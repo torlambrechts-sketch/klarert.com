@@ -96,6 +96,35 @@ These show up in a "backlog" view when the chair plans the next meeting. The cha
 
 The key compliance principle (per AML guidance): **AMU looks at trends, not individual operational deviations**. So the agenda backlog from the deviation module is an aggregated view (e.g. "7 ergonomic deviations in Department X this quarter"), not a list of individual deviation rows.
 
+### Backlog drain pattern
+
+The backlog table is append-only. Pulling an item into a meeting **does not delete it** — it marks `drained_at` and `drained_into`. The history of "what was in the backlog when meeting M was planned" is preserved.
+
+```sql
+create table amu_agenda_backlog (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  meeting_type text not null,                   -- 'amu_quarterly', 'amu_annual', 'amu_extraordinary'
+  source_module text not null,                  -- 'deviations', 'surveys', 'training', ...
+  source_id uuid,                               -- aggregate references may be null
+  priority text not null default 'normal' check (priority in ('low', 'normal', 'high', 'urgent')),
+  suggested_topic text not null,
+  suggested_decision text,
+  evidence jsonb default '{}',                  -- aggregated counts, trend lines
+  drained_at timestamptz,
+  drained_into uuid references meeting_agenda_items(id),
+  created_at timestamptz not null default now()
+);
+
+create index amu_agenda_backlog_pending_idx
+  on amu_agenda_backlog(organization_id, meeting_type, priority, created_at)
+  where drained_at is null;
+```
+
+A trigger on `meeting_agenda_items` insert updates the matching backlog rows. Workflow events emit when a backlog row is added (e.g. `ON_AMU_BACKLOG_ADDED`) so the chair sees a desk-side notification.
+
+This is the model from the NewAMU prototype (`trg_amu_agenda_backlog_drain()`). It replaces any "delete from backlog" code in older sketches.
+
 ## Protocol workflow
 
 1. Meeting moves to `in_progress` at scheduled time
