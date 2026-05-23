@@ -1,76 +1,135 @@
-CLAUDE.md
-This file is loaded at the start of every Claude Code session. Keep it short. Module-specific detail lives in `.claude/modules/<module>.md` and is loaded on demand.
-Project
-Multi-tenant compliance platform. Starts with the Norwegian Working Environment Act (Arbeidsmiljøloven, "AML") and the Internal Control Regulation (Internkontrollforskriften). Designed to extend to ISO 27001, ISO 45001 and other frameworks without code changes — only new templates and workflows.
-Stack
-Next.js 15 (App Router) + React + TypeScript
-Tailwind CSS + shadcn/ui
-Supabase (Postgres, Auth, Storage, Edge Functions)
-Deployed on Vercel
-Architectural rules (non-negotiable)
-Data, not code. Module config, templates, workflows, role permissions and form schemas live in Postgres. The frontend reads them at runtime. If you find yourself hardcoding a checklist item, a question, an approval step or a role check in TypeScript, stop and put it in the database instead.
-Multi-tenancy by RLS. Every tenant-scoped table has `organization_id uuid not null` and an RLS policy that uses `auth.uid()` to scope reads/writes. Never rely on application-layer filtering for tenant isolation.
-Component registry is the only way to add sections. New page sections register themselves in `lib/registry/components.ts` (`COMPONENT_REGISTRY`). The layout engine renders only what's in the registry. Do not import section components directly into pages.
-Workflows are data. Cross-module side effects (a deviation creating a task, a survey closing notifying the AMU) go through the workflow engine tables, not through ad-hoc `await supabase.from(...)` calls in components.
-Audit everything. Every state change on a compliance object (alert, task, document version, AMU protocol, training completion) writes a row to `audit_log` via a Postgres trigger. Never bypass.
-Server-side first. Use Server Actions and Server Components. Client components only when you need interactivity. No service-role keys in the client, ever.
-Folder structure
+# CLAUDE.md
+
+This file loads at the start of every Claude Code session. Keep it short. Module and topic detail lives in `.claude/modules/` and is loaded on demand.
+
+## Project
+
+**klarert.com** — multi-tenant compliance platform for Norwegian workplaces. Starts with Arbeidsmiljøloven (AML) and Internkontrollforskriften. Designed to extend to ISO 27001 / 45001 / 9001 and sectoral frameworks **without code changes** — only new templates and workflows.
+
+We are rebuilding from a prior prototype (AMUlett) that lost its source. See `.claude/modules/COMPETITIVE.md` for what to carry forward and what to never repeat.
+
+## Stack
+
+- Next.js 15 (App Router) + React 19 + TypeScript
+- Tailwind v4 + shadcn/ui, tokens in `lib/design/tokens.ts`
+- Supabase (Postgres, Auth, Storage, Edge Functions, `pg_cron`)
+- React Hook Form + Zod for every form, every Server Action input
+- TanStack Table (via our `<DataGrid>` wrapper) for list views
+- Deployed on Vercel
+- nb-NO default locale, `en` fallback; user text via `t()`
+
+Adding a dependency requires explicit user approval. Already present: shadcn primitives, Tailwind, Supabase client, Zod, date-fns, lucide-react, React Hook Form, TanStack Table.
+
+## Architectural rules (non-negotiable)
+
+1. **Data, not code.** Module config, templates, workflows, role permissions, form schemas live in Postgres. If you find yourself hardcoding a checklist item, a question, an approval step, or a role check in TypeScript — stop and put it in the database.
+2. **Multi-tenancy by RLS.** Every tenant-scoped table has `organization_id uuid not null` and an RLS policy that scopes by `current_org_id()` (which reads `auth.uid()` and the active org claim). Never rely on application-layer filtering for isolation. Cross-tenant queries go through explicit service-role functions, audited.
+3. **Component registry is the only way to add sections.** New page sections register in `lib/registry/components.ts` (`COMPONENT_REGISTRY`). The layout engine renders only what's in the registry, filtered by the user's permissions **and** by `organization_modules.enabled`. Do not import section components directly into pages.
+4. **Workflows are data.** Cross-module side effects (a deviation creating a task, a survey closing notifying the AMU) go through `workflow_triggers` + `workflow_actions`, executed by a single workflow runner. Never `await supabase.from(...).insert()` from a section component to fire a cross-module effect.
+5. **Audit everything.** Every state change on a compliance object writes to `audit_log` via a Postgres trigger. Never bypass. The audit log is append-only — there is no UPDATE policy.
+6. **Server-side first.** Default to Server Components and Server Actions. Client components only for genuine interactivity. No service-role keys, no Supabase admin client, in the browser bundle — ever.
+7. **Structural anonymity, not configured anonymity.** When a module accepts anonymous input, the schema must make identification impossible. Separate table, no FK to users, no IP/session/auth context stored. Every anonymity guarantee is proven by an automated test that tries to join and fails.
+8. **Norwegian first.** All built-in templates ship in `nb-NO`, written for an Arbeidstilsynet inspector. The schema supports localization; the defaults assume Norwegian.
+
+## Lessons paid for already (do not relearn)
+
+These come from AMUlett — see `.claude/modules/COMPETITIVE.md` for context.
+
+- **Migrations apply via CI / `supabase db push`.** Never instruct a user to run a migration in the SQL editor. If a migration is required for a feature to work, the feature is gated on schema presence at boot.
+- **Every outbox needs a worker shipped in the same PR.** Writing intent without delivery is a footgun. Notifications flow through the workflow engine → an edge-function dispatcher that drains queues. No `_outbox` table without a paired drain function.
+- **Auto-provision on `organizations.insert`.** No "open this section once to provision it" bootstrap step. Org creation triggers seed all per-org rows the org will need.
+- **Feature flags live in `module_config` rows.** Not in conditional UI copy. The string "(når X er påslått)" must never reach the user.
+- **Source of truth is git.** Anything not in this repo does not exist. AI-builder deploys that don't commit source are forbidden.
+
+## Folder structure
+
 ```
-app/                         # Next.js routes
-  (auth)/                    # public/auth routes
-  (app)/[org]/...            # tenant-scoped routes
+app/                           # Next.js routes
+  (auth)/                      # public/auth routes
+  (app)/[org]/...              # tenant-scoped routes (mandatory /[org]/ segment)
+  (public)/varsling/...        # unauthenticated public forms
 components/
-  ui/                        # shadcn primitives (do not modify directly)
-  shell/                     # PageShell, nav, layout chrome
-  sections/                  # registered section components
+  ui/                          # shadcn primitives (don't modify directly)
+  shell/                       # PageShell, Section, nav, layout chrome
+  primitives/                  # Stack, Cluster, Grid, Surface, MetaList
+  states/                      # EmptyState, ErrorState, LoadingState
+  data/                        # DataGrid, FormField, Toolbar
+  sections/                    # registered section components (registry-only)
 lib/
-  supabase/                  # client + server + service factories
-  registry/                  # COMPONENT_REGISTRY, workflow actions, triggers
-  rbac/                      # permission helpers (mirror the SQL functions)
-  workflows/                 # workflow engine client helpers
+  design/                      # tokens.ts, theme.css
+  supabase/                    # client + server + service factories
+  registry/                    # COMPONENT_REGISTRY, workflow actions, triggers
+  rbac/                        # permission helpers (mirror the SQL functions)
+  workflows/                   # workflow engine client helpers
+  retention/                   # purge helpers, retention policies
 modules/
-  <module>/                  # module-specific server actions, components, schemas
-templates/                   # built-in template seeds (SQL/JSON), per module
+  <module>/                    # module-specific server actions, schemas, components
+templates/                     # built-in template seeds (SQL/JSON), per module
 supabase/
-  migrations/                # numbered .sql files, append-only
-  functions/                 # edge functions (workflow runner, anon-varsling)
+  migrations/                  # numbered .sql files, append-only
+  functions/                   # edge functions (workflow runner, anon-varsling, dispatcher)
+  tests/                       # pgTAP RLS + anonymity tests
 .claude/
-  modules/                   # per-module instruction files (loaded on demand)
+  modules/                     # per-module + per-topic instruction files (loaded on demand)
 ```
-Naming and code style
-Tables: `snake_case`, plural (`alert_actions`, not `AlertAction`).
-Always include `id uuid default gen_random_uuid() primary key`, `organization_id`, `created_at timestamptz default now()`, `created_by uuid references profiles(id)`.
-Use Zod schemas for every Server Action input. Schemas live next to the action and are re-exported for client use.
-Prefer `select('id, name, ...')` over `select('*')`. Never ship `select *` to production.
-All UI text passes through `t()` (i18n). Default locale `nb-NO`, fallback `en`.
-What "done" looks like for any feature
-Before you mark a task complete, all of these must be true:
-[ ] Migration file added under `supabase/migrations/` and applied locally.
-[ ] RLS policies written and tested for all four operations (select/insert/update/delete) for each relevant role.
-[ ] Server Actions have Zod input validation and return typed errors, never throw to the client.
-[ ] Any new section component is registered in `COMPONENT_REGISTRY` with permission requirements declared.
-[ ] Any cross-module effect goes through a workflow trigger, not direct DB writes.
-[ ] Audit log fires for every state change (verified by inserting a row and checking `audit_log`).
-[ ] System templates seeded under `templates/<module>/` and inserted by the migration.
-[ ] `npm run typecheck` and `npm run lint` pass.
-When you need module detail
-Read the matching file in `.claude/modules/`. Do not load all of them — they are large and most are not relevant to the task at hand:
-`admin.md` — orgs, users, roles, module activation, template management
-`survey.md` — surveys, anonymous responses, psychosocial assessments
-`checklist.md` — recurring checks, evidence upload, signoff
-`alert.md` — deviations and whistleblowing (AML kap. 2A), anonymous tracking codes
-`task.md` — central action tracker, Kanban, cross-module origins
-`document.md` — version-controlled documents, acknowledgements
-`elearning.md` — courses, quizzes, certificates, mandatory HMS training
-`meeting.md` — AMU meetings (AML kap. 7), protocols, attendee signoff
-`register.md` — chemical register (Stoffkartotek), SDS expiry
-Compliance principles (apply across modules)
-Anonymity is structural, not optional. When a module supports anonymous input, the schema must make it impossible to join the response to a user — no nullable `user_id` that gets filled in "by accident". Use a separate `anonymous_responses` table with no FK to users.
-Medvirkning (employee participation) must be provable. Every risk assessment, checklist completion and document acknowledgement records a signed timestamp the user cannot edit after the fact.
-Retention. Personal data linked to closed alerts and surveys must be purgeable on a schedule defined per template. Build delete cascades accordingly.
-Norwegian first. All built-in templates ship in `nb-NO`. The schema supports per-template localization but built-ins are written for a Norwegian auditor (Arbeidstilsynet) reading the output.
-What not to do
-Don't create a new top-level route without checking whether it should be a section in the layout engine instead.
-Don't add a `role` enum check in TypeScript — extend the RBAC tables and use the SQL helper.
-Don't write a `useEffect` that fetches data on mount when a Server Component would do.
-Don't add a new dependency without asking. shadcn, Tailwind, Supabase client, Zod, date-fns, lucide-react are already present.
+
+## Naming and code style
+
+- Tables: `snake_case`, plural (`alert_actions`, not `AlertAction`).
+- Every table has: `id uuid default gen_random_uuid() primary key`, `organization_id uuid` (or explicit cross-tenant comment), `created_at timestamptz default now()`, `created_by uuid references profiles(id)`. Append-only tables also have a deny-update RLS.
+- Use Zod schemas for every Server Action input. Schemas live next to the action and are re-exported for client use.
+- `select('id, name, ...')` — never `select('*')` in production code paths.
+- Code identifiers and comments in English. Table/column comments and user-facing strings in nb-NO when audience is Norwegian.
+- Domain vocabulary uses the canonical Norwegian terms — see `.claude/modules/TERMINOLOGY.md`. Do not invent English aliases for `avvik`, `varsling`, `vernerunde`, `verneombud`, etc.
+
+## What "done" looks like
+
+Before marking a feature complete, all of these must be true:
+
+- [ ] Migration under `supabase/migrations/` applied locally and to a preview branch.
+- [ ] RLS policies for SELECT / INSERT / UPDATE / DELETE on every relevant role, with a pgTAP test under `supabase/tests/` that switches users and asserts the matrix.
+- [ ] Anonymity tests (if applicable) that try to join the anonymous table to users and assert no path exists.
+- [ ] Server Actions have Zod input validation and return typed `{ ok: true, data } | { ok: false, error }` — never throw to the client.
+- [ ] New section components registered in `COMPONENT_REGISTRY` with permission and module requirements declared.
+- [ ] Cross-module effects routed through a workflow trigger, not direct DB writes.
+- [ ] Audit trigger present on every state-changing table; verified by inserting a row and reading `audit_log`.
+- [ ] System templates seeded in `templates/<module>/` and inserted by the migration. Norwegian text reviewed for tone.
+- [ ] Worker / dispatcher / cron job shipped alongside any outbox or scheduled table.
+- [ ] `npm run typecheck`, `npm run lint`, and `supabase test db` all green.
+
+## Where to read next
+
+Module detail (load only when working on that module):
+
+- `admin.md` — orgs, users, roles, module activation, templates
+- `survey.md` — surveys, anonymous responses, psychosocial assessments
+- `checklist.md` — recurring checks, evidence upload, signoff
+- `alert.md` — deviations and whistleblowing, anonymous tracking codes
+- `task.md` — central action tracker, Kanban
+- `document.md` — version-controlled documents, acknowledgements
+- `elearning.md` — courses, quizzes, certificates, mandatory training
+- `meeting.md` — AMU meetings, protocols, attendee signoff
+- `register.md` — chemical register (Stoffkartotek), SDS expiry
+
+Cross-cutting topic detail (load when working in that area):
+
+- `DESIGN_SYSTEM.md` — Claude-inspired tokens, wrapper components, page-type layouts
+- `SECURITY.md` — RLS testing, anonymity testing, secrets, GDPR / Datatilsynet
+- `DATABASE.md` — migration conventions, audit trigger pattern, retention engine, performance
+- `ENGINEERING.md` — Server Actions, error model, testing strategy, observability, accountability
+- `COMPLIANCE.md` — Norwegian regulation → feature map (baseline)
+- `COMPLIANCE_EXTENDED.md` — additional AML chapters, GDPR, ARP, BHT, sykefraværsoppfølging, Byggherreforskriften, Arbeidstilsynet inspection extensions
+- `COMPETITIVE.md` — Vanta / VComply learnings, Norwegian wedge, future-module backlog
+- `TERMINOLOGY.md` — nb-NO ⇄ EN domain cheat sheet
+
+Do not load every file. Load CLAUDE.md, then the one or two files that match the current task.
+
+## What not to do
+
+- Don't add a new top-level route without checking whether it belongs as a section in the layout engine.
+- Don't add a `role` enum check in TypeScript — extend the RBAC tables and use the SQL helper `has_permission()` / `has_role()`.
+- Don't write a `useEffect` that fetches on mount when a Server Component would do.
+- Don't add a dependency without asking.
+- Don't ship a UI button whose backend isn't built. No half-truths.
+- Don't write multi-paragraph comments. Code should explain itself; comments are for non-obvious why.
+- Don't use emojis in product UI or commit messages.
