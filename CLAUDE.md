@@ -6,7 +6,7 @@ This file loads at the start of every Claude Code session. Keep it short. Module
 
 **klarert.com** — multi-tenant compliance platform for Norwegian workplaces. Starts with Arbeidsmiljøloven (AML) and Internkontrollforskriften. Designed to extend to ISO 27001 / 45001 / 9001 and sectoral frameworks **without code changes** — only new templates and workflows.
 
-We are rebuilding from a prior prototype (AMUlett) that lost its source. See `.claude/modules/COMPETITIVE.md` for what to carry forward and what to never repeat.
+We are rebuilding from a prior prototype at `github.com/torlambrechts-sketch/NewAMU` — already named `"klarert"` internally. It is mature (175+ migrations, ~25 edge functions, 9 framework registries, an evidence-anchoring workflow engine) but built on React 19 + Vite + React Router 7. The rebuild is a **deliberate stack change** to Next.js 15 App Router + RSC. Port patterns and data; never port code. See `.claude/modules/AMU_LEGACY.md` for the full transition guide.
 
 ## Stack
 
@@ -30,16 +30,20 @@ Adding a dependency requires explicit user approval. Already present: shadcn pri
 6. **Server-side first.** Default to Server Components and Server Actions. Client components only for genuine interactivity. No service-role keys, no Supabase admin client, in the browser bundle — ever.
 7. **Structural anonymity, not configured anonymity.** When a module accepts anonymous input, the schema must make identification impossible. Separate table, no FK to users, no IP/session/auth context stored. Every anonymity guarantee is proven by an automated test that tries to join and fails.
 8. **Norwegian first.** All built-in templates ship in `nb-NO`, written for an Arbeidstilsynet inspector. The schema supports localization; the defaults assume Norwegian.
+9. **Law references are load-bearing strings.** Use the exact format the gap planner and dashboards match on: `AML § 4-3`, `AML § 2A-7 (5)`, `AML kap. 2A`, `IK-f § 5 nr. 7`, `GDPR Art. 35`, `Likestillings- og diskrimineringsloven § 26`. Spaces and `§` matter. A `LawRef` Zod string format validates inputs; template content is reviewed against it.
 
 ## Lessons paid for already (do not relearn)
 
-These come from AMUlett — see `.claude/modules/COMPETITIVE.md` for context.
+These come from the NewAMU prototype — see `.claude/modules/AMU_LEGACY.md` and `.claude/modules/COMPETITIVE.md` for context.
 
 - **Migrations apply via CI / `supabase db push`.** Never instruct a user to run a migration in the SQL editor. If a migration is required for a feature to work, the feature is gated on schema presence at boot.
 - **Every outbox needs a worker shipped in the same PR.** Writing intent without delivery is a footgun. Notifications flow through the workflow engine → an edge-function dispatcher that drains queues. No `_outbox` table without a paired drain function.
 - **Auto-provision on `organizations.insert`.** No "open this section once to provision it" bootstrap step. Org creation triggers seed all per-org rows the org will need.
 - **Feature flags live in `module_config` rows.** Not in conditional UI copy. The string "(når X er påslått)" must never reach the user.
 - **Source of truth is git.** Anything not in this repo does not exist. AI-builder deploys that don't commit source are forbidden.
+- **Never `check (col in (...))` for an extensibility surface.** The prototype's `org_module_payloads.module_key` constraint forced two follow-up migrations to extend. Use a lookup table with FK instead.
+- **Anonymity is by separate table, not by trigger.** The prototype's `is_anonymous = true → nullify user_id` pattern is the "filled in by accident" mode the architecture forbids. Separate table, no FK, proven by test.
+- **Workflow engine is the only cross-module path.** Even when a direct write seems easier, route it through `emit_workflow_event()`. The evidence chain is the deliverable. See `.claude/modules/workflow.md`.
 
 ## Folder structure
 
@@ -117,9 +121,11 @@ Cross-cutting topic detail (load when working in that area):
 - `SECURITY.md` — RLS testing, anonymity testing, secrets, GDPR / Datatilsynet
 - `DATABASE.md` — migration conventions, audit trigger pattern, retention engine, performance
 - `ENGINEERING.md` — Server Actions, error model, testing strategy, observability, accountability
+- `workflow.md` — workflow engine: catalog + revisions, evidence chain, TSA anchoring, signoffs
 - `COMPLIANCE.md` — Norwegian regulation → feature map (baseline)
 - `COMPLIANCE_EXTENDED.md` — additional AML chapters, GDPR, ARP, BHT, sykefraværsoppfølging, Byggherreforskriften, Arbeidstilsynet inspection extensions
 - `COMPETITIVE.md` — Vanta / VComply learnings, Norwegian wedge, future-module backlog
+- `AMU_LEGACY.md` — what to carry forward from the NewAMU prototype (data, patterns, anti-patterns)
 - `TERMINOLOGY.md` — nb-NO ⇄ EN domain cheat sheet
 
 Do not load every file. Load CLAUDE.md, then the one or two files that match the current task.

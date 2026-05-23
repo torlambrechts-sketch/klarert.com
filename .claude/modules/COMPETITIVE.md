@@ -133,43 +133,55 @@ These are not yet designed in depth. When they come up, draft a `.claude/modules
 - **`auditor-role`** — scoped read-only RBAC + an `/auditor/<token>` portal that doesn't require an account.
 - **`org-hierarchy`** — parent → subsidiary → site. Schema extension in `admin`. Cross-tenant queries still go through explicit, audited functions.
 
-## 5. Lessons from the prior prototype
+## 5. Lessons from the NewAMU prototype
 
-The prior project shipped enough to identify pitfalls. The mapping is recorded in CLAUDE.md "Lessons paid for already"; reproduced and expanded here.
+The prior project (`github.com/torlambrechts-sketch/NewAMU`, internally already called `"klarert"`) is mature — 175+ migrations, ~25 edge functions, a workflow engine with RFC-3161 TSA anchoring, 9 framework registries. We rebuild for stack reasons (React/Vite → Next.js App Router), not because the prior work was wrong. See `.claude/modules/AMU_LEGACY.md` for the full inheritance map.
 
 ### What worked — carry forward
 
-- **Module taxonomy and Norwegian naming**: AMU-senter / Vernerunde / Avvik / ROS / Stans av arbeid / Varsling / Undersøkelser / Dokumenter (Wiki) / Opplæringssenter / Oppgaver. Adopt these verbatim where they match.
+- **Module taxonomy and Norwegian naming**: AMU / Verneombud / Vernerunde / Avvik / ROS / Stans av arbeid / Varsling / Undersøkelser / Dokumenter (Wiki) / Opplæringssenter / Oppgaver. Adopt verbatim.
+- **7-kind alert taxonomy** (`work_injury_illness`, `near_miss`, `harassment_discrimination`, `violence_threat`, `psychosocial`, `whistleblowing`, `other`) — see `alert.md`.
+- **13-module AML compliance dashboard seed** — AMU, Verneombud, ROS-analyser, Vernerunder, Avvik & forbedring, Sykefravær & IA, HMS-opplæring, Bedriftshelsetjeneste, Arbeidstid, Sikker jobbanalyse, Arbeidsmiljøkartlegging, Beredskap & brann.
+- **23-lesson AML masterclass for leaders** — covers § 1-1 through § 19-1.
+- **19 AMU system meeting templates** plus the 7 default council compliance items.
+- **Regelverk registry of 9 frameworks** with paragraph text — AML, IK-f, LDL, GDPR, FOLM, Brannvern, Åpenhetsloven, BHT-f, Utf.arb.
+- **Workflow engine with TSA anchoring** — see `workflow.md`.
+- **HMAC fingerprinting** for cross-org alert dedup without PII leakage.
+- **Agenda backlog drain** pattern in the AMU module — never delete, mark `drained_at` / `drained_into`.
+- **Three-function public submission surface** — submit / status / purge-attachments.
+- **Locale-decoupled system content** — `(parent template) + (per-locale child)` shape.
 - **Domain rules** worth preserving as workflow triggers:
   - Vernerunde "Ikke OK" auto-creates an avvik.
   - ROS at medium/high cannot close until a mitigation task links.
   - Only verneombud can register and lift a "Stans av arbeid (§ 6-3)".
   - Verneombud role is *synced* from member role, not separately editable.
-  - System courses live in a global catalog; orgs copy or just consume; only `platform_admin` edits the catalog.
-  - Annual rotation of AMU leader between employer and employee side — practice rule, surface a reminder, don't enforce.
-  - Min 4 AMU meetings/year — enforce in cadence monitor.
-- **Some nb-NO copy** is high-quality and worth lifting. Examples to keep in `templates/copy/nb-NO.json`:
-  - "Kjør sjekklister. Ved «Ikke OK» opprettes avvik automatisk."
-  - "Du kan ikke lukke denne ROS før en tiltaksoppgave er koblet (påkrevd ved middels/høy risiko)."
-  - "Konfidensielt varslingsløp med saksbehandling og tilgangskontroll."
-  - "Anonyme saker er kun synlige for varslingsmottak og utpekte behandlere — ikke for vanlige ledere."
-  - "Praksis i Norge tilsier at lederen veksler mellom arbeidsgiver- og ansattside."
+  - System courses live in a global catalog; orgs copy or consume; only `platform_admin` edits the catalog.
+  - Annual rotation of AMU leader between employer and employee side — practice rule, surface as a reminder.
+  - Min 4 AMU meetings/year — cadence monitor.
+- **nb-NO copy to lift** — see `AMU_LEGACY.md` §1 for the seed list.
 
-### What to never repeat — anti-patterns observed
+### What to never repeat — anti-patterns observed in the prototype
 
 | Anti-pattern | Corrective rule |
 |---|---|
-| Source code not in git — AI builder deployed without committing | All code in this repo. CI builds from main. No exceptions. |
-| Manual "Run migration X in Supabase SQL editor" prompts in the UI | Migrations apply via CI / `supabase db push`. Features gate on schema presence at boot. |
-| Hardcoded UI for legal areas next to seeded data — claimed "data not code" but shipped per-module pages | Layout engine + `COMPONENT_REGISTRY` only. Every section is a registry entry. |
-| Outbox tables without workers (`hse_halt_alert_outbox` written, never drained) | Every queue/outbox ships with its dispatcher in the same PR. |
-| Document center requiring a privileged user to "open it once" to provision | Auto-provision via triggers on `organizations.insert`. |
-| No `/[org]/` URL segment — tenant scope implicit in session | Mandatory `(app)/[org]/...` segment. Active org agrees with URL. |
-| Schema drift surfaced as runtime errors ("Databasen mangler kolonnen scope") | Boot-time schema check or fail fast. CI applies migrations before tests. |
-| PDF/certificate generation deferred everywhere; buttons that don't work | No button without backend. No "later" features in production. |
-| Anonymity claimed but not provably structural | Schema-level test required. SECURITY.md §3. |
-| Feature flags leaking into UI strings ("når X er påslått") | Flags live in `module_config`. Conditional render, not conditional copy. |
-| No audit log on state changes | Mandatory `audit_log` trigger. DATABASE.md §5. |
+| `check (col in (...))` on extensibility surfaces (`org_module_payloads.module_key`) — forced two follow-up migrations | Lookup table with FK. See DATABASE.md §13. |
+| Composite primary keys (`regulations(organization_id, id)`) — single-column FKs fail with Postgres error 42830 | Single-column `id uuid` PKs. Cross-table tenant invariants via trigger. DATABASE.md §14. |
+| Anonymity via `is_anonymous=true` trigger that nullifies `user_id` | Separate `anonymous_*` tables with no FK. SECURITY.md §3. |
+| Six-call-site widget-kind sprawl (discriminated union duplicated across files) | One registry file; exhaustive switch type-checks automatically. ENGINEERING.md §3. |
+| `SECURITY DEFINER` public RPCs (`public_submit_whistleblowing` etc.) | Public submissions via Edge Functions only, never direct SQL. SECURITY.md §7. |
+| localStorage as persistence for compliance state (early Council / Tasks) | Server-first. CLAUDE.md rule 6. |
+| Stray components at repo root (`DocumentTemplatesSettings.tsx`, `path/to/`) | Strict folder discipline enforced via `no-restricted-paths`. |
+| Repo-root `.md` files for design/spec/roadmap | All instruction content in `.claude/modules/`. |
+| Postgres enum `compliance_pack` requiring `ALTER TYPE` to extend | Lookup table `compliance_frameworks`. |
+| Single `law_ref text` later joined by `law_refs text[]` — backfill migration required | Ship arrays from migration 0001 when multiplicity is plausible. |
+| `crypto.randomUUID()` polyfills duplicated across pages | Single `freshId(prefix)` helper. |
+| Manual "Run migration X" prompts in UI | CI applies migrations. Feature gates on schema presence at boot. |
+| Outbox tables without workers (`hse_halt_alert_outbox` written, never drained) | Worker shipped in same PR. |
+| Document center requiring a privileged user to "open once" to provision | Auto-provision via `organizations.insert` triggers. |
+| Implicit tenant scoping (no `/[org]/` URL segment) | Mandatory `(app)/[org]/...`. |
+| Schema drift surfacing as runtime errors ("Databasen mangler kolonnen scope") | Boot-time schema check or fail fast. |
+| Half-built features with disabled buttons | No button without backend. |
+| Feature flags leaking into UI strings ("når X er påslått") | Flags live in `module_config`. |
 
 ## 6. Scoring a feature request against this landscape
 

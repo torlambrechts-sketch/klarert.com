@@ -15,6 +15,32 @@ The word "alert" covers two legally different concepts. They share a UI surface 
 
 If you put both in one table with a `type` discriminator and use RLS to split them, you create a permanent risk of policy drift. Use two tables.
 
+## Alert kinds — the 7-category taxonomy
+
+Both deviations and whistleblowing share a typed `kind` reference into a small lookup table. The seed (from the NewAMU prototype, `src/data/amlAnonymousReporting.ts`) is canonical — do not re-translate:
+
+| kind | nb-NO label | hint | routes to |
+|---|---|---|---|
+| `work_injury_illness` | Arbeidsskade / sykdom | Skader, ulykker eller arbeidsrelatert sykdom (AML kap. 5). | `incidents` (when that module ships); fall back to `deviations` |
+| `near_miss` | Nestenulykke | Hendelser som kunne ført til skade. Viktig for forebygging. | `deviations` |
+| `harassment_discrimination` | Trakassering / diskriminering | Krenkende handlinger eller forskjellsbehandling (AML § 4-3). | `deviations` if internal report; `whistleblowing_reports` if reporter chooses varsling track |
+| `violence_threat` | Vold / trusler | Vold, trusler eller utilbørlig opptreden (AML § 4-3). | `deviations` + AMU agenda |
+| `psychosocial` | Psykososialt arbeidsmiljø | Forhold som påvirker psykisk arbeidsmiljø (AML § 4-3). | `deviations` |
+| `whistleblowing` | Varsling (kritikkverdige forhold) | AML kap. 2A — kritikkverdige forhold i virksomheten. | `whistleblowing_reports` always |
+| `other` | Annet (AML-relevant) | — | `deviations` |
+
+```sql
+create table alert_kinds (
+  id text primary key,
+  label_nb text not null,
+  hint_nb text,
+  routes_to text not null check (routes_to in ('deviation', 'whistleblowing', 'either')),
+  display_order int not null
+);
+```
+
+The public submission form lets the reporter pick the kind. The `routes_to = 'either'` rows show the reporter both tracks with a one-line explanation of the difference.
+
 ## The anonymity rule
 
 AML kap. 2A guarantees the right to report anonymously. "Anonymous" here means **structural anonymity**: the system must be incapable of revealing the reporter's identity, not merely configured to hide it.
@@ -145,6 +171,27 @@ The reporter replies by posting `{ token, body }` to `post-whistleblowing-messag
 128 bits of entropy minimum. Don't use uuids — they're predictable in some implementations. Use `crypto.randomBytes(16)` from Node's crypto, base32-encode, group in 4-char chunks separated by hyphens for readability.
 
 Rate-limit the public endpoint aggressively (per IP, per session, and a global per-org rate). Don't store the IP in the database — store it in a transient KV (Vercel KV or similar) with a TTL of an hour, just for rate limiting.
+
+## Cross-org dedup via HMAC fingerprint
+
+From the NewAMU prototype's `alerts_fingerprint_hmac.sql`. Pattern: detect "this pattern appears across multiple orgs" without leaking row content.
+
+1. A per-environment HMAC secret is stored in Supabase Vault, accessible only to a `SECURITY DEFINER` function.
+2. Both `deviations` and `whistleblowing_reports` carry a `fingerprint_hmac bytea` column, computed from non-identifying canonical fields: `kind`, normalized `sha256(lower(title || description))`, locale, country, week-of-year. **Never** from `organization_id`, `reporter_*`, `created_by`, IP, or any identifier.
+3. A platform-admin function `alerts_cross_org_dedup(p_fingerprint_hmac bytea)` returns `(occurrence_count, earliest_seen_at, distinct_kinds)` — counts, no rows.
+4. Surfaces only on a platform-admin dashboard ("this pattern appears in N orgs"). Never to tenant admins, never to AMU. The point is for the platform to detect potential brigading or coordinated harassment against a worker who has been pushed between employers — a known risk pattern.
+
+Add `fingerprint_hmac` to both tables. RLS does not expose it to tenant users. The dedup function carries its own audit row.
+
+## Public endpoints — three-function shape
+
+From the prototype. Three Supabase Edge Functions cover the public surface:
+
+- `alerts-public-submit` — accept a submission, return a tracking code. Validates with Zod, rate-limits, writes the row, returns the token exactly once.
+- `alerts-public-status` — given a tracking code, return status + messages. Constant-time token comparison.
+- `alerts-purge-attachments` — scheduled cleanup (via `pg_cron` → edge function) of orphaned attachment paths after the row's retention window. Attachments live in Storage with independent lifecycle; this fn closes the loop.
+
+Add the third function. Without it, Storage accumulates files past the retention horizon, undermining the GDPR claim.
 
 ## Workflows
 

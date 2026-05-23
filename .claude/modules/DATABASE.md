@@ -384,7 +384,64 @@ Index JSONB only when you actually query it, with GIN.
 - Every job has a paired test that runs the function and asserts effects.
 - Jobs run UTC; convert in the function if a Norwegian local time matters.
 
-## 13. What not to do
+## 13. Lookup tables vs check constraints
+
+Anything that could grow is a lookup table with a foreign key — not a `check (col in (...))` constraint and not a Postgres `enum`. Both fight you when you try to extend.
+
+The NewAMU prototype shipped `org_module_payloads.module_key text check (col in ('internal_control','hse','org_health','representatives'))`. Within months it needed two follow-up migrations to extend the set. Every `ALTER TYPE` or `ALTER TABLE ... DROP CONSTRAINT ... ADD CONSTRAINT` is a deploy risk and a coordination headache.
+
+**Use a check constraint** when:
+- The set is closed by a standard you don't control (CLP hazard pictograms — GHS01..GHS09; ISO statuses).
+- The set encodes a state machine the application enforces in code (e.g. `status in ('open','in_progress','done','cancelled')`).
+
+**Use a lookup table with FK** when:
+- The set might grow over time (categories, modules, kinds, frameworks).
+- The set has metadata beyond the key (labels, hints, display order, audience).
+- The set is user-extensible per tenant.
+
+```sql
+-- Wrong:
+alter table org_module_payloads
+  add constraint module_key_check
+  check (module_key in ('internal_control','hse','org_health','representatives'));
+
+-- Right:
+create table module_keys (
+  key text primary key,
+  label_nb text not null,
+  description text,
+  is_system boolean not null default true,
+  display_order int not null
+);
+alter table org_module_payloads
+  add constraint module_key_fk foreign key (module_key) references module_keys(key);
+```
+
+Postgres enums (`create type ... as enum (...)`) have similar problems — `alter type` requires careful coordination and breaks views. Default to a lookup table; reach for an enum only when the set genuinely never changes.
+
+## 14. Composite primary keys — don't
+
+The prototype had `regulations` with PK `(organization_id, id)`. Single-column FKs from other tables fail with Postgres error 42830 ("there is no unique constraint matching given keys for referenced table"). The workaround — duplicating `organization_id` everywhere — defeats the FK's purpose.
+
+The rebuild's primary key is always single-column `id uuid`. If you need a cross-table tenant-match invariant ("`X.organization_id` must match `Y.organization_id` where `X.parent_id = Y.id`"), enforce it with a trigger:
+
+```sql
+create or replace function check_tenant_match_<table>() returns trigger
+language plpgsql as $$
+begin
+  if exists (
+    select 1 from <parent> p
+    where p.id = new.parent_id
+      and p.organization_id <> new.organization_id
+  ) then
+    raise exception 'tenant mismatch on <table>.parent_id';
+  end if;
+  return new;
+end;
+$$;
+```
+
+## 15. What not to do
 
 - Don't write a migration without RLS.
 - Don't write RLS without a pgTAP test.
