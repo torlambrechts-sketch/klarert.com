@@ -50,6 +50,8 @@ export function GroupsManager({
   const [groups, setGroups] = useState(initial);
   useEffect(() => setGroups(initial), [initial]);
   const [, start] = useTransition();
+  // a stable id keeps dnd-kit's aria-describedby the same on the server and the client
+  const dndId = useId();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -81,6 +83,7 @@ export function GroupsManager({
   return (
     <div className="flex flex-col gap-3">
       <DndContext
+        id={dndId}
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={onDragEnd}
