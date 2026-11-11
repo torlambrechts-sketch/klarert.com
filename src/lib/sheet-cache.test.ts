@@ -31,7 +31,9 @@ describe('sheet cache reducers', () => {
   it('upserts in position order and drops archived items', () => {
     const c = makeItem({}, { id: 'c', position: 'Zz' });
     expect(upsertItem(base, c).items.map((i) => i.id)).toEqual(['c', 'a', 'b']);
-    expect(upsertItem(base, { ...a, archivedAt: '2026-11-11T00:00:00Z' }).items.map((i) => i.id)).toEqual(['b']);
+    expect(
+      upsertItem(base, { ...a, archivedAt: '2026-11-11T00:00:00Z' }).items.map((i) => i.id),
+    ).toEqual(['b']);
     expect(upsertItem(base, { ...a, sheetId: 'other' }).items).toHaveLength(1);
   });
 
@@ -46,12 +48,20 @@ describe('sheet cache reducers', () => {
 
   it('replaces links, keeping known rows', () => {
     const one = setLinks(base, 'lf', 'a', ['t1']);
-    const real = upsertLink(one, { id: 'L1', fieldId: 'lf', fromItem: 'a', toItem: 't1', position: 'a0' });
+    const real = upsertLink(one, {
+      id: 'L1',
+      fieldId: 'lf',
+      fromItem: 'a',
+      toItem: 't1',
+      position: 'a0',
+    });
     expect(real.links.map((l) => l.id)).toEqual(['L1']);
     const two = setLinks(real, 'lf', 'a', ['t1', 't2']);
     expect(two.links.map((l) => l.toItem)).toEqual(['t1', 't2']);
     expect(two.links[0]!.id).toBe('L1');
-    expect(upsertLink(base, { id: 'X', fieldId: 'unknown', fromItem: 'a', toItem: 't', position: 'a0' })).toBe(base);
+    expect(
+      upsertLink(base, { id: 'X', fieldId: 'unknown', fromItem: 'a', toItem: 't', position: 'a0' }),
+    ).toBe(base);
   });
 
   it('upserts and removes fields and groups', () => {
@@ -59,7 +69,13 @@ describe('sheet cache reducers', () => {
     expect(upsertField(base, f0).fields.map((f) => f.id)).toEqual(['f0', 'f1', 'lf']);
     expect(upsertField(base, { ...f1, archivedAt: 'now' }).fields.map((f) => f.id)).toEqual(['lf']);
     expect(removeField(base, 'lf').fields.map((f) => f.id)).toEqual(['f1']);
-    const g = upsertGroup(base, { id: 'g', sheetId: sheet.id, name: 'G', color: 'blue', position: 'a0' });
+    const g = upsertGroup(base, {
+      id: 'g',
+      sheetId: sheet.id,
+      name: 'G',
+      color: 'blue',
+      position: 'a0',
+    });
     expect(g.groups).toHaveLength(1);
   });
 

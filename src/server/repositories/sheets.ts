@@ -92,26 +92,6 @@ export const getSheet = cache(async (orgId: string, sheetId: string) => {
 
 export type SheetDetail = NonNullable<Awaited<ReturnType<typeof getSheet>>>;
 
-/** First items of each group, for the read-only preview on the sheet page (the List view arrives in M6). */
-export async function getGroupItems(sheetId: string, groupIds: string[], perGroup: number) {
-  const session = await getSession();
-  if (!session) return new Map<string, { id: string; display_id: string; name: string }[]>();
-  const rows = await Promise.all(
-    groupIds.map((g) =>
-      session.supabase
-        .from('items')
-        .select('id, display_id, name')
-        .eq('sheet_id', sheetId)
-        .eq('group_id', g)
-        .is('archived_at', null)
-        .order('position')
-        .limit(perGroup)
-        .then((r) => [g, r.data ?? []] as const),
-    ),
-  );
-  return new Map(rows);
-}
-
 export async function getFields(sheetId: string) {
   const session = await getSession();
   if (!session) return [];

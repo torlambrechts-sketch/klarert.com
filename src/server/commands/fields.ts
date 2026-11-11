@@ -81,12 +81,18 @@ export async function addField(input: unknown): Promise<Result<{ field: Field }>
         return fail('not_found', 'This sheet no longer exists.');
       const all = await sheetFields(supabase, v.sheetId);
       const live = all.filter((f) => !f.archived_at);
-      const name = v.name ?? freshName(def.label, live.map((f) => f.name));
+      const name =
+        v.name ??
+        freshName(
+          def.label,
+          live.map((f) => f.name),
+        );
       const anchor = v.beforeFieldId ?? v.afterFieldId;
       const at = anchor ? live.findIndex((f) => f.id === anchor) : -1;
       let position: string;
       if (at < 0) position = keyBetween(live.at(-1)?.position ?? null, null);
-      else if (v.beforeFieldId) position = keyBetween(live[at - 1]?.position ?? null, live[at]!.position);
+      else if (v.beforeFieldId)
+        position = keyBetween(live[at - 1]?.position ?? null, live[at]!.position);
       else position = keyBetween(live[at]!.position, live[at + 1]?.position ?? null);
       const { data, error } = await supabase
         .from('fields')
@@ -217,7 +223,10 @@ export async function duplicateField(input: unknown): Promise<Result<{ field: Fi
       const all = await sheetFields(supabase, row.sheet_id);
       const live = all.filter((f) => !f.archived_at);
       const at = live.findIndex((f) => f.id === row.id);
-      const name = freshName(`${row.name} copy`.slice(0, 80), live.map((f) => f.name));
+      const name = freshName(
+        `${row.name} copy`.slice(0, 80),
+        live.map((f) => f.name),
+      );
       const { data, error } = await supabase
         .from('fields')
         .insert({
@@ -353,7 +362,12 @@ export async function changeFieldType(input: unknown): Promise<Result<TypeChange
       const row = await fieldInOrg(supabase, orgId, v.fieldId);
       if (!row || row.archived_at) return fail('not_found', 'This field no longer exists.');
       if (row.locked && !isAdminRole(role)) return fail('forbidden', LOCKED_FIELD);
-      const w = await loadWriteContext(supabase, { orgId, userId: user.id, role }, row.sheet_id, 'all');
+      const w = await loadWriteContext(
+        supabase,
+        { orgId, userId: user.id, role },
+        row.sheet_id,
+        'all',
+      );
       if (!w) return fail('not_found', 'This sheet no longer exists.');
       const field = w.fields.find((f) => f.id === row.id)!;
       const plan = planTypeChange(field, v.to, [...w.items.values()], w.ctx);
@@ -365,7 +379,10 @@ export async function changeFieldType(input: unknown): Promise<Result<TypeChange
         summary: plan.summary,
       };
       if (plan.mode === 'none')
-        return fail('invalid', 'This field cannot change to that type. Create a new field instead.');
+        return fail(
+          'invalid',
+          'This field cannot change to that type. Create a new field instead.',
+        );
       if (needsLibraryTarget(v.to)) {
         const target = (plan.config as { targetSheetId?: string }).targetSheetId;
         const lib = target ? await sheetInOrg(supabase, orgId, target) : null;

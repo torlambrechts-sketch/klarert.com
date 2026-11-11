@@ -174,11 +174,14 @@ export const metaUI = computedUI({
   },
 });
 
-export const workflowstepUI = computedUI({
-  icon: GitBranch,
-  Cell: (p) => <OptionCell {...p} />,
-  explain: () => <p>The workflow step is set by automations only.</p>,
-});
+export const workflowstepUI: FieldTypeUI = {
+  ...computedUI({
+    icon: GitBranch,
+    Cell: (p) => <OptionCell {...p} />,
+    explain: () => <p>The workflow step is set by automations only.</p>,
+  }),
+  automationOnly: true,
+};
 
 function ButtonEditor({ field, onButton, onCancel }: Parameters<FieldTypeUI['Editor']>[0]) {
   const cfg = field.config as { label: string; confirm: string | null };

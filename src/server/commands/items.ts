@@ -20,7 +20,12 @@ import type { Db } from '@/lib/sheet-query';
 import { isAdminRole, type Role } from '@/server/auth';
 import { runAutomations, type AutomationEvent } from '@/server/automations';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
-import { loadWriteContext, sha256, uniqueConflicts, type WriteContext } from '@/server/sheet-context';
+import {
+  loadWriteContext,
+  sha256,
+  uniqueConflicts,
+  type WriteContext,
+} from '@/server/sheet-context';
 import { withOrg } from './context';
 
 // Item commands (docs/02 §4): authorise → validate with the field registry → RPC (row + activity log in one
@@ -32,7 +37,9 @@ const LOCKED = 'This item is locked. Only owners and admins can change it.';
 
 const lockedFor = (item: Item, role: Role) => item.locked && !isAdminRole(role);
 const lockMessage = (item: Item) =>
-  item.lockReason ? `This item is locked: ${item.lockReason}. Only owners and admins can change it.` : LOCKED;
+  item.lockReason
+    ? `This item is locked: ${item.lockReason}. Only owners and admins can change it.`
+    : LOCKED;
 
 async function automations(events: AutomationEvent[], orgId: string, userId: string) {
   return (await runAutomations(events, { orgId, userId })).messages;
@@ -80,7 +87,13 @@ async function writeValues(
     const fieldErrors = Object.fromEntries(plan.rejected.map((r) => [r.fieldId, r.reason]));
     return fail('invalid', plan.rejected[0]!.reason, fieldErrors);
   }
-  const conflicts = await uniqueConflicts(who.supabase, item.sheetId, item.id, w.fields, plan.patch);
+  const conflicts = await uniqueConflicts(
+    who.supabase,
+    item.sheetId,
+    item.id,
+    w.fields,
+    plan.patch,
+  );
   const check = checkWrite(item, plan.next, w.fields, plan.changedKeys, w.ctx, {
     isUnique: (f) => !conflicts.has(f.id),
   });
@@ -126,7 +139,11 @@ async function writeValues(
     if (error) return fromDbError(error);
     saved = toItem(data);
   } else if (protectedInputs.length > 0) {
-    const { data } = await who.supabase.from('items').select('updated_at').eq('id', item.id).single();
+    const { data } = await who.supabase
+      .from('items')
+      .select('updated_at')
+      .eq('id', item.id)
+      .single();
     if (data) saved = { ...item, updatedAt: data.updated_at };
   }
   if (change.note && check.commentRequired.length > 0) {
@@ -177,8 +194,16 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       const { values } = splitInputs(w.fields, v.values ?? {});
       const plan = planValues(blank, w.fields, values, w.ctx, sha256);
       if (plan.rejected.length > 0) return fail('invalid', plan.rejected[0]!.reason);
-      const conflicts = await uniqueConflicts(supabase, v.sheetId, null, w.fields, plan.next.values);
-      const check = checkCreate(plan.next, w.fields, w.ctx, { isUnique: (f) => !conflicts.has(f.id) });
+      const conflicts = await uniqueConflicts(
+        supabase,
+        v.sheetId,
+        null,
+        w.fields,
+        plan.next.values,
+      );
+      const check = checkCreate(plan.next, w.fields, w.ctx, {
+        isUnique: (f) => !conflicts.has(f.id),
+      });
       if (check.blocking.length > 0)
         return fail('blocked', check.blocking.map((i) => i.message).join(' '));
       const { data, error } = await supabase.rpc('create_item', {
@@ -223,7 +248,14 @@ export async function setValues(input: unknown): Promise<Result<ItemResult>> {
       const messages =
         r.data.changed.length > 0
           ? await automations(
-              [{ type: 'field_changed', sheetId: v.sheetId, itemId: item.id, fieldIds: r.data.changed }],
+              [
+                {
+                  type: 'field_changed',
+                  sheetId: v.sheetId,
+                  itemId: item.id,
+                  fieldIds: r.data.changed,
+                },
+              ],
               orgId,
               user.id,
             )
@@ -280,7 +312,12 @@ export async function bulkSetValues(input: unknown): Promise<Result<BulkResult>>
         }
         items.push(r.data.item);
         if (r.data.changed.length > 0)
-          events.push({ type: 'field_changed', sheetId: v.sheetId, itemId: item.id, fieldIds: r.data.changed });
+          events.push({
+            type: 'field_changed',
+            sheetId: v.sheetId,
+            itemId: item.id,
+            fieldIds: r.data.changed,
+          });
       }
       const messages = await automations(events, orgId, user.id);
       return ok({ items, skipped, messages, mutationId: v.mutationId });
@@ -331,7 +368,13 @@ export async function moveItems(input: unknown): Promise<Result<BulkResult>> {
         }
         items.push(toItem(data));
         if (item.groupId !== m.groupId)
-          events.push({ type: 'item_moved', sheetId: v.sheetId, itemId: m.itemId, from: item.groupId, to: m.groupId });
+          events.push({
+            type: 'item_moved',
+            sheetId: v.sheetId,
+            itemId: m.itemId,
+            from: item.groupId,
+            to: m.groupId,
+          });
       }
       const messages = await automations(events, orgId, user.id);
       return ok({ items, skipped, messages, mutationId: v.mutationId });
@@ -349,7 +392,12 @@ export async function archiveItems(input: unknown): Promise<Result<BulkResult>> 
     v.org,
     'editor',
     async ({ supabase, orgId, role, user }) => {
-      const w = await loadWriteContext(supabase, { orgId, userId: user.id, role }, v.sheetId, v.itemIds);
+      const w = await loadWriteContext(
+        supabase,
+        { orgId, userId: user.id, role },
+        v.sheetId,
+        v.itemIds,
+      );
       if (!w) return sheetNotFound();
       const items: Item[] = [];
       const skipped: BulkResult['skipped'] = [];
@@ -374,7 +422,11 @@ export async function archiveItems(input: unknown): Promise<Result<BulkResult>> 
           continue;
         }
         items.push(toItem(data));
-        events.push({ type: v.archived ? 'item_archived' : 'item_restored', sheetId: v.sheetId, itemId: id });
+        events.push({
+          type: v.archived ? 'item_archived' : 'item_restored',
+          sheetId: v.sheetId,
+          itemId: id,
+        });
       }
       const messages = await automations(events, orgId, user.id);
       return ok({ items, skipped, messages, mutationId: v.mutationId });
@@ -405,7 +457,13 @@ export async function lockItem(input: unknown): Promise<Result<ItemResult>> {
       });
       if (error) return fromDbError(error);
       const messages = await automations(
-        [{ type: v.locked ? 'item_locked' : 'item_unlocked', sheetId: v.sheetId, itemId: v.itemId }],
+        [
+          {
+            type: v.locked ? 'item_locked' : 'item_unlocked',
+            sheetId: v.sheetId,
+            itemId: v.itemId,
+          },
+        ],
         orgId,
         user.id,
       );
@@ -428,7 +486,9 @@ export async function setLinks(input: unknown): Promise<Result<LinksResult>> {
     v.org,
     'editor',
     async ({ supabase, orgId, role, user }) => {
-      const w = await loadWriteContext(supabase, { orgId, userId: user.id, role }, v.sheetId, [v.itemId]);
+      const w = await loadWriteContext(supabase, { orgId, userId: user.id, role }, v.sheetId, [
+        v.itemId,
+      ]);
       if (!w) return sheetNotFound();
       const item = w.items.get(v.itemId);
       if (!item || item.archivedAt) return itemNotFound();
@@ -497,7 +557,9 @@ export async function clickButton(input: unknown): Promise<Result<{ messages: st
     v.org,
     'editor',
     async ({ supabase, orgId, role, user }) => {
-      const w = await loadWriteContext(supabase, { orgId, userId: user.id, role }, v.sheetId, [v.itemId]);
+      const w = await loadWriteContext(supabase, { orgId, userId: user.id, role }, v.sheetId, [
+        v.itemId,
+      ]);
       if (!w) return sheetNotFound();
       const item = w.items.get(v.itemId);
       const field = w.fields.find((f) => f.id === v.fieldId);

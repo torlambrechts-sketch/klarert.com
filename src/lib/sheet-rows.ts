@@ -65,7 +65,9 @@ export function toField(r: Omit<FieldDbRow, 'org_id' | 'created_at' | 'updated_a
   };
 }
 
-export function toGroup(r: Pick<GroupDbRow, 'id' | 'sheet_id' | 'name' | 'color' | 'position'>): Group {
+export function toGroup(
+  r: Pick<GroupDbRow, 'id' | 'sheet_id' | 'name' | 'color' | 'position'>,
+): Group {
   return {
     id: r.id,
     sheetId: r.sheet_id,
@@ -75,8 +77,16 @@ export function toGroup(r: Pick<GroupDbRow, 'id' | 'sheet_id' | 'name' | 'color'
   };
 }
 
-export function toLink(r: Pick<LinkDbRow, 'id' | 'field_id' | 'from_item' | 'to_item' | 'position'>): LinkRow {
-  return { id: r.id, fieldId: r.field_id, fromItem: r.from_item, toItem: r.to_item, position: r.position };
+export function toLink(
+  r: Pick<LinkDbRow, 'id' | 'field_id' | 'from_item' | 'to_item' | 'position'>,
+): LinkRow {
+  return {
+    id: r.id,
+    fieldId: r.field_id,
+    fromItem: r.from_item,
+    toItem: r.to_item,
+    position: r.position,
+  };
 }
 
 export function toFile(r: FileDbRow): FileRow {

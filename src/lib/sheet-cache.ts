@@ -4,7 +4,15 @@ import type { LinkRow, ProtectedRow, SheetData } from '@/engine/sheet-data';
 import type { Field, Group, Item, Json } from '@/engine/types';
 
 const byPosition = <T extends { position: string; id: string }>(a: T, b: T) =>
-  a.position < b.position ? -1 : a.position > b.position ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  a.position < b.position
+    ? -1
+    : a.position > b.position
+      ? 1
+      : a.id < b.id
+        ? -1
+        : a.id > b.id
+          ? 1
+          : 0;
 
 export function patchItem(
   data: SheetData,
@@ -37,7 +45,10 @@ export function upsertItem(data: SheetData, item: Item): SheetData {
   if (i < 0) return { ...data, items: [...data.items, item].sort(byPosition) };
   const items = [...data.items];
   items[i] = item;
-  return { ...data, items: items[i]!.position === data.items[i]!.position ? items : items.sort(byPosition) };
+  return {
+    ...data,
+    items: items[i]!.position === data.items[i]!.position ? items : items.sort(byPosition),
+  };
 }
 
 export function removeItems(data: SheetData, ids: Iterable<string>): SheetData {
@@ -50,16 +61,28 @@ export function removeItems(data: SheetData, ids: Iterable<string>): SheetData {
   };
 }
 
-export function moveItem(data: SheetData, itemId: string, groupId: string, position: string): SheetData {
+export function moveItem(
+  data: SheetData,
+  itemId: string,
+  groupId: string,
+  position: string,
+): SheetData {
   const items = data.items.map((it) => (it.id === itemId ? { ...it, groupId, position } : it));
   return { ...data, items: items.sort(byPosition) };
 }
 
 /** Replace the targets of one link field on one item (positions follow the given order). */
-export function setLinks(data: SheetData, fieldId: string, fromItem: string, toIds: string[]): SheetData {
+export function setLinks(
+  data: SheetData,
+  fieldId: string,
+  fromItem: string,
+  toIds: string[],
+): SheetData {
   const kept = data.links.filter((l) => !(l.fieldId === fieldId && l.fromItem === fromItem));
   const existing = new Map(
-    data.links.filter((l) => l.fieldId === fieldId && l.fromItem === fromItem).map((l) => [l.toItem, l]),
+    data.links
+      .filter((l) => l.fieldId === fieldId && l.fromItem === fromItem)
+      .map((l) => [l.toItem, l]),
   );
   const next: LinkRow[] = toIds.map(
     (to, i) =>
@@ -77,7 +100,9 @@ export function setLinks(data: SheetData, fieldId: string, fromItem: string, toI
 /** Realtime: one link row inserted or updated. */
 export function upsertLink(data: SheetData, link: LinkRow): SheetData {
   const rest = data.links.filter(
-    (l) => l.id !== link.id && !(l.fieldId === link.fieldId && l.fromItem === link.fromItem && l.toItem === link.toItem),
+    (l) =>
+      l.id !== link.id &&
+      !(l.fieldId === link.fieldId && l.fromItem === link.fromItem && l.toItem === link.toItem),
   );
   if (!data.fields.some((f) => f.id === link.fieldId)) return data;
   return { ...data, links: [...rest, link] };
@@ -89,8 +114,13 @@ export function removeLink(data: SheetData, linkId: string): SheetData {
     : data;
 }
 
-export function setProtected(data: SheetData, row: ProtectedRow | { itemId: string; fieldId: string; value: null }) {
-  const rest = data.protectedValues.filter((p) => !(p.itemId === row.itemId && p.fieldId === row.fieldId));
+export function setProtected(
+  data: SheetData,
+  row: ProtectedRow | { itemId: string; fieldId: string; value: null },
+) {
+  const rest = data.protectedValues.filter(
+    (p) => !(p.itemId === row.itemId && p.fieldId === row.fieldId),
+  );
   return {
     ...data,
     protectedValues: row.value === null ? rest : [...rest, row as ProtectedRow],
@@ -98,7 +128,10 @@ export function setProtected(data: SheetData, row: ProtectedRow | { itemId: stri
 }
 
 /** Insert or replace a field; archived fields and fields of other sheets leave the cache. */
-export function upsertField(data: SheetData, field: Field & { archivedAt?: string | null }): SheetData {
+export function upsertField(
+  data: SheetData,
+  field: Field & { archivedAt?: string | null },
+): SheetData {
   if (field.sheetId !== data.sheet.id || field.archivedAt) return removeField(data, field.id);
   const rest = data.fields.filter((f) => f.id !== field.id);
   return { ...data, fields: [...rest, field].sort(byPosition) };
@@ -126,7 +159,11 @@ export function removeGroup(data: SheetData, groupId: string): SheetData {
  * Whether a realtime item row should replace the cached one: not while this browser has a write in flight for the
  * item (its own echo, or an older state), and never with an older row.
  */
-export function shouldApplyRemote(local: Item | undefined, remote: Item, pending: ReadonlySet<string>): boolean {
+export function shouldApplyRemote(
+  local: Item | undefined,
+  remote: Item,
+  pending: { has(id: string): boolean },
+): boolean {
   if (pending.has(remote.id)) return false;
   if (!local) return true;
   return remote.updatedAt > local.updatedAt;

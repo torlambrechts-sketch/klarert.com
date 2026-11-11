@@ -46,7 +46,10 @@ export const bulkSetValuesInput = z.object({
 
 export const moveItemsInput = z.object({
   ...base,
-  moves: z.array(z.object({ itemId: uuid, groupId: uuid, position })).min(1).max(5000),
+  moves: z
+    .array(z.object({ itemId: uuid, groupId: uuid, position }))
+    .min(1)
+    .max(5000),
 });
 
 export const archiveItemsInput = z.object({

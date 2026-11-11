@@ -30,7 +30,10 @@ function must<T>(r: { data: T | null; error: { message: string } | null }): T {
 
 async function paged<T>(
   count: number,
-  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
 ): Promise<T[]> {
   const pages = Math.max(1, Math.ceil(count / PAGE));
   const parts = await Promise.all(
@@ -41,7 +44,8 @@ async function paged<T>(
 
 async function chunked<T>(ids: string[], run: (ids: string[]) => PromiseLike<T[]>): Promise<T[]> {
   const out: T[] = [];
-  for (let i = 0; i < ids.length; i += ID_CHUNK) out.push(...(await run(ids.slice(i, i + ID_CHUNK))));
+  for (let i = 0; i < ids.length; i += ID_CHUNK)
+    out.push(...(await run(ids.slice(i, i + ID_CHUNK))));
   return out;
 }
 
@@ -51,7 +55,10 @@ const storageIds = (fields: Field[], storage: string) =>
 /** People, teams, job roles, entities and sites of a workspace. */
 export async function fetchDirectory(db: Db, orgId: string) {
   const [members, teams, teamMembers, jobRoles, entities, sites] = await Promise.all([
-    db.from('memberships').select('user_id, profiles(id, display_name, initials, color)').eq('org_id', orgId),
+    db
+      .from('memberships')
+      .select('user_id, profiles(id, display_name, initials, color)')
+      .eq('org_id', orgId),
     db.from('teams').select('id, name').eq('org_id', orgId).order('name'),
     db.from('team_members').select('team_id, user_id').eq('org_id', orgId),
     db.from('job_roles').select('id, name').eq('org_id', orgId).order('name'),
@@ -110,8 +117,11 @@ export async function fetchAttached(db: Db, fields: Field[], itemIds?: string[])
   const protectedFields = storageIds(fields, 'protected');
   const byItems = <Q extends { in: (c: string, v: string[]) => Q }>(q: Q, col: string) =>
     itemIds ? q.in(col, itemIds) : q;
-  const all = async <T,>(
-    make: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  const all = async <T>(
+    make: (
+      from: number,
+      to: number,
+    ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
   ) => {
     const out: T[] = [];
     for (let from = 0; ; from += PAGE) {
@@ -124,7 +134,10 @@ export async function fetchAttached(db: Db, fields: Field[], itemIds?: string[])
     linkFields.length
       ? all((a, b) =>
           byItems(
-            db.from('item_links').select('id, field_id, from_item, to_item, position').in('field_id', linkFields),
+            db
+              .from('item_links')
+              .select('id, field_id, from_item, to_item, position')
+              .in('field_id', linkFields),
             'from_item',
           )
             .order('id')
@@ -133,7 +146,10 @@ export async function fetchAttached(db: Db, fields: Field[], itemIds?: string[])
       : [],
     fileFields.length
       ? all((a, b) =>
-          byItems(db.from('files').select('*').in('field_id', fileFields).is('replaced_by', null), 'item_id')
+          byItems(
+            db.from('files').select('*').in('field_id', fileFields).is('replaced_by', null),
+            'item_id',
+          )
             .order('id')
             .range(a, b),
         )
@@ -141,7 +157,10 @@ export async function fetchAttached(db: Db, fields: Field[], itemIds?: string[])
     protectedFields.length
       ? all((a, b) =>
           byItems(
-            db.from('protected_values').select('item_id, field_id, value').in('field_id', protectedFields),
+            db
+              .from('protected_values')
+              .select('item_id, field_id, value')
+              .in('field_id', protectedFields),
             'item_id',
           )
             .order('item_id')
@@ -152,7 +171,11 @@ export async function fetchAttached(db: Db, fields: Field[], itemIds?: string[])
   return {
     links: links.map(toLink),
     files: files.map(toFile),
-    protectedValues: protectedValues.map((p) => ({ itemId: p.item_id, fieldId: p.field_id, value: p.value })),
+    protectedValues: protectedValues.map((p) => ({
+      itemId: p.item_id,
+      fieldId: p.field_id,
+      value: p.value,
+    })),
   };
 }
 
@@ -169,21 +192,46 @@ export async function fetchRelated(
   const sheetIds = [...new Set(items.map((i) => i.sheetId))].filter((id) => id !== sheetId);
   if (sheetIds.length === 0) return { sheets: [], fields: [], items };
   const [sheets, fields] = await Promise.all([
-    db.from('sheets').select('id, org_id, name, item_label, id_prefix, is_library').in('id', sheetIds),
-    db.from('fields').select(FIELD_COLUMNS).in('sheet_id', sheetIds).is('archived_at', null).order('position'),
+    db
+      .from('sheets')
+      .select('id, org_id, name, item_label, id_prefix, is_library')
+      .in('id', sheetIds),
+    db
+      .from('fields')
+      .select(FIELD_COLUMNS)
+      .in('sheet_id', sheetIds)
+      .is('archived_at', null)
+      .order('position'),
   ]);
   return { sheets: must(sheets).map(toSheet), fields: must(fields).map(toField), items };
 }
 
 export async function fetchSheetMeta(db: Db, sheetId: string) {
   const [sheet, fields, groups] = await Promise.all([
-    db.from('sheets').select('id, org_id, name, item_label, id_prefix, is_library').eq('id', sheetId).maybeSingle(),
-    db.from('fields').select(FIELD_COLUMNS).eq('sheet_id', sheetId).is('archived_at', null).order('position'),
-    db.from('groups').select('id, sheet_id, name, color, position').eq('sheet_id', sheetId).order('position'),
+    db
+      .from('sheets')
+      .select('id, org_id, name, item_label, id_prefix, is_library')
+      .eq('id', sheetId)
+      .maybeSingle(),
+    db
+      .from('fields')
+      .select(FIELD_COLUMNS)
+      .eq('sheet_id', sheetId)
+      .is('archived_at', null)
+      .order('position'),
+    db
+      .from('groups')
+      .select('id, sheet_id, name, color, position')
+      .eq('sheet_id', sheetId)
+      .order('position'),
   ]);
   const s = must(sheet);
   if (!s) return null;
-  return { sheet: toSheet(s), fields: must(fields).map(toField), groups: must(groups).map(toGroup) };
+  return {
+    sheet: toSheet(s),
+    fields: must(fields).map(toField),
+    groups: must(groups).map(toGroup),
+  };
 }
 
 /** The whole sheet for the grid. Null when the sheet does not exist or is not visible. */

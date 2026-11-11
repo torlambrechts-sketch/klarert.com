@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import './fields/registry';
-import { defaultSummary, summarise, summaryOptions } from './summaries';
+import { defaultSummary, summarise, summaryOptions, type Summary } from './summaries';
 import { makeCtx, makeField, makeFile, makeItem } from './testing/fixtures';
 
 const status = makeField('status', {
@@ -49,6 +49,8 @@ const ctx = makeCtx({
   ],
 });
 
+const valueOf = (s: Summary) => (s.kind === 'value' ? s.value : undefined);
+
 describe('summaries', () => {
   it('picks the default per kind, with average for percent', () => {
     expect(defaultSummary(num, ctx)).toBe('sum');
@@ -67,9 +69,9 @@ describe('summaries', () => {
 
   it('computes number functions', () => {
     expect(summarise(num, items, ctx).text).toBe('15');
-    expect(summarise(num, items, ctx, 'average').value).toBe(5);
-    expect(summarise(num, items, ctx, 'median').value).toBe(4);
-    expect(summarise(num, items, ctx, 'max').value).toBe(9);
+    expect(valueOf(summarise(num, items, ctx, 'average'))).toBe(5);
+    expect(valueOf(summarise(num, items, ctx, 'median'))).toBe(4);
+    expect(valueOf(summarise(num, items, ctx, 'max'))).toBe(9);
     expect(summarise(pct, items, ctx).text).toBe('75');
     expect(summarise(num, items, ctx, 'count_filled').text).toBe('3 of 4 filled');
   });
@@ -94,7 +96,7 @@ describe('summaries', () => {
     expect(summarise(check, items, ctx).text).toBe('25% checked');
     expect(summarise(check, items, ctx, 'count_checked').text).toBe('1 checked');
     expect(summarise(owner, items, ctx).text).toBe('2 of 4 filled');
-    expect(summarise(owner, items, ctx, 'distinct').value).toBe(2);
+    expect(valueOf(summarise(owner, items, ctx, 'distinct'))).toBe(2);
     const f = summarise(ev, items, ctx);
     expect(f.kind === 'segments' && f.segments.map((x) => [x.id, x.count])).toEqual([
       ['current', 1],

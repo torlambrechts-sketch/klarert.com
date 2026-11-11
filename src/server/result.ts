@@ -70,7 +70,11 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
     'The workflow step is set by automations only.',
   ],
   [/link target not allowed/, 'invalid', 'Choose items from the sheet this field links to.'],
-  [/field .* not in sheet|field .* cannot hold a value/, 'conflict', 'A field changed. Reload the sheet.'],
+  [
+    /field .* not in sheet|field .* cannot hold a value/,
+    'conflict',
+    'A field changed. Reload the sheet.',
+  ],
   [/item not found/, 'not_found', 'This item no longer exists or was archived.'],
   [/group not in sheet/, 'not_found', 'This group no longer exists.'],
   [/prefix locked/, 'conflict', 'The ID prefix is fixed once the sheet has items.'],

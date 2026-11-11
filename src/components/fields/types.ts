@@ -54,6 +54,8 @@ export interface FieldTypeUI<V = unknown, C = unknown> {
   toggle?(v: V | null): unknown;
   /** Width of the editor popover in px (default 260). */
   editorWidth?: number;
+  /** Only automations set this value (workflow step): bulk edit and paste leave it out. */
+  automationOnly?: boolean;
   /** Send expectedUpdatedAt so a concurrent edit is reported, not overwritten (docs/02 §5). */
   conflictCheck?: boolean;
 }
