@@ -1,5 +1,5 @@
 import 'server-only';
-import { getSession, isAdminRole, type Role } from '@/server/auth';
+import { getSession, isAdminRole, isEditorRole, type Role } from '@/server/auth';
 import { fail, type Result } from '@/server/result';
 
 type Ctx = NonNullable<Awaited<ReturnType<typeof getSession>>> & { orgId: string; role: Role };
@@ -7,7 +7,7 @@ type Ctx = NonNullable<Awaited<ReturnType<typeof getSession>>> & { orgId: string
 /** Authorise a command against a workspace by slug. RLS enforces the same rule again in the database. */
 export async function withOrg<T>(
   slug: string,
-  need: 'member' | 'admin',
+  need: 'member' | 'editor' | 'admin',
   run: (ctx: Ctx) => Promise<Result<T>>,
   command: string,
 ): Promise<Result<T>> {
@@ -23,6 +23,8 @@ export async function withOrg<T>(
   if (!m) return fail('not_found', 'Workspace not found.');
   if (need === 'admin' && !isAdminRole(m.role))
     return fail('forbidden', 'Only owners and admins can do that.');
+  if (need === 'editor' && !isEditorRole(m.role))
+    return fail('forbidden', 'Viewers cannot change sheets. Ask an editor or admin.');
   const result = await run({ ...session, orgId: m.orgs.id, role: m.role });
   log(command, { org: m.orgs.id, user: session.user.id, ms: Date.now() - started, ok: result.ok });
   return result;
