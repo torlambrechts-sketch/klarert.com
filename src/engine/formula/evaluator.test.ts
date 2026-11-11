@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { type FormulaEnv, type FormulaResult, coerceResult, evaluateFormula, formulaError, parseFormula } from './index';
+import {
+  type FormulaEnv,
+  type FormulaResult,
+  coerceResult,
+  evaluateFormula,
+  formulaError,
+  parseFormula,
+} from './index';
 
 const refs: Record<string, FormulaResult> = {
   likelihood: 4,
@@ -128,7 +135,15 @@ describe('evaluateFormula', () => {
   });
 
   it('never throws on hostile input', () => {
-    for (const src of ['constructor()', '__proto__', '{a}{b}', '"\\', 'IF(', ')))', 'process.exit()']) {
+    for (const src of [
+      'constructor()',
+      '__proto__',
+      '{a}{b}',
+      '"\\',
+      'IF(',
+      ')))',
+      'process.exit()',
+    ]) {
       expect(() => run(src)).not.toThrow();
     }
   });

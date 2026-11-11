@@ -13,7 +13,10 @@ export const formulaError = (error: FormulaErrorCode, message?: string): Formula
   message === undefined ? { error } : { error, message };
 
 export const isFormulaError = (v: unknown): v is FormulaError =>
-  typeof v === 'object' && v !== null && 'error' in v && typeof (v as FormulaError).error === 'string';
+  typeof v === 'object' &&
+  v !== null &&
+  'error' in v &&
+  typeof (v as FormulaError).error === 'string';
 
 const NUMERIC = /^\s*[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?\s*$/i;
 export const isNumericText = (s: string) => NUMERIC.test(s);
@@ -74,7 +77,9 @@ function roundTo(x: number, d: number): number {
 
 function dateArg(v: FormulaValue): string | '' | FormulaError {
   if (v === '') return '';
-  return typeof v === 'string' && isIsoDate(v) ? v : formulaError('#ERR', 'Expected a date (YYYY-MM-DD)');
+  return typeof v === 'string' && isIsoDate(v)
+    ? v
+    : formulaError('#ERR', 'Expected a date (YYYY-MM-DD)');
 }
 
 export const FUNCTIONS: Record<string, FormulaFunction> = {

@@ -56,7 +56,8 @@ function call(name: string, argNodes: Node[], env: FormulaEnv): FormulaResult {
   }
   const fn = lookupFunction(name);
   if (!fn?.call) return formulaError('#ERR', `Unknown function ${name}`);
-  if (argNodes.length < fn.minArgs || argNodes.length > fn.maxArgs) return formulaError('#ERR', `Wrong number of arguments for ${name}`);
+  if (argNodes.length < fn.minArgs || argNodes.length > fn.maxArgs)
+    return formulaError('#ERR', `Wrong number of arguments for ${name}`);
   const args: FormulaValue[] = [];
   for (const a of argNodes) {
     const v = evaluate(a, env);
@@ -67,10 +68,16 @@ function call(name: string, argNodes: Node[], env: FormulaEnv): FormulaResult {
 }
 
 function finite(v: FormulaResult): FormulaResult {
-  return typeof v === 'number' && !Number.isFinite(v) ? formulaError('#ERR', 'The result is not a finite number') : v;
+  return typeof v === 'number' && !Number.isFinite(v)
+    ? formulaError('#ERR', 'The result is not a finite number')
+    : v;
 }
 
-function arithmetic(a: FormulaValue, b: FormulaValue, f: (x: number, y: number) => FormulaResult): FormulaResult {
+function arithmetic(
+  a: FormulaValue,
+  b: FormulaValue,
+  f: (x: number, y: number) => FormulaResult,
+): FormulaResult {
   const x = toNum(a);
   if (isFormulaError(x)) return x;
   const y = toNum(b);

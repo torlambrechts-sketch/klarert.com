@@ -1,7 +1,14 @@
 // Public API of the formula language (docs/03 §7). Pure; no eval, no new Function.
 import { isIsoDate } from '../fields/helpers';
 import { type FormulaEnv, type FormulaResult, evaluate } from './evaluator';
-import { type FormulaError, type FormulaValue, formulaError, isFormulaError, isNumericText, truthy } from './functions';
+import {
+  type FormulaError,
+  type FormulaValue,
+  formulaError,
+  isFormulaError,
+  isNumericText,
+  truthy,
+} from './functions';
 import { type Node, type ParseResult, parse, referencedKeysOf } from './parser';
 
 export type { FormulaEnv, FormulaResult, Node as FormulaAst, ParseResult };
@@ -12,7 +19,8 @@ export type FormulaResultType = 'auto' | 'number' | 'text' | 'date' | 'boolean';
 
 /** References that are not fields: item name, display id and group name. */
 export const SPECIAL_REFS = ['name', 'id', 'group'] as const;
-export const isSpecialRef = (key: string) => (SPECIAL_REFS as readonly string[]).includes(key.toLowerCase());
+export const isSpecialRef = (key: string) =>
+  (SPECIAL_REFS as readonly string[]).includes(key.toLowerCase());
 
 export function parseFormula(src: string): ParseResult {
   return parse(src);
@@ -49,7 +57,9 @@ export function coerceResult(v: FormulaResult, result: FormulaResultType): Formu
     case 'text':
       return typeof v === 'boolean' ? (v ? 'TRUE' : 'FALSE') : String(v);
     case 'date':
-      return typeof v === 'string' && ISO_DATE.test(v) && isIsoDate(v) ? v : formulaError('#ERR', 'The result is not a date');
+      return typeof v === 'string' && ISO_DATE.test(v) && isIsoDate(v)
+        ? v
+        : formulaError('#ERR', 'The result is not a date');
     case 'boolean':
       return truthy(v);
   }

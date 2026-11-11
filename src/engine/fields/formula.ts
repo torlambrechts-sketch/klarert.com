@@ -10,7 +10,16 @@ import {
   resultToValue,
 } from '../formula';
 import type { Ctx, Field, Item } from '../types';
-import { base, cmpNumber, cmpText, emptyLast, formatDate, formatNumber, isIsoDate, parseNumber } from './helpers';
+import {
+  base,
+  cmpNumber,
+  cmpText,
+  emptyLast,
+  formatDate,
+  formatNumber,
+  isIsoDate,
+  parseNumber,
+} from './helpers';
 import { resolveFieldType } from './resolve';
 import type { ValueKind } from './types';
 
@@ -25,7 +34,9 @@ export interface FormulaConfig {
 const MAX_DEPTH = 4;
 
 /** Value kind a formula's result has, for filters and conditions; `auto` reads as text. */
-export function formulaKind(cfg: FormulaConfig): Extract<ValueKind, 'number' | 'date' | 'text' | 'boolean'> {
+export function formulaKind(
+  cfg: FormulaConfig,
+): Extract<ValueKind, 'number' | 'date' | 'text' | 'boolean'> {
   return cfg.result === 'auto' ? 'text' : cfg.result;
 }
 
@@ -56,7 +67,8 @@ function resolveRef(key: string, item: Item, ctx: Ctx, stack: string[]): Formula
   if (special === 'group') return ctx.groups.get(item.groupId)?.name ?? '';
   const target = ctx.fieldsByKey.get(key);
   if (!target) return formulaError('#REF', `No field with key ${key}`);
-  if (target.type === formula.id) return evalField(item, target as Field<FormulaConfig>, ctx, stack);
+  if (target.type === formula.id)
+    return evalField(item, target as Field<FormulaConfig>, ctx, stack);
   const def = resolveFieldType(target.type);
   if (!def) return formulaError('#REF', `Unknown field type ${target.type}`);
   const v = rawValue(item, target, ctx);
@@ -68,7 +80,12 @@ function resolveRef(key: string, item: Item, ctx: Ctx, stack: string[]): Formula
 }
 
 /** `stack` holds the keys of the formulas currently being evaluated above this one. */
-function evalField(item: Item, field: Field<FormulaConfig>, ctx: Ctx, stack: string[]): FormulaResult {
+function evalField(
+  item: Item,
+  field: Field<FormulaConfig>,
+  ctx: Ctx,
+  stack: string[],
+): FormulaResult {
   if (stack.includes(field.key)) return formulaError('#LOOP', 'The formula refers to itself');
   if (stack.length > MAX_DEPTH) return formulaError('#LOOP', 'Formulas are nested too deeply');
   const expr = field.config.expr ?? '';
@@ -76,7 +93,10 @@ function evalField(item: Item, field: Field<FormulaConfig>, ctx: Ctx, stack: str
   const ast = astOf(expr);
   if (!ast) return formulaError('#ERR', 'The formula has a syntax error');
   const inner = [...stack, field.key];
-  const raw = evaluateFormula(ast, { today: ctx.today, ref: (key) => resolveRef(key, item, ctx, inner) });
+  const raw = evaluateFormula(ast, {
+    today: ctx.today,
+    ref: (key) => resolveRef(key, item, ctx, inner),
+  });
   return coerceResult(raw, field.config.result ?? 'auto');
 }
 
@@ -105,7 +125,10 @@ export const formula = base<FormulaFieldValue, FormulaConfig>({
   storage: 'computed',
   kind: 'number',
   valueSchema: z.union([z.number().finite(), z.string(), z.boolean()]),
-  configSchema: z.object({ expr: z.string(), result: z.enum(['auto', 'number', 'text', 'date', 'boolean']) }),
+  configSchema: z.object({
+    expr: z.string(),
+    result: z.enum(['auto', 'number', 'text', 'date', 'boolean']),
+  }),
   defaultConfig: () => ({ expr: '', result: 'auto' }),
   defaultWidth: 130,
   formAllowed: false,

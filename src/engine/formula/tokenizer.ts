@@ -10,7 +10,8 @@ export type Token =
 
 export type Operator = '+' | '-' | '*' | '/' | '%' | '&' | '=' | '<>' | '<' | '>' | '<=' | '>=';
 
-export type TokenizeResult = { ok: true; tokens: Token[] } | { ok: false; message: string; pos: number };
+export type TokenizeResult =
+  { ok: true; tokens: Token[] } | { ok: false; message: string; pos: number };
 
 const TWO_CHAR: readonly string[] = ['<=', '>=', '<>'];
 const ONE_CHAR = '+-*/%&=<>';
@@ -41,7 +42,8 @@ export function tokenize(src: string): TokenizeResult {
         value += src[j];
         j++;
       }
-      if (j >= src.length) return { ok: false, message: 'Text is missing its closing quote', pos: i };
+      if (j >= src.length)
+        return { ok: false, message: 'Text is missing its closing quote', pos: i };
       tokens.push({ type: 'str', value, pos: i });
       i = j + 1;
       continue;

@@ -71,7 +71,8 @@ class Parser {
 
   private expect(v: '(' | ')' | ','): void {
     const t = this.next();
-    if (t.type !== 'punct' || t.value !== v) throw new SyntaxError_(`Expected "${v}" but found ${describe(t)}`);
+    if (t.type !== 'punct' || t.value !== v)
+      throw new SyntaxError_(`Expected "${v}" but found ${describe(t)}`);
   }
 
   private binaryLevel(ops: readonly Operator[], operand: () => Node): Node {
@@ -117,7 +118,8 @@ class Parser {
 
   private identifier(raw: string): Node {
     const name = raw.toUpperCase();
-    if ((name === 'TRUE' || name === 'FALSE') && !this.isPunct('(')) return { type: 'bool', value: name === 'TRUE' };
+    if ((name === 'TRUE' || name === 'FALSE') && !this.isPunct('('))
+      return { type: 'bool', value: name === 'TRUE' };
     const fn = lookupFunction(name);
     if (!fn) throw new SyntaxError_(`Unknown function ${raw}`);
     this.expect('(');
@@ -131,8 +133,15 @@ class Parser {
     }
     this.expect(')');
     if (args.length < fn.minArgs || args.length > fn.maxArgs) {
-      const want = fn.minArgs === fn.maxArgs ? `${fn.minArgs}` : fn.maxArgs === Infinity ? `at least ${fn.minArgs}` : `${fn.minArgs} to ${fn.maxArgs}`;
-      throw new SyntaxError_(`${name} takes ${want} argument${want.endsWith(' 1') || want === '1' ? '' : 's'}, not ${args.length}`);
+      const want =
+        fn.minArgs === fn.maxArgs
+          ? `${fn.minArgs}`
+          : fn.maxArgs === Infinity
+            ? `at least ${fn.minArgs}`
+            : `${fn.minArgs} to ${fn.maxArgs}`;
+      throw new SyntaxError_(
+        `${name} takes ${want} argument${want.endsWith(' 1') || want === '1' ? '' : 's'}, not ${args.length}`,
+      );
     }
     return { type: 'call', name, args };
   }

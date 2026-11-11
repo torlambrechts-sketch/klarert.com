@@ -72,7 +72,11 @@ describe('parse', () => {
 
 describe('referencedKeys', () => {
   it('lists field keys once, without name/id/group', () => {
-    expect(referencedKeys('{a} + {b} * {a} & {name} & {ID} & {group} & { c }')).toEqual(['a', 'b', 'c']);
+    expect(referencedKeys('{a} + {b} * {a} & {name} & {ID} & {group} & { c }')).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
   });
   it('works while the formula is still being typed', () => {
     expect(referencedKeys('IF({status} = "Done", {due')).toEqual(['status']);
