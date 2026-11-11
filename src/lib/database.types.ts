@@ -1046,6 +1046,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_protected_value":
+{ Args: { "p_field": string,"p_item": string,"p_note"?: string,"p_value": string }; Returns: undefined
+                           },
 "submit_form":
 { Args: { "p_name": string,"p_position": string,"p_token": string,"p_values": Json }; Returns: {
               "archived_at": string | null,
