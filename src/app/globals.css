@@ -1,0 +1,114 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Tokens from docs/05 §6. Yellow is for navigation only, never for buttons. */
+:root {
+  --yel: #f7c948;
+  --yel-2: #fff6d6;
+  --ink: #111111;
+  --muted: #5e5c57;
+  --line: #e3e0d8;
+  --soft: #f7f6f2;
+  --brand: #16181d;
+  --focus: #2c4fd0;
+  --sel: #eef1f6;
+  --good: #188a50;
+  --warn: #8a5a00;
+  --crit: #b4232b;
+
+  --label-grey: #b4bcc4;
+  --label-blue: #2f6fd6;
+  --label-navy: #2f4f8f;
+  --label-teal: #0b8389;
+  --label-green: #188a50;
+  --label-yellow: #e5b526;
+  --label-orange: #c46a0a;
+  --label-red: #c93a46;
+  --label-pink: #c24e88;
+  --label-purple: #7e52c6;
+  --label-dark: #55606b;
+
+  --radius-card: 4px;
+  --radius-control: 8px;
+
+  /* shadcn/ui variables mapped onto the tokens */
+  --background: #ffffff;
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--soft);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --accent: var(--sel);
+  --accent-foreground: var(--ink);
+  --destructive: var(--crit);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--focus);
+  --radius: var(--radius-control);
+}
+
+@theme inline {
+  --color-yel: var(--yel);
+  --color-yel-2: var(--yel-2);
+  --color-ink: var(--ink);
+  --color-line: var(--line);
+  --color-soft: var(--soft);
+  --color-brand: var(--brand);
+  --color-focus: var(--focus);
+  --color-sel: var(--sel);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-crit: var(--crit);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--soft);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: 6px;
+  --radius-md: var(--radius-control);
+  --radius-lg: 10px;
+  --radius-card: var(--radius-card);
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-size: 13.5px;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
