@@ -883,6 +883,12 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_items":
+{ Args: { "p_group": string,"p_rows": Json,"p_sheet": string }; Returns: number
+                           },
+"create_sheet":
+{ Args: { "p": Json }; Returns: string
+                           },
 "create_workspace":
 { Args: { "p_name": string,"p_slug": string,"p_time_zone"?: string }; Returns: {
               "created_at": string,
@@ -898,6 +904,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"delete_group":
+{ Args: { "p_group": string,"p_positions"?: Json,"p_target"?: string }; Returns: number
+                           },
 "field_types":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
                            },
