@@ -79,8 +79,38 @@ function SheetContent({
   );
 }
 
+/** Right side sheet (field settings, docs/05 §3.5). Full width on phones. */
+function SideSheetContent({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content>) {
+  return (
+    <DialogPrimitive.Portal>
+      <DialogOverlay className="bg-black/30" />
+      <DialogPrimitive.Content
+        data-slot="side-sheet-content"
+        className={cn(
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-[min(470px,100vw)] flex-col bg-white shadow-xl',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        <DialogPrimitive.Close
+          className="hover:bg-soft absolute top-3 right-3 rounded-md p-1"
+          aria-label="Close"
+        >
+          <XIcon className="size-4" aria-hidden />
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </DialogPrimitive.Portal>
+  );
+}
+
 export {
   Dialog,
+  SideSheetContent,
   DialogClose,
   DialogContent,
   DialogDescription,
