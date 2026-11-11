@@ -21,6 +21,9 @@
     "seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",
     "class-variance-authority": "^0.7.1",
@@ -29,6 +32,7 @@
     "libphonenumber-js": "^1.13.16",
     "lucide-react": "^1.72.0",
     "next": "15.5.29",
+    "papaparse": "^5.7.1",
     "radix-ui": "^1.8.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -45,6 +49,7 @@
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.2.0",

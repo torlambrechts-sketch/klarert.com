@@ -35,31 +35,30 @@ export function fieldKeyFromName(name: string, taken: Iterable<string>): string 
 }
 
 /**
- * Suggested ID prefix from a sheet name (^[A-Z0-9]{1,6}-$, unique per workspace):
- * initials of up to three words ("Corrective actions" → "CA-"), else the first letters of one word ("Risks" → "RIS-").
+ * Suggested ID prefix from a sheet name (templates/starts.json rules.idPrefix): first letters of up to three words,
+ * upper case, plus "-" ("Corrective actions" → "CA-", "Risks" → "R-"); made unique in the workspace (CA-, CA2-).
+ * Always matches ^[A-Z0-9]{1,6}-$.
  */
 export function suggestIdPrefix(name: string, taken: Iterable<string>): string {
   const used = new Set(taken);
   const words = name
     .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
+    .replace(/Æ/g, 'AE')
+    .replace(/Ø/g, 'O')
     .replace(/[^A-Z0-9 ]+/g, ' ')
     .split(/\s+/)
     .filter(Boolean);
-  const letters = words.join('');
-  const first =
-    words.length > 1
-      ? words
-          .slice(0, 3)
-          .map((w) => w[0])
-          .join('')
-      : letters.slice(0, 3);
-  const stem = (first || 'IT').slice(0, 5);
+  const stem =
+    words
+      .slice(0, 3)
+      .map((w) => w[0])
+      .join('') || 'IT';
   if (!used.has(`${stem}-`)) return `${stem}-`;
-  for (let n = 2; n < 100; n += 1) {
+  for (let n = 2; n < 100000; n += 1) {
     const candidate = `${stem.slice(0, 6 - String(n).length)}${n}-`;
     if (!used.has(candidate)) return candidate;
   }
-  return `${stem.slice(0, 3)}X-`;
+  return `${stem}-`;
 }

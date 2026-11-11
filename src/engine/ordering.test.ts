@@ -46,7 +46,11 @@ describe('fieldKeyFromName', () => {
 describe('suggestIdPrefix', () => {
   it.each([
     ['Corrective actions', [], 'CA-'],
-    ['Risks', [], 'RIS-'],
+    ['Risks', [], 'R-'],
+    ['Risks', ['R-'], 'R2-'],
+    ['Supplier risk review board', [], 'SRR-'],
+    ['Øvelser og tiltak', [], 'OOT-'],
+    ['2026 audits', [], '2A-'],
     ['Hazards (HIRA) register', [], 'HHR-'],
     ['Corrective actions', ['CA-'], 'CA2-'],
     ['Corrective actions', ['CA-', 'CA2-'], 'CA3-'],
