@@ -76,13 +76,13 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M5: the item panel per docs/05 §3.4 (Details with summary, linked items both ways, all fields; Updates with mentions; Activity log with Verify), file upload with SHA-256 per docs/02 §8, two-way links, lookup and rollup."
 
-- [ ] Panel opens from name click, `?item=` in URL, J/K navigation, Expand, Copy link, Esc
-- [ ] Details summary strip, linked items (outgoing + incoming), all fields editable respecting visibility; "Automations on this item" placeholder (wired in M8)
-- [ ] Updates: post, @mention people and job roles → notifications; edit/delete own update within 15 min (logged)
-- [ ] Activity log: readable lines for every action type; Verify calls `verify_activity_chain`
-- [ ] Files: prepare/confirm upload, hash check server-side, versions (replace keeps old), evidence freshness, download via signed URL; `log_file_event` RPC migration
-- [ ] Two-way link fields: wizard creates the inverse field; editing either side updates both; link picker searches the target sheet
-- [ ] Lookup and rollup compute from linked items (cached items of other sheets loaded on demand)
+- [x] Panel opens from name click, `?item=` in URL, J/K navigation, Expand, Copy link, Esc
+- [x] Details summary strip, linked items (outgoing + incoming), all fields editable respecting visibility; "Automations on this item" placeholder (wired in M8)
+- [x] Updates: post, @mention people and job roles → notifications; edit/delete own update within 15 min (logged)
+- [x] Activity log: readable lines for every action type; Verify calls `verify_activity_chain`
+- [x] Files: prepare/confirm upload, hash check server-side, versions (replace keeps old), evidence freshness, download via signed URL; `log_file_event` RPC migration
+- [x] Two-way link fields: wizard creates the inverse field; editing either side updates both; link picker searches the target sheet
+- [x] Lookup and rollup compute from linked items (cached items of other sheets loaded on demand)
 
 ## M6 · List, Kanban, Calendar, Form, filters, views  [Sonnet]
 
