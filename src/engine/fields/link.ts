@@ -13,7 +13,11 @@ export interface LinkConfig {
 // ───────────── reading other fields (shared by lookup, rollup, progress) ─────────────
 
 /** A field of the sheet an item or field belongs to, by its stable key. */
-export function fieldByKey(sheetId: string, key: string | null | undefined, ctx: Ctx): Field | undefined {
+export function fieldByKey(
+  sheetId: string,
+  key: string | null | undefined,
+  ctx: Ctx,
+): Field | undefined {
   if (!key) return undefined;
   return ctx.fieldsOf(sheetId).find((f) => f.key === key);
 }
@@ -95,7 +99,8 @@ export const link: FieldTypeDef<string[], LinkConfig> = base<string[], LinkConfi
   validate: (v, field, _item, ctx) => {
     const ids = v ?? [];
     const issues = [];
-    if (!field.config.multiple && ids.length > 1) issues.push(issue(field, 'single_only', 'Choose one item.'));
+    if (!field.config.multiple && ids.length > 1)
+      issues.push(issue(field, 'single_only', 'Choose one item.'));
     const wrong = ids.some((id) => {
       const t = ctx.item(id);
       return t !== undefined && t.sheetId !== field.config.targetSheetId;
@@ -110,5 +115,6 @@ export const link: FieldTypeDef<string[], LinkConfig> = base<string[], LinkConfi
   isEmpty: isBlank,
   toText: (v, _cfg, ctx) => text(v, ctx),
   toNumber: (v) => (v ? v.length : null),
-  compare: (a, b, _cfg, ctx) => emptyLast(a, b, isBlank, (x, y) => cmpText(text(x, ctx), text(y, ctx))),
+  compare: (a, b, _cfg, ctx) =>
+    emptyLast(a, b, isBlank, (x, y) => cmpText(text(x, ctx), text(y, ctx))),
 });

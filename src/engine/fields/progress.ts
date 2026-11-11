@@ -19,7 +19,9 @@ const pct = (part: number, whole: number) => Math.round((part / whole) * 100);
 function checklistProgress(item: Item, source: Field, ctx: Ctx): number | null {
   const lines = (source.config as { lines?: unknown } | null)?.lines;
   if (!Array.isArray(lines) || !lines.length) return null;
-  const answers = (readValue(item, source, ctx) as { answers?: Record<string, { a?: unknown }> } | null)?.answers ?? {};
+  const answers =
+    (readValue(item, source, ctx) as { answers?: Record<string, { a?: unknown }> } | null)
+      ?.answers ?? {};
   const answered = lines.filter((l) => {
     const id = (l as { id?: unknown }).id;
     return typeof id === 'string' && ['yes', 'no', 'na'].includes(String(answers[id]?.a));
@@ -43,7 +45,9 @@ export function computeProgress(item: Item, field: Field<ProgressConfig>, ctx: C
   if (source.type === 'checklist') return checklistProgress(item, source, ctx);
   if (LINK_TYPES.has(source.type) || resolveFieldType(source.type)?.kind === 'link') {
     const targets = linkedItems(item, source, ctx);
-    return targets.length ? pct(targets.filter((t) => isStatusDone(t, ctx)).length, targets.length) : null;
+    return targets.length
+      ? pct(targets.filter((t) => isStatusDone(t, ctx)).length, targets.length)
+      : null;
   }
   return null;
 }

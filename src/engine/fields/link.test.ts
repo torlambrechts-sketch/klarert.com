@@ -24,7 +24,10 @@ describe('link', () => {
     ctx,
     valid: [
       ['i-c1', ['i-c1']],
-      [['i-c1', 'i-c2', 'i-c1'], ['i-c1', 'i-c2']],
+      [
+        ['i-c1', 'i-c2', 'i-c1'],
+        ['i-c1', 'i-c2'],
+      ],
       ['i-c1, i-c2', ['i-c1', 'i-c2']],
     ],
     invalid: [[], '', null, 42, [1, 2]],
@@ -56,9 +59,13 @@ describe('link', () => {
 
   it('refuses items from another sheet and a second item when single', () => {
     expect(link.validate(['i-c1', 'i-c2'], field, a, ctx)).toEqual([]);
-    expect(link.validate(['i-c1', 'i-x'], field, a, ctx).map((i) => i.code)).toEqual(['wrong_sheet']);
+    expect(link.validate(['i-c1', 'i-x'], field, a, ctx).map((i) => i.code)).toEqual([
+      'wrong_sheet',
+    ]);
     const single = { ...field, config: { ...cfg, multiple: false } };
-    expect(link.validate(['i-c1', 'i-c2'], single, a, ctx).map((i) => i.code)).toEqual(['single_only']);
+    expect(link.validate(['i-c1', 'i-c2'], single, a, ctx).map((i) => i.code)).toEqual([
+      'single_only',
+    ]);
     expect(link.validate(['i-c1'], single, a, ctx)).toEqual([]);
   });
 

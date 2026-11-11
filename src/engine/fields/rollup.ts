@@ -5,7 +5,16 @@ import { fieldByKey, linkedItems, readValue } from './link';
 import { resolveFieldType } from './resolve';
 import type { AnyFieldType, FieldTypeDef } from './types';
 
-export const ROLLUP_FNS = ['count', 'sum', 'avg', 'min', 'max', 'pctDone', 'countEmpty', 'countWhere'] as const;
+export const ROLLUP_FNS = [
+  'count',
+  'sum',
+  'avg',
+  'min',
+  'max',
+  'pctDone',
+  'countEmpty',
+  'countWhere',
+] as const;
 export type RollupFn = (typeof ROLLUP_FNS)[number];
 
 const WHERE_OPS = ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'is_empty', 'is_not_empty'] as const;
@@ -43,7 +52,8 @@ function matches(t: Target, where: RollupWhere, ctx: Ctx): boolean {
     const w = where.value;
     const same =
       (typeof w === 'string' &&
-        (t.value === w || t.def.toText(t.value, t.field.config, ctx).toLowerCase() === w.trim().toLowerCase())) ||
+        (t.value === w ||
+          t.def.toText(t.value, t.field.config, ctx).toLowerCase() === w.trim().toLowerCase())) ||
       (w === null && empty);
     return where.op === 'eq' ? same : !same;
   }
@@ -67,7 +77,9 @@ function matches(t: Target, where: RollupWhere, ctx: Ctx): boolean {
 /** The target field to read on a linked item; pctDone without a target uses the sheet's first status field. */
 function targetField(t: Item, cfg: RollupConfig, ctx: Ctx): Field | undefined {
   if (cfg.targetFieldKey) return fieldByKey(t.sheetId, cfg.targetFieldKey, ctx);
-  return cfg.fn === 'pctDone' ? ctx.fieldsOf(t.sheetId).find((f) => f.type === 'status') : undefined;
+  return cfg.fn === 'pctDone'
+    ? ctx.fieldsOf(t.sheetId).find((f) => f.type === 'status')
+    : undefined;
 }
 
 export function computeRollup(item: Item, field: Field<RollupConfig>, ctx: Ctx): number | null {
@@ -116,7 +128,9 @@ export const rollup: FieldTypeDef<number, RollupConfig> = base<number, RollupCon
     linkFieldKey: z.string(),
     targetFieldKey: z.string().min(1).nullable(),
     fn: z.enum(ROLLUP_FNS),
-    where: z.object({ op: z.enum(WHERE_OPS), value: z.custom<Json>((x) => x !== undefined).optional() }).optional(),
+    where: z
+      .object({ op: z.enum(WHERE_OPS), value: z.custom<Json>((x) => x !== undefined).optional() })
+      .optional(),
   }) as z.ZodType<RollupConfig>,
   defaultConfig: () => ({ linkFieldKey: '', targetFieldKey: null, fn: 'count' }),
   defaultWidth: 110,
@@ -128,7 +142,8 @@ export const rollup: FieldTypeDef<number, RollupConfig> = base<number, RollupCon
   parseText: (t) => parseNumber(t),
   compute: computeRollup,
   isEmpty,
-  toText: (v, cfg) => (isEmpty(v) ? '' : `${formatNumber(v!, 2)}${cfg.fn === 'pctDone' ? '%' : ''}`),
+  toText: (v, cfg) =>
+    isEmpty(v) ? '' : `${formatNumber(v!, 2)}${cfg.fn === 'pctDone' ? '%' : ''}`,
   toNumber: (v) => (isEmpty(v) ? null : v),
   compare: (a, b) => emptyLast(a, b, isEmpty, cmpNumber),
 });

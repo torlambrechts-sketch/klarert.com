@@ -4,7 +4,8 @@ import { base, cmpText, emptyLast, isBlank } from './helpers';
 const MAX = 20000;
 
 /** Excel/Sheets wrap multi-line cells in quotes with doubled inner quotes. */
-const unquote = (s: string) => (/^"[\s\S]*"$/.test(s) && /\n/.test(s) ? s.slice(1, -1).replace(/""/g, '"') : s);
+const unquote = (s: string) =>
+  /^"[\s\S]*"$/.test(s) && /\n/.test(s) ? s.slice(1, -1).replace(/""/g, '"') : s;
 
 const clean = (input: unknown): string | null => {
   if (typeof input !== 'string' && typeof input !== 'number') return null;

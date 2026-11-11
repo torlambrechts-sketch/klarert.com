@@ -61,7 +61,7 @@ function normalizeChecklist(input: unknown, cfg: ChecklistConfig): ChecklistValu
       const obj = e && typeof e === 'object' ? (e as Record<string, unknown>) : { a: e };
       const r = entrySchema.safeParse({ ...obj, a: answerOf(obj.a) });
       if (!r.success) return null;
-      answers[id] = Object.fromEntries(Object.entries(r.data).filter(([, x]) => x !== undefined)) as ChecklistEntry;
+      answers[id] = Object.fromEntries(Object.entries(r.data).filter(([, x]) => x !== undefined)) as unknown as ChecklistEntry;
     }
   } else {
     return null;

@@ -56,9 +56,20 @@ function normalize(input: unknown, _cfg: AiConfig, ctx: Ctx): AiValue | null {
     });
     return parsed.success && !isBlank(parsed.data.proposal) ? parsed.data : null;
   }
-  if (isBlank(input) || (!['string', 'number', 'boolean'].includes(typeof input) && !Array.isArray(input))) return null;
+  if (
+    isBlank(input) ||
+    (!['string', 'number', 'boolean'].includes(typeof input) && !Array.isArray(input))
+  )
+    return null;
   const proposal = typeof input === 'string' ? input.trim() : (input as Json);
-  return { proposal, source: '', model: '', status: 'proposed', by: null, at: ctx.now.toISOString() };
+  return {
+    proposal,
+    source: '',
+    model: '',
+    status: 'proposed',
+    by: null,
+    at: ctx.now.toISOString(),
+  };
 }
 
 function proposalText(proposal: Json, cfg: AiConfig, ctx: Ctx): string {

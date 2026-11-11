@@ -10,7 +10,10 @@ describe('duration', () => {
       ['2w', { n: 2, unit: 'weeks' }],
       ['4 hours', { n: 4, unit: 'hours' }],
       [5, { n: 5, unit: 'days' }],
-      [{ n: 1, unit: 'year' }, { n: 1, unit: 'years' }],
+      [
+        { n: 1, unit: 'year' },
+        { n: 1, unit: 'years' },
+      ],
     ],
     invalid: ['3 fortnights', '', null, '-2 days', '5m'],
     parse: [
@@ -31,7 +34,10 @@ describe('duration', () => {
       [{ n: 12, unit: 'hours' }, 0.5],
       [null, null],
     ],
-    order: [{ n: 30, unit: 'hours' }, { n: 2, unit: 'days' }],
+    order: [
+      { n: 30, unit: 'hours' },
+      { n: 2, unit: 'days' },
+    ],
     empty: [
       [{ n: 0, unit: 'days' }, false],
       [null, true],

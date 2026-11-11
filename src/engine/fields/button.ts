@@ -17,7 +17,10 @@ export const button: FieldTypeDef<null, ButtonConfig> = base<null, ButtonConfig>
   storage: 'none',
   kind: 'none',
   valueSchema: z.null(),
-  configSchema: z.object({ label: z.string().trim().min(1).max(40), confirm: z.string().trim().min(1).max(200).nullable() }),
+  configSchema: z.object({
+    label: z.string().trim().min(1).max(40),
+    confirm: z.string().trim().min(1).max(200).nullable(),
+  }),
   defaultConfig: () => ({ label: 'Run', confirm: null }),
   defaultWidth: 140,
   formAllowed: false,

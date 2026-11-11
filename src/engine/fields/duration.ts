@@ -12,15 +12,40 @@ export interface DurationConfig {
 }
 
 /** Days per unit (docs/03 §3.1: month = 30.4, year = 365). */
-export const DAYS_PER_UNIT: Record<DurationUnit, number> = { hours: 1 / 24, days: 1, weeks: 7, months: 30.4, years: 365 };
+export const DAYS_PER_UNIT: Record<DurationUnit, number> = {
+  hours: 1 / 24,
+  days: 1,
+  weeks: 7,
+  months: 30.4,
+  years: 365,
+};
 
 // "m" is left out on purpose: minutes or months is ambiguous.
 const UNIT_ALIASES: Record<string, DurationUnit> = {
-  h: 'hours', hr: 'hours', hrs: 'hours', hour: 'hours', hours: 'hours',
-  d: 'days', day: 'days', days: 'days',
-  w: 'weeks', wk: 'weeks', wks: 'weeks', week: 'weeks', weeks: 'weeks',
-  mo: 'months', mos: 'months', mth: 'months', mths: 'months', month: 'months', months: 'months',
-  y: 'years', yr: 'years', yrs: 'years', year: 'years', years: 'years',
+  h: 'hours',
+  hr: 'hours',
+  hrs: 'hours',
+  hour: 'hours',
+  hours: 'hours',
+  d: 'days',
+  day: 'days',
+  days: 'days',
+  w: 'weeks',
+  wk: 'weeks',
+  wks: 'weeks',
+  week: 'weeks',
+  weeks: 'weeks',
+  mo: 'months',
+  mos: 'months',
+  mth: 'months',
+  mths: 'months',
+  month: 'months',
+  months: 'months',
+  y: 'years',
+  yr: 'years',
+  yrs: 'years',
+  year: 'years',
+  years: 'years',
 };
 
 const unitOf = (s: unknown): DurationUnit | undefined =>
@@ -64,8 +89,11 @@ export const duration = base<DurationValue, DurationConfig>({
   normalize,
   parseText: (t, cfg) => normalize(t, cfg),
   isEmpty,
-  toText: (v) => (isEmpty(v) ? '' : `${formatNumber(v!.n, 2)} ${v!.n === 1 ? v!.unit.slice(0, -1) : v!.unit}`),
+  toText: (v) =>
+    isEmpty(v) ? '' : `${formatNumber(v!.n, 2)} ${v!.n === 1 ? v!.unit.slice(0, -1) : v!.unit}`,
   toNumber: (v) => (isEmpty(v) ? null : v!.n * DAYS_PER_UNIT[v!.unit]),
   compare: (a, b) =>
-    emptyLast(a, b, isEmpty, (x, y) => cmpNumber(x.n * DAYS_PER_UNIT[x.unit], y.n * DAYS_PER_UNIT[y.unit])),
+    emptyLast(a, b, isEmpty, (x, y) =>
+      cmpNumber(x.n * DAYS_PER_UNIT[x.unit], y.n * DAYS_PER_UNIT[y.unit]),
+    ),
 });

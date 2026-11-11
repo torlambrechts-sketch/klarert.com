@@ -11,9 +11,14 @@ export interface LookupConfig {
 }
 
 /** The link field and the target field a lookup reads through, as seen from `sheetId`. */
-function target(sheetId: string, cfg: LookupConfig, ctx: Ctx): { field: Field; def: AnyFieldType } | undefined {
+function target(
+  sheetId: string,
+  cfg: LookupConfig,
+  ctx: Ctx,
+): { field: Field; def: AnyFieldType } | undefined {
   const linkField = fieldByKey(sheetId, cfg.linkFieldKey, ctx);
-  const targetSheetId = (linkField?.config as { targetSheetId?: unknown } | undefined)?.targetSheetId;
+  const targetSheetId = (linkField?.config as { targetSheetId?: unknown } | undefined)
+    ?.targetSheetId;
   if (typeof targetSheetId !== 'string') return undefined;
   const field = fieldByKey(targetSheetId, cfg.targetFieldKey, ctx);
   const def = field && resolveFieldType(field.type);
@@ -37,14 +42,23 @@ const text = (v: Json[] | null, cfg: LookupConfig, ctx: Ctx) => {
   const t = target(ctx.sheet.id, cfg, ctx);
   return (v ?? [])
     .map((x) =>
-      t ? t.def.toText(x, t.field.config, ctx) : typeof x === 'object' && x !== null ? '' : String(x),
+      t
+        ? t.def.toText(x, t.field.config, ctx)
+        : typeof x === 'object' && x !== null
+          ? ''
+          : String(x),
     )
     .filter(Boolean)
     .join(', ');
 };
 
 // toNumber/toDate project the first looked-up value; aggregating many values is the rollup's job.
-const first = <R>(v: Json[] | null, cfg: LookupConfig, ctx: Ctx, pick: (d: AnyFieldType, f: Field) => R | null) => {
+const first = <R>(
+  v: Json[] | null,
+  cfg: LookupConfig,
+  ctx: Ctx,
+  pick: (d: AnyFieldType, f: Field) => R | null,
+) => {
   const t = target(ctx.sheet.id, cfg, ctx);
   return t && v && v.length ? pick(t.def, t.field) : null;
 };
@@ -82,5 +96,6 @@ export const lookup: FieldTypeDef<Json[], LookupConfig> = base<Json[], LookupCon
   toText: (v, cfg, ctx) => text(v, cfg, ctx),
   toNumber: (v, cfg, ctx) => first(v, cfg, ctx, (d, f) => d.toNumber(v![0], f.config, ctx)),
   toDate: (v, cfg, ctx) => first(v, cfg, ctx, (d, f) => d.toDate(v![0], f.config, ctx)),
-  compare: (a, b, cfg, ctx) => emptyLast(a, b, isBlank, (x, y) => cmpText(text(x, cfg, ctx), text(y, cfg, ctx))),
+  compare: (a, b, cfg, ctx) =>
+    emptyLast(a, b, isBlank, (x, y) => cmpText(text(x, cfg, ctx), text(y, cfg, ctx))),
 });

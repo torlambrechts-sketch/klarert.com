@@ -8,20 +8,38 @@ import { status } from './status';
 import type { AnyFieldType } from './types';
 
 // Local stand-in for the checklist type: progress only needs to know where its value is stored.
-const checklistStub = { ...status, id: 'checklist', storage: 'values', kind: 'number' } as AnyFieldType;
+const checklistStub = {
+  ...status,
+  id: 'checklist',
+  storage: 'values',
+  kind: 'number',
+} as AnyFieldType;
 installFieldTypes([link, status, checklistStub]);
 
 const lines = ['l1', 'l2', 'l3', 'l4'].map((id) => ({ id, text: `Check ${id}`, noteOnNo: true }));
 const checks = makeField('checklist', { lines }, { key: 'checks' });
 const noLines = makeField('checklist', { lines: [] }, { key: 'no_lines' });
 const state = makeField('status', status.defaultConfig(), { key: 'state', sheetId: 's-ctl' });
-const controls = makeField('link', { targetSheetId: 's-ctl', multiple: true, inverseFieldId: null }, { key: 'controls' });
-const reqs = makeField('requirement', { targetSheetId: 's-ctl', multiple: true, inverseFieldId: null }, { key: 'reqs' });
+const controls = makeField(
+  'link',
+  { targetSheetId: 's-ctl', multiple: true, inverseFieldId: null },
+  { key: 'controls' },
+);
+const reqs = makeField(
+  'requirement',
+  { targetSheetId: 's-ctl', multiple: true, inverseFieldId: null },
+  { key: 'reqs' },
+);
 
 const c1 = makeItem({ [state.id]: 'opt_done' }, { id: 'i-c1', sheetId: 's-ctl' });
 const c2 = makeItem({ [state.id]: 'opt_wip' }, { id: 'i-c2', sheetId: 's-ctl' });
 const c3 = makeItem({}, { id: 'i-c3', sheetId: 's-ctl' });
-const answers = { l1: { a: 'yes' }, l2: { a: 'no', note: 'Guard missing' }, l3: { a: 'na' }, gone: { a: 'yes' } };
+const answers = {
+  l1: { a: 'yes' },
+  l2: { a: 'no', note: 'Guard missing' },
+  l3: { a: 'na' },
+  gone: { a: 'yes' },
+};
 const a = makeItem({ [checks.id]: { answers } }, { id: 'i-a' });
 const ctx = makeCtx({
   fields: [checks, noLines, controls, reqs],

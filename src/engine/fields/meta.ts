@@ -1,6 +1,15 @@
 import { z } from 'zod';
 import type { Ctx } from '../types';
-import { base, cmpNumber, cmpText, emptyLast, findPersonId, formatDateTime, isBlank, isoDateInZone } from './helpers';
+import {
+  base,
+  cmpNumber,
+  cmpText,
+  emptyLast,
+  findPersonId,
+  formatDateTime,
+  isBlank,
+  isoDateInZone,
+} from './helpers';
 import type { FieldTypeDef, ValueKind } from './types';
 
 export const META_WHICH = ['created_at', 'created_by', 'updated_at', 'updated_by'] as const;
@@ -53,10 +62,13 @@ export const meta: FieldTypeDef<string, MetaConfig> = base<string, MetaConfig>({
     return v || null;
   },
   isEmpty: isBlank,
-  toText: (v, cfg, ctx) => (!v ? '' : isWhen(cfg) ? formatDateTime(v, ctx.timeZone) : personName(v, ctx)),
+  toText: (v, cfg, ctx) =>
+    !v ? '' : isWhen(cfg) ? formatDateTime(v, ctx.timeZone) : personName(v, ctx),
   toDate: (v, cfg, ctx) => (v && isWhen(cfg) ? isoDateInZone(v, ctx.timeZone) : null),
   compare: (a, b, cfg, ctx) =>
     emptyLast(a, b, isBlank, (x, y) =>
-      isWhen(cfg) ? cmpNumber(Date.parse(x), Date.parse(y)) : cmpText(personName(x, ctx), personName(y, ctx)),
+      isWhen(cfg)
+        ? cmpNumber(Date.parse(x), Date.parse(y))
+        : cmpText(personName(x, ctx), personName(y, ctx)),
     ),
 });

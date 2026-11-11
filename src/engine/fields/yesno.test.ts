@@ -40,6 +40,10 @@ describe('yesno', () => {
     const cfg = { allowNA: false };
     expect(yesno.normalize('N/A', cfg, makeCtx())).toBeNull();
     expect(yesno.options!(cfg, makeCtx()).map((o) => o.label)).toEqual(['Yes', 'No']);
-    expect(yesno.options!({ allowNA: true }, makeCtx()).map((o) => o.color)).toEqual(['green', 'red', 'grey']);
+    expect(yesno.options!({ allowNA: true }, makeCtx()).map((o) => o.color)).toEqual([
+      'green',
+      'red',
+      'grey',
+    ]);
   });
 });

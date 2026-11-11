@@ -1,6 +1,17 @@
 import { z } from 'zod';
 import type { Ctx } from '../types';
-import { addDays, addMonths, base, cmpText, daysBetween, emptyLast, formatDate, isIsoDate, parseDate, parseJson } from './helpers';
+import {
+  addDays,
+  addMonths,
+  base,
+  cmpText,
+  daysBetween,
+  emptyLast,
+  formatDate,
+  isIsoDate,
+  parseDate,
+  parseJson,
+} from './helpers';
 
 export const RECURRENCE_UNITS = ['days', 'weeks', 'months', 'years'] as const;
 export type RecurrenceUnit = (typeof RECURRENCE_UNITS)[number];
@@ -46,7 +57,11 @@ export function nextOccurrence(v: RecurrenceValue, today: string): string {
   return addMonths(v.start, k * months);
 }
 
-function make(every: unknown, unit: RecurrenceUnit | undefined, start: string | null): RecurrenceValue | null {
+function make(
+  every: unknown,
+  unit: RecurrenceUnit | undefined,
+  start: string | null,
+): RecurrenceValue | null {
   const n = typeof every === 'string' ? Number(every) : every;
   if (typeof n !== 'number' || !Number.isInteger(n) || n < 1 || !unit || !start) return null;
   return { every: n, unit, start };
@@ -56,7 +71,8 @@ function normalize(input: unknown, ctx: Ctx): RecurrenceValue | null {
   if (typeof input === 'string') return parseRule(input, ctx);
   if (input && typeof input === 'object' && !Array.isArray(input)) {
     const o = input as Record<string, unknown>;
-    const start = o.start === undefined || o.start === null || o.start === '' ? ctx.today : parseDate(o.start);
+    const start =
+      o.start === undefined || o.start === null || o.start === '' ? ctx.today : parseDate(o.start);
     return make(o.every ?? 1, unitOf(o.unit), start);
   }
   return null;
@@ -109,5 +125,7 @@ export const recurrence = base<RecurrenceValue, Record<string, never>>({
   },
   toDate: (v, _cfg, ctx) => (isEmpty(v) ? null : nextOccurrence(v!, ctx.today)),
   compare: (a, b, _cfg, ctx) =>
-    emptyLast(a, b, isEmpty, (x, y) => cmpText(nextOccurrence(x, ctx.today), nextOccurrence(y, ctx.today))),
+    emptyLast(a, b, isEmpty, (x, y) =>
+      cmpText(nextOccurrence(x, ctx.today), nextOccurrence(y, ctx.today)),
+    ),
 });

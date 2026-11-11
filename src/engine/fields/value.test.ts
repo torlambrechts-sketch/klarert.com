@@ -44,7 +44,9 @@ describe('value', () => {
 
   it('flags a stored amount in another currency', () => {
     const field = makeField('value', { currency: 'EUR', allowOther: false });
-    expect(value.validate({ amount: 1, currency: 'USD' }, field, makeItem(), makeCtx())).toHaveLength(1);
+    expect(
+      value.validate({ amount: 1, currency: 'USD' }, field, makeItem(), makeCtx()),
+    ).toHaveLength(1);
     expect(value.validate(eur(1), field, makeItem(), makeCtx())).toEqual([]);
   });
 });

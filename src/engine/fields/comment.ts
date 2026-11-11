@@ -12,10 +12,15 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const isInstant = (s: unknown): s is string =>
   typeof s === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(s) && !Number.isNaN(Date.parse(s));
 
-const isEmpty = (v: CommentValue | null) => !v || typeof v.text !== 'string' || v.text.trim() === '';
+const isEmpty = (v: CommentValue | null) =>
+  !v || typeof v.text !== 'string' || v.text.trim() === '';
 
 function normalize(input: unknown, _cfg: unknown, ctx: Ctx): CommentValue | null {
-  const stamp = (text: string): CommentValue => ({ text, by: ctx.userId, at: ctx.now.toISOString() });
+  const stamp = (text: string): CommentValue => ({
+    text,
+    by: ctx.userId,
+    at: ctx.now.toISOString(),
+  });
   if (typeof input === 'string' || typeof input === 'number') {
     const t = String(input).replace(/\r\n?/g, '\n').trim();
     return t ? stamp(t) : null;
@@ -37,7 +42,11 @@ export const comment = base<CommentValue, Record<string, never>>({
   description: 'A short note stamped with who wrote it and when.',
   storage: 'values',
   kind: 'text',
-  valueSchema: z.object({ text: z.string().min(1), by: z.string().min(1), at: z.string().refine(isInstant) }),
+  valueSchema: z.object({
+    text: z.string().min(1),
+    by: z.string().min(1),
+    at: z.string().refine(isInstant),
+  }),
   configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 200,
@@ -59,7 +68,11 @@ export const comment = base<CommentValue, Record<string, never>>({
   toText: (v, _cfg, ctx) => {
     if (isEmpty(v)) return '';
     const first = ctx.people.get(v!.by)?.name.split(/\s+/)[0];
-    const [, m, d] = isoDateInZone(v!.at, ctx.timeZone).split('-').map(Number) as [number, number, number];
+    const [, m, d] = isoDateInZone(v!.at, ctx.timeZone).split('-').map(Number) as [
+      number,
+      number,
+      number,
+    ];
     const when = `${d} ${MONTHS[m - 1]}`;
     return `${v!.text} — ${first ? `${first}, ` : ''}${when}`;
   },

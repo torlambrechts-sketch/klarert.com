@@ -41,6 +41,8 @@ describe('comment', () => {
 
   it('shows the day in the user time zone', () => {
     const v = { text: 'Late', by: 'u-maria', at: '2026-11-11T23:30:00Z' };
-    expect(comment.toText(v, {}, makeCtx({}, { timeZone: 'Europe/Berlin' }))).toBe('Late — Maria, 12 Nov');
+    expect(comment.toText(v, {}, makeCtx({}, { timeZone: 'Europe/Berlin' }))).toBe(
+      'Late — Maria, 12 Nov',
+    );
   });
 });

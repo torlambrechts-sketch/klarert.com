@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Json } from '../types';
+import type { Ctx, Json } from '../types';
 import { base, cmpNumber, emptyLast, findPersonId, formatDate, isoDateInZone, parseJson } from './helpers';
 
 export interface SignatureValue {
@@ -57,6 +57,14 @@ export function shouldClearSignature(
   return signaturePayload(prevValues, signatureFieldId) !== signaturePayload(nextValues, signatureFieldId);
 }
 
+function normalizeSignature(input: unknown, cfg: SignatureConfig, ctx: Ctx): SignatureValue | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const o = input as Record<string, unknown>;
+  const by = findPersonId(o.by, ctx);
+  const r = valueSchema.safeParse({ ...o, by, meaning: o.meaning ?? cfg.meaning });
+  return r.success ? { by: r.data.by, at: r.data.at, meaning: r.data.meaning, hash: r.data.hash } : null;
+}
+
 export const signature = base<SignatureValue, SignatureConfig>({
   id: 'signature',
   label: 'Signature',
@@ -72,16 +80,10 @@ export const signature = base<SignatureValue, SignatureConfig>({
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],
-  normalize: (input, cfg, ctx) => {
-    if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
-    const o = input as Record<string, unknown>;
-    const by = findPersonId(o.by, ctx);
-    const r = valueSchema.safeParse({ ...o, by, meaning: o.meaning ?? cfg.meaning });
-    return r.success ? { by: r.data.by, at: r.data.at, meaning: r.data.meaning, hash: r.data.hash } : null;
-  },
+  normalize: normalizeSignature,
   parseText: (t, cfg, ctx) => {
     const j = parseJson(t.trim());
-    return j === undefined ? null : signature.normalize(j, cfg, ctx);
+    return j === undefined ? null : normalizeSignature(j, cfg, ctx);
   },
   isEmpty,
   toText: (v, _cfg, ctx) => {

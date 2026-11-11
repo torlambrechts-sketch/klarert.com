@@ -14,7 +14,8 @@ export interface ValueConfig {
 const CODE = /^[A-Z]{3}$/;
 const SYMBOLS: Record<string, string> = { '€': 'EUR', '£': 'GBP', $: 'USD' };
 
-const isEmpty = (v: MoneyValue | null) => !v || typeof v.amount !== 'number' || !Number.isFinite(v.amount);
+const isEmpty = (v: MoneyValue | null) =>
+  !v || typeof v.amount !== 'number' || !Number.isFinite(v.amount);
 
 /** "€1,200", "1,200.50 USD", "GBP 30", "-£5" → amount and the currency it names, if any. */
 function parseMoney(text: string): { amount: number; code?: string } | null {
@@ -77,11 +78,19 @@ export const value = base<MoneyValue, ValueConfig>({
   toText: (v) => {
     if (isEmpty(v)) return '';
     try {
-      return new Intl.NumberFormat('en-GB', { style: 'currency', currency: v!.currency }).format(v!.amount);
+      return new Intl.NumberFormat('en-GB', { style: 'currency', currency: v!.currency }).format(
+        v!.amount,
+      );
     } catch {
       return `${v!.amount} ${v!.currency}`;
     }
   },
   toNumber: (v) => (isEmpty(v) ? null : v!.amount),
-  compare: (a, b) => emptyLast(a, b, isEmpty, (x, y) => cmpNumber(x.amount, y.amount) || cmpText(x.currency, y.currency)),
+  compare: (a, b) =>
+    emptyLast(
+      a,
+      b,
+      isEmpty,
+      (x, y) => cmpNumber(x.amount, y.amount) || cmpText(x.currency, y.currency),
+    ),
 });

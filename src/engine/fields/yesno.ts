@@ -27,8 +27,10 @@ const ALIASES: Record<string, YesNo> = {
   'not applicable': 'na',
 };
 
-const options = (cfg: YesNoConfig) => (cfg.allowNA ? OPTIONS : OPTIONS.filter((o) => o.id !== 'na'));
-const index = (v: YesNo | null, cfg: YesNoConfig) => (v === null ? -1 : options(cfg).findIndex((o) => o.id === v));
+const options = (cfg: YesNoConfig) =>
+  cfg.allowNA ? OPTIONS : OPTIONS.filter((o) => o.id !== 'na');
+const index = (v: YesNo | null, cfg: YesNoConfig) =>
+  v === null ? -1 : options(cfg).findIndex((o) => o.id === v);
 
 function normalize(input: unknown, cfg: YesNoConfig): YesNo | null {
   if (typeof input === 'boolean') return input ? 'yes' : 'no';
@@ -57,6 +59,12 @@ export const yesno = base<YesNo, YesNoConfig>({
   isEmpty: (v) => v === null || v === undefined,
   isDone: (v, cfg) => !!options(cfg).find((o) => o.id === v)?.done,
   toText: (v, cfg) => options(cfg).find((o) => o.id === v)?.label ?? '',
-  compare: (a, b, cfg) => emptyLast(a, b, (v) => index(v, cfg) < 0, (x, y) => cmpNumber(index(x, cfg), index(y, cfg))),
+  compare: (a, b, cfg) =>
+    emptyLast(
+      a,
+      b,
+      (v) => index(v, cfg) < 0,
+      (x, y) => cmpNumber(index(x, cfg), index(y, cfg)),
+    ),
   options: (cfg) => options(cfg).map((o) => ({ ...o })),
 });
