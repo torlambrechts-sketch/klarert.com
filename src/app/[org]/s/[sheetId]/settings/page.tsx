@@ -1,0 +1,158 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ArrowLeft, Lock } from 'lucide-react';
+import { GroupsManager } from '@/components/sheets/groups-manager';
+import { ArchiveSheet, SheetSettingsForm } from '@/components/sheets/sheet-settings';
+import { GroupSwatch } from '@/components/sheets/group-swatch';
+import { fieldType } from '@/engine/fields/registry';
+import { isEditorRole, requireMember } from '@/server/auth';
+import { getFields, getNav, getSheet } from '@/server/repositories/sheets';
+
+export const metadata = { title: 'Sheet settings · Compliance OS' };
+
+function Card({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-line flex flex-col gap-4 rounded-[var(--radius-card)] border bg-white p-4 sm:p-5">
+      <div className="flex flex-col gap-0.5">
+        <h2 className="text-base font-bold">{title}</h2>
+        {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+export default async function SheetSettingsPage({
+  params,
+}: {
+  params: Promise<{ org: string; sheetId: string }>;
+}) {
+  const { org, sheetId } = await params;
+  const { workspace, role } = await requireMember(org);
+  const sheet = await getSheet(workspace.id, sheetId);
+  if (!sheet) notFound();
+  const [nav, fields] = await Promise.all([getNav(workspace.id), getFields(sheet.id)]);
+  const canEdit = isEditorRole(role);
+
+  return (
+    <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
+      <div className="flex flex-col gap-2">
+        <Link
+          href={`/${org}/s/${sheet.id}`}
+          className="text-muted-foreground hover:text-ink flex w-fit items-center gap-1 text-sm"
+        >
+          <ArrowLeft className="size-4" aria-hidden /> Back to {sheet.name}
+        </Link>
+        <h1>Sheet settings</h1>
+        {!canEdit ? (
+          <p className="text-muted-foreground">Viewers cannot change sheet settings.</p>
+        ) : null}
+      </div>
+
+      {canEdit ? (
+        <Card title="Sheet">
+          <SheetSettingsForm
+            org={org}
+            folders={nav.folders.map((f) => ({ id: f.id, name: f.name }))}
+            sheet={{
+              id: sheet.id,
+              name: sheet.name,
+              description: sheet.description,
+              itemLabel: sheet.item_label,
+              idPrefix: sheet.id_prefix,
+              prefixLocked: sheet.next_seq > 1,
+              folderId: sheet.folder_id,
+              isLibrary: sheet.is_library,
+              archived: !!sheet.archived_at,
+            }}
+          />
+        </Card>
+      ) : (
+        <Card title="Sheet">
+          <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
+            <dt className="text-muted-foreground">Name</dt>
+            <dd>{sheet.name}</dd>
+            <dt className="text-muted-foreground">Items are called</dt>
+            <dd>{sheet.item_label}</dd>
+            <dt className="text-muted-foreground">ID prefix</dt>
+            <dd className="font-mono">{sheet.id_prefix}</dd>
+            <dt className="text-muted-foreground">Folder</dt>
+            <dd>{sheet.folderName ?? 'No folder'}</dd>
+          </dl>
+        </Card>
+      )}
+
+      <Card
+        title="Groups"
+        description="Groups are the sections of the sheet. Drag or use the arrows to reorder them."
+      >
+        {canEdit && !sheet.archived_at ? (
+          <GroupsManager
+            org={org}
+            sheetId={sheet.id}
+            groups={sheet.groups.map((g) => ({
+              id: g.id,
+              name: g.name,
+              color: g.color,
+              count: g.count,
+            }))}
+          />
+        ) : (
+          <ul className="flex flex-col gap-1" aria-label="Groups">
+            {sheet.groups.map((g) => (
+              <li key={g.id} className="flex items-center gap-2">
+                <GroupSwatch color={g.color} /> {g.name}{' '}
+                <span className="text-muted-foreground text-sm">· {g.count}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card
+        title={`Fields · ${fields.length}`}
+        description="The columns every item of this sheet has."
+      >
+        {fields.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No fields yet.</p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Fields">
+            {fields.map((f) => (
+              <li key={f.id} className="flex items-center justify-between gap-3 py-2">
+                <span className="flex items-center gap-1.5 font-semibold">
+                  {f.name}
+                  {f.locked ? <Lock className="size-3.5" aria-label="Kept by the app" /> : null}
+                </span>
+                <span className="text-muted-foreground text-sm">
+                  {fieldType(f.type)?.label ?? f.type}{' '}
+                  <span className="font-mono text-xs">{`{${f.key}}`}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      {canEdit ? (
+        <Card
+          title={sheet.archived_at ? 'Archived' : 'Archive'}
+          description={
+            sheet.archived_at
+              ? 'This sheet is hidden from the side menu. Restore it to use it again.'
+              : 'Archiving hides the sheet from the side menu. Nothing is deleted.'
+          }
+        >
+          <ArchiveSheet org={org} sheetId={sheet.id} archived={!!sheet.archived_at} />
+        </Card>
+      ) : null}
+    </main>
+  );
+}

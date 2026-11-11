@@ -55,3 +55,4 @@ export const requireMember = cache(async (slug: string) => {
 });
 
 export const isAdminRole = (role: Role) => role === 'owner' || role === 'admin';
+export const isEditorRole = (role: Role) => role !== 'viewer';

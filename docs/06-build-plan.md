@@ -47,15 +47,15 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M3: the app shell from docs/05 §2 (rail with codes, sections, hover expand and pin; second panel; top bar), routes from docs/05 §1, folders, the new sheet wizard (all starts incl. CSV import and copy), sheet settings, groups CRUD."
 
-- [ ] Rail: top block (Home, My work + badge), folders with sheet codes (unique, no punctuation), bottom block (Automations, Settings, Keep menu open); hover expand 236 px; pin remembered
-- [ ] Second panel per page as specified; collapsible
-- [ ] Top bar: workspace switcher, search box (wired in M9), inbox button (wired in M9), avatar menu
-- [ ] Wizard: Blank, Register, Tracker, Log, Inspection from `templates/starts.json`; columns editable; prefix and keys per the rules in `starts.json`
-- [ ] Import CSV: parse (Papaparse), type detection per `starts.json`, confirm table, creates fields + items through commands; 10 000 rows < 20 s locally
-- [ ] Copy a sheet: fields, groups, views, automations (re-keyed to the new field ids), no items
-- [ ] Sheet settings: name, description, item label, prefix (locked once items exist), folder, library flag, archive
-- [ ] Groups: add, rename, recolour, reorder, collapse, delete when empty / move items first
-- [ ] Phone (< 760 px): bottom bar + menu sheet per docs/05 §5
+- [x] Rail: top block (Home, My work + badge), folders with sheet codes (unique, no punctuation), bottom block (Automations, Settings, Keep menu open); hover expand 236 px; pin remembered
+- [x] Second panel per page as specified; collapsible
+- [x] Top bar: workspace switcher, search box (wired in M9), inbox button (wired in M9), avatar menu
+- [x] Wizard: Blank, Register, Tracker, Log, Inspection from `templates/starts.json`; columns editable; prefix and keys per the rules in `starts.json`
+- [x] Import CSV: parse (Papaparse), type detection per `starts.json`, confirm table, creates fields + items through commands; 10 000 rows < 20 s locally
+- [x] Copy a sheet: fields, groups, views, automations (re-keyed to the new field ids), no items
+- [x] Sheet settings: name, description, item label, prefix (locked once items exist), folder, library flag, archive
+- [x] Groups: add, rename, recolour, reorder, collapse, delete when empty / move items first
+- [x] Phone (< 760 px): bottom bar + menu sheet per docs/05 §5
 
 ## M4 · Grid view and commands  [Opus for commands, Sonnet for cells]
 
