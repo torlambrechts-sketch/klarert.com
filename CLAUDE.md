@@ -61,6 +61,7 @@ tests/                      e2e (Playwright). Unit tests live next to the code a
 4. **Values are stored by id, shown by label.** Option fields store option ids, people fields store user ids, links live in `item_links`. Renaming an option, a person or an item never rewrites values.
 5. **Field keys are stable.** Formulas and templates reference `{field_key}`; renaming a field changes `name`, never `key`.
 6. **RLS everywhere.** Every table has `org_id` and RLS. The service role key is used in exactly four server-only places: the scheduler, the webhook worker, the public form route, and `src/server/automations/effects.ts` (automation posts and notifications, after the runner has authorised the org) — plus `scripts/seed.ts` for local data. Never in client code, never anywhere else.
+   New SQL functions are not executable by API roles by default (migration 0008): grant EXECUTE explicitly to `authenticated` (or `anon` for public forms) in the migration that adds them, and never grant internal `_` helpers.
 7. **Append-only audit.** `activity_log` is insert-only and hash-chained per item (docs/02). Restoring an old value writes a new entry.
 8. **Automations are bounded.** Chains stop at depth 3 (loop guard, logged). Scheduled triggers fire once per item per occurrence (dedupe key). Webhooks go through a queue with retries and a dead letter.
 9. **No inline business rules in components.** Components read derived data from the engine (e.g. `fieldType.format(value, cfg)`), they do not compute it themselves.
