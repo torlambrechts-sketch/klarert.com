@@ -10,13 +10,13 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Read CLAUDE.md. Set up the repository for M0 in docs/06-build-plan.md: Next.js 15 app with TypeScript strict, Tailwind v4, shadcn/ui, self-hosted fonts, Supabase CLI config, Vitest, Playwright, ESLint/Prettier, GitHub Actions CI, the scripts listed in CLAUDE.md, and the folder layout. No product features yet."
 
-- [ ] `pnpm create next-app` with App Router, `src/`, TypeScript strict (`noUncheckedIndexedAccess: true`)
-- [ ] Tailwind v4 + shadcn/ui initialised; tokens from docs/05 §6 in `globals.css`; fonts via `next/font/local` from `src/fonts/` (download Plus Jakarta Sans and IBM Plex Mono woff2 from the `@fontsource` packages)
-- [ ] Supabase CLI (`supabase init`), migrations folder contains `0001_core.sql`, `0002_storage_realtime.sql`; `pnpm supabase:start && pnpm db:reset` works
-- [ ] Vitest with one passing test; Playwright with one smoke test (home page renders)
-- [ ] GitHub Actions: install, lint, typecheck, unit, start Supabase, e2e
+- [x] `pnpm create next-app` with App Router, `src/`, TypeScript strict (`noUncheckedIndexedAccess: true`)
+- [x] Tailwind v4 + shadcn/ui initialised; tokens from docs/05 §6 in `globals.css`; fonts via `next/font/local` from `src/fonts/` (download Plus Jakarta Sans and IBM Plex Mono woff2 from the `@fontsource` packages)
+- [x] Supabase CLI (`supabase init`), migrations folder contains `0001_core.sql`, `0002_storage_realtime.sql`; `pnpm supabase:start && pnpm db:reset` works
+- [x] Vitest with one passing test; Playwright with one smoke test (home page renders)
+- [x] GitHub Actions: install, lint, typecheck, unit, start Supabase, e2e
 - [ ] Vercel project linked, region `fra1`, env vars from `.env.example`
-- [ ] Folder layout from CLAUDE.md created with README stubs in `src/engine` and `src/server`
+- [x] Folder layout from CLAUDE.md created with README stubs in `src/engine` and `src/server`
 
 ## M1 · Schema, auth, tenancy, seed  [Opus]
 
