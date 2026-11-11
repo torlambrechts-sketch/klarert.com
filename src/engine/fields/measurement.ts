@@ -1,6 +1,15 @@
 import { z } from 'zod';
 import type { Ctx } from '../types';
-import { base, cmpNumber, emptyLast, formatNumber, isIsoDate, parseDate, parseJson, parseNumber } from './helpers';
+import {
+  base,
+  cmpNumber,
+  emptyLast,
+  formatNumber,
+  isIsoDate,
+  parseDate,
+  parseJson,
+  parseNumber,
+} from './helpers';
 
 export interface Reading {
   at: string;
@@ -23,7 +32,9 @@ const readingSchema = z.object({
 });
 
 const isEmpty = (v: Reading[] | null) => !Array.isArray(v) || v.length === 0;
-const latest = (v: Reading[] | null) => (isEmpty(v) ? null : v![v!.length - 1]!);
+/** Most recent reading by date; on the same day the later entry wins. */
+const latest = (v: Reading[] | null) =>
+  isEmpty(v) ? null : v!.reduce((a, b) => (b.at >= a.at ? b : a));
 
 function readingOf(x: unknown, ctx: Ctx): Reading | null {
   const n = parseNumber(x);
@@ -32,7 +43,9 @@ function readingOf(x: unknown, ctx: Ctx): Reading | null {
   const o = x as Record<string, unknown>;
   const r = readingSchema.safeParse({ ...o, at: parseDate(o.at), v: parseNumber(o.v) });
   if (!r.success) return null;
-  return Object.fromEntries(Object.entries(r.data).filter(([, y]) => y !== undefined)) as unknown as Reading;
+  return Object.fromEntries(
+    Object.entries(r.data).filter(([, y]) => y !== undefined),
+  ) as unknown as Reading;
 }
 
 function normalizeReadings(input: unknown, ctx: Ctx): Reading[] | null {
@@ -80,7 +93,10 @@ export const measurement = base<Reading[], MeasurementConfig>({
     if (!s) return null;
     if (s.startsWith('[') || s.startsWith('{')) return normalizeReadings(parseJson(s), ctx);
     // "2026-11-01: 12.5; 2026-11-05: 11" or a single number
-    const parts = s.split(/[;\n]/).map((p) => p.trim()).filter(Boolean);
+    const parts = s
+      .split(/[;\n]/)
+      .map((p) => p.trim())
+      .filter(Boolean);
     const rows = parts.map((p) => {
       const m = p.match(/^(.+?)\s*[:=]\s*(.+)$/);
       return m ? { at: m[1], v: m[2] } : p;

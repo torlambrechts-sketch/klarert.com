@@ -18,7 +18,7 @@ export const team: FieldTypeDef<string, TeamConfig> = base<string, TeamConfig>({
   storage: 'values',
   kind: 'option',
   valueSchema: z.string().min(1),
-  configSchema: z.object({}).strict() as z.ZodType<TeamConfig>,
+  configSchema: z.object({}) as z.ZodType<TeamConfig>,
   defaultConfig: () => ({}),
   defaultWidth: 120,
   formAllowed: true,

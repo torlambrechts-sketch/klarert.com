@@ -25,7 +25,8 @@ export function labelType(spec: {
   triggers?: TriggerId[];
 }): FieldTypeDef<string, LabelConfig> {
   const opts = (cfg: LabelConfig) => (spec.fixed ? spec.defaultOptions : cfg.options);
-  const index = (v: string | null, cfg: LabelConfig) => (v === null ? -1 : opts(cfg).findIndex((o) => o.id === v));
+  const index = (v: string | null, cfg: LabelConfig) =>
+    v === null ? -1 : opts(cfg).findIndex((o) => o.id === v);
   const normalize = (input: unknown, cfg: LabelConfig) => findOption(opts(cfg), input)?.id ?? null;
   return base<string, LabelConfig>({
     id: spec.id,
@@ -48,7 +49,13 @@ export function labelType(spec: {
     isDone: (v, cfg) => !!opts(cfg).find((o) => o.id === v)?.done,
     toText: (v, cfg) => opts(cfg).find((o) => o.id === v)?.label ?? '',
     toNumber: (v, cfg) => (spec.ordered && index(v, cfg) >= 0 ? index(v, cfg) : null),
-    compare: (a, b, cfg) => emptyLast(a, b, (v) => index(v, cfg) < 0, (x, y) => cmpNumber(index(x, cfg), index(y, cfg))),
+    compare: (a, b, cfg) =>
+      emptyLast(
+        a,
+        b,
+        (v) => index(v, cfg) < 0,
+        (x, y) => cmpNumber(index(x, cfg), index(y, cfg)),
+      ),
     rank: spec.ordered ? (v, cfg) => (index(v, cfg) >= 0 ? index(v, cfg) : null) : undefined,
     options: (cfg) => opts(cfg),
   });

@@ -48,7 +48,13 @@ export function suggestIdPrefix(name: string, taken: Iterable<string>): string {
     .split(/\s+/)
     .filter(Boolean);
   const letters = words.join('');
-  const first = words.length > 1 ? words.slice(0, 3).map((w) => w[0]).join('') : letters.slice(0, 3);
+  const first =
+    words.length > 1
+      ? words
+          .slice(0, 3)
+          .map((w) => w[0])
+          .join('')
+      : letters.slice(0, 3);
   const stem = (first || 'IT').slice(0, 5);
   if (!used.has(`${stem}-`)) return `${stem}-`;
   for (let n = 2; n < 100; n += 1) {

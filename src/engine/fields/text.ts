@@ -16,7 +16,7 @@ export const text = base<string, Record<string, never>>({
   storage: 'values',
   kind: 'text',
   valueSchema: z.string().min(1).max(MAX),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 180,
   formAllowed: true,

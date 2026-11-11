@@ -118,7 +118,7 @@ export const country: FieldTypeDef<string, CountryConfig> = base<string, Country
   storage: 'values',
   kind: 'option',
   valueSchema: z.string().regex(/^[A-Z]{2}$/),
-  configSchema: z.object({}).strict() as z.ZodType<CountryConfig>,
+  configSchema: z.object({}) as z.ZodType<CountryConfig>,
   defaultConfig: () => ({}),
   defaultWidth: 140,
   formAllowed: true,

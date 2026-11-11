@@ -5,8 +5,20 @@ export const TODAY = '2026-11-11';
 export const NOW = new Date('2026-11-11T12:00:00Z');
 
 export const people: Person[] = [
-  { id: 'u-maria', name: 'Maria Pereira', initials: 'MP', color: 'blue', email: 'maria@example.com' },
-  { id: 'u-james', name: 'James Okafor', initials: 'JO', color: 'teal', email: 'james@example.com' },
+  {
+    id: 'u-maria',
+    name: 'Maria Pereira',
+    initials: 'MP',
+    color: 'blue',
+    email: 'maria@example.com',
+  },
+  {
+    id: 'u-james',
+    name: 'James Okafor',
+    initials: 'JO',
+    color: 'teal',
+    email: 'james@example.com',
+  },
   { id: 'u-vic', name: 'Vic Viewer', initials: 'VV', color: 'grey', email: 'vic@example.com' },
 ];
 
@@ -25,7 +37,11 @@ export const groups: Group[] = [
 ];
 
 let fieldSeq = 0;
-export function makeField<C = Record<string, unknown>>(type: string, config: C, over: Partial<Field<C>> = {}): Field<C> {
+export function makeField<C = Record<string, unknown>>(
+  type: string,
+  config: C,
+  over: Partial<Field<C>> = {},
+): Field<C> {
   fieldSeq += 1;
   const key = over.key ?? `${type}_${fieldSeq}`;
   return {
@@ -109,10 +125,14 @@ export function makeCtx(world: CtxWorld = {}, over: Partial<Ctx> = {}): Ctx {
     links: (itemId, fieldId) => world.links?.[`${itemId}:${fieldId}`] ?? [],
     item: (id) => items.get(id),
     files: (itemId, fieldId) =>
-      (world.files ?? []).filter((f) => f.itemId === itemId && f.fieldId === fieldId && f.replacedBy === null),
+      (world.files ?? []).filter(
+        (f) => f.itemId === itemId && f.fieldId === fieldId && f.replacedBy === null,
+      ),
     sheetOf: (itemId) => {
       const it = items.get(itemId);
-      return it ? (world.sheets?.[it.sheetId] ?? (it.sheetId === sheet.id ? sheet : undefined)) : undefined;
+      return it
+        ? (world.sheets?.[it.sheetId] ?? (it.sheetId === sheet.id ? sheet : undefined))
+        : undefined;
     },
     protectedValue: (itemId, fieldId) => world.protected?.[`${itemId}:${fieldId}`] ?? null,
     newId: (prefix) => `${prefix}${(++idSeq).toString(36).padStart(3, '0')}`,

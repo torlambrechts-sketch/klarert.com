@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { contract } from '../testing/contract';
 import { makeCtx } from '../testing/fixtures';
-import { url } from './url';
+import { url, urlHost } from './url';
 
 describe('url', () => {
   contract(url, {
@@ -25,8 +25,8 @@ describe('url', () => {
       ['iso.org', 'https://iso.org'],
     ],
     text: [
-      ['https://www.gov.uk/guidance/x', 'www.gov.uk'],
-      ['https://example.com:8443/a', 'example.com:8443'],
+      ['https://www.gov.uk/guidance/x', 'https://www.gov.uk/guidance/x'],
+      ['https://example.com:8443/a', 'https://example.com:8443/a'],
     ],
     order: ['https://a.example.com', 'https://b.example.com'],
     empty: [
@@ -40,5 +40,13 @@ describe('url', () => {
       'https://intranet.example.com/x',
     );
     expect(url.normalize('example.com:8080/x', {}, makeCtx())).toBe('https://example.com:8080/x');
+  });
+});
+
+describe('urlHost', () => {
+  it('shows only the host in the cell, keeping the full address as text', () => {
+    expect(urlHost('https://www.gov.uk/guidance/x')).toBe('www.gov.uk');
+    expect(urlHost('https://example.com:8443/a')).toBe('example.com:8443');
+    expect(urlHost(null)).toBe('');
   });
 });

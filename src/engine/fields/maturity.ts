@@ -13,7 +13,8 @@ export const MATURITY_LEVELS: LabelOption[] = [
   { id: '5', label: 'Optimised', color: 'green', done: true },
 ];
 
-const isLevel = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 5;
+const isLevel = (n: unknown): n is number =>
+  typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 5;
 const isEmpty = (v: number | null) => !isLevel(v);
 
 function normalizeMaturity(input: unknown): number | null {
@@ -34,7 +35,7 @@ export const maturity = base<number, MaturityConfig>({
   storage: 'values',
   kind: 'ordered',
   valueSchema: z.number().int().min(0).max(5),
-  configSchema: z.object({}).strict() as unknown as z.ZodType<MaturityConfig>,
+  configSchema: z.object({}) as unknown as z.ZodType<MaturityConfig>,
   defaultConfig: () => ({}),
   defaultWidth: 130,
   formAllowed: true,
@@ -49,5 +50,6 @@ export const maturity = base<number, MaturityConfig>({
   toNumber: (v) => (isLevel(v) ? v : null),
   compare: (a, b) => emptyLast(a, b, isEmpty, cmpNumber),
   rank: (v) => (isLevel(v) ? v : null),
+  keyOf: (v) => (isLevel(v) ? String(v) : null),
   options: () => MATURITY_LEVELS,
 });

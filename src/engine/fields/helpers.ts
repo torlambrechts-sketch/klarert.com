@@ -12,7 +12,12 @@ export const isBlank = (v: unknown): boolean =>
   (Array.isArray(v) && v.length === 0);
 
 /** Compare with empties last, regardless of direction of the inner comparison. */
-export function emptyLast<V>(a: V | null, b: V | null, isEmpty: (v: V | null) => boolean, cmp: (a: V, b: V) => number) {
+export function emptyLast<V>(
+  a: V | null,
+  b: V | null,
+  isEmpty: (v: V | null) => boolean,
+  cmp: (a: V, b: V) => number,
+) {
   const ea = isEmpty(a);
   const eb = isEmpty(b);
   if (ea && eb) return 0;
@@ -22,7 +27,8 @@ export function emptyLast<V>(a: V | null, b: V | null, isEmpty: (v: V | null) =>
 }
 
 export const cmpNumber = (a: number, b: number) => (a < b ? -1 : a > b ? 1 : 0);
-export const cmpText = (a: string, b: string) => a.localeCompare(b, 'en-GB', { sensitivity: 'base', numeric: true });
+export const cmpText = (a: string, b: string) =>
+  a.localeCompare(b, 'en-GB', { sensitivity: 'base', numeric: true });
 
 // ───────────── numbers ─────────────
 
@@ -30,14 +36,21 @@ export const cmpText = (a: string, b: string) => a.localeCompare(b, 'en-GB', { s
 export function parseNumber(text: unknown): number | null {
   if (typeof text === 'number') return Number.isFinite(text) ? text : null;
   if (typeof text !== 'string') return null;
-  const t = text.trim().replace(/^[^\d+\-.]+/, '').replace(/[%\s]+$/g, '').replace(/,(?=\d{3}(\D|$))/g, '');
+  const t = text
+    .trim()
+    .replace(/^[^\d+\-.]+/, '')
+    .replace(/[%\s]+$/g, '')
+    .replace(/,(?=\d{3}(\D|$))/g, '');
   if (!/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(t)) return null;
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
 }
 
 export function formatNumber(n: number, decimals = 2): string {
-  return new Intl.NumberFormat('en-GB', { maximumFractionDigits: decimals, minimumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat('en-GB', {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: 0,
+  }).format(n);
 }
 
 // ───────────── dates (ISO strings, UTC arithmetic) ─────────────
@@ -96,7 +109,9 @@ export function addDays(iso: string, n: number): string {
 export function addMonths(iso: string, n: number): string {
   const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
   const target = new Date(Date.UTC(y, m - 1 + n, 1));
-  const last = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  const last = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
   target.setUTCDate(Math.min(d, last));
   return target.toISOString().slice(0, 10);
 }
@@ -115,7 +130,12 @@ export function formatDate(iso: string): string {
 /** ISO instant → ISO date in a time zone. */
 export function isoDateInZone(instant: string | Date, timeZone: string): string {
   const d = typeof instant === 'string' ? new Date(instant) : instant;
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
   return parts;
 }
 
@@ -123,13 +143,30 @@ export function isoDateInZone(instant: string | Date, timeZone: string): string 
 export function formatDateTime(instant: string, timeZone: string): string {
   const d = new Date(instant);
   const date = formatDate(isoDateInZone(d, timeZone));
-  const time = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+  const time = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(d);
   return `${date}, ${time}`;
 }
 
 // ───────────── options ─────────────
 
-export const COLORS = ['grey', 'blue', 'navy', 'teal', 'green', 'yellow', 'orange', 'red', 'pink', 'purple', 'dark'] as const;
+export const COLORS = [
+  'grey',
+  'blue',
+  'navy',
+  'teal',
+  'green',
+  'yellow',
+  'orange',
+  'red',
+  'pink',
+  'purple',
+  'dark',
+] as const;
 
 export const optionSchema = z.object({
   id: z.string().min(1),
@@ -142,7 +179,10 @@ export const optionSchema = z.object({
 export function findOption(options: LabelOption[], input: unknown): LabelOption | undefined {
   if (typeof input !== 'string') return undefined;
   const t = input.trim();
-  return options.find((o) => o.id === t) ?? options.find((o) => o.label.toLowerCase() === t.toLowerCase());
+  return (
+    options.find((o) => o.id === t) ??
+    options.find((o) => o.label.toLowerCase() === t.toLowerCase())
+  );
 }
 
 // ───────────── people and lookups ─────────────
@@ -161,7 +201,10 @@ export function findPersonId(input: unknown, ctx: Ctx): string | undefined {
   return undefined;
 }
 
-export function findByName<T extends { id: string; name: string }>(map: Map<string, T>, input: unknown): T | undefined {
+export function findByName<T extends { id: string; name: string }>(
+  map: Map<string, T>,
+  input: unknown,
+): T | undefined {
   if (typeof input !== 'string') return undefined;
   const t = input.trim();
   return map.get(t) ?? [...map.values()].find((x) => x.name.toLowerCase() === t.toLowerCase());
@@ -189,7 +232,12 @@ export function splitList(text: string): string[] {
 export const noIssues = (): Issue[] => [];
 export const nullProjection = (): null => null;
 
-export function issue(field: Field, code: string, message: string, level: Issue['level'] = 'error'): Issue {
+export function issue(
+  field: Field,
+  code: string,
+  message: string,
+  level: Issue['level'] = 'error',
+): Issue {
   return { fieldKey: field.key, level, code, message };
 }
 

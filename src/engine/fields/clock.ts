@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import type { Ctx, Field, Item, Json } from '../types';
-import { cmpNumber, emptyLast, isoDateInZone, nullProjection, noIssues, parseJson } from './helpers';
+import {
+  cmpNumber,
+  emptyLast,
+  isoDateInZone,
+  nullProjection,
+  noIssues,
+  parseJson,
+} from './helpers';
 import { resolveFieldType } from './resolve';
 import type { FieldTypeDef } from './types';
 
@@ -62,7 +69,11 @@ function zonedMidnight(iso: string, timeZone: string): number {
 /** The moment a date/datetime field's value stands for: an ISO instant as is, a date at local midnight. */
 function instantOf(field: Field, raw: Json | undefined, ctx: Ctx): number | null {
   if (raw === undefined || raw === null) return null;
-  if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(raw) && !Number.isNaN(Date.parse(raw))) {
+  if (
+    typeof raw === 'string' &&
+    /^\d{4}-\d{2}-\d{2}T/.test(raw) &&
+    !Number.isNaN(Date.parse(raw))
+  ) {
     return Date.parse(raw);
   }
   const d = resolveFieldType(field.type)?.toDate(raw, field.config, ctx) ?? null;
@@ -82,7 +93,8 @@ export function clockState(item: Item, field: Field<ClockConfig>, ctx: Ctx): Clo
   const cfg = field.config;
   const sf = cfg.startFieldKey ? ctx.fieldsByKey.get(cfg.startFieldKey) : undefined;
   const start = sf ? instantOf(sf, item.values[sf.id], ctx) : null;
-  if (start === null) return { state: 'not_started', start: null, deadline: null, stoppedAt: null, hoursLeft: null };
+  if (start === null)
+    return { state: 'not_started', start: null, deadline: null, stoppedAt: null, hoursLeft: null };
   const deadline = start + cfg.hours * HOUR;
   const base = { start: iso(start), deadline: iso(deadline) };
   const stf = cfg.stopFieldKey ? ctx.fieldsByKey.get(cfg.stopFieldKey) : undefined;
@@ -90,10 +102,16 @@ export function clockState(item: Item, field: Field<ClockConfig>, ctx: Ctx): Clo
     const stop = instantOf(stf, item.values[stf.id], ctx);
     // A stop field without a time (e.g. a checkbox) counts as met.
     const missed = stop !== null && stop > deadline;
-    return { ...base, state: missed ? 'missed' : 'met', stoppedAt: stop === null ? null : iso(stop), hoursLeft: null };
+    return {
+      ...base,
+      state: missed ? 'missed' : 'met',
+      stoppedAt: stop === null ? null : iso(stop),
+      hoursLeft: null,
+    };
   }
   const left = deadline - ctx.now.getTime();
-  const state: ClockStateId = left < 0 ? 'overdue' : left < (cfg.hours * HOUR) / 3 ? 'warning' : 'running';
+  const state: ClockStateId =
+    left < 0 ? 'overdue' : left < (cfg.hours * HOUR) / 3 ? 'warning' : 'running';
   return { ...base, state, stoppedAt: null, hoursLeft: left / HOUR };
 }
 

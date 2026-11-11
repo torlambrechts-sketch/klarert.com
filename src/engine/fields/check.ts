@@ -22,7 +22,7 @@ export const check = base<boolean, Record<string, never>>({
   storage: 'values',
   kind: 'boolean',
   valueSchema: z.boolean(),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 76,
   formAllowed: true,

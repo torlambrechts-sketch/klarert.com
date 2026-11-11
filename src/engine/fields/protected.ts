@@ -15,7 +15,8 @@ function normalizeProtected(input: unknown): string | null {
   return t === '' ? null : t;
 }
 
-const isEmpty = (v: ProtectedValue | null) => v === null || (typeof v === 'string' && v.trim() === '');
+const isEmpty = (v: ProtectedValue | null) =>
+  v === null || (typeof v === 'string' && v.trim() === '');
 // Restricted values sort with the empties: their content must not leak through ordering.
 const sortEmpty = (v: ProtectedValue | null) => v === undefined || isEmpty(v);
 

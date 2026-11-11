@@ -30,7 +30,9 @@ export const date = base<string, DateConfig>({
 
 /** "in 3 days" / "today" / "2 days overdue" — the cell suffix when the item is not done (docs/03 §3.1). */
 export function relativeDue(iso: string, today: string): string {
-  const d = Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000);
+  const d = Math.round(
+    (Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000,
+  );
   if (d === 0) return 'today';
   if (d === 1) return 'tomorrow';
   if (d > 1) return `in ${d} days`;

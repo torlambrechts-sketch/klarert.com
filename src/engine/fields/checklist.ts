@@ -61,7 +61,9 @@ function normalizeChecklist(input: unknown, cfg: ChecklistConfig): ChecklistValu
       const obj = e && typeof e === 'object' ? (e as Record<string, unknown>) : { a: e };
       const r = entrySchema.safeParse({ ...obj, a: answerOf(obj.a) });
       if (!r.success) return null;
-      answers[id] = Object.fromEntries(Object.entries(r.data).filter(([, x]) => x !== undefined)) as unknown as ChecklistEntry;
+      answers[id] = Object.fromEntries(
+        Object.entries(r.data).filter(([, x]) => x !== undefined),
+      ) as unknown as ChecklistEntry;
     }
   } else {
     return null;
@@ -101,7 +103,8 @@ function score(v: ChecklistValue | null, cfg: ChecklistConfig): number | null {
   return yes + no === 0 ? null : (yes / (yes + no)) * 100;
 }
 
-const isEmpty = (v: ChecklistValue | null) => !v || !v.answers || Object.keys(v.answers).length === 0;
+const isEmpty = (v: ChecklistValue | null) =>
+  !v || !v.answers || Object.keys(v.answers).length === 0;
 
 export const checklist = base<ChecklistValue, ChecklistConfig>({
   id: 'checklist',
@@ -112,7 +115,9 @@ export const checklist = base<ChecklistValue, ChecklistConfig>({
   kind: 'number',
   valueSchema: z.object({ answers: z.record(z.string(), entrySchema) }),
   configSchema: z.object({
-    lines: z.array(z.object({ id: z.string().min(1), text: z.string().min(1), noteOnNo: z.boolean() })).min(1),
+    lines: z
+      .array(z.object({ id: z.string().min(1), text: z.string().min(1), noteOnNo: z.boolean() }))
+      .min(1),
   }),
   defaultConfig: () => ({ lines: [{ id: 'l1', text: 'First check', noteOnNo: true }] }),
   defaultWidth: 150,
@@ -130,7 +135,9 @@ export const checklist = base<ChecklistValue, ChecklistConfig>({
   validate: (v, field) =>
     field.config.lines
       .filter((l) => l.noteOnNo && v?.answers[l.id]?.a === 'no' && !v.answers[l.id]?.note?.trim())
-      .map((l) => issue(field, 'note_required', `Add a note to "${l.text}" explaining the No.`, 'warning')),
+      .map((l) =>
+        issue(field, 'note_required', `Add a note to "${l.text}" explaining the No.`, 'warning'),
+      ),
   isEmpty,
   toText: (v, cfg) => {
     if (isEmpty(v)) return '';

@@ -72,7 +72,7 @@ export const pdmarker = base<string[], PdMarkerConfig>({
   storage: 'values',
   kind: 'multi',
   valueSchema: z.array(z.enum(IDS as [string, ...string[]])),
-  configSchema: z.object({}).strict() as unknown as z.ZodType<PdMarkerConfig>,
+  configSchema: z.object({}) as unknown as z.ZodType<PdMarkerConfig>,
   defaultConfig: () => ({}),
   defaultWidth: 180,
   formAllowed: true,
@@ -84,6 +84,7 @@ export const pdmarker = base<string[], PdMarkerConfig>({
   isEmpty,
   toText: (v) => text(v),
   toNumber: (v) => (isEmpty(v) ? null : v!.length),
-  compare: (a, b) => emptyLast(a, b, isEmpty, (x, y) => cmpText(text(x), text(y)) || cmpNumber(x.length, y.length)),
+  compare: (a, b) =>
+    emptyLast(a, b, isEmpty, (x, y) => cmpText(text(x), text(y)) || cmpNumber(x.length, y.length)),
   options: () => OPTIONS,
 });

@@ -89,6 +89,8 @@ export const applicability = base<ApplicabilityValue, ApplicabilityConfig>({
     const label = APPLICABILITY_OPTIONS.find((o) => o.id === s)!.label;
     return v!.reason ? `${label} — ${v!.reason}` : label;
   },
-  compare: (a, b) => emptyLast(a, b, isEmpty, (x, y) => cmpNumber(x.applicable ? 0 : 1, y.applicable ? 0 : 1)),
+  compare: (a, b) =>
+    emptyLast(a, b, isEmpty, (x, y) => cmpNumber(x.applicable ? 0 : 1, y.applicable ? 0 : 1)),
+  keyOf: (v) => (v ? (v.applicable ? 'applicable' : 'not_applicable') : null),
   options: () => APPLICABILITY_OPTIONS,
 });

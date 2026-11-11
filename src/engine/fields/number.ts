@@ -26,7 +26,8 @@ export const number = base<number, NumberConfig>({
   normalize: (input) => parseNumber(input),
   parseText: (t) => parseNumber(t),
   isEmpty,
-  toText: (v, cfg) => (isEmpty(v) ? '' : `${formatNumber(v!, cfg.decimals)}${cfg.unit ? ` ${cfg.unit}` : ''}`),
+  toText: (v, cfg) =>
+    isEmpty(v) ? '' : `${formatNumber(v!, cfg.decimals)}${cfg.unit ? ` ${cfg.unit}` : ''}`,
   toNumber: (v) => (isEmpty(v) ? null : v),
   compare: (a, b) => emptyLast(a, b, isEmpty, cmpNumber),
 });

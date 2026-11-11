@@ -32,7 +32,8 @@ export const numberOf = (item: Item, field: Field, ctx: Ctx) =>
   defOf(field).toNumber(valueOf(item, field, ctx), field.config, ctx);
 export const dateOf = (item: Item, field: Field, ctx: Ctx) =>
   defOf(field).toDate(valueOf(item, field, ctx), field.config, ctx);
-export const isEmptyOf = (item: Item, field: Field, ctx: Ctx) => defOf(field).isEmpty(valueOf(item, field, ctx));
+export const isEmptyOf = (item: Item, field: Field, ctx: Ctx) =>
+  defOf(field).isEmpty(valueOf(item, field, ctx));
 export const isDoneOf = (item: Item, field: Field, ctx: Ctx) =>
   defOf(field).isDone?.(valueOf(item, field, ctx), field.config) ?? false;
 

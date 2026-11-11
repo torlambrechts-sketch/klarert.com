@@ -43,7 +43,7 @@ import { riskmatrix } from './riskmatrix';
 import { maturity } from './maturity';
 import { measurement } from './measurement';
 import { clock } from './clock';
-import { protected } from './protected';
+import { protectedText } from './protected';
 import { pdmarker } from './pdmarker';
 import { retention } from './retention';
 import { version } from './version';
@@ -104,7 +104,7 @@ export const FIELD_TYPES = {
   maturity,
   measurement,
   clock,
-  protected,
+  protected: protectedText,
   pdmarker,
   retention,
   version,

@@ -21,7 +21,7 @@ export const email = base<string, Record<string, never>>({
   storage: 'values',
   kind: 'text',
   valueSchema: z.string().regex(EMAIL).max(254),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 180,
   formAllowed: true,

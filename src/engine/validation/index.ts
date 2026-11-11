@@ -27,7 +27,12 @@ export function isVisible(field: Field, item: Item, ctx: Ctx): boolean {
   return field.visibility ? matches(field.visibility, item, ctx) : true;
 }
 
-const issue = (field: Field, code: string, message: string, level: Issue['level'] = 'error'): Issue => ({
+const issue = (
+  field: Field,
+  code: string,
+  message: string,
+  level: Issue['level'] = 'error',
+): Issue => ({
   fieldKey: field.key,
   code,
   message,
@@ -50,13 +55,16 @@ function genericIssues(field: Field, item: Item, ctx: Ctx, opts: ValidateOptions
 
   if (kind === 'number' && (min !== undefined || max !== undefined)) {
     const n = numberOf(item, field, ctx);
-    if (n !== null && min !== undefined && n < min) out.push(issue(field, 'min', `${field.name} must be at least ${min}.`));
-    if (n !== null && max !== undefined && n > max) out.push(issue(field, 'max', `${field.name} must be at most ${max}.`));
+    if (n !== null && min !== undefined && n < min)
+      out.push(issue(field, 'min', `${field.name} must be at least ${min}.`));
+    if (n !== null && max !== undefined && n > max)
+      out.push(issue(field, 'max', `${field.name} must be at most ${max}.`));
   }
   if (TEXT_KINDS.includes(kind)) {
     const text = textOf(item, field, ctx);
     const longest = maxLength ?? max;
-    if (min !== undefined && text.length < min) out.push(issue(field, 'min', `${field.name} needs at least ${min} characters.`));
+    if (min !== undefined && text.length < min)
+      out.push(issue(field, 'min', `${field.name} needs at least ${min} characters.`));
     if (longest !== undefined && text.length > longest)
       out.push(issue(field, 'max', `${field.name} can be at most ${longest} characters.`));
     if (pattern && pattern.length <= 200) {
@@ -66,13 +74,16 @@ function genericIssues(field: Field, item: Item, ctx: Ctx, opts: ValidateOptions
       } catch {
         re = null;
       }
-      if (re && !re.test(text)) out.push(issue(field, 'pattern', `${field.name} is not in the expected format.`));
+      if (re && !re.test(text))
+        out.push(issue(field, 'pattern', `${field.name} is not in the expected format.`));
     }
   }
   if (COUNT_KINDS.includes(kind)) {
     const count = lengthOf(value);
-    if (min !== undefined && count < min) out.push(issue(field, 'min', `Choose at least ${min} for ${field.name}.`));
-    if (max !== undefined && count > max) out.push(issue(field, 'max', `Choose at most ${max} for ${field.name}.`));
+    if (min !== undefined && count < min)
+      out.push(issue(field, 'min', `Choose at least ${min} for ${field.name}.`));
+    if (max !== undefined && count > max)
+      out.push(issue(field, 'max', `Choose at most ${max} for ${field.name}.`));
   }
   if (unique && opts.isUnique && !opts.isUnique(field, value)) {
     out.push(issue(field, 'unique', `Another item already has this ${field.name.toLowerCase()}.`));
@@ -83,11 +94,18 @@ function genericIssues(field: Field, item: Item, ctx: Ctx, opts: ValidateOptions
 function ruleMatches(rule: StatusRule, field: Field, item: Item, ctx: Ctx): boolean {
   const keys = keysOf(item, field, ctx);
   const raw = valueOf(item, field, ctx) as Json;
-  return rule.whenValues.some((w) => keys.includes(String(w)) || JSON.stringify(w) === JSON.stringify(raw));
+  return rule.whenValues.some(
+    (w) => keys.includes(String(w)) || JSON.stringify(w) === JSON.stringify(raw),
+  );
 }
 
 /** Validate an item as it would be after a change. */
-export function validateItem(item: Item, fields: Field[], ctx: Ctx, opts: ValidateOptions = {}): ValidationResult {
+export function validateItem(
+  item: Item,
+  fields: Field[],
+  ctx: Ctx,
+  opts: ValidateOptions = {},
+): ValidationResult {
   const changed = opts.changedKeys ? new Set(opts.changedKeys) : null;
   const issues: Issue[] = [];
   const commentRequired: StatusRule[] = [];

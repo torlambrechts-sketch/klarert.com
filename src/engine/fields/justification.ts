@@ -41,7 +41,10 @@ export const justification = base<string, JustificationConfig>({
   storage: 'values',
   kind: 'text',
   valueSchema: z.string().min(1).max(MAX),
-  configSchema: z.object({ whenFieldKey: z.string().min(1).nullable(), whenValues: z.array(z.json()) }),
+  configSchema: z.object({
+    whenFieldKey: z.string().min(1).nullable(),
+    whenValues: z.array(z.json()),
+  }),
   defaultConfig: () => ({ whenFieldKey: 'applicability', whenValues: ['not_applicable'] }),
   defaultWidth: 200,
   formAllowed: true,

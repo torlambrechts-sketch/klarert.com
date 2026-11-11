@@ -19,7 +19,7 @@ export const role: FieldTypeDef<string, RoleConfig> = base<string, RoleConfig>({
   storage: 'values',
   kind: 'option',
   valueSchema: z.string().min(1),
-  configSchema: z.object({}).strict() as z.ZodType<RoleConfig>,
+  configSchema: z.object({}) as z.ZodType<RoleConfig>,
   defaultConfig: () => ({}),
   defaultWidth: 140,
   formAllowed: true,

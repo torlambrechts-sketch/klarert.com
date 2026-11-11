@@ -32,7 +32,7 @@ export const autoid: FieldTypeDef<string, AutoIdConfig> = base<string, AutoIdCon
   storage: 'computed',
   kind: 'text',
   valueSchema: z.string().min(1),
-  configSchema: z.object({}).strict() as unknown as z.ZodType<AutoIdConfig>,
+  configSchema: z.object({}) as unknown as z.ZodType<AutoIdConfig>,
   defaultConfig: () => ({}),
   defaultWidth: 100,
   formAllowed: false,

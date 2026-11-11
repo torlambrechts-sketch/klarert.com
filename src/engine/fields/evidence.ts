@@ -27,7 +27,8 @@ const isEmpty = (v: FileRow[] | null) => !Array.isArray(v) || v.length === 0;
 /** Earliest valid_until among current files, or null. */
 export function earliestValidUntil(rows: FileRow[] | null): string | null {
   let min: string | null = null;
-  for (const r of rows ?? []) if (r.validUntil && (min === null || r.validUntil < min)) min = r.validUntil;
+  for (const r of rows ?? [])
+    if (r.validUntil && (min === null || r.validUntil < min)) min = r.validUntil;
   return min;
 }
 

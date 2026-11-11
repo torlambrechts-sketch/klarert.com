@@ -9,35 +9,71 @@ beforeAll(() => installFieldTypes(Object.values(FIELD_TYPES)));
 
 const f = {
   title: makeField('text', {}, { key: 'title', position: 'a0' }),
-  status: makeField('status', FIELD_TYPES.status.defaultConfig(), { key: 'status', position: 'a1' }),
+  status: makeField('status', FIELD_TYPES.status.defaultConfig(), {
+    key: 'status',
+    position: 'a1',
+  }),
   cost: makeField('number', { unit: '', decimals: 2 }, { key: 'cost', position: 'a2' }),
   due: makeField('date', { relative: true }, { key: 'due', position: 'a3' }),
-  severity: makeField('severity', FIELD_TYPES.severity.defaultConfig(), { key: 'severity', position: 'a4' }),
+  severity: makeField('severity', FIELD_TYPES.severity.defaultConfig(), {
+    key: 'severity',
+    position: 'a4',
+  }),
   tags: makeField(
     'multiselect',
-    { options: [{ id: 'opt_a', label: 'Safety', color: 'red' }, { id: 'opt_b', label: 'Quality', color: 'blue' }, { id: 'opt_c', label: 'IT', color: 'teal' }] },
+    {
+      options: [
+        { id: 'opt_a', label: 'Safety', color: 'red' },
+        { id: 'opt_b', label: 'Quality', color: 'blue' },
+        { id: 'opt_c', label: 'IT', color: 'teal' },
+      ],
+    },
     { key: 'tags', position: 'a5' },
   ),
   owner: makeField('people', { multiple: true }, { key: 'owner', position: 'a6' }),
   approved: makeField('check', {}, { key: 'approved', position: 'a7' }),
-  related: makeField('link', { targetSheetId: 's-ca', multiple: true, inverseFieldId: null }, { key: 'related', position: 'a8' }),
-  evidence: makeField('evidence', { validDays: 365, multiple: true, accept: [] }, { key: 'evidence', position: 'a9' }),
-  signoff: makeField('signature', { meaning: 'Approved', clearOnChange: true }, { key: 'signoff', position: 'b0' }),
+  related: makeField(
+    'link',
+    { targetSheetId: 's-ca', multiple: true, inverseFieldId: null },
+    { key: 'related', position: 'a8' },
+  ),
+  evidence: makeField(
+    'evidence',
+    { validDays: 365, multiple: true, accept: [] },
+    { key: 'evidence', position: 'a9' },
+  ),
+  signoff: makeField(
+    'signature',
+    { meaning: 'Approved', clearOnChange: true },
+    { key: 'signoff', position: 'b0' },
+  ),
 };
 const fields: Field[] = Object.values(f);
 
-function world(values: Record<string, Json>, over: Partial<Item> = {}, extra: Parameters<typeof makeCtx>[0] = {}) {
-  const item = makeItem(Object.fromEntries(Object.entries(values).map(([k, v]) => [f[k as keyof typeof f].id, v])), {
-    id: 'i-x',
-    name: 'Fix guard on press 3',
-    displayId: 'CA-014',
-    ...over,
-  });
+function world(
+  values: Record<string, Json>,
+  over: Partial<Item> = {},
+  extra: Parameters<typeof makeCtx>[0] = {},
+) {
+  const item = makeItem(
+    Object.fromEntries(Object.entries(values).map(([k, v]) => [f[k as keyof typeof f].id, v])),
+    {
+      id: 'i-x',
+      name: 'Fix guard on press 3',
+      displayId: 'CA-014',
+      ...over,
+    },
+  );
   const ctx = makeCtx({ fields, items: [item, makeItem({}, { id: 'i-y' })], ...extra });
   return { item, ctx };
 }
 
-const is = (cond: Condition, values: Record<string, Json>, expected: boolean, extra?: Parameters<typeof makeCtx>[0]) => {
+const is = (
+  cond: Condition,
+  values: Record<string, Json>,
+  expected: boolean,
+  extra?: Parameters<typeof makeCtx>[0],
+) => {
   const { item, ctx } = world(values, {}, extra);
   expect(matches(cond, item, ctx)).toBe(expected);
 };
@@ -58,7 +94,9 @@ describe('text', () => {
     ['not_contains', 'valve', true],
     ['starts_with', 'Check', false],
     ['is_not', 'x', true],
-  ])('%s %j', (op, value, expected) => is({ fieldKey: 'title', op, value }, { title: 'Press guard check' }, expected));
+  ])('%s %j', (op, value, expected) =>
+    is({ fieldKey: 'title', op, value }, { title: 'Press guard check' }, expected),
+  );
 
   it('empties', () => {
     is({ fieldKey: 'title', op: 'is_empty' }, {}, true);
@@ -69,8 +107,12 @@ describe('text', () => {
     const { item, ctx } = world({});
     expect(matches({ fieldKey: '__name', op: 'contains', value: 'press 3' }, item, ctx)).toBe(true);
     expect(matches({ fieldKey: '__id', op: 'is', value: 'CA-014' }, item, ctx)).toBe(true);
-    expect(matches({ fieldKey: '__group', op: 'is_any_of', value: ['g-open'] }, item, ctx)).toBe(true);
-    expect(matches({ fieldKey: '__group', op: 'is_none_of', value: ['g-open'] }, item, ctx)).toBe(false);
+    expect(matches({ fieldKey: '__group', op: 'is_any_of', value: ['g-open'] }, item, ctx)).toBe(
+      true,
+    );
+    expect(matches({ fieldKey: '__group', op: 'is_none_of', value: ['g-open'] }, item, ctx)).toBe(
+      false,
+    );
   });
 });
 
@@ -85,7 +127,9 @@ describe('number', () => {
     ['between', [50, 150], true],
     ['between', [150, 50], true],
     ['between', [101, 150], false],
-  ])('%s %j', (op, value, expected) => is({ fieldKey: 'cost', op, value }, { cost: 100 }, expected));
+  ])('%s %j', (op, value, expected) =>
+    is({ fieldKey: 'cost', op, value }, { cost: 100 }, expected),
+  );
 
   it('an empty number matches only emptiness', () => {
     is({ fieldKey: 'cost', op: 'gt', value: 0 }, {}, false);
@@ -108,7 +152,9 @@ describe('date (today = 2026-11-11)', () => {
     ['next_days', 7, '2026-11-10', false],
     ['last_days', 7, '2026-11-04', true],
     ['last_days', 7, '2026-11-03', false],
-  ])('%s %j on %s', (op, value, due, expected) => is({ fieldKey: 'due', op, value }, { due }, expected));
+  ])('%s %j on %s', (op, value, due, expected) =>
+    is({ fieldKey: 'due', op, value }, { due }, expected),
+  );
 
   it('overdue: before today and the item is not done', () => {
     is({ fieldKey: 'due', op: 'overdue' }, { due: '2026-11-10', status: 'opt_wip' }, true);
@@ -120,14 +166,20 @@ describe('date (today = 2026-11-11)', () => {
 
 describe('option and ordered', () => {
   it('is_any_of / is_none_of / is_done', () => {
-    is({ fieldKey: 'status', op: 'is_any_of', value: ['opt_wip', 'opt_stuck'] }, { status: 'opt_wip' }, true);
+    is(
+      { fieldKey: 'status', op: 'is_any_of', value: ['opt_wip', 'opt_stuck'] },
+      { status: 'opt_wip' },
+      true,
+    );
     is({ fieldKey: 'status', op: 'is_none_of', value: ['opt_wip'] }, { status: 'opt_wip' }, false);
     is({ fieldKey: 'status', op: 'is_done' }, { status: 'opt_done' }, true);
     is({ fieldKey: 'status', op: 'is_not_done' }, {}, true);
   });
 
   it('at_least / at_most use the option order', () => {
-    const [low, medium, high, critical] = FIELD_TYPES.severity.defaultConfig().options.map((o) => o.id);
+    const [low, medium, high, critical] = FIELD_TYPES.severity
+      .defaultConfig()
+      .options.map((o) => o.id);
     is({ fieldKey: 'severity', op: 'at_least', value: high! }, { severity: critical! }, true);
     is({ fieldKey: 'severity', op: 'at_least', value: high! }, { severity: medium! }, false);
     is({ fieldKey: 'severity', op: 'at_most', value: medium! }, { severity: low! }, true);
@@ -142,7 +194,9 @@ describe('multi', () => {
     ['has_all_of', ['opt_a', 'opt_c'], false],
     ['has_none_of', ['opt_c'], true],
     ['has_none_of', ['opt_a'], false],
-  ])('%s %j', (op, value, expected) => is({ fieldKey: 'tags', op, value }, { tags: ['opt_a', 'opt_b'] }, expected));
+  ])('%s %j', (op, value, expected) =>
+    is({ fieldKey: 'tags', op, value }, { tags: ['opt_a', 'opt_b'] }, expected),
+  );
 });
 
 describe('people', () => {
@@ -151,7 +205,11 @@ describe('people', () => {
     is({ fieldKey: 'owner', op: 'includes_me' }, { owner: ['u-james'] }, false);
   });
   it('includes_any_of and excludes accept "me"', () => {
-    is({ fieldKey: 'owner', op: 'includes_any_of', value: ['u-vic', 'me'] }, { owner: ['u-maria'] }, true);
+    is(
+      { fieldKey: 'owner', op: 'includes_any_of', value: ['u-vic', 'me'] },
+      { owner: ['u-maria'] },
+      true,
+    );
     is({ fieldKey: 'owner', op: 'excludes', value: ['u-james'] }, { owner: ['u-maria'] }, true);
     is({ fieldKey: 'owner', op: 'is_empty' }, { owner: [] }, true);
   });
@@ -172,29 +230,50 @@ describe('link', () => {
     ['includes_item', 'i-y', true],
     ['count_gt', 1, true],
     ['count_lt', 2, false],
-  ])('%s %j', (op, value, expected) => is({ fieldKey: 'related', op, value }, {}, expected, { links }));
+  ])('%s %j', (op, value, expected) =>
+    is({ fieldKey: 'related', op, value }, {}, expected, { links }),
+  );
 });
 
 describe('file', () => {
-  const files = (validUntil: string | null) => [makeFile({ itemId: 'i-x', fieldId: 'f-evidence', validUntil })];
+  const files = (validUntil: string | null) => [
+    makeFile({ itemId: 'i-x', fieldId: 'f-evidence', validUntil }),
+  ];
   it('has_files / has_none', () => {
     is({ fieldKey: 'evidence', op: 'has_files' }, {}, true, { files: files('2027-06-01') });
     is({ fieldKey: 'evidence', op: 'has_none' }, {}, true);
   });
   it('freshness_is', () => {
-    is({ fieldKey: 'evidence', op: 'freshness_is', value: 'current' }, {}, true, { files: files('2027-06-01') });
-    is({ fieldKey: 'evidence', op: 'freshness_is', value: 'expiring' }, {}, true, { files: files('2026-12-01') });
-    is({ fieldKey: 'evidence', op: 'freshness_is', value: 'expired' }, {}, true, { files: files('2026-11-01') });
+    is({ fieldKey: 'evidence', op: 'freshness_is', value: 'current' }, {}, true, {
+      files: files('2027-06-01'),
+    });
+    is({ fieldKey: 'evidence', op: 'freshness_is', value: 'expiring' }, {}, true, {
+      files: files('2026-12-01'),
+    });
+    is({ fieldKey: 'evidence', op: 'freshness_is', value: 'expired' }, {}, true, {
+      files: files('2026-11-01'),
+    });
   });
   it('expires_within N days', () => {
-    is({ fieldKey: 'evidence', op: 'expires_within', value: 30 }, {}, true, { files: files('2026-12-01') });
-    is({ fieldKey: 'evidence', op: 'expires_within', value: 10 }, {}, false, { files: files('2026-12-01') });
-    is({ fieldKey: 'evidence', op: 'expires_within', value: 30 }, {}, false, { files: files('2026-11-01') });
+    is({ fieldKey: 'evidence', op: 'expires_within', value: 30 }, {}, true, {
+      files: files('2026-12-01'),
+    });
+    is({ fieldKey: 'evidence', op: 'expires_within', value: 10 }, {}, false, {
+      files: files('2026-12-01'),
+    });
+    is({ fieldKey: 'evidence', op: 'expires_within', value: 30 }, {}, false, {
+      files: files('2026-11-01'),
+    });
   });
 });
 
 describe('signature', () => {
-  const signed = { by: 'u-james', at: '2026-11-10T10:00:00Z', meaning: 'Approved', hash: 'a'.repeat(64) };
+  const signed = {
+    by: 'u-james',
+    at: '2026-11-10T10:00:00Z',
+    meaning: 'Approved',
+    hash: 'a'.repeat(64),
+  };
   it('is_signed / signed_by', () => {
     is({ fieldKey: 'signoff', op: 'is_signed' }, { signoff: signed }, true);
     is({ fieldKey: 'signoff', op: 'is_not_signed' }, {}, true);
@@ -236,5 +315,42 @@ describe('validity', () => {
         ctx,
       ),
     ).toBe(false);
+  });
+});
+
+describe('object-valued options and derived kinds', () => {
+  it('location filters by site id; applicability by state; maturity by level', () => {
+    const site = makeField('location', {}, { key: 'site', position: 'c0' });
+    const appl = makeField('applicability', FIELD_TYPES.applicability.defaultConfig(), {
+      key: 'appl',
+      position: 'c1',
+    });
+    const mat = makeField('maturity', FIELD_TYPES.maturity.defaultConfig(), {
+      key: 'mat',
+      position: 'c2',
+    });
+    const item = makeItem({
+      [site.id]: { siteId: 'site-leeds' },
+      [appl.id]: { applicable: false, reason: 'n/a' },
+      [mat.id]: 3,
+    });
+    const ctx = makeCtx({ fields: [site, appl, mat], items: [item] });
+    expect(matches({ fieldKey: 'site', op: 'is_any_of', value: ['site-leeds'] }, item, ctx)).toBe(
+      true,
+    );
+    expect(
+      matches({ fieldKey: 'appl', op: 'is_any_of', value: ['not_applicable'] }, item, ctx),
+    ).toBe(true);
+    expect(matches({ fieldKey: 'mat', op: 'is_any_of', value: ['3'] }, item, ctx)).toBe(true);
+    expect(matches({ fieldKey: 'mat', op: 'at_least', value: '2' }, item, ctx)).toBe(true);
+  });
+
+  it('"created by" filters as people and "created at" as a date', () => {
+    const by = makeField('meta', { which: 'created_by' }, { key: 'by', position: 'c0' });
+    const at = makeField('meta', { which: 'created_at' }, { key: 'at', position: 'c1' });
+    const item = makeItem({}, { createdBy: 'u-maria', createdAt: '2026-11-01T09:00:00Z' });
+    const ctx = makeCtx({ fields: [by, at], items: [item] });
+    expect(matches({ fieldKey: 'by', op: 'includes_me' }, item, ctx)).toBe(true);
+    expect(matches({ fieldKey: 'at', op: 'before', value: '2026-11-02' }, item, ctx)).toBe(true);
   });
 });

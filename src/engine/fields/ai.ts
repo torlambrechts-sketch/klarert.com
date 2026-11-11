@@ -116,5 +116,6 @@ export const ai: FieldTypeDef<AiValue, AiConfig> = base<AiValue, AiConfig>({
       const rank = (v: AiValue) => AI_STATUSES.indexOf(v.status);
       return cmpNumber(rank(x), rank(y)) || cmpText(text(x, cfg, ctx), text(y, cfg, ctx));
     }),
+  keyOf: (v) => v?.status ?? null,
   options: () => OPTIONS.map((o) => ({ ...o })),
 });

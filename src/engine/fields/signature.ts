@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import type { Ctx, Json } from '../types';
-import { base, cmpNumber, emptyLast, findPersonId, formatDate, isoDateInZone, parseJson } from './helpers';
+import {
+  base,
+  cmpNumber,
+  emptyLast,
+  findPersonId,
+  formatDate,
+  isoDateInZone,
+  parseJson,
+} from './helpers';
 
 export interface SignatureValue {
   by: string;
@@ -54,7 +62,10 @@ export function shouldClearSignature(
   cfg: SignatureConfig,
 ): boolean {
   if (!cfg.clearOnChange) return false;
-  return signaturePayload(prevValues, signatureFieldId) !== signaturePayload(nextValues, signatureFieldId);
+  return (
+    signaturePayload(prevValues, signatureFieldId) !==
+    signaturePayload(nextValues, signatureFieldId)
+  );
 }
 
 function normalizeSignature(input: unknown, cfg: SignatureConfig, ctx: Ctx): SignatureValue | null {
@@ -62,7 +73,9 @@ function normalizeSignature(input: unknown, cfg: SignatureConfig, ctx: Ctx): Sig
   const o = input as Record<string, unknown>;
   const by = findPersonId(o.by, ctx);
   const r = valueSchema.safeParse({ ...o, by, meaning: o.meaning ?? cfg.meaning });
-  return r.success ? { by: r.data.by, at: r.data.at, meaning: r.data.meaning, hash: r.data.hash } : null;
+  return r.success
+    ? { by: r.data.by, at: r.data.at, meaning: r.data.meaning, hash: r.data.hash }
+    : null;
 }
 
 export const signature = base<SignatureValue, SignatureConfig>({
@@ -93,5 +106,6 @@ export const signature = base<SignatureValue, SignatureConfig>({
     return name ? `${v!.meaning} by ${name} on ${on}` : `${v!.meaning} on ${on}`;
   },
   toDate: (v, _cfg, ctx) => (isEmpty(v) ? null : isoDateInZone(v!.at, ctx.timeZone)),
-  compare: (a, b) => emptyLast(a, b, isEmpty, (x, y) => cmpNumber(Date.parse(x.at), Date.parse(y.at))),
+  compare: (a, b) =>
+    emptyLast(a, b, isEmpty, (x, y) => cmpNumber(Date.parse(x.at), Date.parse(y.at))),
 });

@@ -39,7 +39,13 @@ export const question = base<string, QuestionConfig>({
   configSchema: z.object({
     question: z.string(),
     options: z
-      .array(z.object({ id: z.string().min(1), label: z.string().min(1).max(80), score: z.number().finite() }))
+      .array(
+        z.object({
+          id: z.string().min(1),
+          label: z.string().min(1).max(80),
+          score: z.number().finite(),
+        }),
+      )
       .min(1),
     weight: z.number().finite(),
   }),
@@ -66,6 +72,12 @@ export const question = base<string, QuestionConfig>({
     return s === null ? null : s * cfg.weight;
   },
   compare: (a, b, cfg) =>
-    emptyLast(a, b, (v) => scoreOf(v, cfg) === null, (x, y) => cmpNumber(scoreOf(x, cfg)!, scoreOf(y, cfg)!)),
-  options: (cfg): LabelOption[] => cfg.options.map((o) => ({ id: o.id, label: o.label, color: 'grey' })),
+    emptyLast(
+      a,
+      b,
+      (v) => scoreOf(v, cfg) === null,
+      (x, y) => cmpNumber(scoreOf(x, cfg)!, scoreOf(y, cfg)!),
+    ),
+  options: (cfg): LabelOption[] =>
+    cfg.options.map((o) => ({ id: o.id, label: o.label, color: 'grey' })),
 });

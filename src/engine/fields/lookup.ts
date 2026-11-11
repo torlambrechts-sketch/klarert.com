@@ -96,6 +96,7 @@ export const lookup: FieldTypeDef<Json[], LookupConfig> = base<Json[], LookupCon
   toText: (v, cfg, ctx) => text(v, cfg, ctx),
   toNumber: (v, cfg, ctx) => first(v, cfg, ctx, (d, f) => d.toNumber(v![0], f.config, ctx)),
   toDate: (v, cfg, ctx) => first(v, cfg, ctx, (d, f) => d.toDate(v![0], f.config, ctx)),
+  effectiveKind: (field, ctx) => lookupKind(field, ctx),
   compare: (a, b, cfg, ctx) =>
     emptyLast(a, b, isBlank, (x, y) => cmpText(text(x, cfg, ctx), text(y, cfg, ctx))),
 });

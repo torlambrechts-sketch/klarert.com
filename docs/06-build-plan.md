@@ -35,13 +35,13 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M2: the pure engine in src/engine — domain types, the field type registry with all 57 types per docs/03, value projections, the condition operators per kind, and the formula parser. 100 % of the logic unit-tested; no React or Supabase imports in src/engine."
 
-- [ ] `src/engine/types.ts`: Sheet, Field, Group, Item, Person, Ctx, Issue, Automation types
-- [ ] Registry with exactly the 57 ids (test compares to the SQL list)
-- [ ] Each type: valueSchema, configSchema + defaults, normalize, parseText, validate, isEmpty, isDone, toText, toNumber, toDate, compare, compute (computed types) — tests per docs/03 §9
-- [ ] Generic validation: required, min/max, pattern, unique hook, status rules, justification, visibility
-- [ ] Conditions: every operator in docs/03 §4 with tests, including `overdue`, `at_least`, `includes_me`, `expires_within`
-- [ ] Formula: tokenizer, parser, evaluator, functions, errors `#REF #LOOP #ERR #DIV0`; 40+ test cases; no `eval`
-- [ ] Ordering helpers wrap `fractional-indexing`; key generator for fields; id-prefix suggestion
+- [x] `src/engine/types.ts`: Sheet, Field, Group, Item, Person, Ctx, Issue, Automation types
+- [x] Registry with exactly the 57 ids (test compares to the SQL list)
+- [x] Each type: valueSchema, configSchema + defaults, normalize, parseText, validate, isEmpty, isDone, toText, toNumber, toDate, compare, compute (computed types) — tests per docs/03 §9
+- [x] Generic validation: required, min/max, pattern, unique hook, status rules, justification, visibility
+- [x] Conditions: every operator in docs/03 §4 with tests, including `overdue`, `at_least`, `includes_me`, `expires_within`
+- [x] Formula: tokenizer, parser, evaluator, functions, errors `#REF #LOOP #ERR #DIV0`; 40+ test cases; no `eval`
+- [x] Ordering helpers wrap `fractional-indexing`; key generator for fields; id-prefix suggestion
 
 ## M3 · App shell and sheets  [Sonnet]
 

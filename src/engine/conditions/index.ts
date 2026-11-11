@@ -2,7 +2,18 @@
 import type { ValueKind } from '../fields/types';
 import { addDays } from '../fields/helpers';
 import type { Condition, Ctx, Field, FileRow, Item, Json } from '../types';
-import { dateOf, defOf, isDoneOf, isEmptyOf, isItemDone, keysOf, kindOf, numberOf, textOf, valueOf } from '../values';
+import {
+  dateOf,
+  defOf,
+  isDoneOf,
+  isEmptyOf,
+  isItemDone,
+  keysOf,
+  kindOf,
+  numberOf,
+  textOf,
+  valueOf,
+} from '../values';
 
 const EMPTY = ['is_empty', 'is_not_empty'] as const;
 const OPTION = ['is_any_of', 'is_none_of', 'is_done', 'is_not_done', ...EMPTY] as const;
@@ -10,8 +21,32 @@ const OPTION = ['is_any_of', 'is_none_of', 'is_done', 'is_not_done', ...EMPTY] a
 export const OPERATORS: Record<ValueKind, readonly string[]> = {
   text: ['is', 'is_not', 'contains', 'not_contains', 'starts_with', ...EMPTY],
   number: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'between', ...EMPTY],
-  date: ['is', 'before', 'after', 'on_or_before', 'on_or_after', 'between', 'is_today', 'next_days', 'last_days', 'overdue', ...EMPTY],
-  daterange: ['is', 'before', 'after', 'on_or_before', 'on_or_after', 'between', 'is_today', 'next_days', 'last_days', 'overdue', ...EMPTY],
+  date: [
+    'is',
+    'before',
+    'after',
+    'on_or_before',
+    'on_or_after',
+    'between',
+    'is_today',
+    'next_days',
+    'last_days',
+    'overdue',
+    ...EMPTY,
+  ],
+  daterange: [
+    'is',
+    'before',
+    'after',
+    'on_or_before',
+    'on_or_after',
+    'between',
+    'is_today',
+    'next_days',
+    'last_days',
+    'overdue',
+    ...EMPTY,
+  ],
   option: OPTION,
   ordered: [...OPTION, 'at_least', 'at_most'],
   multi: ['has_any_of', 'has_all_of', 'has_none_of', ...EMPTY],
@@ -24,7 +59,11 @@ export const OPERATORS: Record<ValueKind, readonly string[]> = {
 };
 
 /** Special keys usable in conditions besides field keys. */
-export const SPECIAL_KEYS: Record<string, ValueKind> = { __name: 'text', __group: 'option', __id: 'text' };
+export const SPECIAL_KEYS: Record<string, ValueKind> = {
+  __name: 'text',
+  __group: 'option',
+  __id: 'text',
+};
 
 type Resolved =
   | { special: '__name' | '__id' | '__group'; field?: undefined }
@@ -54,10 +93,15 @@ export function conditionProblem(cond: Condition, ctx: Ctx): string | null {
 
 const str = (v: Json | undefined): string => (v === null || v === undefined ? '' : String(v));
 const num = (v: Json | undefined): number | null =>
-  typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v)) ? Number(v) : null;
+  typeof v === 'number'
+    ? v
+    : typeof v === 'string' && v.trim() !== '' && !Number.isNaN(Number(v))
+      ? Number(v)
+      : null;
 const list = (v: Json | undefined): string[] =>
   Array.isArray(v) ? v.map(String) : v === null || v === undefined || v === '' ? [] : [String(v)];
-const pair = (v: Json | undefined): [Json, Json] | null => (Array.isArray(v) && v.length === 2 ? [v[0]!, v[1]!] : null);
+const pair = (v: Json | undefined): [Json, Json] | null =>
+  Array.isArray(v) && v.length === 2 ? [v[0]!, v[1]!] : null;
 
 function textOp(op: string, actual: string, value: Json | undefined): boolean {
   const a = actual.toLowerCase();
@@ -106,7 +150,13 @@ function numberOp(op: string, actual: number | null, value: Json | undefined): b
   }
 }
 
-function dateOp(op: string, actual: string | null, value: Json | undefined, item: Item, ctx: Ctx): boolean {
+function dateOp(
+  op: string,
+  actual: string | null,
+  value: Json | undefined,
+  item: Item,
+  ctx: Ctx,
+): boolean {
   if (actual === null) return false;
   const target = str(value) === 'today' ? ctx.today : str(value);
   switch (op) {
@@ -145,7 +195,10 @@ function dateOp(op: string, actual: string | null, value: Json | undefined, item
 
 function freshnessOf(rows: FileRow[], today: string): 'current' | 'expiring' | 'expired' | 'none' {
   if (rows.length === 0) return 'none';
-  const expiries = rows.map((r) => r.validUntil).filter((d): d is string => !!d).sort();
+  const expiries = rows
+    .map((r) => r.validUntil)
+    .filter((d): d is string => !!d)
+    .sort();
   const first = expiries[0];
   if (!first) return 'current';
   if (first < today) return 'expired';
@@ -193,7 +246,9 @@ export function matches(cond: Condition, item: Item, ctx: Ctx): boolean {
       if (op === 'is_not_done') return !isDoneOf(item, field, ctx);
       const def = defOf(field);
       const mine = def.rank?.(valueOf(item, field, ctx), field.config) ?? null;
-      const theirs = def.rank?.(str(value), field.config) ?? null;
+      // the condition value may be an option id, a label or a number: read it the way the field would
+      const theirs =
+        def.rank?.(def.normalize(value, field.config, ctx) ?? str(value), field.config) ?? null;
       if (mine === null || theirs === null) return false;
       return op === 'at_least' ? mine >= theirs : op === 'at_most' ? mine <= theirs : false;
     }
@@ -232,10 +287,14 @@ export function matches(cond: Condition, item: Item, ctx: Ctx): boolean {
       const rows = Array.isArray(v) ? (v as FileRow[]) : [];
       if (op === 'has_files') return rows.length > 0;
       if (op === 'has_none') return rows.length === 0;
-      if (op === 'freshness_is') return rows.length > 0 && freshnessOf(rows, ctx.today) === str(value);
+      if (op === 'freshness_is')
+        return rows.length > 0 && freshnessOf(rows, ctx.today) === str(value);
       if (op === 'expires_within') {
         const n = num(value);
-        const first = rows.map((r) => r.validUntil).filter((d): d is string => !!d).sort()[0];
+        const first = rows
+          .map((r) => r.validUntil)
+          .filter((d): d is string => !!d)
+          .sort()[0];
         return n !== null && !!first && first >= ctx.today && first <= addDays(ctx.today, n);
       }
       return false;
@@ -245,7 +304,13 @@ export function matches(cond: Condition, item: Item, ctx: Ctx): boolean {
       const signed = !!v && typeof v === 'object' && !!v.by;
       if (op === 'is_signed') return signed;
       if (op === 'is_not_signed') return !signed;
-      if (op === 'signed_by') return signed && list(value).map((w) => (w === 'me' ? ctx.userId : w)).includes(v!.by!);
+      if (op === 'signed_by')
+        return (
+          signed &&
+          list(value)
+            .map((w) => (w === 'me' ? ctx.userId : w))
+            .includes(v!.by!)
+        );
       return false;
     }
     default:

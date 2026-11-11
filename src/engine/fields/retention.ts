@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import type { Ctx, Field, Item } from '../types';
-import { addMonths, base, cmpNumber, emptyLast, formatDate, isoDateInZone, parseJson } from './helpers';
+import {
+  addMonths,
+  base,
+  cmpNumber,
+  emptyLast,
+  formatDate,
+  isoDateInZone,
+  parseJson,
+} from './helpers';
 import { resolveFieldType } from './resolve';
 
 export interface RetentionValue {
@@ -18,7 +26,10 @@ function normalizeRetention(input: unknown): RetentionValue | null {
   if (input && typeof input === 'object' && !Array.isArray(input)) {
     const o = input as Record<string, unknown>;
     if (typeof o.hold !== 'boolean') return null;
-    return { hold: o.hold, holdReason: typeof o.holdReason === 'string' ? o.holdReason.trim() : '' };
+    return {
+      hold: o.hold,
+      holdReason: typeof o.holdReason === 'string' ? o.holdReason.trim() : '',
+    };
   }
   if (typeof input !== 'string') return null;
   const t = input.trim();
@@ -61,7 +72,10 @@ export const retention = base<RetentionValue, RetentionConfig>({
   storage: 'values',
   kind: 'date',
   valueSchema: z.object({ hold: z.boolean(), holdReason: z.string() }),
-  configSchema: z.object({ years: z.number().nonnegative(), fromFieldKey: z.string().min(1).nullable() }),
+  configSchema: z.object({
+    years: z.number().nonnegative(),
+    fromFieldKey: z.string().min(1).nullable(),
+  }),
   defaultConfig: () => ({ years: 6, fromFieldKey: null }),
   defaultWidth: 160,
   formAllowed: true,

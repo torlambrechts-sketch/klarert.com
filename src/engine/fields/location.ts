@@ -43,7 +43,7 @@ export const location = base<LocationValue, Record<string, never>>({
   storage: 'values',
   kind: 'option',
   valueSchema: z.object({ siteId: z.string().min(1), note: z.string().min(1).optional() }),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 170,
   formAllowed: true,
@@ -62,6 +62,7 @@ export const location = base<LocationValue, Record<string, never>>({
       isEmpty,
       (x, y) => cmpText(siteName(x, ctx), siteName(y, ctx)) || cmpText(x.note ?? '', y.note ?? ''),
     ),
+  keyOf: (v) => v?.siteId ?? null,
   options: (_cfg, ctx) =>
     [...ctx.sites.values()].map((s) => ({ id: s.id, label: s.name, color: 'grey' })),
 });

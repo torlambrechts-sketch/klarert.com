@@ -108,7 +108,7 @@ export const recurrence = base<RecurrenceValue, Record<string, never>>({
     unit: z.enum(RECURRENCE_UNITS),
     start: z.string().refine(isIsoDate),
   }),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 170,
   formAllowed: true,

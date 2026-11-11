@@ -31,7 +31,11 @@ describe('fieldKeyFromName', () => {
     ['Ansvarlig (ø/æ)', [], 'ansvarlig_o_ae'],
     ['2nd reviewer', [], 'f_2nd_reviewer'],
     ['!!!', [], 'field'],
-    ['A very long field name that goes on and on and on', [], 'a_very_long_field_name_that_goes_on'],
+    [
+      'A very long field name that goes on and on and on',
+      [],
+      'a_very_long_field_name_that_goes_on',
+    ],
   ])('%s with %j → %s', (name, taken, key) => {
     const k = fieldKeyFromName(name, taken);
     expect(k).toBe(key);

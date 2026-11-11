@@ -56,7 +56,7 @@ export const entity: FieldTypeDef<EntityValue, EntityConfig> = base<EntityValue,
   storage: 'values',
   kind: 'option',
   valueSchema: z.object({ entityId: z.string().min(1), siteId: z.string().min(1).nullable() }),
-  configSchema: z.object({}).strict() as z.ZodType<EntityConfig>,
+  configSchema: z.object({}) as z.ZodType<EntityConfig>,
   defaultConfig: () => ({}),
   defaultWidth: 200,
   formAllowed: true,
@@ -85,6 +85,7 @@ export const entity: FieldTypeDef<EntityValue, EntityConfig> = base<EntityValue,
       (v) => !v || !v.entityId,
       (x, y) => cmpText(toText(x, cfg, ctx), toText(y, cfg, ctx)),
     ),
+  keyOf: (v) => (v ? (v.siteId ? `${v.entityId}:${v.siteId}` : v.entityId) : null),
   options: (cfg, ctx) => {
     const out: LabelOption[] = [];
     for (const e of ctx.entities.values()) {

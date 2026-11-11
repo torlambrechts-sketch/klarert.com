@@ -35,7 +35,7 @@ export const url = base<string, Record<string, never>>({
   storage: 'values',
   kind: 'text',
   valueSchema: z.string().refine(isWebUrl, 'Use a web address starting with https://'),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 170,
   formAllowed: true,
@@ -45,13 +45,17 @@ export const url = base<string, Record<string, never>>({
   normalize: clean,
   parseText: clean,
   isEmpty: isBlank,
-  toText: (v) => {
-    if (!v) return '';
-    try {
-      return new URL(v).host;
-    } catch {
-      return v;
-    }
-  },
+  // Full address: toText feeds search, CSV export and type conversion. The cell shows urlHost().
+  toText: (v) => v ?? '',
   compare: (a, b) => emptyLast(a, b, isBlank, cmpText),
 });
+
+/** Host shown in the grid cell (docs/03 §3.1 "show host"). */
+export function urlHost(v: string | null): string {
+  if (!v) return '';
+  try {
+    return new URL(v).host;
+  } catch {
+    return v;
+  }
+}

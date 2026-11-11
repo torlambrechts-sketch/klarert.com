@@ -1,7 +1,8 @@
 import type { Ctx, Field } from '../types';
 import { resolveFieldType } from './resolve';
 
-const byPosition = (a: Field, b: Field) => (a.position < b.position ? -1 : a.position > b.position ? 1 : 0);
+const byPosition = (a: Field, b: Field) =>
+  a.position < b.position ? -1 : a.position > b.position ? 1 : 0;
 
 /**
  * The field that decides whether an item is done (overdue, My work, progress): the first `status` field,

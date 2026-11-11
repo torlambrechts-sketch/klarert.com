@@ -47,7 +47,7 @@ export const comment = base<CommentValue, Record<string, never>>({
     by: z.string().min(1),
     at: z.string().refine(isInstant),
   }),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 200,
   formAllowed: true,

@@ -24,7 +24,9 @@ function normalizeIds(input: unknown, cfg: LibraryLinkConfig): string[] | null {
   else return null;
   const ids = [
     ...new Set(
-      parts.filter((p): p is string => typeof p === 'string' && p.trim() !== '').map((p) => p.trim()),
+      parts
+        .filter((p): p is string => typeof p === 'string' && p.trim() !== '')
+        .map((p) => p.trim()),
     ),
   ];
   if (ids.length === 0) return null;
@@ -73,7 +75,12 @@ export function libraryLinkType(spec: {
     toText: (v, _cfg, ctx) => text(v, ctx),
     toNumber: (v) => (isEmpty(v) ? null : v!.length),
     compare: (a, b, _cfg, ctx) =>
-      emptyLast(a, b, isEmpty, (x, y) => cmpText(text(x, ctx), text(y, ctx)) || cmpNumber(x.length, y.length)),
+      emptyLast(
+        a,
+        b,
+        isEmpty,
+        (x, y) => cmpText(text(x, ctx), text(y, ctx)) || cmpNumber(x.length, y.length),
+      ),
   });
 }
 

@@ -75,5 +75,6 @@ export const riskmatrix = base<RiskValue, RiskMatrixConfig>({
   isEmpty,
   toText: (v, cfg) => (isEmpty(v) ? '' : `${scoreOf(v!)} · ${riskLevel(scoreOf(v!), cfg.bands)}`),
   toNumber: (v) => (isEmpty(v) ? null : scoreOf(v!)),
-  compare: (a, b) => emptyLast(a, b, isEmpty, (x, y) => cmpNumber(scoreOf(x), scoreOf(y)) || cmpNumber(x.l, y.l)),
+  compare: (a, b) =>
+    emptyLast(a, b, isEmpty, (x, y) => cmpNumber(scoreOf(x), scoreOf(y)) || cmpNumber(x.l, y.l)),
 });

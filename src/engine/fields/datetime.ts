@@ -127,7 +127,7 @@ export const datetime = base<string, Record<string, never>>({
   valueSchema: z
     .string()
     .refine(isStored, 'Use an ISO instant in UTC, such as 2026-11-11T14:20:00Z'),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 150,
   formAllowed: true,

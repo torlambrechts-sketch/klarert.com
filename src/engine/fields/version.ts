@@ -43,7 +43,7 @@ export const version = base<string, VersionConfig>({
   storage: 'values',
   kind: 'text',
   valueSchema: z.string().regex(VERSION),
-  configSchema: z.object({}).strict() as unknown as z.ZodType<VersionConfig>,
+  configSchema: z.object({}) as unknown as z.ZodType<VersionConfig>,
   defaultConfig: () => ({}),
   defaultWidth: 90,
   formAllowed: true,

@@ -64,7 +64,7 @@ export const timeline = base<TimelineValue, Record<string, never>>({
   valueSchema: z
     .object({ start: z.string().refine(isIsoDate), end: z.string().refine(isIsoDate) })
     .refine((v) => v.end >= v.start, 'End is before start.'),
-  configSchema: z.object({}).strict() as z.ZodType<Record<string, never>>,
+  configSchema: z.object({}) as z.ZodType<Record<string, never>>,
   defaultConfig: () => ({}),
   defaultWidth: 170,
   formAllowed: true,

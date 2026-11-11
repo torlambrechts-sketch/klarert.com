@@ -65,6 +65,7 @@ export const meta: FieldTypeDef<string, MetaConfig> = base<string, MetaConfig>({
   toText: (v, cfg, ctx) =>
     !v ? '' : isWhen(cfg) ? formatDateTime(v, ctx.timeZone) : personName(v, ctx),
   toDate: (v, cfg, ctx) => (v && isWhen(cfg) ? isoDateInZone(v, ctx.timeZone) : null),
+  effectiveKind: (field) => metaKind(field.config),
   compare: (a, b, cfg, ctx) =>
     emptyLast(a, b, isBlank, (x, y) =>
       isWhen(cfg)
