@@ -118,6 +118,8 @@ export function ItemPanel(props: ItemPanelProps) {
   const saveName = async () => {
     const n = name.trim();
     setRenaming(false);
+    // keep focus on the title; otherwise the focus trap may land it in a field and swallow the next Esc
+    requestAnimationFrame(() => titleRef.current?.focus());
     if (!n) {
       setName(item.name);
       return void toast.error('A name is required.');
