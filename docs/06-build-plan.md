@@ -15,7 +15,7 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 - [x] Supabase CLI (`supabase init`), migrations folder contains `0001_core.sql`, `0002_storage_realtime.sql`; `pnpm supabase:start && pnpm db:reset` works
 - [x] Vitest with one passing test; Playwright with one smoke test (home page renders)
 - [x] GitHub Actions: install, lint, typecheck, unit, start Supabase, e2e
-- [ ] Vercel project linked, region `fra1`, env vars from `.env.example`
+- [x] Vercel project linked, region `fra1`, env vars from `.env.example`
 - [x] Folder layout from CLAUDE.md created with README stubs in `src/engine` and `src/server`
 
 ## M1 · Schema, auth, tenancy, seed  [Opus]
