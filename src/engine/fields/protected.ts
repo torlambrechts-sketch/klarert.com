@@ -1,5 +1,7 @@
 import { z } from 'zod';
+import type { Field } from '../types';
 import { base, cmpText, emptyLast } from './helpers';
+import { resolveFieldType } from './resolve';
 
 /** undefined = the caller may not see the value. */
 export type ProtectedValue = string | undefined;
@@ -47,3 +49,13 @@ export const protectedText = base<ProtectedValue, ProtectedConfig>({
 });
 
 export { protectedText as protected };
+
+/** Whether a person may read (and, as an editor, write) a protected field: admins, or people the field lists. */
+export function canReadProtected(
+  field: Field<ProtectedConfig>,
+  userId: string,
+  isAdmin: boolean,
+): boolean {
+  if (resolveFieldType(field.type)?.storage !== 'protected') return false;
+  return isAdmin || (field.config?.allowedUserIds ?? []).includes(userId);
+}

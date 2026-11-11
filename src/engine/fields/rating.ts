@@ -28,6 +28,7 @@ export const rating = base<number, RatingConfig>({
   description: 'A rating in stars, from 1 to the scale you choose.',
   storage: 'values',
   kind: 'number',
+  defaultSummary: 'average',
   valueSchema: z.number().int().min(1).max(10),
   configSchema: z.object({ scale: z.number().int().min(3).max(10) }),
   defaultConfig: () => ({ scale: 5 }),

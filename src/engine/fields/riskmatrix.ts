@@ -57,6 +57,7 @@ export const riskmatrix = base<RiskValue, RiskMatrixConfig>({
   description: 'Likelihood times impact, with a Low to Critical level.',
   storage: 'values',
   kind: 'number',
+  defaultSummary: 'average',
   valueSchema: z.object({ l: z.number().int().min(1), i: z.number().int().min(1) }),
   configSchema: z.object({
     size: z.number().int().min(2),

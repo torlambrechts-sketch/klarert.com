@@ -106,6 +106,20 @@ export const signature = base<SignatureValue, SignatureConfig>({
     return name ? `${v!.meaning} by ${name} on ${on}` : `${v!.meaning} on ${on}`;
   },
   toDate: (v, _cfg, ctx) => (isEmpty(v) ? null : isoDateInZone(v!.at, ctx.timeZone)),
+  // The signer is always the caller, at the server's clock, over the values at signing.
+  stamp: (v, field, values, ctx, hash) => ({
+    by: ctx.userId,
+    at: ctx.now.toISOString(),
+    meaning: v.meaning || field.config.meaning,
+    hash: hash(signaturePayload(values, field.id)),
+  }),
+  onItemChange: (prev, next, field) =>
+    prev[field.id] !== undefined &&
+    next[field.id] !== undefined &&
+    stableStringify(prev[field.id]) === stableStringify(next[field.id]) &&
+    shouldClearSignature(prev, next, field.id, field.config)
+      ? null
+      : undefined,
   compare: (a, b) =>
     emptyLast(a, b, isEmpty, (x, y) => cmpNumber(Date.parse(x.at), Date.parse(y.at))),
 });

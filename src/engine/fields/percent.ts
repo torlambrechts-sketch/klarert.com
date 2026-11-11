@@ -15,6 +15,7 @@ export const percent = base<number, PercentConfig>({
   description: 'A percentage from 0 to 100, with an optional bar.',
   storage: 'values',
   kind: 'number',
+  defaultSummary: 'average',
   valueSchema: z.number().min(0).max(100),
   configSchema: z.object({ bar: z.boolean() }),
   defaultConfig: () => ({ bar: true }),
