@@ -138,7 +138,7 @@ test.describe('desktop', () => {
 
     await page.getByRole('link', { name: 'Sheet settings' }).click();
     const fields = page.getByRole('list', { name: 'Fields' });
-    for (const [field, type] of [
+    for (const [field, type] of <[string, string][]>[
       ['Owner email', 'Email'],
       ['Due', 'Date'],
       ['Hours', 'Number'],
