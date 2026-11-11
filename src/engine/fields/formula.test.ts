@@ -12,7 +12,7 @@ import { text } from './text';
 beforeAll(() => installFieldTypes([text, number, date, status, formula]));
 
 const fx = (key: string, expr: string, result: FormulaConfig['result'] = 'auto') =>
-  makeField<FormulaConfig>('formula', { expr, result }, { key }) as Field;
+  makeField<FormulaConfig>('formula', { expr, result }, { key });
 
 describe('formula', () => {
   contract(formula, {

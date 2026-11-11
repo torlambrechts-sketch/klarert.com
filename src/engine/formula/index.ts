@@ -2,7 +2,6 @@
 import { isIsoDate } from '../fields/helpers';
 import { type FormulaEnv, type FormulaResult, evaluate } from './evaluator';
 import {
-  type FormulaError,
   type FormulaValue,
   formulaError,
   isFormulaError,

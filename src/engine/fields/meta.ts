@@ -16,7 +16,7 @@ export function metaKind(cfg: MetaConfig): ValueKind {
 }
 
 const instant = (input: unknown): string | null => {
-  if (typeof input !== 'string' || !/^\d{4}-\d{2}-\d{2}T/.test(input.trim())) return null;
+  if (typeof input !== 'string' || !/^\d{4}-\d{2}-\d{2}[T ]\d/.test(input.trim())) return null;
   const ms = Date.parse(input.trim());
   return Number.isNaN(ms) ? null : new Date(ms).toISOString();
 };

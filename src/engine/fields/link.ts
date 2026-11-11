@@ -48,12 +48,10 @@ export function readValue(item: Item, field: Field, ctx: Ctx): unknown {
   }
 }
 
-/** Items a link-kind field on `item` points to, skipping ids not in the cache. */
+/** Items a link-kind field (link, requirement, controllink) on `item` points to, skipping ids not in the cache. */
 export function linkedItems(item: Item, linkField: Field, ctx: Ctx): Item[] {
-  const ids = readValue(item, linkField, ctx);
-  if (!Array.isArray(ids)) return [];
-  return ids.flatMap((id) => {
-    const t = typeof id === 'string' ? ctx.item(id) : undefined;
+  return ctx.links(item.id, linkField.id).flatMap((id) => {
+    const t = ctx.item(id);
     return t ? [t] : [];
   });
 }
