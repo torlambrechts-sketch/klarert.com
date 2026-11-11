@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { Ctx, Field, Issue, Item, TriggerId } from '../types';
+import type { Ctx, Field, Issue, Item, Json, TriggerId } from '../types';
 
 export type ValueKind =
   | 'text'
@@ -71,6 +71,29 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
   keyOf?(v: V | null, cfg: C): string | null;
   /** Kinds that depend on config (formula result type, lookup target). Default: `kind`. */
   effectiveKind?(field: Field<C>, ctx: Ctx): ValueKind;
+  /** Number kinds: the default group-footer summary (docs/03 §8). Default `sum`. */
+  defaultSummary?: 'sum' | 'average';
+  /**
+   * Server-side stamping of a value about to be written: who, when, hashes (signature). `values` are the item's
+   * values after the rest of the change; `hash` is SHA-256 of a string, injected.
+   */
+  stamp?(
+    v: V,
+    field: Field<C>,
+    values: Record<string, Json>,
+    ctx: Ctx,
+    hash: (s: string) => string,
+  ): V;
+  /**
+   * Called for every field of this type when other values of the item change. Return the new value (null clears),
+   * or undefined to keep it (signature clearOnChange).
+   */
+  onItemChange?(
+    prev: Record<string, Json>,
+    next: Record<string, Json>,
+    field: Field<C>,
+    ctx: Ctx,
+  ): V | null | undefined;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

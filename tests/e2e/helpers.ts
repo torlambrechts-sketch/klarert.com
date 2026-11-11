@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
 
 const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324';
@@ -66,4 +67,54 @@ export async function completeProfile(page: Page, name: string) {
   await expect(page.getByRole('heading', { name: 'Welcome' })).toBeVisible();
   await page.getByLabel('Your name').fill(name);
   await page.getByRole('button', { name: 'Continue' }).click();
+}
+
+// ───────────── REST as the signed-in person (RLS applies) ─────────────
+
+function localEnv(name: string): string {
+  if (process.env[name]) return process.env[name]!;
+  let text = '';
+  try {
+    text = readFileSync('.env.local', 'utf8');
+  } catch {
+    return '';
+  }
+  const line = text.split('\n').find((l) => l.startsWith(`${name}=`));
+  return line
+    ? line
+        .slice(name.length + 1)
+        .trim()
+        .replace(/^"|"$/g, '')
+    : '';
+}
+
+/** The signed-in person's access token, from the Supabase auth cookie (possibly chunked, base64). */
+export async function accessToken(page: Page): Promise<string> {
+  const cookies = (await page.context().cookies())
+    .filter((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name))
+    .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }));
+  let raw = decodeURIComponent(cookies.map((c) => c.value).join(''));
+  if (raw.startsWith('base64-')) raw = Buffer.from(raw.slice(7), 'base64').toString('utf8');
+  return (JSON.parse(raw) as { access_token: string }).access_token;
+}
+
+/** PostgREST call as the signed-in person: `rest(page, 'rpc/create_items', { method: 'POST', body })`. */
+export async function rest<T = unknown>(
+  page: Page,
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<T> {
+  const res = await fetch(`${localEnv('NEXT_PUBLIC_SUPABASE_URL')}/rest/v1/${path}`, {
+    method: init.method ?? 'GET',
+    headers: {
+      apikey: localEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+      Authorization: `Bearer ${await accessToken(page)}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`${res.status} ${text}`);
+  return (text ? JSON.parse(text) : null) as T;
 }

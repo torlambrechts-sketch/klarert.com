@@ -61,16 +61,16 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M4: the command layer (createItem, setValues, moveItem, archive, setLinks) per docs/02 §4 with optimistic TanStack Query mutations and realtime, then the Grid view per docs/05 §3.2 with a Cell and an Editor for every field type and column management."
 
-- [ ] Commands in `src/server/commands/` with Zod input, role check, registry validation, RPC call, returned messages; automations hook stubbed (no-op) until M7
-- [ ] Optimistic updates with rollback + error toast; realtime patching; own echoes ignored
-- [ ] Grid: groups blocks, sticky name column, per-group summaries (docs/03 §8), "+ Add item" with Enter-to-continue, virtualised rows and columns (10 000 × 30 smooth)
-- [ ] Cells + editors for all 57 types (computed types read-only with an explanation popover); evidence/attachment editors open the file dialog (upload wired in M5)
-- [ ] Keyboard: arrows, Enter/F2, Esc, Tab/Shift+Tab, Space for check, Delete clears, Cmd/Ctrl+C/V TSV (paste uses `parseText`, shows "8 cells pasted, 1 skipped: not a date")
-- [ ] Column header menu, add field popover (12 essentials + search + all types), field settings sheet incl. rules and visibility, resize, reorder, hide, duplicate, delete (soft), type change with preview (docs/03 §5)
-- [ ] Multi-select rows: bulk set field, move, archive (with Undo)
-- [ ] Drag to reorder items and move across groups (dnd-kit)
-- [ ] Status rule blocks show the message; comment-on-value opens the comment box
-- [ ] Locked items/fields behave per docs/01 §4
+- [x] Commands in `src/server/commands/` with Zod input, role check, registry validation, RPC call, returned messages; automations hook stubbed (no-op) until M7
+- [x] Optimistic updates with rollback + error toast; realtime patching; own echoes ignored
+- [x] Grid: groups blocks, sticky name column, per-group summaries (docs/03 §8), "+ Add item" with Enter-to-continue, virtualised rows and columns (10 000 × 30 smooth)
+- [x] Cells + editors for all 57 types (computed types read-only with an explanation popover); evidence/attachment editors open the file dialog (upload wired in M5)
+- [x] Keyboard: arrows, Enter/F2, Esc, Tab/Shift+Tab, Space for check, Delete clears, Cmd/Ctrl+C/V TSV (paste uses `parseText`, shows "8 cells pasted, 1 skipped: not a date")
+- [x] Column header menu, add field popover (12 essentials + search + all types), field settings sheet incl. rules and visibility, resize, reorder, hide, duplicate, delete (soft), type change with preview (docs/03 §5)
+- [x] Multi-select rows: bulk set field, move, archive (with Undo)
+- [x] Drag to reorder items and move across groups (dnd-kit)
+- [x] Status rule blocks show the message; comment-on-value opens the comment box
+- [x] Locked items/fields behave per docs/01 §4
 
 ## M5 · Item panel, files, links, activity  [Sonnet]
 

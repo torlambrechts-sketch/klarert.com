@@ -1,12 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Settings } from 'lucide-react';
-import { GroupBlocks } from '@/components/sheets/group-blocks';
-import { Button } from '@/components/ui/button';
+import { SheetView } from '@/components/grid/sheet-view';
 import { requireMember } from '@/server/auth';
-import { getGroupItems, getSheet } from '@/server/repositories/sheets';
-
-const PREVIEW = 25;
+import { getSheet } from '@/server/repositories/sheets';
 
 export async function generateMetadata({
   params,
@@ -19,6 +15,8 @@ export async function generateMetadata({
   return { title: `${sheet?.name ?? 'Sheet'} · Compliance OS` };
 }
 
+// The sheet page (docs/05 §3): the Grid view. The List view and saved views arrive with M6; until then the Grid is
+// the only view and the header shows no view tabs.
 export default async function SheetPage({
   params,
   searchParams,
@@ -28,50 +26,22 @@ export default async function SheetPage({
 }) {
   const { org, sheetId } = await params;
   const { group } = await searchParams;
-  const { workspace } = await requireMember(org);
+  const { workspace, role, user } = await requireMember(org);
   const sheet = await getSheet(workspace.id, sheetId);
   if (!sheet) notFound();
-  const shown = group ? sheet.groups.filter((g) => g.id === group) : sheet.groups;
-  const items = await getGroupItems(
-    sheet.id,
-    shown.filter((g) => g.count > 0).map((g) => g.id),
-    PREVIEW,
-  );
   const base = `/${org}/s/${sheet.id}`;
   return (
-    <main className="flex flex-col gap-5 px-4 py-6 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="break-words">{sheet.name}</h1>
-          <p className="text-muted-foreground text-sm">
-            {sheet.total === 1 ? '1 item' : `${sheet.total.toLocaleString('en-GB')} items`} · ids{' '}
-            <span className="font-mono">{sheet.id_prefix}001</span>
-            {sheet.description ? ` · ${sheet.description}` : ''}
-          </p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href={`${base}/settings`}>
-            <Settings aria-hidden /> Sheet settings
-          </Link>
-        </Button>
-      </div>
+    <>
       {sheet.archived_at ? (
         <p
           role="status"
-          className="border-warn/40 text-warn rounded-[var(--radius-card)] border bg-[#FFF8E6] px-3 py-2 text-sm"
+          className="border-warn/40 text-warn mx-4 mt-4 rounded-[var(--radius-card)] border bg-[#FFF8E6] px-3 py-2 text-sm sm:mx-6"
         >
           This sheet is archived. It is hidden from the side menu. Restore it in its settings.
         </p>
       ) : null}
-      {group ? (
-        <p className="phone-only text-sm">
-          <Link className="text-focus underline" href={base}>
-            Show all groups
-          </Link>
-        </p>
-      ) : null}
       {sheet.groups.length > 1 ? (
-        <nav aria-label="Groups" className="phone-only">
+        <nav aria-label="Groups" className="phone-only px-4 pt-4">
           <ul className="flex flex-wrap gap-2 text-sm">
             <li>
               <Link
@@ -96,19 +66,15 @@ export default async function SheetPage({
           </ul>
         </nav>
       ) : null}
-      {shown.length === 0 ? (
-        <p className="text-muted-foreground">
-          This group no longer exists.{' '}
-          <Link className="text-focus underline" href={base}>
-            Show all groups
-          </Link>
-        </p>
-      ) : (
-        <GroupBlocks
-          itemLabel={sheet.item_label}
-          groups={shown.map((g) => ({ ...g, items: [...(items.get(g.id) ?? [])] }))}
-        />
-      )}
-    </main>
+      <SheetView
+        org={org}
+        sheetId={sheet.id}
+        sheetName={sheet.name}
+        userId={user.id}
+        timeZone={workspace.time_zone}
+        role={role}
+        onlyGroup={group ?? null}
+      />
+    </>
   );
 }
