@@ -1,7 +1,17 @@
 import type { z } from 'zod';
 
 export type CommandError = {
-  code: 'invalid' | 'unauthenticated' | 'forbidden' | 'not_found' | 'conflict' | 'failed';
+  code:
+    | 'invalid'
+    | 'unauthenticated'
+    | 'forbidden'
+    | 'not_found'
+    | 'conflict'
+    | 'failed'
+    /** A status rule or a validation rule blocks the change (docs/03 §6). */
+    | 'blocked'
+    /** A status rule needs a comment: resend with `note` (docs/03 §6). */
+    | 'comment_required';
   message: string;
   fieldErrors?: Record<string, string>;
 };
@@ -52,6 +62,17 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   ],
   [/invites_open_email_idx/, 'conflict', 'This person already has an open invite.'],
   [/memberships_pkey/, 'conflict', 'This person is already a member.'],
+  [/item locked: (.*)/, 'forbidden', 'This item is locked. Only owners and admins can change it.'],
+  [/item locked/, 'forbidden', 'This item is locked. Only owners and admins can change it.'],
+  [
+    /workflow step is set by automations only/,
+    'forbidden',
+    'The workflow step is set by automations only.',
+  ],
+  [/link target not allowed/, 'invalid', 'Choose items from the sheet this field links to.'],
+  [/field .* not in sheet|field .* cannot hold a value/, 'conflict', 'A field changed. Reload the sheet.'],
+  [/item not found/, 'not_found', 'This item no longer exists or was archived.'],
+  [/group not in sheet/, 'not_found', 'This group no longer exists.'],
   [/prefix locked/, 'conflict', 'The ID prefix is fixed once the sheet has items.'],
   [/sheets_org_id_id_prefix_key/, 'conflict', 'Another sheet uses this ID prefix. Choose another.'],
   [/a sheet needs at least one group/, 'conflict', 'A sheet needs at least one group.'],
