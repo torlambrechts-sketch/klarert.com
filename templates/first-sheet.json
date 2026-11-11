@@ -1,0 +1,822 @@
+{
+  "id": "first-sheet-corrective-actions",
+  "version": 1,
+  "description": "The first spreadsheet: Corrective actions with a linked Actions sheet. Exercises 17 field types, status rules, a visibility rule, two-way links, a lookup, a formula, a progress field, a button and 9 automations.",
+  "people": [
+    {
+      "ref": "maria",
+      "email": "maria@example.com",
+      "name": "Maria Pereira",
+      "initials": "MP",
+      "jobRole": "Compliance manager",
+      "team": "Quality",
+      "role": "owner"
+    },
+    {
+      "ref": "james",
+      "email": "james@example.com",
+      "name": "James Okafor",
+      "initials": "JO",
+      "jobRole": "Head of IT",
+      "team": "IT",
+      "role": "editor"
+    },
+    {
+      "ref": "tom",
+      "email": "tom@example.com",
+      "name": "Tom Kirby",
+      "initials": "TK",
+      "jobRole": "HSE manager",
+      "team": "HSE",
+      "role": "editor"
+    },
+    {
+      "ref": "vic",
+      "email": "vic@example.com",
+      "name": "Vic Viewer",
+      "initials": "VV",
+      "jobRole": "Auditor",
+      "team": "Quality",
+      "role": "viewer"
+    }
+  ],
+  "folder": "Your sheets",
+  "sheets": [
+    {
+      "ref": "ca",
+      "name": "Corrective actions",
+      "description": "Nonconformities, complaints and audit findings that need a fix, a root cause and proof it worked.",
+      "itemLabel": "Corrective action",
+      "idPrefix": "CA-",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "Open",
+          "color": "orange"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "required": true,
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "locked": true,
+          "config": {
+            "options": [
+              {
+                "id": "opt_new",
+                "label": "New",
+                "color": "grey"
+              },
+              {
+                "id": "opt_investigating",
+                "label": "Investigating",
+                "color": "blue"
+              },
+              {
+                "id": "opt_action",
+                "label": "Action set",
+                "color": "purple"
+              },
+              {
+                "id": "opt_stuck",
+                "label": "Stuck",
+                "color": "red"
+              },
+              {
+                "id": "opt_verify",
+                "label": "Verifying",
+                "color": "orange"
+              },
+              {
+                "id": "opt_done",
+                "label": "Done",
+                "color": "green",
+                "done": true
+              }
+            ],
+            "default": "opt_new"
+          },
+          "rules": [
+            {
+              "id": "r_done",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_done"
+              ],
+              "require": [
+                "root_cause",
+                "evidence",
+                "effectiveness"
+              ],
+              "message": "Add the root cause, evidence and the effectiveness check before closing."
+            },
+            {
+              "id": "r_stuck",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_stuck"
+              ],
+              "requireComment": true
+            }
+          ]
+        },
+        {
+          "key": "source",
+          "name": "Source",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_audit",
+                "label": "Internal audit",
+                "color": "blue"
+              },
+              {
+                "id": "opt_complaint",
+                "label": "Customer complaint",
+                "color": "pink"
+              },
+              {
+                "id": "opt_incident",
+                "label": "Incident",
+                "color": "red"
+              },
+              {
+                "id": "opt_supplier",
+                "label": "Supplier",
+                "color": "teal"
+              }
+            ]
+          }
+        },
+        {
+          "key": "severity",
+          "name": "Severity",
+          "type": "severity"
+        },
+        {
+          "key": "site",
+          "name": "Site",
+          "type": "location"
+        },
+        {
+          "key": "found_on",
+          "name": "Found on",
+          "type": "date",
+          "config": {
+            "relative": false,
+            "default": "$today"
+          }
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date",
+          "required": true,
+          "config": {
+            "relative": true,
+            "default": "$in:30"
+          }
+        },
+        {
+          "key": "risk",
+          "name": "Risk",
+          "type": "riskmatrix",
+          "config": {
+            "size": 5,
+            "bands": [
+              4,
+              9,
+              15
+            ]
+          }
+        },
+        {
+          "key": "priority_score",
+          "name": "Priority score",
+          "type": "formula",
+          "config": {
+            "expr": "IF(EMPTY({due_date}), 0, ROUND({risk} + MAX(0, 30 - DAYS({due_date}, TODAY())) / 3, 0))",
+            "result": "number"
+          }
+        },
+        {
+          "key": "description",
+          "name": "What happened",
+          "type": "longtext"
+        },
+        {
+          "key": "root_cause",
+          "name": "Root cause",
+          "type": "longtext",
+          "visibility": {
+            "fieldKey": "status",
+            "op": "is_none_of",
+            "value": [
+              "opt_new"
+            ]
+          }
+        },
+        {
+          "key": "actions",
+          "name": "Actions",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "act",
+            "multiple": true,
+            "inverseKey": "corrective_action"
+          }
+        },
+        {
+          "key": "actions_done",
+          "name": "Actions done",
+          "type": "progress",
+          "config": {
+            "sourceFieldKey": "actions"
+          }
+        },
+        {
+          "key": "effectiveness",
+          "name": "Effectiveness check",
+          "type": "checklist",
+          "config": {
+            "lines": [
+              {
+                "id": "l1",
+                "text": "The fix is in place on every affected line or site",
+                "noteOnNo": true
+              },
+              {
+                "id": "l2",
+                "text": "No repeat in the 30 days after the fix",
+                "noteOnNo": true
+              },
+              {
+                "id": "l3",
+                "text": "Procedures and training updated where needed",
+                "noteOnNo": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "evidence",
+          "name": "Evidence",
+          "type": "evidence",
+          "config": {
+            "validDays": 365,
+            "multiple": true
+          }
+        },
+        {
+          "key": "raise_action",
+          "name": "Raise action",
+          "type": "button",
+          "config": {
+            "label": "Raise action"
+          }
+        },
+        {
+          "key": "ref",
+          "name": "ID",
+          "type": "autoid"
+        },
+        {
+          "key": "updated",
+          "name": "Last updated",
+          "type": "meta",
+          "config": {
+            "which": "updated_at"
+          }
+        }
+      ],
+      "views": [
+        {
+          "name": "List",
+          "type": "list",
+          "config": {
+            "hidden": [
+              "ref",
+              "updated",
+              "description"
+            ]
+          }
+        },
+        {
+          "name": "Grid",
+          "type": "grid",
+          "config": {}
+        },
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
+        {
+          "name": "Due dates",
+          "type": "calendar",
+          "config": {
+            "dateFieldKey": "due_date"
+          }
+        }
+      ],
+      "items": [
+        {
+          "group": "open",
+          "name": "Burrs on bracket 44-210",
+          "values": {
+            "owner": [
+              "$person:tom"
+            ],
+            "status": "opt_investigating",
+            "source": "opt_complaint",
+            "severity": "$option:Medium",
+            "found_on": "$in:-9",
+            "due_date": "$in:5",
+            "risk": {
+              "l": 3,
+              "i": 3
+            },
+            "description": "Customer found burrs on 12 of 400 brackets in lot 2210."
+          }
+        },
+        {
+          "group": "open",
+          "name": "Calibration label missing on CMM-2",
+          "values": {
+            "owner": [
+              "$person:maria"
+            ],
+            "status": "opt_action",
+            "source": "opt_audit",
+            "severity": "$option:Low",
+            "found_on": "$in:-20",
+            "due_date": "$in:-2",
+            "risk": {
+              "l": 2,
+              "i": 2
+            },
+            "root_cause": "Label not reprinted after the last calibration."
+          }
+        },
+        {
+          "group": "open",
+          "name": "Guard bypassed on press 3",
+          "values": {
+            "owner": [
+              "$person:tom"
+            ],
+            "status": "opt_stuck",
+            "source": "opt_incident",
+            "severity": "$option:Critical",
+            "found_on": "$in:-3",
+            "due_date": "$in:4",
+            "risk": {
+              "l": 4,
+              "i": 5
+            },
+            "description": "Night shift bypassed the light guard to hit targets."
+          }
+        },
+        {
+          "group": "open",
+          "name": "Shared admin account on firewall",
+          "values": {
+            "owner": [
+              "$person:james"
+            ],
+            "status": "opt_new",
+            "source": "opt_audit",
+            "severity": "$option:High",
+            "found_on": "$in:-1",
+            "due_date": "$in:21",
+            "risk": {
+              "l": 3,
+              "i": 4
+            }
+          }
+        },
+        {
+          "group": "open",
+          "name": "Supplier evaluations overdue",
+          "values": {
+            "owner": [
+              "$person:maria"
+            ],
+            "status": "opt_verify",
+            "source": "opt_supplier",
+            "severity": "$option:Low",
+            "found_on": "$in:-60",
+            "due_date": "$in:-30",
+            "risk": {
+              "l": 2,
+              "i": 2
+            },
+            "root_cause": "No reminder on the supplier review date.",
+            "effectiveness": {
+              "answers": {
+                "l1": {
+                  "a": "yes"
+                },
+                "l2": {
+                  "a": "yes"
+                },
+                "l3": {
+                  "a": "na"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "ref": "act",
+      "name": "Actions",
+      "description": "Tasks raised from corrective actions, with an owner and a due date.",
+      "itemLabel": "Action",
+      "idPrefix": "ACT-",
+      "groups": [
+        {
+          "ref": "todo",
+          "name": "To do",
+          "color": "blue"
+        },
+        {
+          "ref": "done",
+          "name": "Done",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "required": true,
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_todo",
+                "label": "Not started",
+                "color": "grey"
+              },
+              {
+                "id": "opt_doing",
+                "label": "Working on it",
+                "color": "orange"
+              },
+              {
+                "id": "opt_blocked",
+                "label": "Stuck",
+                "color": "red"
+              },
+              {
+                "id": "opt_done",
+                "label": "Done",
+                "color": "green",
+                "done": true
+              }
+            ],
+            "default": "opt_todo"
+          }
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date",
+          "config": {
+            "relative": true,
+            "default": "$in:14"
+          }
+        },
+        {
+          "key": "done_on",
+          "name": "Done on",
+          "type": "date"
+        },
+        {
+          "key": "corrective_action",
+          "name": "Corrective action",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "ca",
+            "multiple": false,
+            "inverseKey": "actions"
+          }
+        },
+        {
+          "key": "ca_owner",
+          "name": "Corrective action owner",
+          "type": "lookup",
+          "config": {
+            "linkFieldKey": "corrective_action",
+            "targetFieldKey": "owner"
+          }
+        },
+        {
+          "key": "notes",
+          "name": "Notes",
+          "type": "longtext"
+        }
+      ],
+      "views": [
+        {
+          "name": "List",
+          "type": "list",
+          "config": {}
+        },
+        {
+          "name": "Grid",
+          "type": "grid",
+          "config": {}
+        },
+        {
+          "name": "Board",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "items": [
+        {
+          "group": "todo",
+          "name": "Deburr lot 2210 and re-inspect",
+          "values": {
+            "owner": [
+              "$person:tom"
+            ],
+            "status": "opt_doing",
+            "due_date": "$in:2"
+          },
+          "links": {
+            "corrective_action": [
+              "$item:ca:Burrs on bracket 44-210"
+            ]
+          }
+        },
+        {
+          "group": "done",
+          "name": "Reprint CMM-2 calibration label",
+          "values": {
+            "owner": [
+              "$person:maria"
+            ],
+            "status": "opt_done",
+            "due_date": "$in:-5",
+            "done_on": "$in:-4"
+          },
+          "links": {
+            "corrective_action": [
+              "$item:ca:Calibration label missing on CMM-2"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "sheet": "ca",
+      "name": "Stuck → notify the owner and the compliance manager",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_stuck"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner",
+            "jobRole:Compliance manager"
+          ],
+          "message": "{id} {name} is stuck. Can you help unblock it?"
+        }
+      ]
+    },
+    {
+      "sheet": "ca",
+      "name": "Critical severity → alert the HSE manager",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "severity",
+        "value": "$option:Critical"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "jobRole:HSE manager"
+          ],
+          "message": "Critical corrective action: {id} {name} at {site}."
+        }
+      ]
+    },
+    {
+      "sheet": "ca",
+      "name": "Priority score above 15 → set severity High",
+      "trigger": {
+        "type": "number_above",
+        "fieldKey": "priority_score",
+        "threshold": 15
+      },
+      "conditions": [
+        {
+          "fieldKey": "severity",
+          "op": "at_most",
+          "value": "$option:Medium"
+        }
+      ],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "severity",
+          "value": "$option:High"
+        },
+        {
+          "type": "post_update",
+          "message": "Severity raised to High: priority score is {priority_score}."
+        }
+      ]
+    },
+    {
+      "sheet": "ca",
+      "name": "Raise action button → create a linked action",
+      "trigger": {
+        "type": "button_clicked",
+        "fieldKey": "raise_action"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "act",
+          "groupRef": "todo",
+          "name": "Action for {id}: {name}",
+          "values": {
+            "due_date": "$in:14"
+          },
+          "link": true
+        },
+        {
+          "type": "set_field",
+          "fieldKey": "status",
+          "value": "opt_action"
+        }
+      ]
+    },
+    {
+      "sheet": "ca",
+      "name": "Due in 3 days → ask the owner for an update",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "due_date",
+        "offsetDays": -3
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "request_update",
+          "fieldKey": "owner",
+          "message": "{id} {name} is due on {due_date}. Please update the status."
+        }
+      ]
+    },
+    {
+      "sheet": "ca",
+      "name": "Effectiveness answer is No → back to Investigating",
+      "trigger": {
+        "type": "checklist_no",
+        "fieldKey": "effectiveness"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "status",
+          "value": "opt_investigating"
+        },
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "An effectiveness check failed on {id}. The fix needs another look."
+        }
+      ]
+    },
+    {
+      "sheet": "ca",
+      "name": "Done → move to Closed and lock",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_done"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "move_to_group",
+          "groupRef": "closed"
+        },
+        {
+          "type": "lock_item",
+          "reason": "Closed"
+        }
+      ]
+    },
+    {
+      "sheet": "ca",
+      "name": "Evidence expiring → request a new file",
+      "trigger": {
+        "type": "evidence_expiring",
+        "fieldKey": "evidence",
+        "days": 30
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "request_update",
+          "fieldKey": "owner",
+          "message": "Evidence on {id} expires soon. Please upload a current file."
+        }
+      ]
+    },
+    {
+      "sheet": "act",
+      "name": "Action done → record the date and tell the corrective action owner",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_done"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "done_on",
+          "value": "$today"
+        },
+        {
+          "type": "move_to_group",
+          "groupRef": "done"
+        },
+        {
+          "type": "notify",
+          "to": [
+            "field:ca_owner"
+          ],
+          "message": "{name} is done. Check whether {corrective_action} can move to Verifying."
+        }
+      ]
+    }
+  ],
+  "tokens": {
+    "$today": "today's date",
+    "$in:N": "today plus N days (negative = past)",
+    "$person:<ref>": "user id of the person with that ref",
+    "$option:<label>": "option id with that label on the same field (built-in options such as severity)",
+    "$item:<sheetRef>:<name>": "item id of the item with that name on that sheet",
+    "groupRef / sheetRef / targetSheetRef": "resolved to ids by the importer",
+    "inverseKey": "the importer creates both link fields and sets inverseFieldId on each",
+    "field:ca_owner": "a lookup of people: notify resolves lookups of people to user ids"
+  },
+  "importer": {
+    "rules": "The importer writes through the same commands as people but with automations and status rules switched off, so sample data loads as written. Activity log entries are written with actor 'system'.",
+    "order": "people → folder → sheets (fields without links) → link fields with inverses → groups → views → items → links → automations"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "starts": [
+    { "id": "blank", "title": "Blank", "description": "Owner, Status and Due date to start with", "itemLabel": "Item",
+      "groups": ["To do", "Done"],
+      "fields": [ ["Owner", "people"], ["Status", "status"], ["Due date", "date"] ] },
+    { "id": "register", "title": "Register", "description": "Things you keep under review: assets, suppliers, obligations", "itemLabel": "Entry",
+      "groups": ["Active", "Retired"],
+      "fields": [ ["Owner", "people"], ["Status", "status"], ["Category", "dropdown"], ["Review date", "date"], ["Notes", "longtext"] ] },
+    { "id": "tracker", "title": "Tracker", "description": "Work with owners and deadlines: actions, tasks, requests", "itemLabel": "Task",
+      "groups": ["Open", "Done"],
+      "fields": [ ["Owner", "people"], ["Status", "status"], ["Priority", "severity"], ["Due date", "date"], ["Progress", "percent"] ] },
+    { "id": "log", "title": "Log", "description": "Events recorded as they happen: incidents, complaints, visits", "itemLabel": "Event",
+      "groups": ["Open", "Closed"],
+      "fields": [ ["Happened at", "datetime"], ["Reported by", "people"], ["Type", "dropdown"], ["Severity", "severity"], ["Description", "longtext"] ] },
+    { "id": "inspection", "title": "Inspection", "description": "Repeated checks with a checklist and a result", "itemLabel": "Inspection",
+      "groups": ["Planned", "Done"],
+      "fields": [ ["Inspector", "people"], ["Date", "date"], ["Location", "location"], ["Checklist", "checklist"], ["Result", "finding"], ["Photos", "attachment"] ] },
+    { "id": "csv", "title": "Import a spreadsheet", "description": "Paste or upload CSV; columns become fields and rows become items" },
+    { "id": "copy", "title": "Copy a sheet", "description": "Same fields, groups, views and automations as an existing sheet, no items" }
+  ],
+  "rules": {
+    "idPrefix": "Suggested from the name: first letters of up to 3 words, upper case, plus '-'; made unique in the workspace (CA-, CA2-)",
+    "fieldKey": "slug of the name: lower case, a–z 0–9 and _, max 40, unique per sheet (due_date, due_date_2)",
+    "csvTypes": "per column: all ISO/locale dates → date; all numbers → number; all emails → email; all URLs → url; yes/no/true/false/1/0 → yesno; ≤ 12 distinct values and ≥ 2 repeats → dropdown (options created); otherwise text. The person confirms or changes each type before import. Max 10 000 rows, 100 columns, 10 MB."
+  }
+}
