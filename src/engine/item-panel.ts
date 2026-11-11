@@ -103,3 +103,11 @@ export function neighbours(
   if (at < 0) return { prev: null, next: null };
   return { prev: list[at - 1] ?? null, next: list[at + 1] ?? null };
 }
+
+/** The status field of any sheet the Ctx knows (a linked item's status pill). */
+export const statusFieldOf = (sheetId: string, ctx: Ctx): Field | null =>
+  itemStatusField(ctx, ctx.fieldsOf(sheetId));
+
+/** File fields whose files expire (evidence): the panel shows freshness for these. */
+export const filesExpire = (field: Field): boolean =>
+  resolveFieldType(field.type)?.triggers.includes('evidence_expiring') ?? false;

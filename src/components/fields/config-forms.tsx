@@ -390,6 +390,32 @@ function LinkTarget(p: Props & { library: boolean }) {
         checked={p.config.multiple !== false}
         onChange={(v) => set(p, { multiple: v })}
       />
+      <TwoWay {...p} />
+    </div>
+  );
+}
+
+/**
+ * "Show on <target sheet> too": saving with it on creates the inverse field on the target sheet (two-way link);
+ * turning it off makes both fields one-way again. The command keeps inverseFieldId itself.
+ */
+function TwoWay(p: Props) {
+  const target = p.env.sheets.find((s) => s.id === p.config.targetSheetId);
+  const on =
+    typeof p.config.twoWay === 'boolean' ? p.config.twoWay : Boolean(p.config.inverseFieldId);
+  if (!target) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <Toggle
+        label={`Show on ${target.name} too`}
+        checked={on}
+        onChange={(v) => set(p, { twoWay: v })}
+      />
+      <p className="text-muted-foreground text-xs">
+        {on
+          ? `${target.name} gets a field listing the items that link to it. Changing either side changes both.`
+          : `Adds a field to ${target.name} that lists the items linking to it.`}
+      </p>
     </div>
   );
 }

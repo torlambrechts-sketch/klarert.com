@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { FIELD_TYPE_IDS } from '@/engine/fields/registry';
 
-// The link editor imports the browser Supabase client, which reads its env at import time.
+// The link editor calls the item search server action; in tests the action module is a stub (it imports
+// server-only code). The files UI and others import the browser Supabase client, which reads its env at import time.
+vi.mock('@/app/[org]/s/panel-actions', () => ({ searchItemsAction: vi.fn() }));
 let FIELD_UI: Record<string, { Cell: unknown; Editor: unknown; icon: unknown }>;
 beforeAll(async () => {
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://127.0.0.1:54321');

@@ -108,3 +108,20 @@ describe('neighbours', () => {
     expect(neighbours([a!], 'missing')).toEqual({ prev: null, next: null });
   });
 });
+
+describe('status and expiry helpers', () => {
+  it('finds the status field of another sheet and which file fields expire', async () => {
+    const { statusFieldOf, filesExpire } = await import('./item-panel');
+    const riskStatus = makeField('status', status.defaultConfig(), {
+      id: 'f-risk-status',
+      sheetId: 's-risks',
+    });
+    const ctx = makeCtx({ fields, otherFields: { 's-risks': [riskStatus] } });
+    expect(statusFieldOf('s-risks', ctx)?.id).toBe('f-risk-status');
+    expect(statusFieldOf('s-none', ctx)).toBeNull();
+    expect(filesExpire(makeField('evidence', { validDays: 1, multiple: true, accept: [] }))).toBe(
+      true,
+    );
+    expect(filesExpire(makeField('attachment', { multiple: true, accept: [] }))).toBe(false);
+  });
+});

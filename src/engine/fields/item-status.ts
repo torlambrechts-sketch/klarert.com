@@ -8,8 +8,12 @@ const byPosition = (a: Field, b: Field) =>
  * The field that decides whether an item is done (overdue, My work, progress): the first `status` field,
  * else the first label field that has a done option. Null when the sheet has neither.
  */
-export function itemStatusField(ctx: Ctx): Field | null {
-  const fields = [...ctx.fieldsByKey.values()].sort(byPosition);
+export function itemStatusField(
+  ctx: Ctx,
+  /** Fields of another sheet (a linked item's status); default: the Ctx's sheet. */
+  of: Iterable<Field> = ctx.fieldsByKey.values(),
+): Field | null {
+  const fields = [...of].sort(byPosition);
   const status = fields.find((f) => f.type === 'status');
   if (status) return status;
   return (

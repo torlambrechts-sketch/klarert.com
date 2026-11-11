@@ -1,0 +1,296 @@
+'use client';
+
+import { useMemo } from 'react';
+import { formatDate } from '@/engine/fields/helpers';
+import { linkEdges, itemSummary, statusFieldOf, type LinkEdge } from '@/engine/item-panel';
+import { resolveFieldType } from '@/engine/fields/resolve';
+import type { SheetData } from '@/engine/sheet-data';
+import type { Ctx, Field, FileRow, Item } from '@/engine/types';
+import { isVisible } from '@/engine/validation';
+import { fieldUI } from '@/components/fields/registry';
+import { Avatar, cellValue, colorVar } from '@/components/fields/shared';
+import { cn } from '@/lib/utils';
+import { FieldRow } from './field-row';
+import { FilesField } from './files-field';
+import type { FileVersion } from './queries';
+
+// Details (docs/05 §3.4, FR-28): the summary strip, linked items in both directions, the automations note and every
+// visible field, editable in place with the same editors as the Grid.
+
+function SummaryCard({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="border-line flex min-w-0 flex-col gap-1 border px-3 py-2.5">
+      <span className="text-muted-foreground text-[10.5px] font-extrabold tracking-[0.06em] uppercase">
+        {label}
+      </span>
+      <div className="min-w-0 text-[13.5px] font-bold">{children}</div>
+    </div>
+  );
+}
+
+function Summary({ item, ctx }: { item: Item; ctx: Ctx }) {
+  const s = itemSummary(item, ctx);
+  const group = ctx.groups.get(item.groupId);
+  const person = s.person?.userId ? ctx.people.get(s.person.userId) : undefined;
+  return (
+    <section
+      aria-label="Summary"
+      className="grid grid-cols-2 gap-2 group-data-[wide=true]/panel:min-[760px]:grid-cols-4"
+    >
+      <SummaryCard label={s.status?.name ?? 'Status'}>
+        {s.status ? (
+          (() => {
+            const ui = fieldUI(s.status.type);
+            const v = cellValue(item, s.status, ctx);
+            return resolveFieldType(s.status.type)?.isEmpty(v) ? (
+              <span className="text-muted-foreground font-semibold">Not set</span>
+            ) : (
+              <ui.Cell value={v as never} field={s.status} item={item} ctx={ctx} density="list" />
+            );
+          })()
+        ) : (
+          <span className="text-muted-foreground font-semibold">No status field</span>
+        )}
+      </SummaryCard>
+      <SummaryCard label={s.person?.field.name ?? 'Person'}>
+        {person ? (
+          <span className="flex min-w-0 items-center gap-1.5">
+            <Avatar id={person.id} ctx={ctx} size={20} />
+            <span className="truncate">{person.name}</span>
+          </span>
+        ) : (
+          <span className="text-muted-foreground font-semibold">No one</span>
+        )}
+      </SummaryCard>
+      <SummaryCard label={s.due?.field.name ?? 'Due date'}>
+        {s.due ? (
+          <span className="flex flex-col">
+            <span>{formatDate(s.due.date)}</span>
+            {s.due.relative ? (
+              <em
+                className={cn(
+                  'text-xs font-semibold not-italic',
+                  s.due.overdue ? 'text-crit font-extrabold' : 'text-muted-foreground',
+                )}
+              >
+                {s.due.relative}
+              </em>
+            ) : null}
+          </span>
+        ) : (
+          <span className="text-muted-foreground font-semibold">No date</span>
+        )}
+      </SummaryCard>
+      <SummaryCard label="Group">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span
+            aria-hidden
+            className="size-2.5 shrink-0 rounded-full"
+            style={{ background: colorVar(group?.color ?? 'grey') }}
+          />
+          <span className="truncate">{group?.name ?? '—'}</span>
+        </span>
+      </SummaryCard>
+    </section>
+  );
+}
+
+function LinkedItems({
+  item,
+  ctx,
+  edges,
+  fieldById,
+  loading,
+  onOpen,
+}: {
+  item: Item;
+  ctx: Ctx;
+  edges: LinkEdge[];
+  fieldById(id: string): Field | undefined;
+  loading: boolean;
+  onOpen(target: Item): void;
+}) {
+  const rows = edges.flatMap((e) => {
+    const other = ctx.item(e.otherId);
+    if (!other || other.archivedAt) return [];
+    return [{ edge: e, other }];
+  });
+  return (
+    <section aria-labelledby={`linked-${item.id}`} className="flex flex-col gap-2">
+      <h3 id={`linked-${item.id}`} className="m-0 text-[13px] font-extrabold">
+        Linked items · {rows.length}
+      </h3>
+      {loading && rows.length === 0 ? (
+        <div
+          aria-busy="true"
+          aria-label="Loading linked items"
+          className="bg-soft h-9 animate-pulse rounded"
+        />
+      ) : rows.length === 0 ? (
+        <p className="text-muted-foreground m-0 text-[13px]">
+          No linked items. Add a link field to connect this item to items on other sheets.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-1" aria-label="Linked items">
+          {rows.map(({ edge, other }) => {
+            const sheet = ctx.sheetOf(other.id);
+            const field = fieldById(edge.fieldId);
+            const chip =
+              edge.direction === 'out'
+                ? (field?.name ?? 'Link')
+                : (sheet?.name ?? field?.name ?? 'Linked');
+            const status = statusFieldOf(other.sheetId, ctx);
+            const sv = status ? cellValue(other, status, ctx) : null;
+            const ui = status ? fieldUI(status.type) : null;
+            return (
+              <li
+                key={`${edge.direction}:${edge.fieldId}:${other.id}`}
+                className="border-line flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5 text-[13px]"
+              >
+                <span
+                  className="bg-soft border-line shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold"
+                  title={edge.direction === 'out' ? 'Links from this item' : 'Links to this item'}
+                >
+                  {edge.direction === 'in' ? '← ' : ''}
+                  {chip}
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <button
+                    type="button"
+                    className="truncate text-left font-semibold hover:underline"
+                    onClick={() => onOpen(other)}
+                  >
+                    {other.name}
+                  </button>
+                  <span className="text-muted-foreground font-mono text-[11px]">
+                    {other.displayId} · {sheet?.name ?? ''}
+                  </span>
+                </span>
+                {status && ui && !resolveFieldType(status.type)?.isEmpty(sv) ? (
+                  <ui.Cell
+                    value={sv as never}
+                    field={status}
+                    item={other}
+                    ctx={ctx}
+                    density="list"
+                  />
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+export function DetailsTab({
+  org,
+  data,
+  item,
+  ctx,
+  canEditItem,
+  readOnlyReason,
+  incoming,
+  incomingLoading,
+  versions,
+  onCommit,
+  onButton,
+  onOpenLinked,
+  onFileSaved,
+}: {
+  org: string;
+  data: SheetData;
+  item: Item;
+  ctx: Ctx;
+  canEditItem: boolean;
+  readOnlyReason: string;
+  incoming: { fieldId: string; fromItem: string }[];
+  incomingLoading: boolean;
+  versions: FileVersion[];
+  onCommit(item: Item, fieldId: string, raw: unknown): Promise<void> | void;
+  onButton(field: Field): void;
+  onOpenLinked(target: Item): void;
+  onFileSaved(file: FileRow, replaces: string | null): void;
+}) {
+  const fieldById = useMemo(() => {
+    const m = new Map<string, Field>();
+    for (const f of [...data.related.fields, ...data.fields]) m.set(f.id, f);
+    return (id: string) => m.get(id);
+  }, [data.fields, data.related.fields]);
+  const edges = useMemo(
+    () =>
+      linkEdges({
+        itemId: item.id,
+        outgoing: data.fields
+          .filter((f) => resolveFieldType(f.type)?.storage === 'links')
+          .map((f) => ({ field: f, targetIds: ctx.links(item.id, f.id) })),
+        incoming,
+        fieldById,
+      }),
+    [ctx, data.fields, fieldById, incoming, item.id],
+  );
+  const visible = data.fields.filter((f) => isVisible(f, item, ctx));
+
+  return (
+    <div className="flex flex-col gap-5">
+      <Summary item={item} ctx={ctx} />
+      <LinkedItems
+        item={item}
+        ctx={ctx}
+        edges={edges}
+        fieldById={fieldById}
+        loading={incomingLoading}
+        onOpen={onOpenLinked}
+      />
+      <section aria-labelledby={`autos-${item.id}`} className="flex flex-col gap-1">
+        <h3 id={`autos-${item.id}`} className="m-0 text-[13px] font-extrabold">
+          Automations on this item
+        </h3>
+        <p className="text-muted-foreground m-0 text-[13px]">
+          Automations that run on this item will be listed here.
+        </p>
+      </section>
+      <section aria-labelledby={`fields-${item.id}`} className="flex flex-col gap-2">
+        <h3 id={`fields-${item.id}`} className="m-0 text-[13px] font-extrabold">
+          All fields
+        </h3>
+        {!canEditItem ? (
+          <p className="text-muted-foreground m-0 text-[13px]">{readOnlyReason}</p>
+        ) : null}
+        {visible.length === 0 ? (
+          <p className="text-muted-foreground m-0 text-[13px]">
+            This sheet has no fields yet. Add one from the Grid’s “+” column.
+          </p>
+        ) : (
+          <dl className="m-0 grid grid-cols-[minmax(110px,150px)_minmax(0,1fr)] items-start gap-x-3 gap-y-1 group-data-[wide=true]/panel:min-[760px]:grid-cols-[170px_minmax(0,1fr)_170px_minmax(0,1fr)]">
+            {visible.map((f) => (
+              <FieldRow
+                key={f.id}
+                item={item}
+                field={f}
+                ctx={ctx}
+                editable={canEditItem}
+                readOnlyReason={readOnlyReason}
+                onCommit={onCommit}
+                onButton={() => onButton(f)}
+              >
+                {resolveFieldType(f.type)?.storage === 'files' ? (
+                  <FilesField
+                    org={org}
+                    item={item}
+                    field={f}
+                    ctx={ctx}
+                    editable={canEditItem}
+                    versions={versions}
+                    onSaved={onFileSaved}
+                  />
+                ) : undefined}
+              </FieldRow>
+            ))}
+          </dl>
+        )}
+      </section>
+    </div>
+  );
+}

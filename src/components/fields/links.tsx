@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { X } from 'lucide-react';
+import { searchItemsAction } from '@/app/[org]/s/panel-actions';
 import type { Item } from '@/engine/types';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Empty, Muted } from './kit';
 import { EditorFrame, inputClass, SaveCancel } from './shared';
 import type { CellProps, EditorProps } from './types';
 
 // Link, requirement and control link cells and editors (docs/03 §3.3, §3.4). Links live in item_links; the editor
-// searches the target sheet and returns the chosen item ids.
+// searches the target sheet through the search command and returns the chosen item ids.
 
 type Target = { id: string; displayId: string; name: string };
 
@@ -38,36 +39,35 @@ export function LinkCell({ item, field, ctx }: CellProps) {
   );
 }
 
+/** Items of the target sheet matching the query, from the search command (debounced, display id or name). */
 function useTargets(sheetId: string | undefined, query: string) {
+  const { org } = useParams<{ org: string }>();
   const [rows, setRows] = useState<Target[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const db = useMemo(() => createClient(), []);
   useEffect(() => {
-    if (!sheetId) return;
+    if (!sheetId || !org) return;
     let live = true;
     setLoading(true);
     const t = setTimeout(async () => {
-      let q = db
-        .from('items')
-        .select('id, display_id, name')
-        .eq('sheet_id', sheetId)
-        .is('archived_at', null)
-        .order('seq')
-        .limit(20);
-      const s = query.trim().replace(/[%,()]/g, ' ');
-      if (s) q = q.or(`name.ilike.%${s}%,display_id.ilike.%${s}%`);
-      const { data, error: e } = await q;
-      if (!live) return;
-      setLoading(false);
-      setError(!!e);
-      setRows((data ?? []).map((r) => ({ id: r.id, displayId: r.display_id, name: r.name })));
-    }, 150);
+      try {
+        const r = await searchItemsAction({ org, sheetId, query });
+        if (!live) return;
+        setError(!r.ok);
+        setRows(
+          r.ok ? r.data.items.map((i) => ({ id: i.id, displayId: i.displayId, name: i.name })) : [],
+        );
+      } catch {
+        if (live) setError(true);
+      } finally {
+        if (live) setLoading(false);
+      }
+    }, 200);
     return () => {
       live = false;
       clearTimeout(t);
     };
-  }, [db, sheetId, query]);
+  }, [org, sheetId, query]);
   return { rows, loading, error };
 }
 

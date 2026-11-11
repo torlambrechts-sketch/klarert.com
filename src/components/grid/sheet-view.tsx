@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import {
   Archive,
@@ -17,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { sheetCtx } from '@/engine/sheet-data';
+import { compareItems } from '@/engine/values';
 import type { Field, Item } from '@/engine/types';
 import { fieldUI } from '@/components/fields/registry';
 import { inputClass } from '@/components/fields/shared';
@@ -30,11 +32,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ItemPanel } from '@/components/item-panel/item-panel';
 import { createClient } from '@/lib/supabase/client';
 import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
 import { Grid } from './grid';
-import { positionsAtEnd } from './grid-model';
+import { buildLayout, positionsAtEnd } from './grid-model';
 import { createGridStore, GridStoreContext, useGrid, useGridStore } from './grid-store';
 import { useSheetActions, useSheetQuery, useSheetRealtime, type SheetActions } from './use-sheet';
 
@@ -170,6 +173,35 @@ function SheetBody({ org, sheetId, sheetName, userId, timeZone, role, onlyGroup 
     [data, ctx, sheets.data],
   );
 
+  // ───────────── item panel: ?item=<display id> (FR-27) ─────────────
+  const search = useSearchParams();
+  const itemParam = search.get('item');
+  const sort = useGrid((s) => s.sort);
+  const setItemParam = useCallback((displayId: string | null, mode: 'push' | 'replace') => {
+    const url = new URL(window.location.href);
+    if (displayId) url.searchParams.set('item', displayId);
+    else url.searchParams.delete('item');
+    window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', url.toString());
+  }, []);
+  const panelItem = itemParam ? data?.items.find((i) => i.displayId === itemParam) : undefined;
+  useEffect(() => {
+    if (!itemParam || !data || panelItem) return;
+    toast.error(`${itemParam} no longer exists in this sheet or was archived.`);
+    setItemParam(null, 'replace');
+  }, [itemParam, data, panelItem, setItemParam]);
+  const order = useMemo(() => {
+    if (!data || !ctx) return [];
+    const sortField = sort ? data.fields.find((f) => f.id === sort.fieldId) : undefined;
+    return buildLayout({
+      groups: data.groups,
+      items: data.items,
+      collapsed: new Set(),
+      compare: sortField ? compareItems(sortField, ctx, sort!.dir) : null,
+      canAdd: false,
+      onlyGroup: onlyGroup && data.groups.some((g) => g.id === onlyGroup) ? onlyGroup : null,
+    }).flat;
+  }, [data, ctx, sort, onlyGroup]);
+
   const hiddenCount = data ? data.fields.filter((f) => hidden.has(f.id)).length : 0;
   const total = data?.items.length ?? 0;
 
@@ -254,6 +286,7 @@ function SheetBody({ org, sheetId, sheetName, userId, timeZone, role, onlyGroup 
               }
               nameWidth={narrow ? 150 : 300}
               addFocusTick={addTick}
+              onOpenItem={(item) => setItemParam(item.displayId, 'push')}
             />
           </div>
           {canEdit && selected.size > 0 ? (
@@ -263,6 +296,20 @@ function SheetBody({ org, sheetId, sheetName, userId, timeZone, role, onlyGroup 
               env={env}
               allItems={data.items}
               isAdmin={isAdmin}
+            />
+          ) : null}
+          {panelItem ? (
+            <ItemPanel
+              org={org}
+              data={data}
+              ctx={ctx}
+              actions={actions}
+              item={panelItem}
+              order={order}
+              canEdit={canEdit}
+              isAdmin={isAdmin}
+              onClose={() => setItemParam(null, 'push')}
+              onNavigate={(it) => setItemParam(it.displayId, 'replace')}
             />
           ) : null}
           <FieldSettings

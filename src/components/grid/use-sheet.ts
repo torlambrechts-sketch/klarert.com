@@ -22,8 +22,11 @@ import {
 } from '@/app/[org]/s/grid-actions';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { SheetData } from '@/engine/sheet-data';
-import type { Field, Item, Json } from '@/engine/types';
+import type { Field, FileRow, Item, Json } from '@/engine/types';
 import {
+  addFile,
+  addRelated,
+  missingItems,
   moveItem,
   patchItem,
   removeField,
@@ -38,7 +41,7 @@ import {
   upsertItem,
   upsertLink,
 } from '@/lib/sheet-cache';
-import { fetchSheetData } from '@/lib/sheet-query';
+import { fetchRelated, fetchSheetData } from '@/lib/sheet-query';
 import {
   toField,
   toGroup,
@@ -156,14 +159,13 @@ export function useSheetRealtime(sheetId: string, pending: Pending): RealtimeSta
           if (!row?.id || pending.has(row.from_item)) return;
           const cached = qc.getQueryData<SheetData>(key);
           patch((d) => upsertLink(d, toLink(row)));
-          // a target this sheet has not loaded: fetch it so the chip can show its id and name
+          // a target this sheet has not loaded: fetch it so the chip, lookups and rollups can read it
           if (
             cached &&
             cached.fields.some((f) => f.id === row.field_id) &&
-            !cached.items.some((i) => i.id === row.to_item) &&
-            !cached.related.items.some((i) => i.id === row.to_item)
+            missingItems(cached, [row.to_item]).length > 0
           )
-            void qc.invalidateQueries({ queryKey: key });
+            void loadRelatedInto(qc, db, sheetId, [row.to_item]);
         })
         .subscribe((s) => {
           if (s === 'SUBSCRIBED') {
@@ -181,6 +183,25 @@ export function useSheetRealtime(sheetId: string, pending: Pending): RealtimeSta
     };
   }, [qc, sheetId, pending]);
   return status;
+}
+
+/** Fetch the given items (and their sheets and fields) into `related` when the cache lacks them. */
+async function loadRelatedInto(
+  qc: ReturnType<typeof useQueryClient>,
+  db: ReturnType<typeof createClient>,
+  sheetId: string,
+  ids: string[],
+) {
+  const data = qc.getQueryData<SheetData>(sheetKey(sheetId));
+  if (!data) return;
+  const missing = missingItems(data, ids);
+  if (missing.length === 0) return;
+  try {
+    const more = await fetchRelated(db, sheetId, new Set(data.items.map((i) => i.id)), missing);
+    qc.setQueryData<SheetData>(sheetKey(sheetId), (d) => (d ? addRelated(d, more) : d));
+  } catch {
+    // the chip shows "—" until the next full load; nothing to undo
+  }
 }
 
 const newMutationId = () => Math.random().toString(36).slice(2, 12);
@@ -218,6 +239,18 @@ export function useSheetActions(org: string, sheetId: string) {
   const run = useCallback(
     <T>(fn: () => Promise<Result<T>>) => mutateAsync(fn) as Promise<Result<T>>,
     [mutateAsync],
+  );
+
+  /** Load linked items of other sheets that the cache cannot show yet (lookups, rollups, chips). */
+  const loadRelated = useCallback(
+    (ids: Iterable<string>) => loadRelatedInto(qc, createClient(), sheetId, [...ids]),
+    [qc, sheetId],
+  );
+
+  /** A file version saved by the upload command (docs/02 §8). */
+  const addFileVersion = useCallback(
+    (file: FileRow, replaces?: string | null) => patch((d) => addFile(d, file, replaces)),
+    [patch],
   );
 
   /** One cell or the name of one item. Comment-required and conflicts come back to the caller. */
@@ -494,14 +527,7 @@ export function useSheetActions(org: string, sheetId: string) {
         patch((d) =>
           r.data.links.reduce((acc, l) => upsertLink(acc, l), setLinksIn(d, field.id, item.id, [])),
         );
-        if (
-          to.some(
-            (id) =>
-              !get()?.items.some((i) => i.id === id) &&
-              !get()?.related.items.some((i) => i.id === id),
-          )
-        )
-          void qc.invalidateQueries({ queryKey: key });
+        void loadRelated(to);
         showMessages(r.data.messages);
       } catch {
         patch((d) => setLinksIn(d, field.id, item.id, before));
@@ -510,7 +536,7 @@ export function useSheetActions(org: string, sheetId: string) {
         pending.done(item.id);
       }
     },
-    [get, key, org, patch, pending, qc, run, sheetId],
+    [get, loadRelated, org, patch, pending, run, sheetId],
   );
 
   const lockItem = useCallback(
@@ -628,6 +654,8 @@ export function useSheetActions(org: string, sheetId: string) {
   return {
     pending,
     refresh,
+    loadRelated,
+    addFileVersion,
     setCell,
     bulkSet,
     createItem,

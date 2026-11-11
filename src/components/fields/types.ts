@@ -24,6 +24,8 @@ export interface EditorProps<V = unknown, C = unknown> {
   onCommitField?(fieldId: string, v: unknown): void;
   /** Run the item's button automation (button field). */
   onButton?(): void;
+  /** Open the item panel (the grid's file cells upload from there). */
+  onOpenItem?(): void;
 }
 
 export interface ConfigEnv {
