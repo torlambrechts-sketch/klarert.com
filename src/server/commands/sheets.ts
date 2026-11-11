@@ -10,6 +10,7 @@ import {
 } from '@/engine/fields/csv';
 import { fieldType } from '@/engine/fields/registry';
 import { fieldKeyFromName, keyBetween, keysBetween } from '@/engine/ordering';
+import { isLinkType, needsLibraryTarget } from '@/engine/fields/type-change';
 import { rekeyIds } from '@/engine/rekey';
 import type { Json } from '@/engine/types';
 import {
@@ -23,6 +24,7 @@ import {
 import type { ServerClient } from '@/lib/supabase/server';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { log, withOrg } from './context';
+import { createInverseField } from './two-way';
 
 // Sheets (docs/01 FR-6, FR-7). Structure rows are written under RLS through create_sheet (one transaction, logged by
 // the schema triggers); imported items go through create_items (definer, same checks as create_item).
@@ -141,9 +143,42 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
     async ({ supabase, orgId }) => {
       if (await prefixTaken(supabase, orgId, v.idPrefix)) return prefixConflict();
       const columns = v.columns.filter((c) => c.name);
+      // link columns: the chosen sheet must be in the workspace (and a library for requirement/control link)
+      const targets = [
+        ...new Set(columns.flatMap((c) => (c.targetSheetId ? [c.targetSheetId] : []))),
+      ];
+      const { data: targetRows } = targets.length
+        ? await supabase
+            .from('sheets')
+            .select('id, is_library')
+            .eq('org_id', orgId)
+            .in('id', targets)
+        : { data: [] };
+      const known = new Map((targetRows ?? []).map((t) => [t.id, t.is_library]));
+      for (const c of columns) {
+        if (!c.targetSheetId || !isLinkType(c.type)) continue;
+        if (!known.has(c.targetSheetId))
+          return fail('invalid', `${c.name}: choose a sheet of this workspace to link to.`);
+        if (needsLibraryTarget(c.type) && !known.get(c.targetSheetId))
+          return fail('invalid', `${c.name}: choose a library sheet.`);
+      }
+      const fields = newFields(
+        columns.map((c) => ({
+          name: c.name,
+          type: c.type,
+          config:
+            c.targetSheetId && isLinkType(c.type)
+              ? {
+                  ...(fieldType(c.type)!.defaultConfig() as object),
+                  targetSheetId: c.targetSheetId,
+                }
+              : undefined,
+        })),
+      );
+      const sheetId = randomUUID();
       const created = await insertSheet(supabase, {
         sheet: {
-          id: randomUUID(),
+          id: sheetId,
           org_id: orgId,
           folder_id: v.folderId,
           name: v.name,
@@ -153,9 +188,32 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
           position: keyBetween(await lastSheetPosition(supabase, orgId), null),
         },
         groups: newGroups(v.groups),
-        fields: newFields(columns),
+        fields,
       });
-      return created.ok ? ok({ sheetId: created.data }) : created;
+      if (!created.ok) return created;
+      // "Show on <target sheet> too": the inverse field on the target sheet, then point this field at it
+      for (const [i, c] of columns.entries()) {
+        if (!c.twoWay || !c.targetSheetId || !isLinkType(c.type)) continue;
+        const f = fields[i]!;
+        const inverse = await createInverseField(
+          supabase,
+          orgId,
+          { fieldId: f.id, sheetId, sheetName: v.name },
+          c.targetSheetId,
+        );
+        if (!inverse.ok) return inverse;
+        const { error } = await supabase
+          .from('fields')
+          .update({
+            config: {
+              ...(f.config as object),
+              inverseFieldId: inverse.data.id,
+            } as NonNullable<Json>,
+          })
+          .eq('id', f.id);
+        if (error) return fromDbError(error);
+      }
+      return ok({ sheetId: created.data });
     },
     'createSheet',
   );
@@ -289,6 +347,23 @@ export async function importCsv(input: unknown): Promise<Result<ImportResult>> {
 
 // ───────────────────────── wizard: Copy a sheet ─────────────────────────
 
+/**
+ * A copied field's config with ids re-keyed to the copy. A two-way link whose inverse lives on another sheet loses
+ * its inverseFieldId: that inverse belongs to the original sheet, so the copy's link is one-way (turn it on again in
+ * the field settings to create the copy's own inverse). An inverse on the copied sheet itself is re-keyed with it.
+ */
+function copiedConfig(
+  type: string,
+  config: unknown,
+  ids: Map<string, string>,
+  re: (j: unknown) => Json,
+): Json {
+  const next = re(config);
+  if (!isLinkType(type) || !next || typeof next !== 'object' || Array.isArray(next)) return next;
+  const inv = (config as { inverseFieldId?: string | null } | null)?.inverseFieldId;
+  return inv && !ids.has(inv) ? { ...next, inverseFieldId: null } : next;
+}
+
 export async function copySheet(input: unknown): Promise<Result<{ sheetId: string }>> {
   const p = copySheetInput.safeParse(input);
   if (!p.success) return invalid(p.error);
@@ -359,7 +434,7 @@ export async function copySheet(input: unknown): Promise<Result<{ sheetId: strin
           required: f.required,
           locked: f.locked,
           description: f.description,
-          config: re(f.config),
+          config: copiedConfig(f.type, f.config, ids, re),
           validation: re(f.validation),
           rules: re(f.rules),
           visibility: re(f.visibility),

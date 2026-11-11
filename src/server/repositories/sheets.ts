@@ -110,12 +110,14 @@ export async function getWizardData(orgId: string) {
   if (!session) return { prefixes: [], sheets: [] };
   const { data } = await session.supabase
     .from('sheets')
-    .select('id, name, id_prefix, archived_at')
+    .select('id, name, id_prefix, is_library, archived_at')
     .eq('org_id', orgId)
     .order('name');
   return {
     prefixes: (data ?? []).map((s) => s.id_prefix),
-    sheets: (data ?? []).filter((s) => !s.archived_at).map((s) => ({ id: s.id, name: s.name })),
+    sheets: (data ?? [])
+      .filter((s) => !s.archived_at)
+      .map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library })),
   };
 }
 

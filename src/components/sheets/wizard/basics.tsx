@@ -13,8 +13,8 @@ export type WizardContext = {
   folders: Folder[];
   /** ID prefixes in use in the workspace. */
   prefixes: string[];
-  /** Sheets that can be copied. */
-  sheets: { id: string; name: string }[];
+  /** Sheets that can be copied or linked to. */
+  sheets: { id: string; name: string; isLibrary?: boolean }[];
 };
 
 /** Name, item label, ID prefix (suggested from the name until edited), folder and groups. */

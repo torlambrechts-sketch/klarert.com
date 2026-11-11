@@ -20,6 +20,7 @@ import { isAdminRole } from '@/server/auth';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { loadWriteContext } from '@/server/sheet-context';
 import { withOrg } from './context';
+import { createInverseField, detachInverse } from './two-way';
 
 // Field (column) commands (docs/01 FR-15…FR-20). Fields are structure: written under RLS (editors; locked fields
 // admins only) and logged to the sheet chain by the schema trigger. Values move through set_item_values.
@@ -118,6 +119,47 @@ export async function addField(input: unknown): Promise<Result<{ field: Field }>
   );
 }
 
+/**
+ * The "Show on <target sheet> too" switch of a link field: turning it on creates the inverse field on the target sheet,
+ * turning it off makes both fields one-way again. Returns the field's new inverseFieldId.
+ */
+async function twoWayChange(
+  db: Db,
+  orgId: string,
+  row: { id: string; sheet_id: string },
+  stored: { inverseFieldId?: string | null; targetSheetId?: string },
+  next: Record<string, unknown>,
+  twoWay: unknown,
+): Promise<Result<string | null>> {
+  const current = stored.inverseFieldId ?? null;
+  const target = typeof next.targetSheetId === 'string' ? next.targetSheetId : '';
+  if (current && target !== (stored.targetSheetId ?? ''))
+    return fail(
+      'invalid',
+      'Turn off showing this link on the other sheet before linking to another sheet.',
+    );
+  if (twoWay === true && !current) {
+    if (!target) return fail('invalid', 'Choose the sheet to link to first.');
+    const { data: sheet } = await db
+      .from('sheets')
+      .select('name')
+      .eq('id', row.sheet_id)
+      .maybeSingle();
+    const created = await createInverseField(
+      db,
+      orgId,
+      { fieldId: row.id, sheetId: row.sheet_id, sheetName: sheet?.name ?? 'Linked items' },
+      target,
+    );
+    return created.ok ? ok(created.data.id) : created;
+  }
+  if (twoWay === false && current) {
+    const r = await detachInverse(db, current);
+    return r.ok ? ok(null) : r;
+  }
+  return ok(current);
+}
+
 export async function updateField(input: unknown): Promise<Result<{ field: Field }>> {
   const p = updateFieldInput.safeParse(input);
   if (!p.success) return invalid(p.error);
@@ -147,7 +189,16 @@ export async function updateField(input: unknown): Promise<Result<{ field: Field
         patch.rules = v.rules as DbJson;
       }
       if (v.config !== undefined) {
-        const { default: dflt, ...rest } = v.config;
+        const { default: dflt, twoWay, ...rest } = v.config;
+        if (isLinkType(row.type)) {
+          // inverseFieldId is the app's to keep: only the two-way switch changes it
+          const stored =
+            (row.config as { inverseFieldId?: string | null; targetSheetId?: string }) ?? {};
+          rest.inverseFieldId = stored.inverseFieldId ?? null;
+          const r = await twoWayChange(supabase, orgId, row, stored, rest, twoWay);
+          if (!r.ok) return r;
+          rest.inverseFieldId = r.data;
+        }
         const parsed = def.configSchema.safeParse(rest);
         if (!parsed.success)
           return fail('invalid', parsed.error.issues[0]?.message ?? 'Check the field settings.', {
