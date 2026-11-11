@@ -853,7 +853,11 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<GridRow, { ki
                   className="max-w-full truncate text-left font-semibold hover:underline"
                   onMouseDown={(e) => e.stopPropagation()}
                   onDoubleClick={(e) => e.stopPropagation()}
-                  onClick={() => p.onOpenItem(item)}
+                  onClick={(e) => {
+                    // the panel returns focus here when it closes
+                    e.currentTarget.focus();
+                    p.onOpenItem(item);
+                  }}
                 >
                   {item.name}
                 </button>

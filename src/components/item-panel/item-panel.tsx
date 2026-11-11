@@ -51,6 +51,10 @@ export function ItemPanel(props: ItemPanelProps) {
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(item.name);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  // where focus was when the panel opened (a name in the grid, a deep link: the page); restored on close
+  const [opener] = useState(() =>
+    typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null),
+  );
   const contentRef = useRef<HTMLDivElement>(null);
   const valueCommit = useValueCommit(data, ctx, actions);
 
@@ -147,6 +151,11 @@ export function ItemPanel(props: ItemPanelProps) {
             e.preventDefault();
             titleRef.current?.focus();
           }}
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            if (opener && opener.isConnected && opener !== document.body) opener.focus();
+            else document.querySelector<HTMLElement>('[role="grid"]')?.focus();
+          }}
           onEscapeKeyDown={(e) => {
             // first Esc leaves a text field, the next one closes the panel
             const t = document.activeElement;
@@ -171,7 +180,7 @@ export function ItemPanel(props: ItemPanelProps) {
           className={cn(
             'group/panel fixed top-0 right-0 bottom-0 z-40 flex w-[min(470px,100vw)] flex-col border-l border-[var(--line)] bg-white shadow-[-10px_0_30px_rgba(10,20,30,0.16)] outline-none',
             'data-[wide=true]:w-[min(1080px,calc(100vw-100px))]',
-            'max-[759px]:bottom-16 max-[759px]:w-full max-[759px]:data-[wide=true]:w-full',
+            'max-[759px]:bottom-[64px] max-[759px]:w-full max-[759px]:data-[wide=true]:w-full',
           )}
         >
           <Tabs.Root value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col">
@@ -331,7 +340,12 @@ export function ItemPanel(props: ItemPanelProps) {
                   incoming={incoming.data ?? []}
                   incomingLoading={incoming.isPending}
                   versions={versions.data ?? []}
-                  onCommit={(it, fieldId, raw) => valueCommit.commit(it, fieldId, raw)}
+                  onCommit={async (it, fieldId, raw) => {
+                    await valueCommit.commit(it, fieldId, raw);
+                    // links on the other side and the log change with the write: read them again now
+                    void qc.invalidateQueries({ queryKey: panelKeys.incoming(item.id) });
+                    void qc.invalidateQueries({ queryKey: panelKeys.activity(item.id) });
+                  }}
                   onButton={(f: Field) => void actions.clickButton(item, f)}
                   onOpenLinked={openLinked}
                   onFileSaved={onFileSaved}

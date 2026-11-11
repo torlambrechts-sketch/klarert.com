@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Users, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -63,16 +63,23 @@ function MentionTextarea({
   const options = open ? suggestMentions(mention!.query, candidates) : [];
   const show = open && options.length > 0;
 
+  // the caret after inserting a name, applied once the new text is in the textarea (before the next keystroke)
+  const pendingCaret = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const at = pendingCaret.current;
+    if (at === null || !ref.current) return;
+    pendingCaret.current = null;
+    ref.current.focus();
+    ref.current.setSelectionRange(at, at);
+  }, [value]);
+
   const choose = (c: MentionCandidate) => {
     if (!mention) return;
     const next = insertMention(value, mention.start, caret, c.name);
+    pendingCaret.current = next.caret;
     onChange(next.text);
     setCaret(next.caret);
     setActive(0);
-    requestAnimationFrame(() => {
-      ref.current?.focus();
-      ref.current?.setSelectionRange(next.caret, next.caret);
-    });
   };
 
   return (
