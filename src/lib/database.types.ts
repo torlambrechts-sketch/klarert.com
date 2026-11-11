@@ -834,6 +834,23 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"_own_recent_update":
+{ Args: { "p_update": string }; Returns: {
+              "author_id": string | null,
+"body": string,
+"created_at": string,
+"id": string,
+"item_id": string,
+"kind": string,
+"mentions": (string)[],
+"org_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "item_updates"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "accept_invite":
 { Args: { "p_token": string }; Returns: {
               "created_at": string,
@@ -855,6 +872,30 @@ isOneToOne: false
 "actor_kind_for":
 { Args: { "p_automation": string }; Returns: string
                            },
+"add_file":
+{ Args: { "p_field": string,"p_file": string,"p_filename": string,"p_item": string,"p_mime": string,"p_path": string,"p_replaces"?: string,"p_sha256": string,"p_size": number }; Returns: {
+              "collected_at": string,
+"created_at": string,
+"field_id": string,
+"filename": string,
+"id": string,
+"item_id": string,
+"mime_type": string,
+"org_id": string,
+"replaced_by": string | null,
+"sha256": string,
+"size_bytes": number,
+"source": string,
+"storage_path": string,
+"uploaded_by": string | null,
+"valid_until": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "files"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean
                            },
@@ -907,6 +948,26 @@ isOneToOne: false
 "delete_group":
 { Args: { "p_group": string,"p_positions"?: Json,"p_target"?: string }; Returns: number
                            },
+"delete_update":
+{ Args: { "p_update": string }; Returns: undefined
+                           },
+"edit_update":
+{ Args: { "p_body": string,"p_mentions"?: (string)[],"p_update": string }; Returns: {
+              "author_id": string | null,
+"body": string,
+"created_at": string,
+"id": string,
+"item_id": string,
+"kind": string,
+"mentions": (string)[],
+"org_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "item_updates"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "field_types":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
                            },
@@ -926,6 +987,9 @@ isOneToOne: false
                            },
 "is_member":
 { Args: { "o": string }; Returns: boolean
+                           },
+"log_file_event":
+{ Args: { "p_action": string,"p_field": string,"p_file": string,"p_item": string }; Returns: undefined
                            },
 "move_item":
 { Args: { "p_automation"?: string,"p_group": string,"p_item": string,"p_position": string }; Returns: {
@@ -954,6 +1018,9 @@ isOneToOne: false
       } },
 "non_value_types":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
+                           },
+"notify_mention":
+{ Args: { "p_update": string,"p_user_ids": (string)[] }; Returns: number
                            },
 "set_item_archived":
 { Args: { "p_archived": boolean,"p_item": string }; Returns: {
