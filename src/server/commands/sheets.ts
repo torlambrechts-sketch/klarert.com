@@ -1,0 +1,465 @@
+import 'server-only';
+import { randomUUID } from 'node:crypto';
+import { basicCtx } from '@/engine/context';
+import {
+  columnConfig,
+  parseCsv,
+  rowsToItems,
+  type CsvField,
+  type CsvTable,
+} from '@/engine/fields/csv';
+import { fieldType } from '@/engine/fields/registry';
+import { fieldKeyFromName, keyBetween, keysBetween } from '@/engine/ordering';
+import { rekeyIds } from '@/engine/rekey';
+import type { Json } from '@/engine/types';
+import {
+  LABEL_COLORS,
+  archiveSheetInput,
+  copySheetInput,
+  createSheetInput,
+  importCsvInput,
+  updateSheetInput,
+} from '@/lib/schemas/sheets';
+import type { ServerClient } from '@/lib/supabase/server';
+import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
+import { log, withOrg } from './context';
+
+// Sheets (docs/01 FR-6, FR-7). Structure rows are written under RLS through create_sheet (one transaction, logged by
+// the schema triggers); imported items go through create_items (definer, same checks as create_item).
+
+type NewField = {
+  id: string;
+  key: string;
+  name: string;
+  type: string;
+  position: string;
+  width: number | null;
+  required?: boolean;
+  locked?: boolean;
+  description?: string | null;
+  config: Json;
+  validation?: Json;
+  rules?: Json;
+  visibility?: Json;
+};
+
+const IMPORT_CHUNK = 1000;
+
+const clampWidth = (w: number) => Math.min(600, Math.max(60, Math.round(w)));
+const optionId = () => `opt_${randomUUID().slice(0, 8)}`;
+
+async function prefixTaken(db: ServerClient, orgId: string, prefix: string, exceptSheet?: string) {
+  let q = db.from('sheets').select('id').eq('org_id', orgId).eq('id_prefix', prefix);
+  if (exceptSheet) q = q.neq('id', exceptSheet);
+  const { data } = await q.limit(1);
+  return (data ?? []).length > 0;
+}
+
+const prefixConflict = () =>
+  fail('invalid', 'Check the highlighted fields.', {
+    idPrefix: 'Another sheet uses this prefix. Choose another.',
+  });
+
+async function lastSheetPosition(db: ServerClient, orgId: string): Promise<string | null> {
+  const { data } = await db
+    .from('sheets')
+    .select('position')
+    .eq('org_id', orgId)
+    .order('position', { ascending: false })
+    .limit(1);
+  return data?.[0]?.position ?? null;
+}
+
+function newGroups(names: string[]) {
+  const list = names.length > 0 ? names : ['Group 1'];
+  const keys = keysBetween(null, null, list.length);
+  return list.map((name, i) => ({
+    id: randomUUID(),
+    name,
+    color: LABEL_COLORS[i % LABEL_COLORS.length]!,
+    position: keys[i]!,
+  }));
+}
+
+/** Fields from (name, type, config) with stable keys, default widths and ordered positions. */
+function newFields(cols: { name: string; type: string; config?: unknown }[]): NewField[] {
+  const keys = keysBetween(null, null, cols.length);
+  const taken = new Set<string>();
+  return cols.map((c, i) => {
+    const def = fieldType(c.type)!;
+    const key = fieldKeyFromName(c.name, taken);
+    taken.add(key);
+    return {
+      id: randomUUID(),
+      key,
+      name: c.name,
+      type: c.type,
+      position: keys[i]!,
+      width: clampWidth(def.defaultWidth),
+      config: (c.config ?? def.defaultConfig()) as Json,
+    };
+  });
+}
+
+type SheetPayload = {
+  sheet: {
+    id: string;
+    org_id: string;
+    folder_id: string | null;
+    name: string;
+    description: string | null;
+    item_label: string;
+    id_prefix: string;
+    is_library?: boolean;
+    settings?: Json;
+    position: string;
+  };
+  groups: { id: string; name: string; color: string; position: string }[];
+  fields: NewField[];
+  views?: { id: string; name: string; type: string; config: Json; position: string }[];
+  automations?: Record<string, Json>[];
+};
+
+async function insertSheet(db: ServerClient, payload: SheetPayload): Promise<Result<string>> {
+  const { data, error } = await db.rpc('create_sheet', { p: payload as unknown as Json });
+  if (error) {
+    if (/sheets_org_id_id_prefix_key/.test(error.message)) return prefixConflict();
+    return fromDbError(error);
+  }
+  return ok(data);
+}
+
+// ───────────────────────── wizard: Blank, Register, Tracker, Log, Inspection ─────────────────────────
+
+export async function createSheet(input: unknown): Promise<Result<{ sheetId: string }>> {
+  const p = createSheetInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId }) => {
+      if (await prefixTaken(supabase, orgId, v.idPrefix)) return prefixConflict();
+      const columns = v.columns.filter((c) => c.name);
+      const created = await insertSheet(supabase, {
+        sheet: {
+          id: randomUUID(),
+          org_id: orgId,
+          folder_id: v.folderId,
+          name: v.name,
+          description: v.description,
+          item_label: v.itemLabel,
+          id_prefix: v.idPrefix,
+          position: keyBetween(await lastSheetPosition(supabase, orgId), null),
+        },
+        groups: newGroups(v.groups),
+        fields: newFields(columns),
+      });
+      return created.ok ? ok({ sheetId: created.data }) : created;
+    },
+    'createSheet',
+  );
+}
+
+// ───────────────────────── wizard: Import a spreadsheet ─────────────────────────
+
+export type ImportResult = {
+  sheetId: string;
+  items: number;
+  imported: number;
+  skippedCells: number;
+};
+
+export async function importCsv(input: unknown): Promise<Result<ImportResult>> {
+  const p = importCsvInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  const parsed = parseCsv(v.csv);
+  if (!parsed.ok) return fail('invalid', parsed.message, { csv: parsed.message });
+  const table: CsvTable = parsed.table;
+  const width = table.header.length;
+  const indexes = v.columns.map((c) => c.index);
+  if (
+    indexes.length !== width - 1 ||
+    new Set(indexes).size !== indexes.length ||
+    indexes.some((i) => i >= width)
+  )
+    return fail('invalid', 'The columns changed. Read the CSV again and confirm the types.');
+
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId, user, profile }) => {
+      if (await prefixTaken(supabase, orgId, v.idPrefix)) return prefixConflict();
+      const cols = [...v.columns].sort((a, b) => a.index - b.index);
+      const fields = newFields(
+        cols.map((c) => ({
+          name: c.name,
+          type: c.type,
+          config: columnConfig(
+            c.type,
+            table.rows.map((r) => r[c.index] ?? ''),
+            optionId,
+          ),
+        })),
+      );
+      const groups = newGroups(v.groups.length > 0 ? v.groups : ['Imported']);
+      const sheetId = randomUUID();
+      const created = await insertSheet(supabase, {
+        sheet: {
+          id: sheetId,
+          org_id: orgId,
+          folder_id: v.folderId,
+          name: v.name,
+          description: v.description,
+          item_label: v.itemLabel,
+          id_prefix: v.idPrefix,
+          position: keyBetween(await lastSheetPosition(supabase, orgId), null),
+        },
+        groups,
+        fields,
+      });
+      if (!created.ok) return created;
+
+      const { data: members } = await supabase
+        .from('memberships')
+        .select('user_id, profiles!inner(display_name, initials, color)')
+        .eq('org_id', orgId);
+      const now = new Date();
+      const ctx = basicCtx({
+        today: now.toISOString().slice(0, 10),
+        now,
+        timeZone: 'UTC',
+        userId: user.id,
+        sheet: {
+          id: sheetId,
+          orgId,
+          name: v.name,
+          itemLabel: v.itemLabel,
+          idPrefix: v.idPrefix,
+          isLibrary: false,
+        },
+        people: (members ?? []).map((m) => ({
+          id: m.user_id,
+          name: m.profiles.display_name,
+          initials: m.profiles.initials,
+          color: m.profiles.color,
+        })),
+        newId: optionId,
+      });
+      const csvFields: CsvField[] = cols.map((c, i) => ({
+        index: c.index,
+        fieldId: fields[i]!.id,
+        type: c.type,
+        config: fields[i]!.config,
+      }));
+      const { items, skippedCells } = rowsToItems(table, csvFields, ctx);
+      const positions = items.length > 0 ? keysBetween(null, null, items.length) : [];
+      let imported = 0;
+      for (let start = 0; start < items.length; start += IMPORT_CHUNK) {
+        const rows = items.slice(start, start + IMPORT_CHUNK).map((it, i) => ({
+          name: it.name,
+          position: positions[start + i]!,
+          values: it.values,
+        }));
+        const { data, error } = await supabase.rpc('create_items', {
+          p_sheet: sheetId,
+          p_group: groups[0]!.id,
+          p_rows: rows as unknown as Json,
+        });
+        if (error) {
+          console.error(
+            JSON.stringify({
+              level: 'error',
+              source: 'importCsv',
+              at: start,
+              message: error.message,
+            }),
+          );
+          break;
+        }
+        imported += data;
+      }
+      log('importCsv.items', { sheet: sheetId, user: profile?.id, items: items.length, imported });
+      return ok({ sheetId, items: items.length, imported, skippedCells });
+    },
+    'importCsv',
+  );
+}
+
+// ───────────────────────── wizard: Copy a sheet ─────────────────────────
+
+export async function copySheet(input: unknown): Promise<Result<{ sheetId: string }>> {
+  const p = copySheetInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId }) => {
+      const { data: src } = await supabase
+        .from('sheets')
+        .select('id, description, item_label, is_library, settings')
+        .eq('id', v.sourceSheetId)
+        .eq('org_id', orgId)
+        .maybeSingle();
+      if (!src) return fail('not_found', 'The sheet to copy was not found.');
+      if (await prefixTaken(supabase, orgId, v.idPrefix)) return prefixConflict();
+      const [fieldsRes, groupsRes, viewsRes, autoRes] = await Promise.all([
+        supabase
+          .from('fields')
+          .select('*')
+          .eq('sheet_id', src.id)
+          .is('archived_at', null)
+          .order('position'),
+        supabase.from('groups').select('*').eq('sheet_id', src.id).order('position'),
+        supabase
+          .from('views')
+          .select('*')
+          .eq('sheet_id', src.id)
+          .is('owner_id', null)
+          .order('position'),
+        supabase.from('automations').select('*').eq('sheet_id', src.id).order('created_at'),
+      ]);
+      const failed = [fieldsRes, groupsRes, viewsRes, autoRes].find((r) => r.error);
+      if (failed?.error) return fromDbError(failed.error);
+
+      const sheetId = randomUUID();
+      const ids = new Map<string, string>([[src.id, sheetId]]);
+      for (const r of [...fieldsRes.data!, ...groupsRes.data!, ...viewsRes.data!])
+        ids.set(r.id, randomUUID());
+      const re = (j: unknown) => rekeyIds((j ?? null) as Json, ids);
+
+      const created = await insertSheet(supabase, {
+        sheet: {
+          id: sheetId,
+          org_id: orgId,
+          folder_id: v.folderId,
+          name: v.name,
+          description: src.description,
+          item_label: src.item_label,
+          id_prefix: v.idPrefix,
+          is_library: src.is_library,
+          settings: re(src.settings),
+          position: keyBetween(await lastSheetPosition(supabase, orgId), null),
+        },
+        groups: groupsRes.data!.map((g) => ({
+          id: ids.get(g.id)!,
+          name: g.name,
+          color: g.color,
+          position: g.position,
+        })),
+        fields: fieldsRes.data!.map((f) => ({
+          id: ids.get(f.id)!,
+          key: f.key,
+          name: f.name,
+          type: f.type,
+          position: f.position,
+          width: f.width,
+          required: f.required,
+          locked: f.locked,
+          description: f.description,
+          config: re(f.config),
+          validation: re(f.validation),
+          rules: re(f.rules),
+          visibility: re(f.visibility),
+        })),
+        views: viewsRes.data!.map((w) => ({
+          id: ids.get(w.id)!,
+          name: w.name,
+          type: w.type,
+          config: re(w.config),
+          position: w.position,
+        })),
+        automations: autoRes.data!.map((a) => ({
+          name: a.name,
+          enabled: a.enabled,
+          trigger: re(a.trigger),
+          conditions: re(a.conditions),
+          actions: re(a.actions),
+          source: a.source,
+          version: a.version,
+          locked: a.locked,
+        })),
+      });
+      return created.ok ? ok({ sheetId: created.data }) : created;
+    },
+    'copySheet',
+  );
+}
+
+// ───────────────────────── sheet settings ─────────────────────────
+
+export async function updateSheet(input: unknown): Promise<Result<null>> {
+  const p = updateSheetInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId }) => {
+      const { data: s } = await supabase
+        .from('sheets')
+        .select('id, id_prefix, next_seq')
+        .eq('id', v.sheetId)
+        .eq('org_id', orgId)
+        .maybeSingle();
+      if (!s) return fail('not_found', 'Sheet not found.');
+      const prefix = v.idPrefix ?? s.id_prefix;
+      if (prefix !== s.id_prefix) {
+        if (s.next_seq > 1)
+          return fail('invalid', 'Check the highlighted fields.', {
+            idPrefix: 'The prefix is fixed once the sheet has items.',
+          });
+        if (await prefixTaken(supabase, orgId, prefix, s.id)) return prefixConflict();
+      }
+      if (v.folderId) {
+        const { data: f } = await supabase
+          .from('folders')
+          .select('id')
+          .eq('id', v.folderId)
+          .eq('org_id', orgId)
+          .maybeSingle();
+        if (!f)
+          return fail('invalid', 'Check the highlighted fields.', { folderId: 'Choose a folder.' });
+      }
+      const { error } = await supabase
+        .from('sheets')
+        .update({
+          name: v.name,
+          description: v.description,
+          item_label: v.itemLabel,
+          id_prefix: prefix,
+          folder_id: v.folderId,
+          is_library: v.isLibrary,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', s.id);
+      if (error && /sheets_org_id_id_prefix_key/.test(error.message)) return prefixConflict();
+      return error ? fromDbError(error) : ok(null);
+    },
+    'updateSheet',
+  );
+}
+
+export async function archiveSheet(input: unknown): Promise<Result<{ archived: boolean }>> {
+  const p = archiveSheetInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'editor',
+    async ({ supabase, orgId }) => {
+      const { data, error } = await supabase
+        .from('sheets')
+        .update({ archived_at: p.data.archived ? new Date().toISOString() : null })
+        .eq('id', p.data.sheetId)
+        .eq('org_id', orgId)
+        .select('id');
+      if (error) return fromDbError(error);
+      return data.length
+        ? ok({ archived: p.data.archived })
+        : fail('not_found', 'Sheet not found.');
+    },
+    'archiveSheet',
+  );
+}

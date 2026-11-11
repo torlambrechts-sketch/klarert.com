@@ -58,7 +58,7 @@ import { workflowstep } from './workflowstep';
 import { button } from './button';
 import { ai } from './ai';
 import { installFieldTypes } from './resolve';
-import type { AnyFieldType } from './types';
+import type { AnyFieldType, Family } from './types';
 
 export const FIELD_TYPES = {
   text,
@@ -132,4 +132,24 @@ export function fieldType(id: string): AnyFieldType | undefined {
 
 export function isFieldTypeId(id: string): id is FieldTypeId {
   return id in FIELD_TYPES;
+}
+
+/** Families in the order pickers show them (docs/03). */
+export const FAMILIES: { id: Family; label: string }[] = [
+  { id: 'basic', label: 'Basic' },
+  { id: 'choice', label: 'Choice' },
+  { id: 'compliance', label: 'Compliance' },
+  { id: 'computed', label: 'Computed' },
+];
+
+/** Field types grouped by family, for type pickers. Optionally limited by a predicate. */
+export function typesByFamily(
+  keep: (t: AnyFieldType) => boolean = () => true,
+): { family: Family; label: string; types: AnyFieldType[] }[] {
+  const all = Object.values(FIELD_TYPES) as AnyFieldType[];
+  return FAMILIES.map((f) => ({
+    family: f.id,
+    label: f.label,
+    types: all.filter((t) => t.family === f.id && keep(t)),
+  })).filter((g) => g.types.length > 0);
 }

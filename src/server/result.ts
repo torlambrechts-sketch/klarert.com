@@ -52,6 +52,11 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   ],
   [/invites_open_email_idx/, 'conflict', 'This person already has an open invite.'],
   [/memberships_pkey/, 'conflict', 'This person is already a member.'],
+  [/prefix locked/, 'conflict', 'The ID prefix is fixed once the sheet has items.'],
+  [/sheets_org_id_id_prefix_key/, 'conflict', 'Another sheet uses this ID prefix. Choose another.'],
+  [/a sheet needs at least one group/, 'conflict', 'A sheet needs at least one group.'],
+  [/group has items/, 'conflict', 'This group has items. Choose a group to move them to first.'],
+  [/folder not in workspace/, 'invalid', 'Choose a folder of this workspace.'],
   [/duplicate key value/, 'conflict', 'That name is already used.'],
   [
     /row-level security|not allowed|permission denied/,
