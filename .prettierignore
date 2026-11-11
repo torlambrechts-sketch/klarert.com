@@ -1,0 +1,12 @@
+reference/
+docs/
+templates/
+supabase/
+pnpm-lock.yaml
+.next/
+coverage/
+playwright-report/
+test-results/
+src/lib/database.types.ts
+*.md
+scripts/test-migration.mjs
