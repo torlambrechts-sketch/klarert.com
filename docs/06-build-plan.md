@@ -22,14 +22,14 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M1: apply the migrations, generate types, magic-link auth, onboarding (create workspace / accept invite), workspace settings (members, teams, job roles, entities and sites), the seed script, and pgTAP RLS tests."
 
-- [ ] Migrations apply cleanly on local Supabase and on the EU project
-- [ ] `pnpm db:types` generates `src/lib/database.types.ts`
-- [ ] Magic link sign-in; profile created on first sign-in (display name, initials, colour)
-- [ ] Onboarding: create workspace (name → slug) makes the user owner; invite by email (token link) adds a member with the chosen role
-- [ ] Settings page: members (invite, change role, remove; cannot remove the last owner), teams + team members, job roles, entities + sites
-- [ ] `scripts/seed.ts` creates the seed from docs/02 §11 (people from `templates/first-sheet.json`, workspace, teams, roles, entity, sites, folder) — sheets come in M10
-- [ ] pgTAP tests in `supabase/tests/`: viewer cannot call `set_item_values`; editor cannot update a locked field; member of org A cannot select org B rows; protected value hidden from an editor not in `allowedUserIds`; `activity_log` update fails
-- [ ] Workspace switcher in the top bar lists the user's workspaces
+- [x] Migrations apply cleanly on local Supabase and on the EU project
+- [x] `pnpm db:types` generates `src/lib/database.types.ts`
+- [x] Magic link sign-in; profile created on first sign-in (display name, initials, colour)
+- [x] Onboarding: create workspace (name → slug) makes the user owner; invite by email (token link) adds a member with the chosen role
+- [x] Settings page: members (invite, change role, remove; cannot remove the last owner), teams + team members, job roles, entities + sites
+- [x] `scripts/seed.ts` creates the seed from docs/02 §11 (people from `templates/first-sheet.json`, workspace, teams, roles, entity, sites, folder) — sheets come in M10
+- [x] pgTAP tests in `supabase/tests/`: viewer cannot call `set_item_values`; editor cannot update a locked field; member of org A cannot select org B rows; protected value hidden from an editor not in `allowedUserIds`; `activity_log` update fails
+- [x] Workspace switcher in the top bar lists the user's workspaces
 
 ## M2 · Engine core (pure TypeScript)  [Opus]
 

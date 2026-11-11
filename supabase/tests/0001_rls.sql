@@ -12,7 +12,8 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000d', 'viewer@a.test'),
   ('00000000-0000-0000-0000-00000000000e', 'trusted@a.test'),
   ('00000000-0000-0000-0000-00000000000f', 'owner@b.test');
-insert into profiles (id, display_name, initials) select id, email, 'XX' from auth.users where email like '%.test';
+insert into profiles (id, display_name, initials)
+select id, email, 'XX' from auth.users where id::text like '00000000-0000-0000-0000-00000000000_';
 
 insert into orgs (id, name, slug) values
   ('aaaaaaaa-0000-0000-0000-000000000000', 'Org A', 'org-a'),
