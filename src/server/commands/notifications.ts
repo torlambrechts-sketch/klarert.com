@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
-import { fromDbError, invalid, ok, type Result } from '@/server/result';
+import { env } from '@/lib/env';
+import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
 
 // The inbox (docs/01 FR-36, docs/05 §2.3): mark one, some or all of my notifications in a workspace read. People may
@@ -51,8 +52,21 @@ export async function noteActivityLogOpened(raw: unknown): Promise<Result<null>>
     async ({ supabase, user }) => {
       if ((user.user_metadata as { opened_activity_log?: unknown })?.opened_activity_log === true)
         return ok(null);
-      const { error } = await supabase.auth.updateUser({ data: { opened_activity_log: true } });
-      if (error) return fromDbError(error);
+      // straight to the auth API with the person's token: updateUser on the cookie client would rewrite the session
+      // cookies, and a server action that sets cookies refreshes the open page (an open editor would lose its state)
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) return fail('unauthenticated', 'Sign in again.');
+      const res = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
+        method: 'PUT',
+        headers: {
+          apikey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: { opened_activity_log: true } }),
+      });
+      if (!res.ok) return fail('failed', 'Something went wrong. Try again.');
       return ok(null);
     },
     'noteActivityLogOpened',

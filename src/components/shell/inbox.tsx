@@ -17,6 +17,7 @@ import { useShell } from './shell-context';
 // realtime inserts and updates of their notifications; marking read goes through a command.
 
 export const INBOX_LATEST = 10;
+const POLL_MS = 30_000;
 
 const KIND_LABEL: Record<string, string> = {
   notify: 'Notification',
@@ -97,8 +98,16 @@ function useInbox(orgId: string, userId: string) {
           if (status === 'SUBSCRIBED') void load();
         });
     })();
+    // realtime is the fast path; a slow poll and focus catch events lost while its connection was down
+    const poll = setInterval(() => {
+      if (document.visibilityState === 'visible') void load();
+    }, POLL_MS);
+    const onFocus = () => void load();
+    window.addEventListener('focus', onFocus);
     return () => {
       cancelled = true;
+      clearInterval(poll);
+      window.removeEventListener('focus', onFocus);
       if (channel) void db.removeChannel(channel);
     };
   }, [load, userId]);
