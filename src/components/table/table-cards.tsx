@@ -14,6 +14,8 @@ import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
 import { GroupTitle, groupTint } from './group-title';
+import { useTableGroups } from './use-table-groups';
+import { donePercent } from '@/engine/views/group-by';
 import { buildLayout, byPosition, cardFields, positionsAtEnd, type TableRow } from './table-model';
 
 // The Table view on phones (< 640 px, docs/05 §5): the same groups with the same collapsible titles, one card per
@@ -52,17 +54,25 @@ export function TableCards({
   const store = useGridStore();
   const collapsed = useGrid((s) => s.collapsed);
   const hidden = useGrid((s) => s.hidden);
+  const tg = useTableGroups({
+    groups: data.groups,
+    sheetId: data.sheet.id,
+    ctx,
+    items: visibleItems,
+    onlyGroup,
+  });
   const layout = useMemo(
     () =>
       buildLayout({
-        groups: data.groups,
+        groups: tg.groups,
         items: visibleItems,
         collapsed,
         compare: viewCompare,
-        canAdd: canEdit,
-        onlyGroup,
+        canAdd: canEdit && !tg.virtual,
+        onlyGroup: tg.onlyGroup,
+        groupOf: tg.groupOf,
       }),
-    [data.groups, visibleItems, collapsed, viewCompare, canEdit, onlyGroup],
+    [tg, visibleItems, collapsed, viewCompare, canEdit],
   );
   const owner = useMemo(() => ownerField(ctx), [ctx]);
   const shown = useMemo(
@@ -124,6 +134,7 @@ export function TableCards({
                   <GroupTitle
                     group={row.group}
                     count={row.count}
+                    donePct={donePercent(layout.byGroup.get(row.group.id) ?? [], ctx)}
                     collapsed={row.collapsed}
                     onToggle={() => store.getState().toggleCollapsed(row.group.id)}
                   />

@@ -133,7 +133,7 @@ export function ColumnHeader({
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="hover:bg-soft text-label flex h-full min-w-0 flex-1 items-center gap-1.5 px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+          className="hover:bg-soft text-meta text-muted-foreground flex h-full min-w-0 flex-1 items-center gap-1.5 px-2 text-left font-semibold tracking-wide uppercase outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
           aria-label={`${field.name} column menu`}
         >
           <Icon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />

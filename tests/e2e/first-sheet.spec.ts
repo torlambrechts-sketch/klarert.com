@@ -448,6 +448,29 @@ test.describe('Part B · automations on the reference template', () => {
     return panel(page);
   }
 
+  /**
+   * Edits in the panel hold the row's automations until the person finishes it. Close the panel (that finishes the
+   * row), wait for the server to answer, then open the same item again.
+   */
+  async function finishPanel(page: Page) {
+    const url = new URL(page.url());
+    const item = url.searchParams.get('item');
+    const answered = page
+      .waitForResponse(
+        (r) => r.request().method() === 'POST' && !!r.request().headers()['next-action'],
+        { timeout: 15_000 },
+      )
+      .catch(() => null);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await answered;
+    if (item) {
+      url.searchParams.set('item', item);
+      await page.goto(url.toString());
+      await expect(panel(page).getByText(item).first()).toBeVisible();
+    }
+  }
+
   /** Pick an option of a label field in the panel and wait for the command (and its automations). */
   async function pick(page: Page, field: string, option: string) {
     await panel(page)
@@ -457,6 +480,7 @@ test.describe('Part B · automations on the reference template', () => {
     await page.getByRole('listbox', { name: field }).getByRole('option', { name: option }).click();
     await answered;
     await popoverGone(page);
+    await finishPanel(page);
   }
 
   async function risk(page: Page, l: number, i: number) {
@@ -467,6 +491,7 @@ test.describe('Part B · automations on the reference template', () => {
     await page.getByRole('button', { name: new RegExp(`^Likelihood ${l}, impact ${i}:`) }).click();
     await answered;
     await popoverGone(page);
+    await finishPanel(page);
   }
 
   test('the import loaded both sheets with items, links and the 9 automations', async ({
@@ -692,6 +717,7 @@ test.describe('Part B · automations on the reference template', () => {
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await answered;
     await popoverGone(page);
+    await finishPanel(page);
     await expect(p.getByRole('button', { name: /^Edit Status: Investigating/ })).toBeVisible();
     const r5 = await runs(page, auto('Effectiveness answer is No'));
     expect(r5.map((x) => [x.status, x.steps.length])).toEqual([['done', 2]]);
@@ -799,6 +825,7 @@ test.describe('Part B · automations on the reference template', () => {
     await page.keyboard.press('Enter');
     await answered;
     await popoverGone(page);
+    await finishPanel(page);
   }
 
   async function runDateChecks(page: Page) {

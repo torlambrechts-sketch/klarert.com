@@ -474,12 +474,19 @@ export const checklistUI: FieldTypeUI = {
     const p = checklistProgress(value as ChecklistValue | null, cfg);
     if (!value || p.answered === 0) return <Empty />;
     return (
-      <span className="flex w-full min-w-0 flex-col gap-0.5">
-        <span className="truncate text-[12.5px] tabular-nums">
-          {p.answered}/{p.lines} answered
-        </span>
-        <span className="bg-soft block h-1.5 w-full overflow-hidden rounded-full" aria-hidden>
+      <span
+        className="flex w-full min-w-0 items-center gap-2"
+        title={`${p.answered} of ${p.lines} answered`}
+      >
+        <span
+          className="bg-soft block h-1.5 min-w-0 flex-1 overflow-hidden rounded-full"
+          aria-hidden
+        >
           <span className="bg-focus block h-full" style={{ width: `${p.pct ?? 0}%` }} />
+        </span>
+        <span className="shrink-0 text-[12.5px] tabular-nums">
+          {p.answered}/{p.lines}
+          <span className="sr-only"> answered</span>
         </span>
       </span>
     );
