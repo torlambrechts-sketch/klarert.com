@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { FIELD_TYPES } from './fields/registry';
 import { installFieldTypes } from './fields/resolve';
 import { checklist, checklistDone, homeSummary, NEEDS_YOU_MAX } from './home';
-import { buildMyWork, dueField, filterRows, type OpenRequest } from './my-work';
+import { buildMyWork, dueField, filterRows, sections, type OpenRequest } from './my-work';
 import { makeCtx, makeField, makeItem } from './testing/fixtures';
 import type { Item } from './types';
 
@@ -97,6 +97,14 @@ describe('buildMyWork', () => {
     expect(names('assigned')).toEqual(['late', 'soon', 'edge', 'later', 'nodate']);
     expect(names('requests')).toEqual(['asked']);
     expect(w.counts).toEqual({ everything: 6, overdue: 2, due: 2, assigned: 5, requests: 1 });
+  });
+
+  it('Everything shows each row once, in its first section', () => {
+    expect(sections(w.rows).map((s) => [s.bucket, s.rows.map((r) => r.name)])).toEqual([
+      ['overdue', ['late', 'asked']],
+      ['due', ['soon', 'edge']],
+      ['assigned', ['later', 'nodate']],
+    ]);
   });
 
   it('done items are not my work, overdue or assigned', () => {

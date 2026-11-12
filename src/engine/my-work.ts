@@ -195,3 +195,20 @@ export function filterRows(
 
 export const isBucket = (v: unknown): v is Bucket =>
   typeof v === 'string' && (BUCKETS as string[]).includes(v);
+
+export const BUCKET_LABEL: Record<Bucket, string> = {
+  overdue: 'Overdue',
+  due: 'Due in 14 days',
+  requests: 'Requests to me',
+  assigned: 'Assigned to me',
+};
+
+/** "Everything": each row once, in the first section it belongs to (Overdue, Due in 14 days, Requests, Assigned). */
+export function sections(rows: WorkRow[]): { bucket: Bucket; rows: WorkRow[] }[] {
+  const out = BUCKETS.map((bucket) => ({ bucket, rows: [] as WorkRow[] }));
+  for (const r of rows) {
+    const s = out.find((x) => inBucket(r, x.bucket));
+    if (s) s.rows.push(r);
+  }
+  return out.filter((s) => s.rows.length > 0);
+}
