@@ -43,6 +43,7 @@ import {
   Text,
   TextEditor,
 } from './shared';
+import { TrendLine } from './trend';
 import type { CellProps, EditorProps, FieldTypeUI } from './types';
 
 // Basic input types (docs/03 §3.1).
@@ -180,6 +181,7 @@ function NumberCell(p: CellProps) {
     <span className="flex w-full min-w-0 items-center justify-end gap-2">
       <Text className="tabular-nums">{t}</Text>
       <Meter step={step} label={`Step ${step} of 4`} />
+      <TrendLine field={p.field} item={p.item} value={p.value} ctx={p.ctx} />
     </span>
   );
 }
