@@ -477,6 +477,19 @@ export function autoName(
   return `${describeTrigger(draft.trigger, ctx)} → ${then || '…'}`.slice(0, 200);
 }
 
+/** The whole rule as one sentence: "When Status becomes Done, and only if Severity is High, then notify Owner and lock." */
+export function describeAutomation(
+  draft: Pick<AutomationDraft, 'trigger' | 'conditions' | 'actions'>,
+  ctx: Ctx,
+  sheetName?: (id: string) => string | undefined,
+): string {
+  const when = describeTrigger(draft.trigger, ctx);
+  const ifs = (draft.conditions ?? []).map((c) => describeCondition(c, ctx));
+  const then = joinWords(draft.actions.map((a) => describeAction(a, ctx, sheetName)));
+  const only = ifs.length ? `, and only if ${joinWords(ifs)}` : '';
+  return then ? `${when}${only}, then ${then}.` : `${when}${only}, then …`;
+}
+
 // ───────────────────────── validation ─────────────────────────
 
 /** Actions that write a field of the item they run on. */

@@ -76,7 +76,7 @@ export function ValuePicker({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`${label}: ${text || 'not chosen'}`}
+          aria-label={`${label}: ${text || 'Choose a value'}`}
           className={cn(
             inputClass,
             'flex w-auto max-w-full min-w-28 items-center text-left',

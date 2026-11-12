@@ -138,7 +138,7 @@ Sentence layout: **When** [trigger ▾] [field ▾] [value/threshold/offset] · 
 - Save → name auto-generated ("When Status becomes Done → notify Owner"), editable. New automations are on by default.
 - Validation errors inline; cannot save an automation that would set the same field it triggers on with `field_changed` (instant loop) — show "This would trigger itself".
 
-Automations page: list per sheet (toggle, name, trigger summary, runs, last run, source), filters, run log tab (time, automation, sheet, item link, outcome chip, detail, expandable steps), **Run date checks now** (admins). Item panel → Details shows "Automations on this item" with pause toggles.
+Automations page: list per sheet (toggle, name, trigger summary, runs, last run, source), search, sheet and on/off filters, the builder opening in place in the row, run log at `?tab=runs` and the latest runs under the list (time, automation, sheet, item link, outcome chip, detail, expandable steps), **Run date checks now** (admins). Item panel → Details shows "Automations on this item" with pause toggles.
 
 ## 11. Starter recipes
 

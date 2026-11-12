@@ -11,6 +11,7 @@ import {
   availableTriggers,
   defaultAction,
   defaultTrigger,
+  describeAutomation,
   describeRecipients,
   draftProblems,
   incomingLinkFields,
@@ -44,7 +45,10 @@ import { ValuePicker } from './value-picker';
 // `{` template keys, the name is generated until someone types one, and "Test on an item" plans the steps without
 // writing. The command validates the same draft with the same engine before saving.
 
-const selectClass = cn(inputClass, 'h-8 w-auto max-w-full pr-6');
+const selectClass = cn(
+  inputClass,
+  'select-chevron h-8 w-auto max-w-[280px] text-[13.5px] shadow-none',
+);
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 const num = (v: unknown, d = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
 
@@ -59,6 +63,10 @@ export interface BuilderProps {
   /** The automation being edited, or null for a new one. */
   automationId: string | null;
   source: string;
+  /** Version of the automation being edited: saving creates the next one. */
+  version?: number;
+  /** The first row of the builder (the sheet it runs on). */
+  head?: React.ReactNode;
   onSaved(id: string): void | Promise<void>;
   onCancel(): void;
 }
@@ -71,11 +79,32 @@ function Problem({ id, text }: { id: string; text?: string }) {
   ) : null;
 }
 
-function Keyword({ children }: { children: React.ReactNode }) {
+/** One row of the builder: a 96 px keyword column, then its controls (docs/04 §10, the board design's builder). */
+function Row({
+  label,
+  labelId,
+  children,
+  top,
+}: {
+  label: React.ReactNode;
+  labelId?: string;
+  children: React.ReactNode;
+  /** Align the keyword with the first line of a tall row. */
+  top?: boolean;
+}) {
   return (
-    <span className="w-12 shrink-0 pt-1.5 text-[13px] font-extrabold tracking-wide uppercase">
-      {children}
-    </span>
+    <div className="border-soft flex flex-wrap gap-x-2 gap-y-1.5 border-b py-2 last:border-b-0 sm:flex-nowrap">
+      <span
+        id={labelId}
+        className={cn(
+          'text-muted-foreground w-full shrink-0 text-[12px] font-medium sm:w-24',
+          top ? 'sm:pt-2' : 'self-center',
+        )}
+      >
+        {label}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">{children}</div>
+    </div>
   );
 }
 
@@ -147,141 +176,130 @@ export function AutomationBuilder(props: BuilderProps) {
   const tField = ctx.fieldsByKey.get(str(draft.trigger.fieldKey));
   const conditionFields = filterable(ctx.fieldsOf(ctx.sheet.id), ctx);
 
+  const sentence = describeAutomation(draft, ctx, sheetName);
   return (
-    <div className="flex flex-col gap-5">
-      <section
-        aria-labelledby={`${ids}-when`}
-        className="border-line flex flex-col gap-2 rounded-[var(--radius-card)] border bg-white p-4"
-      >
-        <div className="flex flex-wrap items-start gap-2">
-          <span id={`${ids}-when`}>
-            <Keyword>When</Keyword>
-          </span>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-            <select
-              aria-label="Trigger"
-              className={selectClass}
-              value={draft.trigger.type}
-              onChange={(e) => setTrigger(defaultTrigger(e.target.value as TriggerId, ctx))}
-            >
-              {!triggers.includes(draft.trigger.type) ? (
-                <option value={draft.trigger.type}>{spec?.label ?? draft.trigger.type}</option>
-              ) : null}
-              {triggers.map((t) => (
-                <option key={t} value={t}>
-                  {TRIGGER_CATALOGUE[t].label}
-                </option>
-              ))}
-            </select>
-            {spec?.field ? (
+    <div className="flex flex-col gap-2.5">
+      <div className="border-line flex flex-col rounded-lg border bg-white px-3.5 py-1.5">
+        {props.head}
+        <Row label="When" labelId={`${ids}-when`}>
+          <div role="group" aria-labelledby={`${ids}-when`} className="flex flex-col gap-1.5">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
               <select
-                aria-label="Trigger field"
+                aria-label="Trigger"
                 className={selectClass}
-                value={str(draft.trigger.fieldKey)}
-                onChange={(e) => {
-                  const next: AutomationDraft['trigger'] = {
-                    ...draft.trigger,
-                    fieldKey: e.target.value,
-                  };
-                  if (spec.param === 'value') next.value = null;
-                  setTrigger(next);
-                }}
+                value={draft.trigger.type}
+                onChange={(e) => setTrigger(defaultTrigger(e.target.value as TriggerId, ctx))}
               >
-                {!tField ? (
-                  <option value={str(draft.trigger.fieldKey)}>Choose a field</option>
+                {!triggers.includes(draft.trigger.type) ? (
+                  <option value={draft.trigger.type}>{spec?.label ?? draft.trigger.type}</option>
                 ) : null}
-                {tFields.map((f) => (
-                  <option key={f.id} value={f.key}>
-                    {f.name}
+                {triggers.map((t) => (
+                  <option key={t} value={t}>
+                    {TRIGGER_CATALOGUE[t].label}
                   </option>
                 ))}
               </select>
-            ) : null}
-            {spec?.param === 'value' && tField ? (
-              <>
-                <span className="text-sm">becomes</span>
-                <ValuePicker
-                  field={tField}
-                  ctx={ctx}
-                  value={draft.trigger.value}
-                  mode="key"
-                  label="Trigger value"
-                  invalid={!!shown('trigger')}
-                  onChange={(v) => setTrigger({ ...draft.trigger, value: v })}
-                />
-              </>
-            ) : null}
-            {spec?.param === 'threshold' ? (
-              <input
-                type="number"
-                aria-label="Threshold"
-                className={cn(inputClass, 'w-24')}
-                value={num(draft.trigger.threshold)}
-                onChange={(e) =>
-                  setTrigger({
-                    ...draft.trigger,
-                    threshold: e.target.value === '' ? null : Number(e.target.value),
-                  })
-                }
-              />
-            ) : null}
-            {spec?.param === 'offsetDays' ? (
-              <OffsetInput
-                value={num(draft.trigger.offsetDays)}
-                onChange={(n) => setTrigger({ ...draft.trigger, offsetDays: n })}
-              />
-            ) : null}
-            {spec?.param === 'hoursLeft' ? (
-              <>
-                <span className="text-sm">with less than</span>
+              {spec?.field ? (
+                <select
+                  aria-label="Trigger field"
+                  className={selectClass}
+                  value={str(draft.trigger.fieldKey)}
+                  onChange={(e) => {
+                    const next: AutomationDraft['trigger'] = {
+                      ...draft.trigger,
+                      fieldKey: e.target.value,
+                    };
+                    if (spec.param === 'value') next.value = null;
+                    setTrigger(next);
+                  }}
+                >
+                  {!tField ? (
+                    <option value={str(draft.trigger.fieldKey)}>Choose a field</option>
+                  ) : null}
+                  {tFields.map((f) => (
+                    <option key={f.id} value={f.key}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+              {spec?.param === 'value' && tField ? (
+                <>
+                  <span className="text-sm">becomes</span>
+                  <ValuePicker
+                    field={tField}
+                    ctx={ctx}
+                    value={draft.trigger.value}
+                    mode="key"
+                    label="Trigger value"
+                    invalid={!!shown('trigger')}
+                    onChange={(v) => setTrigger({ ...draft.trigger, value: v })}
+                  />
+                </>
+              ) : null}
+              {spec?.param === 'threshold' ? (
                 <input
                   type="number"
-                  min={1}
-                  aria-label="Hours left"
-                  className={cn(inputClass, 'w-20')}
-                  value={num(draft.trigger.hoursLeft, 24)}
+                  aria-label="Threshold"
+                  className={cn(inputClass, 'w-24')}
+                  value={num(draft.trigger.threshold)}
                   onChange={(e) =>
-                    setTrigger({ ...draft.trigger, hoursLeft: Number(e.target.value) })
+                    setTrigger({
+                      ...draft.trigger,
+                      threshold: e.target.value === '' ? null : Number(e.target.value),
+                    })
                   }
                 />
-                <span className="text-sm">hours left</span>
-              </>
-            ) : null}
-            {spec?.param === 'days' ? (
-              <>
-                <span className="text-sm">within</span>
-                <input
-                  type="number"
-                  min={1}
-                  aria-label="Days before expiry"
-                  className={cn(inputClass, 'w-20')}
-                  value={num(draft.trigger.days, 30)}
-                  onChange={(e) => setTrigger({ ...draft.trigger, days: Number(e.target.value) })}
+              ) : null}
+              {spec?.param === 'offsetDays' ? (
+                <OffsetInput
+                  value={num(draft.trigger.offsetDays)}
+                  onChange={(n) => setTrigger({ ...draft.trigger, offsetDays: n })}
                 />
-                <span className="text-sm">days</span>
-              </>
-            ) : null}
+              ) : null}
+              {spec?.param === 'hoursLeft' ? (
+                <>
+                  <span className="text-sm">with less than</span>
+                  <input
+                    type="number"
+                    min={1}
+                    aria-label="Hours left"
+                    className={cn(inputClass, 'w-20')}
+                    value={num(draft.trigger.hoursLeft, 24)}
+                    onChange={(e) =>
+                      setTrigger({ ...draft.trigger, hoursLeft: Number(e.target.value) })
+                    }
+                  />
+                  <span className="text-sm">hours left</span>
+                </>
+              ) : null}
+              {spec?.param === 'days' ? (
+                <>
+                  <span className="text-sm">within</span>
+                  <input
+                    type="number"
+                    min={1}
+                    aria-label="Days before expiry"
+                    className={cn(inputClass, 'w-20')}
+                    value={num(draft.trigger.days, 30)}
+                    onChange={(e) => setTrigger({ ...draft.trigger, days: Number(e.target.value) })}
+                  />
+                  <span className="text-sm">days</span>
+                </>
+              ) : null}
+            </div>
           </div>
-        </div>
-        {spec?.scheduled ? (
-          <p className="text-muted-foreground m-0 pl-14 text-xs">
-            Date checks run on a schedule, once per item for each date.
-          </p>
-        ) : null}
-        <div className="pl-14" id={`${ids}-trigger`}>
-          <Problem id={`${ids}-trigger-problem`} text={shown('trigger')} />
-        </div>
-      </section>
-
-      <section
-        aria-labelledby={`${ids}-if`}
-        className="border-line flex flex-col gap-2 rounded-[var(--radius-card)] border bg-white p-4"
-      >
-        <div className="flex flex-wrap items-start gap-2">
-          <span id={`${ids}-if`}>
-            <Keyword>If</Keyword>
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {spec?.scheduled ? (
+            <p className="text-muted-foreground m-0 text-[12.5px]">
+              Date checks run on a schedule, once per item for each date.
+            </p>
+          ) : null}
+          <div id={`${ids}-trigger`}>
+            <Problem id={`${ids}-trigger-problem`} text={shown('trigger')} />
+          </div>
+        </Row>
+        <Row label="and only if" labelId={`${ids}-if`} top>
+          <div role="group" aria-labelledby={`${ids}-if`} className="flex flex-col gap-2">
             {draft.conditions.length === 0 ? (
               <p className="text-muted-foreground m-0 pt-1.5 text-sm">
                 No conditions: it runs every time the trigger fires.
@@ -341,123 +359,125 @@ export function AutomationBuilder(props: BuilderProps) {
               </Button>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section
-        aria-labelledby={`${ids}-then`}
-        className="border-line flex flex-col gap-2 rounded-[var(--radius-card)] border bg-white p-4"
-      >
-        <div className="flex flex-wrap items-start gap-2">
-          <span id={`${ids}-then`}>
-            <Keyword>Then</Keyword>
-          </span>
-          <ol className="m-0 flex min-w-0 flex-1 list-none flex-col gap-2 p-0">
-            {draft.actions.map((a, i) => (
-              <li
-                key={i}
-                id={`${ids}-actions.${i}`}
-                className={cn(
-                  'border-line flex flex-col gap-1.5 rounded-md border p-2',
-                  loops.has(i) && 'border-crit',
-                )}
-              >
-                <ActionRow
-                  index={i}
-                  action={a}
-                  ctx={ctx}
-                  sheets={sheets}
-                  invalid={!!shown(`actions.${i}`)}
-                  onChange={(next) => setAction(i, next)}
-                  onRemove={
-                    draft.actions.length > 1
-                      ? () =>
-                          setDraft((d) => ({ ...d, actions: d.actions.filter((_, j) => j !== i) }))
-                      : undefined
-                  }
-                />
-                <Problem id={`${ids}-a${i}`} text={shown(`actions.${i}`)} />
-              </li>
-            ))}
-            {draft.actions.length === 0 ? (
-              <Problem id={`${ids}-actions`} text={shown('actions')} />
-            ) : null}
-            <li>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={draft.actions.length >= 10}
-                onClick={() =>
-                  setDraft((d) => ({ ...d, actions: [...d.actions, defaultAction('notify', ctx)] }))
-                }
-              >
-                <Plus aria-hidden /> Add an action
-              </Button>
-            </li>
-          </ol>
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-1.5">
-        <label htmlFor={`${ids}-name`} className="text-sm font-semibold">
-          Name
-        </label>
-        <input
-          id={`${ids}-name`}
-          type="text"
-          maxLength={200}
-          className={inputClass}
-          placeholder={generated}
-          value={draft.name}
-          onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-        />
-        <p className="text-muted-foreground m-0 text-xs">Leave it empty to use “{generated}”.</p>
-      </section>
-
-      <section
-        aria-labelledby={`${ids}-test`}
-        className="border-line flex flex-col gap-3 rounded-[var(--radius-card)] border border-dashed p-4"
-      >
-        <h2 id={`${ids}-test`} className="m-0 text-[15px] font-extrabold">
-          Test on an item
-        </h2>
-        {props.items.length === 0 ? (
-          <p className="text-muted-foreground m-0 text-sm">
-            This sheet has no items yet. Add one to test the automation on it.
-          </p>
-        ) : (
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              aria-label="Item to test on"
-              className={selectClass}
-              value={testItemId}
-              onChange={(e) => setTestItemId(e.target.value)}
-            >
-              {props.items.map((it) => (
-                <option key={it.id} value={it.id}>
-                  {it.displayId} {it.name}
-                </option>
+        </Row>
+        <Row label="then" labelId={`${ids}-then`} top>
+          <div role="group" aria-labelledby={`${ids}-then`}>
+            <ol className="m-0 flex min-w-0 flex-1 list-none flex-col gap-2 p-0">
+              {draft.actions.map((a, i) => (
+                <li
+                  key={i}
+                  id={`${ids}-actions.${i}`}
+                  className={cn(
+                    'border-soft flex flex-col gap-1.5 border-t pt-2 first:border-t-0 first:pt-0',
+                    loops.has(i) && 'border-crit rounded-md border p-2 first:border-t first:p-2',
+                  )}
+                >
+                  <ActionRow
+                    index={i}
+                    action={a}
+                    ctx={ctx}
+                    sheets={sheets}
+                    invalid={!!shown(`actions.${i}`)}
+                    onChange={(next) => setAction(i, next)}
+                    onRemove={
+                      draft.actions.length > 1
+                        ? () =>
+                            setDraft((d) => ({
+                              ...d,
+                              actions: d.actions.filter((_, j) => j !== i),
+                            }))
+                        : undefined
+                    }
+                  />
+                  <Problem id={`${ids}-a${i}`} text={shown(`actions.${i}`)} />
+                </li>
               ))}
-            </select>
-            <Button type="button" variant="outline" onClick={() => setTesting(true)}>
-              Test
-            </Button>
+              {draft.actions.length === 0 ? (
+                <Problem id={`${ids}-actions`} text={shown('actions')} />
+              ) : null}
+              <li>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={draft.actions.length >= 10}
+                  onClick={() =>
+                    setDraft((d) => ({
+                      ...d,
+                      actions: [...d.actions, defaultAction('notify', ctx)],
+                    }))
+                  }
+                >
+                  <Plus aria-hidden /> Add an action
+                </Button>
+              </li>
+            </ol>
           </div>
-        )}
-        {test && testItem ? <TestPanel result={test} item={testItem} /> : null}
-      </section>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" onClick={() => void save()} disabled={saving}>
-          {saving ? 'Saving…' : props.automationId ? 'Save changes' : 'Save and turn on'}
-        </Button>
+        </Row>
+        <div className="border-soft border-b py-2 last:border-b-0">
+          <p className="bg-soft text-ink-2 m-0 rounded-md px-3 py-2.5 text-[13.5px] leading-normal">
+            <b className="text-ink font-medium">Reads as:</b> {sentence}
+          </p>
+        </div>
+        <Row label={<label htmlFor={`${ids}-name`}>Name</label>}>
+          <input
+            id={`${ids}-name`}
+            type="text"
+            maxLength={200}
+            className={cn(inputClass, 'h-8 text-[13.5px] shadow-none')}
+            placeholder={generated}
+            value={draft.name}
+            onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+          />
+          <p className="text-muted-foreground m-0 text-[12.5px]">
+            Leave it empty to use “{generated}”.
+          </p>
+        </Row>
+        <Row label="Test on" labelId={`${ids}-test`}>
+          {props.items.length === 0 ? (
+            <p className="text-muted-foreground m-0 text-sm">
+              This sheet has no items yet. Add one to test the automation on it.
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                aria-label="Item to test on"
+                className={selectClass}
+                value={testItemId}
+                onChange={(e) => setTestItemId(e.target.value)}
+              >
+                {props.items.map((it) => (
+                  <option key={it.id} value={it.id}>
+                    {it.displayId} {it.name}
+                  </option>
+                ))}
+              </select>
+              <Button type="button" variant="outline" onClick={() => setTesting(true)}>
+                Test
+              </Button>
+            </div>
+          )}
+          {test && testItem ? <TestPanel result={test} item={testItem} /> : null}
+        </Row>
+        <Row label={<span className="sr-only">Save</span>}>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+            <Button type="button" onClick={() => void save()} disabled={saving}>
+              {saving
+                ? 'Saving…'
+                : props.automationId
+                  ? `Save as v${(props.version ?? 0) + 1}`
+                  : 'Turn on automation'}
+            </Button>
+            <p className="text-muted-foreground m-0 text-[12.5px]">
+              Status rules still apply to its changes, and every run is logged.
+            </p>
+          </div>
+        </Row>
+      </div>
+      <div className="flex justify-end">
         <Button type="button" variant="outline" onClick={props.onCancel} disabled={saving}>
           Cancel
         </Button>
-        <p className="text-muted-foreground m-0 text-xs">
-          Status rules still apply to its changes, and every run is logged.
-        </p>
       </div>
     </div>
   );

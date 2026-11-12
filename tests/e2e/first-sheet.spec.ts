@@ -546,7 +546,7 @@ test.describe('Part B · automations on the reference template', () => {
 
     // the run log shows it
     await page.goto(`/${slug}/automations?tab=runs`);
-    const run = page.getByRole('list', { name: 'Runs' }).getByRole('listitem').filter({
+    const run = page.getByRole('table', { name: 'Runs' }).getByRole('row').filter({
       hasText: 'Critical severity → alert the HSE manager',
     });
     await expect(run).toHaveCount(1);

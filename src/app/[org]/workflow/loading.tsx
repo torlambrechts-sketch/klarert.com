@@ -1,19 +1,26 @@
 export default function Loading() {
   return (
     <main
-      className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]"
+      className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]"
       aria-busy="true"
       aria-label="Loading workflow"
     >
-      <h1>Workflow</h1>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="bg-soft h-[100px] animate-pulse rounded-xl" />
-        ))}
+      <div className="flex flex-col gap-1.5 pb-[18px]">
+        <div className="bg-soft h-[18px] w-48 animate-pulse rounded" />
+        <h1>Workflow</h1>
+        <div className="bg-soft h-[42px] w-full max-w-[780px] animate-pulse rounded" />
       </div>
-      <div className="flex flex-col gap-2">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-soft h-14 animate-pulse rounded" />
+      <div className="bg-soft h-[38px] w-full max-w-[360px] animate-pulse rounded-md" />
+      <div className="border-line overflow-hidden rounded-[10px] border bg-white">
+        <div className="border-soft h-9 border-b" />
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="border-line-2 flex h-14 items-center gap-3 border-b px-3 last:border-b-0"
+          >
+            <div className="bg-soft size-7 animate-pulse rounded-full" />
+            <div className="bg-soft h-4 w-48 animate-pulse rounded" />
+          </div>
         ))}
       </div>
     </main>

@@ -9,6 +9,7 @@ import {
   availableTriggers,
   becomesKey,
   defaultTrigger,
+  describeAutomation,
   describeCondition,
   draftProblems,
   emptyDraft,
@@ -125,6 +126,26 @@ describe('compatibility filters', () => {
   it('reads the key a field_becomes value picker commits', () => {
     expect(becomesKey(f.status, 'opt_done', ctx)).toBe('opt_done');
     expect(becomesKey(f.owner, ['u-maria', 'u-james'], ctx, 'u-maria')).toBe('u-james');
+  });
+});
+
+describe('describe automation', () => {
+  it('reads the whole rule as one sentence', () => {
+    expect(describeAutomation(draft({}), ctx)).toBe('When Status becomes Done, then notify Owner.');
+    expect(
+      describeAutomation(
+        draft({
+          conditions: [{ fieldKey: 'status', op: 'is_any_of', value: ['opt_done'] }],
+          actions: [{ type: 'lock_item' }, { type: 'post_update', message: 'x' }],
+        }),
+        ctx,
+      ),
+    ).toBe(
+      'When Status becomes Done, and only if Status is any of Done, then lock and post an update.',
+    );
+    expect(describeAutomation(draft({ actions: [] }), ctx)).toBe(
+      'When Status becomes Done, then …',
+    );
   });
 });
 

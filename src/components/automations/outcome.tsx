@@ -31,7 +31,7 @@ export function OutcomeChip({ outcome, className }: { outcome: string; className
     <span
       className={cn(
         'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap',
-        outcome === 'done' && 'border-good/30 text-good bg-good-soft',
+        outcome === 'done' && 'border-good/30 text-h1i bg-good-soft',
         bad && 'border-crit-line text-crit-ink bg-crit-soft',
         warn && 'border-warn/40 text-warn bg-warn-soft',
         !bad && !warn && outcome !== 'done' && 'border-line text-muted-foreground bg-white',
