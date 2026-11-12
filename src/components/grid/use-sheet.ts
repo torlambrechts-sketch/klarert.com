@@ -383,24 +383,29 @@ export function useSheetActions(org: string, sheetId: string) {
     },
     [finishItem],
   );
+  // listeners live for the whole page: they read the latest callbacks through a ref, so a re-render (for example the
+  // "Editing" marker appearing) never runs the cleanup and releases rows early
+  const finishRef = useRef({ finishItem, finishAll });
+  finishRef.current = { finishItem, finishAll };
   useEffect(() => {
     const idle = setInterval(() => {
       const now = Date.now();
-      for (const [id, at] of heldRef.current) if (now - at > 2 * 60 * 1000) void finishItem(id);
+      for (const [id, at] of heldRef.current)
+        if (now - at > 2 * 60 * 1000) void finishRef.current.finishItem(id);
     }, 15_000);
     const hidden = () => {
-      if (document.visibilityState === 'hidden') finishAll();
+      if (document.visibilityState === 'hidden') finishRef.current.finishAll();
     };
-    const leave = () => finishAll();
+    const leave = () => finishRef.current.finishAll();
     document.addEventListener('visibilitychange', hidden);
     window.addEventListener('pagehide', leave);
     return () => {
       clearInterval(idle);
       document.removeEventListener('visibilitychange', hidden);
       window.removeEventListener('pagehide', leave);
-      finishAll();
+      finishRef.current.finishAll();
     };
-  }, [finishAll, finishItem]);
+  }, []);
 
   /** One cell or the name of one item. Comment-required and conflicts come back to the caller. */
   const setCell = useCallback(
