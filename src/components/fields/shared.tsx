@@ -169,6 +169,8 @@ export function Avatar({
 }) {
   const p = ctx.people.get(id);
   const color = p?.color ?? 'dark';
+  // 24 px is the smallest circle that holds two initials in text-label-12
+  const px = Math.max(size, 24);
   return (
     <span
       aria-hidden={decorative || undefined}
@@ -180,8 +182,8 @@ export function Avatar({
           : 'text-label-12 font-semibold shadow-[0_0_0_2px_var(--background-100)]',
       )}
       style={{
-        width: size,
-        height: size,
+        width: px,
+        height: px,
         ...(tone === 'solid' ? { background: solidVar(color) } : softAvatar(color)),
       }}
     >
