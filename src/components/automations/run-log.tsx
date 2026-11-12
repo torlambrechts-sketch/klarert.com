@@ -183,7 +183,7 @@ export function RunTable({
               <th
                 key={h}
                 scope="col"
-                className="border-soft text-faint border-b bg-white px-3.5 py-2.5 text-left text-[12px] font-normal whitespace-nowrap"
+                className="border-soft text-muted-foreground border-b bg-white px-3.5 py-2.5 text-left text-[12px] font-normal whitespace-nowrap"
               >
                 {h}
               </th>

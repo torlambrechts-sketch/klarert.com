@@ -192,7 +192,7 @@ export function AutomationRows({
               )}
               <span className="flex min-w-0 items-center gap-3">
                 <RowIcon icon={Zap} dim={!a.enabled} />
-                <span className={cn('flex min-w-0 flex-col', !a.enabled && 'opacity-55')}>
+                <span className="flex min-w-0 flex-col">
                   <span className="flex min-w-0 items-center gap-1.5">
                     <span className="line-clamp-2 text-[14px] font-medium break-words md:line-clamp-1">
                       {a.name}
@@ -231,7 +231,7 @@ export function AutomationRows({
                   <span className="text-muted-foreground font-mono text-[13px]">0</span>
                 )}
                 <span
-                  className="text-faint truncate text-[11.5px]"
+                  className="text-muted-foreground truncate text-[11.5px]"
                   title={
                     a.lastRunAt ? `Last run ${formatDateTime(a.lastRunAt, timeZone)}` : undefined
                   }

@@ -138,7 +138,7 @@ export function ListHeader({
     <div
       aria-hidden
       className={cn(
-        'border-soft text-faint grid min-h-9 items-center gap-x-3 border-b pr-3 pl-1.5 text-[12px]',
+        'border-soft text-muted-foreground grid min-h-9 items-center gap-x-3 border-b pr-3 pl-1.5 text-[12px]',
         className,
       )}
     >

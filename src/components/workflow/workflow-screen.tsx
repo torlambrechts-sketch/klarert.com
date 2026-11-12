@@ -311,7 +311,7 @@ function WorkflowListRow({
           <RowIcon icon={Workflow} dim={!l} />
           <span className="flex min-w-0 flex-col">
             <span className="truncate text-[14px] font-medium">{row.sheet.name}</span>
-            <span className="text-faint truncate font-mono text-[11.5px]">
+            <span className="text-muted-foreground truncate font-mono text-[11.5px]">
               {l
                 ? `${l.field.key} · ${plural(l.total, row.sheet.itemLabel.toLowerCase())}`
                 : 'no stages'}
@@ -477,9 +477,9 @@ function Steps({
                       </span>
                     </span>
                   ) : s.key !== null ? (
-                    <span className="text-faint">No automations</span>
+                    <span className="text-muted-foreground">No automations</span>
                   ) : (
-                    <span className="text-faint">Not an option of {l.field.name}</span>
+                    <span className="text-muted-foreground">Not an option of {l.field.name}</span>
                   )}
                 </span>
                 <span className="col-start-3 row-start-1 flex justify-end md:col-start-auto md:row-start-auto">
