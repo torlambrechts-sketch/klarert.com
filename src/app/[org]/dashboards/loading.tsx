@@ -1,19 +1,24 @@
+// Loading a dashboard: the header, the period switch, the key figures card and three cards, as quiet blocks in the
+// places they will take (no layout shift when the figures arrive).
 export default function Loading() {
   return (
     <main
-      className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]"
+      className="mx-auto flex w-full max-w-[1184px] flex-col gap-4 px-4 pt-6 pb-8 sm:px-7 sm:pt-[42px]"
       aria-busy="true"
       aria-label="Loading dashboards"
     >
-      <h1>Dashboards</h1>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="bg-soft h-[100px] animate-pulse rounded-xl" />
-        ))}
+      <div className="flex flex-col gap-1.5 pb-0.5">
+        <h1 className="m-0">Dashboards</h1>
+        <div className="bg-soft h-5 w-full max-w-[560px] animate-pulse rounded" />
       </div>
-      <div className="flex flex-col gap-2">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-soft h-14 animate-pulse rounded" />
+      <div className="bg-soft h-[38px] w-[260px] animate-pulse rounded-md" />
+      <div className="border-line h-[440px] animate-pulse rounded-[10px] border bg-white" />
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="border-line bg-subtle h-[380px] animate-pulse rounded-[10px] border"
+          />
         ))}
       </div>
     </main>

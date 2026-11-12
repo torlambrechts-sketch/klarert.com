@@ -2,6 +2,8 @@
 
 import { useId, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
+// the field types the widget's field choices and conditions read (installs the registry in the browser)
+import '@/engine/fields/registry';
 import {
   DEFAULT_DAYS,
   MAX_DAYS,
@@ -216,7 +218,7 @@ function WidgetForm({
 
       {def.needs.field ? (
         <label htmlFor={ids.field} className="flex flex-col gap-1 text-sm font-medium">
-          {def.needs.field === 'date' ? 'Date field' : 'Field'}
+          {def.fieldPrompt?.label ?? (def.needs.field === 'date' ? 'Date field' : 'Field')}
           <select
             id={ids.field}
             className={selectClass}
@@ -226,9 +228,10 @@ function WidgetForm({
           >
             {choices.length === 0 ? (
               <option value="">
-                {def.needs.field === 'date'
-                  ? 'This sheet has no date field'
-                  : 'This sheet has no status or label field'}
+                {def.fieldPrompt?.none ??
+                  (def.needs.field === 'date'
+                    ? 'This sheet has no date field'
+                    : 'This sheet has no status or label field')}
               </option>
             ) : null}
             {choices.map((f) => (

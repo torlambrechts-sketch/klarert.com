@@ -47,6 +47,8 @@ function normalizeRisk(input: unknown, cfg: RiskMatrixConfig): RiskValue | null 
   return inRange(l, cfg.size) && inRange(i, cfg.size) ? { l, i } : null;
 }
 
+const RANK: Record<RiskLevel, 1 | 2 | 3 | 4> = { Low: 1, Medium: 2, High: 3, Critical: 4 };
+
 const isEmpty = (v: RiskValue | null) => !v || typeof v.l !== 'number' || typeof v.i !== 'number';
 const scoreOf = (v: RiskValue) => v.l * v.i;
 
@@ -76,6 +78,15 @@ export const riskmatrix = base<RiskValue, RiskMatrixConfig>({
   isEmpty,
   toText: (v, cfg) => (isEmpty(v) ? '' : `${scoreOf(v!)} · ${riskLevel(scoreOf(v!), cfg.bands)}`),
   toNumber: (v) => (isEmpty(v) ? null : scoreOf(v!)),
+  matrix: {
+    axes: { x: 'Likelihood', y: 'Impact' },
+    size: (cfg) => cfg.size,
+    cell: (v) => (isEmpty(v) ? null : { x: v!.l, y: v!.i }),
+    level: (x, y, cfg) => {
+      const label = riskLevel(x * y, cfg.bands);
+      return { rank: RANK[label], label };
+    },
+  },
   compare: (a, b) =>
     emptyLast(a, b, isEmpty, (x, y) => cmpNumber(scoreOf(x), scoreOf(y)) || cmpNumber(x.l, y.l)),
 });

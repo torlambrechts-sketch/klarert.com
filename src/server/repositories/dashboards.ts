@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  DEFAULT_DAYS,
   computeWidget,
   widgetType,
   type DashboardData,
@@ -9,8 +10,10 @@ import {
 } from '@/engine/dashboards';
 import { isoDateInZone } from '@/engine/fields/helpers';
 import { emptySheetData, sheetCtx, todayIn, type CtxEnv } from '@/engine/sheet-data';
-import type { Ctx, Field, Group, Person, Sheet } from '@/engine/types';
-import { fetchDirectory, fetchSheetData, type Db } from '@/lib/sheet-query';
+import { itemStatusField } from '@/engine/fields/item-status';
+import type { Ctx, Field, Group, Json, Person, Sheet } from '@/engine/types';
+import { monthPoints } from '@/engine/dashboards/history';
+import { fetchDirectory, fetchItemsOfSheets, fetchSheetData, type Db } from '@/lib/sheet-query';
 import { toDashboard, toField, toGroup, toSheet, type Dashboard } from '@/lib/sheet-rows';
 import { fetchEvidence } from './evidence';
 
@@ -25,6 +28,8 @@ function must<T>(r: { data: T | null; error: { message: string } | null }): T {
 const DASHBOARD_COLUMNS = 'id, name, position, config, updated_at';
 /** Runs read at most per dashboard (the newest first). */
 const MAX_RUNS = 5000;
+/** Earlier values (activity log) read at most per dashboard for trends (the newest first). */
+const MAX_CHANGES = 20000;
 const PAGE = 1000;
 
 export async function listDashboards(db: Db, orgId: string): Promise<Dashboard[]> {
@@ -101,6 +106,8 @@ export interface DashboardView {
   /** The sheet name of each widget that has one (or null when it is gone). */
   sheetNames: Record<string, string | null>;
   today: string;
+  /** The period trends show, in months. */
+  months: number;
 }
 
 /** The results of a dashboard's widgets, computed by the engine from the data they need. */
@@ -109,27 +116,48 @@ export async function computeDashboard(
   orgId: string,
   widgets: WidgetConfig[],
   env: Omit<CtxEnv, 'now'>,
+  months: number,
 ): Promise<DashboardView> {
   const now = new Date();
   const today = todayIn(now, env.timeZone);
   const defs = widgets.map((w) => widgetType(w.type));
   const sheetIds = [...new Set(widgets.map((w) => w.sheetId).filter((s): s is string => !!s))];
   const needsEvidence = defs.some((d) => d?.data.evidence);
-  const runDays = Math.max(0, ...widgets.map((w, i) => (defs[i]?.data.runs ? (w.days ?? 30) : 0)));
-  const [sheetData, evidence, runs] = await Promise.all([
+  const needsAll = defs.some((d) => d?.data.allSheets);
+  const needsHistory = defs.some((d) => d?.data.history);
+  const runDays = Math.max(
+    0,
+    ...widgets.map((w, i) => (defs[i]?.data.runs ? (w.days ?? DEFAULT_DAYS) : 0)),
+  );
+  const [sheetData, all, evidence, runs] = await Promise.all([
     Promise.all(sheetIds.map((id) => fetchSheetData(db, id).catch(() => null))),
+    needsAll ? fetchAllSources(db, orgId, { ...env, now }) : Promise.resolve([]),
     needsEvidence ? fetchEvidence(db, orgId) : Promise.resolve([]),
     runDays > 0 ? fetchRuns(db, orgId, now, runDays + 1) : Promise.resolve([]),
   ]);
-  const sources = new Map<string, SheetSource>();
+  const sources = new Map<string, SheetSource>(all.map((s) => [s.sheet.id, s]));
   for (const d of sheetData) {
     if (!d || d.sheet.orgId !== orgId) continue;
     const ctx = sheetCtx(d, { ...env, now });
     sources.set(d.sheet.id, { sheet: d.sheet, fields: d.fields, items: d.items, ctx });
   }
+  // the fields that decide done, of every sheet a trend reads, and their earlier values since the period began
+  const deciding = needsHistory
+    ? [...sources.values()]
+        .map((s) => itemStatusField(s.ctx, s.fields)?.id)
+        .filter((id): id is string => !!id)
+    : [];
+  const start = `${monthPoints(today, months)[0]?.date.slice(0, 8) ?? today.slice(0, 8)}01`;
+  const changes = deciding.length
+    ? await fetchChanges(db, orgId, deciding, start, env.timeZone)
+    : [];
   const data: DashboardData = {
     today,
+    timeZone: env.timeZone,
+    months,
     sheet: (id) => sources.get(id),
+    sheets: () => all.map((s) => sources.get(s.sheet.id) ?? s),
+    changes,
     evidence: evidence.map((e) => ({ sheetId: e.sheet.id, validUntil: e.validUntil })),
     runs: runs.map((r) => ({
       sheetId: r.sheet_id,
@@ -143,7 +171,67 @@ export async function computeDashboard(
     results[w.id] = computeWidget(w, data);
     if (w.sheetId) sheetNames[w.id] = sources.get(w.sheetId)?.sheet.name ?? null;
   }
-  return { results, sheetNames, today };
+  return { results, sheetNames, today, months };
+}
+
+/** Every sheet of the workspace with its fields and live items (no links or files), in menu order. */
+async function fetchAllSources(db: Db, orgId: string, env: CtxEnv): Promise<SheetSource[]> {
+  const metas = await fetchSheetMetas(db, orgId);
+  const itemsOf = await fetchItemsOfSheets(
+    db,
+    orgId,
+    metas.sheets.map((m) => m.sheet.id),
+  );
+  return metas.sheets.map((m) => {
+    const items = itemsOf.get(m.sheet.id) ?? [];
+    const ctx = sheetCtx(
+      {
+        ...emptySheetData(m.sheet),
+        fields: m.fields,
+        groups: m.groups,
+        people: metas.people,
+        items,
+      },
+      env,
+    );
+    return { sheet: m.sheet, fields: m.fields, items, ctx };
+  });
+}
+
+/** Earlier values of the given fields since `since` (value.changed entries of the activity log). */
+async function fetchChanges(
+  db: Db,
+  orgId: string,
+  fieldIds: string[],
+  since: string,
+  timeZone: string,
+): Promise<DashboardData['changes']> {
+  const out: DashboardData['changes'] = [];
+  const from = new Date(`${since}T00:00:00Z`);
+  from.setUTCDate(from.getUTCDate() - 1);
+  for (let at = 0; at < MAX_CHANGES; at += PAGE) {
+    const rows = must(
+      await db
+        .from('activity_log')
+        .select('item_id, field_id, old_value, at')
+        .eq('org_id', orgId)
+        .eq('action', 'value.changed')
+        .in('field_id', fieldIds)
+        .gte('at', from.toISOString())
+        .order('id', { ascending: false })
+        .range(at, at + PAGE - 1),
+    );
+    for (const r of rows)
+      if (r.item_id && r.field_id)
+        out.push({
+          itemId: r.item_id,
+          fieldId: r.field_id,
+          old: (r.old_value ?? null) as Json,
+          date: isoDateInZone(r.at, timeZone),
+        });
+    if (rows.length < PAGE) break;
+  }
+  return out;
 }
 
 async function fetchRuns(db: Db, orgId: string, now: Date, days: number) {
