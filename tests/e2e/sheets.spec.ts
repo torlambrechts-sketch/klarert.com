@@ -81,7 +81,7 @@ test.describe('desktop', () => {
     await expect(link).toContainText(code);
 
     // the group menu lists the groups
-    await page.getByRole('button', { name: /^Show one group/ }).click();
+    await page.getByRole('button', { name: /show one group$/ }).click();
     const groupsMenu = page.getByRole('navigation', { name: 'Groups' });
     await expect(groupsMenu.getByRole('link', { name: /All groups/ })).toBeVisible();
     await expect(groupsMenu.getByRole('link', { name: /Done/ })).toBeVisible();
