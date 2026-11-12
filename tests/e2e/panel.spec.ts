@@ -99,8 +99,11 @@ test.describe('desktop', () => {
       'aria-selected',
       'true',
     );
+    // a new sheet has no automations yet (M8 lists them here with pause switches)
     await expect(
-      dialog.getByText('Automations that run on this item will be listed here.'),
+      dialog
+        .getByRole('region', { name: 'Automations on this item' })
+        .getByText('No automations on this sheet.'),
     ).toBeVisible();
 
     // J next, K previous

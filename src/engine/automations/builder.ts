@@ -271,7 +271,7 @@ export function tokenLabel(token: string): string {
   const m = t.match(/^\$in:(-?\d{1,4})$/);
   if (m) {
     const n = Number(m[1]);
-    return n === 0 ? 'Today' : n < 0 ? `${-n} days ago` : `in ${n} ${n === 1 ? 'day' : 'days'}`;
+    return n === 0 ? 'Today' : n < 0 ? `${dayWords(-n)} before today` : `${dayWords(n)} from today`;
   }
   return t;
 }

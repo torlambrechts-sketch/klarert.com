@@ -13,8 +13,9 @@ import {
 import { rest, signIn } from './helpers';
 
 // M8: the Automations page, the builder, recipes, the run log, the sheet's automations side sheet and per-item pauses
-// (docs/04 §10–§11). Uses the seed (pnpm seed): maria@example.com owner, james@example.com editor and
-// vic@example.com viewer of /meridian. Every sheet is new and has its own ID prefix.
+// (docs/04 §10–§11). Uses the seed (pnpm seed): james@example.com and tom@example.com editors and vic@example.com
+// viewer of /meridian (two editors so parallel sign-ins do not compete for one address). Every sheet is new and has
+// its own ID prefix.
 
 test.describe.configure({ mode: 'default' });
 test.beforeEach(({}, info) => test.skip(info.project.name === 'phone', 'desktop builder'));
@@ -122,7 +123,7 @@ test('build "When Status becomes Done → set a date to Today and lock" in the b
 });
 
 test('the builder refuses an automation that would trigger itself', async ({ page }) => {
-  await signIn(page, 'james@example.com');
+  await signIn(page, 'tom@example.com');
   const sheet = await makeSheet(page, `Loop ${tag()}`, [
     { key: 'status', name: 'Status', type: 'status', config: STATUS },
   ]);
@@ -179,7 +180,7 @@ test('start from a recipe, map its roles to fields, fill the rest and save', asy
 });
 
 test('turning an automation off stops it; duplicate and delete', async ({ page }) => {
-  await signIn(page, 'james@example.com');
+  await signIn(page, 'tom@example.com');
   const sheet = await makeSheet(page, `Toggle ${tag()}`, [
     { key: 'status', name: 'Status', type: 'status', config: STATUS },
   ]);
@@ -271,7 +272,7 @@ test('the run log lists runs with their steps, links to the item and filters by 
 });
 
 test('the sheet header opens this sheet’s automations in a side sheet', async ({ page }) => {
-  await signIn(page, 'james@example.com');
+  await signIn(page, 'tom@example.com');
   const sheet = await makeSheet(page, `Side ${tag()}`, [
     { key: 'status', name: 'Status', type: 'status', config: STATUS },
   ]);

@@ -168,6 +168,15 @@ describe('auto name', () => {
     );
   });
 
+  it('reads relative dates', () => {
+    expect(
+      autoName(
+        draft({ actions: [{ type: 'set_field', fieldKey: 'done_on', value: '$in:14' }] }),
+        ctx,
+      ),
+    ).toBe('When Status becomes Done → set Date to 14 days from today');
+  });
+
   it('names target sheets and people', () => {
     expect(
       autoName(

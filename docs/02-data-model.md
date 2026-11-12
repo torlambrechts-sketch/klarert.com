@@ -97,8 +97,9 @@ Commands also write: `item_updates` (comments), `notifications`, `automation_run
 |---|---|---|
 | Everything with `org_id` | members (`is_member`) | see below |
 | Workspace admin tables (memberships, invites, teams, job_roles, entities, sites) | members (invites: admins) | admins |
-| folders, sheets, groups, form_links, automation_pauses | members | editors |
-| fields, automations | members | editors if not `locked`; admins always |
+| folders, sheets, groups, form_links | members | editors |
+| automation_pauses | members | editors, through `set_automation_pause` (logs `automation.paused` / `automation.resumed` on the item's chain); the automation and the item must be on the same sheet of the workspace (0011) |
+| fields, automations | members | editors if not `locked`; admins always. Automations: the sheet is in the workspace, `created_by` is the person inserting, new rows have no runs; workspace, sheet and creator never change (0011) |
 | views | shared views: members; personal: owner | owner (personal) or editors (shared). `config` (field keys, not ids): `{ filters, sort[], hidden[], labelFieldKey, dateFieldKey, pageSize, form }`; `sheets.settings.defaultViewId` is a shared view's id or a built-in view (`list`, `grid` …). A form link serves the layout of one form view (`form_links.view_id`) |
 | items, item_links, activity_log | members | **only via RPCs** (no write policies) |
 | item_updates | members | editors, as themselves, kind `update`; automation posts are written by the runner (below) |
