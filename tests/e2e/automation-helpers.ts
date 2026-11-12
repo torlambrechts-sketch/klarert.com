@@ -35,8 +35,8 @@ export async function me(page: Page): Promise<string> {
     .sub;
 }
 
-async function workspace(page: Page) {
-  const [org] = await rest<{ id: string }[]>(page, 'orgs?slug=eq.meridian&select=id');
+async function workspace(page: Page, slug: string) {
+  const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
   const [folder] = await rest<{ id: string }[]>(
     page,
     `folders?org_id=eq.${org!.id}&select=id&order=position&limit=1`,
@@ -45,8 +45,14 @@ async function workspace(page: Page) {
 }
 
 /** A sheet with groups Open and Done and the given fields, created in one call (create_sheet). */
-export async function makeSheet(page: Page, name: string, fields: FieldSpec[], itemLabel = 'Item') {
-  const { orgId, folderId } = await workspace(page);
+export async function makeSheet(
+  page: Page,
+  name: string,
+  fields: FieldSpec[],
+  itemLabel = 'Item',
+  slug = 'meridian',
+) {
+  const { orgId, folderId } = await workspace(page, slug);
   const id = randomUUID();
   const groups = { Open: randomUUID(), Done: randomUUID() };
   const positions = generateNKeysBetween(null, null, fields.length);
@@ -87,7 +93,7 @@ export async function makeSheet(page: Page, name: string, fields: FieldSpec[], i
     orgId,
     idPrefix,
     groups,
-    url: `/meridian/s/${id}?view=grid`,
+    url: `/${slug}/s/${id}?view=grid`,
     field: (key: string) => ids[key]!,
     /** Grid cell of an item: column 0 is the name, then the fields in order. */
     cell: (p: Page, item: string, column: string) =>
