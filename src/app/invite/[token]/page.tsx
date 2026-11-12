@@ -32,7 +32,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
             <h1>Invite already used</h1>
             <p className="text-muted-foreground">
               This invite to {invite.org_name} has been accepted. If that was you, open{' '}
-              <a className="text-focus underline" href={`/${invite.org_slug}`}>
+              <a className="text-info underline" href={`/${invite.org_slug}`}>
                 the workspace
               </a>
               .

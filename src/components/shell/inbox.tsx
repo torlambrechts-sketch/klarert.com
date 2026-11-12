@@ -164,7 +164,7 @@ export function Inbox({
   return (
     <Popover open={inboxOpen} onOpenChange={setInboxOpen}>
       <PopoverTrigger
-        className="hover:bg-soft relative flex h-9 items-center gap-1.5 rounded-md px-2 font-semibold"
+        className="hover:bg-soft relative flex h-9 items-center gap-1.5 rounded-md px-2.5 text-[14px] font-medium"
         aria-label={unread > 0 ? `Inbox, ${unread} unread` : 'Inbox'}
         data-testid="inbox-button"
         data-state-loaded={state.status === 'ready' ? '' : undefined}
@@ -186,10 +186,10 @@ export function Inbox({
         className="flex w-[min(380px,calc(100vw-24px))] flex-col gap-2 p-0"
       >
         <div className="flex items-center justify-between gap-2 px-3 pt-3">
-          <h2 className="font-bold">Inbox</h2>
+          <h2 className="text-[15px] font-semibold">Inbox</h2>
           <button
             type="button"
-            className="text-focus inline-flex items-center gap-1 rounded px-1 text-sm font-semibold disabled:text-[var(--muted)] disabled:opacity-60"
+            className="text-info inline-flex items-center gap-1 rounded px-1 text-sm font-semibold disabled:text-[var(--muted)] disabled:opacity-60"
             disabled={unread === 0}
             onClick={() => void markRead()}
           >
@@ -234,13 +234,13 @@ export function Inbox({
                 >
                   <button
                     type="button"
-                    className="flex min-w-0 flex-1 flex-col items-start gap-0.5 rounded-md px-2 py-2 text-left hover:bg-black/5"
+                    className="hover:bg-subtle flex min-w-0 flex-1 flex-col items-start gap-0.5 rounded-md px-2 py-2 text-left"
                     onClick={() => open(row)}
                     disabled={!row.item}
                   >
-                    <span className="flex items-center gap-1.5 text-[11.5px] font-bold tracking-wide uppercase">
+                    <span className="text-muted-foreground flex items-center gap-1.5 text-[12px] font-medium">
                       {!row.readAt ? (
-                        <span className="bg-focus size-2 shrink-0 rounded-full" aria-hidden />
+                        <span className="bg-info size-2 shrink-0 rounded-full" aria-hidden />
                       ) : null}
                       {KIND_LABEL[row.kind] ?? 'Notification'}
                       {!row.readAt ? <span className="sr-only">, unread</span> : null}
@@ -274,7 +274,7 @@ export function Inbox({
         <div className="border-line border-t px-3 py-2">
           <Link
             href={`/${org}/my-work`}
-            className="text-focus text-sm font-semibold"
+            className="text-info text-sm font-semibold"
             onClick={() => setInboxOpen(false)}
           >
             Open My work

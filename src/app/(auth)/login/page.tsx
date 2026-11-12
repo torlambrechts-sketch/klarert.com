@@ -31,7 +31,7 @@ export default async function LoginPage({
     const q = p.toString();
     return q ? `/login?${q}` : '/login';
   };
-  const linkClass = 'text-focus underline-offset-4 hover:underline';
+  const linkClass = 'text-info underline-offset-4 hover:underline';
 
   return (
     <div className="flex flex-col gap-6">

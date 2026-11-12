@@ -482,7 +482,7 @@ export const checklistUI: FieldTypeUI = {
           className="bg-soft block h-1.5 min-w-0 flex-1 overflow-hidden rounded-full"
           aria-hidden
         >
-          <span className="bg-focus block h-full" style={{ width: `${p.pct ?? 0}%` }} />
+          <span className="bg-brand block h-full" style={{ width: `${p.pct ?? 0}%` }} />
         </span>
         <span className="shrink-0 text-[12.5px] tabular-nums">
           {p.answered}/{p.lines}
