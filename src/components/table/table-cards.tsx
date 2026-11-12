@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Lock } from 'lucide-react';
 import { formatDate } from '@/engine/fields/helpers';
 import { resolveFieldType } from '@/engine/fields/resolve';
@@ -14,6 +14,7 @@ import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
 import { GroupTitle } from './group-title';
+import { useDocumentTop } from './use-document-top';
 import { useTableGroups } from './use-table-groups';
 import { donePercent } from '@/engine/views/group-by';
 import { buildLayout, byPosition, cardFields, positionsAtEnd, type TableRow } from './table-model';
@@ -82,9 +83,11 @@ export function TableCards({
     [data.fields, hidden, owner],
   );
   const scrollRef = useRef<HTMLDivElement>(null);
-  const v = useVirtualizer({
+  // the cards scroll with the page, like the Table
+  const docTop = useDocumentTop(scrollRef);
+  const v = useWindowVirtualizer({
     count: layout.rows.length,
-    getScrollElement: () => scrollRef.current,
+    scrollMargin: docTop,
     estimateSize: (i) => ESTIMATE[layout.rows[i]!.kind],
     getItemKey: useCallback((i: number) => layout.rows[i]!.key, [layout.rows]),
     overscan: 6,
@@ -110,7 +113,7 @@ export function TableCards({
     <div
       ref={scrollRef}
       data-testid="item-cards"
-      className="min-h-0 flex-1 overflow-auto"
+      className="relative"
       aria-label={`${ctx.sheet.name} items`}
       role="region"
     >
@@ -123,7 +126,7 @@ export function TableCards({
               ref={v.measureElement}
               data-index={vr.index}
               className="absolute top-0 left-0 w-full"
-              style={{ transform: `translateY(${vr.start}px)` }}
+              style={{ transform: `translateY(${vr.start - v.options.scrollMargin}px)` }}
             >
               {row.kind === 'group' ? (
                 <div className="border-line bg-subtle flex items-center rounded-[var(--radius-card)] border py-0.5">

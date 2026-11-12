@@ -24,7 +24,10 @@ async function session(page: Page) {
 
 type Sample = { frames: number[]; longTasks: number[] };
 
-/** Scroll the grid by `step` px per animation frame along one axis; collect frame times and long tasks. */
+/**
+ * Scroll by `step` px per animation frame along one axis (rows scroll with the page, columns inside the grid);
+ * collect frame times and long tasks.
+ */
 function scrollAndSample(page: Page, axis: 'top' | 'left', frames: number, step: number) {
   return page.getByRole('grid').evaluate(
     (el, { axis, frames, step }) =>
@@ -40,7 +43,7 @@ function scrollAndSample(page: Page, axis: 'top' | 'left', frames: number, step:
         const tick = (now: number) => {
           if (last) times.push(now - last);
           last = now;
-          if (axis === 'top') el.scrollTop += step;
+          if (axis === 'top') window.scrollBy(0, step);
           else el.scrollLeft += step;
           n += 1;
           if (n < frames) requestAnimationFrame(tick);
@@ -88,7 +91,7 @@ test('a 10 000-item × 30-field sheet scrolls within the frame budget', async ({
   await expect(page.getByRole('grid').getByText('Row 00001', { exact: true })).toBeVisible();
   // warm up (first renders of each cell type, JIT), back to the top, let the page settle
   await scrollAndSample(page, 'top', 120, 120);
-  await page.getByRole('grid').evaluate((el) => (el.scrollTop = 0));
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(3000);
 
   const down = await scrollAndSample(page, 'top', 600, 120);
@@ -105,7 +108,7 @@ test('a 10 000-item × 30-field sheet scrolls within the frame budget', async ({
   test.info().annotations.push({ type: 'scroll', description: JSON.stringify(result) });
   console.log(`scroll 10 000 × 30: ${JSON.stringify(result)}`);
   // the window of rows moved: a row far down is rendered
-  expect(await page.getByRole('grid').evaluate((el) => el.scrollTop)).toBeGreaterThan(60_000);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(60_000);
   expect(result.p95FrameMs).toBeLessThanOrEqual(50);
   expect(result.longestTaskMs).toBeLessThan(200);
 });

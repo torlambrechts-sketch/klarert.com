@@ -12,7 +12,6 @@ import {
   Copy,
   GripVertical,
   EyeOff,
-  Lock,
   Settings2,
   Sigma,
   Trash2,
@@ -135,7 +134,11 @@ export function ColumnHeader({
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="hover:text-ink text-muted-foreground flex h-full min-w-0 flex-1 items-center gap-1.5 px-[14px] text-left text-[12px] font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+          className={cn(
+            'hover:text-ink text-faint flex h-full min-w-0 items-center gap-1.5 pl-[14px] text-left text-[12px] font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
+            // the system-column mark sits right after the name
+            field.locked ? 'flex-initial pr-0' : 'flex-1 pr-[14px]',
+          )}
           aria-label={`${field.name} column menu`}
         >
           <span className="truncate">{field.name}</span>
@@ -262,14 +265,18 @@ export function ColumnHeader({
 function LockedMark() {
   const text = 'Kept by the app. You can hide it, not delete it.';
   return (
-    <span className="group/lock relative mr-2 inline-flex shrink-0">
+    <span className="group/lock relative mr-auto ml-[5px] inline-flex shrink-0">
       <span
         role="img"
         tabIndex={0}
         aria-label={text}
         className="focus-visible:outline-focus inline-flex rounded outline-offset-2 focus-visible:outline-2"
       >
-        <Lock className="size-3 opacity-60" aria-hidden />
+        {/* the design's system-column mark: a small outlined square after the name */}
+        <span
+          aria-hidden
+          className="inline-block h-2 w-[7px] rounded-[2px] border border-current text-[var(--faint)]"
+        />
       </span>
       <span
         role="tooltip"

@@ -12,10 +12,11 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useVirtualizer, useWindowVirtualizer } from '@tanstack/react-virtual';
 import {
   Archive,
   ExternalLink,
+  FileText,
   GripVertical,
   Lock,
   LockOpen,
@@ -54,6 +55,7 @@ import { ColumnHeader, type ColumnMenuActions } from './column-header';
 import { GroupSummary } from './group-summary';
 import { GroupTitle } from './group-title';
 import { LockDialog } from './lock-dialog';
+import { useDocumentTop } from './use-document-top';
 import { useTableGroups } from './use-table-groups';
 import {
   buildLayout,
@@ -79,8 +81,11 @@ import {
 
 /** The trailing column: "+" in the column headers, the row actions menu in item rows. */
 const TRAIL = 48;
-/** The leading part of the sticky column: drag handle and checkbox (shown on hover, focus or selection). */
-const CHECK_W = 56;
+/**
+ * The leading part of the sticky column: the sheet's round row icon at rest; the checkbox replaces it on hover, focus
+ * or selection, with the drag handle in the 16 px before it.
+ */
+const CHECK_W = 58;
 /** The card's left and right borders. */
 const EDGE = 2;
 const cellId = (itemId: string, col: string) => `cell-${itemId}-${col}`;
@@ -241,9 +246,10 @@ export function Table({
     [fitted],
   );
 
-  const rowV = useVirtualizer({
+  const docTop = useDocumentTop(scrollRef);
+  const rowV = useWindowVirtualizer({
     count: layout.rows.length,
-    getScrollElement: () => scrollRef.current,
+    scrollMargin: docTop,
     estimateSize: (i) => rowHeight(layout.rows[i]!.kind, density),
     getItemKey: useCallback((i: number) => layout.rows[i]!.key, [layout.rows]),
     overscan: 10,
@@ -703,7 +709,7 @@ export function Table({
       onDragEnd={onDragEnd}
       onDragCancel={() => setDragging(null)}
     >
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative flex flex-col">
         <div
           ref={scrollRef}
           role="grid"
@@ -720,7 +726,8 @@ export function Table({
             if (e.target === scrollRef.current && !store.getState().active && layout.flat[0])
               store.getState().focus({ itemId: layout.flat[0].id, col: 'name' });
           }}
-          className="grid-scroll relative min-h-0 flex-1 overflow-auto rounded-[10px] outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
+          // rows scroll with the page; only wide tables scroll sideways here
+          className="grid-scroll relative overflow-x-auto overflow-y-hidden rounded-[10px] outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
         >
           <div style={{ height: rowV.getTotalSize(), width: totalW, position: 'relative' }}>
             {vRows.map((vr) => {
@@ -744,7 +751,7 @@ export function Table({
                   style={{
                     height: vr.size,
                     width: totalW,
-                    transform: `translateY(${vr.start}px)`,
+                    transform: `translateY(${vr.start - rowV.options.scrollMargin}px)`,
                   }}
                 >
                   <RowContent
@@ -796,14 +803,15 @@ export function Table({
         </div>
         {more ? (
           <div
-            className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] flex w-[130px] items-center justify-end"
+            className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] flex w-[130px] items-start justify-end"
             style={{
               background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.96) 70%)',
             }}
           >
             <button
               type="button"
-              className="border-line hover:border-line-strong focus-visible:outline-focus pointer-events-auto mr-2 rounded-full border bg-white px-3 py-1 text-xs font-medium shadow-xs focus-visible:outline-2"
+              // stays in view while the page scrolls past a long table
+              className="border-line hover:border-line-strong focus-visible:outline-focus pointer-events-auto sticky top-[50vh] mt-[60px] mr-2 rounded-full border bg-white px-3 py-1 text-xs font-medium shadow-xs focus-visible:outline-2"
               onClick={() => {
                 const el = scrollRef.current;
                 if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
@@ -934,7 +942,7 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
         drop.isOver && 'bg-sel',
       )}
     >
-      <div className="sticky left-0 flex items-center px-2">
+      <div className="sticky left-0 flex items-center px-[12px]">
         <GroupTitle
           group={row.group}
           count={row.count}
@@ -957,21 +965,22 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
     <>
       <Sticky width={p.stickyW} role="columnheader" className="border-b-soft border-b">
         {p.canEdit ? (
-          <span className="flex w-[52px] shrink-0 justify-end pr-1.5">
-            <input
-              type="checkbox"
-              aria-label={`Select all items in ${row.group.name}`}
-              checked={allSelected}
-              disabled={items.length === 0}
-              onChange={(e) => p.onSelectItems(items, e.target.checked)}
-            />
+          <span className="flex w-[58px] shrink-0 justify-start pl-[16px]">
+            <span className="grid size-[28px] place-items-center">
+              <input
+                type="checkbox"
+                className="row-check"
+                aria-label={`Select all items in ${row.group.name}`}
+                checked={allSelected}
+                disabled={items.length === 0}
+                onChange={(e) => p.onSelectItems(items, e.target.checked)}
+              />
+            </span>
           </span>
         ) : (
-          <span className="w-[52px] shrink-0" />
+          <span className="w-[58px] shrink-0" />
         )}
-        <span className="text-muted-foreground truncate pl-3 text-[12px]">
-          {p.ctx.sheet.itemLabel}
-        </span>
+        <span className="text-faint truncate pl-[4px] text-[12px]">{p.ctx.sheet.itemLabel}</span>
       </Sticky>
       {p.vCols.map((vc) => {
         if (vc.index >= p.fieldCols.length)
@@ -1089,7 +1098,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
           aria-readonly={!editable || undefined}
           className="flex h-full w-full items-center"
         >
-          <span className="flex w-5 shrink-0 items-center justify-end">
+          <span className="relative flex h-full w-[58px] shrink-0 items-center">
             {!p.dragDisabled && editable ? (
               <button
                 ref={drag.setNodeRef}
@@ -1099,39 +1108,55 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                 tabIndex={-1}
                 aria-label={`Drag ${item.name} to move it`}
                 className={cn(
-                  'text-muted-foreground hover:text-ink cursor-grab rounded p-0.5',
+                  'text-muted-foreground hover:text-ink absolute top-1/2 left-0 flex w-[16px] -translate-y-1/2 cursor-grab justify-center rounded py-0.5',
                   reveal,
                 )}
               >
                 <GripVertical className="size-3.5" aria-hidden />
               </button>
             ) : null}
-          </span>
-          <span className="flex w-8 shrink-0 items-center justify-center">
-            {p.canEdit ? (
-              <input
-                type="checkbox"
-                aria-label={`Select ${item.name}`}
-                checked={isSelected}
-                className={cn(reveal, isSelected && 'opacity-100')}
-                onClick={(e) =>
-                  p.onSelectRow(item, (e.target as HTMLInputElement).checked, e.shiftKey)
-                }
-                onChange={() => undefined}
-              />
-            ) : null}
+            <span className="absolute top-1/2 left-[16px] grid size-[28px] -translate-y-1/2 place-items-center">
+              {/* the sheet's row icon at rest; the checkbox takes its place on hover, focus or selection */}
+              <span
+                aria-hidden
+                className={cn(
+                  'border-line text-ink-3 col-start-1 row-start-1 grid size-[28px] place-items-center rounded-full border bg-white',
+                  p.canEdit && 'group-focus-within/row:invisible group-hover/row:invisible',
+                  p.canEdit && (rowActive || p.selected.size > 0) && 'invisible',
+                )}
+              >
+                <FileText className="size-[14px]" />
+              </span>
+              {p.canEdit ? (
+                <input
+                  type="checkbox"
+                  aria-label={`Select ${item.name}`}
+                  checked={isSelected}
+                  className={cn(
+                    'row-check col-start-1 row-start-1',
+                    reveal,
+                    'group-focus-within/row:opacity-100',
+                    isSelected && 'opacity-100',
+                  )}
+                  onClick={(e) =>
+                    p.onSelectRow(item, (e.target as HTMLInputElement).checked, e.shiftKey)
+                  }
+                  onChange={() => undefined}
+                />
+              ) : null}
+            </span>
           </span>
           <div
             data-cell={`${item.id}|name`}
             onMouseDown={p.onMouseDown}
             onDoubleClick={p.onDoubleClick}
             className={cn(
-              'relative flex h-full min-w-0 flex-1 cursor-default flex-col justify-center gap-0.5 pr-2 pl-3',
+              'relative flex h-full min-w-0 flex-1 cursor-default flex-col justify-center gap-0.5 pr-2',
               inRange(0) && 'bg-sel',
               isActive('name') && 'outline-focus z-[1] outline-2 -outline-offset-2',
             )}
           >
-            <span className="flex min-w-0 items-center gap-2 text-[14px] leading-tight">
+            <span className="flex min-w-0 items-center gap-2 text-[14px] leading-[20px]">
               {item.id.startsWith('temp-') ? (
                 <span className="text-ink truncate">{item.name}</span>
               ) : (
@@ -1163,7 +1188,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               ) : null}
             </span>
             {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
-              <span className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-[12px] leading-4">
+              <span className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px]">
                 <span className="shrink-0 font-mono">{item.displayId}</span>
                 {ownerName ? (
                   <>
@@ -1539,10 +1564,10 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
       )}
     >
       <Sticky width={p.stickyW} className={cn(drop.isOver && 'bg-sel')}>
-        <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[52px]">
+        <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[58px]">
           <input
             ref={p.addRef}
-            className="placeholder:text-muted-foreground text-ink h-full w-full bg-transparent px-3 text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+            className="placeholder:text-faint text-ink h-full w-full bg-transparent px-[4px] text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
             placeholder={`+ Add ${label}`}
             aria-label={`Add ${label} to ${row.group.name}`}
             value={name}
@@ -1582,7 +1607,7 @@ function SummaryRow(p: RowProps & { row: Extract<TableRow, { kind: 'summary' }> 
           <div
             key={field.id}
             role="gridcell"
-            className="absolute top-0 flex h-full items-center bg-white px-[14px]"
+            className="absolute top-0 flex h-full items-center bg-white pr-[14px] pl-[16px]"
             style={{ left: vc.start, width: vc.size }}
           >
             {fn ? (
