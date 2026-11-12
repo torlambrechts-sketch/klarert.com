@@ -100,12 +100,12 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M7: the automation engine per docs/04 §1–§7 — pure trigger matching, conditions and action planning in src/engine/automations, the server runner with depth, once-per-chain, time budget, run log, notifications and automation posts. Wire it into every command, buttons and forms."
 
-- [ ] Pure: `matchTrigger` for all 11 triggers (number triggers on computed fields compute before/after), `checkConditions`, `planActions` for all 11 actions, `renderTemplate`; unit tests per trigger and action
-- [ ] Runner: event loop, depth ≤ 3 with `stopped` run, once-per-chain, 5 s budget, isolation per effect, outcomes per step, `automation_runs` rows, counters
-- [ ] Effects: set_field via `set_item_values(p_automation)`, notify/request (notifications + automation post), create_item (+ link + owner copy), update_linked (out/in), move_to_group, assign, lock_item, post_update, webhook (queue row), raise_version
-- [ ] Buttons call the runner; spinner; toast lists steps
-- [ ] Forms run `form_submitted` automations (service role, scoped)
-- [ ] Every acceptance test in docs/04 §12 that does not need the scheduler or webhooks passes
+- [x] Pure: `matchTrigger` for all 11 triggers (number triggers on computed fields compute before/after), `checkConditions`, `planActions` for all 11 actions, `renderTemplate`; unit tests per trigger and action
+- [x] Runner: event loop, depth ≤ 3 with `stopped` run, once-per-chain, 5 s budget, isolation per effect, outcomes per step, `automation_runs` rows, counters
+- [x] Effects: set_field via `set_item_values(p_automation)`, notify/request (notifications + automation post), create_item (+ link + owner copy), update_linked (out/in), move_to_group, assign, lock_item, post_update, webhook (queue row), raise_version
+- [x] Buttons call the runner; spinner; toast lists steps
+- [x] Forms run `form_submitted` automations (service role, scoped)
+- [x] Every acceptance test in docs/04 §12 that does not need the scheduler or webhooks passes
 
 ## M8 · Automation builder and pages  [Sonnet]
 
