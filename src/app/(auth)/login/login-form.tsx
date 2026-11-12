@@ -1,13 +1,13 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import {
   SubmitButton,
   TextField,
   useResultToast,
   type FormState,
 } from '@/components/forms/form-bits';
-import { sendMagicLink } from './actions';
+import { sendMagicLink, signInWithPassword, signUpWithPassword } from './actions';
 
 export function LoginForm({ next }: { next?: string }) {
   const [state, action] = useActionState<FormState<{ email: string }>, FormData>(
@@ -41,6 +41,49 @@ export function LoginForm({ next }: { next?: string }) {
         state={state}
       />
       <SubmitButton pendingText="Sending link…">Send sign-in link</SubmitButton>
+    </form>
+  );
+}
+
+export function PasswordForm({ next, mode }: { next?: string; mode: 'signin' | 'signup' }) {
+  const [state, action] = useActionState<FormState<null>, FormData>(
+    mode === 'signin' ? signInWithPassword : signUpWithPassword,
+    null,
+  );
+  // Forms reset after an action; an uncontrolled field whose default follows the typed email keeps it across
+  // attempts without wiping what was typed before hydration. Errors show inline, next to the form.
+  const [email, setEmail] = useState('');
+  return (
+    <form action={action} className="flex flex-col gap-4" noValidate>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
+      <TextField
+        label="Email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        defaultValue={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        autoFocus
+        state={state}
+      />
+      <TextField
+        label="Password"
+        name="password"
+        type="password"
+        autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+        hint={mode === 'signup' ? 'At least 10 characters.' : undefined}
+        required
+        state={state}
+      />
+      {state && !state.ok && !state.error.fieldErrors ? (
+        <p role="alert" className="text-crit text-sm">
+          {state.error.message}
+        </p>
+      ) : null}
+      <SubmitButton pendingText={mode === 'signin' ? 'Signing in…' : 'Creating account…'}>
+        {mode === 'signin' ? 'Sign in' : 'Create account'}
+      </SubmitButton>
     </form>
   );
 }
