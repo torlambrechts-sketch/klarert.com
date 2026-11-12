@@ -142,6 +142,11 @@ export const updateSheetInput = z.object({
     .union([z.literal('on'), z.literal('true'), z.literal('false'), z.literal('')])
     .optional()
     .transform((v) => v === 'on' || v === 'true'),
+  /** Automations wait until the person finishes a row in the Table or item panel. */
+  holdAutomations: z
+    .union([z.literal('on'), z.literal('true'), z.literal('false'), z.literal('')])
+    .optional()
+    .transform((v) => v === undefined || v === 'on' || v === 'true'),
 });
 
 export const archiveSheetInput = z.object({

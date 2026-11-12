@@ -475,7 +475,7 @@ export async function updateSheet(input: unknown): Promise<Result<null>> {
     async ({ supabase, orgId }) => {
       const { data: s } = await supabase
         .from('sheets')
-        .select('id, id_prefix, next_seq')
+        .select('id, id_prefix, next_seq, settings')
         .eq('id', v.sheetId)
         .eq('org_id', orgId)
         .maybeSingle();
@@ -507,6 +507,10 @@ export async function updateSheet(input: unknown): Promise<Result<null>> {
           id_prefix: prefix,
           folder_id: v.folderId,
           is_library: v.isLibrary,
+          settings: {
+            ...((s.settings ?? {}) as Record<string, Json>),
+            holdAutomations: v.holdAutomations,
+          },
           updated_at: new Date().toISOString(),
         })
         .eq('id', s.id);

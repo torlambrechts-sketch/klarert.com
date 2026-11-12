@@ -265,7 +265,7 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       if (error) return fromDbError(error);
       const item = toItem(data);
       const actor = userActor(user.id);
-      if (v.hold && !v.formViewId) {
+      if (v.hold && !v.formViewId && (await sheetHolds(supabase, v.sheetId))) {
         // the person is still filling the row: automations run when they finish it (finishItem)
         const { error: holdError } = await supabase.rpc('hold_item', {
           p_item: item.id,
@@ -292,6 +292,12 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
     },
     'createItem',
   );
+}
+
+/** The sheet holds automations until a row is finished (sheets.settings.holdAutomations, on unless false). */
+async function sheetHolds(db: Db, sheetId: string): Promise<boolean> {
+  const { data } = await db.from('sheets').select('settings').eq('id', sheetId).maybeSingle();
+  return (data?.settings as { holdAutomations?: boolean } | null)?.holdAutomations !== false;
 }
 
 async function isHeld(db: Db, itemId: string): Promise<boolean> {
@@ -348,7 +354,7 @@ export async function setValues(input: unknown): Promise<Result<ItemResult>> {
       // edits in the Table and the panel hold the row: its automations run once when the person finishes it
       const protectedEdit = splitInputs(w.fields, v.values ?? {}).protectedInputs.length > 0;
       let held = false;
-      if (v.hold && !protectedEdit) {
+      if (v.hold && !protectedEdit && (await sheetHolds(supabase, v.sheetId))) {
         const { error: holdError } = await supabase.rpc('hold_item', { p_item: item.id });
         held = !holdError;
       } else held = await isHeld(supabase, item.id);
