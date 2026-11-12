@@ -151,6 +151,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"dashboards": {
+                  Row: {
+                    "config": NonNullable<Json>,"created_at": string,"created_by": string | null,"id": string,"name": string,"org_id": string,"position": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "config"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string,"org_id": string,"position": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "config"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dashboards_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dashboards_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"entities": {
                   Row: {
                     "country": string,"id": string,"name": string,"org_id": string
