@@ -10,11 +10,12 @@ import { isVisible } from '@/engine/validation';
 import { fieldUI } from '@/components/fields/registry';
 import { Avatar, cellValue, colorVar } from '@/components/fields/shared';
 import { cn } from '@/lib/utils';
+import { ItemAutomations } from '@/components/automations/item-automations';
 import { FieldRow } from './field-row';
 import { FilesField } from './files-field';
 import type { FileVersion } from './queries';
 
-// Details (docs/05 §3.4, FR-28): the summary strip, linked items in both directions, the automations note and every
+// Details (docs/05 §3.4, FR-28): the summary strip, linked items in both directions, the automations with per-item pause and every
 // visible field, editable in place with the same editors as the Grid.
 
 function SummaryCard({ label, children }: { label: string; children: React.ReactNode }) {
@@ -190,6 +191,7 @@ export function DetailsTab({
   item,
   ctx,
   canEditItem,
+  canPause,
   readOnlyReason,
   incoming,
   incomingLoading,
@@ -204,6 +206,8 @@ export function DetailsTab({
   item: Item;
   ctx: Ctx;
   canEditItem: boolean;
+  /** Editors pause automations for this item, also on locked items. */
+  canPause: boolean;
   readOnlyReason: string;
   incoming: { fieldId: string; fromItem: string }[];
   incomingLoading: boolean;
@@ -243,14 +247,7 @@ export function DetailsTab({
         loading={incomingLoading}
         onOpen={onOpenLinked}
       />
-      <section aria-labelledby={`autos-${item.id}`} className="flex flex-col gap-1">
-        <h3 id={`autos-${item.id}`} className="m-0 text-[13px] font-extrabold">
-          Automations on this item
-        </h3>
-        <p className="text-muted-foreground m-0 text-[13px]">
-          Automations that run on this item will be listed here.
-        </p>
-      </section>
+      <ItemAutomations org={org} item={item} ctx={ctx} canPause={canPause} />
       <section aria-labelledby={`fields-${item.id}`} className="flex flex-col gap-2">
         <h3 id={`fields-${item.id}`} className="m-0 text-[13px] font-extrabold">
           All fields

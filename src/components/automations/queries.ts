@@ -2,8 +2,9 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Step } from '@/engine/automations';
-import type { Automation, Condition, Field } from '@/engine/types';
-import { FIELD_COLUMNS, toField } from '@/lib/sheet-rows';
+import type { Automation, Condition, Field, Sheet } from '@/engine/types';
+import { fetchDirectory } from '@/lib/sheet-query';
+import { FIELD_COLUMNS, toField, toSheet } from '@/lib/sheet-rows';
 import { createClient } from '@/lib/supabase/client';
 
 // Reads for the Automations page, the builder, the sheet's side sheet and the item panel. All under the person's RLS
@@ -68,10 +69,7 @@ export function useRefreshAutomations(orgId: string) {
   return () => qc.invalidateQueries({ queryKey: automationsKey(orgId) });
 }
 
-export interface SheetRef {
-  id: string;
-  name: string;
-}
+export type SheetRef = Sheet;
 
 /** Sheets of the workspace that are not archived, by name. */
 export function useWorkspaceSheets(orgId: string | undefined) {
@@ -81,13 +79,23 @@ export function useWorkspaceSheets(orgId: string | undefined) {
     queryFn: async (): Promise<SheetRef[]> => {
       const { data, error } = await createClient()
         .from('sheets')
-        .select('id, name')
+        .select('id, org_id, name, item_label, id_prefix, is_library')
         .eq('org_id', orgId!)
         .is('archived_at', null)
         .order('name');
       if (error) throw new Error(error.message);
-      return data ?? [];
+      return (data ?? []).map(toSheet);
     },
+    staleTime: 60_000,
+  });
+}
+
+/** People, teams, job roles, entities and sites of the workspace. */
+export function useDirectory(orgId: string | undefined) {
+  return useQuery({
+    queryKey: ['automation-directory', orgId],
+    enabled: !!orgId,
+    queryFn: () => fetchDirectory(createClient(), orgId!),
     staleTime: 60_000,
   });
 }

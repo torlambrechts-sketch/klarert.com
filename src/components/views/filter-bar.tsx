@@ -42,7 +42,7 @@ export function keyLabel(key: string, ctx: Ctx) {
 }
 
 /** Fields that can be filtered: everything with operators besides "is empty". */
-function filterable(fields: Field[], ctx: Ctx) {
+export function filterable(fields: Field[], ctx: Ctx) {
   return fields.filter((f) => {
     const kind = kindOfKey(f.key, ctx);
     return kind && kind !== 'none' && resolveFieldType(f.type)?.storage !== 'none';
@@ -77,6 +77,14 @@ function choicesFor(key: string, kind: ValueKind, ctx: Ctx): { id: string; label
 
 const selectClass = cn(inputClass, 'h-8 w-auto max-w-full pr-6');
 
+/** A new condition on the first usable field with its first operator. */
+export function newCondition(fields: Field[], ctx: Ctx): Condition {
+  const key = fields[0]?.key ?? '__name';
+  const kind = kindOfKey(key, ctx) ?? 'text';
+  const op = offered(kind)[0]!;
+  return { fieldKey: key, op, value: defaultValue(op, kind) };
+}
+
 export function FilterButton({
   config,
   setConfig,
@@ -95,7 +103,6 @@ export function FilterButton({
   const { invalid } = splitConditions(conds, ctx);
   const set = (next: Condition[]) => setConfig((c) => ({ ...c, filters: next }));
   const usable = filterable(fields, ctx);
-  const firstKey = usable[0]?.key ?? '__name';
   const count = conds.length;
   return (
     <Popover>
@@ -138,11 +145,7 @@ export function FilterButton({
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => {
-                const kind = kindOfKey(firstKey, ctx) ?? 'text';
-                const op = offered(kind)[0]!;
-                set([...conds, { fieldKey: firstKey, op, value: defaultValue(op, kind) }]);
-              }}
+              onClick={() => set([...conds, newCondition(usable, ctx)])}
             >
               <Plus aria-hidden /> Add a condition
             </Button>
@@ -163,7 +166,8 @@ export function FilterButton({
   );
 }
 
-function ConditionRow({
+/** One condition: field, operator and value (view filters and automation conditions). */
+export function ConditionRow({
   index,
   cond,
   ctx,

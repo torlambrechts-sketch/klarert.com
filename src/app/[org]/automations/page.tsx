@@ -1,26 +1,20 @@
-import { EmptyPage } from '@/components/shell/empty-page';
+import { AutomationsScreen } from '@/components/automations/automations-screen';
 import { requireMember } from '@/server/auth';
 
 export const metadata = { title: 'Automations · Compliance OS' };
 
-export default async function AutomationsPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ org: string }>;
-  searchParams: Promise<{ tab?: string }>;
-}) {
-  await requireMember((await params).org);
-  const runs = (await searchParams).tab === 'runs';
-  return runs ? (
-    <EmptyPage
-      title="Run log"
-      message="No automation runs yet. Every run will be listed here with its steps."
-    />
-  ) : (
-    <EmptyPage
-      title="Automations"
-      message="No automations yet. Automations of every sheet in this workspace will be listed here."
+// Automations (docs/04 §10): every automation of the workspace or one sheet's, the builder, recipes and the run log
+// (?tab=runs). The client screen reads under the person's RLS and writes through the automation commands.
+export default async function AutomationsPage({ params }: { params: Promise<{ org: string }> }) {
+  const { org } = await params;
+  const { workspace, role, user } = await requireMember(org);
+  return (
+    <AutomationsScreen
+      org={org}
+      orgId={workspace.id}
+      role={role}
+      timeZone={workspace.time_zone}
+      userId={user.id}
     />
   );
 }

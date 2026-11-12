@@ -251,7 +251,10 @@ export function valueTokens(field: Field, ctx: Ctx): ValueToken[] {
   const kind = kindOf(field, ctx);
   const out: ValueToken[] = [];
   if (kind === 'date')
-    out.push({ id: '$today', label: 'Today' }, { id: '$in:7', label: 'In 7 days' });
+    out.push(
+      { id: '$today', label: 'Today, the day it runs' },
+      { id: '$in:7', label: 'In 7 days' },
+    );
   if (kind === 'people') out.push({ id: '$actor', label: 'The person who made the change' });
   out.push({ id: '$empty', label: 'Empty' });
   return out;

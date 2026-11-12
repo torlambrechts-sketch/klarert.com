@@ -338,6 +338,7 @@ export function ItemPanel(props: ItemPanelProps) {
                   item={item}
                   ctx={ctx}
                   canEditItem={canEditItem}
+                  canPause={canEdit}
                   readOnlyReason={readOnlyReason}
                   incoming={incoming.data ?? []}
                   incomingLoading={incoming.isPending}
