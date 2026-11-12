@@ -9,6 +9,7 @@ import {
   bulkSetValuesInput,
   clickButtonInput,
   createItemInput,
+  finishItemInput,
   lockItemInput,
   moveItemsInput,
   setLinksInput,
@@ -256,6 +257,11 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       if (error) return fromDbError(error);
       const item = toItem(data);
       const actor = userActor(user.id);
+      if (v.hold && !v.formViewId) {
+        // the person is still filling the row: item_created runs when they leave it (finishItem)
+        const { error: holdError } = await supabase.rpc('hold_item_created', { p_item: item.id });
+        if (!holdError) return ok({ item, messages: [], mutationId: v.mutationId });
+      }
       const messages = await automations(
         [
           v.formViewId
@@ -274,6 +280,41 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       return ok({ item: after!, messages, mutationId: v.mutationId });
     },
     'createItem',
+  );
+}
+
+async function isHeld(db: Db, itemId: string): Promise<boolean> {
+  const { data } = await db
+    .from('items')
+    .select('created_pending_at')
+    .eq('id', itemId)
+    .maybeSingle();
+  return !!data?.created_pending_at;
+}
+
+/** The person left a new row: run its item_created automations once, with the values entered so far. */
+export async function finishItem(input: unknown): Promise<Result<ItemResult | null>> {
+  const p = finishItemInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId, user }) => {
+      const { data: released, error } = await supabase.rpc('release_item_created', {
+        p_item: v.itemId,
+      });
+      if (error) return fromDbError(error);
+      if (!released) return ok(null);
+      const messages = await automations(
+        [{ type: 'item.created', sheetId: v.sheetId, itemId: v.itemId, actor: userActor(user.id) }],
+        { orgId, userId: user.id, workspace: v.org },
+      );
+      const [item] = await fetchItemsById(supabase, [v.itemId]);
+      if (!item) return ok(null);
+      return ok({ item, messages, mutationId: v.mutationId });
+    },
+    'finishItem',
   );
 }
 
@@ -296,11 +337,14 @@ export async function setValues(input: unknown): Promise<Result<ItemResult>> {
         return fail('conflict', 'Someone else changed this item since you opened it.');
       const r = await writeValues(who, w, item, v);
       if (!r.ok) return r;
-      const messages = await automations(r.data.events, {
-        orgId,
-        userId: user.id,
-        workspace: v.org,
-      });
+      // values entered while a new row is still being filled are part of creating it: no field automations
+      const messages = (await isHeld(supabase, item.id))
+        ? []
+        : await automations(r.data.events, {
+            orgId,
+            userId: user.id,
+            workspace: v.org,
+          });
       const [after] = await settled(supabase, [r.data.item], messages);
       return ok({ item: after!, messages, mutationId: v.mutationId });
     },

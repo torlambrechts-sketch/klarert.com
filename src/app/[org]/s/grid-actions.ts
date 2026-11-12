@@ -22,6 +22,7 @@ function bind<T>(command: (input: unknown) => Promise<Result<T>>, revalidate: bo
 }
 
 export const createItemAction = bind(items.createItem, true);
+export const finishItemAction = bind(items.finishItem, false);
 export const setValuesAction = bind(items.setValues, false);
 export const bulkSetValuesAction = bind(items.bulkSetValues, false);
 export const moveItemsAction = bind(items.moveItems, true);

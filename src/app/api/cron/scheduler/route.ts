@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { env } from '@/lib/env';
 import { isCronAuthorised } from '@/server/cron-auth';
+import { releaseStaleHolds } from '@/server/scheduler/created-holds';
 import {
   emptySummary,
   runDateChecks,
@@ -54,7 +55,25 @@ export async function GET(request: NextRequest) {
       );
     }
   }
-  const body = { ok: true, at: now.toISOString(), ms: Date.now() - started, ...total };
+  let releasedHolds = 0;
+  try {
+    releasedHolds = await releaseStaleHolds(db, now);
+  } catch (e) {
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        source: 'scheduler',
+        message: e instanceof Error ? e.message : String(e),
+      }),
+    );
+  }
+  const body = {
+    ok: true,
+    at: now.toISOString(),
+    ms: Date.now() - started,
+    ...total,
+    releasedHolds,
+  };
   console.info(JSON.stringify({ level: 'info', source: 'scheduler', ...body }));
   return NextResponse.json(body);
 }
