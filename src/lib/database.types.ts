@@ -925,6 +925,29 @@ isOneToOne: false
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean
                            },
+"claim_outbound_webhooks":
+{ Args: { "p_limit"?: number }; Returns: {
+              "attempts": number,
+"automation_id": string | null,
+"created_at": string,
+"id": string,
+"item_id": string | null,
+"last_error": string | null,
+"next_attempt_at": string,
+"org_id": string,
+"payload": NonNullable<Json>,
+"status": string,
+"url": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "outbound_webhooks"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"claim_schedule_occurrence":
+{ Args: { "p_automation": string,"p_item": string,"p_occurrence": string }; Returns: boolean
+                           },
 "create_item":
 { Args: { "p_automation"?: string,"p_group": string,"p_name": string,"p_position": string,"p_sheet": string,"p_values"?: Json }; Returns: {
               "archived_at": string | null,
@@ -1020,6 +1043,31 @@ isOneToOne: false
 "is_member":
 { Args: { "o": string }; Returns: boolean
                            },
+"items_for_people":
+{ Args: { "p_limit"?: number,"p_org": string,"p_people": (string)[] }; Returns: {
+              "archived_at": string | null,
+"created_at": string,
+"created_by": string | null,
+"display_id": string,
+"group_id": string,
+"id": string,
+"lock_reason": string | null,
+"locked": boolean,
+"name": string,
+"org_id": string,
+"position": string,
+"seq": number,
+"sheet_id": string,
+"updated_at": string,
+"updated_by": string | null,
+"values": NonNullable<Json>
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "items"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "log_file_event":
 { Args: { "p_action": string,"p_field": string,"p_file": string,"p_item": string }; Returns: undefined
                            },
@@ -1060,6 +1108,26 @@ isOneToOne: false
 "record_automation_run":
 { Args: { "p_automation": string,"p_chain": string,"p_depth": number,"p_detail": string,"p_event": Json,"p_item": string,"p_started_at": string,"p_status": string,"p_steps": Json }; Returns: number
                            },
+"record_webhook_attempt":
+{ Args: { "p_error": string,"p_id": string,"p_next_attempt_at": string,"p_status": string }; Returns: {
+              "attempts": number,
+"automation_id": string | null,
+"created_at": string,
+"id": string,
+"item_id": string | null,
+"last_error": string | null,
+"next_attempt_at": string,
+"org_id": string,
+"payload": NonNullable<Json>,
+"status": string,
+"url": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "outbound_webhooks"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "set_automation_pause":
 { Args: { "p_automation": string,"p_item": string,"p_paused": boolean }; Returns: boolean
                            },
