@@ -40,6 +40,9 @@ export const GroupSummary = memo(function GroupSummary({
   }
   // nothing to show when no item has a value
   if (s.total === 0 || s.segments.every((seg) => seg.color === 'empty')) return null;
+  // the design's bar counts filled values only: empty items are left out (the words still say how many)
+  const filled = s.segments.filter((seg) => seg.color !== 'empty');
+  const filledTotal = filled.reduce((n, seg) => n + seg.count, 0);
   return (
     <span
       // a compact stacked bar, one solid segment per option (the design's board summary)
@@ -48,13 +51,13 @@ export const GroupSummary = memo(function GroupSummary({
       aria-label={s.text}
       title={s.text}
     >
-      {s.segments.map((seg) => (
+      {filled.map((seg) => (
         <span
-          key={seg.id || 'empty'}
+          key={seg.id}
           title={`${seg.label}: ${seg.count}`}
           style={{
-            width: `${(seg.count / s.total) * 100}%`,
-            background: seg.color === 'empty' ? 'var(--line)' : solidVar(seg.color),
+            width: `${(seg.count / filledTotal) * 100}%`,
+            background: solidVar(seg.color),
           }}
         />
       ))}
