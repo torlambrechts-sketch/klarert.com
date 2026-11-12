@@ -5,6 +5,8 @@ import 'server-only';
 
 export type AutomationEvent =
   | { type: 'item_created'; sheetId: string; itemId: string }
+  /** A form created the item (public link or internal form); item_created is not sent as well (docs/04 §3). */
+  | { type: 'form_submitted'; sheetId: string; itemId: string; formId: string | null }
   | { type: 'field_changed'; sheetId: string; itemId: string; fieldIds: string[] }
   | { type: 'item_moved'; sheetId: string; itemId: string; from: string; to: string }
   | { type: 'item_archived' | 'item_restored'; sheetId: string; itemId: string }
@@ -22,7 +24,8 @@ export interface AutomationOutcome {
 /** Run the automations that match these events (depth ≤ 3). No automations exist before M7. */
 export async function runAutomations(
   events: AutomationEvent[],
-  context: { orgId: string; userId: string; depth?: number },
+  /** userId is null for public form submissions (no one is signed in). */
+  context: { orgId: string; userId: string | null; depth?: number },
 ): Promise<AutomationOutcome> {
   void events;
   void context;

@@ -1,8 +1,9 @@
 // Form view (docs/05 §3.3, FR-25): which fields a form shows, in what order, and checking answers before submit.
 // Pure; the same code checks the builder in the browser and the public submit on the server.
+import { basicCtx } from '../context';
 import { formEligible } from '../fields/view-support';
 import { resolveFieldType } from '../fields/resolve';
-import type { Ctx, Field, Item, Json } from '../types';
+import type { Ctx, Field, Item, Json, Sheet } from '../types';
 import { validateItem } from '../validation';
 import type { FormLayout } from './config';
 
@@ -117,4 +118,29 @@ export function checkFormAnswers(
   }
   for (const id of Object.keys(errors)) delete values[id];
   return { values, errors };
+}
+
+/** The Ctx a public form works in: the sheet and the form's fields, no directory and no other items. */
+export function formCtx(input: {
+  sheet: Sheet;
+  fields: Field[];
+  timeZone: string;
+  now: Date;
+  newId: (prefix: string) => string;
+}): Ctx {
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: input.timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(input.now);
+  const ctx = basicCtx({
+    today,
+    now: input.now,
+    timeZone: input.timeZone,
+    userId: '',
+    sheet: input.sheet,
+    newId: input.newId,
+  });
+  return { ...ctx, fieldsByKey: new Map(input.fields.map((f) => [f.key, f])) };
 }

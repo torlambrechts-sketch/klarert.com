@@ -115,3 +115,14 @@ export function sameConfig(a: ViewConfig, b: ViewConfig): boolean {
 /** The built-in views every sheet has, addressed as ?view=list … (saved views use their uuid). */
 export const isBuiltinViewId = (id: string): id is ViewType =>
   (VIEW_TYPES as readonly string[]).includes(id);
+
+/** A row of `views` as the app uses it. ownerId null = shared with every member. */
+export interface SavedView {
+  id: string;
+  sheetId: string;
+  name: string;
+  type: ViewType;
+  config: ViewConfig;
+  ownerId: string | null;
+  position: string;
+}

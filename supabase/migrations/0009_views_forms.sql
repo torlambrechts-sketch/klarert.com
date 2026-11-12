@@ -39,7 +39,9 @@ begin
                                    then v.config->'form'->'fields' else '[]'::jsonb end) e;
   g := coalesce(fl.group_id, (select id from groups where sheet_id = s.id order by position collate "C" limit 1));
   return jsonb_build_object(
-    'sheet', jsonb_build_object('id', s.id, 'name', s.name, 'itemLabel', s.item_label, 'idPrefix', s.id_prefix),
+    'sheet', jsonb_build_object('id', s.id, 'name', s.name, 'itemLabel', s.item_label, 'idPrefix', s.id_prefix,
+                                'timeZone', (select time_zone from orgs where id = s.org_id)),
+    'viewId', fl.view_id,
     'form', coalesce(v.config->'form', '{}'::jsonb),
     'fields', coalesce((select jsonb_agg(jsonb_build_object(
                           'id', f.id, 'key', f.key, 'name', f.name, 'type', f.type, 'position', f.position,
