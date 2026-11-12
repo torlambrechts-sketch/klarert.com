@@ -70,7 +70,7 @@ function TabLink({
         open(view.id);
       }}
       className={cn(
-        'flex h-9 items-center gap-1.5 rounded-md px-2.5 text-sm font-semibold whitespace-nowrap',
+        'text-label flex h-9 items-center gap-1.5 rounded-md px-2.5 whitespace-nowrap',
         active ? 'bg-ink text-white' : 'hover:bg-soft',
       )}
     >
@@ -128,7 +128,7 @@ export function ViewTabs({ views, fields }: { views: ViewsState; fields: Field[]
         <li>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" className="h-9 px-2.5">
+              <Button type="button" variant="ghost" className="text-label h-9 px-2.5">
                 More <ChevronDown aria-hidden />
               </Button>
             </DropdownMenuTrigger>

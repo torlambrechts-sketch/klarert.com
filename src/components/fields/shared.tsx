@@ -13,6 +13,7 @@ import { searchOptions } from './option-search';
 // Building blocks for cells and editors: label chips and blocks (docs/05 §3.1, §6), avatars, editor frames, a text
 // editor and an option list editor. Type-agnostic; each type's file composes them.
 
+/** Label colours too light for white text: shown as a tint with dark text. */
 const LIGHT = new Set(['grey', 'yellow']);
 
 export const colorVar = (color: string) => `var(--label-${color}, var(--label-grey))`;
@@ -34,63 +35,91 @@ export function Bang() {
   );
 }
 
-/** Pill for List cells, cards and editors. */
+/**
+ * Fill, border and text of an option label: the contrast-safe solid colour with white text, or for light colours
+ * (grey, yellow) a tint with a border and dark text.
+ */
+function optionStyle(option: LabelOption): React.CSSProperties {
+  return LIGHT.has(option.color)
+    ? {
+        background: `color-mix(in srgb, ${colorVar(option.color)} 22%, white)`,
+        borderColor: colorVar(option.color),
+        color: 'var(--ink)',
+      }
+    : {
+        background: solidVar(option.color),
+        borderColor: solidVar(option.color),
+        color: '#fff',
+      };
+}
+
+/** "!" for options that need action and a check for done ones, with their words for screen readers. */
+function OptionMarks({ option, children }: { option: LabelOption; children: React.ReactNode }) {
+  return (
+    <>
+      {actionNeeded(option) ? <Bang /> : null}
+      {option.done ? <Check className="size-3.5 shrink-0" aria-hidden /> : null}
+      {children}
+      {actionNeeded(option) ? <span className="sr-only"> (needs action)</span> : null}
+      {option.done ? <span className="sr-only"> (done)</span> : null}
+    </>
+  );
+}
+
+/** A compact option label: several in one cell (multi-select), cards, pickers. */
 export function Chip({ option, className }: { option: LabelOption; className?: string }) {
-  const solid = actionNeeded(option);
   return (
     <span
       className={cn(
-        'inline-flex max-w-full min-w-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold',
+        'text-meta inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-md border px-2 font-semibold',
         className,
       )}
-      style={
-        solid
-          ? {
-              background: solidVar(option.color),
-              borderColor: solidVar(option.color),
-              color: '#fff',
-            }
-          : {
-              background: `color-mix(in srgb, ${colorVar(option.color)} 13%, white)`,
-              borderColor: colorVar(option.color),
-              color: 'var(--ink)',
-            }
-      }
+      style={optionStyle(option)}
     >
-      {solid ? <Bang /> : null}
-      {option.done ? <Check className="size-3 shrink-0" aria-hidden /> : null}
-      <span className="truncate">{option.label}</span>
-      {solid ? <span className="sr-only"> (needs action)</span> : null}
-      {option.done ? <span className="sr-only"> (done)</span> : null}
+      <OptionMarks option={option}>
+        <span className="truncate">{option.label}</span>
+      </OptionMarks>
     </span>
   );
 }
 
-/** Full-cell colour block for status cells in the Grid (docs/05 §3.2). */
-export function Block({ option }: { option: LabelOption }) {
-  const light = LIGHT.has(option.color);
+/**
+ * The value of a one-option cell (List and Grid): a rounded block across the cell, label centred. The Grid's 36 px
+ * rows take a 30 px block, the List's taller rows 34 px.
+ */
+export function Block({ option, density }: { option: LabelOption; density: 'grid' | 'list' }) {
   return (
     <span
-      className="absolute inset-0 flex items-center justify-center gap-1 px-2 text-[13px] font-semibold"
-      style={{
-        background: light ? colorVar(option.color) : solidVar(option.color),
-        color: light ? 'var(--ink)' : '#fff',
-      }}
+      className={cn(
+        'text-label flex w-full min-w-0 items-center justify-center gap-1 rounded-md border px-2',
+        density === 'grid' ? 'h-[30px]' : 'h-[34px]',
+      )}
+      style={optionStyle(option)}
     >
-      {actionNeeded(option) ? <Bang /> : null}
-      {option.done ? <Check className="size-3.5 shrink-0" aria-hidden /> : null}
-      <span className="truncate">{option.label}</span>
-      {actionNeeded(option) ? <span className="sr-only"> (needs action)</span> : null}
-      {option.done ? <span className="sr-only"> (done)</span> : null}
+      <OptionMarks option={option}>
+        <span className="truncate">{option.label}</span>
+      </OptionMarks>
     </span>
   );
 }
 
-export function Avatar({ id, ctx, size = 24 }: { id: string; ctx: Ctx; size?: number }) {
+export function Avatar({
+  id,
+  ctx,
+  size = 24,
+  decorative = false,
+}: {
+  id: string;
+  ctx: Ctx;
+  size?: number;
+  /** The name is written next to it: no tooltip and nothing for screen readers. */
+  decorative?: boolean;
+}) {
   const p = ctx.people.get(id);
   return (
     <span
-      title={p?.name ?? 'Former member'}
+      aria-hidden={decorative || undefined}
+      title={decorative ? undefined : (p?.name ?? 'Former member')}
       className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-white"
       style={{ width: size, height: size, background: solidVar(p?.color ?? 'dark') }}
     >
@@ -101,7 +130,32 @@ export function Avatar({ id, ctx, size = 24 }: { id: string; ctx: Ctx; size?: nu
         data-initials={p?.initials ?? '?'}
         className="before:content-[attr(data-initials)]"
       />
-      <span className="sr-only">{p?.name ?? 'Former member'}</span>
+      {decorative ? null : <span className="sr-only">{p?.name ?? 'Former member'}</span>}
+    </span>
+  );
+}
+
+/** A people cell: the first person's avatar and name, then "+2" for the others. */
+export function PeopleNames({ ids, ctx }: { ids: string[]; ctx: Ctx }) {
+  const first = ids[0]!;
+  const rest = ids.length - 1;
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <Avatar id={first} ctx={ctx} size={22} decorative />
+      <span className="min-w-0 truncate">{ctx.people.get(first)?.name ?? 'Former member'}</span>
+      {rest > 0 ? (
+        <span className="text-muted-foreground text-meta shrink-0 font-semibold">
+          +{rest}
+          <span className="sr-only">
+            {' '}
+            more:{' '}
+            {ids
+              .slice(1)
+              .map((id) => ctx.people.get(id)?.name ?? 'Former member')
+              .join(', ')}
+          </span>
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -289,7 +343,7 @@ function FooterAction({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={cn(
-        'text-muted-foreground hover:text-ink focus-visible:outline-focus inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-[13px] font-semibold focus-visible:outline-2',
+        'text-muted-foreground hover:text-ink focus-visible:outline-focus text-label inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 focus-visible:outline-2',
         className,
       )}
     >

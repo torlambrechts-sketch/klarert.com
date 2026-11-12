@@ -12,13 +12,13 @@ import {
   UsersRound,
   UserSquare,
 } from 'lucide-react';
-import { Avatar, Avatars, OptionsEditor } from './shared';
+import { Avatar, OptionsEditor, PeopleNames } from './shared';
 import { Empty, optionUI } from './kit';
 import type { FieldTypeUI } from './types';
 
 // Choice and people types (docs/03 §3.2).
 
-export const statusUI = optionUI({ icon: CircleDot, block: true });
+export const statusUI = optionUI({ icon: CircleDot });
 export const dropdownUI = optionUI({ icon: ListFilter });
 export const multiselectUI: FieldTypeUI = {
   ...optionUI({ icon: ListChecks, multiple: true }),
@@ -35,7 +35,7 @@ export const peopleUI: FieldTypeUI = {
   icon: Users,
   Cell: ({ value, ctx }) =>
     Array.isArray(value) && value.length > 0 ? (
-      <Avatars ids={value as string[]} ctx={ctx} />
+      <PeopleNames ids={value as string[]} ctx={ctx} />
     ) : (
       <Empty />
     ),

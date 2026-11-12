@@ -393,12 +393,12 @@ function Table(
   return (
     <div className="border-line relative min-h-0 flex-1 overflow-hidden rounded-[var(--radius-card)] border">
       <div ref={scroller} className="h-full overflow-auto">
-        <table className="w-max min-w-full border-separate border-spacing-0 text-[13px]">
+        <table className="text-cell w-max min-w-full border-separate border-spacing-0">
           <thead className="bg-soft sticky top-0 z-[2]">
             <tr>
               <th
                 scope="col"
-                className="bg-soft border-line sticky left-0 z-[3] w-[360px] min-w-[360px] border-r border-b px-3 py-2 text-left text-xs font-semibold"
+                className="bg-soft border-line text-label sticky left-0 z-[3] w-[360px] min-w-[360px] border-r border-b px-3 py-2 text-left"
               >
                 {ctx.sheet.itemLabel}
               </th>
@@ -408,7 +408,7 @@ function Table(
                   <th
                     key={f.id}
                     scope="col"
-                    className="border-line border-r border-b px-3 py-2 text-left text-xs font-semibold whitespace-nowrap"
+                    className="border-line text-label border-r border-b px-3 py-2 text-left whitespace-nowrap"
                     style={{
                       minWidth: Math.max(
                         120,
@@ -476,7 +476,7 @@ function Table(
                         type="button"
                         aria-expanded={!isCollapsed}
                         onClick={() => p.toggle(group.id)}
-                        className="sticky left-0 flex items-center gap-2 px-3 py-2 text-sm font-bold"
+                        className="text-cell sticky left-0 flex items-center gap-2 px-3 py-2 font-bold"
                       >
                         {isCollapsed ? (
                           <ChevronRight className="size-4" aria-hidden />
@@ -489,7 +489,7 @@ function Table(
                           style={{ background: colorVar(group.color) }}
                         />
                         {group.name}
-                        <span className="text-muted-foreground text-xs font-semibold tabular-nums">
+                        <span className="text-muted-foreground text-meta font-semibold tabular-nums">
                           ({p.counts.get(group.id) ?? items.length})
                         </span>
                       </button>
@@ -684,7 +684,7 @@ function Cell({
       // the shown value is part of the name (WCAG 2.5.3 label in name)
       aria-label={`${field.name} of ${item.name}${text ? `: ${text}` : ''}`}
       onClick={onEdit}
-      className="flex min-h-9 w-full min-w-0 items-center px-3 py-1.5 text-left hover:bg-white hover:shadow-[inset_0_0_0_1.5px_#9AA3B5] focus-visible:shadow-[inset_0_0_0_2px_var(--focus)] focus-visible:outline-none"
+      className="flex min-h-9 w-full min-w-0 items-center px-2 py-1.5 text-left hover:bg-white hover:shadow-[inset_0_0_0_1.5px_#9AA3B5] focus-visible:shadow-[inset_0_0_0_2px_var(--focus)] focus-visible:outline-none"
     >
       <span className="flex min-w-0 flex-1 items-center">
         <ui.Cell value={value as never} field={field} item={item} ctx={ctx} density="list" />
@@ -787,7 +787,7 @@ export function ItemCard({
       data-testid="item-card"
       className="border-line hover:border-ink flex w-full flex-col gap-1.5 rounded-[var(--radius-card)] border bg-white p-3 text-left"
     >
-      <span className="text-[14.5px] leading-snug font-bold break-words">{item.name}</span>
+      <span className="text-cell leading-snug font-bold break-words">{item.name}</span>
       <span className="flex flex-wrap items-center gap-2 text-xs">
         {status && StatusCell ? (
           <StatusCell

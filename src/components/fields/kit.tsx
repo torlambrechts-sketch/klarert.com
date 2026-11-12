@@ -101,12 +101,16 @@ export function optionInput(field: Field, ctx: Ctx, o: LabelOption): unknown {
   return def.normalize(o.id, field.config, ctx) !== null ? o.id : o.label;
 }
 
-export function OptionCell({ value, field, ctx, block, density }: CellProps & { block?: boolean }) {
+/**
+ * An option cell: one option fills the cell as a rounded block (List and Grid alike); several (multi-select) are
+ * compact chips side by side.
+ */
+export function OptionCell({ value, field, ctx, density }: CellProps) {
   const opts = optionsOf(field, ctx);
   const keys = selectedKeys(field, value);
   const chosen = keys.map((k) => opts.find((o) => o.id === k)).filter((o): o is LabelOption => !!o);
   if (chosen.length === 0) return <Empty />;
-  if (block && density === 'grid') return <Block option={chosen[0]!} />;
+  if (!Array.isArray(value)) return <Block option={chosen[0]!} density={density} />;
   const shown = chosen.slice(0, 3);
   return (
     <span className="flex min-w-0 items-center gap-1 overflow-hidden">
@@ -114,7 +118,7 @@ export function OptionCell({ value, field, ctx, block, density }: CellProps & { 
         <Chip key={o.id} option={o} className="shrink-0" />
       ))}
       {chosen.length > 3 ? (
-        <span className="text-muted-foreground text-xs font-semibold">+{chosen.length - 3}</span>
+        <span className="text-muted-foreground text-meta font-semibold">+{chosen.length - 3}</span>
       ) : null}
     </span>
   );
@@ -175,13 +179,12 @@ function OptionPicker({
 /** A type picked from its options (status, dropdown, role, team …). */
 export function optionUI(spec: {
   icon: LucideIcon;
-  block?: boolean;
   multiple?: boolean | ((field: Field) => boolean);
   render?: (o: LabelOption) => React.ReactNode;
 }): FieldTypeUI {
   return {
     icon: spec.icon,
-    Cell: (p) => <OptionCell {...p} block={spec.block} />,
+    Cell: (p) => <OptionCell {...p} />,
     Editor: (p) => (
       <OptionPicker
         {...p}
