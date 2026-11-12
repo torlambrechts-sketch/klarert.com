@@ -47,7 +47,7 @@ export function SheetAutomations({
           <Zap aria-hidden />
           Automations{' '}
           <span
-            className="bg-soft text-muted-foreground rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums empty:hidden"
+            className="bg-soft text-ink-2 rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums empty:hidden"
             aria-hidden={autos.isPending}
           >
             {autos.isPending ? '' : list.length}

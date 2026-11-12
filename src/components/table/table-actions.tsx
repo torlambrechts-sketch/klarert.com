@@ -260,7 +260,7 @@ export function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCo
         <Button type="button" variant="outline" className="h-[38px] shadow-none">
           <Columns3 aria-hidden /> Columns
           {hiddenCount ? (
-            <span className="bg-soft text-muted-foreground rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums">
+            <span className="bg-soft text-ink-2 rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums">
               +{hiddenCount}
               <span className="sr-only"> hidden</span>
             </span>

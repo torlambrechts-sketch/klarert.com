@@ -165,7 +165,7 @@ export function Inbox({
     <Popover open={inboxOpen} onOpenChange={setInboxOpen}>
       <PopoverTrigger
         className="hover:bg-soft relative flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13.5px] font-medium"
-        aria-label={unread > 0 ? `Inbox, ${unread} unread` : 'Inbox'}
+        aria-label={unread > 0 ? `Inbox ${unread > 99 ? '99+' : unread} unread` : 'Inbox'}
         data-testid="inbox-button"
         data-state-loaded={state.status === 'ready' ? '' : undefined}
       >

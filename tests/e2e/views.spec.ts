@@ -181,7 +181,7 @@ test('Table view on a phone shows cards', async ({ page }, info) => {
   await expect(card).toBeVisible();
   await expect(card).toContainText('Stuck');
   await expect(card).toContainText(/-001/);
-  await expect(card).toContainText('overdue');
+  await expect(card).toContainText('late');
   await expect(page.getByRole('table')).toHaveCount(0);
   await expect(page.getByRole('grid')).toHaveCount(0);
   await card.click();

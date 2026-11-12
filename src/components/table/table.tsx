@@ -982,7 +982,9 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
         ) : (
           <span className="w-[58px] shrink-0" />
         )}
-        <span className="text-faint truncate pl-[4px] text-[12px]">{p.ctx.sheet.itemLabel}</span>
+        <span className="text-muted-foreground truncate pl-[4px] text-[12px]">
+          {p.ctx.sheet.itemLabel}
+        </span>
       </Sticky>
       {p.vCols.map((vc) => {
         if (vc.index >= p.fieldCols.length)
@@ -1569,7 +1571,7 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
         <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[58px]">
           <input
             ref={p.addRef}
-            className="placeholder:text-faint text-ink h-full w-full bg-transparent px-[4px] text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+            className="placeholder:text-muted-foreground text-ink h-full w-full bg-transparent px-[4px] text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
             placeholder={`+ Add ${label}`}
             aria-label={`Add ${label} to ${row.group.name}`}
             value={name}

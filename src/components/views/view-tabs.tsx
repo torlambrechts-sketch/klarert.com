@@ -113,60 +113,61 @@ export function ViewTabs({
   const isDefault = (v: ActiveView) =>
     v.id === defaultViewId || (v === tabs.table && defaultViewId === 'table');
   return (
-    <nav
-      aria-label="Views"
+    <div
       className={cn('border-line mt-[18px] flex min-w-0 items-center gap-2 border-b', className)}
     >
-      <ul className="m-0 flex min-w-0 flex-1 [scrollbar-width:none] list-none items-center gap-[22px] overflow-x-auto p-0">
-        <li>
-          <TabLink
-            view={tabs.table}
-            label="Table"
-            active={active.id === tabs.table.id}
-            isDefault={isDefault(tabs.table)}
-            open={open}
-          />
-        </li>
-        {[tabs.more.kanban, tabs.more.calendar, tabs.more.form].map((v) => (
-          <li key={v.id}>
+      <nav aria-label="Views" className="flex min-w-0 flex-1">
+        <ul className="m-0 flex min-w-0 flex-1 [scrollbar-width:none] list-none items-center gap-[22px] overflow-x-auto p-0">
+          <li>
             <TabLink
-              view={v}
-              label={tabLabel(v)}
-              active={active.id === v.id}
-              isDefault={isDefault(v)}
+              view={tabs.table}
+              label="Table"
+              active={active.id === tabs.table.id}
+              isDefault={isDefault(tabs.table)}
               open={open}
             />
           </li>
-        ))}
-        {others.map((v) => (
-          <li key={v.id}>
-            <TabLink view={v} active={active.id === v.id} isDefault={isDefault(v)} open={open} />
-          </li>
-        ))}
-        {extra ? (
+          {[tabs.more.kanban, tabs.more.calendar, tabs.more.form].map((v) => (
+            <li key={v.id}>
+              <TabLink
+                view={v}
+                label={tabLabel(v)}
+                active={active.id === v.id}
+                isDefault={isDefault(v)}
+                open={open}
+              />
+            </li>
+          ))}
+          {others.map((v) => (
+            <li key={v.id}>
+              <TabLink view={v} active={active.id === v.id} isDefault={isDefault(v)} open={open} />
+            </li>
+          ))}
+          {extra ? (
+            <li>
+              <TabLink view={extra} active isDefault={isDefault(extra)} open={open} />
+            </li>
+          ) : null}
           <li>
-            <TabLink view={extra} active isDefault={isDefault(extra)} open={open} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-ink h-8 px-2 text-[14px] font-normal"
+                >
+                  More <ChevronDown aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onSelect={() => setNewOpen(true)}>
+                  <Plus aria-hidden /> New view
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </li>
-        ) : null}
-        <li>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-muted-foreground hover:text-ink h-8 px-2 text-[14px] font-normal"
-              >
-                More <ChevronDown aria-hidden />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onSelect={() => setNewOpen(true)}>
-                <Plus aria-hidden /> New view
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </li>
-      </ul>
+        </ul>
+      </nav>
       {end ? <div className="flex shrink-0 items-center gap-1.5 pb-1">{end}</div> : null}
       <ViewDialog
         open={newOpen}
@@ -183,7 +184,7 @@ export function ViewTabs({
           await views.create({ name, type, shared, config });
         }}
       />
-    </nav>
+    </div>
   );
 }
 

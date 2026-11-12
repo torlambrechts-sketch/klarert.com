@@ -248,7 +248,7 @@ function ItemCard({
       {due ? (
         <span className={cn('text-meta self-end font-semibold', due.overdue && 'text-crit')}>
           {due.field.name}: {formatDate(due.date)}
-          {due.overdue ? ' · overdue' : ''}
+          {due.overdue ? ' · late' : ''}
         </span>
       ) : null}
     </article>
