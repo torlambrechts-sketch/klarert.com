@@ -92,7 +92,10 @@ function useInbox(orgId: string, userId: string) {
           { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
           () => void load(),
         )
-        .subscribe();
+        // anything that arrived between the first load and the subscription is fetched once it is live
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') void load();
+        });
     })();
     return () => {
       cancelled = true;
@@ -118,6 +121,11 @@ export function Inbox({
   const { state, reload, setState } = useInbox(orgId, userId);
   const router = useRouter();
   const unread = state.status === 'ready' ? state.unread : 0;
+
+  // opening the inbox (top bar or phone bottom bar) shows the latest
+  useEffect(() => {
+    if (inboxOpen) void reload();
+  }, [inboxOpen, reload]);
 
   const markRead = async (ids?: string[]) => {
     // optimistic: the badge and the dots change at once; a failure reloads the truth
