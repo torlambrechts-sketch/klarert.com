@@ -35,7 +35,7 @@ import { formatDate, formatDateTime } from '@/engine/fields/helpers';
 import { onTarget, type MeasurementConfig, type Reading } from '@/engine/fields/measurement';
 import { hasSpecialCategory } from '@/engine/fields/pdmarker';
 import { retentionText, type RetentionConfig } from '@/engine/fields/retention';
-import { riskLevel, type RiskMatrixConfig } from '@/engine/fields/riskmatrix';
+import { riskLevel, riskStep, type RiskMatrixConfig } from '@/engine/fields/riskmatrix';
 import type { FileRow, Field } from '@/engine/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -47,6 +47,7 @@ import {
   EditorFrame,
   ExplainEditor,
   inputClass,
+  Meter,
   SaveCancel,
   Text,
   TextEditor,
@@ -566,11 +567,17 @@ function RiskEditor({ value, field, onCommit, onCancel }: EditorProps) {
 
 export const riskmatrixUI: FieldTypeUI = {
   icon: Grid3x3,
-  Cell: ({ value, field }) => {
+  Cell: ({ value, field, density }) => {
     const v = value as { l: number; i: number } | null;
     if (!v) return <Empty />;
     const level = riskLevel(v.l * v.i, (field.config as RiskMatrixConfig).bands);
-    return (
+    // Table: the score, then the meter by level (the level is the meter's name); elsewhere the level in words
+    return density === 'table' ? (
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="tabular-nums">{v.l * v.i}</span>
+        <Meter step={riskStep(level)} label={level} />
+      </span>
+    ) : (
       <span className="flex min-w-0 items-center gap-1.5">
         <span className="font-bold tabular-nums">{v.l * v.i}</span>
         <Chip option={{ id: level, label: level, color: LEVEL_COLOR[level] }} />

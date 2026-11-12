@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { COLORS } from '@/engine/fields/helpers';
 import type { LabelOption } from '@/engine/fields/types';
@@ -288,22 +288,63 @@ export function FixedOptions(p: Props) {
 
 // ───────────── small forms ─────────────
 
-export const NumberConfig = (p: Props) => (
-  <div className="grid grid-cols-2 gap-3">
-    <TextIn
-      label="Unit"
-      value={String(p.config.unit ?? '')}
-      onChange={(v) => set(p, { unit: v.slice(0, 12) })}
-    />
-    <NumIn
-      label="Decimals"
-      min={0}
-      max={6}
-      value={Number(p.config.decimals ?? 2)}
-      onChange={(v) => set(p, { decimals: v ?? 0 })}
-    />
-  </div>
-);
+export function NumberConfig(p: Props) {
+  const saved = p.config.bands as [number, number, number] | undefined;
+  const [bands, setBands] = useState<string[]>(saved ? saved.map(String) : ['', '', '']);
+  const changeBand = (i: number, v: string) => {
+    const next = bands.map((b, j) => (j === i ? v : b));
+    setBands(next);
+    if (next.every((b) => b.trim() === '')) return set(p, { bands: undefined });
+    const n = next.map((b) => (b.trim() === '' ? NaN : Number(b)));
+    if (n.every(Number.isFinite) && n[0]! < n[1]! && n[1]! < n[2]!) set(p, { bands: n });
+  };
+  const partial =
+    bands.some((b) => b.trim() !== '') &&
+    !(saved && saved.every((b, i) => String(b) === bands[i]!.trim()));
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-2 gap-3">
+        <TextIn
+          label="Unit"
+          value={String(p.config.unit ?? '')}
+          onChange={(v) => set(p, { unit: v.slice(0, 12) })}
+        />
+        <NumIn
+          label="Decimals"
+          min={0}
+          max={6}
+          value={Number(p.config.decimals ?? 2)}
+          onChange={(v) => set(p, { decimals: v ?? 0 })}
+        />
+      </div>
+      <fieldset className="flex flex-col gap-1.5">
+        <legend className="text-label-13 font-medium">Meter bands (optional)</legend>
+        <p className="text-muted-foreground text-copy-13">
+          Three thresholds, each higher than the last. The Table shows a four-bar meter beside the
+          number: one bar up to the first, four above the last.
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {['First', 'Second', 'Third'].map((label, i) => (
+            <label key={label} className="text-label-12 flex flex-col gap-1">
+              {label}
+              <input
+                type="number"
+                className={inputClass}
+                value={bands[i]}
+                onChange={(e) => changeBand(i, e.target.value)}
+              />
+            </label>
+          ))}
+        </div>
+        {partial ? (
+          <p className="text-muted-foreground text-copy-13" role="status">
+            Fill all three, each higher than the last, to show the meter.
+          </p>
+        ) : null}
+      </fieldset>
+    </div>
+  );
+}
 
 export const ValueConfig = (p: Props) => (
   <div className="flex flex-col gap-3">

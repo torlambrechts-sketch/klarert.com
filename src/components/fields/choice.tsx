@@ -18,22 +18,21 @@ import type { FieldTypeUI } from './types';
 
 // Choice and people types (docs/03 §3.2).
 
-// In the Table, status-like types fill the cell with the option's colour; values picked from a list (dropdown,
-// role, team, entity, country) are outlined pills, as in the design's board.
+// In the Table every one-option value is the option's tinted box (Block); several are tinted chips.
 export const statusUI = optionUI({ icon: CircleDot });
-export const dropdownUI = optionUI({ icon: ListFilter, look: 'pill' });
+export const dropdownUI = optionUI({ icon: ListFilter });
 export const multiselectUI: FieldTypeUI = {
   ...optionUI({ icon: ListChecks, multiple: true }),
   editorWidth: 300,
 };
-export const roleUI = optionUI({ icon: UserSquare, look: 'pill' });
-export const teamUI = optionUI({ icon: UsersRound, look: 'pill' });
+export const roleUI = optionUI({ icon: UserSquare });
+export const teamUI = optionUI({ icon: UsersRound });
 export const entityUI: FieldTypeUI = {
-  ...optionUI({ icon: Building2, look: 'pill' }),
+  ...optionUI({ icon: Building2 }),
   editorWidth: 320,
 };
 export const countryUI: FieldTypeUI = {
-  ...optionUI({ icon: Globe, look: 'pill' }),
+  ...optionUI({ icon: Globe }),
   editorWidth: 300,
 };
 export const classificationUI = optionUI({ icon: Tag });

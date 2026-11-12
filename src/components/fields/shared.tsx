@@ -56,16 +56,26 @@ export function OptionDot({ option }: { option: LabelOption }) {
   );
 }
 
-/** A compact option label: several in one cell (multi-select), cards, pickers. A dot, the words and the marks. */
+/** An option colour as the Table's soft box: the tint, a border in the same hue and the hue's dark step for words. */
+export const tintStyle = (color: string): React.CSSProperties => ({
+  background: `var(--tint-${color}-bg, var(--tint-grey-bg))`,
+  borderColor: `var(--tint-${color}-line, var(--tint-grey-line))`,
+  color: `var(--tint-${color}-ink, var(--tint-grey-ink))`,
+});
+
+/**
+ * A compact option label: several in one cell (multi-select), cards, pickers. The option's tint, its words and the
+ * marks ("!" for action needed, a check for done).
+ */
 export function Chip({ option, className }: { option: LabelOption; className?: string }) {
   return (
     <span
       className={cn(
-        'border-line text-ink bg-background-100 text-label-13 inline-flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-full border px-2.5 font-medium',
+        'text-label-13 inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-full border px-2.5 font-medium',
         className,
       )}
+      style={tintStyle(option.color)}
     >
-      <OptionDot option={option} />
       <OptionMarks option={option}>
         <span className="truncate">{option.label}</span>
       </OptionMarks>
@@ -74,8 +84,9 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
 }
 
 /**
- * The value of a one-option cell (Table): a colour dot and the label, left-aligned, with "!" for options that need
- * action and a check for done ones. The Grid density keeps a 30 px line, the List density 34 px.
+ * The value of a one-option cell. In the Table: a box inset 8 px in the cell, 6 px radius, the option's tint with a
+ * border in the same hue and the words centred in its dark step, with "!" for options that need action and a check
+ * for done ones. Elsewhere (Grid 30 px, List 34 px): a colour dot and the label, left-aligned.
  */
 export function Block({
   option,
@@ -85,11 +96,11 @@ export function Block({
   density: 'grid' | 'list' | 'table';
 }) {
   if (density === 'table')
-    // monday-style: the option fills the whole cell, white text on the option's solid colour
     return (
       <span
-        className="text-label-14 absolute inset-px flex min-w-0 items-center justify-center gap-1.5 px-[10px] font-medium text-white"
-        style={{ background: solidVar(option.color) }}
+        data-box
+        className="text-label-14 absolute inset-[8px] flex min-w-0 items-center justify-center gap-1.5 rounded-md border px-[10px] font-medium"
+        style={tintStyle(option.color)}
       >
         <OptionMarks option={option}>
           <span className="truncate">{option.label}</span>
@@ -113,15 +124,24 @@ export function Block({
 }
 
 /**
- * One option as an outlined pill (the Table's look for picked-from-a-list values: dropdown, role, team …): the words
- * and the marks, no colour fill. Status-like types fill the cell instead (Block).
+ * A four-bar meter beside a number (number fields with bands, risk scores): `step` bars of four are filled in the
+ * step's colour. Decorative for sight; `label` (the level in words) is read out and shown on hover.
  */
-export function Pill({ option }: { option: LabelOption }) {
+export function Meter({ step, label }: { step: 1 | 2 | 3 | 4; label: string }) {
   return (
-    <span className="border-line text-ink bg-background-100 text-label-13 inline-flex h-[24px] max-w-full min-w-0 items-center gap-1 rounded-full border px-[10px] leading-[18px] font-medium">
-      <OptionMarks option={option}>
-        <span className="truncate">{option.label}</span>
-      </OptionMarks>
+    <span className="inline-flex shrink-0 items-end gap-[2px]" title={label}>
+      {[1, 2, 3, 4].map((n) => (
+        <span
+          key={n}
+          aria-hidden
+          className="block w-[4px] rounded-full"
+          style={{
+            height: `${6 + n * 2}px`,
+            background: n <= step ? `var(--meter-${step})` : 'var(--meter-off)',
+          }}
+        />
+      ))}
+      <span className="sr-only">{label}</span>
     </span>
   );
 }

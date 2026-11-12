@@ -20,7 +20,6 @@ import {
   GripVertical,
   Lock,
   LockOpen,
-  MessageSquare,
   MoreHorizontal,
   Plus,
 } from 'lucide-react';
@@ -85,7 +84,7 @@ const TRAIL = 48;
  * The leading part of the sticky column: the sheet's round row icon at rest; the checkbox replaces it on hover, focus
  * or selection, with the drag handle in the 16 px before it.
  */
-const CHECK_W = 58;
+const CHECK_W = 70;
 /** The card's left and right borders. */
 const EDGE = 2;
 const cellId = (itemId: string, col: string) => `cell-${itemId}-${col}`;
@@ -967,8 +966,8 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
     <>
       <Sticky width={p.stickyW} role="columnheader" className="border-b-soft border-b">
         {p.canEdit ? (
-          <span className="flex w-[58px] shrink-0 justify-start pl-[16px]">
-            <span className="grid size-[28px] place-items-center">
+          <span className="flex w-[70px] shrink-0 justify-start pl-[16px]">
+            <span className="grid size-[40px] place-items-center">
               <input
                 type="checkbox"
                 className="row-check"
@@ -980,7 +979,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
             </span>
           </span>
         ) : (
-          <span className="w-[58px] shrink-0" />
+          <span className="w-[70px] shrink-0" />
         )}
         <span className="text-muted-foreground text-label-12 truncate pl-[4px]">
           {p.ctx.sheet.itemLabel}
@@ -1102,7 +1101,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
           aria-readonly={!editable || undefined}
           className="flex h-full w-full items-center"
         >
-          <span className="relative flex h-full w-[58px] shrink-0 items-center">
+          <span className="relative flex h-full w-[70px] shrink-0 items-center">
             {!p.dragDisabled && editable ? (
               <button
                 ref={drag.setNodeRef}
@@ -1119,17 +1118,17 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                 <GripVertical className="size-3.5" aria-hidden />
               </button>
             ) : null}
-            <span className="absolute top-1/2 left-[16px] grid size-[28px] -translate-y-1/2 place-items-center">
+            <span className="absolute top-1/2 left-[16px] grid size-[40px] -translate-y-1/2 place-items-center">
               {/* the sheet's row icon at rest; the checkbox takes its place on hover, focus or selection */}
               <span
                 aria-hidden
                 className={cn(
-                  'border-line text-muted-foreground bg-background-100 col-start-1 row-start-1 grid size-[28px] place-items-center rounded-full border',
+                  'border-line text-muted-foreground bg-background-100 col-start-1 row-start-1 grid size-[40px] place-items-center rounded-full border',
                   p.canEdit && 'group-focus-within/row:invisible group-hover/row:invisible',
                   p.canEdit && (rowActive || p.selected.size > 0) && 'invisible',
                 )}
               >
-                <FileText className="size-[14px]" />
+                <FileText className="size-[16px]" />
               </span>
               {p.canEdit ? (
                 <input
@@ -1160,7 +1159,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               isActive('name') && 'outline-focus z-[1] outline-2 -outline-offset-2',
             )}
           >
-            <span className="text-label-14 flex min-w-0 items-center gap-2 leading-[20px]">
+            <span className="text-label-16 flex min-w-0 items-center gap-2">
               {item.id.startsWith('temp-') ? (
                 <span className="text-ink truncate">{item.name}</span>
               ) : (
@@ -1182,22 +1181,21 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               )}
               {p.comments > 0 ? (
                 <span
-                  className="border-line-strong text-ink bg-background-100 text-label-12-mono inline-flex h-[22px] min-w-7 shrink-0 items-center justify-center gap-1 rounded-full border px-1.5"
+                  className="border-line text-ink bg-background-100 text-label-13-mono -my-2 inline-flex size-[36px] shrink-0 items-center justify-center rounded-full border"
                   title={p.comments === 1 ? '1 update' : `${p.comments} updates`}
                 >
-                  <MessageSquare className="size-3" aria-hidden />
                   {p.comments}
                   <span className="sr-only">{p.comments === 1 ? ' update' : ' updates'}</span>
                 </span>
               ) : null}
             </span>
             {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
-              <span className="text-muted-foreground text-label-12 flex min-w-0 items-center gap-[7px] leading-[17px]">
-                <span className="shrink-0 font-mono">{item.displayId}</span>
+              <span className="text-muted-foreground text-label-13-mono flex min-w-0 items-center gap-[7px] leading-[18px]">
+                <span className="shrink-0">{item.displayId}</span>
                 {ownerName ? (
                   <>
                     <span aria-hidden>·</span>
-                    <span className="truncate font-mono">{ownerName}</span>
+                    <span className="truncate">{ownerName}</span>
                   </>
                 ) : null}
                 {item.locked ? (
@@ -1568,7 +1566,7 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
       )}
     >
       <Sticky width={p.stickyW} className={cn(drop.isOver && 'bg-sel')}>
-        <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[58px]">
+        <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[70px]">
           <input
             ref={p.addRef}
             className="placeholder:text-muted-foreground text-ink text-label-14 h-full w-full bg-transparent px-[4px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"

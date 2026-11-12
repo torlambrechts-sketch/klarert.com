@@ -163,6 +163,50 @@
   --label-pink: #c24e88;
   --label-purple: #7e52c6;
   --label-dark: #55606b;
+  /* the Table's option boxes and chips (docs/05 Design system): the option's soft tint, a border in the same hue and
+     its dark step for the words (all ≥ 4.5:1 on their tint). Geist has no orange, navy or neutral label hue: those
+     are the nearest steps or, for orange, a tint of the label colour. */
+  --tint-grey-bg: var(--gray-100);
+  --tint-grey-line: var(--gray-alpha-300);
+  --tint-grey-ink: var(--gray-1000);
+  --tint-dark-bg: var(--gray-200);
+  --tint-dark-line: var(--gray-alpha-500);
+  --tint-dark-ink: var(--gray-1000);
+  --tint-blue-bg: var(--blue-100);
+  --tint-blue-line: var(--blue-400);
+  --tint-blue-ink: var(--blue-900);
+  --tint-navy-bg: var(--blue-200);
+  --tint-navy-line: var(--blue-500);
+  --tint-navy-ink: var(--blue-1000);
+  --tint-teal-bg: var(--teal-100);
+  --tint-teal-line: var(--teal-400);
+  --tint-teal-ink: var(--teal-900);
+  --tint-green-bg: var(--green-100);
+  --tint-green-line: var(--green-400);
+  --tint-green-ink: var(--green-900);
+  --tint-yellow-bg: var(--amber-100);
+  --tint-yellow-line: var(--amber-400);
+  --tint-yellow-ink: var(--amber-900);
+  --tint-orange-bg: #fff2e8;
+  --tint-orange-line: #fcd3b0;
+  --tint-orange-ink: #8a3d0a;
+  --tint-red-bg: var(--red-100);
+  --tint-red-line: var(--red-400);
+  --tint-red-ink: var(--red-900);
+  --tint-pink-bg: var(--pink-100);
+  --tint-pink-line: var(--pink-400);
+  --tint-pink-ink: var(--pink-900);
+  --tint-purple-bg: var(--purple-100);
+  --tint-purple-line: var(--purple-400);
+  --tint-purple-ink: var(--purple-900);
+
+  /* the four steps of a value meter (number and risk cells): low → critical, beside the number they describe */
+  --meter-1: var(--green-700);
+  --meter-2: var(--amber-700);
+  --meter-3: var(--label-orange);
+  --meter-4: var(--red-700);
+  --meter-off: var(--gray-alpha-200);
+
   /* fills behind white text (solid status blocks, action-needed pills): the label colour, darkened just enough
      for 4.5:1 where it falls short (WCAG 2.1 AA, M10 axe pass) */
   --solid-grey: #71767b;

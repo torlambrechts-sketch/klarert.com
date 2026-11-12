@@ -167,8 +167,8 @@ describe('column widths', () => {
   });
 
   it('has taller rows when comfortable', () => {
-    expect(rowHeight('item')).toBe(52);
-    expect(rowHeight('item', 'compact')).toBe(40);
+    expect(rowHeight('item')).toBe(76);
+    expect(rowHeight('item', 'compact')).toBe(44);
     expect(rowHeight('header')).toBe(34);
   });
 });
