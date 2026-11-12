@@ -90,7 +90,7 @@ test('build "When Status becomes Done → set a date to Today and lock" in the b
   expect(untouched).toEqual({ locked: false, values: {} });
   expect(await rest(page, `automation_runs?sheet_id=eq.${sheet.id}&select=id`)).toEqual([]);
 
-  await page.getByRole('button', { name: 'Save and turn on' }).click();
+  await page.getByRole('button', { name: 'Turn on automation' }).click();
   await expect(page.getByText('Automation saved and turned on.')).toBeVisible();
   await expect(page.getByRole('switch', { name })).toBeChecked();
   const [saved] = await automationsOf(page, sheet);
@@ -133,7 +133,7 @@ test('the builder refuses an automation that would trigger itself', async ({ pag
   await page.getByLabel('Action 1 type').selectOption({ label: 'set a field' });
   await page.getByLabel('Action 1 field').selectOption({ label: 'Status' });
   await expect(page.getByText(/^This would trigger itself/)).toBeVisible();
-  await page.getByRole('button', { name: 'Save and turn on' }).click();
+  await page.getByRole('button', { name: 'Turn on automation' }).click();
   await expect(page.getByText('Fix the highlighted parts first.')).toBeVisible();
   expect(await automationsOf(page, sheet)).toEqual([]);
 });
@@ -161,12 +161,12 @@ test('start from a recipe, map its roles to fields, fill the rest and save', asy
   await page.getByRole('button', { name: 'Continue in the builder' }).click();
 
   // the recipe leaves the status to reach open: saving asks for it
-  await page.getByRole('button', { name: 'Save and turn on' }).click();
+  await page.getByRole('button', { name: 'Turn on automation' }).click();
   await expect(page.getByText('Choose a value.')).toBeVisible();
   await page.getByRole('button', { name: /^Trigger value/ }).click();
   await pickOption(page, 'State', 'Stuck');
   await expect(page.getByLabel('Action 1 message')).toHaveValue('{id} {name} is now {state}.');
-  await page.getByRole('button', { name: 'Save and turn on' }).click();
+  await page.getByRole('button', { name: 'Turn on automation' }).click();
   await expect(page.getByText('Automation saved and turned on.')).toBeVisible();
 
   const [saved] = await automationsOf(page, sheet);
@@ -176,7 +176,12 @@ test('start from a recipe, map its roles to fields, fill the rest and save', asy
     trigger: { type: 'field_becomes', fieldKey: 'state', value: 'opt_stuck' },
     actions: [{ type: 'notify', to: ['field:reviewer'], message: '{id} {name} is now {state}.' }],
   });
-  await expect(page.getByText('Recipe · v1')).toBeVisible();
+  const row = page
+    .getByRole('list', { name: 'Automations' })
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('switch', { name: saved!.name }) });
+  await expect(row.getByText('Recipe', { exact: true })).toBeVisible();
+  await expect(row.getByText('v1', { exact: true })).toBeVisible();
 });
 
 test('turning an automation off stops it; duplicate and delete', async ({ page }) => {
@@ -205,14 +210,11 @@ test('turning an automation off stops it; duplicate and delete', async ({ page }
   expect(await runsOf(page, id)).toEqual([]);
 
   await page.goto(`/meridian/automations?sheet=${sheet.id}`);
-  await page.getByRole('button', { name: 'More actions for Post on done' }).click();
-  await page.getByRole('menuitem', { name: 'Duplicate' }).click();
+  await page.getByRole('button', { name: 'Duplicate Post on done' }).click();
   await expect(page.getByText('Copy saved. It is off until you turn it on.')).toBeVisible();
   await expect(page.getByRole('switch', { name: 'Copy of Post on done' })).not.toBeChecked();
-  await expect(page.getByRole('menu')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'More actions for Copy of Post on done' }).click();
-  await page.getByRole('menuitem', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Delete Copy of Post on done' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
   await expect(
     page.getByText('“Copy of Post on done” deleted. Its runs stay in the run log.'),
@@ -247,8 +249,8 @@ test('the run log lists runs with their steps, links to the item and filters by 
 
   await page.goto(`/meridian/automations?tab=runs&sheet=${sheet.id}`);
   const runs = page
-    .getByRole('list', { name: 'Runs' })
-    .getByRole('listitem')
+    .getByRole('table', { name: 'Runs' })
+    .getByRole('row')
     .filter({ hasText: 'Gasket' });
   await expect(runs).toHaveCount(2);
   const done = runs.filter({ hasText: 'Post on done' });
@@ -362,7 +364,9 @@ test('a viewer sees read-only automation lists', async ({ page, browser }) => {
   await expect(vic.getByRole('switch', { name: 'Post on done' })).toBeDisabled();
   await expect(vic.getByRole('link', { name: 'New automation' })).toHaveCount(0);
   await expect(vic.getByRole('link', { name: 'Start from a recipe' })).toHaveCount(0);
-  await expect(vic.getByRole('button', { name: 'More actions for Post on done' })).toHaveCount(0);
+  await expect(vic.getByRole('button', { name: 'Edit Post on done' })).toHaveCount(0);
+  await expect(vic.getByRole('button', { name: 'Duplicate Post on done' })).toHaveCount(0);
+  await expect(vic.getByRole('button', { name: 'Delete Post on done' })).toHaveCount(0);
   await expect(vic.getByRole('link', { name: 'Post on done' })).toHaveCount(0);
 
   await vic.goto(`/meridian/automations?new=1&sheet=${sheet.id}`);
