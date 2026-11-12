@@ -38,8 +38,11 @@ async function latestLink(email: string, after: number): Promise<string> {
 /**
  * Signs in through the real magic-link flow (local Supabase + Mailpit). Parallel tests that sign in as the same
  * seeded person can invalidate each other's link (a newer link replaces the older one), so an expired link is
- * requested again, up to three times.
+ * requested again. Auth refuses a second link for the same address within a second, which parallel workers signing
+ * in as the same person hit: wait a jittered moment and ask again, up to five times.
  */
+const ATTEMPTS = 5;
+
 export async function signIn(page: Page, email: string, next?: string) {
   for (let attempt = 1; ; attempt += 1) {
     const started = Date.now();
@@ -48,17 +51,17 @@ export async function signIn(page: Page, email: string, next?: string) {
     await page.getByRole('button', { name: 'Send sign-in link' }).click();
     const sent = page.getByRole('heading', { name: 'Check your email' });
     // a second request for the same address within a second is refused: wait and ask again
-    if (attempt < 3) {
+    if (attempt < ATTEMPTS) {
       try {
         await expect(sent).toBeVisible({ timeout: 6_000 });
       } catch {
-        await page.waitForTimeout(1500 * attempt);
+        await page.waitForTimeout(1500 * attempt + Math.random() * 1000);
         continue;
       }
     }
     await expect(sent).toBeVisible();
     await page.goto(await latestLink(email, started));
-    if (!/\/login\?error=/.test(page.url()) || attempt === 3) return;
+    if (!/\/login\?error=/.test(page.url()) || attempt === ATTEMPTS) return;
     await page.waitForTimeout(500 * attempt + Math.random() * 1000);
   }
 }

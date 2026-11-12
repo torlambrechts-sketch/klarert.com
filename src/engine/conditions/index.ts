@@ -15,6 +15,8 @@ import {
   valueOf,
 } from '../values';
 
+export { OP_LABEL } from './labels';
+
 const EMPTY = ['is_empty', 'is_not_empty'] as const;
 const OPTION = ['is_any_of', 'is_none_of', 'is_done', 'is_not_done', ...EMPTY] as const;
 

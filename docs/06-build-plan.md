@@ -111,13 +111,13 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M8: the Automations page and the builder per docs/04 §10, recipes from templates/automation-recipes.json, the run log, and per-item automations with pause in the item panel."
 
-- [ ] Automations page (all sheets / per sheet): list with toggles, runs, last run, source; delete; duplicate
-- [ ] Builder: When / if / then sentence, compatible pickers from the registry, value editors per field type, template autocomplete, self-trigger guard, auto name
-- [ ] "Test on an item" shows match, conditions and planned steps without writing
-- [ ] Recipes: pick → map roles to fields → save
-- [ ] Run log tab with filters and expandable steps; link to the item
-- [ ] ⚡ button on the sheet header opens this sheet's automations in a side sheet
-- [ ] Item panel: automations on this item with pause toggles (`automation_pauses`)
+- [x] Automations page (all sheets / per sheet): list with toggles, runs, last run, source; delete; duplicate
+- [x] Builder: When / if / then sentence, compatible pickers from the registry, value editors per field type, template autocomplete, self-trigger guard, auto name
+- [x] "Test on an item" shows match, conditions and planned steps without writing
+- [x] Recipes: pick → map roles to fields → save
+- [x] Run log tab with filters and expandable steps; link to the item
+- [x] ⚡ button on the sheet header opens this sheet's automations in a side sheet
+- [x] Item panel: automations on this item with pause toggles (`automation_pauses`)
 
 ## M9 · Scheduler, webhooks, notifications, My work, search  [Opus]
 

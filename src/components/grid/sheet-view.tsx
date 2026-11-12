@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SheetAutomations } from '@/components/automations/sheet-automations';
 import { ItemPanel } from '@/components/item-panel/item-panel';
 import { ListView } from '@/components/list/list-view';
 import { CalendarView } from '@/components/views/calendar-view';
@@ -270,6 +271,14 @@ function SheetBody(props: SheetViewProps) {
             </>
           ) : null}
           {data && tabular ? <ColumnsMenu fields={data.fields} hiddenCount={hiddenCount} /> : null}
+          <SheetAutomations
+            org={org}
+            sheetId={sheetId}
+            sheetName={sheetName}
+            ctx={ctx}
+            role={role}
+            timeZone={timeZone}
+          />
           <ViewMenu views={views} canEdit={canEdit} />
           <Button asChild variant="outline" size="icon">
             <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">

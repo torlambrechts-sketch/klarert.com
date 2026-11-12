@@ -132,6 +132,14 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
       return 'Edited an update';
     case 'update.deleted':
       return 'Deleted an update';
+    case 'automation.paused':
+      return e.note
+        ? `Paused the automation ${quote(e.note)} for this item`
+        : 'Paused an automation';
+    case 'automation.resumed':
+      return e.note
+        ? `Resumed the automation ${quote(e.note)} for this item`
+        : 'Resumed an automation';
     default:
       return e.action;
   }
