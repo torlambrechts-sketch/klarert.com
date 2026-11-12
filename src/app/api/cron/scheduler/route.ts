@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { env } from '@/lib/env';
 import { isCronAuthorised } from '@/server/cron-auth';
-import { releaseStaleHolds } from '@/server/scheduler/created-holds';
+import { releaseIdleHolds } from '@/server/scheduler/edit-holds';
 import {
   emptySummary,
   runDateChecks,
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
   }
   let releasedHolds = 0;
   try {
-    releasedHolds = await releaseStaleHolds(db, now);
+    releasedHolds = await releaseIdleHolds(db, now);
   } catch (e) {
     console.error(
       JSON.stringify({

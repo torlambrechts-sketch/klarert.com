@@ -370,7 +370,7 @@ export function Table({
 
   // ───────────── commits ─────────────
 
-  const valueCommit = useValueCommit(data, ctx, actions);
+  const valueCommit = useValueCommit(data, ctx, actions, { hold: true });
   const commit = async (item: Item, col: string, raw: unknown, note?: string) => {
     store.getState().edit(null);
     setSeed(null);
@@ -433,27 +433,17 @@ export function Table({
 
   // ───────────── add items ─────────────
 
-  // New rows hold their item_created automations until the person leaves the row (or the table).
-  const held = useRef(new Set<string>());
-  const finishRef = useRef(actions.finishItem);
-  finishRef.current = actions.finishItem;
-  useEffect(() => {
-    const release = (keep: string | null) => {
-      for (const id of [...held.current]) {
-        if (id === keep) continue;
-        held.current.delete(id);
-        void finishRef.current(id);
-      }
-    };
-    const unsub = store.subscribe((s, prev) => {
-      if (held.current.size && s.active?.itemId !== prev.active?.itemId)
-        release(s.active?.itemId ?? null);
-    });
-    return () => {
-      unsub();
-      release(null);
-    };
-  }, [store]);
+  // Held rows (see useSheetActions): leaving a row finishes every other held row.
+  const finishAllRef = useRef(actions.finishAll);
+  finishAllRef.current = actions.finishAll;
+  useEffect(
+    () =>
+      store.subscribe((s, prev) => {
+        if (s.active?.itemId !== prev.active?.itemId)
+          finishAllRef.current(s.active?.itemId ?? null);
+      }),
+    [store],
+  );
 
   const addItem = async (group: Group, name: string) => {
     // after every item of the group, also those a filter hides, so keys never collide
@@ -468,7 +458,6 @@ export function Table({
         const s = store.getState();
         const swap = (c: CellRef | null) =>
           c && c.itemId === tempId ? { ...c, itemId: saved.id } : c;
-        held.current.add(saved.id);
         if (s.active?.itemId === tempId || s.anchor?.itemId === tempId)
           store.setState({ active: swap(s.active), anchor: swap(s.anchor) });
       },
@@ -1093,6 +1082,29 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                   <span className="sr-only">
                     {item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
                   </span>
+                </span>
+              ) : null}
+              {p.actions.held.has(item.id) ? (
+                <span
+                  className="flex shrink-0 items-center gap-1"
+                  title="Actions run when you finish this row"
+                >
+                  <span className="border-line text-ink rounded-full border px-1.5 leading-4">
+                    Editing
+                  </span>
+                  <span className="sr-only">Actions run when you finish this row.</span>
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="text-ink font-semibold underline-offset-2 hover:underline"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void p.actions.finishItem(item.id);
+                    }}
+                  >
+                    Done
+                  </button>
                 </span>
               ) : null}
             </span>

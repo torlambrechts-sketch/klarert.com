@@ -365,6 +365,16 @@ function ViewBody({
     window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', url.toString());
   }, []);
   const panelItem = itemParam ? data.items.find((i) => i.displayId === itemParam) : undefined;
+  // closing the panel or moving to another item finishes the row it showed (its held automations run)
+  const panelItemId = panelItem?.id;
+  const finishItemRef = useRef(actions.finishItem);
+  finishItemRef.current = actions.finishItem;
+  useEffect(() => {
+    if (!panelItemId) return;
+    return () => {
+      if (store.getState().active?.itemId !== panelItemId) void finishItemRef.current(panelItemId);
+    };
+  }, [panelItemId, store]);
   useEffect(() => {
     if (!itemParam || panelItem) return;
     toast.error(`${itemParam} no longer exists in this sheet or was archived.`);

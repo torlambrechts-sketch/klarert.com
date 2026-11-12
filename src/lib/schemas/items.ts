@@ -25,7 +25,7 @@ export const createItemInput = z.object({
   values: values.optional(),
   /** Set when the item comes from a form view (internal form): automations see form_submitted. */
   formViewId: uuid.optional(),
-  /** Added inline: item_created automations wait until the person leaves the row (finishItem). */
+  /** Added inline: automations wait until the person finishes the row (finishItem). */
   hold: z.boolean().optional(),
 });
 
@@ -40,6 +40,8 @@ export const setValuesInput = z.object({
   note: z.string().trim().min(1).max(10_000).optional(),
   /** Long text and checklist edits: reject when someone else saved in between (docs/02 §5). */
   expectedUpdatedAt: z.string().max(40).optional(),
+  /** Edited in the Table or the item panel: automations wait until the person finishes the row (finishItem). */
+  hold: z.boolean().optional(),
 });
 
 export const bulkSetValuesInput = z.object({

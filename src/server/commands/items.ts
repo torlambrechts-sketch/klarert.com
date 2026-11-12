@@ -20,6 +20,7 @@ import type { LinkRow } from '@/engine/sheet-data';
 import { fetchItemsById, type Db } from '@/lib/sheet-query';
 import { isAdminRole, type Role } from '@/server/auth';
 import { runAutomations, valueEvents, type AutomationEvent } from '@/server/automations';
+import { releaseHold } from '@/server/automations/holds';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import {
   loadWriteContext,
@@ -32,7 +33,14 @@ import { withOrg } from './context';
 // Item commands (docs/02 §4): authorise → validate with the field registry → RPC (row + activity log in one
 // transaction) → automations → { item, messages }. The browser never writes items itself.
 
-export type ItemResult = { item: Item; messages: string[]; mutationId?: string };
+export type ItemResult = {
+  item: Item;
+  messages: string[];
+  mutationId?: string;
+  /** The row is held: its automations run when the person finishes it. */
+  held?: boolean;
+  ran?: string[];
+};
 
 const LOCKED = 'This item is locked. Only owners and admins can change it.';
 
@@ -258,9 +266,12 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       const item = toItem(data);
       const actor = userActor(user.id);
       if (v.hold && !v.formViewId) {
-        // the person is still filling the row: item_created runs when they leave it (finishItem)
-        const { error: holdError } = await supabase.rpc('hold_item_created', { p_item: item.id });
-        if (!holdError) return ok({ item, messages: [], mutationId: v.mutationId });
+        // the person is still filling the row: automations run when they finish it (finishItem)
+        const { error: holdError } = await supabase.rpc('hold_item', {
+          p_item: item.id,
+          p_created: true,
+        });
+        if (!holdError) return ok({ item, messages: [], held: true, mutationId: v.mutationId });
       }
       const messages = await automations(
         [
@@ -284,15 +295,11 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
 }
 
 async function isHeld(db: Db, itemId: string): Promise<boolean> {
-  const { data } = await db
-    .from('items')
-    .select('created_pending_at')
-    .eq('id', itemId)
-    .maybeSingle();
-  return !!data?.created_pending_at;
+  const { data } = await db.from('items').select('held_at').eq('id', itemId).maybeSingle();
+  return !!data?.held_at;
 }
 
-/** The person left a new row: run its item_created automations once, with the values entered so far. */
+/** The person finished a row: run its held automations once, against the final values. */
 export async function finishItem(input: unknown): Promise<Result<ItemResult | null>> {
   const p = finishItemInput.safeParse(input);
   if (!p.success) return invalid(p.error);
@@ -301,18 +308,21 @@ export async function finishItem(input: unknown): Promise<Result<ItemResult | nu
     v.org,
     'editor',
     async ({ supabase, orgId, user }) => {
-      const { data: released, error } = await supabase.rpc('release_item_created', {
-        p_item: v.itemId,
-      });
-      if (error) return fromDbError(error);
-      if (!released) return ok(null);
-      const messages = await automations(
-        [{ type: 'item.created', sheetId: v.sheetId, itemId: v.itemId, actor: userActor(user.id) }],
-        { orgId, userId: user.id, workspace: v.org },
-      );
+      let r;
+      try {
+        r = await releaseHold(
+          supabase,
+          { id: v.itemId, sheetId: v.sheetId, orgId },
+          { userId: user.id, workspace: v.org },
+        );
+      } catch (e) {
+        return fail('failed', e instanceof Error ? e.message : 'The automations could not run.');
+      }
+      if (!r) return ok(null);
       const [item] = await fetchItemsById(supabase, [v.itemId]);
       if (!item) return ok(null);
-      return ok({ item, messages, mutationId: v.mutationId });
+      const messages = r.ran.length ? [`Ran: ${r.ran.join(', ')}.`, ...r.messages] : r.messages;
+      return ok({ item, messages, ran: r.ran, mutationId: v.mutationId });
     },
     'finishItem',
   );
@@ -335,10 +345,16 @@ export async function setValues(input: unknown): Promise<Result<ItemResult>> {
       if (!item || item.archivedAt) return itemNotFound();
       if (v.expectedUpdatedAt && v.expectedUpdatedAt !== item.updatedAt)
         return fail('conflict', 'Someone else changed this item since you opened it.');
+      // edits in the Table and the panel hold the row: its automations run once when the person finishes it
+      const protectedEdit = splitInputs(w.fields, v.values ?? {}).protectedInputs.length > 0;
+      let held = false;
+      if (v.hold && !protectedEdit) {
+        const { error: holdError } = await supabase.rpc('hold_item', { p_item: item.id });
+        held = !holdError;
+      } else held = await isHeld(supabase, item.id);
       const r = await writeValues(who, w, item, v);
       if (!r.ok) return r;
-      // values entered while a new row is still being filled are part of creating it: no field automations
-      const messages = (await isHeld(supabase, item.id))
+      const messages = held
         ? []
         : await automations(r.data.events, {
             orgId,
@@ -346,7 +362,7 @@ export async function setValues(input: unknown): Promise<Result<ItemResult>> {
             workspace: v.org,
           });
       const [after] = await settled(supabase, [r.data.item], messages);
-      return ok({ item: after!, messages, mutationId: v.mutationId });
+      return ok({ item: after!, messages, held, mutationId: v.mutationId });
     },
     'setValues',
   );

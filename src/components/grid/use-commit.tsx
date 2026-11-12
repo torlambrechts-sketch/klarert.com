@@ -21,7 +21,14 @@ export const mayEditField = (field: Field, p: { canEdit: boolean; isAdmin: boole
  * values (setCell) with the status-rule comment box (docs/03 §6) and the "Keep mine / Use theirs" conflict choice
  * (docs/02 §5). Render `dialog` once next to the editors.
  */
-export function useValueCommit(data: SheetData, ctx: Ctx, actions: SheetActions) {
+export function useValueCommit(
+  data: SheetData,
+  ctx: Ctx,
+  actions: SheetActions,
+  /** Table and panel: hold the row's automations until the person finishes it. */
+  opts: { hold?: boolean } = {},
+) {
+  const hold = !!opts.hold;
   const [comment, setComment] = useState<{
     item: Item;
     field: Field;
@@ -34,7 +41,7 @@ export function useValueCommit(data: SheetData, ctx: Ctx, actions: SheetActions)
       if (col === 'name') {
         const name = typeof raw === 'string' ? raw.trim() : '';
         if (!name) return void toast.error('A name is required.');
-        if (name !== item.name) await actions.setCell(item, { name });
+        if (name !== item.name) await actions.setCell(item, { name, hold });
         return;
       }
       // the cache, not this render: an option added a moment ago is already in the field's config there
@@ -62,6 +69,7 @@ export function useValueCommit(data: SheetData, ctx: Ctx, actions: SheetActions)
         value,
         note,
         expectedUpdatedAt: fieldUI(field.type).conflictCheck ? item.updatedAt : undefined,
+        hold,
       });
       if (r.ok) return;
       if (r.error.code === 'comment_required')
@@ -71,12 +79,12 @@ export function useValueCommit(data: SheetData, ctx: Ctx, actions: SheetActions)
           duration: 10000,
           action: {
             label: 'Keep mine',
-            onClick: () => void actions.setCell(item, { fieldId: field.id, value }),
+            onClick: () => void actions.setCell(item, { fieldId: field.id, value, hold }),
           },
           cancel: { label: 'Use theirs', onClick: () => void actions.refresh() },
         });
     },
-    [actions, ctx, data],
+    [actions, ctx, data, hold],
   );
 
   const store = useGridStore();
@@ -119,7 +127,7 @@ export function useValueCommit(data: SheetData, ctx: Ctx, actions: SheetActions)
         if (!comment) return;
         const { item, field, value } = comment;
         setComment(null);
-        const r = await actions.setCell(item, { fieldId: field.id, value, note });
+        const r = await actions.setCell(item, { fieldId: field.id, value, note, hold });
         if (r.ok) toast('Saved with your comment.');
       }}
     />

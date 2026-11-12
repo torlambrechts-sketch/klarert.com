@@ -342,6 +342,66 @@ export function useSheetActions(org: string, sheetId: string) {
     [patch],
   );
 
+  // ───────────── edit holds ─────────────
+  // Rows edited in the Table or the panel are held: their automations run once when the person finishes the row
+  // (another row, Done, panel closed, page hidden, 2 minutes without edits). The scheduler covers closed tabs.
+  const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
+  const heldRef = useRef(new Map<string, number>());
+  const markHeld = useCallback((itemId: string) => {
+    heldRef.current.set(itemId, Date.now());
+    setHeld(new Set(heldRef.current.keys()));
+  }, []);
+  const finishItem = useCallback(
+    async (itemId: string) => {
+      if (!heldRef.current.delete(itemId)) return;
+      setHeld(new Set(heldRef.current.keys()));
+      try {
+        const r = await finishItemAction({ org, sheetId, itemId });
+        if (!r.ok || !r.data) return;
+        patch((d) => upsertItem(d, r.data!.item));
+        const [first, ...rest] = r.data.messages;
+        if (first && r.data.ran?.length)
+          toast(first, {
+            action: {
+              label: 'View log',
+              onClick: () =>
+                window.location.assign(`/${org}/automations?sheet=${sheetId}&tab=runs`),
+            },
+          });
+        else if (first) toast(first);
+        showMessages(rest);
+      } catch {
+        // the scheduler releases the hold later
+      }
+    },
+    [org, patch, sheetId],
+  );
+  /** Finish every held row except `keep` (the row the person is on now). */
+  const finishAll = useCallback(
+    (keep?: string | null) => {
+      for (const id of [...heldRef.current.keys()]) if (id !== keep) void finishItem(id);
+    },
+    [finishItem],
+  );
+  useEffect(() => {
+    const idle = setInterval(() => {
+      const now = Date.now();
+      for (const [id, at] of heldRef.current) if (now - at > 2 * 60 * 1000) void finishItem(id);
+    }, 15_000);
+    const hidden = () => {
+      if (document.visibilityState === 'hidden') finishAll();
+    };
+    const leave = () => finishAll();
+    document.addEventListener('visibilitychange', hidden);
+    window.addEventListener('pagehide', leave);
+    return () => {
+      clearInterval(idle);
+      document.removeEventListener('visibilitychange', hidden);
+      window.removeEventListener('pagehide', leave);
+      finishAll();
+    };
+  }, [finishAll, finishItem]);
+
   /** One cell or the name of one item. Comment-required and conflicts come back to the caller. */
   const setCell = useCallback(
     async (
@@ -352,6 +412,8 @@ export function useSheetActions(org: string, sheetId: string) {
         name?: string;
         note?: string;
         expectedUpdatedAt?: string;
+        /** Hold the row's automations until the person finishes it. */
+        hold?: boolean;
       },
     ): Promise<CellResult> => {
       const data = get();
@@ -388,6 +450,7 @@ export function useSheetActions(org: string, sheetId: string) {
             ...(change.name !== undefined ? { name: change.name } : {}),
             ...(change.note ? { note: change.note } : {}),
             ...(change.expectedUpdatedAt ? { expectedUpdatedAt: change.expectedUpdatedAt } : {}),
+            ...(change.hold ? { hold: true } : {}),
           }),
         );
         if (!r.ok) {
@@ -398,6 +461,7 @@ export function useSheetActions(org: string, sheetId: string) {
           return { ok: false, error: r.error };
         }
         patch((d) => upsertItem(d, r.data.item));
+        if (r.data.held) markHeld(item.id);
         showMessages(r.data.messages);
         return { ok: true };
       } catch {
@@ -412,7 +476,7 @@ export function useSheetActions(org: string, sheetId: string) {
         pending.done(item.id);
       }
     },
-    [get, org, patch, pending, restoreItems, run, sheetId],
+    [get, markHeld, org, patch, pending, restoreItems, run, sheetId],
   );
 
   /** Paste, clear and bulk edit. Undo puts the previous values back. */
@@ -524,6 +588,7 @@ export function useSheetActions(org: string, sheetId: string) {
           return null;
         }
         patch((d) => upsertItem(d, r.data.item));
+        if (r.data.held) markHeld(r.data.item.id);
         onSaved?.(tempId, r.data.item);
         showMessages(r.data.messages);
         return r.data.item;
@@ -533,22 +598,7 @@ export function useSheetActions(org: string, sheetId: string) {
         return null;
       }
     },
-    [org, patch, run, sheetId],
-  );
-
-  /** The person left a new row added with `hold`: run its item_created automations now. */
-  const finishItem = useCallback(
-    async (itemId: string) => {
-      try {
-        const r = await finishItemAction({ org, sheetId, itemId });
-        if (!r.ok || !r.data) return;
-        patch((d) => upsertItem(d, r.data!.item));
-        showMessages(r.data.messages);
-      } catch {
-        // the scheduler releases the hold later
-      }
-    },
-    [org, patch, sheetId],
+    [markHeld, org, patch, run, sheetId],
   );
 
   const moveItems = useCallback(
@@ -804,7 +854,9 @@ export function useSheetActions(org: string, sheetId: string) {
 
   return {
     pending,
+    held,
     finishItem,
+    finishAll,
     /** The cached sheet as it is now (newer than a render's `data` right after a write). */
     current: get,
     refresh,
