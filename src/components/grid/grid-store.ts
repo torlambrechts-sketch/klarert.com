@@ -20,6 +20,10 @@ export interface GridState {
   /** Column widths while resizing, before they are saved. */
   widths: Readonly<Record<string, number>>;
   settingsFor: string | null;
+  /** Table "Group by": a field id, or null for the sheet's own groups. UI state only. */
+  groupBy: string | null;
+  /** Table person filter: user ids; empty = everyone. */
+  people: ReadonlySet<string>;
   addFieldAt: { beforeFieldId?: string; afterFieldId?: string } | null;
 
   focus(cell: CellRef, extend?: boolean): void;
@@ -31,6 +35,9 @@ export interface GridState {
   onHiddenChange: ((hidden: ReadonlySet<string>) => void) | null;
   setWidth(fieldId: string, width: number | null): void;
   openSettings(fieldId: string | null): void;
+  setGroupBy(fieldId: string | null): void;
+  togglePerson(userId: string): void;
+  clearPeople(): void;
   openAddField(at: GridState['addFieldAt']): void;
 }
 
@@ -46,12 +53,22 @@ export function createGridStore(): StoreApi<GridState> {
     onHiddenChange: null,
     widths: {},
     settingsFor: null,
+    groupBy: null,
+    people: new Set(),
     addFieldAt: null,
 
     focus: (cell, extend) =>
       set({ active: cell, anchor: extend ? (get().anchor ?? get().active ?? cell) : cell }),
     edit: (cell) => set({ editing: cell }),
     setSelected: (ids, last = null) => set({ selected: new Set(ids), lastSelected: last }),
+    setGroupBy: (fieldId) => set({ groupBy: fieldId }),
+    togglePerson: (userId) => {
+      const next = new Set(get().people);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      set({ people: next });
+    },
+    clearPeople: () => set({ people: new Set() }),
     toggleCollapsed: (groupId) => {
       const next = new Set(get().collapsed);
       if (next.has(groupId)) next.delete(groupId);

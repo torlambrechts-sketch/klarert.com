@@ -14,11 +14,14 @@ export const groupTint = (color: string) => `color-mix(in srgb, ${colorVar(color
 export function GroupTitle({
   group,
   count,
+  donePct = null,
   collapsed,
   onToggle,
 }: {
   group: Group;
   count: number;
+  /** Share of the group's items that are done; null when the sheet has no done-capable field. */
+  donePct?: number | null;
   collapsed: boolean;
   onToggle(): void;
 }) {
@@ -36,6 +39,11 @@ export function GroupTitle({
           <ChevronDown className="size-4 shrink-0" aria-hidden />
         )}
         <span
+          aria-hidden
+          className="size-3 shrink-0 rounded-[3px]"
+          style={{ background: solidVar(group.color) }}
+        />
+        <span
           className="text-cell truncate font-bold"
           style={{ color: `color-mix(in srgb, ${solidVar(group.color)} 78%, black)` }}
         >
@@ -43,6 +51,7 @@ export function GroupTitle({
         </span>
         <span className="text-muted-foreground text-meta shrink-0 font-semibold tabular-nums">
           {count === 1 ? '1 item' : `${count.toLocaleString('en-GB')} items`}
+          {donePct === null ? '' : ` · ${donePct}% done`}
         </span>
       </button>
     </h2>

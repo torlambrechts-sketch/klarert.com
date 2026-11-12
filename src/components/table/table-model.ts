@@ -19,7 +19,7 @@ export const ROW_HEIGHT: Record<TableRow['kind'], number> = {
   item: 52,
   add: 40,
   summary: 36,
-  gap: 16,
+  gap: 24,
 };
 
 /** Height of the one column header row above the rows. */
@@ -50,9 +50,12 @@ export function buildLayout(input: {
   summaries?: boolean;
   /** Only these groups (second panel filter). */
   onlyGroup?: string | null;
+  /** The group an item sits in; default its own group (virtual "group by" groups pass their lookup). */
+  groupOf?: (item: Item) => string;
 }): Layout {
   const byGroup = new Map<string, Item[]>(input.groups.map((g) => [g.id, []]));
-  for (const it of input.items) byGroup.get(it.groupId)?.push(it);
+  const groupOf = input.groupOf ?? ((it: Item) => it.groupId);
+  for (const it of input.items) byGroup.get(groupOf(it))?.push(it);
   for (const list of byGroup.values()) list.sort(input.compare ?? byPosition);
 
   const rows: TableRow[] = [];

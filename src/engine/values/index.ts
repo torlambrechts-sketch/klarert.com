@@ -76,3 +76,14 @@ export function isItemDone(item: Item, ctx: Ctx): boolean {
 }
 
 export type { Json };
+
+/**
+ * A deadline date that has passed on an item that is not done. Only fields the type calls a deadline count, so a
+ * "Found on" date never reads as late. `ctx.today` is injected, so this stays pure.
+ */
+export function isOverdueOf(item: Item, field: Field, ctx: Ctx): boolean {
+  const def = defOf(field);
+  if (def.kind !== 'date' || !def.isDeadline?.(field.config)) return false;
+  const date = dateOf(item, field, ctx);
+  return !!date && date < ctx.today && !isItemDone(item, ctx);
+}

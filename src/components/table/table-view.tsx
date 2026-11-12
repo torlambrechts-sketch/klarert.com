@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Lock, X } from 'lucide-react';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Item } from '@/engine/types';
 import type { ViewConfig } from '@/engine/views/config';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
+import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import { Table } from './table';
+import { filterByPeople, ownersOf, TableToolbar } from './table-toolbar';
 import { TableCards } from './table-cards';
 
 // The Table view (docs/05 §3.1): the one view for working through a sheet's items as rows. Desktop and tablets get
@@ -55,11 +57,20 @@ function usePhone() {
 
 export function TableView(p: TableViewProps) {
   const phone = usePhone();
-  const total = p.onlyGroup
-    ? p.data.items.filter((i) => i.groupId === p.onlyGroup).length
-    : p.data.items.length;
+  const inScope = useMemo(
+    () => (p.onlyGroup ? p.data.items.filter((i) => i.groupId === p.onlyGroup) : p.data.items),
+    [p.data.items, p.onlyGroup],
+  );
+  const total = inScope.length;
+  const chosen = useGrid((s) => s.people);
+  const store = useGridStore();
+  const clearPeople = () => store.getState().clearPeople();
+  const people = useMemo(() => ownersOf(inScope, p.ctx), [inScope, p.ctx]);
+  const items = useMemo(() => filterByPeople(p.items, chosen, p.ctx), [p.items, chosen, p.ctx]);
+  const filtered = p.filtered || (chosen.size > 0 && people.length > 0);
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
+      <TableToolbar ctx={p.ctx} people={people} shown={items.length} total={total} />
       {phone ? null : <Hint />}
       {total === 0 ? (
         <Notice>
@@ -70,10 +81,18 @@ export function TableView(p: TableViewProps) {
             </Button>
           ) : null}
         </Notice>
-      ) : p.items.length === 0 && p.filtered ? (
+      ) : items.length === 0 && filtered ? (
         <Notice>
           No items match these filters.{' '}
-          <Button type="button" variant="link" className="h-auto p-0" onClick={p.onClearFilters}>
+          <Button
+            type="button"
+            variant="link"
+            className="h-auto p-0"
+            onClick={() => {
+              p.onClearFilters();
+              clearPeople();
+            }}
+          >
             Clear filters
           </Button>
         </Notice>
@@ -87,7 +106,7 @@ export function TableView(p: TableViewProps) {
           onlyGroup={p.onlyGroup}
           addFocusTick={p.addFocusTick}
           onOpenItem={p.onOpenItem}
-          visibleItems={p.items}
+          visibleItems={items}
           viewCompare={p.compare}
         />
       ) : (
@@ -102,7 +121,7 @@ export function TableView(p: TableViewProps) {
             nameWidth={p.narrow ? 200 : 320}
             addFocusTick={p.addFocusTick}
             onOpenItem={p.onOpenItem}
-            visibleItems={p.items}
+            visibleItems={items}
             viewCompare={p.compare}
             config={p.config}
             setConfig={p.setConfig}

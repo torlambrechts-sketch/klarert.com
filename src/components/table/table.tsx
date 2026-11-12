@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { copyRange, planClear, planPaste, type GridColumn } from '@/engine/clipboard';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { ownerField, ownerOf } from '@/engine/item-panel';
+import { donePercent } from '@/engine/views/group-by';
 import { keysBetween } from '@/engine/ordering';
 import type { SheetData } from '@/engine/sheet-data';
 import type { SummaryFn } from '@/engine/summaries';
@@ -42,6 +43,7 @@ import { cn } from '@/lib/utils';
 import { ColumnHeader } from './column-header';
 import { GroupSummary } from './group-summary';
 import { GroupTitle, groupTint } from './group-title';
+import { useTableGroups } from './use-table-groups';
 import {
   buildLayout,
   byPosition,
@@ -143,18 +145,26 @@ export function Table({
     [columns],
   );
   const showSummaries = !!summaries && fieldCols.some((c) => summaries[c.field.key]);
+  const tg = useTableGroups({
+    groups: data.groups,
+    sheetId: data.sheet.id,
+    ctx,
+    items: visibleItems,
+    onlyGroup,
+  });
   const layout = useMemo(
     () =>
       buildLayout({
-        groups: data.groups,
+        groups: tg.groups,
         items: visibleItems,
         collapsed,
         compare: viewCompare,
-        canAdd: canEdit,
+        canAdd: canEdit && !tg.virtual,
         summaries: showSummaries,
-        onlyGroup,
+        onlyGroup: tg.onlyGroup,
+        groupOf: tg.groupOf,
       }),
-    [data.groups, visibleItems, collapsed, viewCompare, canEdit, showSummaries, onlyGroup],
+    [tg, visibleItems, collapsed, viewCompare, canEdit, showSummaries],
   );
   const owner = useMemo(() => ownerField(ctx), [ctx]);
   const colIndex = useMemo(() => new Map(columns.map((c, i) => [columnId(c), i])), [columns]);
@@ -559,7 +569,7 @@ export function Table({
   const vRows = rowV.getVirtualItems();
   const vCols = colV.getVirtualItems();
   const totalW = colV.getTotalSize();
-  const dragDisabled = config.sort.length > 0 || !canEdit;
+  const dragDisabled = config.sort.length > 0 || !canEdit || tg.virtual;
   const activeId =
     active && rowIndexOfItem.has(active.itemId) ? cellId(active.itemId, active.col) : undefined;
   const editingItem = editing ? layout.flat[layout.index.get(editing.itemId) ?? -1] : undefined;
@@ -758,7 +768,7 @@ function HeaderRow(p: {
           </span>
         ) : null}
         <span
-          className="text-label flex-1 truncate px-2"
+          className="text-meta text-muted-foreground flex-1 truncate px-2 font-semibold tracking-wide uppercase"
           style={{ paddingLeft: p.canEdit ? 28 : 8 }}
         >
           {p.ctx.sheet.itemLabel}
@@ -880,16 +890,16 @@ interface RowProps {
   fieldProps(field: Field): Pick<EditorProps, 'onAddOption' | 'onEditField'>;
 }
 
-/** The sticky left part of a row: the group colour bar, then the checkbox, handle and name. */
+/** The sticky left part of a row: room for the group bar (only the title row draws it), then the checkbox, handle and name. */
 function Sticky({
   width,
-  color,
   children,
   className,
   role = 'gridcell',
 }: {
   width: number;
-  color: string;
+  /** Kept by callers; only the group title row carries the colour bar. */
+  color?: string;
   children?: React.ReactNode;
   className?: string;
   /** Rows own only cells (ARIA grid): the sticky part is a cell of its own, or none when it wraps the name cell. */
@@ -902,7 +912,7 @@ function Sticky({
         'border-line sticky left-0 z-[2] flex shrink-0 items-center border-r border-b bg-white',
         className,
       )}
-      style={{ width, borderLeft: `${BAR_W}px solid ${colorVar(color)}` }}
+      style={{ width, borderLeft: `${BAR_W}px solid transparent` }}
     >
       {children}
     </div>
@@ -952,6 +962,7 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
         <GroupTitle
           group={row.group}
           count={row.count}
+          donePct={donePercent(items, p.ctx)}
           collapsed={row.collapsed}
           onToggle={() => store.getState().toggleCollapsed(row.group.id)}
         />
@@ -1214,7 +1225,7 @@ const TableCell = memo(function TableCell({
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'border-line text-cell absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-2 hover:shadow-[inset_0_0_0_1.5px_#9AA3B5]',
+        'border-line text-cell absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-2 hover:shadow-[inset_0_0_0_1.5px_#9AA3B5] [&_[data-pill]]:-mx-1.5',
         selected && 'bg-sel',
         active && 'outline-focus z-[1] outline-2 -outline-offset-2',
       )}

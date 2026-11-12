@@ -53,6 +53,20 @@ function optionStyle(option: LabelOption): React.CSSProperties {
       };
 }
 
+/**
+ * A table cell's option pill: a tint of the label colour with a darker shade of the same hue as text (at least
+ * 4.5:1 on the tint for every label colour), so the pill reads without relying on colour alone: the words stay, with
+ * a check for done options and "!" for ones that need action.
+ */
+function pillStyle(option: LabelOption): React.CSSProperties {
+  const hue = solidVar(option.color);
+  return {
+    background: `color-mix(in srgb, ${colorVar(option.color)} 20%, white)`,
+    borderColor: `color-mix(in srgb, ${colorVar(option.color)} 45%, white)`,
+    color: `color-mix(in srgb, ${hue} 45%, black)`,
+  };
+}
+
 /** "!" for options that need action and a check for done ones, with their words for screen readers. */
 function OptionMarks({ option, children }: { option: LabelOption; children: React.ReactNode }) {
   return (
@@ -90,11 +104,12 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
 export function Block({ option, density }: { option: LabelOption; density: 'grid' | 'list' }) {
   return (
     <span
+      data-pill
       className={cn(
         'text-label flex w-full min-w-0 items-center justify-center gap-1 rounded-md border px-2',
         density === 'grid' ? 'h-[30px]' : 'h-[34px]',
       )}
-      style={optionStyle(option)}
+      style={pillStyle(option)}
     >
       <OptionMarks option={option}>
         <span className="truncate">{option.label}</span>

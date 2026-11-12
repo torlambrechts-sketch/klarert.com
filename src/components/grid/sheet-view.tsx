@@ -393,7 +393,7 @@ function ViewBody({
 
   return (
     <>
-      {view.filtered && active.type !== 'form' ? (
+      {view.filtered && active.type !== 'form' && active.type !== 'table' ? (
         <p className="text-muted-foreground -mt-1 text-xs" aria-live="polite">
           Showing {view.items.length.toLocaleString('en-GB')} of{' '}
           {(onlyGroup

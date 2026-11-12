@@ -28,7 +28,7 @@ import { addDays, formatDate, isoDateInZone } from '@/engine/fields/helpers';
 import { firstLine } from '@/engine/fields/longtext';
 import { RECURRENCE_UNITS } from '@/engine/fields/recurrence';
 import { urlHost } from '@/engine/fields/url';
-import { isItemDone } from '@/engine/values';
+import { isItemDone, isOverdueOf } from '@/engine/values';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Bar, Empty, Muted, optionUI, textUI, TextCell } from './kit';
@@ -173,9 +173,9 @@ export const percentUI: FieldTypeUI = {
     invalid: 'Enter a number from 0 to 100.',
     toInput: (v) => String(v),
   }),
-  Cell: ({ value, field }) => {
+  Cell: ({ value, field, density }) => {
     if (typeof value !== 'number') return <Empty />;
-    const bar = (field.config as { bar?: boolean }).bar;
+    const bar = (field.config as { bar?: boolean }).bar || density === 'list';
     return (
       <span className="flex w-full min-w-0 items-center gap-2">
         {bar ? <Bar pct={value} color="var(--good)" /> : null}
@@ -454,6 +454,13 @@ export const checkUI: FieldTypeUI = {
 
 function DateCell({ value, field, item, ctx }: CellProps) {
   if (typeof value !== 'string' || !value) return <Empty />;
+  if (isOverdueOf(item, field, ctx))
+    return (
+      <Text className="text-crit font-semibold">
+        {formatDate(value)} <span aria-hidden>· late</span>
+        <span className="sr-only"> (late)</span>
+      </Text>
+    );
   const relative = (field.config as { relative?: boolean }).relative && !isItemDone(item, ctx);
   if (!relative) return <Text>{formatDate(value)}</Text>;
   const rel = relativeDue(value, ctx.today);
