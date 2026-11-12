@@ -145,6 +145,7 @@ export const checklist = base<ChecklistValue, ChecklistConfig>({
     return `${c.yes} yes, ${c.no} no, ${c.na} n/a, ${c.open} open`;
   },
   toNumber: (v, cfg) => score(v, cfg),
+  countNo,
   compare: (a, b, cfg) =>
     emptyLast(a, b, isEmpty, (x, y) => cmpNumber(score(x, cfg) ?? -1, score(y, cfg) ?? -1)),
 });
