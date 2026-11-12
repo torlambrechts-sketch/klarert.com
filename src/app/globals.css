@@ -34,6 +34,9 @@
   --crit-line: #fecaca;
   --info: #2c4fd0;
   --info-soft: #ebf1fe;
+  /* thin progress bars (the Table's date countdown): brighter than the text colours, beside words that say the same */
+  --bar-good: #2fb35a;
+  --bar-crit: #e5484d;
 
   /* heat scale (risk levels 1 to 4): fill and the text that sits on it */
   --h1: #ddf1e4;
@@ -176,6 +179,7 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    line-height: 1.45;
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
@@ -266,4 +270,13 @@
   .phone-only {
     display: none !important;
   }
+}
+
+/* the Table's row and group checkboxes: 16 px, ink when ticked (the design's board) */
+.row-check {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--ink);
+  cursor: pointer;
 }
