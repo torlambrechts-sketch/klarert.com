@@ -8,7 +8,7 @@ import { colorVar, solidVar } from '@/components/fields/shared';
 export const groupTint = (color: string) => `color-mix(in srgb, ${colorVar(color)} 9%, white)`;
 
 /**
- * A group's title (Table rows and phone cards): a heading with a button that collapses the group, its name in the
+ * A group's title (Table rows and phone cards), its name a darker shade of the group colour (4.5:1 on the tint): a heading with a button that collapses the group, its name in the
  * group colour and the item count, so colour is never the only signal.
  */
 export function GroupTitle({
@@ -35,7 +35,10 @@ export function GroupTitle({
         ) : (
           <ChevronDown className="size-4 shrink-0" aria-hidden />
         )}
-        <span className="text-cell truncate font-bold" style={{ color: solidVar(group.color) }}>
+        <span
+          className="text-cell truncate font-bold"
+          style={{ color: `color-mix(in srgb, ${solidVar(group.color)} 78%, black)` }}
+        >
           {group.name}
         </span>
         <span className="text-muted-foreground text-meta shrink-0 font-semibold tabular-nums">
