@@ -77,7 +77,13 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
  * The value of a one-option cell (Table): a colour dot and the label, left-aligned, with "!" for options that need
  * action and a check for done ones. The Grid density keeps a 30 px line, the List density 34 px.
  */
-export function Block({ option, density }: { option: LabelOption; density: 'grid' | 'list' }) {
+export function Block({
+  option,
+  density,
+}: {
+  option: LabelOption;
+  density: 'grid' | 'list' | 'table';
+}) {
   return (
     <span
       data-pill
@@ -161,6 +167,14 @@ export function Avatars({ ids, ctx, max = 3 }: { ids: string[]; ctx: Ctx; max?: 
       {ids.length > max ? (
         <span className="text-muted-foreground pl-2.5 text-xs font-semibold">
           +{ids.length - max}
+          <span className="sr-only">
+            {' '}
+            more:{' '}
+            {ids
+              .slice(max)
+              .map((id) => ctx.people.get(id)?.name ?? 'Former member')
+              .join(', ')}
+          </span>
         </span>
       ) : null}
     </span>

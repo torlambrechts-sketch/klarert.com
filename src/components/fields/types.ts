@@ -10,7 +10,8 @@ export interface CellProps<V = unknown, C = unknown> {
   field: Field<C>;
   item: Item;
   ctx: Ctx;
-  density: 'grid' | 'list';
+  /** grid: dense; list: forms and panels; table: the Table view (date countdowns, stacked avatars). */
+  density: 'grid' | 'list' | 'table';
 }
 
 export interface EditorProps<V = unknown, C = unknown> {

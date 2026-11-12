@@ -22,7 +22,7 @@ import {
   ToggleLeft,
   Type,
 } from 'lucide-react';
-import { relativeDue } from '@/engine/fields/date';
+import { dateCountdown, relativeDue } from '@/engine/fields/date';
 import { DURATION_UNITS } from '@/engine/fields/duration';
 import { addDays, formatDate, isoDateInZone } from '@/engine/fields/helpers';
 import { firstLine } from '@/engine/fields/longtext';
@@ -175,7 +175,7 @@ export const percentUI: FieldTypeUI = {
   }),
   Cell: ({ value, field, density }) => {
     if (typeof value !== 'number') return <Empty />;
-    const bar = (field.config as { bar?: boolean }).bar || density === 'list';
+    const bar = (field.config as { bar?: boolean }).bar || density !== 'grid';
     return (
       <span className="flex w-full min-w-0 items-center gap-2">
         {bar ? <Bar pct={value} color="var(--good)" /> : null}
@@ -452,8 +452,46 @@ export const checkUI: FieldTypeUI = {
 
 // ───────────── dates ─────────────
 
-function DateCell({ value, field, item, ctx }: CellProps) {
+const COUNTDOWN_TONE = {
+  done: { bar: 'var(--good)', text: 'text-muted-foreground' },
+  late: { bar: 'var(--crit)', text: 'text-crit font-medium' },
+  soon: { bar: 'var(--label-orange)', text: 'text-muted-foreground' },
+  far: { bar: 'var(--line-strong)', text: 'text-muted-foreground' },
+} as const;
+
+/** The Table's date: the date, then a thin bar and "in 65d" / "today" / "late 3d" / "done" (docs/05 §3.1). */
+function DateCountdownCell({
+  value,
+  item,
+  ctx,
+}: {
+  value: string;
+  item: CellProps['item'];
+  ctx: CellProps['ctx'];
+}) {
+  const c = dateCountdown(value, ctx.today, isItemDone(item, ctx));
+  const tone = COUNTDOWN_TONE[c.tone];
+  return (
+    <span className="flex w-full min-w-0 flex-col gap-1">
+      <span className="text-ink truncate text-[14px]">{formatDate(value)}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span aria-hidden className="bg-soft block h-1 min-w-6 flex-1 overflow-hidden rounded-full">
+          <span
+            className="block h-full rounded-full"
+            style={{ width: `${c.pct}%`, background: tone.bar }}
+          />
+        </span>
+        <span className={cn('shrink-0 font-mono text-[11.5px] leading-none', tone.text)}>
+          {c.text}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function DateCell({ value, field, item, ctx, density }: CellProps) {
   if (typeof value !== 'string' || !value) return <Empty />;
+  if (density === 'table') return <DateCountdownCell value={value} item={item} ctx={ctx} />;
   if (isOverdueOf(item, field, ctx))
     return (
       <Text className="text-crit font-semibold">
