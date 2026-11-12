@@ -77,6 +77,9 @@ describe('summaries', () => {
   it('computes number functions', () => {
     expect(summarise(num, items, ctx).text).toBe('15');
     expect(valueOf(summarise(num, items, ctx, 'average'))).toBe(5);
+    // the average reads with one decimal
+    const scores = [20, 12, 9, 8].map((n) => makeItem({ [num.id]: n }));
+    expect(summarise(num, scores, ctx, 'average').text).toBe('12.3');
     expect(valueOf(summarise(num, items, ctx, 'median'))).toBe(4);
     expect(valueOf(summarise(num, items, ctx, 'max'))).toBe(9);
     expect(summarise(pct, items, ctx).text).toBe('75');

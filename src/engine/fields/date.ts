@@ -15,7 +15,7 @@ export const date = base<string, DateConfig>({
   valueSchema: z.string().refine(isIsoDate, 'Use YYYY-MM-DD'),
   configSchema: z.object({ relative: z.boolean() }),
   defaultConfig: () => ({ relative: true }),
-  defaultWidth: 120,
+  defaultWidth: 160,
   formAllowed: true,
   kanbanCapable: false,
   calendarCapable: true,

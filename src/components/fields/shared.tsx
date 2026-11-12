@@ -85,7 +85,7 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
 
 /**
  * The value of a one-option cell. In the Table: a box that hugs its words (28 px tall, 4 × 10 px padding, 6 px
- * radius), centred in the cell, the option's tint with a border in the same hue and the words in its dark step, with
+ * radius, 13.5 px medium words), centred in the cell (which then has 8 px side padding), the option's tint with a border in the same hue and the words in its dark step, with
  * "!" for options that need action and a check for done ones. Elsewhere (Grid 30 px, List 34 px): a colour dot and
  * the label, left-aligned.
  */
@@ -101,7 +101,7 @@ export function Block({
       <span className="flex w-full min-w-0 items-center justify-center">
         <span
           data-box
-          className="text-label-14 inline-flex h-[28px] max-w-full min-w-0 items-center justify-center gap-1.5 rounded-md border px-[10px] py-1 font-medium"
+          className="text-label-13.5 inline-flex h-[28px] max-w-full min-w-0 items-center justify-center gap-1 rounded-md border px-[10px] py-1 font-medium"
           style={tintStyle(option.color)}
         >
           <OptionMarks option={option}>
@@ -126,22 +126,28 @@ export function Block({
   );
 }
 
+/** The number before a meter in the Table (scores, numbers with meter bands). */
+export function ScoreNumber({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-ink text-label-12.5-mono min-w-[22px] shrink-0 font-medium tabular-nums">
+      {children}
+    </span>
+  );
+}
+
 /**
  * A four-bar meter beside a number (number fields with bands, risk scores): `step` bars of four are filled in the
  * step's colour. Decorative for sight; `label` (the level in words) is read out and shown on hover.
  */
 export function Meter({ step, label }: { step: 1 | 2 | 3 | 4; label: string }) {
   return (
-    <span className="inline-flex shrink-0 items-end gap-[2px]" title={label}>
+    <span className="inline-flex shrink-0 items-center gap-[2px]" title={label}>
       {[1, 2, 3, 4].map((n) => (
         <span
           key={n}
           aria-hidden
-          className="block w-[4px] rounded-full"
-          style={{
-            height: `${6 + n * 2}px`,
-            background: n <= step ? `var(--meter-${step})` : 'var(--meter-off)',
-          }}
+          className="block h-[14px] w-[6px] rounded-[2px]"
+          style={{ background: n <= step ? `var(--meter-${step})` : 'var(--meter-off)' }}
         />
       ))}
       <span className="sr-only">{label}</span>
@@ -182,7 +188,7 @@ export function Avatar({
         'inline-flex shrink-0 items-center justify-center rounded-full',
         tone === 'solid'
           ? 'text-label-12 border-2 border-white font-bold text-white'
-          : 'text-label-12 font-semibold shadow-[0_0_0_2px_var(--background-100)]',
+          : 'text-label-9.5 font-semibold shadow-[0_0_0_2px_var(--background-100)]',
       )}
       style={{
         width: px,
@@ -232,7 +238,7 @@ export function Avatars({ ids, ctx, max = 3 }: { ids: string[]; ctx: Ctx; max?: 
   return (
     <span className="flex items-center -space-x-1.5">
       {shown.map((id) => (
-        <Avatar key={id} id={id} ctx={ctx} size={26} tone="soft" />
+        <Avatar key={id} id={id} ctx={ctx} size={24} tone="soft" />
       ))}
       {ids.length > max ? (
         <span className="text-muted-foreground text-label-12 pl-2.5 font-semibold">

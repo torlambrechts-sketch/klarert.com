@@ -39,6 +39,7 @@ import {
   EditorFrame,
   inputClass,
   Meter,
+  ScoreNumber,
   SaveCancel,
   Text,
   TextEditor,
@@ -178,8 +179,8 @@ function NumberCell(p: CellProps) {
     return <Text className="text-right tabular-nums">{t}</Text>;
   const step = meterStep(p.value, cfg.bands);
   return (
-    <span className="flex w-full min-w-0 items-center justify-end gap-2">
-      <Text className="tabular-nums">{t}</Text>
+    <span className="flex w-full min-w-0 items-center gap-2">
+      <ScoreNumber>{t}</ScoreNumber>
       <Meter step={step} label={`Step ${step} of 4`} />
       <TrendLine field={p.field} item={p.item} value={p.value} ctx={p.ctx} />
     </span>
@@ -486,8 +487,8 @@ export const checkUI: FieldTypeUI = {
 const COUNTDOWN_TONE = {
   done: { bar: 'var(--bar-good)', text: 'text-good' },
   late: { bar: 'var(--bar-crit)', text: 'text-crit-ink' },
-  soon: { bar: 'var(--faint)', text: 'text-muted-foreground' },
-  far: { bar: 'var(--faint)', text: 'text-muted-foreground' },
+  soon: { bar: 'var(--bar-warn)', text: 'text-warn' },
+  far: { bar: 'var(--bar-far)', text: 'text-muted-foreground' },
 } as const;
 
 /** The Table's date: the date, then a thin bar and "in 65d" / "today" / "late 3d" / "done" (docs/05 §3.1). */
@@ -503,21 +504,16 @@ function DateCountdownCell({
   const c = dateCountdown(value, ctx.today, isItemDone(item, ctx));
   const tone = COUNTDOWN_TONE[c.tone];
   return (
-    <span className="flex w-full min-w-0 flex-col gap-1.5">
-      <span className="text-ink text-label-14 truncate">{formatDate(value)}</span>
+    <span className="flex w-full min-w-0 flex-col gap-1">
+      <span className="text-ink text-label-12.5 truncate font-medium">{formatDate(value)}</span>
       <span className="flex min-w-0 items-center gap-1.5">
-        <span
-          aria-hidden
-          className="bg-gray-alpha-200 block h-1 min-w-6 flex-1 overflow-hidden rounded-full"
-        >
+        <span aria-hidden className="bg-soft block h-1 min-w-6 flex-1 overflow-hidden rounded-full">
           <span
             className="block h-full rounded-full"
             style={{ width: `${c.pct}%`, background: tone.bar }}
           />
         </span>
-        <span className={cn('text-label-12-mono shrink-0 leading-[15px] font-medium', tone.text)}>
-          {c.text}
-        </span>
+        <span className={cn('text-label-10.5-mono shrink-0 font-medium', tone.text)}>{c.text}</span>
       </span>
     </span>
   );

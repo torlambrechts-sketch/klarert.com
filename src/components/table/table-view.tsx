@@ -119,7 +119,7 @@ export function TableView(p: TableViewProps) {
             canEdit={p.canEdit}
             isAdmin={p.isAdmin}
             onlyGroup={p.onlyGroup}
-            nameWidth={p.narrow ? 200 : 320}
+            nameWidth={p.narrow ? 200 : 322}
             addFocusTick={p.addFocusTick}
             onOpenItem={p.onOpenItem}
             visibleItems={items}
