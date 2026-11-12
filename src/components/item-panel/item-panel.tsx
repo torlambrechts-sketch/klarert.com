@@ -350,6 +350,9 @@ export function ItemPanel(props: ItemPanelProps) {
                     void qc.invalidateQueries({ queryKey: panelKeys.activity(item.id) });
                   }}
                   onButton={(f: Field) => void actions.clickButton(item, f)}
+                  fieldProps={(f, close) =>
+                    valueCommit.fieldProps(f, { canEdit: canEditItem, isAdmin }, close)
+                  }
                   onOpenLinked={openLinked}
                   onFileSaved={onFileSaved}
                 />

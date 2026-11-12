@@ -1,7 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, Lock, Plus, X } from 'lucide-react';
+import {
+  ArrowDownAZ,
+  ArrowUpAZ,
+  ChevronDown,
+  ChevronRight,
+  EyeOff,
+  Lock,
+  Plus,
+  Settings2,
+  X,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/engine/fields/helpers';
 import { itemStatusField } from '@/engine/fields/item-status';
@@ -13,12 +23,20 @@ import { groupRows } from '@/engine/views/apply';
 import { PAGE_SIZES, type PageSize, type ViewConfig } from '@/engine/views/config';
 import { paginate } from '@/engine/views/pagination';
 import { fieldUI } from '@/components/fields/registry';
-import { cellValue, colorVar, displayText } from '@/components/fields/shared';
+import { cellValue, colorVar, displayText, editorPopoverClass } from '@/components/fields/shared';
+import type { EditorProps } from '@/components/fields/types';
 import { FieldPicker } from '@/components/grid/field-picker';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
-import { useValueCommit } from '@/components/grid/use-commit';
+import { mayEditField, useValueCommit } from '@/components/grid/use-commit';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
@@ -87,7 +105,7 @@ export function ListView(p: ListViewProps) {
     return status && !hidden.has(status.id) ? [status, ...visible] : visible;
   }, [data.fields, hidden, status]);
 
-  const { commit, dialog } = useValueCommit(data, ctx, p.actions);
+  const { commit, dialog, fieldProps } = useValueCommit(data, ctx, p.actions);
   const total = data.items.length;
 
   return (
@@ -139,6 +157,9 @@ export function ListView(p: ListViewProps) {
             })
           }
           commit={commit}
+          fieldProps={(f, close) =>
+            fieldProps(f, { canEdit: p.canEdit, isAdmin: p.isAdmin }, close)
+          }
         />
       )}
       {ordered.length > 0 ? (
@@ -256,6 +277,63 @@ function LockedMark() {
   );
 }
 
+/** A column header's menu (as in the Grid, docs/05 §3.2): sort, hide, and the field settings. */
+function ColumnMenu({
+  field,
+  icon: Icon,
+  editable,
+  sorted,
+  onSort,
+  onHide,
+  onSettings,
+}: {
+  field: Field;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+  editable: boolean;
+  sorted: 'asc' | 'desc' | null;
+  onSort(dir: 'asc' | 'desc' | null): void;
+  onHide(): void;
+  onSettings(): void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={`${field.name} column menu`}
+        className="hover:bg-sel focus-visible:outline-focus -mx-1.5 inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-left focus-visible:outline-2"
+      >
+        <Icon className="text-muted-foreground size-3.5" aria-hidden />
+        {field.name}
+        {sorted === 'asc' ? (
+          <ArrowDownAZ className="size-3.5" aria-label="sorted A to Z" />
+        ) : sorted === 'desc' ? (
+          <ArrowUpAZ className="size-3.5" aria-label="sorted Z to A" />
+        ) : null}
+        <ChevronDown className="text-muted-foreground size-3" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuItem onSelect={() => onSort('asc')}>
+          <ArrowDownAZ aria-hidden /> Sort A to Z
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onSort('desc')}>
+          <ArrowUpAZ aria-hidden /> Sort Z to A
+        </DropdownMenuItem>
+        {sorted ? (
+          <DropdownMenuItem onSelect={() => onSort(null)}>
+            <X aria-hidden /> Clear sort
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={onHide}>
+          <EyeOff aria-hidden /> Hide
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onSettings}>
+          <Settings2 aria-hidden /> {editable ? 'Settings' : 'About this field'}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 type Rows = ReturnType<typeof groupRows<SheetData['groups'][number]>>;
 
 function Table(
@@ -266,6 +344,7 @@ function Table(
     collapsed: ReadonlySet<string>;
     toggle(groupId: string): void;
     commit(item: Item, col: string, raw: unknown): Promise<void>;
+    fieldProps(f: Field, close: () => void): Pick<EditorProps, 'onAddOption' | 'onEditField'>;
   },
 ) {
   const { ctx, columns } = p;
@@ -337,9 +416,25 @@ function Table(
                       ),
                     }}
                   >
-                    <span className="inline-flex items-center gap-1.5">
-                      <Icon className="text-muted-foreground size-3.5" aria-hidden />
-                      {f.name}
+                    <span className="inline-flex items-center gap-1">
+                      <ColumnMenu
+                        field={f}
+                        icon={Icon}
+                        editable={mayEditField(f, p)}
+                        sorted={
+                          p.config.sort.length === 1 && p.config.sort[0]!.fieldKey === f.key
+                            ? p.config.sort[0]!.dir
+                            : null
+                        }
+                        onSort={(dir) =>
+                          p.setConfig((c) => ({
+                            ...c,
+                            sort: dir ? [{ fieldKey: f.key, dir }] : [],
+                          }))
+                        }
+                        onHide={() => store.getState().setHidden(f.id, true)}
+                        onSettings={() => store.getState().openSettings(f.id)}
+                      />
                       {f.locked ? <LockedMark /> : null}
                     </span>
                   </th>
@@ -418,6 +513,7 @@ function Table(
                             setEditing(null);
                             void p.commit(item, fieldId, raw);
                           }}
+                          fieldProps={(f) => p.fieldProps(f, () => setEditing(null))}
                           onButton={(f) => {
                             setEditing(null);
                             void p.actions.clickButton(item, f);
@@ -476,6 +572,7 @@ function Row({
   onButton,
   onOpenItem,
   addCell,
+  fieldProps,
 }: {
   item: Item;
   columns: Field[];
@@ -490,6 +587,7 @@ function Row({
   onButton(f: Field): void;
   onOpenItem(): void;
   addCell: boolean;
+  fieldProps(f: Field): Pick<EditorProps, 'onAddOption' | 'onEditField'>;
 }) {
   const summary = itemSummary(item, ctx);
   const person = summary.person?.userId ? ctx.people.get(summary.person.userId)?.name : null;
@@ -544,6 +642,7 @@ function Row({
           onCommitField={canEdit ? onCommit : undefined}
           onButton={canEdit ? () => onButton(f) : undefined}
           onOpenItem={onOpenItem}
+          editorProps={editing === f.id ? fieldProps(f) : undefined}
         />
       ))}
       {addCell ? <td className="border-line border-b" /> : null}
@@ -562,6 +661,7 @@ function Cell({
   onCommitField,
   onButton,
   onOpenItem,
+  editorProps,
 }: {
   item: Item;
   field: Field;
@@ -573,6 +673,7 @@ function Cell({
   onCommitField?: (fieldId: string, raw: unknown) => void;
   onButton?: () => void;
   onOpenItem(): void;
+  editorProps?: Pick<EditorProps, 'onAddOption' | 'onEditField'>;
 }) {
   const ui = fieldUI(field.type);
   const value = cellValue(item, field, ctx);
@@ -598,7 +699,7 @@ function Cell({
           <PopoverContent
             align="start"
             sideOffset={2}
-            className="p-3"
+            className={editorPopoverClass}
             style={{ width: Math.min(ui.editorWidth ?? 280, 420) }}
           >
             <ui.Editor
@@ -611,6 +712,7 @@ function Cell({
               onCommitField={onCommitField}
               onButton={onButton}
               onOpenItem={onOpenItem}
+              {...editorProps}
             />
           </PopoverContent>
         </Popover>

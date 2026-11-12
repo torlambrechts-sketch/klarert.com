@@ -5,7 +5,8 @@ import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Ctx, Field, Item } from '@/engine/types';
 import { fieldUI } from '@/components/fields/registry';
-import { cellValue, defOf, displayText } from '@/components/fields/shared';
+import { cellValue, defOf, displayText, editorPopoverClass } from '@/components/fields/shared';
+import type { EditorProps } from '@/components/fields/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ export function FieldRow({
   readOnlyReason,
   onCommit,
   onButton,
+  fieldProps,
   children,
 }: {
   item: Item;
@@ -31,6 +33,8 @@ export function FieldRow({
   readOnlyReason: string;
   onCommit(item: Item, fieldId: string, raw: unknown): Promise<void> | void;
   onButton?(): void;
+  /** "Add …" and "Edit options" in the editor; `close` closes the popover first. */
+  fieldProps?(close: () => void): Pick<EditorProps, 'onAddOption' | 'onEditField'>;
   /** Replaces the value (file fields render their own manager). */
   children?: React.ReactNode;
 }) {
@@ -118,7 +122,7 @@ export function FieldRow({
             </PopoverTrigger>
             <PopoverContent
               align="start"
-              className="p-3"
+              className={editorPopoverClass}
               style={{ width: Math.min(ui.editorWidth ?? 300, 420) }}
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
@@ -138,6 +142,7 @@ export function FieldRow({
                       }
                     : undefined
                 }
+                {...(open && editable ? fieldProps?.(() => setOpen(false)) : undefined)}
               />
             </PopoverContent>
           </Popover>

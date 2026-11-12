@@ -4,10 +4,17 @@ import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { SheetData } from '@/engine/sheet-data';
+import type { LabelOption } from '@/engine/fields/types';
 import type { Ctx, Field, Item } from '@/engine/types';
 import { fieldUI } from '@/components/fields/registry';
+import type { EditorProps } from '@/components/fields/types';
 import { CommentDialog } from './comment-dialog';
+import { useGridStore } from './grid-store';
 import type { SheetActions } from './use-sheet';
+
+/** Who may change a field's settings and options: editors on unlocked fields, admins always (fields RLS). */
+export const mayEditField = (field: Field, p: { canEdit: boolean; isAdmin: boolean }) =>
+  p.canEdit && (!field.locked || p.isAdmin);
 
 /**
  * Saving one value from an editor, shared by the Grid and the item panel: the name, link fields (setLinks) and stored
@@ -30,7 +37,8 @@ export function useValueCommit(data: SheetData, ctx: Ctx, actions: SheetActions)
         if (name !== item.name) await actions.setCell(item, { name });
         return;
       }
-      const field = data.fields.find((f) => f.id === col);
+      // the cache, not this render: an option added a moment ago is already in the field's config there
+      const field = (actions.current() ?? data).fields.find((f) => f.id === col);
       if (!field) return;
       const def = resolveFieldType(field.type)!;
       if (def.storage === 'links')
@@ -68,7 +76,38 @@ export function useValueCommit(data: SheetData, ctx: Ctx, actions: SheetActions)
           cancel: { label: 'Use theirs', onClick: () => void actions.refresh() },
         });
     },
-    [actions, ctx, data.fields],
+    [actions, ctx, data],
+  );
+
+  const store = useGridStore();
+  const addOption = useCallback(
+    async (field: Field, label: string): Promise<LabelOption | null> =>
+      (await actions.addFieldOption(field, label))?.option ?? null,
+    [actions],
+  );
+
+  /**
+   * The editor props that change the field itself: "Add …" in option pickers (types with addOption) and "Edit
+   * options", for people who may edit the field. `close` closes the editor before the field settings open.
+   */
+  const fieldProps = useCallback(
+    (
+      field: Field,
+      p: { canEdit: boolean; isAdmin: boolean },
+      close: () => void,
+    ): Pick<EditorProps, 'onAddOption' | 'onEditField'> => {
+      if (!mayEditField(field, p)) return {};
+      return {
+        onAddOption: resolveFieldType(field.type)?.addOption
+          ? (label) => addOption(field, label)
+          : undefined,
+        onEditField: () => {
+          close();
+          store.getState().openSettings(field.id);
+        },
+      };
+    },
+    [addOption, store],
   );
 
   const dialog = (
@@ -86,5 +125,5 @@ export function useValueCommit(data: SheetData, ctx: Ctx, actions: SheetActions)
     />
   );
 
-  return { commit, dialog };
+  return { commit, dialog, fieldProps };
 }
