@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { DashboardScreen } from '@/components/dashboards/dashboard-screen';
+import { toPeriod } from '@/engine/dashboards';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import {
   computeDashboard,
@@ -15,10 +16,13 @@ export const metadata = { title: 'Dashboards · Compliance OS' };
 // every widget on the server from the data it needs; editors add, move, remove and rename through the commands.
 export default async function DashboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ org: string; dashboardId: string }>;
+  searchParams: Promise<{ months?: string }>;
 }) {
   const { org, dashboardId } = await params;
+  const months = toPeriod((await searchParams).months);
   const { workspace, supabase, role, user } = await requireMember(org);
   const list = await listDashboards(supabase, workspace.id);
   const dashboard = list.find((d) => d.id === dashboardId);
@@ -26,12 +30,18 @@ export default async function DashboardPage({
   const canEdit = isEditorRole(role);
   let view: DashboardView | null = null;
   try {
-    view = await computeDashboard(supabase, workspace.id, dashboard.widgets, {
-      timeZone: workspace.time_zone,
-      userId: user.id,
-      newId,
-      isAdmin: isAdminRole(role),
-    });
+    view = await computeDashboard(
+      supabase,
+      workspace.id,
+      dashboard.widgets,
+      {
+        timeZone: workspace.time_zone,
+        userId: user.id,
+        newId,
+        isAdmin: isAdminRole(role),
+      },
+      months,
+    );
   } catch {
     view = null;
   }
@@ -42,6 +52,7 @@ export default async function DashboardPage({
       dashboards={list.map((d) => ({ id: d.id, name: d.name }))}
       dashboard={dashboard}
       view={view}
+      months={months}
       canEdit={canEdit}
       editor={
         metas
