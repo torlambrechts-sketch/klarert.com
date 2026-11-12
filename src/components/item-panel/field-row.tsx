@@ -58,8 +58,9 @@ export function FieldRow({
         <span className="flex items-center gap-1">
           <span className="truncate">{field.name}</span>
           {field.required ? (
-            <span className="text-crit" aria-label="required">
-              *
+            <span className="text-crit">
+              <span aria-hidden>*</span>
+              <span className="sr-only">required</span>
             </span>
           ) : null}
           {field.locked ? (

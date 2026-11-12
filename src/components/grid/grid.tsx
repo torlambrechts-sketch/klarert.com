@@ -22,7 +22,7 @@ import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { compareItems } from '@/engine/values';
 import { fieldUI } from '@/components/fields/registry';
-import { cellValue, colorVar, TextEditor } from '@/components/fields/shared';
+import { cellValue, colorVar, solidVar, TextEditor } from '@/components/fields/shared';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -589,14 +589,18 @@ function Sticky({
   color,
   children,
   className,
+  role = 'gridcell',
 }: {
   width: number;
   color: string;
   children?: React.ReactNode;
   className?: string;
+  /** Rows own only cells (ARIA grid): the sticky part is a cell of its own, or none when it wraps the name cell. */
+  role?: 'gridcell' | 'columnheader' | 'none';
 }) {
   return (
     <div
+      role={role}
       className={cn(
         'border-line sticky left-0 z-[2] flex shrink-0 items-center border-r border-b bg-white',
         className,
@@ -635,6 +639,7 @@ function GroupRow({ row, stickyW }: RowProps & { row: Extract<GridRow, { kind: '
   return (
     <div
       ref={drop.setNodeRef}
+      role="gridcell"
       className={cn('sticky left-0 flex items-end', drop.isOver && 'bg-sel')}
       style={{ width: `min(100%, ${stickyW + 400}px)` }}
     >
@@ -650,7 +655,7 @@ function GroupRow({ row, stickyW }: RowProps & { row: Extract<GridRow, { kind: '
           ) : (
             <ChevronDown className="size-4" aria-hidden />
           )}
-          <span className="text-[15px] font-bold" style={{ color: colorVar(row.group.color) }}>
+          <span className="text-[15px] font-bold" style={{ color: solidVar(row.group.color) }}>
             {row.group.name}
           </span>
           <span className="text-muted-foreground text-xs font-semibold tabular-nums">
@@ -670,7 +675,7 @@ function HeaderRow(p: RowProps & { row: Extract<GridRow, { kind: 'header' }> }) 
   const [pickerOpen, setPickerOpen] = useState(false);
   return (
     <>
-      <Sticky width={p.stickyW} color={row.group.color} className="bg-soft">
+      <Sticky width={p.stickyW} color={row.group.color} className="bg-soft" role="columnheader">
         {p.canEdit ? (
           <span className="flex w-8 shrink-0 justify-center">
             <input
@@ -690,7 +695,6 @@ function HeaderRow(p: RowProps & { row: Extract<GridRow, { kind: 'header' }> }) 
           </span>
         ) : null}
         <span
-          role="columnheader"
           className="flex-1 truncate px-2 text-xs font-semibold"
           style={{ paddingLeft: p.canEdit ? 28 : 8 }}
         >
@@ -702,6 +706,7 @@ function HeaderRow(p: RowProps & { row: Extract<GridRow, { kind: 'header' }> }) 
           return (
             <div
               key="__add"
+              role="columnheader"
               className="border-line bg-soft absolute top-0 flex h-full items-center justify-center border-b"
               style={{ left: vc.start, width: vc.size }}
             >
@@ -802,13 +807,22 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<GridRow, { ki
       <Sticky
         width={p.stickyW}
         color={row.group.color}
+        role="none"
         className={cn(
           isSelected && 'bg-sel',
           drop.isOver && 'shadow-[inset_0_2px_0_var(--focus)]',
           drag.isDragging && 'opacity-40',
         )}
       >
-        <div ref={drop.setNodeRef} className="flex h-full w-full items-center">
+        {/* the name cell holds the row's checkbox and drag handle too (rows own only cells) */}
+        <div
+          ref={drop.setNodeRef}
+          id={cellId(item.id, 'name')}
+          role="gridcell"
+          aria-selected={inRange(0)}
+          aria-readonly={!editable || undefined}
+          className="flex h-full w-full items-center"
+        >
           <span className="flex w-8 shrink-0 items-center justify-center">
             {p.canEdit ? (
               <input
@@ -838,10 +852,6 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<GridRow, { ki
             ) : null}
           </span>
           <div
-            id={cellId(item.id, 'name')}
-            role="gridcell"
-            aria-selected={inRange(0)}
-            aria-readonly={!editable || undefined}
             data-cell={`${item.id}|name`}
             onMouseDown={p.onMouseDown}
             onDoubleClick={p.onDoubleClick}

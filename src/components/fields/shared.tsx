@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 const LIGHT = new Set(['grey', 'yellow']);
 
 export const colorVar = (color: string) => `var(--label-${color}, var(--label-grey))`;
+/** A label colour as a fill behind white text: darker where the label colour is short of 4.5:1. */
+export const solidVar = (color: string) => `var(--solid-${color}, ${colorVar(color)})`;
 
 /** Red and orange options that are not done need action: solid with "!" (docs/05 §3.1). */
 export const actionNeeded = (o: LabelOption) =>
@@ -43,8 +45,8 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
       style={
         solid
           ? {
-              background: colorVar(option.color),
-              borderColor: colorVar(option.color),
+              background: solidVar(option.color),
+              borderColor: solidVar(option.color),
               color: '#fff',
             }
           : {
@@ -69,7 +71,10 @@ export function Block({ option }: { option: LabelOption }) {
   return (
     <span
       className="absolute inset-0 flex items-center justify-center gap-1 px-2 text-[13px] font-semibold"
-      style={{ background: colorVar(option.color), color: light ? 'var(--ink)' : '#fff' }}
+      style={{
+        background: light ? colorVar(option.color) : solidVar(option.color),
+        color: light ? 'var(--ink)' : '#fff',
+      }}
     >
       {actionNeeded(option) ? <Bang /> : null}
       {option.done ? <Check className="size-3.5 shrink-0" aria-hidden /> : null}
@@ -86,9 +91,15 @@ export function Avatar({ id, ctx, size = 24 }: { id: string; ctx: Ctx; size?: nu
     <span
       title={p?.name ?? 'Former member'}
       className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-white"
-      style={{ width: size, height: size, background: colorVar(p?.color ?? 'grey') }}
+      style={{ width: size, height: size, background: solidVar(p?.color ?? 'dark') }}
     >
-      <span aria-hidden>{p?.initials ?? '?'}</span>
+      {/* initials as generated content: decoration only, so the name read out (and matched by "label in name")
+          is the person's name */}
+      <span
+        aria-hidden
+        data-initials={p?.initials ?? '?'}
+        className="before:content-[attr(data-initials)]"
+      />
       <span className="sr-only">{p?.name ?? 'Former member'}</span>
     </span>
   );
