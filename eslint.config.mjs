@@ -8,6 +8,7 @@ const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta
 const eslintConfig = [
   {
     ignores: [
+      '.claude/**',
       'node_modules/**',
       '.next/**',
       'out/**',
