@@ -272,25 +272,36 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
     .getByRole('listbox', { name: 'Owner' })
     .getByRole('option', { name: /Tom Kirby/ })
     .click();
+  // each edit waits for the server's answer, so step 7 counts the activity entries of settled writes
+  let saved = nextAnswer(page);
   await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await saved;
   await expect(p.getByRole('button', { name: /^Edit Owner: .*Tom Kirby/ })).toBeVisible();
   await popoverGone(page);
   await p.getByRole('button', { name: /^Edit Source/ }).click();
+  saved = nextAnswer(page);
   await page.getByRole('option', { name: 'Customer complaint' }).click();
+  await saved;
   await expect(p.getByRole('button', { name: 'Edit Source: Customer complaint' })).toBeVisible();
   await popoverGone(page);
   await p.getByRole('button', { name: /^Edit Priority/ }).click();
+  saved = nextAnswer(page);
   await page.getByRole('option', { name: 'Medium' }).click();
+  await saved;
   await expect(p.getByRole('button', { name: /^Edit Priority: Medium/ })).toBeVisible();
   await popoverGone(page);
   const due = isoIn(5);
   await p.getByRole('button', { name: /^Edit Due date/ }).click();
   await page.getByRole('textbox', { name: 'Due date' }).fill(ukDate(due));
+  saved = nextAnswer(page);
   await page.keyboard.press('Enter');
+  await saved;
   await expect(p.getByRole('button', { name: /^Edit Due date: / })).toContainText('in 5 days');
   await popoverGone(page);
   await p.getByRole('button', { name: /^Edit Risk/ }).click();
+  saved = nextAnswer(page);
   await page.getByRole('button', { name: /^Likelihood 3, impact 3: 9/ }).click();
+  await saved;
   await expect(p.getByRole('button', { name: /^Edit Risk: 9/ })).toBeVisible();
   await popoverGone(page);
   // 9 + (30 − 5) / 3 = 17.33 → 17
