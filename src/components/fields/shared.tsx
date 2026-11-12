@@ -84,6 +84,18 @@ export function Block({
   option: LabelOption;
   density: 'grid' | 'list' | 'table';
 }) {
+  if (density === 'table')
+    // monday-style: the option fills the whole cell, white text on the option's solid colour
+    return (
+      <span
+        className="absolute inset-px flex min-w-0 items-center justify-center gap-1.5 px-2 text-[14px] font-medium text-white"
+        style={{ background: solidVar(option.color) }}
+      >
+        <OptionMarks option={option}>
+          <span className="truncate">{option.label}</span>
+        </OptionMarks>
+      </span>
+    );
   return (
     <span
       data-pill
