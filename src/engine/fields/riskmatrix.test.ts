@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { contract } from '../testing/contract';
 import { makeCtx } from '../testing/fixtures';
-import { riskLevel, riskmatrix } from './riskmatrix';
+import { riskLevel, riskmatrix, riskStep } from './riskmatrix';
 
 describe('riskmatrix', () => {
   contract(riskmatrix, {
@@ -67,5 +67,9 @@ describe('riskmatrix', () => {
     expect(m.cell(null)).toBeNull();
     expect(m.level(1, 1, cfg)).toEqual({ rank: 1, label: 'Low' });
     expect(m.level(4, 5, cfg)).toEqual({ rank: 4, label: 'Critical' });
+  });
+
+  it('maps each level to a step of the Table meter', () => {
+    expect((['Low', 'Medium', 'High', 'Critical'] as const).map(riskStep)).toEqual([1, 2, 3, 4]);
   });
 });

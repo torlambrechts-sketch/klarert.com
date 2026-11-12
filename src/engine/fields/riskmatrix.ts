@@ -23,6 +23,11 @@ export function riskLevel(score: number, bands: readonly number[]): RiskLevel {
   return 'Critical';
 }
 
+const LEVELS: readonly RiskLevel[] = ['Low', 'Medium', 'High', 'Critical'];
+
+/** The level as a step 1–4 of the Table's meter (Low = 1 … Critical = 4). */
+export const riskStep = (level: RiskLevel) => (LEVELS.indexOf(level) + 1) as 1 | 2 | 3 | 4;
+
 const inRange = (n: unknown, size: number): n is number =>
   typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= size;
 
