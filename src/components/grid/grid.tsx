@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -77,6 +77,18 @@ const explainOnly = (f: Field) => {
   const s = storageOf(f);
   return s === 'computed' || s === 'files' || s === 'none';
 };
+
+/**
+ * A callback that keeps its identity across renders and always calls the latest `fn`. Rows are memoised: handlers
+ * that changed identity on every render made every visible row render again on every scrolled frame (M10 perf).
+ */
+function useStableEvent<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
+  const ref = useRef(fn);
+  useLayoutEffect(() => {
+    ref.current = fn;
+  });
+  return useCallback((...args: A) => ref.current(...args), []);
+}
 
 export function Grid({
   data,
@@ -177,7 +189,16 @@ export function Grid({
   };
   const activePos = pos(active);
   const anchorPos = pos(anchor) ?? activePos;
-  const range = activePos && anchorPos ? rangeOf(anchorPos, activePos) : null;
+  // the same range object while the selection stays put, so memoised rows do not render again
+  const rangeKey =
+    activePos && anchorPos
+      ? `${anchorPos.row},${anchorPos.col},${activePos.row},${activePos.col}`
+      : '';
+  const range = useMemo(() => {
+    if (!rangeKey) return null;
+    const [ar, ac, br, bc] = rangeKey.split(',').map(Number) as [number, number, number, number];
+    return rangeOf({ row: ar, col: ac }, { row: br, col: bc });
+  }, [rangeKey]);
 
   const focusGrid = () => scrollRef.current?.focus({ preventScroll: true });
   const refAt = (p: { row: number; col: number }): CellRef => ({
@@ -441,6 +462,17 @@ export function Grid({
 
   // ───────────── render ─────────────
 
+  const onMouseDownStable = useStableEvent(onMouseDown);
+  const onDoubleClickStable = useStableEvent(onDoubleClick);
+  const selectRowStable = useStableEvent(selectRow);
+  const addItemStable = useStableEvent(addItem);
+  const commitStable = useStableEvent(commit);
+  const openItemStable = useStableEvent(onOpenItem);
+  const cancelEditStable = useStableEvent(() => {
+    store.getState().edit(null);
+    focusGrid();
+  });
+
   const vRows = rowV.getVirtualItems();
   const vCols = colV.getVirtualItems();
   const totalW = colV.getTotalSize();
@@ -516,18 +548,15 @@ export function Grid({
                   dragDisabled={dragDisabled}
                   allFields={data.fields}
                   actions={actions}
-                  onMouseDown={onMouseDown}
-                  onDoubleClick={onDoubleClick}
-                  onSelectRow={selectRow}
-                  onAdd={addItem}
+                  onMouseDown={onMouseDownStable}
+                  onDoubleClick={onDoubleClickStable}
+                  onSelectRow={selectRowStable}
+                  onAdd={addItemStable}
                   addRef={row.key === firstAddGroup ? firstAddRef : undefined}
                   groupItems={layout.byGroup}
-                  onCommit={commit}
-                  onOpenItem={onOpenItem}
-                  onCancelEdit={() => {
-                    store.getState().edit(null);
-                    focusGrid();
-                  }}
+                  onCommit={commitStable}
+                  onOpenItem={openItemStable}
+                  onCancelEdit={cancelEditStable}
                   editingItem={editingItem}
                 />
               </div>
