@@ -18,6 +18,13 @@ async function trackerSheet(page: Page, name = `Views ${unique()}`) {
   await page.goto('/meridian/s/new?start=tracker');
   await page.getByLabel('Sheet name').fill(name);
   await expect(page.getByLabel('ID prefix')).not.toHaveValue('');
+  // a random prefix: names here share their initials, so suggested prefixes collide between parallel tests
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const prefix = Array.from(
+    { length: 5 },
+    () => letters[Math.floor(Math.random() * letters.length)],
+  ).join('');
+  await page.getByLabel('ID prefix').fill(`${prefix}-`);
   await page.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page).toHaveURL(/\/meridian\/s\/[0-9a-f-]{36}$/);
   const url = page.url();

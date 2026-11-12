@@ -128,6 +128,8 @@ test.describe('desktop', () => {
     await dialog.getByRole('button', { name: /^Edit Status/ }).click();
     await page.getByRole('option', { name: 'Working on it' }).click();
     await expect(dialog.getByRole('button', { name: 'Edit Status: Working on it' })).toBeVisible();
+    // the status popover stays the top layer until its exit animation ends, taking clicks and Esc meanwhile
+    await expect(page.getByRole('dialog')).toHaveCount(1);
     await dialog.getByRole('button', { name: 'Rename' }).click();
     await dialog.getByRole('textbox', { name: 'Task name' }).fill('Second thing, renamed');
     await page.keyboard.press('Enter');
