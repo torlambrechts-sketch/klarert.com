@@ -4,35 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  Archive,
-  Columns3,
-  FolderInput,
-  Lock,
-  LockOpen,
-  PenSquare,
-  Plus,
-  Settings,
-  X,
-} from 'lucide-react';
+import { Link2, Plus, Settings } from 'lucide-react';
 import { toast } from 'sonner';
-import { resolveFieldType } from '@/engine/fields/resolve';
 import { sheetCtx } from '@/engine/sheet-data';
 import type { SheetData } from '@/engine/sheet-data';
-import type { Ctx, Field, Item } from '@/engine/types';
+import type { Ctx, Item } from '@/engine/types';
 import { CLIENT_FILTER_LIMIT, groupRows } from '@/engine/views/apply';
-import { fieldUI } from '@/components/fields/registry';
-import { inputClass } from '@/components/fields/shared';
 import type { ConfigEnv } from '@/components/fields/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SheetAutomations } from '@/components/automations/sheet-automations';
 import { ItemPanel } from '@/components/item-panel/item-panel';
 import { CalendarView } from '@/components/views/calendar-view';
@@ -49,7 +29,14 @@ import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
 import { GroupSelect } from '@/components/table/group-select';
 import { TableView } from '@/components/table/table-view';
-import { positionsAtEnd } from '@/components/table/table-model';
+import {
+  ColumnsMenu,
+  DensityToggle,
+  OwnerFilter,
+  StatusFilter,
+  TableActions,
+  useDensityPreference,
+} from '@/components/table/table-actions';
 import { createGridStore, GridStoreContext, useGrid, useGridStore } from './grid-store';
 import {
   useRelatedRealtime,
@@ -60,14 +47,17 @@ import {
   type SheetActions,
 } from './use-sheet';
 
-// The sheet page's client part: data (TanStack Query + realtime), the view tabs and the header actions (search,
-// filters, sort, columns), the active view (Table, Kanban, Calendar, Form), the bulk bar for selected rows, the
-// item panel, field settings and the add-field picker.
+// The sheet page's client part: data (TanStack Query + realtime); the page header (crumb, title, description, Share
+// and New item); the view tabs; one toolbar row (search, Actions with the bulk actions for selected rows, groups,
+// status and owner filters, sort, filter, columns, row density, automations); the active view (Table, Kanban,
+// Calendar, Form), the item panel, field settings and the add-field picker.
 
 export interface SheetViewProps {
   org: string;
   sheetId: string;
   sheetName: string;
+  /** sheets.description, shown under the title when set. */
+  description?: string | null;
   folderName: string | null;
   archived: boolean;
   userId: string;
@@ -169,6 +159,7 @@ function SheetBody(props: SheetViewProps) {
   const [q, setQ] = useSearchParam();
   const [addTick, setAddTick] = useState(0);
   const [newItem, setNewItem] = useState<NewItemRequest | null>(null);
+  useDensityPreference();
 
   // hidden columns belong to the view: view → grid store, and column menu → view
   const fields = data?.fields;
@@ -203,43 +194,60 @@ function SheetBody(props: SheetViewProps) {
   );
 
   const hiddenCount = data ? data.fields.filter((f) => hidden.has(f.id)).length : 0;
-  const total = data?.items.length ?? 0;
   const tabular = active.type === 'table';
   const filterable = active.type !== 'form';
+  const inScope = useMemo(
+    () =>
+      data
+        ? props.onlyGroup
+          ? data.items.filter((i) => i.groupId === props.onlyGroup)
+          : data.items
+        : [],
+    [data, props.onlyGroup],
+  );
+  const share = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast('Link copied.');
+    } catch {
+      toast.error('The link could not be copied. Copy it from the address bar.');
+    }
+  };
+  const itemLabel = data?.sheet.itemLabel.toLowerCase() ?? 'item';
 
   return (
     <main className="flex h-[calc(100dvh-48px)] min-w-0 flex-col px-4 pt-5 pb-3 max-[759px]:h-[calc(100dvh-112px)] sm:px-7 sm:pt-[22px]">
       <PageHeader
         crumb={
-          props.folderName ? (
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="truncate">{props.folderName}</span>
-              <span aria-hidden className="text-line-strong">
-                /
-              </span>
-              <span className="text-ink truncate">{sheetName}</span>
-            </span>
-          ) : null
+          <span className="flex min-w-0 items-center gap-2">
+            {props.folderName ? (
+              <>
+                <span className="truncate">{props.folderName}</span>
+                <span aria-hidden className="text-line-strong">
+                  /
+                </span>
+              </>
+            ) : null}
+            <span className="text-ink truncate">{sheetName}</span>
+          </span>
         }
         title={sheetName}
         description={
-          <>
-            {active.name} ·{' '}
-            {data
-              ? total === 1
-                ? '1 item'
-                : `${total.toLocaleString('en-GB')} items`
-              : 'loading items'}
-            {realtime === 'offline' && online ? ' · live updates paused, reconnecting' : ''}
-          </>
+          props.description || (realtime === 'offline' && online) ? (
+            <>
+              {props.description}
+              {realtime === 'offline' && online ? (
+                <span className="text-muted-foreground block text-[13px]">
+                  Live updates paused, reconnecting.
+                </span>
+              ) : null}
+            </>
+          ) : undefined
         }
         actions={
           <>
-            <ViewMenu views={views} canEdit={canEdit} />
-            <Button asChild variant="outline" size="icon">
-              <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
-                <Settings aria-hidden />
-              </Link>
+            <Button type="button" variant="outline" onClick={() => void share()}>
+              <Link2 aria-hidden /> Share
             </Button>
             {canEdit && active.type !== 'form' ? (
               <Button
@@ -247,18 +255,41 @@ function SheetBody(props: SheetViewProps) {
                 onClick={() => (tabular ? setAddTick((t) => t + 1) : setNewItem({}))}
                 disabled={!data}
               >
-                <Plus aria-hidden /> New {data?.sheet.itemLabel.toLowerCase() ?? 'item'}
+                <Plus aria-hidden /> New {itemLabel}
               </Button>
             ) : null}
           </>
         }
       />
-      <ViewTabs views={views} fields={data?.fields ?? []} />
-      <div className="my-3.5 flex flex-wrap items-center gap-2">
+      <ViewTabs
+        views={views}
+        fields={data?.fields ?? []}
+        end={
+          <>
+            <ViewMenu views={views} canEdit={canEdit} />
+            <Button asChild variant="ghost" size="icon-sm">
+              <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
+                <Settings aria-hidden />
+              </Link>
+            </Button>
+          </>
+        }
+      />
+      <div className="mt-4 mb-3.5 flex flex-wrap items-center gap-2">
         {filterable ? (
           <div className="flex min-w-0 flex-[1_1_260px] [&>*]:w-full">
             <SheetSearch value={q} onChange={setQ} />
           </div>
+        ) : null}
+        {data && env && tabular ? (
+          <TableActions
+            actions={actions}
+            fields={data.fields}
+            env={env}
+            allItems={data.items}
+            canEdit={canEdit}
+            isAdmin={isAdmin}
+          />
         ) : null}
         {data ? (
           <GroupSelect
@@ -269,8 +300,15 @@ function SheetBody(props: SheetViewProps) {
             archived={props.archived}
           />
         ) : null}
+        {data && ctx && tabular ? (
+          <>
+            <StatusFilter items={inScope} ctx={ctx} />
+            <OwnerFilter items={inScope} ctx={ctx} />
+          </>
+        ) : null}
         {data && ctx && filterable ? (
           <>
+            <SortButton config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
             <FilterButton
               config={config}
               setConfig={setConfig}
@@ -278,10 +316,14 @@ function SheetBody(props: SheetViewProps) {
               ctx={ctx}
               computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
             />
-            <SortButton config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
           </>
         ) : null}
-        {data && tabular ? <ColumnsMenu fields={data.fields} hiddenCount={hiddenCount} /> : null}
+        {data && tabular ? (
+          <>
+            <ColumnsMenu fields={data.fields} hiddenCount={hiddenCount} />
+            <DensityToggle />
+          </>
+        ) : null}
         <SheetAutomations
           org={org}
           sheetId={sheetId}
@@ -497,15 +539,6 @@ function ViewBody({
         items={data.items}
         actions={actions}
       />
-      {canEdit && selected.size > 0 && active.type === 'table' ? (
-        <BulkBar
-          actions={actions}
-          fields={data.fields}
-          env={env}
-          allItems={data.items}
-          isAdmin={isAdmin}
-        />
-      ) : null}
       {panelItem ? (
         <ItemPanel
           org={org}
@@ -563,263 +596,5 @@ function GridSkeleton() {
         />
       ))}
     </div>
-  );
-}
-
-function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCount: number }) {
-  const store = useGridStore();
-  const hidden = useGrid((s) => s.hidden);
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="outline">
-          <Columns3 aria-hidden /> Columns{hiddenCount ? ` · ${hiddenCount} hidden` : ''}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-64">
-        <fieldset className="flex flex-col gap-1">
-          <legend className="mb-1 text-sm font-semibold">Show columns</legend>
-          {fields.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No fields yet.</p>
-          ) : null}
-          <div className="flex max-h-72 flex-col gap-0.5 overflow-auto">
-            {fields.map((f) => {
-              const Icon = fieldUI(f.type).icon;
-              return (
-                <label
-                  key={f.id}
-                  className="hover:bg-soft flex items-center gap-2 rounded px-1 py-0.5 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={!hidden.has(f.id)}
-                    onChange={(e) => store.getState().setHidden(f.id, !e.target.checked)}
-                  />
-                  <Icon className="text-muted-foreground size-3.5" aria-hidden />
-                  {f.name}
-                </label>
-              );
-            })}
-          </div>
-          <p className="text-muted-foreground pt-1 text-xs">Hidden columns belong to this view.</p>
-        </fieldset>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function BulkBar({
-  actions,
-  fields,
-  env,
-  allItems,
-  isAdmin,
-}: {
-  actions: SheetActions;
-  fields: Field[];
-  env: ConfigEnv;
-  allItems: Item[];
-  isAdmin: boolean;
-}) {
-  const store = useGridStore();
-  const selected = useGrid((s) => s.selected);
-  const [field, setField] = useState<Field | null>(null);
-  const [locking, setLocking] = useState(false);
-  const [reason, setReason] = useState('');
-  const data = env;
-  const ids = [...selected];
-  const items = allItems.filter((i) => selected.has(i.id));
-  const groups = [...data.ctx.groups.values()].sort((a, b) => (a.position < b.position ? -1 : 1));
-  const valueFields = fields.filter(
-    (f) => resolveFieldType(f.type)?.storage === 'values' && !fieldUI(f.type).automationOnly,
-  );
-  const n = selected.size;
-  return (
-    <div
-      role="region"
-      aria-label="Selected items"
-      className="bg-ink fixed bottom-4 left-1/2 z-40 flex max-w-[calc(100vw-24px)] -translate-x-1/2 flex-wrap items-center gap-2 rounded-lg px-3 py-2 text-white shadow-xl max-[759px]:bottom-[76px]"
-    >
-      <span className="text-sm font-semibold">{n === 1 ? '1 selected' : `${n} selected`}</span>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="secondary">
-            <PenSquare aria-hidden /> Set a field
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="max-h-72">
-          {valueFields.length === 0 ? (
-            <DropdownMenuItem disabled>No fields to set</DropdownMenuItem>
-          ) : null}
-          {valueFields.map((f) => (
-            <DropdownMenuItem key={f.id} onSelect={() => setField(f)}>
-              {f.name}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="secondary">
-            <FolderInput aria-hidden /> Move to group
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          {groups.map((g) => (
-            <DropdownMenuItem
-              key={g.id}
-              onSelect={() => {
-                const target = items.filter((i) => i.groupId !== g.id);
-                const existing = allItems
-                  .filter((i) => i.groupId === g.id && !selected.has(i.id))
-                  .sort((a, b) => (a.position < b.position ? -1 : a.position > b.position ? 1 : 0));
-                const keys = positionsAtEnd(existing, target.length);
-                void actions.moveItems(
-                  target.map((it, i) => ({ itemId: it.id, groupId: g.id, position: keys[i]! })),
-                  `${target.length} ${target.length === 1 ? 'item' : 'items'} moved to ${g.name}.`,
-                );
-              }}
-            >
-              {g.name}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <Button
-        size="sm"
-        variant="secondary"
-        onClick={() => {
-          store.getState().setSelected([]);
-          void actions.setArchived(ids, true);
-        }}
-      >
-        <Archive aria-hidden /> Archive
-      </Button>
-      {isAdmin ? (
-        items.every((i) => i.locked) ? (
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => items.forEach((it) => void actions.lockItem(it, false))}
-          >
-            <LockOpen aria-hidden /> Unlock
-          </Button>
-        ) : (
-          <Button size="sm" variant="secondary" onClick={() => setLocking(true)}>
-            <Lock aria-hidden /> Lock
-          </Button>
-        )
-      ) : null}
-      <Dialog open={locking} onOpenChange={setLocking}>
-        <DialogContent>
-          <DialogTitle className="text-lg font-bold">
-            Lock {n === 1 ? 'this item' : `${n} items`}
-          </DialogTitle>
-          <DialogDescription className="text-muted-foreground text-sm">
-            Only owners and admins can change a locked item. Everyone sees the lock and the reason.
-          </DialogDescription>
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setLocking(false);
-              items
-                .filter((i) => !i.locked)
-                .forEach((it) => void actions.lockItem(it, true, reason.trim()));
-              setReason('');
-            }}
-          >
-            <label className="flex flex-col gap-1 text-sm font-semibold">
-              Reason
-              <input
-                className={inputClass}
-                maxLength={200}
-                value={reason}
-                placeholder="Approved by QA"
-                onChange={(e) => setReason(e.target.value)}
-              />
-            </label>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setLocking(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Lock</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-      <Button
-        size="icon-sm"
-        variant="ghost"
-        className="text-white hover:bg-white/15 hover:text-white"
-        aria-label="Clear selection"
-        onClick={() => store.getState().setSelected([])}
-      >
-        <X aria-hidden />
-      </Button>
-      <BulkEditor
-        field={field}
-        env={env}
-        onClose={() => setField(null)}
-        onCommit={(f, raw) => {
-          setField(null);
-          const def = resolveFieldType(f.type)!;
-          const value =
-            raw === null || raw === undefined ? null : def.normalize(raw, f.config, env.ctx);
-          if (raw !== null && raw !== undefined && value === null)
-            return toast.error(`This is not a valid ${f.name.toLowerCase()}.`);
-          void actions.bulkSet(
-            ids.map((itemId) => ({ itemId, values: { [f.id]: value as never } })),
-            { message: `${f.name} set on ${ids.length} ${ids.length === 1 ? 'item' : 'items'}.` },
-          );
-        }}
-      />
-    </div>
-  );
-}
-
-function BulkEditor({
-  field,
-  env,
-  onClose,
-  onCommit,
-}: {
-  field: Field | null;
-  env: ConfigEnv;
-  onClose(): void;
-  onCommit(f: Field, raw: unknown): void;
-}) {
-  if (!field) return null;
-  const ui = fieldUI(field.type);
-  const blank = {
-    id: 'bulk',
-    sheetId: env.sheet.id,
-    groupId: '',
-    seq: 0,
-    displayId: '',
-    name: '',
-    values: {},
-    position: 'a0',
-    locked: false,
-    createdAt: env.ctx.now.toISOString(),
-    updatedAt: env.ctx.now.toISOString(),
-  };
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="w-[min(420px,calc(100vw-32px))]">
-        <DialogTitle className="text-lg font-bold">Set {field.name}</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-sm">
-          The value is set on every selected item.
-        </DialogDescription>
-        <ui.Editor
-          value={null}
-          field={field}
-          item={blank}
-          ctx={env.ctx}
-          onCommit={(v) => onCommit(field, v)}
-          onCancel={onClose}
-        />
-      </DialogContent>
-    </Dialog>
   );
 }

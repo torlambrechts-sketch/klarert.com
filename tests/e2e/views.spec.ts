@@ -114,8 +114,12 @@ test('Table view: editing, add a field, locks, hint and all rows reachable', asy
   await table(page).evaluate((el) => (el.scrollTop = 0));
   await expect(listRow(page, 'Row 01')).toBeVisible();
 
-  // one header row: the item label, then the fields in field order
-  const headers = table(page).getByRole('columnheader');
+  // each group card starts with a header row: the item label, then the fields in field order
+  const headers = table(page)
+    .getByRole('row')
+    .filter({ has: page.getByRole('columnheader') })
+    .first()
+    .getByRole('columnheader');
   await expect(headers).toHaveText([
     'Task',
     'Owner',
@@ -148,18 +152,12 @@ test('Table view: editing, add a field, locks, hint and all rows reachable', asy
   );
 
   // "+" adds a field
-  await page.getByRole('button', { name: 'Add a field' }).click();
+  await page.getByRole('button', { name: 'Add a field' }).first().click();
   await page.getByRole('button', { name: /^Text/ }).first().click();
   await page.getByRole('button', { name: 'Add field' }).click();
   await expect(headers.filter({ hasText: /^Text$/ })).toBeVisible();
 
-  // the hint goes and stays gone
-  await expect(
-    page.getByText('Click a cell, then click again or press Enter to edit.'),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Dismiss hint' }).click();
-  await page.reload();
-  await expect(listRow(page, 'Row 01')).toBeVisible();
+  // no hint line above the table
   await expect(
     page.getByText('Click a cell, then click again or press Enter to edit.'),
   ).toHaveCount(0);
@@ -422,7 +420,7 @@ test('filters, sort and search', async ({ page }, info) => {
   await expect.poll(names).toEqual(['Pump A seal', 'Pump B seal', 'Valve check', 'Guard rail']);
 
   // sort by name, Z → A
-  await page.getByRole('button', { name: 'Sort', exact: true }).click();
+  await page.getByRole('button', { name: 'Default order', exact: true }).click();
   await page.getByRole('button', { name: 'Add a sort' }).click();
   await page.getByLabel('Sort level 1 field').selectOption({ label: 'Name' });
   await page.getByLabel('Sort level 1 direction').selectOption({ label: 'Z → A, high → low' });

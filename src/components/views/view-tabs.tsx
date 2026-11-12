@@ -33,8 +33,9 @@ import {
 import { cn } from '@/lib/utils';
 import type { ActiveView, ViewsState } from './use-views';
 
-// The view tab bar (docs/05 §3, FR-26): Table, saved views, then "More ▾" with Kanban, Calendar, Form and
-// "+ New view"; and the active view's menu (rename, duplicate, delete, save as a view, make default).
+// The view tab bar (docs/05 §3, FR-26): icon and label tabs with an ink underline on the active one: Table, Board
+// (Kanban), Calendar, Form, the other saved views, then "More ▾" with "+ New view"; the page's view options sit at the
+// right end. And the active view's menu (rename, duplicate, delete, save as a view, make default).
 
 const ICONS: Record<ViewType, typeof Table2> = {
   table: Table2,
@@ -68,7 +69,8 @@ function TabLink({
         open(view.id);
       }}
       className={cn(
-        'relative flex h-10 items-center gap-[7px] px-px text-[14px] whitespace-nowrap outline-offset-[-2px]',
+        // the focus ring shows for keyboard focus only (focus-visible), never as a box around the active tab
+        'focus-visible:outline-focus relative flex h-10 items-center gap-[7px] rounded-sm px-px text-[14px] whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
         active
           ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-sm after:bg-[var(--ink)]'
           : 'text-muted-foreground hover:text-ink',
@@ -87,16 +89,33 @@ function TabLink({
   );
 }
 
-export function ViewTabs({ views, fields }: { views: ViewsState; fields: Field[] }) {
+/** The tab label of a built-in view type ("Board" for Kanban); saved views keep their name. */
+const tabLabel = (v: ActiveView) => (v.saved ? v.name : v.type === 'kanban' ? 'Board' : v.name);
+
+export function ViewTabs({
+  views,
+  fields,
+  end,
+}: {
+  views: ViewsState;
+  fields: Field[];
+  /** Controls at the right end of the tab bar (view options, settings). */
+  end?: React.ReactNode;
+}) {
   const { tabs, active, open, defaultViewId } = views;
   const [newOpen, setNewOpen] = useState(false);
-  const shown = [tabs.table, ...tabs.others];
+  const builtins = [tabs.table, tabs.more.kanban, tabs.more.calendar, tabs.more.form];
+  const others = tabs.others.filter((v) => !builtins.some((b) => b.id === v.id));
+  const shown = [...builtins, ...others];
   const extra = shown.some((v) => v.id === active.id) ? null : active;
   const isDefault = (v: ActiveView) =>
     v.id === defaultViewId || (v === tabs.table && defaultViewId === 'table');
   return (
-    <nav aria-label="Views" className="border-line mt-[18px] min-w-0 border-b">
-      <ul className="m-0 flex [scrollbar-width:none] list-none items-center gap-[22px] overflow-x-auto p-0">
+    <nav
+      aria-label="Views"
+      className="border-line mt-[18px] flex min-w-0 items-center gap-2 border-b"
+    >
+      <ul className="m-0 flex min-w-0 flex-1 [scrollbar-width:none] list-none items-center gap-[22px] overflow-x-auto p-0">
         <li>
           <TabLink
             view={tabs.table}
@@ -106,7 +125,18 @@ export function ViewTabs({ views, fields }: { views: ViewsState; fields: Field[]
             open={open}
           />
         </li>
-        {tabs.others.map((v) => (
+        {[tabs.more.kanban, tabs.more.calendar, tabs.more.form].map((v) => (
+          <li key={v.id}>
+            <TabLink
+              view={v}
+              label={tabLabel(v)}
+              active={active.id === v.id}
+              isDefault={isDefault(v)}
+              open={open}
+            />
+          </li>
+        ))}
+        {others.map((v) => (
           <li key={v.id}>
             <TabLink view={v} active={active.id === v.id} isDefault={isDefault(v)} open={open} />
           </li>
@@ -128,15 +158,6 @@ export function ViewTabs({ views, fields }: { views: ViewsState; fields: Field[]
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              {(['kanban', 'calendar', 'form'] as const).map((t) => {
-                const Icon = ICONS[t];
-                return (
-                  <DropdownMenuItem key={t} onSelect={() => open(tabs.more[t].id)}>
-                    <Icon aria-hidden /> {VIEW_TYPE_LABEL[t]}
-                  </DropdownMenuItem>
-                );
-              })}
-              <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setNewOpen(true)}>
                 <Plus aria-hidden /> New view
               </DropdownMenuItem>
@@ -144,6 +165,7 @@ export function ViewTabs({ views, fields }: { views: ViewsState; fields: Field[]
           </DropdownMenu>
         </li>
       </ul>
+      {end ? <div className="flex shrink-0 items-center gap-1.5 pb-1">{end}</div> : null}
       <ViewDialog
         open={newOpen}
         onClose={() => setNewOpen(false)}
