@@ -2,7 +2,7 @@
 
 import { useId } from 'react';
 import { ArrowDownUp, Filter, Plus, Search, X } from 'lucide-react';
-import { OPERATORS, kindOfKey, SPECIAL_KEYS } from '@/engine/conditions';
+import { OPERATORS, kindOfKey, OP_LABEL, SPECIAL_KEYS } from '@/engine/conditions';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { ValueKind } from '@/engine/fields/types';
 import type { Condition, Ctx, Field, Json } from '@/engine/types';
@@ -17,54 +17,7 @@ import { cn } from '@/lib/utils';
 // Filters, sort and search of a view (docs/01 FR-26, docs/03 §4): conditions use the engine's operators per value
 // kind; the field picker offers the item's name, group and id besides the sheet's fields.
 
-export const OP_LABEL: Record<string, string> = {
-  is: 'is',
-  is_not: 'is not',
-  contains: 'contains',
-  not_contains: 'does not contain',
-  starts_with: 'starts with',
-  is_empty: 'is empty',
-  is_not_empty: 'is not empty',
-  eq: 'equals',
-  neq: 'does not equal',
-  gt: 'is more than',
-  gte: 'is at least',
-  lt: 'is less than',
-  lte: 'is at most',
-  between: 'is between',
-  before: 'is before',
-  after: 'is after',
-  on_or_before: 'is on or before',
-  on_or_after: 'is on or after',
-  is_today: 'is today',
-  next_days: 'is in the next … days',
-  last_days: 'was in the last … days',
-  overdue: 'is overdue',
-  is_any_of: 'is any of',
-  is_none_of: 'is none of',
-  is_done: 'is done',
-  is_not_done: 'is not done',
-  at_least: 'is at least',
-  at_most: 'is at most',
-  has_any_of: 'has any of',
-  has_all_of: 'has all of',
-  has_none_of: 'has none of',
-  includes_any_of: 'includes any of',
-  includes_me: 'includes me',
-  excludes: 'excludes',
-  is_checked: 'is checked',
-  is_not_checked: 'is not checked',
-  has_any: 'has linked items',
-  has_none: 'has none',
-  count_gt: 'has more than … items',
-  count_lt: 'has fewer than … items',
-  has_files: 'has files',
-  freshness_is: 'freshness is',
-  expires_within: 'expires within … days',
-  is_signed: 'is signed',
-  is_not_signed: 'is not signed',
-  signed_by: 'is signed by',
-};
+export { OP_LABEL };
 
 /** Operators the builder offers (picking an item or a signer by id has no picker yet). */
 const offered = (kind: ValueKind) =>

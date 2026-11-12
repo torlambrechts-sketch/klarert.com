@@ -56,3 +56,6 @@ export const version = base<string, VersionConfig>({
   toText: (v) => v ?? '',
   compare: (a, b) => emptyLast(a, b, isBlank, compareVersions),
 });
+
+/** The raise_version action needs a version field (docs/04 §5); the builder offers only these. */
+export const isVersionField = (field: { type: string }) => field.type === version.id;

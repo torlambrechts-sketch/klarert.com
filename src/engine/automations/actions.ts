@@ -69,7 +69,7 @@ export function resolveValueToken(
 }
 
 /** How a raw value reads for the field ("Done", "11 Nov 2026", "empty"). */
-function valueLabel(field: Field, raw: Json | null, ctx: Ctx): string {
+export function valueLabel(field: Field, raw: Json | null, ctx: Ctx): string {
   if (raw === null) return 'empty';
   const def = defOf(field);
   const v = def.normalize(raw, field.config, ctx);
