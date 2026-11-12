@@ -8,7 +8,7 @@ export function ListSkeleton() {
       {[0, 1, 2].map((i) => (
         <li
           key={i}
-          className="border-line h-[76px] animate-pulse rounded-[var(--radius-card)] border bg-white"
+          className="border-line bg-background-100 h-[76px] animate-pulse rounded-lg border"
         />
       ))}
     </ul>
@@ -19,7 +19,7 @@ export function ErrorBox({ text, retry }: { text: string; retry(): void }) {
   return (
     <div
       role="alert"
-      className="border-line flex flex-col items-start gap-2 rounded-[var(--radius-card)] border bg-white p-4"
+      className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-4"
     >
       <p className="m-0 font-semibold">{text}</p>
       <Button type="button" variant="outline" onClick={retry}>

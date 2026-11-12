@@ -54,7 +54,7 @@ export function NewGroupForm({
             onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
           />
           {state && !state.ok && state.error.fieldErrors?.name ? (
-            <p className="text-crit text-sm">{state.error.fieldErrors.name}</p>
+            <p className="text-crit text-copy-13">{state.error.fieldErrors.name}</p>
           ) : null}
           <div className="flex gap-2">
             <SubmitButton size="sm" pendingText="Adding…">

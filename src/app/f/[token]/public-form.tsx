@@ -49,12 +49,12 @@ export function PublicFormView(props: {
     return (
       <section
         role="status"
-        className="border-line flex flex-col items-start gap-3 rounded-xl border bg-white p-6 shadow-xs"
+        className="border-line bg-background-100 flex flex-col items-start gap-3 rounded-xl border p-6"
       >
         <CheckCircle2 className="text-good size-6" aria-hidden />
-        <h1 className="text-[22px]">Thank you. Your answers were sent.</h1>
+        <h1 className="text-heading-24">Thank you. Your answers were sent.</h1>
         {sent.displayId ? (
-          <p className="text-sm">
+          <p className="text-copy-13">
             Reference <span className="font-mono">{sent.displayId}</span>
           </p>
         ) : null}
@@ -75,7 +75,7 @@ export function PublicFormView(props: {
   return (
     <form
       noValidate
-      className="border-line flex flex-col gap-5 rounded-xl border bg-white p-6 shadow-xs sm:p-7"
+      className="border-line bg-background-100 flex flex-col gap-5 rounded-xl border p-6 sm:p-7"
       onSubmit={async (e) => {
         e.preventDefault();
         setMessage(null);
@@ -101,9 +101,11 @@ export function PublicFormView(props: {
       }}
     >
       <header className="border-line -mx-6 -mt-6 flex flex-col gap-1.5 border-b px-6 pt-6 pb-5 sm:-mx-7 sm:-mt-7 sm:px-7 sm:pt-7">
-        <h1 className="text-[24px]">{props.title}</h1>
+        <h1 className="text-heading-24">{props.title}</h1>
         {props.description ? (
-          <p className="text-muted-foreground text-sm whitespace-pre-line">{props.description}</p>
+          <p className="text-muted-foreground text-copy-13 whitespace-pre-line">
+            {props.description}
+          </p>
         ) : null}
       </header>
       <FormFill
@@ -131,7 +133,7 @@ export function PublicFormView(props: {
         </label>
       </div>
       {message ? (
-        <p role="alert" className="text-crit text-sm">
+        <p role="alert" className="text-crit text-copy-13">
           {message}
         </p>
       ) : null}

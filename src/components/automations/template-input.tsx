@@ -102,7 +102,7 @@ export function TemplateInput({
           id={listId}
           role="listbox"
           aria-label="Template keys"
-          className="border-line absolute top-full left-0 z-20 mt-1 max-h-60 w-64 overflow-auto rounded-md border bg-white p-1 shadow-lg"
+          className="border-line bg-background-100 shadow-menu absolute top-full left-0 z-20 mt-1 max-h-60 w-64 overflow-auto rounded-lg border p-1"
         >
           {matches.map((k, i) => (
             <li
@@ -111,7 +111,7 @@ export function TemplateInput({
               role="option"
               aria-selected={i === active}
               className={cn(
-                'flex cursor-pointer items-baseline justify-between gap-2 rounded px-2 py-1 text-sm',
+                'text-label-13 flex cursor-pointer items-baseline justify-between gap-2 rounded px-2 py-1',
                 i === active && 'bg-soft',
               )}
               onMouseDown={(e) => {
@@ -119,8 +119,8 @@ export function TemplateInput({
                 insert(k.key);
               }}
             >
-              <span className="font-mono text-[12.5px]">{`{${k.key}}`}</span>
-              <span className="text-muted-foreground truncate text-xs">{k.label}</span>
+              <span className="text-label-13-mono">{`{${k.key}}`}</span>
+              <span className="text-muted-foreground text-label-12 truncate">{k.label}</span>
             </li>
           ))}
         </ul>

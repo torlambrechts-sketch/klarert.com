@@ -66,12 +66,12 @@ export default async function MyWorkPage({
       {failed || !data ? (
         <div
           role="alert"
-          className="border-line flex flex-col items-start gap-2 rounded-xl border bg-white p-5 shadow-xs"
+          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
         >
           <p className="m-0">My work could not be loaded.</p>
           <a
             href={href(bucket)}
-            className="border-line hover:bg-soft inline-flex h-9 items-center rounded-md border bg-white px-3.5 text-[13.5px] font-medium shadow-xs"
+            className="border-line hover:bg-soft bg-background-100 text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
           >
             Retry
           </a>
@@ -88,17 +88,17 @@ export default async function MyWorkPage({
                   aria-current={active ? 'page' : undefined}
                   data-testid={`kpi-${b}`}
                   className={cn(
-                    'border-line hover:border-line-strong flex flex-col gap-1.5 rounded-xl border bg-white px-5 py-[18px] shadow-xs outline-offset-2',
+                    'border-line hover:border-line-strong bg-background-100 flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2',
                     active && 'border-brand ring-brand ring-1',
                   )}
                 >
-                  <span className="text-ink flex items-center justify-between gap-1.5 text-[13.5px] font-medium">
+                  <span className="text-ink text-label-14 flex items-center justify-between gap-1.5 font-medium">
                     {BUCKET_LABEL[b]}
                     <Icon className="text-muted-foreground size-4" aria-hidden />
                   </span>
                   <span
                     className={cn(
-                      'text-[30px] leading-[1.1] font-bold tracking-[-0.03em] tabular-nums',
+                      'text-heading-32 leading-none tabular-nums',
                       b === 'overdue' && data.work.counts.overdue > 0 && 'text-crit',
                     )}
                   >
@@ -136,7 +136,7 @@ function Rows({
   const sheetName = sheetId ? work.sheets.find((s) => s.id === sheetId)?.name : null;
   if (work.rows.length === 0)
     return (
-      <div className="border-line flex flex-col items-start gap-2 rounded-xl border border-dashed bg-white p-6">
+      <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
         <p className="text-muted-foreground m-0">
           Nothing needs you. Items where you are in a people field, and requests to you, show here.
         </p>
@@ -147,7 +147,7 @@ function Rows({
     );
   if (rows.length === 0)
     return (
-      <div className="border-line flex flex-col items-start gap-2 rounded-xl border border-dashed bg-white p-6">
+      <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
         <p className="text-muted-foreground m-0">Nothing matches this filter.</p>
         <a href={`/${org}/my-work`} className="text-ink font-medium underline underline-offset-4">
           Show everything
@@ -159,15 +159,15 @@ function Rows({
     return (
       <section className="flex flex-col gap-2" aria-labelledby="work-filtered">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 id="work-filtered" className="text-[15px] font-semibold tracking-[-0.01em]">
+          <h2 id="work-filtered" className="text-heading-16">
             {title}{' '}
-            <span className="text-muted-foreground font-mono text-xs font-normal">
+            <span className="text-muted-foreground text-label-12-mono font-normal">
               ({rows.length})
             </span>
           </h2>
           <a
             href={`/${org}/my-work`}
-            className="text-ink text-sm font-medium underline underline-offset-4"
+            className="text-ink text-label-13 font-medium underline underline-offset-4"
           >
             Clear filter
           </a>
@@ -183,9 +183,9 @@ function Rows({
           className="flex flex-col gap-2"
           aria-labelledby={`work-${s.bucket}`}
         >
-          <h2 id={`work-${s.bucket}`} className="text-[15px] font-semibold tracking-[-0.01em]">
+          <h2 id={`work-${s.bucket}`} className="text-heading-16">
             {BUCKET_LABEL[s.bucket]}{' '}
-            <span className="text-muted-foreground font-mono text-xs font-normal">
+            <span className="text-muted-foreground text-label-12-mono font-normal">
               ({s.rows.length})
             </span>
           </h2>

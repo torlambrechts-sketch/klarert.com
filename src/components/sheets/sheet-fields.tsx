@@ -90,7 +90,7 @@ function FieldsBody({ org, sheetId, userId, timeZone, role, archived }: SheetFie
   if (query.isError)
     return (
       <div role="alert" className="flex flex-col items-start gap-2">
-        <p className="text-sm font-semibold">The fields could not be loaded.</p>
+        <p className="text-copy-13 font-semibold">The fields could not be loaded.</p>
         <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
           Retry
         </Button>
@@ -108,7 +108,7 @@ function FieldsBody({ org, sheetId, userId, timeZone, role, archived }: SheetFie
   return (
     <div className="flex flex-col gap-3">
       {data.fields.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No fields yet.</p>
+        <p className="text-muted-foreground text-copy-13">No fields yet.</p>
       ) : (
         <ul className="divide-line flex flex-col divide-y" aria-label="Fields">
           {data.fields.map((f) => {
@@ -127,7 +127,7 @@ function FieldsBody({ org, sheetId, userId, timeZone, role, archived }: SheetFie
                       </span>
                     ) : null}
                   </span>
-                  <span className="text-muted-foreground truncate text-xs">
+                  <span className="text-muted-foreground text-label-12 truncate">
                     {resolveFieldType(f.type)?.label ?? f.type}{' '}
                     <span className="font-mono">{`{${f.key}}`}</span>
                   </span>
@@ -168,7 +168,7 @@ function FieldsBody({ org, sheetId, userId, timeZone, role, archived }: SheetFie
       />
       <Dialog open={adding} onOpenChange={setAdding}>
         <DialogContent className="w-[min(380px,calc(100vw-32px))]">
-          <DialogTitle className="text-lg font-bold">Add a field</DialogTitle>
+          <DialogTitle className="text-heading-16">Add a field</DialogTitle>
           <DialogDescription className="sr-only">
             Choose the type of the new field.
           </DialogDescription>

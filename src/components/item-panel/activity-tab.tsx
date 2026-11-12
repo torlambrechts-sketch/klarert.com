@@ -74,7 +74,7 @@ export function ActivityTab({
         >
           <ShieldCheck aria-hidden /> {verifying ? 'Verifying…' : 'Verify audit trail'}
         </Button>
-        <p role="status" className="m-0 text-[13px]">
+        <p role="status" className="text-copy-13 m-0">
           {result ? (
             result.ok ? (
               <span className="text-good inline-flex items-center gap-1 font-semibold">
@@ -99,24 +99,24 @@ export function ActivityTab({
           ))}
         </div>
       ) : state === 'error' && !data ? (
-        <div role="alert" className="flex flex-col items-start gap-2 text-sm">
+        <div role="alert" className="text-label-13 flex flex-col items-start gap-2">
           <p>The activity log could not be loaded.</p>
           <Button type="button" size="sm" variant="outline" onClick={onRetry}>
             Retry
           </Button>
         </div>
       ) : entries.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No activity yet.</p>
+        <p className="text-muted-foreground text-copy-13">No activity yet.</p>
       ) : (
         <ol className="flex flex-col" aria-label="Activity log">
           {entries.map((e) => {
             const line = activityLine(e, look);
             return (
-              <li key={e.id} className="border-line flex gap-2 border-t py-2 text-[13px]">
+              <li key={e.id} className="border-line text-label-13 flex gap-2 border-t py-2">
                 {e.actorKind === 'user' && e.actorId ? (
                   <Avatar id={e.actorId} ctx={ctx} size={22} />
                 ) : (
-                  <span className="bg-soft border-line inline-flex size-[22px] shrink-0 items-center justify-center rounded-full border text-[10px] font-bold">
+                  <span className="bg-soft border-line text-label-12 inline-flex size-[22px] shrink-0 items-center justify-center rounded-full border font-bold">
                     {line.who.slice(0, 1)}
                   </span>
                 )}
@@ -124,7 +124,7 @@ export function ActivityTab({
                   <span className="break-words">
                     <b>{line.who}</b> · {line.text}
                   </span>
-                  <span className="text-muted-foreground font-mono text-[11px]">
+                  <span className="text-muted-foreground text-label-12-mono">
                     {formatDateTime(e.at, ctx.timeZone)} · #{e.id} · hash {line.shortHash}
                   </span>
                 </div>
@@ -133,7 +133,7 @@ export function ActivityTab({
           })}
         </ol>
       )}
-      <p className="text-muted-foreground text-xs">
+      <p className="text-muted-foreground text-label-12">
         Entries are hash-chained: each hash covers the one before it. Restoring an old value writes
         a new entry; history is never rewritten.
       </p>

@@ -48,7 +48,7 @@ export function TopBar({
   const { setMenuOpen, focusSearch } = useShell();
   useSlashToSearch(focusSearch);
   return (
-    <header className="border-line-2 sticky top-0 z-30 flex h-[48px] items-center gap-2 border-b bg-white px-3 sm:gap-3 sm:px-[28px]">
+    <header className="border-line bg-background-100 sticky top-0 z-30 flex h-[48px] items-center gap-2 border-b px-3 sm:gap-3 sm:px-[28px]">
       <button
         type="button"
         className="phone-only hover:bg-soft flex size-9 shrink-0 items-center justify-center rounded-md"
@@ -68,7 +68,7 @@ export function TopBar({
 
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="flex size-7 shrink-0 items-center justify-center rounded-full text-[10.5px] font-semibold text-white"
+            className="text-label-12 flex size-7 shrink-0 items-center justify-center rounded-full font-semibold text-white"
             style={{ background: solidVar(me.color) }}
             aria-label={`${me.initials}: account menu for ${me.displayName}`}
           >
@@ -77,7 +77,7 @@ export function TopBar({
           <DropdownMenuContent align="end" className="min-w-56">
             <DropdownMenuLabel className="flex flex-col">
               <span>{me.displayName}</span>
-              <span className="text-muted-foreground text-xs font-normal">{me.email}</span>
+              <span className="text-muted-foreground text-label-12 font-normal">{me.email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             {canManage ? (

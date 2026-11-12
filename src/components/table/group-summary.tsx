@@ -26,12 +26,12 @@ export const GroupSummary = memo(function GroupSummary({
     const caption = SUMMARY_CAPTION[s.fn];
     return (
       <span
-        className="text-ink-2 block min-w-0 text-[12px] leading-[17px] font-semibold tabular-nums"
+        className="text-ink text-label-12 block min-w-0 leading-[17px] font-semibold tabular-nums"
         title={caption ? `${s.text} ${caption}` : s.text}
       >
         <span className="block truncate">{s.text}</span>
         {caption ? (
-          <span className="text-muted-foreground block truncate text-[10.5px] leading-[10.5px] font-normal">
+          <span className="text-muted-foreground text-label-12 block truncate leading-none font-normal">
             {caption}
           </span>
         ) : null}

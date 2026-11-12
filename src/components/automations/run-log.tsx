@@ -27,7 +27,7 @@ import {
 
 const selectClass = cn(
   inputClass,
-  'select-chevron h-[38px] w-auto max-w-full text-[14px] shadow-none sm:min-w-[170px]',
+  'select-chevron h-[40px] w-auto max-w-full text-label-14 shadow-none sm:min-w-[170px]',
 );
 
 export function RunLog(props: { org: string; orgId: string; timeZone: string }) {
@@ -134,7 +134,7 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
       ) : runs.isPending ? (
         <ListSkeleton />
       ) : runs.data.length === 0 ? (
-        <div className="border-line rounded-[10px] border border-dashed bg-white p-6">
+        <div className="border-line bg-background-100 rounded-lg border border-dashed p-6">
           <p className="text-muted-foreground m-0">
             {filtered
               ? 'No runs match these filters.'
@@ -143,11 +143,11 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
         </div>
       ) : (
         <>
-          <div className="border-line overflow-hidden rounded-[10px] border bg-white">
+          <div className="border-line bg-background-100 overflow-hidden rounded-lg border">
             <RunTable runs={runs.data} org={org} timeZone={props.timeZone} label="Runs" />
           </div>
           {runs.data.length === RUN_PAGE ? (
-            <p className="text-muted-foreground m-0 text-xs">
+            <p className="text-muted-foreground text-label-12 m-0">
               Showing the latest {RUN_PAGE} runs. Filter to see older ones.
             </p>
           ) : null}
@@ -176,14 +176,14 @@ export function RunTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table aria-label={label} className="w-full min-w-[860px] border-collapse text-[13px]">
+      <table aria-label={label} className="text-label-13 w-full min-w-[860px] border-collapse">
         <thead>
           <tr>
             {['Time', 'Automation', 'Sheet', 'Item', 'Outcome', 'What it did'].map((h) => (
               <th
                 key={h}
                 scope="col"
-                className="border-soft text-muted-foreground border-b bg-white px-3.5 py-2.5 text-left text-[12px] font-normal whitespace-nowrap"
+                className="border-soft text-muted-foreground bg-background-100 text-label-12 border-b px-3.5 py-2.5 text-left font-normal whitespace-nowrap"
               >
                 {h}
               </th>
@@ -200,20 +200,20 @@ export function RunTable({
   );
 }
 
-const td = 'border-soft text-ink-2 border-b px-3.5 py-2.5 align-top group-last:border-b-0';
+const td = 'border-soft text-ink border-b px-3.5 py-2.5 align-top group-last:border-b-0';
 
 function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: string }) {
   const [open, setOpen] = useState(false);
   const stepsId = `run-${run.id}-steps`;
   return (
     <tr className="group hover:[&>td]:bg-subtle">
-      <td className={cn(td, 'text-muted-foreground font-mono text-[12px] whitespace-nowrap')}>
+      <td className={cn(td, 'text-muted-foreground text-label-12-mono whitespace-nowrap')}>
         {formatDateTime(run.startedAt, timeZone)}
       </td>
       <td className={cn(td, 'min-w-[180px]')}>
         <span className="text-ink break-words">{run.automationName ?? 'Deleted automation'}</span>
         {run.depth > 0 ? (
-          <span className="text-muted-foreground block text-[12px]">
+          <span className="text-muted-foreground text-label-12 block">
             Caused by another automation (depth {run.depth})
           </span>
         ) : null}
@@ -225,7 +225,7 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
             className="hover:underline"
             href={`/${org}/s/${run.sheetId}?item=${encodeURIComponent(run.itemDisplayId)}`}
           >
-            <span className="font-mono text-[12px]">{run.itemDisplayId}</span> {run.itemName}
+            <span className="text-label-12-mono">{run.itemDisplayId}</span> {run.itemName}
           </Link>
         ) : (
           <span className="text-muted-foreground">Item no longer available</span>
@@ -242,7 +242,7 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
             aria-expanded={open}
             aria-controls={stepsId}
             onClick={() => setOpen((o) => !o)}
-            className="text-ink-3 hover:bg-soft hover:text-ink focus-visible:outline-focus -my-1 inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[12.5px] font-medium whitespace-nowrap focus-visible:outline-2"
+            className="text-muted-foreground hover:bg-soft hover:text-ink focus-visible:outline-focus text-label-13 -my-1 inline-flex h-7 items-center gap-1 rounded-md px-1.5 font-medium whitespace-nowrap focus-visible:outline-2"
           >
             {open ? (
               <ChevronDown className="size-3.5" aria-hidden />

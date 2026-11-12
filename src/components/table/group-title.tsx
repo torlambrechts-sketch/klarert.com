@@ -40,12 +40,12 @@ export function GroupTitle({
           className="size-[8px] shrink-0 rounded-full"
           style={{ background: solidVar(group.color) }}
         />
-        <span className="text-ink truncate text-[14px] font-semibold">{group.name}</span>
-        <span className="bg-soft text-ink-2 shrink-0 rounded-full px-[8px] py-px font-mono text-[12px] leading-[17px] font-semibold tabular-nums">
+        <span className="text-ink text-label-14 truncate font-semibold">{group.name}</span>
+        <span className="bg-soft text-ink text-label-12-mono shrink-0 rounded-full px-[8px] py-px leading-[17px] font-semibold tabular-nums">
           {count === 1 ? '1 item' : `${count.toLocaleString('en-GB')} items`}
         </span>
         {donePct === null ? null : (
-          <span className="text-muted-foreground shrink-0 text-[12.5px] tabular-nums">
+          <span className="text-muted-foreground text-label-13 shrink-0 tabular-nums">
             {donePct}% done
           </span>
         )}

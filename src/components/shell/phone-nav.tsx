@@ -8,7 +8,7 @@ import { SideMenu, type SideMenuProps } from './side-menu';
 import { useShell } from './shell-context';
 
 const cell =
-  'flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground outline-offset-[-3px] aria-[current=page]:text-ink';
+  'flex flex-col items-center justify-center gap-0.5 text-label-12 font-medium text-muted-foreground outline-offset-[-3px] aria-[current=page]:text-ink';
 
 /** Phones (< 760 px): bottom bar and the full side menu as a left sheet over a scrim (docs/05 §5). */
 export function PhoneNav(props: Omit<SideMenuProps, 'onNavigate'>) {

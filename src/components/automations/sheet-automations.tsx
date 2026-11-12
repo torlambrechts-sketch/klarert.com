@@ -46,13 +46,13 @@ export function SheetAutomations({
         <Button
           type="button"
           variant="outline"
-          className="h-[38px] font-normal shadow-none"
+          className="h-[40px] font-normal shadow-none"
           disabled={!ctx}
         >
           <Zap aria-hidden />
           Automations{' '}
           <span
-            className="bg-soft text-ink-2 rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums empty:hidden"
+            className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px] font-normal tabular-nums empty:hidden"
             aria-hidden={autos.isPending}
           >
             {autos.isPending ? '' : list.length}
@@ -62,8 +62,8 @@ export function SheetAutomations({
       <SideSheetContent className="w-[min(560px,100vw)] overflow-y-auto">
         <div className="flex flex-col gap-4 p-5">
           <div className="flex flex-col gap-1 pr-8">
-            <DialogTitle className="text-[19px] font-extrabold">Automations</DialogTitle>
-            <DialogDescription className="text-muted-foreground m-0 text-sm">
+            <DialogTitle className="text-heading-20">Automations</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-label-13 m-0">
               On {sheetName}. They run on every matching change; each run is logged.
             </DialogDescription>
           </div>
@@ -89,7 +89,7 @@ export function SheetAutomations({
             </Button>
           </div>
           {!perms.canEdit ? (
-            <p className="text-muted-foreground m-0 text-sm">
+            <p className="text-muted-foreground text-copy-13 m-0">
               You can see this sheet’s automations. Ask an editor or admin to change them.
             </p>
           ) : null}
@@ -98,7 +98,7 @@ export function SheetAutomations({
           ) : autos.isPending || !orgId ? (
             <ListSkeleton />
           ) : list.length === 0 ? (
-            <p className="text-muted-foreground border-line m-0 rounded-[var(--radius-card)] border border-dashed p-4 text-sm">
+            <p className="text-muted-foreground border-line text-copy-13 m-0 rounded-lg border border-dashed p-4">
               No automations on this sheet yet.
               {perms.canEdit ? ' Start from a recipe or build a new one.' : ''}
             </p>

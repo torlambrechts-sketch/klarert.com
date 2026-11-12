@@ -39,7 +39,9 @@ export function FolderManager({ org, folders }: { org: string; folders: Folder[]
         )}
       </ActionForm>
       {folders.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No folders yet. Add the first one above.</p>
+        <p className="text-muted-foreground text-copy-13">
+          No folders yet. Add the first one above.
+        </p>
       ) : (
         <ul className="divide-line flex flex-col divide-y" aria-label="Folders">
           {folders.map((f) => (
@@ -96,7 +98,7 @@ function FolderRow({ org, folder }: { org: string; folder: Folder }) {
           className="flex items-center gap-2"
           aria-label={`Delete ${folder.name}`}
         >
-          <span className="text-sm">Delete this folder?</span>
+          <span className="text-label-13">Delete this folder?</span>
           <SubmitButton size="sm" variant="destructive" pendingText="Deleting…">
             Delete folder
           </SubmitButton>

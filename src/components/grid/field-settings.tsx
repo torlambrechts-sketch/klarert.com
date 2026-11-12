@@ -73,7 +73,7 @@ const NO_VALUE = new Set([
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="border-line flex flex-col gap-3 border-t pt-4" aria-label={title}>
-      <h3 className="text-sm font-bold">{title}</h3>
+      <h3 className="text-label-13 font-bold">{title}</h3>
       {children}
     </section>
   );
@@ -91,11 +91,11 @@ function Labelled({
   const id = useId();
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-semibold">
+      <label htmlFor={id} className="text-label-13 font-semibold">
         {label}
       </label>
       {children(id)}
-      {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
+      {hint ? <p className="text-muted-foreground text-label-12">{hint}</p> : null}
     </div>
   );
 }
@@ -214,8 +214,8 @@ function FieldSettingsBody({
       }}
     >
       <div className="border-line border-b px-5 py-4 pr-12">
-        <DialogTitle className="text-lg font-bold">{field.name}</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-xs">
+        <DialogTitle className="text-heading-16">{field.name}</DialogTitle>
+        <DialogDescription className="text-muted-foreground text-label-12">
           {def.label} · key <span className="font-mono">{field.key}</span>
           {field.locked ? ' · kept by the app' : ''}
         </DialogDescription>
@@ -225,7 +225,7 @@ function FieldSettingsBody({
         className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4"
       >
         {!canEdit ? (
-          <p role="status" className="bg-soft rounded-md px-3 py-2 text-sm">
+          <p role="status" className="bg-soft text-copy-13 rounded-md px-3 py-2">
             {field.locked
               ? 'This field is kept by the app. Only owners and admins can change it.'
               : 'You can view these settings. Ask an editor or admin to change them.'}
@@ -257,7 +257,7 @@ function FieldSettingsBody({
             )}
           </Labelled>
           {stored ? (
-            <label className="flex items-center gap-2 text-sm">
+            <label className="text-label-13 flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={required}
@@ -295,7 +295,7 @@ function FieldSettingsBody({
             )}
           </Labelled>
           {isAdmin ? (
-            <label className="flex items-center gap-2 text-sm">
+            <label className="text-label-13 flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={locked}
@@ -332,7 +332,7 @@ function FieldSettingsBody({
 
         {stored && options.length > 0 ? (
           <Section title="Rules">
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-label-12">
               When this field changes to one of the chosen values, require other fields to be filled
               or ask for a comment.
             </p>
@@ -387,7 +387,7 @@ function FieldSettingsBody({
             <Trash2 aria-hidden /> Delete field
           </Button>
           {field.locked ? (
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-label-12">
               Kept by the app. You can hide it, not delete it.
             </p>
           ) : null}
@@ -436,7 +436,7 @@ function TypeSection({
   return (
     <Section title="Field type">
       {targets.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-copy-13">
           A {fieldType(field.type)?.label.toLowerCase()} field cannot change type.
         </p>
       ) : (
@@ -480,7 +480,7 @@ function TypeSection({
               </Button>
               {preview ? (
                 <>
-                  <p role="status" className="text-sm">
+                  <p role="status" className="text-copy-13">
                     {preview.summary}
                   </p>
                   <Button
@@ -565,7 +565,7 @@ function ValidationSection({
         </Labelled>
       ) : null}
       {isText || isNumber ? (
-        <label className="flex items-center gap-2 text-sm">
+        <label className="text-label-13 flex items-center gap-2">
           <input
             type="checkbox"
             checked={!!validation.unique}
@@ -597,12 +597,12 @@ function RuleEditor({
   const require = rule.require ?? [];
   return (
     <fieldset className="border-line flex flex-col gap-2 rounded-md border p-3">
-      <legend className="px-1 text-xs font-semibold">Rule {index + 1}</legend>
+      <legend className="text-label-12 px-1 font-semibold">Rule {index + 1}</legend>
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold">When it becomes</p>
+        <p className="text-copy-13 font-semibold">When it becomes</p>
         <div className="flex flex-wrap gap-x-3 gap-y-1">
           {options.map((o) => (
-            <label key={o.id} className="flex items-center gap-1.5 text-sm">
+            <label key={o.id} className="text-label-13 flex items-center gap-1.5">
               <input
                 type="checkbox"
                 checked={when.includes(o.id)}
@@ -621,10 +621,10 @@ function RuleEditor({
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold">Require these fields</p>
+        <p className="text-copy-13 font-semibold">Require these fields</p>
         <div className="flex max-h-32 flex-wrap gap-x-3 gap-y-1 overflow-auto">
           {fields.map((f) => (
-            <label key={f.id} className="flex items-center gap-1.5 text-sm">
+            <label key={f.id} className="text-label-13 flex items-center gap-1.5">
               <input
                 type="checkbox"
                 checked={require.includes(f.key)}
@@ -642,7 +642,7 @@ function RuleEditor({
           ))}
         </div>
       </div>
-      <label className="flex items-center gap-2 text-sm">
+      <label className="text-label-13 flex items-center gap-2">
         <input
           type="checkbox"
           checked={!!rule.requireComment}
@@ -687,7 +687,7 @@ function VisibilityEditor({
   const listValue = Array.isArray(value?.value) ? (value!.value as string[]) : [];
   return (
     <div className="flex flex-col gap-2">
-      <label className="flex items-center gap-2 text-sm">
+      <label className="text-label-13 flex items-center gap-2">
         <input
           type="checkbox"
           checked={!!value}
@@ -729,7 +729,7 @@ function VisibilityEditor({
             options.length > 0 ? (
               <div className="flex flex-wrap gap-x-3 gap-y-1" role="group" aria-label="Values">
                 {options.map((o) => (
-                  <label key={o.id} className="flex items-center gap-1.5 text-sm">
+                  <label key={o.id} className="text-label-13 flex items-center gap-1.5">
                     <input
                       type="checkbox"
                       checked={listValue.includes(o.id)}
@@ -759,7 +759,7 @@ function VisibilityEditor({
               />
             )
           ) : null}
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-label-12">
             Hidden fields keep their value. A hidden required field is not required.
           </p>
         </div>

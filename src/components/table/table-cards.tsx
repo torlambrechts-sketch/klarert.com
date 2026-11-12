@@ -129,7 +129,7 @@ export function TableCards({
               style={{ transform: `translateY(${vr.start - v.options.scrollMargin}px)` }}
             >
               {row.kind === 'group' ? (
-                <div className="border-line bg-subtle flex items-center rounded-[var(--radius-card)] border py-0.5">
+                <div className="border-line bg-subtle flex items-center rounded-lg border py-0.5">
                   <GroupTitle
                     group={row.group}
                     count={row.count}
@@ -196,7 +196,7 @@ function ItemCard({
   return (
     <article
       data-testid="item-card"
-      className="border-line hover:border-ink focus-within:border-ink relative flex w-full flex-col gap-1.5 rounded-[var(--radius-card)] border bg-white p-3"
+      className="border-line hover:border-ink focus-within:border-ink bg-background-100 relative flex w-full flex-col gap-1.5 rounded-lg border p-3"
       style={{ borderLeft: `4px solid ${colorVar(group.color)}` }}
     >
       <h3 className="m-0">
@@ -204,12 +204,12 @@ function ItemCard({
           type="button"
           onClick={onOpen}
           disabled={item.id.startsWith('temp-')}
-          className="text-cell focus-visible:outline-focus text-left leading-snug font-bold break-words outline-offset-2 after:absolute after:inset-0 after:content-[''] focus-visible:outline-2"
+          className="text-label-14 focus-visible:outline-focus text-left leading-snug font-bold break-words outline-offset-2 after:absolute after:inset-0 after:content-[''] focus-visible:outline-2"
         >
           {item.name}
         </button>
       </h3>
-      <span className="text-muted-foreground text-meta flex min-w-0 items-center gap-1.5">
+      <span className="text-muted-foreground text-label-12 flex min-w-0 items-center gap-1.5">
         <span className="shrink-0 font-mono">{item.displayId}</span>
         {ownerId ? (
           <>
@@ -230,7 +230,7 @@ function ItemCard({
             const ui = fieldUI(f.type);
             return (
               <div key={f.id} className="contents">
-                <dt className="text-muted-foreground text-meta truncate">{f.name}</dt>
+                <dt className="text-muted-foreground text-label-12 truncate">{f.name}</dt>
                 <dd className="flex min-h-[34px] min-w-0 items-center">
                   <ui.Cell
                     value={cellValue(item, f, ctx) as never}
@@ -246,7 +246,7 @@ function ItemCard({
         </dl>
       ) : null}
       {due ? (
-        <span className={cn('text-meta self-end font-semibold', due.overdue && 'text-crit')}>
+        <span className={cn('text-label-12 self-end font-semibold', due.overdue && 'text-crit')}>
           {due.field.name}: {formatDate(due.date)}
           {due.overdue ? ' · late' : ''}
         </span>
@@ -270,7 +270,7 @@ function AddCard({
   return (
     <input
       ref={inputRef}
-      className="border-line placeholder:text-muted-foreground text-cell focus-visible:outline-focus h-11 w-full rounded-[var(--radius-card)] border border-dashed bg-white px-3 focus-visible:outline-2"
+      className="border-line placeholder:text-muted-foreground text-label-14 focus-visible:outline-focus bg-background-100 h-11 w-full rounded-lg border border-dashed px-3 focus-visible:outline-2"
       placeholder={`+ Add ${label}`}
       aria-label={`Add ${label} to ${group.name}`}
       value={name}

@@ -27,7 +27,7 @@ export function ArchivedItems({
   const [busy, setBusy] = useState<string | null>(null);
   if (items.length === 0)
     return (
-      <p className="text-muted-foreground text-sm">
+      <p className="text-muted-foreground text-copy-13">
         No archived items. Archive items from the Grid by selecting them.
       </p>
     );
@@ -37,7 +37,7 @@ export function ArchivedItems({
         <li key={it.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
           <span className="flex min-w-0 flex-col">
             <span className="truncate font-semibold">{it.name}</span>
-            <span className="text-muted-foreground text-xs">
+            <span className="text-muted-foreground text-label-12">
               <span className="font-mono">{it.displayId}</span> · archived{' '}
               {formatDate(it.archivedAt.slice(0, 10))}
             </span>

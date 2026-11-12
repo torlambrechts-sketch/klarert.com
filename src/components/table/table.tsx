@@ -729,7 +729,7 @@ export function Table({
               store.getState().focus({ itemId: layout.flat[0].id, col: 'name' });
           }}
           // rows scroll with the page; only wide tables scroll sideways here
-          className="grid-scroll relative overflow-x-auto overflow-y-hidden rounded-[10px] outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
+          className="grid-scroll relative overflow-x-auto overflow-y-hidden rounded-lg outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
         >
           <div style={{ height: rowV.getTotalSize(), width: totalW, position: 'relative' }}>
             {vRows.map((vr) => {
@@ -743,7 +743,7 @@ export function Table({
                   aria-rowindex={ariaRows.index.get(row.key)}
                   className={cn(
                     'absolute top-0 left-0 flex',
-                    row.kind !== 'gap' && 'border-line overflow-clip border-x bg-white',
+                    row.kind !== 'gap' && 'border-line bg-background-100 overflow-clip border-x',
                     row.kind === 'item' && 'group/row',
                     first && 'rounded-t-[10px] border-t',
                     last && 'rounded-b-[10px]',
@@ -813,7 +813,7 @@ export function Table({
             <button
               type="button"
               // stays in view while the page scrolls past a long table
-              className="border-line hover:border-line-strong focus-visible:outline-focus pointer-events-auto sticky top-[50vh] mt-[60px] mr-2 shrink-0 rounded-full border bg-white px-3 py-1 text-xs font-medium whitespace-nowrap shadow-xs focus-visible:outline-2"
+              className="border-line hover:border-line-strong focus-visible:outline-focus bg-background-100 text-label-12 pointer-events-auto sticky top-[50vh] mt-[60px] mr-2 shrink-0 rounded-full border px-3 py-1 font-medium whitespace-nowrap focus-visible:outline-2"
               onClick={() => {
                 const el = scrollRef.current;
                 if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
@@ -826,7 +826,7 @@ export function Table({
       </div>
       <DragOverlay dropAnimation={null}>
         {dragging?.startsWith('row:') ? (
-          <div className="bg-ink rounded-md px-3 py-1.5 text-sm font-semibold text-white shadow-lg">
+          <div className="bg-ink text-label-13 shadow-menu rounded-md px-3 py-1.5 font-semibold text-white">
             {selected.has(dragging.slice(4)) && selected.size > 1
               ? `${selected.size} items`
               : (layout.flat.find((i) => i.id === dragging.slice(4))?.name ?? '')}
@@ -908,7 +908,7 @@ function Sticky({
   return (
     <div
       role={role}
-      className={cn('sticky left-0 z-[2] flex shrink-0 items-center bg-white', className)}
+      className={cn('bg-background-100 sticky left-0 z-[2] flex shrink-0 items-center', className)}
       style={{ width }}
     >
       {children}
@@ -940,7 +940,7 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
       role="gridcell"
       className={cn(
         'flex w-full items-center',
-        !row.collapsed && 'border-b-line-2 border-b',
+        !row.collapsed && 'border-b-line border-b',
         drop.isOver && 'bg-sel',
       )}
     >
@@ -982,7 +982,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
         ) : (
           <span className="w-[58px] shrink-0" />
         )}
-        <span className="text-muted-foreground truncate pl-[4px] text-[12px]">
+        <span className="text-muted-foreground text-label-12 truncate pl-[4px]">
           {p.ctx.sheet.itemLabel}
         </span>
       </Sticky>
@@ -992,7 +992,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
             <div
               key="__trail"
               role="columnheader"
-              className="border-b-soft absolute top-0 flex h-full items-center justify-center border-b bg-white"
+              className="border-b-soft bg-background-100 absolute top-0 flex h-full items-center justify-center border-b"
               style={{ left: vc.start, width: vc.size }}
             >
               {p.canEdit ? (
@@ -1087,7 +1087,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
         width={p.stickyW}
         role="none"
         className={cn(
-          'border-b-line-2 group-hover/row:bg-subtle border-b',
+          'border-b-line group-hover/row:bg-subtle border-b',
           isSelected && 'bg-sel group-hover/row:bg-sel',
           drop.isOver && 'shadow-[inset_0_2px_0_var(--focus)]',
           drag.isDragging && 'opacity-40',
@@ -1124,7 +1124,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               <span
                 aria-hidden
                 className={cn(
-                  'border-line text-ink-3 col-start-1 row-start-1 grid size-[28px] place-items-center rounded-full border bg-white',
+                  'border-line text-muted-foreground bg-background-100 col-start-1 row-start-1 grid size-[28px] place-items-center rounded-full border',
                   p.canEdit && 'group-focus-within/row:invisible group-hover/row:invisible',
                   p.canEdit && (rowActive || p.selected.size > 0) && 'invisible',
                 )}
@@ -1160,7 +1160,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               isActive('name') && 'outline-focus z-[1] outline-2 -outline-offset-2',
             )}
           >
-            <span className="flex min-w-0 items-center gap-2 text-[14px] leading-[20px]">
+            <span className="text-label-14 flex min-w-0 items-center gap-2 leading-[20px]">
               {item.id.startsWith('temp-') ? (
                 <span className="text-ink truncate">{item.name}</span>
               ) : (
@@ -1182,7 +1182,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               )}
               {p.comments > 0 ? (
                 <span
-                  className="border-line-strong text-ink inline-flex h-[22px] min-w-7 shrink-0 items-center justify-center gap-1 rounded-full border bg-white px-1.5 font-mono text-[11px]"
+                  className="border-line-strong text-ink bg-background-100 text-label-12-mono inline-flex h-[22px] min-w-7 shrink-0 items-center justify-center gap-1 rounded-full border px-1.5"
                   title={p.comments === 1 ? '1 update' : `${p.comments} updates`}
                 >
                   <MessageSquare className="size-3" aria-hidden />
@@ -1192,7 +1192,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               ) : null}
             </span>
             {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
-              <span className="text-muted-foreground flex min-w-0 items-center gap-[7px] text-[12px] leading-[17px]">
+              <span className="text-muted-foreground text-label-12 flex min-w-0 items-center gap-[7px] leading-[17px]">
                 <span className="shrink-0 font-mono">{item.displayId}</span>
                 {ownerName ? (
                   <>
@@ -1328,7 +1328,7 @@ function RowMenu({
     <div
       role="gridcell"
       className={cn(
-        'border-b-line-2 group-hover/row:bg-subtle absolute top-0 flex h-full items-center justify-center border-b bg-white',
+        'border-b-line group-hover/row:bg-subtle bg-background-100 absolute top-0 flex h-full items-center justify-center border-b',
         selected && 'bg-sel group-hover/row:bg-sel',
       )}
       style={{ left, width }}
@@ -1444,7 +1444,7 @@ const TableCell = memo(function TableCell({
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'border-b-line-2 text-ink-2 group-hover/row:bg-subtle absolute top-0 flex h-full items-center overflow-hidden border-b bg-white px-[14px] text-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] [&_[data-pill]]:-mx-1.5',
+        'border-b-line text-ink group-hover/row:bg-subtle bg-background-100 text-label-14 absolute top-0 flex h-full items-center overflow-hidden border-b px-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] [&_[data-pill]]:-mx-1.5',
         (selected || rowSelected) && 'bg-sel group-hover/row:bg-sel',
         active && 'outline-focus z-[1] outline-2 -outline-offset-2',
       )}
@@ -1563,7 +1563,7 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
     <div
       className={cn(
         'flex w-full items-stretch',
-        !p.endOfCard && 'border-b-line-2 border-b',
+        !p.endOfCard && 'border-b-line border-b',
         drop.isOver && 'bg-sel',
       )}
     >
@@ -1571,7 +1571,7 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
         <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[58px]">
           <input
             ref={p.addRef}
-            className="placeholder:text-muted-foreground text-ink h-full w-full bg-transparent px-[4px] text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+            className="placeholder:text-muted-foreground text-ink text-label-14 h-full w-full bg-transparent px-[4px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
             placeholder={`+ Add ${label}`}
             aria-label={`Add ${label} to ${row.group.name}`}
             value={name}
@@ -1611,7 +1611,7 @@ function SummaryRow(p: RowProps & { row: Extract<TableRow, { kind: 'summary' }> 
           <div
             key={field.id}
             role="gridcell"
-            className="absolute top-0 flex h-full items-center bg-white pr-[14px] pl-[16px]"
+            className="bg-background-100 absolute top-0 flex h-full items-center pr-[14px] pl-[16px]"
             style={{ left: vc.start, width: vc.size }}
           >
             {fn ? (

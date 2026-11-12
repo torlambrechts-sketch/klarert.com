@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export const selectClass =
-  'border-input h-9 w-full rounded-md border bg-white px-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive';
+  'border-input h-9 w-full rounded-md border bg-background-100 px-2 text-label-13 outline-none focus-visible:ring-[3px] focus-visible:ring-focus/25 aria-invalid:border-destructive';
 
 /** Labelled control with an error or hint line. */
 export function Field({
@@ -33,11 +33,11 @@ export function Field({
       <Label htmlFor={id}>{label}</Label>
       {children({ id, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy })}
       {error ? (
-        <p id={`${id}-error`} className="text-crit text-sm">
+        <p id={`${id}-error`} className="text-crit text-copy-13">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-muted-foreground text-sm">
+        <p id={`${id}-hint`} className="text-muted-foreground text-copy-13">
           {hint}
         </p>
       ) : null}

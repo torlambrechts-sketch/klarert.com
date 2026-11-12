@@ -90,7 +90,7 @@ export function DashboardScreen({
 
   const actions = canEdit ? (
     <>
-      <Button type="button" className="h-9" onClick={() => setWidgetDialog({})} disabled={!editor}>
+      <Button type="button" onClick={() => setWidgetDialog({})} disabled={!editor}>
         <Plus aria-hidden /> Add widget
       </Button>
       <DropdownMenu>
@@ -99,7 +99,7 @@ export function DashboardScreen({
             type="button"
             variant="outline"
             size="icon"
-            className="size-[36px]"
+            className="size-[40px]"
             aria-label="Dashboard options"
           >
             <MoreHorizontal aria-hidden />
@@ -127,19 +127,19 @@ export function DashboardScreen({
       aria-busy={pending}
     >
       <ShellCrumb>
-        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2.5 text-[14px]">
+        <nav aria-label="Breadcrumb" className="text-label-14 flex min-w-0 items-center gap-2.5">
           <span className="text-muted-foreground flex items-center gap-2">
             <ChartColumn className="size-[15px] shrink-0" aria-hidden />
             Insights
           </span>
-          <span aria-hidden className="text-line-strong text-[20px] leading-none font-light">
+          <span aria-hidden className="text-line-strong text-label-20 leading-none font-light">
             /
           </span>
           <span className="text-ink flex min-w-0 items-center gap-2" aria-current="page">
             <LayoutGrid className="size-[15px] shrink-0" aria-hidden />
             <span className="truncate font-medium">{dashboard.name}</span>
           </span>
-          <span className="bg-soft text-ink-3 shrink-0 rounded-full px-[9px] py-0.5 text-[11.5px] font-medium">
+          <span className="bg-soft text-muted-foreground text-label-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
             Dashboard
           </span>
         </nav>
@@ -166,7 +166,7 @@ export function DashboardScreen({
       {!view ? (
         <div
           role="alert"
-          className="border-line flex flex-col items-start gap-2 rounded-xl border bg-white p-5 shadow-xs"
+          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
         >
           <p className="m-0">The widgets could not be loaded.</p>
           <Button type="button" variant="outline" onClick={refresh}>
@@ -174,7 +174,7 @@ export function DashboardScreen({
           </Button>
         </div>
       ) : widgets.length === 0 ? (
-        <div className="border-line flex flex-col items-start gap-2 rounded-xl border border-dashed bg-white p-6">
+        <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
           <p className="text-muted-foreground m-0">
             No widgets yet.{canEdit ? ' Add the first one.' : ''}
           </p>
@@ -242,8 +242,8 @@ export function DashboardScreen({
       />
       <Dialog open={confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(false)}>
         <DialogContent>
-          <DialogTitle className="text-lg font-semibold">Delete this dashboard?</DialogTitle>
-          <DialogDescription className="text-muted-foreground text-sm">
+          <DialogTitle className="text-heading-16">Delete this dashboard?</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-label-13">
             {dashboard.name} and its widgets are removed for everyone. Your sheets and items stay as
             they are.
           </DialogDescription>
@@ -275,14 +275,14 @@ export function DashboardScreen({
 function PeriodSwitch({ months }: { months: number }) {
   return (
     <nav aria-label="Period" className="mt-[19px] mb-5 flex flex-wrap items-center gap-2">
-      <ul className="border-line m-0 inline-flex h-[38px] list-none gap-0.5 rounded-md border bg-white p-0.5">
+      <ul className="border-line bg-background-100 m-0 inline-flex h-[40px] list-none gap-0.5 rounded-md border p-0.5">
         {PERIODS.map((p) => (
           <li key={p} className="flex">
             <Link
               href={`?months=${p}`}
               scroll={false}
               aria-current={p === months ? 'true' : undefined}
-              className="text-muted-foreground hover:text-ink aria-[current=true]:bg-soft aria-[current=true]:text-ink inline-flex items-center rounded px-3 text-[13.5px] whitespace-nowrap no-underline aria-[current=true]:font-medium"
+              className="text-muted-foreground hover:text-ink aria-[current=true]:bg-soft aria-[current=true]:text-ink text-label-14 inline-flex items-center rounded px-3 whitespace-nowrap no-underline aria-[current=true]:font-medium"
             >
               {p} months
             </Link>
@@ -361,16 +361,16 @@ function WidgetCard({
     <li
       aria-labelledby={headingId}
       className={cn(
-        'border-line flex min-w-0 flex-col rounded-[10px] border bg-white',
+        'border-line bg-background-100 flex min-w-0 flex-col rounded-lg border',
         def?.wide && 'col-span-full',
       )}
     >
-      <div className="border-line-2 flex min-h-[52px] items-center justify-between gap-2.5 border-b px-[16px] py-2">
-        <h2 id={headingId} className="m-0 min-w-0 text-[14px] leading-tight font-semibold">
+      <div className="border-line flex min-h-[52px] items-center justify-between gap-2.5 border-b px-[16px] py-2">
+        <h2 id={headingId} className="text-heading-14 m-0 min-w-0">
           {widget.title}
         </h2>
         <span className="flex min-w-0 shrink items-center gap-1.5">
-          <span className="text-muted-foreground truncate text-right text-[12.5px]">{meta}</span>
+          <span className="text-muted-foreground text-label-13 truncate text-right">{meta}</span>
           {menu}
         </span>
       </div>
@@ -434,15 +434,15 @@ function NameForm({
         setBusy(false);
       }}
     >
-      <DialogTitle className="text-lg font-semibold">
+      <DialogTitle className="text-heading-16">
         {mode === 'rename' ? 'Rename dashboard' : 'New dashboard'}
       </DialogTitle>
-      <DialogDescription className="text-muted-foreground text-sm">
+      <DialogDescription className="text-muted-foreground text-label-13">
         {mode === 'rename'
           ? 'Everyone in the workspace sees the new name.'
           : 'A new dashboard starts empty. Add widgets to it next.'}
       </DialogDescription>
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-label-13 font-medium">
         Name
       </label>
       <input

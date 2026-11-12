@@ -48,8 +48,8 @@ function SourcePill({ source }: { source: string }) {
   return (
     <span
       className={cn(
-        'inline-block max-w-full truncate rounded-full px-[9px] py-0.5 text-[12px] font-medium whitespace-nowrap',
-        label === 'Custom' ? 'bg-info-soft text-info' : 'bg-soft text-ink-2',
+        'text-label-12 inline-block max-w-full truncate rounded-full px-[9px] py-0.5 font-medium whitespace-nowrap',
+        label === 'Custom' ? 'bg-info-soft text-info' : 'bg-soft text-ink',
       )}
     >
       {label}
@@ -69,7 +69,7 @@ export function NewAutomationRow({
 }) {
   const drawer = useId();
   return (
-    <li className="border-line-2 border-b last:border-b-0">
+    <li className="border-line border-b last:border-b-0">
       <div
         className={cn('bg-subtle grid min-h-14 items-center gap-x-3 pr-3 pl-1.5', AUTOMATION_GRID)}
       >
@@ -77,8 +77,8 @@ export function NewAutomationRow({
         <span className="col-span-3 flex min-w-0 items-center gap-3 md:col-span-7">
           <RowIcon icon={Plus} />
           <span className="flex min-w-0 flex-col">
-            <h2 className="m-0 truncate text-[14px] font-medium tracking-normal">{title}</h2>
-            <span className="text-muted-foreground text-[12.5px]">Not saved yet</span>
+            <h2 className="text-label-14 m-0 truncate font-medium">{title}</h2>
+            <span className="text-muted-foreground text-label-13">Not saved yet</span>
           </span>
         </span>
       </div>
@@ -172,7 +172,7 @@ export function AutomationRows({
         const open = openId === a.id && mayChange;
         const drawer = `automation-${a.id}-builder`;
         return (
-          <li key={a.id} className="border-line-2 border-b last:border-b-0">
+          <li key={a.id} className="border-line border-b last:border-b-0">
             <div
               className={cn(
                 'hover:bg-subtle grid min-h-14 items-center gap-x-3 py-1.5 pr-3 pl-1.5',
@@ -194,44 +194,44 @@ export function AutomationRows({
                 <RowIcon icon={Zap} dim={!a.enabled} />
                 <span className="flex min-w-0 flex-col">
                   <span className="flex min-w-0 items-center gap-1.5">
-                    <span className="line-clamp-2 text-[14px] font-medium break-words md:line-clamp-1">
+                    <span className="text-label-14 line-clamp-2 font-medium break-words md:line-clamp-1">
                       {a.name}
                     </span>
                     {a.locked ? (
                       <Lock className="text-muted-foreground size-3 shrink-0" aria-label="Locked" />
                     ) : null}
                   </span>
-                  <span className="text-muted-foreground truncate text-[12.5px]">
+                  <span className="text-muted-foreground text-label-13 truncate">
                     {ctx ? describeAutomation(a, ctx, sheetName) : 'Loading…'}
                   </span>
-                  <span className="text-muted-foreground truncate text-[12px] md:hidden">
+                  <span className="text-muted-foreground text-label-12 truncate md:hidden">
                     {sheetName(a.sheetId) ?? 'Archived sheet'} · {sourceLabel(a.source)} · v
                     {a.version}
                   </span>
                 </span>
               </span>
-              <span className="text-ink-2 hidden min-w-0 items-center gap-[7px] text-[13.5px] md:flex">
+              <span className="text-ink text-label-14 hidden min-w-0 items-center gap-[7px] md:flex">
                 <SheetIcon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{sheetName(a.sheetId) ?? 'Archived sheet'}</span>
               </span>
               <span className="hidden min-w-0 md:block">
                 <SourcePill source={a.source} />
               </span>
-              <span className="text-ink-2 hidden font-mono text-[13px] md:block">v{a.version}</span>
+              <span className="text-ink text-label-13-mono hidden md:block">v{a.version}</span>
               <span className="hidden min-w-0 flex-col md:flex">
                 {a.runCount > 0 ? (
                   <Link
                     href={`/${org}/automations?tab=runs&automation=${a.id}`}
-                    className="text-ink-2 hover:text-ink font-mono text-[13px] underline-offset-4 hover:underline"
+                    className="text-ink hover:text-ink text-label-13-mono underline-offset-4 hover:underline"
                     aria-label={`${a.runCount.toLocaleString('en-GB')} runs of ${a.name}`}
                   >
                     {a.runCount.toLocaleString('en-GB')}
                   </Link>
                 ) : (
-                  <span className="text-muted-foreground font-mono text-[13px]">0</span>
+                  <span className="text-muted-foreground text-label-13-mono">0</span>
                 )}
                 <span
-                  className="text-muted-foreground truncate text-[11.5px]"
+                  className="text-muted-foreground text-label-12 truncate"
                   title={
                     a.lastRunAt ? `Last run ${formatDateTime(a.lastRunAt, timeZone)}` : undefined
                   }
@@ -248,7 +248,7 @@ export function AutomationRows({
                   onCheckedChange={(v) => void toggle(a, v)}
                   className="data-[state=checked]:bg-ink"
                 />
-                <span className="text-muted-foreground w-6 text-[12px]">
+                <span className="text-muted-foreground text-label-12 w-6">
                   {a.enabled ? 'On' : 'Off'}
                 </span>
               </span>

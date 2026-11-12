@@ -53,7 +53,7 @@ import { positionsAtEnd } from './table-model';
 
 /** A select-like trigger of the toolbar (38 px, muted while nothing is chosen). */
 export const toolbarSelectClass =
-  'border-line hover:bg-subtle focus-visible:outline-focus flex h-[38px] max-w-[240px] min-w-[150px] items-center gap-2 rounded-md border bg-white pr-2.5 pl-3 text-[14px] focus-visible:outline-2';
+  'border-line hover:bg-subtle focus-visible:outline-focus flex h-[40px] max-w-[240px] min-w-[150px] items-center gap-2 rounded-md border bg-background-100 pr-2.5 pl-3 text-label-14 focus-visible:outline-2';
 
 // ───────────────────────── density ─────────────────────────
 
@@ -91,7 +91,7 @@ export function DensityToggle() {
     <div
       role="group"
       aria-label="Row height"
-      className="border-line flex h-[38px] items-center gap-0.5 rounded-md border bg-white p-0.5"
+      className="border-line bg-background-100 flex h-[40px] items-center gap-0.5 rounded-md border p-0.5"
     >
       {options.map(({ id, label, Icon }) => (
         <button
@@ -153,7 +153,7 @@ export function StatusFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
         <ChevronDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-80 w-60">
-        <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
+        <DropdownMenuLabel className="text-muted-foreground text-label-12 font-medium">
           Status
         </DropdownMenuLabel>
         {choices.map(({ option, count }) => (
@@ -169,9 +169,7 @@ export function StatusFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
               style={{ background: solidVar(option.color) }}
             />
             <span className="min-w-0 flex-1 truncate">{option.label}</span>
-            <span className="text-muted-foreground font-mono text-[11.5px] tabular-nums">
-              {count}
-            </span>
+            <span className="text-muted-foreground text-label-12-mono tabular-nums">{count}</span>
           </DropdownMenuCheckboxItem>
         ))}
         {picked.length > 0 ? (
@@ -222,7 +220,7 @@ export function OwnerFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
         <ChevronDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-80 w-64">
-        <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
+        <DropdownMenuLabel className="text-muted-foreground text-label-12 font-medium">
           Owner
         </DropdownMenuLabel>
         {ids.map((id) => (
@@ -257,10 +255,10 @@ export function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCo
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-[38px] font-normal shadow-none">
+        <Button type="button" variant="outline" className="h-[40px] font-normal shadow-none">
           <Columns3 aria-hidden /> Columns
           {hiddenCount ? (
-            <span className="bg-soft text-ink-2 rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums">
+            <span className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px] font-normal tabular-nums">
               +{hiddenCount}
               <span className="sr-only"> hidden</span>
             </span>
@@ -269,9 +267,9 @@ export function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCo
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64">
         <fieldset className="flex flex-col gap-1">
-          <legend className="mb-1 text-sm font-semibold">Show columns</legend>
+          <legend className="text-label-13 mb-1 font-semibold">Show columns</legend>
           {fields.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No fields yet.</p>
+            <p className="text-muted-foreground text-copy-13">No fields yet.</p>
           ) : null}
           <div className="flex max-h-72 flex-col gap-0.5 overflow-auto">
             {fields.map((f) => {
@@ -279,7 +277,7 @@ export function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCo
               return (
                 <label
                   key={f.id}
-                  className="hover:bg-soft flex items-center gap-2 rounded px-1 py-0.5 text-sm"
+                  className="hover:bg-soft text-label-13 flex items-center gap-2 rounded px-1 py-0.5"
                 >
                   <input
                     type="checkbox"
@@ -292,7 +290,9 @@ export function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCo
               );
             })}
           </div>
-          <p className="text-muted-foreground pt-1 text-xs">Hidden columns belong to this view.</p>
+          <p className="text-muted-foreground text-label-12 pt-1">
+            Hidden columns belong to this view.
+          </p>
         </fieldset>
       </PopoverContent>
     </Popover>
@@ -344,14 +344,14 @@ export function TableActions({
   const menu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className="h-[38px] font-normal shadow-none">
+        <Button type="button" variant="outline" className="h-[40px] font-normal shadow-none">
           <Layers3 aria-hidden /> Actions <ChevronDown aria-hidden />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
         {n > 0 ? (
           <>
-            <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
+            <DropdownMenuLabel className="text-muted-foreground text-label-12 font-medium">
               {n === 1 ? '1 selected item' : `${n} selected items`}
             </DropdownMenuLabel>
             <DropdownMenuSub>
@@ -429,7 +429,7 @@ export function TableActions({
             <DropdownMenuSeparator />
           </>
         ) : null}
-        <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
+        <DropdownMenuLabel className="text-muted-foreground text-label-12 font-medium">
           Group by
         </DropdownMenuLabel>
         <DropdownMenuRadioGroup
@@ -451,13 +451,13 @@ export function TableActions({
       {n > 0 ? (
         <div role="region" aria-label="Selected items" className="flex items-center gap-2">
           {menu}
-          <span className="text-[14px] font-medium tabular-nums" aria-live="polite">
+          <span className="text-label-14 font-medium tabular-nums" aria-live="polite">
             {n === 1 ? '1 selected' : `${n} selected`}
           </span>
           <Button
             type="button"
             variant="ghost"
-            className="h-[38px] px-2.5"
+            className="h-[40px] px-2.5"
             onClick={() => store.getState().setSelected([])}
           >
             Clear
@@ -517,8 +517,8 @@ function BulkEditor({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[min(420px,calc(100vw-32px))]">
-        <DialogTitle className="text-lg font-bold">Set {field.name}</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-sm">
+        <DialogTitle className="text-heading-16">Set {field.name}</DialogTitle>
+        <DialogDescription className="text-muted-foreground text-label-13">
           The value is set on every selected item.
         </DialogDescription>
         <ui.Editor

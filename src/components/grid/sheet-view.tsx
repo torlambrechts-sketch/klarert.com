@@ -228,14 +228,14 @@ function SheetBody(props: SheetViewProps) {
       )}
     >
       <ShellCrumb>
-        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2.5 text-[14px]">
+        <nav aria-label="Breadcrumb" className="text-label-14 flex min-w-0 items-center gap-2.5">
           {props.folderName ? (
             <>
               <span className="text-muted-foreground flex min-w-0 items-center gap-2">
                 <Folder className="size-4 shrink-0" aria-hidden />
                 <span className="truncate">{props.folderName}</span>
               </span>
-              <span aria-hidden className="text-line-strong text-[20px] leading-none font-light">
+              <span aria-hidden className="text-line-strong text-label-20 leading-none font-light">
                 /
               </span>
             </>
@@ -245,7 +245,7 @@ function SheetBody(props: SheetViewProps) {
             <span className="truncate font-medium">{sheetName}</span>
           </span>
           {props.archived || data?.sheet.isLibrary ? (
-            <span className="bg-soft text-ink-3 shrink-0 rounded-full px-[9px] py-0.5 text-[11.5px] font-medium">
+            <span className="bg-soft text-muted-foreground text-label-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
               {props.archived ? 'Archived' : 'Library'}
             </span>
           ) : null}
@@ -258,7 +258,7 @@ function SheetBody(props: SheetViewProps) {
             <>
               {props.description}
               {realtime === 'offline' && online ? (
-                <span className="text-muted-foreground block text-[13px]">
+                <span className="text-muted-foreground text-label-13 block">
                   Live updates paused, reconnecting.
                 </span>
               ) : null}
@@ -356,17 +356,17 @@ function SheetBody(props: SheetViewProps) {
         />
       </div>
       {!canEdit ? (
-        <p className="text-muted-foreground -mt-1 mb-3 text-sm">
+        <p className="text-muted-foreground text-copy-13 -mt-1 mb-3">
           You can view this sheet. Ask an editor or admin to change it.
         </p>
       ) : null}
       {query.isError ? (
         <div
           role="alert"
-          className="border-line flex flex-col items-start gap-2 rounded-[var(--radius-card)] border p-4"
+          className="border-line flex flex-col items-start gap-2 rounded-lg border p-4"
         >
           <p className="font-semibold">The sheet could not be loaded.</p>
-          <p className="text-muted-foreground text-sm">{query.error.message}</p>
+          <p className="text-muted-foreground text-copy-13">{query.error.message}</p>
           <Button type="button" variant="outline" onClick={() => void query.refetch()}>
             Retry
           </Button>
@@ -374,7 +374,7 @@ function SheetBody(props: SheetViewProps) {
       ) : views.query.isError ? (
         <div
           role="alert"
-          className="border-line flex flex-col items-start gap-2 rounded-[var(--radius-card)] border p-4"
+          className="border-line flex flex-col items-start gap-2 rounded-lg border p-4"
         >
           <p className="font-semibold">The views of this sheet could not be loaded.</p>
           <Button type="button" variant="outline" onClick={() => void views.query.refetch()}>
@@ -488,7 +488,7 @@ function ViewBody({
   return (
     <>
       {view.filtered && active.type !== 'form' && active.type !== 'table' ? (
-        <p className="text-muted-foreground -mt-1 text-xs" aria-live="polite">
+        <p className="text-muted-foreground text-label-12 -mt-1" aria-live="polite">
           Showing {view.items.length.toLocaleString('en-GB')} of{' '}
           {(onlyGroup
             ? data.items.filter((i) => i.groupId === onlyGroup).length
@@ -586,7 +586,7 @@ function ViewBody({
       />
       <Dialog open={!!addFieldAt} onOpenChange={(o) => !o && store.getState().openAddField(null)}>
         <DialogContent className="w-[min(380px,calc(100vw-32px))]">
-          <DialogTitle className="text-lg font-bold">Add a field</DialogTitle>
+          <DialogTitle className="text-heading-16">Add a field</DialogTitle>
           <DialogDescription className="sr-only">
             Choose the type of the new field.
           </DialogDescription>
@@ -608,7 +608,7 @@ function GridSkeleton() {
     <div
       aria-busy="true"
       aria-label="Loading the table"
-      className="border-line flex flex-1 flex-col gap-2 rounded-[var(--radius-card)] border p-3"
+      className="border-line flex flex-1 flex-col gap-2 rounded-lg border p-3"
     >
       {Array.from({ length: 8 }, (_, i) => (
         <div

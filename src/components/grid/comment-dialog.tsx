@@ -34,8 +34,10 @@ export function CommentDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
       <DialogContent>
-        <DialogTitle className="text-lg font-bold">Add a comment</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-sm">{message}</DialogDescription>
+        <DialogTitle className="text-heading-16">Add a comment</DialogTitle>
+        <DialogDescription className="text-muted-foreground text-label-13">
+          {message}
+        </DialogDescription>
         <form
           className="flex flex-col gap-3"
           onSubmit={(e) => {
@@ -43,7 +45,7 @@ export function CommentDialog({
             void submit();
           }}
         >
-          <label htmlFor={id} className="text-sm font-semibold">
+          <label htmlFor={id} className="text-label-13 font-semibold">
             Comment
           </label>
           <textarea
@@ -61,7 +63,7 @@ export function CommentDialog({
               }
             }}
           />
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-label-12">
             It is posted as an update on the item and kept in the activity log.
           </p>
           <div className="flex justify-end gap-2">

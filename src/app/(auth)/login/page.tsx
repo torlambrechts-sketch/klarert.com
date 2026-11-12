@@ -37,11 +37,11 @@ export default async function LoginPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1>Compliance OS</h1>
-        <h2 className="text-lg font-bold">{MODES[mode].title}</h2>
+        <h2 className="text-heading-16">{MODES[mode].title}</h2>
         <p className="text-muted-foreground">{MODES[mode].intro}</p>
       </div>
       {error ? (
-        <p role="alert" className="text-crit text-sm">
+        <p role="alert" className="text-crit text-copy-13">
           That sign-in link has expired or was already used. Sign in again.
         </p>
       ) : null}
@@ -50,7 +50,7 @@ export default async function LoginPage({
       ) : (
         <PasswordForm key={mode} next={safeNext} mode={mode} />
       )}
-      <nav aria-label="Other ways to sign in" className="flex flex-col gap-1 text-sm">
+      <nav aria-label="Other ways to sign in" className="text-label-13 flex flex-col gap-1">
         {mode !== 'signin' ? (
           <Link className={linkClass} href={href('signin')}>
             Sign in with a password

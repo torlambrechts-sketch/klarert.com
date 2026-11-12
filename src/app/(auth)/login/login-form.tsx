@@ -19,7 +19,7 @@ export function LoginForm({ next }: { next?: string }) {
   if (state?.ok) {
     return (
       <div role="status" className="flex flex-col gap-2">
-        <h2 className="text-lg font-bold">Check your email</h2>
+        <h2 className="text-heading-16">Check your email</h2>
         <p className="text-muted-foreground">
           We sent a sign-in link to <strong className="text-foreground">{state.data.email}</strong>.
           Open it on this device to continue.
@@ -77,7 +77,7 @@ export function PasswordForm({ next, mode }: { next?: string; mode: 'signin' | '
         state={state}
       />
       {state && !state.ok && !state.error.fieldErrors ? (
-        <p role="alert" className="text-crit text-sm">
+        <p role="alert" className="text-crit text-copy-13">
           {state.error.message}
         </p>
       ) : null}

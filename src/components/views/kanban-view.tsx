@@ -69,7 +69,7 @@ export function KanbanView({
 
   if (!field)
     return (
-      <div className="border-line rounded-[var(--radius-card)] border border-dashed p-6 text-sm">
+      <div className="border-line text-label-13 rounded-lg border border-dashed p-6">
         Kanban needs a status, dropdown or another label field for its lanes. Add one to this sheet
         first.
       </div>
@@ -91,11 +91,11 @@ export function KanbanView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+      <div className="text-label-13 flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2">
           <span className="text-muted-foreground">Lanes by</span>
           <select
-            className="border-input h-8 rounded-md border bg-white px-2"
+            className="border-input bg-background-100 h-8 rounded-md border px-2"
             value={field.key}
             onChange={(e) => setConfig((c) => ({ ...c, labelFieldKey: e.target.value }))}
           >
@@ -107,7 +107,7 @@ export function KanbanView({
           </select>
         </label>
         {canEdit ? (
-          <span className="text-muted-foreground text-xs">
+          <span className="text-muted-foreground text-label-12">
             Drag a card to another lane to change it. Status rules still apply.
           </span>
         ) : null}
@@ -193,12 +193,12 @@ function LaneColumn({
       aria-label={`${name}, ${lane.items.length} ${lane.items.length === 1 ? 'item' : 'items'}`}
       data-lane={name}
       className={cn(
-        'border-line bg-subtle flex w-[272px] shrink-0 flex-col rounded-[var(--radius-card)] border',
+        'border-line bg-subtle flex w-[272px] shrink-0 flex-col rounded-lg border',
         highlighted && 'outline-ink bg-sel outline-2 -outline-offset-2 outline-dashed',
       )}
     >
       <h3
-        className="border-line bg-soft flex items-center justify-between gap-2 border-b px-3 py-2.5 text-[13px] font-extrabold"
+        className="border-line bg-soft text-label-13 flex items-center justify-between gap-2 border-b px-3 py-2.5 font-extrabold"
         style={{ borderLeft: `4px solid ${color}` }}
       >
         <span className="flex min-w-0 items-center gap-2">
@@ -209,7 +209,7 @@ function LaneColumn({
           />
           <span className="truncate">{name}</span>
         </span>
-        <span className="border-line rounded-sm border bg-white px-2 text-xs tabular-nums">
+        <span className="border-line bg-background-100 text-label-12 rounded-sm border px-2 tabular-nums">
           {lane.items.length}
         </span>
       </h3>
@@ -225,7 +225,7 @@ function LaneColumn({
           type="button"
           onClick={onAdd}
           aria-label={`Add an item to ${name}`}
-          className="text-muted-foreground hover:text-ink m-2 mt-0 flex items-center gap-1 rounded px-2 py-1 text-sm font-semibold"
+          className="text-muted-foreground hover:text-ink text-label-13 m-2 mt-0 flex items-center gap-1 rounded px-2 py-1 font-semibold"
         >
           <Plus className="size-4" aria-hidden /> Add
         </button>
@@ -258,8 +258,8 @@ function Card({
         zIndex: drag.isDragging ? 10 : undefined,
       }}
       className={cn(
-        'border-line flex flex-col gap-1 rounded-[var(--radius-card)] border bg-white p-2.5 text-[13px] shadow-sm',
-        drag.isDragging && 'shadow-lg',
+        'border-line bg-background-100 text-label-13 flex flex-col gap-1 rounded-lg border p-2.5',
+        drag.isDragging && 'shadow-menu',
         draggable && 'cursor-grab touch-none',
       )}
       {...drag.attributes}
@@ -276,11 +276,11 @@ function Card({
       >
         {item.name}
       </button>
-      <span className="text-muted-foreground text-xs">
+      <span className="text-muted-foreground text-label-12">
         <span className="font-mono">{item.displayId}</span>
         {person ? ` · ${person}` : ''}
       </span>
-      <span className="flex items-center justify-between gap-2 text-xs">
+      <span className="text-label-12 flex items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-1.5">
           <span
             aria-hidden
