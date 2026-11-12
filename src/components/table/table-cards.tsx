@@ -24,6 +24,7 @@ import { buildLayout, byPosition, cardFields, positionsAtEnd, type TableRow } fr
 
 const ESTIMATE: Record<TableRow['kind'], number> = {
   group: 44,
+  header: 0,
   item: 120,
   add: 48,
   summary: 0,
@@ -69,6 +70,7 @@ export function TableCards({
         collapsed,
         compare: viewCompare,
         canAdd: canEdit && !tg.virtual,
+        headers: false,
         onlyGroup: tg.onlyGroup,
         groupOf: tg.groupOf,
       }),

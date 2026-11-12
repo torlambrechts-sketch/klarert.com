@@ -1,6 +1,7 @@
-// The Table view's row model (docs/05 §3.1): one sticky column header for the whole sheet, then per group a title
-// row, the items, "+ Add" and, when a column has its summary on, a summary row. Groups are flattened into one list
-// so one virtualiser renders them all. Pure: data in, rows out, so it is unit-tested and the component only renders.
+// The Table view's row model (docs/05 §3.1): each group is a card: its title row, its own column header, the items,
+// "+ Add" and, when a column shows its summary, a summary row; a gap separates the cards. Groups are flattened into
+// one list so one virtualiser renders them all. Pure: data in, rows out, so it is unit-tested and the component only
+// renders.
 import type { GridColumn } from '@/engine/clipboard';
 import { keyBetween } from '@/engine/ordering';
 import { resolveFieldType } from '@/engine/fields/resolve';
@@ -8,22 +9,54 @@ import type { Field, Group, Item } from '@/engine/types';
 
 export type TableRow =
   | { kind: 'group'; key: string; group: Group; count: number; collapsed: boolean }
+  | { kind: 'header'; key: string; group: Group }
   | { kind: 'item'; key: string; group: Group; item: Item; index: number }
   | { kind: 'add'; key: string; group: Group }
   | { kind: 'summary'; key: string; group: Group; items: Item[] }
   | { kind: 'gap'; key: string };
 
+export type Density = 'comfortable' | 'compact';
+
 /** Row heights of the table (two-line item rows: the name, then the id and owner). */
-export const ROW_HEIGHT: Record<TableRow['kind'], number> = {
-  group: 44,
-  item: 52,
-  add: 40,
-  summary: 36,
-  gap: 24,
+export function rowHeight(kind: TableRow['kind'], density: Density = 'comfortable'): number {
+  switch (kind) {
+    case 'group':
+      return 48;
+    case 'header':
+      return 34;
+    case 'item':
+      return density === 'compact' ? 48 : 68;
+    case 'add':
+      return density === 'compact' ? 44 : 52;
+    case 'summary':
+      return 38;
+    case 'gap':
+      return 24;
+  }
+}
+
+/** The last row of a group's card (it carries the card's bottom edge). */
+export const endsCard = (rows: TableRow[], i: number) => {
+  const next = rows[i + 1];
+  return rows[i]!.kind !== 'gap' && (!next || next.kind === 'gap');
 };
 
-/** Height of the one column header row above the rows. */
-export const HEADER_HEIGHT = 40;
+/**
+ * Column widths that fill the table: when the columns are narrower than `available`, the leftover space is shared
+ * across them in proportion to their widths; wider tables keep their widths (and scroll).
+ */
+export function fitWidths(widths: number[], fixed: number, available: number): number[] {
+  const total = widths.reduce((a, b) => a + b, 0);
+  const room = available - fixed - total;
+  if (room <= 0 || total === 0) return widths;
+  let given = 0;
+  return widths.map((w, i) => {
+    if (i === widths.length - 1) return w + (room - given);
+    const extra = Math.floor((room * w) / total);
+    given += extra;
+    return w + extra;
+  });
+}
 
 export interface Layout {
   rows: TableRow[];
@@ -48,6 +81,8 @@ export function buildLayout(input: {
   canAdd: boolean;
   /** A summary row per open group: on when at least one column shows its summary. */
   summaries?: boolean;
+  /** A column header row in each open group (the Table; phone cards have none). Default true. */
+  headers?: boolean;
   /** Only these groups (second panel filter). */
   onlyGroup?: string | null;
   /** The group an item sits in; default its own group (virtual "group by" groups pass their lookup). */
@@ -69,6 +104,7 @@ export function buildLayout(input: {
     if (gi > 0) rows.push({ kind: 'gap', key: `x:${group.id}` });
     rows.push({ kind: 'group', key: `g:${group.id}`, group, count: items.length, collapsed });
     if (collapsed) return;
+    if (input.headers !== false) rows.push({ kind: 'header', key: `h:${group.id}`, group });
     for (const item of items) {
       rows.push({ kind: 'item', key: `i:${item.id}`, group, item, index: flat.length });
       flat.push(item);

@@ -13,7 +13,16 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { GripVertical, Lock, Plus } from 'lucide-react';
+import {
+  Archive,
+  ExternalLink,
+  GripVertical,
+  Lock,
+  LockOpen,
+  MessageSquare,
+  MoreHorizontal,
+  Plus,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { copyRange, planClear, planPaste, type GridColumn } from '@/engine/clipboard';
 import { resolveFieldType } from '@/engine/fields/resolve';
@@ -21,45 +30,59 @@ import { ownerField, ownerOf } from '@/engine/item-panel';
 import { donePercent } from '@/engine/views/group-by';
 import { keysBetween } from '@/engine/ordering';
 import type { SheetData } from '@/engine/sheet-data';
-import type { SummaryFn } from '@/engine/summaries';
+import { columnSummaries, type SummaryFn } from '@/engine/summaries';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { setSummary, type ViewConfig } from '@/engine/views/config';
 import { fieldUI } from '@/components/fields/registry';
-import { Avatar, cellValue, editorPopoverClass, TextEditor } from '@/components/fields/shared';
+import { cellValue, editorPopoverClass, TextEditor } from '@/components/fields/shared';
 import type { EditorProps } from '@/components/fields/types';
 import { FieldPicker } from '@/components/grid/field-picker';
 import { useGrid, useGridStore, type CellRef } from '@/components/grid/grid-store';
 import { useValueCommit } from '@/components/grid/use-commit';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { ColumnHeader } from './column-header';
+import { ColumnHeader, type ColumnMenuActions } from './column-header';
 import { GroupSummary } from './group-summary';
 import { GroupTitle } from './group-title';
+import { LockDialog } from './lock-dialog';
 import { useTableGroups } from './use-table-groups';
 import {
   buildLayout,
   byPosition,
   columnId,
-  HEADER_HEIGHT,
+  endsCard,
+  fitWidths,
   positionsAtEnd,
   rangeOf,
-  ROW_HEIGHT,
+  rowHeight,
   step,
   tableColumns,
+  type Density,
   type TableRow,
 } from './table-model';
 
-// The Table view (docs/05 §3.1, FR-21, FR-22): one sticky column header for the whole sheet, groups as collapsible
-// sections with a coloured title row, readable two-line rows (name, then id and owner), "+ Add" per group and
-// optional summary rows. Groups are flattened into one row list and virtualised (rows and columns), so 10,000 rows
-// stay fast. The grid element keeps keyboard focus and points at the active cell with aria-activedescendant, so
-// focus survives virtualisation.
+// The Table view (docs/05 §3.1): each group is a card spanning the content width: a title row (chevron, dot, name,
+// item count), its own column header (select all, small muted names, "+" add column), readable two-line rows
+// (name, then id and owner), "+ Add" and a summary footer. Groups are flattened into one row list and virtualised
+// (rows and columns), so 10,000 rows stay fast; columns stretch to fill the width and scroll only when they do not
+// fit. The grid element keeps keyboard focus and points at the active cell with aria-activedescendant, so focus
+// survives virtualisation. Shift+F10 opens the active row's actions menu.
 
-const ADD_COL = 48;
-const CHECK_W = 64;
-const BAR_W = 4;
+/** The trailing column: "+" in the column headers, the row actions menu in item rows. */
+const TRAIL = 48;
+/** The leading part of the sticky column: drag handle and checkbox (shown on hover, focus or selection). */
+const CHECK_W = 56;
+/** The card's left and right borders. */
+const EDGE = 2;
 const cellId = (itemId: string, col: string) => `cell-${itemId}-${col}`;
 
 export interface TableProps {
@@ -81,6 +104,8 @@ export interface TableProps {
   /** The active view's config: sort and column summaries live there. */
   config: ViewConfig;
   setConfig(update: (c: ViewConfig) => ViewConfig): void;
+  /** Updates (comments) per item, for the bubble after the name. */
+  updateCounts: ReadonlyMap<string, number>;
 }
 
 const storageOf = (f: Field) => resolveFieldType(f.type)?.storage;
@@ -117,6 +142,7 @@ export function Table({
   viewCompare,
   config,
   setConfig,
+  updateCounts,
 }: TableProps) {
   const store = useGridStore();
   const collapsed = useGrid((s) => s.collapsed);
@@ -126,19 +152,43 @@ export function Table({
   const anchor = useGrid((s) => s.anchor);
   const editing = useGrid((s) => s.editing);
   const selected = useGrid((s) => s.selected);
+  const density = useGrid((s) => s.density);
+  const rowMenu = useGrid((s) => s.rowMenu);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [lockFor, setLockFor] = useState<Item[] | null>(null);
+  // the width the columns stretch to fill
+  const [viewW, setViewW] = useState(0);
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => setViewW(el.clientWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const [dragging, setDragging] = useState<string | null>(null);
   /** The key typed on a cell that opened its editor (type to edit). */
   const [seed, setSeed] = useState<string | null>(null);
 
   const sort = config.sort.length === 1 ? config.sort[0]! : null;
-  const summaries = config.summaries;
   const columns = useMemo(() => tableColumns(data.fields, hidden), [data.fields, hidden]);
   const fieldCols = useMemo(
     () => columns.filter((c): c is Extract<GridColumn, { kind: 'field' }> => c.kind === 'field'),
     [columns],
   );
-  const showSummaries = !!summaries && fieldCols.some((c) => summaries[c.field.key]);
+  // number, option and date columns show a summary unless switched off; others when chosen
+  const summaries = useMemo(
+    () =>
+      columnSummaries(
+        fieldCols.map((c) => c.field),
+        config.summaries,
+        config.summaryOff,
+        ctx,
+      ),
+    [fieldCols, config.summaries, config.summaryOff, ctx],
+  );
+  const showSummaries = Object.keys(summaries).length > 0;
   const tg = useTableGroups({
     groups: data.groups,
     sheetId: data.sheet.id,
@@ -167,37 +217,59 @@ export function Table({
     layout.rows.forEach((r, i) => r.kind === 'item' && m.set(r.item.id, i));
     return m;
   }, [layout.rows]);
-  const widthOf = useCallback(
+  const baseWidth = useCallback(
     (f: Field) => widths[f.id] ?? f.width ?? resolveFieldType(f.type)?.defaultWidth ?? 140,
     [widths],
   );
   const stickyW = CHECK_W + nameWidth;
+  // columns stretch to fill the card; wider tables keep their widths and scroll
+  const fitted = useMemo(() => {
+    const base = fieldCols.map((c) => baseWidth(c.field));
+    const w = fitWidths(base, stickyW + TRAIL + EDGE, viewW);
+    return new Map(fieldCols.map((c, i) => [c.field.id, { shown: w[i]!, base: base[i]! }]));
+  }, [fieldCols, baseWidth, stickyW, viewW]);
+  const widthOf = useCallback(
+    (f: Field) => fitted.get(f.id)?.shown ?? baseWidth(f),
+    [fitted, baseWidth],
+  );
+  /** A width the person dragged to, back in stored terms (the stretch is added again when it fits). */
+  const toBase = useCallback(
+    (f: Field, shown: number) => {
+      const w = fitted.get(f.id);
+      return w && w.shown > 0 ? Math.round((shown * w.base) / w.shown) : shown;
+    },
+    [fitted],
+  );
 
   const rowV = useVirtualizer({
     count: layout.rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (i) => ROW_HEIGHT[layout.rows[i]!.kind],
+    estimateSize: (i) => rowHeight(layout.rows[i]!.kind, density),
     getItemKey: useCallback((i: number) => layout.rows[i]!.key, [layout.rows]),
-    // the rows start below the sticky column header
-    scrollMargin: HEADER_HEIGHT,
-    scrollPaddingStart: HEADER_HEIGHT,
     overscan: 10,
   });
   const colV = useVirtualizer({
     horizontal: true,
-    count: fieldCols.length + (canEdit ? 1 : 0),
+    count: fieldCols.length + 1,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (i) => (i < fieldCols.length ? widthOf(fieldCols[i]!.field) : ADD_COL),
+    estimateSize: (i) => (i < fieldCols.length ? widthOf(fieldCols[i]!.field) : TRAIL),
     getItemKey: useCallback(
-      (i: number) => (i < fieldCols.length ? fieldCols[i]!.field.id : '__add'),
+      (i: number) => (i < fieldCols.length ? fieldCols[i]!.field.id : '__trail'),
       [fieldCols],
     ),
     paddingStart: stickyW,
     scrollPaddingStart: stickyW,
     overscan: 3,
   });
-  useEffect(() => colV.measure(), [colV, widths, fieldCols, stickyW]);
-  useEffect(() => rowV.measure(), [rowV, layout.rows]);
+  useEffect(() => colV.measure(), [colV, fitted, fieldCols, stickyW]);
+  useEffect(() => rowV.measure(), [rowV, layout.rows, density]);
+  /** ARIA row numbers: every row but the gaps between cards. */
+  const ariaRows = useMemo(() => {
+    const m = new Map<string, number>();
+    let n = 0;
+    for (const r of layout.rows) if (r.kind !== 'gap') m.set(r.key, (n += 1));
+    return { index: m, count: n };
+  }, [layout.rows]);
 
   const canEditItem = useCallback(
     (item: Item) => canEdit && !item.id.startsWith('temp-') && (!item.locked || isAdmin),
@@ -276,6 +348,13 @@ export function Table({
     if (e.target !== scrollRef.current || editing) return;
     const rows = layout.flat.length;
     if (rows === 0) return;
+    if ((e.key === 'F10' && e.shiftKey) || e.key === 'ContextMenu') {
+      if (!active || active.itemId.startsWith('temp-')) return;
+      e.preventDefault();
+      reveal({ row: activePos?.row ?? 0, col: columns.length });
+      store.getState().openRowMenu(active.itemId);
+      return;
+    }
     const at = activePos ?? { row: 0, col: 0 };
     const keys: Record<string, 'up' | 'down' | 'left' | 'right'> = {
       ArrowUp: 'up',
@@ -559,21 +638,53 @@ export function Table({
   const fieldPropsStable = useStableEvent((field: Field) =>
     valueCommit.fieldProps(field, { canEdit, isAdmin }, () => store.getState().edit(null)),
   );
+  const rowActionsStable = useStableEvent((item: Item, action: RowAction) => {
+    store.getState().openRowMenu(null);
+    if (action === 'open') return onOpenItem(item);
+    if (action === 'archive') {
+      const s = store.getState();
+      if (s.selected.has(item.id)) {
+        const next = new Set(s.selected);
+        next.delete(item.id);
+        s.setSelected(next);
+      }
+      return void actions.setArchived([item.id], true);
+    }
+    if (action === 'lock') return setLockFor([item]);
+    if (action === 'unlock') return void actions.lockItem(item, false);
+  });
+  const columnActions = useStableEvent((field: Field, index: number): ColumnMenuActions => ({
+    sort: (dir) => setConfig((c) => ({ ...c, sort: dir ? [{ fieldKey: field.key, dir }] : [] })),
+    hide: () => {
+      store.getState().setHidden(field.id, true);
+      toast(`${field.name} hidden. Show it again from Columns.`);
+    },
+    settings: () => store.getState().openSettings(field.id),
+    insert: (side) =>
+      store
+        .getState()
+        .openAddField(side === 'left' ? { beforeFieldId: field.id } : { afterFieldId: field.id }),
+    duplicate: () => void actions.duplicateField(field),
+    move: (by) => void actions.moveField(field, Math.max(0, index + by)),
+    remove: () => void actions.deleteField(field),
+    summary: (fn: SummaryFn | null) => setConfig((c) => setSummary(c, field.key, fn)),
+    resize: (w, done) => {
+      const base = toBase(field, w);
+      store.getState().setWidth(field.id, base);
+      if (done)
+        void actions
+          .updateField(field, { width: base })
+          .then(() => store.getState().setWidth(field.id, null));
+    },
+  }));
 
   const vRows = rowV.getVirtualItems();
   const vCols = colV.getVirtualItems();
-  const totalW = colV.getTotalSize();
+  const totalW = colV.getTotalSize() + EDGE;
   const dragDisabled = config.sort.length > 0 || !canEdit || tg.virtual;
   const activeId =
     active && rowIndexOfItem.has(active.itemId) ? cellId(active.itemId, active.col) : undefined;
   const editingItem = editing ? layout.flat[layout.index.get(editing.itemId) ?? -1] : undefined;
-  const shownItems = useMemo(
-    () =>
-      [...layout.byGroup.entries()]
-        .filter(([g]) => !onlyGroup || g === onlyGroup)
-        .flatMap(([, l]) => l),
-    [layout.byGroup, onlyGroup],
-  );
 
   const firstAddRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
@@ -592,13 +703,13 @@ export function Table({
       onDragEnd={onDragEnd}
       onDragCancel={() => setDragging(null)}
     >
-      <div className="border-line relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border">
+      <div className="relative flex min-h-0 flex-1 flex-col">
         <div
           ref={scrollRef}
           role="grid"
           aria-label={`${ctx.sheet.name} table`}
-          aria-rowcount={layout.flat.length + 1}
-          aria-colcount={columns.length}
+          aria-rowcount={ariaRows.count}
+          aria-colcount={columns.length + 1}
           aria-multiselectable
           aria-activedescendant={activeId}
           tabIndex={0}
@@ -609,39 +720,31 @@ export function Table({
             if (e.target === scrollRef.current && !store.getState().active && layout.flat[0])
               store.getState().focus({ itemId: layout.flat[0].id, col: 'name' });
           }}
-          className="grid-scroll relative min-h-0 flex-1 overflow-auto bg-white outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
+          className="grid-scroll relative min-h-0 flex-1 overflow-auto rounded-[10px] outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
         >
-          <HeaderRow
-            ctx={ctx}
-            width={totalW}
-            stickyW={stickyW}
-            fieldCols={fieldCols}
-            vCols={vCols}
-            widthOf={widthOf}
-            canEdit={canEdit}
-            isAdmin={isAdmin}
-            allFields={data.fields}
-            actions={actions}
-            sort={sort}
-            setConfig={setConfig}
-            summaries={summaries}
-            shownItems={shownItems}
-            selected={selected}
-            onSelectItems={selectItemsStable}
-          />
           <div style={{ height: rowV.getTotalSize(), width: totalW, position: 'relative' }}>
             {vRows.map((vr) => {
               const row = layout.rows[vr.index]!;
+              const first = row.kind === 'group';
+              const last = endsCard(layout.rows, vr.index);
               return (
                 <div
                   key={row.key}
                   role={row.kind === 'gap' ? 'presentation' : 'row'}
-                  aria-rowindex={row.kind === 'item' ? row.index + 2 : undefined}
-                  className="absolute top-0 left-0 flex"
+                  aria-rowindex={ariaRows.index.get(row.key)}
+                  className={cn(
+                    'absolute top-0 left-0 flex',
+                    row.kind !== 'gap' && 'border-line overflow-clip border-x bg-white',
+                    row.kind === 'item' && 'group/row',
+                    first && 'rounded-t-[10px] border-t',
+                    last && 'rounded-b-[10px]',
+                    // item and header rows draw their own bottom line
+                    last && row.kind !== 'item' && row.kind !== 'header' && 'border-b',
+                  )}
                   style={{
                     height: vr.size,
                     width: totalW,
-                    transform: `translateY(${vr.start - rowV.options.scrollMargin}px)`,
+                    transform: `translateY(${vr.start}px)`,
                   }}
                 >
                   <RowContent
@@ -652,6 +755,7 @@ export function Table({
                     fieldCols={fieldCols}
                     vCols={vCols}
                     canEdit={canEdit}
+                    isAdmin={isAdmin}
                     canEditItem={canEditItem}
                     owner={owner}
                     active={active}
@@ -661,6 +765,7 @@ export function Table({
                     editing={editing}
                     seed={seed}
                     summaries={summaries}
+                    sort={sort}
                     dragDisabled={dragDisabled}
                     actions={actions}
                     onMouseDown={onMouseDownStable}
@@ -675,6 +780,14 @@ export function Table({
                     onCancelEdit={cancelEditStable}
                     fieldProps={fieldPropsStable}
                     editingItem={editingItem}
+                    comments={row.kind === 'item' ? (updateCounts.get(row.item.id) ?? 0) : 0}
+                    menuOpen={row.kind === 'item' && rowMenu === row.item.id}
+                    onRowAction={rowActionsStable}
+                    allFields={data.fields}
+                    widthOf={widthOf}
+                    columnActions={columnActions}
+                    density={density}
+                    endOfCard={last}
                   />
                 </div>
               );
@@ -710,144 +823,15 @@ export function Table({
           </div>
         ) : null}
       </DragOverlay>
+      <LockDialog items={lockFor} actions={actions} onClose={() => setLockFor(null)} />
       {valueCommit.dialog}
     </DndContext>
   );
 }
 
-// ───────────────────────── the column header ─────────────────────────
-
-function HeaderRow(p: {
-  ctx: Ctx;
-  width: number;
-  stickyW: number;
-  fieldCols: Extract<GridColumn, { kind: 'field' }>[];
-  vCols: { index: number; start: number; size: number; key: React.Key }[];
-  widthOf(f: Field): number;
-  canEdit: boolean;
-  isAdmin: boolean;
-  allFields: Field[];
-  actions: SheetActions;
-  sort: { fieldKey: string; dir: 'asc' | 'desc' } | null;
-  setConfig(update: (c: ViewConfig) => ViewConfig): void;
-  summaries: ViewConfig['summaries'];
-  shownItems: Item[];
-  selected: ReadonlySet<string>;
-  onSelectItems(items: Item[], checked: boolean): void;
-}) {
-  const store = useGridStore();
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const allSelected = p.shownItems.length > 0 && p.shownItems.every((i) => p.selected.has(i.id));
-  return (
-    <div
-      role="row"
-      aria-rowindex={1}
-      className="sticky top-0 z-[4] flex"
-      style={{ height: HEADER_HEIGHT, width: p.width }}
-    >
-      <div
-        role="columnheader"
-        className="border-line bg-subtle sticky left-0 z-[2] flex shrink-0 items-center border-r border-b"
-        style={{ width: p.stickyW, paddingLeft: BAR_W }}
-      >
-        {p.canEdit ? (
-          <span className="flex w-8 shrink-0 justify-center">
-            <input
-              type="checkbox"
-              aria-label="Select all items"
-              checked={allSelected}
-              disabled={p.shownItems.length === 0}
-              onChange={(e) => p.onSelectItems(p.shownItems, e.target.checked)}
-            />
-          </span>
-        ) : null}
-        <span
-          className="text-muted-foreground flex-1 truncate px-2 text-[12.5px] font-medium"
-          style={{ paddingLeft: p.canEdit ? 28 : 8 }}
-        >
-          {p.ctx.sheet.itemLabel}
-        </span>
-      </div>
-      {p.vCols.map((vc) => {
-        if (vc.index >= p.fieldCols.length)
-          return (
-            <div
-              key="__add"
-              role="columnheader"
-              className="border-line bg-subtle absolute top-0 flex h-full items-center justify-center border-b"
-              style={{ left: vc.start, width: vc.size }}
-            >
-              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button type="button" size="icon-sm" variant="ghost" aria-label="Add a field">
-                    <Plus aria-hidden />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-80">
-                  <FieldPicker
-                    onPick={(type, name) => {
-                      setPickerOpen(false);
-                      void p.actions.addField(type, undefined, name);
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          );
-        const field = p.fieldCols[vc.index]!.field;
-        const index = p.allFields.findIndex((f) => f.id === field.id);
-        return (
-          <div
-            key={field.id}
-            className="bg-subtle absolute top-0 h-full"
-            style={{ left: vc.start, width: vc.size }}
-          >
-            <ColumnHeader
-              field={field}
-              width={p.widthOf(field)}
-              ctx={p.ctx}
-              canEdit={p.canEdit}
-              isAdmin={p.isAdmin}
-              sorted={p.sort?.fieldKey === field.key ? p.sort.dir : null}
-              summary={p.summaries?.[field.key]}
-              first={index === 0}
-              last={index === p.allFields.length - 1}
-              dragDisabled={!p.canEdit}
-              actions={{
-                sort: (dir) =>
-                  p.setConfig((c) => ({ ...c, sort: dir ? [{ fieldKey: field.key, dir }] : [] })),
-                hide: () => {
-                  store.getState().setHidden(field.id, true);
-                  toast(`${field.name} hidden. Show it again from Columns.`);
-                },
-                settings: () => store.getState().openSettings(field.id),
-                insert: (side) =>
-                  store
-                    .getState()
-                    .openAddField(
-                      side === 'left' ? { beforeFieldId: field.id } : { afterFieldId: field.id },
-                    ),
-                duplicate: () => void p.actions.duplicateField(field),
-                move: (by) => void p.actions.moveField(field, Math.max(0, index + by)),
-                remove: () => void p.actions.deleteField(field),
-                summary: (fn: SummaryFn | null) => p.setConfig((c) => setSummary(c, field.key, fn)),
-                resize: (w, done) => {
-                  store.getState().setWidth(field.id, w);
-                  if (done)
-                    void p.actions
-                      .updateField(field, { width: w })
-                      .then(() => store.getState().setWidth(field.id, null));
-                },
-              }}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 // ───────────────────────── rows ─────────────────────────
+
+type RowAction = 'open' | 'archive' | 'lock' | 'unlock';
 
 interface RowProps {
   row: TableRow;
@@ -858,6 +842,7 @@ interface RowProps {
   fieldCols: Extract<GridColumn, { kind: 'field' }>[];
   vCols: { index: number; start: number; size: number; key: React.Key }[];
   canEdit: boolean;
+  isAdmin: boolean;
   canEditItem(item: Item): boolean;
   /** The sheet's owner field (first people field), shown under the name. */
   owner: Field | null;
@@ -868,7 +853,9 @@ interface RowProps {
   editing: CellRef | null;
   editingItem: Item | undefined;
   seed: string | null;
-  summaries: ViewConfig['summaries'];
+  /** Field key → the summary its column shows. */
+  summaries: Record<string, SummaryFn>;
+  sort: { fieldKey: string; dir: 'asc' | 'desc' } | null;
   dragDisabled: boolean;
   actions: SheetActions;
   onMouseDown(e: React.MouseEvent): void;
@@ -882,9 +869,20 @@ interface RowProps {
   onCancelEdit(): void;
   /** "Add …" and "Edit options" for the open editor (people who may edit the field). */
   fieldProps(field: Field): Pick<EditorProps, 'onAddOption' | 'onEditField'>;
+  /** Updates (comments) on this row's item. */
+  comments: number;
+  /** The row actions menu is open (Shift+F10 or the "…" button). */
+  menuOpen: boolean;
+  onRowAction(item: Item, action: RowAction): void;
+  allFields: Field[];
+  widthOf(f: Field): number;
+  columnActions(field: Field, index: number): ColumnMenuActions;
+  density: Density;
+  /** The row is the last of its group card. */
+  endOfCard: boolean;
 }
 
-/** The sticky left part of a row: room for the group bar (only the title row draws it), then the checkbox, handle and name. */
+/** The sticky left part of a row: the leading controls and the name. */
 function Sticky({
   width,
   children,
@@ -892,21 +890,16 @@ function Sticky({
   role = 'gridcell',
 }: {
   width: number;
-  /** Kept by callers; only the group title row carries the colour bar. */
-  color?: string;
   children?: React.ReactNode;
   className?: string;
   /** Rows own only cells (ARIA grid): the sticky part is a cell of its own, or none when it wraps the name cell. */
-  role?: 'gridcell' | 'none';
+  role?: 'gridcell' | 'none' | 'columnheader';
 }) {
   return (
     <div
       role={role}
-      className={cn(
-        'border-b-line-2 border-r-line sticky left-0 z-[2] flex shrink-0 items-center border-r border-b bg-white',
-        className,
-      )}
-      style={{ width, borderLeft: `${BAR_W}px solid transparent` }}
+      className={cn('sticky left-0 z-[2] flex shrink-0 items-center bg-white', className)}
+      style={{ width }}
     >
       {children}
     </div>
@@ -917,6 +910,7 @@ function RowContent(p: RowProps) {
   const { row } = p;
   if (row.kind === 'gap') return null;
   if (row.kind === 'group') return <GroupRow {...p} row={row} />;
+  if (row.kind === 'header') return <HeaderRow {...p} row={row} />;
   if (row.kind === 'item') return <ItemRow {...p} row={row} />;
   if (row.kind === 'add') return <AddRow {...p} row={row} />;
   return <SummaryRow {...p} row={row} />;
@@ -930,31 +924,17 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
     data: { type: 'group', groupId: row.group.id, at: 'top' },
   });
   const items = p.groupItems.get(row.group.id) ?? [];
-  const allSelected = items.length > 0 && items.every((i) => p.selected.has(i.id));
   return (
     <div
       ref={drop.setNodeRef}
       role="gridcell"
       className={cn(
-        'border-line bg-subtle flex w-full items-center border-b',
+        'flex w-full items-center',
+        !row.collapsed && 'border-b-line-2 border-b',
         drop.isOver && 'bg-sel',
       )}
-      style={{
-        borderLeft: `${BAR_W}px solid transparent`,
-      }}
     >
-      <div className="sticky left-0 flex items-center gap-1">
-        {p.canEdit ? (
-          <span className="flex w-8 shrink-0 justify-center">
-            <input
-              type="checkbox"
-              aria-label={`Select all items in ${row.group.name}`}
-              checked={allSelected}
-              disabled={items.length === 0}
-              onChange={(e) => p.onSelectItems(items, e.target.checked)}
-            />
-          </span>
-        ) : null}
+      <div className="sticky left-0 flex items-center px-2">
         <GroupTitle
           group={row.group}
           count={row.count}
@@ -964,6 +944,97 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
         />
       </div>
     </div>
+  );
+}
+
+/** The column header at the top of a group card: select all of the group, the column names, "+" add a column. */
+function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> }) {
+  const { row } = p;
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const items = p.groupItems.get(row.group.id) ?? [];
+  const allSelected = items.length > 0 && items.every((i) => p.selected.has(i.id));
+  return (
+    <>
+      <Sticky width={p.stickyW} role="columnheader" className="border-b-soft border-b">
+        {p.canEdit ? (
+          <span className="flex w-[52px] shrink-0 justify-end pr-1.5">
+            <input
+              type="checkbox"
+              aria-label={`Select all items in ${row.group.name}`}
+              checked={allSelected}
+              disabled={items.length === 0}
+              onChange={(e) => p.onSelectItems(items, e.target.checked)}
+            />
+          </span>
+        ) : (
+          <span className="w-[52px] shrink-0" />
+        )}
+        <span className="text-muted-foreground truncate pl-3 text-[12px]">
+          {p.ctx.sheet.itemLabel}
+        </span>
+      </Sticky>
+      {p.vCols.map((vc) => {
+        if (vc.index >= p.fieldCols.length)
+          return (
+            <div
+              key="__trail"
+              role="columnheader"
+              className="border-b-soft absolute top-0 flex h-full items-center justify-center border-b bg-white"
+              style={{ left: vc.start, width: vc.size }}
+            >
+              {p.canEdit ? (
+                <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label="Add a field"
+                      className="text-muted-foreground"
+                    >
+                      <Plus aria-hidden />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80">
+                    <FieldPicker
+                      onPick={(type, name) => {
+                        setPickerOpen(false);
+                        void p.actions.addField(type, undefined, name);
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <span className="sr-only">Actions</span>
+              )}
+            </div>
+          );
+        const field = p.fieldCols[vc.index]!.field;
+        const index = p.allFields.findIndex((f) => f.id === field.id);
+        return (
+          <div
+            key={field.id}
+            className="absolute top-0 h-full"
+            style={{ left: vc.start, width: vc.size }}
+          >
+            <ColumnHeader
+              scope={row.group.id}
+              field={field}
+              width={p.widthOf(field)}
+              ctx={p.ctx}
+              canEdit={p.canEdit}
+              isAdmin={p.isAdmin}
+              sorted={p.sort?.fieldKey === field.key ? p.sort.dir : null}
+              summary={p.summaries[field.key]}
+              first={index === 0}
+              last={index === p.allFields.length - 1}
+              dragDisabled={!p.canEdit}
+              actions={p.columnActions(field, index)}
+            />
+          </div>
+        );
+      })}
+    </>
   );
 }
 
@@ -989,16 +1060,22 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
     col <= p.range.right;
   const isActive = (col: string) => p.active?.itemId === item.id && p.active.col === col;
   const isEditing = (col: string) => p.editing?.itemId === item.id && p.editing.col === col;
+  const rowActive = p.active?.itemId === item.id;
   const ownerId = p.owner ? ownerOf(item, p.owner, ctx) : null;
   const ownerName = ownerId ? (ctx.people.get(ownerId)?.name ?? 'Former member') : null;
+  // the leading controls show on hover, on the active row and while anything is selected
+  const reveal = cn(
+    'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100',
+    (rowActive || p.selected.size > 0) && 'opacity-100',
+  );
   return (
     <>
       <Sticky
         width={p.stickyW}
-        color={row.group.color}
         role="none"
         className={cn(
-          isSelected && 'bg-sel',
+          'border-b-line-2 group-hover/row:bg-subtle border-b',
+          isSelected && 'bg-sel group-hover/row:bg-sel',
           drop.isOver && 'shadow-[inset_0_2px_0_var(--focus)]',
           drag.isDragging && 'opacity-40',
         )}
@@ -1012,20 +1089,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
           aria-readonly={!editable || undefined}
           className="flex h-full w-full items-center"
         >
-          <span className="flex w-8 shrink-0 items-center justify-center">
-            {p.canEdit ? (
-              <input
-                type="checkbox"
-                aria-label={`Select ${item.name}`}
-                checked={isSelected}
-                onClick={(e) =>
-                  p.onSelectRow(item, (e.target as HTMLInputElement).checked, e.shiftKey)
-                }
-                onChange={() => undefined}
-              />
-            ) : null}
-          </span>
-          <span className="flex w-6 shrink-0 items-center justify-center">
+          <span className="flex w-5 shrink-0 items-center justify-end">
             {!p.dragDisabled && editable ? (
               <button
                 ref={drag.setNodeRef}
@@ -1034,10 +1098,27 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                 {...drag.attributes}
                 tabIndex={-1}
                 aria-label={`Drag ${item.name} to move it`}
-                className="text-muted-foreground hover:text-ink cursor-grab rounded p-0.5"
+                className={cn(
+                  'text-muted-foreground hover:text-ink cursor-grab rounded p-0.5',
+                  reveal,
+                )}
               >
                 <GripVertical className="size-3.5" aria-hidden />
               </button>
+            ) : null}
+          </span>
+          <span className="flex w-8 shrink-0 items-center justify-center">
+            {p.canEdit ? (
+              <input
+                type="checkbox"
+                aria-label={`Select ${item.name}`}
+                checked={isSelected}
+                className={cn(reveal, isSelected && 'opacity-100')}
+                onClick={(e) =>
+                  p.onSelectRow(item, (e.target as HTMLInputElement).checked, e.shiftKey)
+                }
+                onChange={() => undefined}
+              />
             ) : null}
           </span>
           <div
@@ -1045,20 +1126,20 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
             onMouseDown={p.onMouseDown}
             onDoubleClick={p.onDoubleClick}
             className={cn(
-              'relative flex h-full min-w-0 flex-1 cursor-default flex-col justify-center gap-0.5 px-2',
+              'relative flex h-full min-w-0 flex-1 cursor-default flex-col justify-center gap-0.5 pr-2 pl-3',
               inRange(0) && 'bg-sel',
               isActive('name') && 'outline-focus z-[1] outline-2 -outline-offset-2',
             )}
           >
-            <span className="text-cell flex min-w-0 items-center leading-tight">
+            <span className="flex min-w-0 items-center gap-2 text-[14px] leading-tight">
               {item.id.startsWith('temp-') ? (
-                <span className="truncate font-medium">{item.name}</span>
+                <span className="text-ink truncate">{item.name}</span>
               ) : (
                 <button
                   type="button"
                   tabIndex={-1}
                   title={`Open ${item.displayId}`}
-                  className="max-w-full truncate text-left font-medium hover:underline"
+                  className="text-ink min-w-0 truncate text-left font-normal hover:underline"
                   onMouseDown={(e) => e.stopPropagation()}
                   onDoubleClick={(e) => e.stopPropagation()}
                   onClick={(e) => {
@@ -1070,51 +1151,62 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                   {item.name}
                 </button>
               )}
-            </span>
-            <span className="text-muted-foreground text-meta flex min-w-0 items-center gap-1.5">
-              <span className="shrink-0 font-mono">{item.displayId}</span>
-              {ownerId ? (
-                <>
-                  <span aria-hidden>·</span>
-                  <Avatar id={ownerId} ctx={ctx} size={20} decorative />
-                  <span className="truncate">{ownerName}</span>
-                </>
-              ) : null}
-              {item.locked ? (
+              {p.comments > 0 ? (
                 <span
-                  className="flex shrink-0 items-center gap-0.5"
-                  title={item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
+                  className="border-line-strong text-ink inline-flex h-[22px] min-w-7 shrink-0 items-center justify-center gap-1 rounded-full border bg-white px-1.5 font-mono text-[11px]"
+                  title={p.comments === 1 ? '1 update' : `${p.comments} updates`}
                 >
-                  <Lock className="size-3" aria-hidden />
-                  <span className="sr-only">
-                    {item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
-                  </span>
+                  <MessageSquare className="size-3" aria-hidden />
+                  {p.comments}
+                  <span className="sr-only">{p.comments === 1 ? ' update' : ' updates'}</span>
                 </span>
               ) : null}
-              {p.actions.held.has(item.id) ? (
-                <span
-                  className="flex shrink-0 items-center gap-1"
-                  title="Actions run when you finish this row"
-                >
-                  <span className="border-line text-ink rounded-full border px-1.5 leading-4">
-                    Editing
-                  </span>
-                  <span className="sr-only">Actions run when you finish this row.</span>
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    className="text-ink font-semibold underline-offset-2 hover:underline"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void p.actions.finishItem(item.id);
-                    }}
+            </span>
+            {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
+              <span className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-[12px] leading-4">
+                <span className="shrink-0 font-mono">{item.displayId}</span>
+                {ownerName ? (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span className="truncate font-mono">{ownerName}</span>
+                  </>
+                ) : null}
+                {item.locked ? (
+                  <span
+                    className="flex shrink-0 items-center gap-0.5"
+                    title={item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
                   >
-                    Done
-                  </button>
-                </span>
-              ) : null}
-            </span>
+                    <Lock className="size-3" aria-hidden />
+                    <span className="sr-only">
+                      {item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
+                    </span>
+                  </span>
+                ) : null}
+                {p.actions.held.has(item.id) ? (
+                  <span
+                    className="flex shrink-0 items-center gap-1"
+                    title="Actions run when you finish this row"
+                  >
+                    <span className="border-line text-ink rounded-full border px-1.5 leading-4">
+                      Editing
+                    </span>
+                    <span className="sr-only">Actions run when you finish this row.</span>
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="text-ink font-semibold underline-offset-2 hover:underline"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void p.actions.finishItem(item.id);
+                      }}
+                    >
+                      Done
+                    </button>
+                  </span>
+                ) : null}
+              </span>
+            )}
             {isEditing('name') ? (
               <CellEditor
                 width={Math.max(280, p.nameWidth)}
@@ -1135,7 +1227,20 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
         </div>
       </Sticky>
       {vCols.map((vc) => {
-        if (vc.index >= fieldCols.length) return null;
+        if (vc.index >= fieldCols.length)
+          return (
+            <RowMenu
+              key="__trail"
+              item={item}
+              left={vc.start}
+              width={vc.size}
+              selected={isSelected}
+              open={p.menuOpen}
+              canEdit={p.canEdit}
+              isAdmin={p.isAdmin}
+              onAction={p.onRowAction}
+            />
+          );
         const field = fieldCols[vc.index]!.field;
         const col = p.colIndex.get(field.id)!;
         const cellEditing = isEditing(field.id);
@@ -1148,6 +1253,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
             left={vc.start}
             width={vc.size}
             selected={inRange(col)}
+            rowSelected={isSelected}
             active={isActive(field.id)}
             editing={cellEditing}
             seed={cellEditing ? p.seed : null}
@@ -1167,6 +1273,91 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
   );
 });
 
+/** The "…" at the end of every item row: open, archive, lock (admins). Shift+F10 on the grid opens it too. */
+function RowMenu({
+  item,
+  left,
+  width,
+  selected,
+  open,
+  canEdit,
+  isAdmin,
+  onAction,
+}: {
+  item: Item;
+  left: number;
+  width: number;
+  selected: boolean;
+  open: boolean;
+  canEdit: boolean;
+  isAdmin: boolean;
+  onAction(item: Item, action: RowAction): void;
+}) {
+  const store = useGridStore();
+  const temp = item.id.startsWith('temp-');
+  return (
+    <div
+      role="gridcell"
+      className={cn(
+        'border-b-line-2 group-hover/row:bg-subtle absolute top-0 flex h-full items-center justify-center border-b bg-white',
+        selected && 'bg-sel group-hover/row:bg-sel',
+      )}
+      style={{ left, width }}
+    >
+      {temp ? null : (
+        <DropdownMenu
+          open={open}
+          onOpenChange={(o) => store.getState().openRowMenu(o ? item.id : null)}
+        >
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              tabIndex={-1}
+              aria-label={`Actions for ${item.name}`}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            onCloseAutoFocus={(e) => {
+              // back to the grid, which keeps the active cell
+              e.preventDefault();
+              document.querySelector<HTMLElement>('[role="grid"]')?.focus({ preventScroll: true });
+            }}
+          >
+            <DropdownMenuItem onSelect={() => onAction(item, 'open')}>
+              <ExternalLink aria-hidden /> Open
+            </DropdownMenuItem>
+            {canEdit && (!item.locked || isAdmin) ? (
+              <DropdownMenuItem onSelect={() => onAction(item, 'archive')}>
+                <Archive aria-hidden /> Archive
+              </DropdownMenuItem>
+            ) : null}
+            {isAdmin ? (
+              <>
+                <DropdownMenuSeparator />
+                {item.locked ? (
+                  <DropdownMenuItem onSelect={() => onAction(item, 'unlock')}>
+                    <LockOpen aria-hidden /> Unlock
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onSelect={() => onAction(item, 'lock')}>
+                    <Lock aria-hidden /> Lock
+                  </DropdownMenuItem>
+                )}
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
+  );
+}
+
 const TableCell = memo(function TableCell({
   item,
   field,
@@ -1174,6 +1365,7 @@ const TableCell = memo(function TableCell({
   left,
   width,
   selected,
+  rowSelected,
   active,
   editing,
   seed,
@@ -1193,6 +1385,8 @@ const TableCell = memo(function TableCell({
   left: number;
   width: number;
   selected: boolean;
+  /** The row's checkbox is ticked. */
+  rowSelected: boolean;
   active: boolean;
   editing: boolean;
   seed: string | null;
@@ -1221,13 +1415,13 @@ const TableCell = memo(function TableCell({
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'border-r-soft border-b-line-2 text-cell absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-3 hover:shadow-[inset_0_0_0_1px_var(--line-strong)] [&_[data-pill]]:-mx-1.5',
-        selected && 'bg-sel',
+        'border-b-line-2 text-ink-2 group-hover/row:bg-subtle absolute top-0 flex h-full items-center overflow-hidden border-b bg-white px-[14px] text-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] [&_[data-pill]]:-mx-1.5',
+        (selected || rowSelected) && 'bg-sel group-hover/row:bg-sel',
         active && 'outline-focus z-[1] outline-2 -outline-offset-2',
       )}
       style={{ left, width }}
     >
-      <ui.Cell value={value as never} field={field} item={item} ctx={ctx} density="list" />
+      <ui.Cell value={value as never} field={field} item={item} ctx={ctx} density="table" />
       {missing ? (
         <span
           aria-hidden
@@ -1337,31 +1531,39 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
   });
   const label = ctx.sheet.itemLabel.toLowerCase();
   return (
-    <Sticky width={p.stickyW} color={row.group.color} className={cn(drop.isOver && 'bg-sel')}>
-      <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-14">
-        <input
-          ref={p.addRef}
-          className="placeholder:text-muted-foreground text-cell h-full w-full bg-transparent px-2 outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
-          placeholder={`+ Add ${label}`}
-          aria-label={`Add ${label} to ${row.group.name}`}
-          value={name}
-          maxLength={500}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              const n = name.trim();
-              if (!n) return;
-              setName('');
-              void p.onAdd(row.group, n);
-            } else if (e.key === 'Escape') {
-              setName('');
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-        />
-      </div>
-    </Sticky>
+    <div
+      className={cn(
+        'flex w-full items-stretch',
+        !p.endOfCard && 'border-b-line-2 border-b',
+        drop.isOver && 'bg-sel',
+      )}
+    >
+      <Sticky width={p.stickyW} className={cn(drop.isOver && 'bg-sel')}>
+        <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[52px]">
+          <input
+            ref={p.addRef}
+            className="placeholder:text-muted-foreground text-ink h-full w-full bg-transparent px-3 text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+            placeholder={`+ Add ${label}`}
+            aria-label={`Add ${label} to ${row.group.name}`}
+            value={name}
+            maxLength={500}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const n = name.trim();
+                if (!n) return;
+                setName('');
+                void p.onAdd(row.group, n);
+              } else if (e.key === 'Escape') {
+                setName('');
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+          />
+        </div>
+      </Sticky>
+    </div>
   );
 }
 
@@ -1369,20 +1571,18 @@ function SummaryRow(p: RowProps & { row: Extract<TableRow, { kind: 'summary' }> 
   const { row, ctx, fieldCols, vCols } = p;
   return (
     <>
-      <Sticky width={p.stickyW} color={row.group.color}>
-        <span className="text-muted-foreground text-meta px-3 font-semibold">
-          Summary<span className="sr-only"> of {row.group.name}</span>
-        </span>
+      <Sticky width={p.stickyW}>
+        <span className="sr-only">Summary of {row.group.name}</span>
       </Sticky>
       {vCols.map((vc) => {
         if (vc.index >= fieldCols.length) return null;
         const field = fieldCols[vc.index]!.field;
-        const fn = p.summaries?.[field.key];
+        const fn = p.summaries[field.key];
         return (
           <div
             key={field.id}
             role="gridcell"
-            className="border-line bg-subtle absolute top-0 flex h-full items-center border-r border-b px-2"
+            className="absolute top-0 flex h-full items-center bg-white px-[14px]"
             style={{ left: vc.start, width: vc.size }}
           >
             {fn ? (

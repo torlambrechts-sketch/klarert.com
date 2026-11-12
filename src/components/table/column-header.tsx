@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { defaultSummary, SUMMARY_LABELS, summaryOptions, type SummaryFn } from '@/engine/summaries';
 import type { Ctx, Field } from '@/engine/types';
-import { fieldUI } from '@/components/fields/registry';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,11 +48,13 @@ export interface ColumnMenuActions {
 }
 
 /**
- * A column header of the Table (docs/05 §3.1): menu (sort, hide, show or hide the group summary and choose its
+ * A column header of the Table (docs/05 §3.1), repeated at the top of every group card: small muted name, no type
+ * icon; the reorder grip and the resize edge show on hover and focus. Menu (sort, hide, show or hide the group summary and choose its
  * function, settings, insert left/right, duplicate, move, delete), resize by dragging or with the arrow keys on the
  * edge, reorder by dragging the header.
  */
 export function ColumnHeader({
+  scope,
   field,
   width,
   ctx,
@@ -66,6 +67,8 @@ export function ColumnHeader({
   actions,
   dragDisabled,
 }: {
+  /** The group card this header sits in: drag ids are unique per header row. */
+  scope: string;
   field: Field;
   width: number;
   ctx: Ctx;
@@ -78,15 +81,14 @@ export function ColumnHeader({
   actions: ColumnMenuActions;
   dragDisabled: boolean;
 }) {
-  const Icon = fieldUI(field.type).icon;
   const editable = canEdit && (!field.locked || isAdmin);
   const drag = useDraggable({
-    id: `col:${field.id}`,
+    id: `col:${scope}:${field.id}`,
     data: { type: 'column', fieldId: field.id },
     disabled: !editable || dragDisabled,
   });
   const drop = useDroppable({
-    id: `coldrop:${field.id}`,
+    id: `coldrop:${scope}:${field.id}`,
     data: { type: 'column', fieldId: field.id },
   });
   const startX = useRef(0);
@@ -115,7 +117,7 @@ export function ColumnHeader({
       role="columnheader"
       aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
       className={cn(
-        'border-b-line border-r-soft bg-subtle relative flex h-full items-center border-r border-b',
+        'group/col border-b-soft relative flex h-full items-center border-b bg-white',
         drop.isOver && !drag.isDragging && 'bg-sel',
         drag.isDragging && 'opacity-50',
       )}
@@ -126,17 +128,16 @@ export function ColumnHeader({
           {...drag.listeners}
           aria-hidden
           title={`Drag to reorder ${field.name}`}
-          className="text-muted-foreground hover:text-ink flex h-full w-3 shrink-0 cursor-grab items-center justify-center"
+          className="text-muted-foreground hover:text-ink absolute top-0 left-0 z-[1] flex h-full w-3 cursor-grab items-center justify-center opacity-0 group-focus-within/col:opacity-100 group-hover/col:opacity-100"
         >
           <GripVertical className="size-3" />
         </span>
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="hover:text-ink text-muted-foreground flex h-full min-w-0 flex-1 items-center gap-1.5 px-3 text-left text-[12.5px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+          className="hover:text-ink text-muted-foreground flex h-full min-w-0 flex-1 items-center gap-1.5 px-[14px] text-left text-[12px] font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
           aria-label={`${field.name} column menu`}
         >
-          <Icon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
           <span className="truncate">{field.name}</span>
           {sorted ? (
             sorted === 'asc' ? (
@@ -250,7 +251,7 @@ export function ColumnHeader({
           onKeyUp={(e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') actions.resize(width, true);
           }}
-          className="hover:bg-focus/40 focus-visible:bg-focus absolute top-0 right-0 z-[1] h-full w-1.5 cursor-col-resize outline-none"
+          className="hover:bg-focus/40 focus-visible:bg-focus group-hover/col:bg-line absolute top-1.5 right-0 bottom-1.5 z-[1] w-1 cursor-col-resize rounded-full outline-none"
         />
       ) : null}
     </div>
