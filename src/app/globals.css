@@ -139,6 +139,8 @@
   /* thin progress bars (the Table's date countdown): the bright steps, beside words that say the same */
   --bar-good: var(--green-700);
   --bar-crit: var(--red-700);
+  --bar-warn: var(--amber-700);
+  --bar-far: var(--gray-600);
 
   /* heat scale (risk levels 1 to 4): fill and the text that sits on it. Kept as the risk matrix's own colours. */
   --h1: #ddf1e4;
@@ -203,9 +205,9 @@
   /* the four steps of a value meter (number and risk cells): low → critical, beside the number they describe */
   --meter-1: var(--green-700);
   --meter-2: var(--amber-700);
-  --meter-3: var(--label-orange);
+  --meter-3: var(--amber-800);
   --meter-4: var(--red-700);
-  --meter-off: var(--gray-alpha-200);
+  --meter-off: var(--gray-100);
 
   /* fills behind white text (solid status blocks, action-needed pills): the label colour, darkened just enough
      for 4.5:1 where it falls short (WCAG 2.1 AA, M10 axe pass) */
@@ -237,6 +239,8 @@
 }
 
 @theme inline {
+  /* Geist's 4 px grid: p-2.5 is 10 px, size-4 16 px, whatever the root font size */
+  --spacing: 4px;
   --color-background-100: var(--background-100);
   --color-background-200: var(--background-200);
   --color-gray-100: var(--gray-100);
@@ -430,6 +434,10 @@
   --text-heading-32--line-height: 40px;
   --text-heading-32--letter-spacing: -1.28px;
   --text-heading-32--font-weight: 600;
+  --text-heading-26: 26px;
+  --text-heading-26--line-height: 31.2px;
+  --text-heading-26--letter-spacing: -0.78px;
+  --text-heading-26--font-weight: 600;
   --text-heading-24: 24px;
   --text-heading-24--line-height: 32px;
   --text-heading-24--letter-spacing: -0.96px;
@@ -459,6 +467,15 @@
   --text-label-13--line-height: 16px;
   --text-label-12: 12px;
   --text-label-12--line-height: 16px;
+  /* Half steps of the board design (docs/05 §6.2): dense controls, cells and counts in the Table and the shell */
+  --text-label-13\.5: 13.5px;
+  --text-label-13\.5--line-height: 20px;
+  --text-label-12\.5: 12.5px;
+  --text-label-12\.5--line-height: 18px;
+  --text-label-11: 11px;
+  --text-label-11--line-height: 16px;
+  --text-label-9\.5: 9.5px;
+  --text-label-9\.5--line-height: 14px;
 
   --text-copy-24: 24px;
   --text-copy-24--line-height: 36px;
@@ -487,6 +504,26 @@
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: var(--tw-leading, 20px);
+}
+@utility text-label-12\.5-mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: var(--tw-leading, 18px);
+}
+@utility text-label-11\.5-mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: var(--tw-leading, 18px);
+}
+@utility text-label-11-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: var(--tw-leading, 18px);
+}
+@utility text-label-10\.5-mono {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: var(--tw-leading, 15px);
 }
 @utility text-label-12-mono {
   font-family: var(--font-mono);
@@ -519,7 +556,7 @@
       'calt' 1;
   }
   h1 {
-    @apply text-heading-24;
+    @apply text-heading-26;
   }
   /* Geist focus: a 2 px blue ring clear of the control */
   :focus-visible {
@@ -617,9 +654,25 @@
 
 /* the Table's row and group checkboxes: 16 px, ink when ticked (the design's board) */
 .row-check {
+  appearance: none;
+  flex: none;
   width: 16px;
   height: 16px;
   margin: 0;
-  accent-color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  background: var(--background-100) center / 12px no-repeat;
   cursor: pointer;
+}
+.row-check:checked {
+  background-color: var(--ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 6.2 5 8.6l4.5-5'/%3E%3C/svg%3E");
+}
+.row-check:indeterminate {
+  background-color: var(--ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' stroke='white' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M3 6h6'/%3E%3C/svg%3E");
+}
+.row-check:disabled {
+  cursor: default;
+  opacity: 0.4;
 }

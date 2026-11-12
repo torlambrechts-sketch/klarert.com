@@ -8,7 +8,7 @@ const out = new URL('../src/fonts/', import.meta.url);
 mkdirSync(out, { recursive: true });
 
 const sets = [
-  ['@fontsource/geist-sans', 'geist-sans', [400, 500, 600, 700]],
+  ['@fontsource/geist', 'geist', [400, 500, 600, 700]],
   ['@fontsource/geist-mono', 'geist-mono', [400, 500]],
 ];
 for (const [pkg, name, weights] of sets) {

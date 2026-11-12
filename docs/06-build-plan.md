@@ -11,7 +11,7 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 **Prompt:** "Read CLAUDE.md. Set up the repository for M0 in docs/06-build-plan.md: Next.js 15 app with TypeScript strict, Tailwind v4, shadcn/ui, self-hosted fonts, Supabase CLI config, Vitest, Playwright, ESLint/Prettier, GitHub Actions CI, the scripts listed in CLAUDE.md, and the folder layout. No product features yet."
 
 - [x] `pnpm create next-app` with App Router, `src/`, TypeScript strict (`noUncheckedIndexedAccess: true`)
-- [x] Tailwind v4 + shadcn/ui initialised; tokens from docs/05 §6 in `globals.css`; fonts via `next/font/local` from `src/fonts/` (Geist and Geist Mono woff2 from the `@fontsource/geist-sans` and `@fontsource/geist-mono` packages, `pnpm fonts:copy`)
+- [x] Tailwind v4 + shadcn/ui initialised; tokens from docs/05 §6 in `globals.css`; fonts via `next/font/local` from `src/fonts/` (Geist and Geist Mono woff2 from the `@fontsource/geist` and `@fontsource/geist-mono` packages (the versions Google Fonts serves), `pnpm fonts:copy`)
 - [x] Supabase CLI (`supabase init`), migrations folder contains `0001_core.sql`, `0002_storage_realtime.sql`; `pnpm supabase:start && pnpm db:reset` works
 - [x] Vitest with one passing test; Playwright with one smoke test (home page renders)
 - [x] GitHub Actions: install, lint, typecheck, unit, start Supabase, e2e
