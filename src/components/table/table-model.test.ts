@@ -108,11 +108,10 @@ describe('buildLayout', () => {
     expect(one.flat.map((i) => i.id)).toEqual(['c']);
   });
 
-  it('keeps empty groups with their title and add row', () => {
+  it('keeps empty groups compact: title and add row, no column header', () => {
     const l = buildLayout({ groups, items: [c], collapsed: new Set(), canAdd: true });
     expect(l.rows.map((r) => r.kind)).toEqual([
       'group',
-      'header',
       'add',
       'gap',
       'group',
@@ -121,6 +120,25 @@ describe('buildLayout', () => {
       'add',
     ]);
     expect(l.rows[0]).toMatchObject({ count: 0 });
+  });
+
+  it('keeps the column header on the first group when every group is empty', () => {
+    const l = buildLayout({
+      groups,
+      items: [],
+      collapsed: new Set(),
+      canAdd: true,
+      summaries: true,
+    });
+    expect(l.rows.map((r) => r.kind)).toEqual([
+      'group',
+      'header',
+      'add',
+      'summary',
+      'gap',
+      'group',
+      'add',
+    ]);
   });
 
   it('sorts inside groups with a comparator', () => {

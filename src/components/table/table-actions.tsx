@@ -257,7 +257,7 @@ export function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCo
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-[38px] shadow-none">
+        <Button type="button" variant="outline" className="h-[38px] font-normal shadow-none">
           <Columns3 aria-hidden /> Columns
           {hiddenCount ? (
             <span className="bg-soft text-ink-2 rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums">
@@ -344,7 +344,7 @@ export function TableActions({
   const menu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className="h-[38px] shadow-none">
+        <Button type="button" variant="outline" className="h-[38px] font-normal shadow-none">
           <Layers3 aria-hidden /> Actions <ChevronDown aria-hidden />
         </Button>
       </DropdownMenuTrigger>
