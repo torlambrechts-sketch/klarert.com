@@ -7,6 +7,7 @@ import {
   History,
   IdCard,
   Link as LinkIcon,
+  Loader2,
   MousePointerClick,
   Search,
   Sigma,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { AiValue } from '@/engine/fields/ai';
 import type { FormulaConfig } from '@/engine/fields/formula';
+import { buttonKey, useRunningButtons } from '@/components/automations/running-buttons';
 import { Button } from '@/components/ui/button';
 import { computedUI, Muted, OptionCell, TextCell } from './kit';
 import { LinkCell, LinkEditor } from './links';
@@ -221,13 +223,23 @@ function ButtonEditor({ field, onButton, onCancel }: Parameters<FieldTypeUI['Edi
   );
 }
 
+function ButtonCell({ field, item }: Parameters<FieldTypeUI['Cell']>[0]) {
+  const busy = useRunningButtons((s) => s.running.has(buttonKey(item.id, field.id)));
+  return (
+    <span
+      aria-busy={busy}
+      className="border-line bg-soft inline-flex max-w-full items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold"
+    >
+      {busy ? <Loader2 aria-hidden className="size-3 shrink-0 animate-spin" /> : null}
+      <span className="truncate">{(field.config as { label: string }).label}</span>
+      {busy ? <span className="sr-only">Running</span> : null}
+    </span>
+  );
+}
+
 export const buttonUI: FieldTypeUI = {
   icon: MousePointerClick,
-  Cell: ({ field }) => (
-    <span className="border-line bg-soft inline-flex max-w-full items-center rounded-md border px-2 py-0.5 text-xs font-semibold">
-      <span className="truncate">{(field.config as { label: string }).label}</span>
-    </span>
-  ),
+  Cell: ButtonCell,
   Editor: ButtonEditor,
 };
 

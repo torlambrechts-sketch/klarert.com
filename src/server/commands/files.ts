@@ -163,9 +163,20 @@ export async function confirmUpload(input: unknown): Promise<Result<ConfirmedUpl
         { path, sha256: v.sha256, size: v.size },
       );
       if (!r.ok) return r;
+      // a file field's value is its current versions: the event names the version replaced and the new one
       const outcome = await runAutomations(
-        [{ type: 'field_changed', sheetId: v.sheetId, itemId: v.itemId, fieldIds: [v.fieldId] }],
-        { orgId, userId: user.id },
+        [
+          {
+            type: 'value.changed',
+            sheetId: v.sheetId,
+            itemId: v.itemId,
+            fieldId: v.fieldId,
+            before: v.replaces ?? null,
+            after: r.data.id,
+            actor: { kind: 'user', id: user.id },
+          },
+        ],
+        { orgId, userId: user.id, workspace: v.org },
       );
       return ok({ file: r.data, messages: outcome.messages });
     },

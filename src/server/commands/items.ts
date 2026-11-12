@@ -16,9 +16,9 @@ import {
 } from '@/lib/schemas/items';
 import { toItem, toLink } from '@/lib/sheet-rows';
 import type { LinkRow } from '@/engine/sheet-data';
-import type { Db } from '@/lib/sheet-query';
+import { fetchItemsById, type Db } from '@/lib/sheet-query';
 import { isAdminRole, type Role } from '@/server/auth';
-import { runAutomations, type AutomationEvent } from '@/server/automations';
+import { runAutomations, valueEvents, type AutomationEvent } from '@/server/automations';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import {
   loadWriteContext,
@@ -41,9 +41,32 @@ const lockMessage = (item: Item) =>
     ? `This item is locked: ${item.lockReason}. Only owners and admins can change it.`
     : LOCKED;
 
-async function automations(events: AutomationEvent[], orgId: string, userId: string) {
-  return (await runAutomations(events, { orgId, userId })).messages;
+async function automations(
+  events: AutomationEvent[],
+  who: { orgId: string; userId: string; workspace: string },
+  summarise = false,
+) {
+  return (await runAutomations(events, { ...who, summarise })).messages;
 }
+
+/**
+ * The items as stored after the automations ran (they may have set values, moved or locked them). The browser
+ * ignores realtime rows for items it is writing, so the command's answer must be the final state.
+ */
+async function settled(db: Db, items: Item[], messages: string[]): Promise<Item[]> {
+  if (messages.length === 0 || items.length === 0) return items;
+  const fresh = new Map(
+    (
+      await fetchItemsById(
+        db,
+        items.map((i) => i.id),
+      )
+    ).map((i) => [i.id, i]),
+  );
+  return items.map((i) => fresh.get(i.id) ?? i);
+}
+
+const userActor = (userId: string) => ({ kind: 'user' as const, id: userId });
 
 type Who = { supabase: Db; orgId: string; userId: string; role: Role };
 
@@ -79,7 +102,7 @@ async function writeValues(
   w: WriteContext,
   item: Item,
   change: { values?: Record<string, unknown>; name?: string; note?: string },
-): Promise<Result<{ item: Item; changed: string[] }>> {
+): Promise<Result<{ item: Item; changed: string[]; events: AutomationEvent[] }>> {
   if (lockedFor(item, who.role)) return fail('forbidden', lockMessage(item));
   const { values, protectedInputs } = splitInputs(w.fields, change.values ?? {});
   const plan = planValues(item, w.fields, values, w.ctx, sha256);
@@ -160,7 +183,14 @@ async function writeValues(
     ...w.fields.filter((f) => plan.changedKeys.includes(f.key)).map((f) => f.id),
     ...protectedInputs.map(([f]) => f.id),
   ];
-  return ok({ item: saved, changed });
+  const events = valueEvents(
+    item,
+    saved,
+    changed,
+    userActor(who.userId),
+    new Set(protectedInputs.map(([f]) => f.id)),
+  );
+  return ok({ item: saved, changed, events });
 }
 
 // ───────────────────────── create ─────────────────────────
@@ -225,16 +255,23 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       });
       if (error) return fromDbError(error);
       const item = toItem(data);
+      const actor = userActor(user.id);
       const messages = await automations(
         [
           v.formViewId
-            ? { type: 'form_submitted', sheetId: v.sheetId, itemId: item.id, formId: v.formViewId }
-            : { type: 'item_created', sheetId: v.sheetId, itemId: item.id },
+            ? {
+                type: 'form.submitted',
+                sheetId: v.sheetId,
+                itemId: item.id,
+                formId: v.formViewId,
+                actor,
+              }
+            : { type: 'item.created', sheetId: v.sheetId, itemId: item.id, actor },
         ],
-        orgId,
-        user.id,
+        { orgId, userId: user.id, workspace: v.org },
       );
-      return ok({ item, messages, mutationId: v.mutationId });
+      const [after] = await settled(supabase, [item], messages);
+      return ok({ item: after!, messages, mutationId: v.mutationId });
     },
     'createItem',
   );
@@ -259,22 +296,13 @@ export async function setValues(input: unknown): Promise<Result<ItemResult>> {
         return fail('conflict', 'Someone else changed this item since you opened it.');
       const r = await writeValues(who, w, item, v);
       if (!r.ok) return r;
-      const messages =
-        r.data.changed.length > 0
-          ? await automations(
-              [
-                {
-                  type: 'field_changed',
-                  sheetId: v.sheetId,
-                  itemId: item.id,
-                  fieldIds: r.data.changed,
-                },
-              ],
-              orgId,
-              user.id,
-            )
-          : [];
-      return ok({ item: r.data.item, messages, mutationId: v.mutationId });
+      const messages = await automations(r.data.events, {
+        orgId,
+        userId: user.id,
+        workspace: v.org,
+      });
+      const [after] = await settled(supabase, [r.data.item], messages);
+      return ok({ item: after!, messages, mutationId: v.mutationId });
     },
     'setValues',
   );
@@ -325,16 +353,19 @@ export async function bulkSetValues(input: unknown): Promise<Result<BulkResult>>
           continue;
         }
         items.push(r.data.item);
-        if (r.data.changed.length > 0)
-          events.push({
-            type: 'field_changed',
-            sheetId: v.sheetId,
-            itemId: item.id,
-            fieldIds: r.data.changed,
-          });
+        events.push(...r.data.events);
       }
-      const messages = await automations(events, orgId, user.id);
-      return ok({ items, skipped, messages, mutationId: v.mutationId });
+      const messages = await automations(
+        events,
+        { orgId, userId: user.id, workspace: v.org },
+        true,
+      );
+      return ok({
+        items: await settled(supabase, items, messages),
+        skipped,
+        messages,
+        mutationId: v.mutationId,
+      });
     },
     'bulkSetValues',
   );
@@ -383,15 +414,25 @@ export async function moveItems(input: unknown): Promise<Result<BulkResult>> {
         items.push(toItem(data));
         if (item.groupId !== m.groupId)
           events.push({
-            type: 'item_moved',
+            type: 'item.moved',
             sheetId: v.sheetId,
             itemId: m.itemId,
-            from: item.groupId,
-            to: m.groupId,
+            fromGroupId: item.groupId,
+            toGroupId: m.groupId,
+            actor: userActor(user.id),
           });
       }
-      const messages = await automations(events, orgId, user.id);
-      return ok({ items, skipped, messages, mutationId: v.mutationId });
+      const messages = await automations(
+        events,
+        { orgId, userId: user.id, workspace: v.org },
+        true,
+      );
+      return ok({
+        items: await settled(supabase, items, messages),
+        skipped,
+        messages,
+        mutationId: v.mutationId,
+      });
     },
     'moveItems',
   );
@@ -415,7 +456,6 @@ export async function archiveItems(input: unknown): Promise<Result<BulkResult>> 
       if (!w) return sheetNotFound();
       const items: Item[] = [];
       const skipped: BulkResult['skipped'] = [];
-      const events: AutomationEvent[] = [];
       for (const id of v.itemIds) {
         const item = w.items.get(id);
         if (!item) {
@@ -436,14 +476,9 @@ export async function archiveItems(input: unknown): Promise<Result<BulkResult>> 
           continue;
         }
         items.push(toItem(data));
-        events.push({
-          type: v.archived ? 'item_archived' : 'item_restored',
-          sheetId: v.sheetId,
-          itemId: id,
-        });
       }
-      const messages = await automations(events, orgId, user.id);
-      return ok({ items, skipped, messages, mutationId: v.mutationId });
+      // archived items emit no events (docs/04 §7.8); no trigger listens to restoring
+      return ok({ items, skipped, messages: [], mutationId: v.mutationId });
     },
     v.archived ? 'archiveItems' : 'restoreItems',
   );
@@ -457,7 +492,7 @@ export async function lockItem(input: unknown): Promise<Result<ItemResult>> {
   return withOrg(
     v.org,
     'admin',
-    async ({ supabase, orgId, user }) => {
+    async ({ supabase, orgId }) => {
       const { data: row } = await supabase
         .from('items')
         .select('id, sheet_id, org_id')
@@ -470,18 +505,8 @@ export async function lockItem(input: unknown): Promise<Result<ItemResult>> {
         p_reason: v.locked ? v.reason || undefined : undefined,
       });
       if (error) return fromDbError(error);
-      const messages = await automations(
-        [
-          {
-            type: v.locked ? 'item_locked' : 'item_unlocked',
-            sheetId: v.sheetId,
-            itemId: v.itemId,
-          },
-        ],
-        orgId,
-        user.id,
-      );
-      return ok({ item: toItem(data), messages, mutationId: v.mutationId });
+      // no trigger listens to locking (docs/04 §3)
+      return ok({ item: toItem(data), messages: [], mutationId: v.mutationId });
     },
     'lockItem',
   );
@@ -569,9 +594,18 @@ export async function setLinks(input: unknown): Promise<Result<LinksResult>> {
         }
       }
       const messages = await automations(
-        [{ type: 'links_changed', sheetId: v.sheetId, itemId: item.id, fieldId: field.id }],
-        orgId,
-        user.id,
+        [
+          {
+            type: 'links.changed',
+            sheetId: v.sheetId,
+            itemId: item.id,
+            fieldId: field.id,
+            before,
+            after: (data ?? []).map((l) => l.to_item),
+            actor: userActor(user.id),
+          },
+        ],
+        { orgId, userId: user.id, workspace: v.org },
       );
       return ok({ links: (data ?? []).map(toLink), messages, mutationId: v.mutationId });
     },
@@ -600,8 +634,16 @@ export async function clickButton(input: unknown): Promise<Result<{ messages: st
       if (!field || resolveFieldType(field.type)?.storage !== 'none')
         return fail('not_found', 'This button no longer exists.');
       const outcome = await runAutomations(
-        [{ type: 'button_clicked', sheetId: v.sheetId, itemId: v.itemId, fieldId: v.fieldId }],
-        { orgId, userId: user.id },
+        [
+          {
+            type: 'button.clicked',
+            sheetId: v.sheetId,
+            itemId: v.itemId,
+            fieldId: v.fieldId,
+            actor: userActor(user.id),
+          },
+        ],
+        { orgId, userId: user.id, workspace: v.org },
       );
       return ok({
         messages:

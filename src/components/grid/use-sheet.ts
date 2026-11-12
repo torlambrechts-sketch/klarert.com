@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { buttonKey, useRunningButtons } from '@/components/automations/running-buttons';
 import {
   addFieldAction,
   archiveItemsAction,
@@ -571,11 +572,19 @@ export function useSheetActions(org: string, sheetId: string) {
 
   const clickButton = useCallback(
     async (item: Item, field: Field) => {
-      const r = await run(() =>
-        clickButtonAction({ org, sheetId, itemId: item.id, fieldId: field.id }),
-      );
-      if (!r.ok) return showError(r.error);
-      showMessages(r.data.messages);
+      const key = buttonKey(item.id, field.id);
+      const buttons = useRunningButtons.getState();
+      if (buttons.running.has(key)) return;
+      buttons.start(key);
+      try {
+        const r = await run(() =>
+          clickButtonAction({ org, sheetId, itemId: item.id, fieldId: field.id }),
+        );
+        if (!r.ok) return showError(r.error);
+        showMessages(r.data.messages);
+      } finally {
+        useRunningButtons.getState().stop(key);
+      }
     },
     [org, run, sheetId],
   );
