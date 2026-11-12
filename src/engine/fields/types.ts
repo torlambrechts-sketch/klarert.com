@@ -71,6 +71,8 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
   keyOf?(v: V | null, cfg: C): string | null;
   /** Kinds that depend on config (formula result type, lookup target). Default: `kind`. */
   effectiveKind?(field: Field<C>, ctx: Ctx): ValueKind;
+  /** Types with the checklist_no trigger: how many answers are "No" (the trigger fires when it increases). */
+  countNo?(v: V | null, cfg: C): number;
   /** Number kinds: the default group-footer summary (docs/03 §8). Default `sum`. */
   defaultSummary?: 'sum' | 'average';
   /**

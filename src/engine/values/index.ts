@@ -39,8 +39,12 @@ export const isDoneOf = (item: Item, field: Field, ctx: Ctx) =>
 
 /** Option key(s) of a value for option/ordered/multi/people filters. */
 export function keysOf(item: Item, field: Field, ctx: Ctx): string[] {
+  return keysOfValue(field, valueOf(item, field, ctx));
+}
+
+/** Option key(s) of a value of this field (keysOf without the item: automation before/after values). */
+export function keysOfValue(field: Field, v: unknown): string[] {
   const def = defOf(field);
-  const v = valueOf(item, field, ctx);
   if (def.keyOf) {
     const k = def.keyOf(v, field.config);
     return k === null ? [] : [k];

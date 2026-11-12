@@ -363,7 +363,10 @@ test.describe('desktop', () => {
     const linked = dialog.getByRole('list', { name: 'Linked items' });
     await expect(linked).toContainText('Loose handrail');
     await expect(dialog.getByRole('heading', { name: 'Linked items · 1' })).toBeVisible();
+    // the picker is a layer of its own until its exit animation ends: Esc would close it, not the panel
+    await expect(page.getByRole('textbox', { name: 'Search items for Risks' })).toHaveCount(0);
     await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
 
     // lookup and rollup through the link
     await addField(page, 'lookup', /^Lookup/);

@@ -533,17 +533,23 @@ isOneToOne: false
                   ]
                 },"notifications": {
                   Row: {
-                    "body": string,"created_at": string,"done_at": string | null,"id": string,"item_id": string | null,"kind": string,"org_id": string,"read_at": string | null,"user_id": string
+                    "automation_id": string | null,"body": string,"created_at": string,"done_at": string | null,"id": string,"item_id": string | null,"kind": string,"org_id": string,"read_at": string | null,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "body": string,"created_at"?: string,"done_at"?: string | null,"id"?: string,"item_id"?: string | null,"kind": string,"org_id": string,"read_at"?: string | null,"user_id": string
+                    "automation_id"?: string | null,"body": string,"created_at"?: string,"done_at"?: string | null,"id"?: string,"item_id"?: string | null,"kind": string,"org_id": string,"read_at"?: string | null,"user_id": string
                   }
                   Update: {
-                    "body"?: string,"created_at"?: string,"done_at"?: string | null,"id"?: string,"item_id"?: string | null,"kind"?: string,"org_id"?: string,"read_at"?: string | null,"user_id"?: string
+                    "automation_id"?: string | null,"body"?: string,"created_at"?: string,"done_at"?: string | null,"id"?: string,"item_id"?: string | null,"kind"?: string,"org_id"?: string,"read_at"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "notifications_automation_id_fkey"
+      columns: ["automation_id"]
+isOneToOne: false
+      referencedRelation: "automations"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "notifications_item_id_fkey"
       columns: ["item_id"]
 isOneToOne: false
@@ -1047,6 +1053,9 @@ isOneToOne: false
                            },
 "notify_mention":
 { Args: { "p_update": string,"p_user_ids": (string)[] }; Returns: number
+                           },
+"record_automation_run":
+{ Args: { "p_automation": string,"p_chain": string,"p_depth": number,"p_detail": string,"p_event": Json,"p_item": string,"p_started_at": string,"p_status": string,"p_steps": Json }; Returns: number
                            },
 "set_item_archived":
 { Args: { "p_archived": boolean,"p_item": string }; Returns: {

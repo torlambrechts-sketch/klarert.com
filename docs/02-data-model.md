@@ -73,7 +73,7 @@ UI (optimistic) ─► Server Action ─► src/server/commands/<command>.ts
 
 Structure tables (folders, sheets, fields, groups, views, automations) are written directly by commands with the user's Supabase client under RLS; triggers log them to the sheet's chain (`sheets.insert`, `fields.update` …), ignoring bookkeeping columns.
 
-`p_automation`: when an automation performs a write it passes its id. The RPC allows it if the caller is a member and the automation is enabled, records `actor_kind = 'automation'`, `actor_id = automation id`. Automations may write to locked items (that is how "approved → lock" and later workflow steps work); people need admin for that.
+`p_automation`: when an automation performs a write it passes its id. The RPC allows it only for the runner (service role, see §7) and only if the automation is enabled and in the item's workspace (since 0010; before, any member could name an automation), and records `actor_kind = 'automation'`, `actor_id = automation id`. Automations may write to locked items (that is how "approved → lock" and later workflow steps work); people need admin for that.
 
 Commands also write: `item_updates` (comments), `notifications`, `automation_runs`, `files`, `protected_values`.
 
@@ -107,7 +107,7 @@ Commands also write: `item_updates` (comments), `notifications`, `automation_run
 | notifications | the recipient | the recipient may set `read_at`/`done_at` |
 | scheduler_fired, outbound_webhooks | service role only | service role only |
 
-Automation posts and notifications are inserted by the automation runner. In a request it uses a **server-only** client created with the service role, scoped by the org id it has already authorised. This is the one allowed service-role use in a request path; keep it inside `src/server/automations/effects.ts`.
+Automation posts, notifications, webhook queue rows, run rows (`record_automation_run`) and the automation's item writes (the RPCs with `p_automation`) are made by the automation runner. In a request it uses a **server-only** client created with the service role, scoped by the org id it has already authorised. This is the one allowed service-role use in a request path; keep it inside `src/server/automations/effects.ts`. System notifications about an automation carry `notifications.automation_id` (failure notices at most once per hour).
 
 RLS tests: add pgTAP tests in `supabase/tests/` (M1) for viewer cannot write, editor cannot touch locked field, member of org A cannot read org B, protected value hidden.
 

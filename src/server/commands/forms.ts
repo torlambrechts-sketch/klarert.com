@@ -168,8 +168,17 @@ export async function submitPublicForm(
           : 'invalid';
     return fail(code, REASONS[r.reason ?? 'invalid'] ?? REASONS.invalid!);
   }
+  // form automations run with the runner's own server-only client, scoped to the form's workspace (docs/02 §7)
   await runAutomations(
-    [{ type: 'form_submitted', sheetId: r.sheet_id!, itemId: r.id!, formId: form.viewId }],
+    [
+      {
+        type: 'form.submitted',
+        sheetId: r.sheet_id!,
+        itemId: r.id!,
+        formId: form.viewId,
+        actor: { kind: 'form', id: null },
+      },
+    ],
     { orgId: r.org_id!, userId: null },
   );
   return ok({ displayId: r.display_id ?? null });
