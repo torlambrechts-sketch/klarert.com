@@ -1,16 +1,28 @@
-// Local seed (docs/02 §11, M1): people from templates/first-sheet.json, the Meridian workspace, teams, job roles,
-// entity, sites and the first folder. Sheets and items arrive with M10. Safe to run repeatedly.
+// Local seed (docs/02 §11): people from templates/first-sheet.json, the Meridian workspace, teams, job roles, entity,
+// sites, the first folder, and the template's two sheets with items, links and automations (the importer, M10).
+// Safe to run repeatedly: nothing is duplicated.
 // Run: pnpm seed   (reads .env.local; refuses non-local Supabase unless SEED_ALLOW_REMOTE=1)
+// Options (environment): SEED_WORKSPACE=<slug> and SEED_WORKSPACE_NAME=<name> seed another workspace with the same
+// people (the first-sheet e2e test uses a fresh one per run); SEED_SHEETS=0 leaves it empty (docs/07 Part A).
+import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Database } from '../src/lib/database.types';
+import { parseTemplate } from '../src/lib/templates/schema';
+import { importTemplate } from '../src/server/templates/importer';
 
 const env = z
   .object({
     NEXT_PUBLIC_SUPABASE_URL: z.url(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
     SEED_ALLOW_REMOTE: z.string().optional(),
+    SEED_WORKSPACE: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9-]{1,47}$/)
+      .default('meridian'),
+    SEED_WORKSPACE_NAME: z.string().min(1).max(120).optional(),
+    SEED_SHEETS: z.enum(['0', '1']).default('1'),
   })
   .parse(process.env);
 
@@ -22,26 +34,20 @@ if (!['127.0.0.1', 'localhost'].includes(host) && env.SEED_ALLOW_REMOTE !== '1')
   process.exit(1);
 }
 
-const template = z
-  .object({
-    folder: z.string(),
-    people: z.array(
-      z.object({
-        email: z.email(),
-        name: z.string(),
-        initials: z.string().max(3),
-        jobRole: z.string(),
-        team: z.string(),
-        role: z.enum(['owner', 'admin', 'editor', 'viewer']),
-      }),
-    ),
-  })
-  .parse(
-    JSON.parse(readFileSync(new URL('../templates/first-sheet.json', import.meta.url), 'utf8')),
-  );
+const template = parseTemplate(
+  JSON.parse(readFileSync(new URL('../templates/first-sheet.json', import.meta.url), 'utf8')),
+);
 
 const COLORS = ['blue', 'teal', 'orange', 'purple', 'green', 'pink'] as const;
-const WORKSPACE = { name: 'Meridian Components Ltd', slug: 'meridian', time_zone: 'Europe/London' };
+const WORKSPACE = {
+  name:
+    env.SEED_WORKSPACE_NAME ??
+    (env.SEED_WORKSPACE === 'meridian'
+      ? 'Meridian Components Ltd'
+      : `Workspace ${env.SEED_WORKSPACE}`),
+  slug: env.SEED_WORKSPACE,
+  time_zone: 'Europe/London',
+};
 const ENTITY = { name: 'Meridian Components Ltd', country: 'GB', sites: ['Leeds', 'Bradford'] };
 
 const db = createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -69,6 +75,16 @@ async function userId(email: string): Promise<string> {
   const created = await db.auth.admin.createUser({ email, email_confirm: true });
   if (created.error) throw new Error(`create user ${email}: ${created.error.message}`);
   return created.data.user.id;
+}
+
+/** Today's date (YYYY-MM-DD) in a time zone. */
+function todayIn(timeZone: string, now: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
 }
 
 async function main() {
@@ -162,24 +178,55 @@ async function main() {
     );
   }
 
-  const folder = maybe(
-    await db
-      .from('folders')
-      .select('id')
-      .eq('org_id', org.id)
-      .eq('name', template.folder)
-      .maybeSingle(),
-    'folder lookup',
-  );
-  if (!folder)
-    maybe(
-      await db.from('folders').insert({ org_id: org.id, name: template.folder, position: 'a0' }),
+  const folderLookup = await db
+    .from('folders')
+    .select('id')
+    .eq('org_id', org.id)
+    .eq('name', template.folder)
+    .maybeSingle();
+  if (folderLookup.error) throw new Error(`folder lookup: ${folderLookup.error.message}`);
+  const folder = folderLookup.data;
+  const folderId =
+    folder?.id ??
+    check(
+      await db
+        .from('folders')
+        .insert({ org_id: org.id, name: template.folder, position: 'a0' })
+        .select('id')
+        .single(),
       'folder',
-    );
+    ).id;
+
+  let sheetsLine = 'no sheets (SEED_SHEETS=0)';
+  if (env.SEED_SHEETS === '1') {
+    const now = new Date();
+    const outcome = await importTemplate(db, template, {
+      orgId: org.id,
+      folderId,
+      people: people.map((p, i) => ({
+        ref: p.ref,
+        id: p.id,
+        name: p.name,
+        initials: p.initials,
+        color: COLORS[i % COLORS.length]!,
+        email: p.email,
+      })),
+      today: todayIn(WORKSPACE.time_zone, now),
+      now,
+      timeZone: WORKSPACE.time_zone,
+      newId: randomUUID,
+    });
+    sheetsLine =
+      outcome.status === 'exists'
+        ? `sheets from ${template.id} already there`
+        : `${outcome.counts.sheets} sheets, ${outcome.counts.fields} fields, ${outcome.counts.items} items, ` +
+          `${outcome.counts.links} links, ${outcome.counts.automations} automations from ${template.id}`;
+  }
 
   console.log(
     `Seeded ${WORKSPACE.name} (/${WORKSPACE.slug}): ${people.length} people, ${teams.length} teams, ` +
-      `${roleNames.length} job roles, 1 entity, ${ENTITY.sites.length} sites, folder "${template.folder}".`,
+      `${roleNames.length} job roles, 1 entity, ${ENTITY.sites.length} sites, folder "${template.folder}", ` +
+      `${sheetsLine}.`,
   );
   console.log(
     `Sign in as ${people.map((p) => `${p.email} (${p.role})`).join(', ')} — magic links arrive in Mailpit.`,

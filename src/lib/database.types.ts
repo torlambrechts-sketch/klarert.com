@@ -974,7 +974,7 @@ isOneToOne: false
         isSetofReturn: false
       } },
 "create_items":
-{ Args: { "p_group": string,"p_rows": Json,"p_sheet": string }; Returns: number
+{ Args: { "p_group": string,"p_note"?: string,"p_rows": Json,"p_sheet": string }; Returns: number
                            },
 "create_sheet":
 { Args: { "p": Json }; Returns: string
