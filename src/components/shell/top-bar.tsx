@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { Bell, Check, ChevronDown, Menu, Plus, Search } from 'lucide-react';
+import { Check, ChevronDown, Menu, Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { GlobalSearch } from './global-search';
+import { Inbox } from './inbox';
 import { initialsOf } from './rail';
 import { useShell } from './shell-context';
 
@@ -48,13 +49,15 @@ export function TopBar({
   workspaces,
   me,
   canManage,
+  timeZone,
 }: {
   current: Ws;
   workspaces: Ws[];
-  me: { displayName: string; initials: string; color: string; email: string };
+  me: { id: string; displayName: string; initials: string; color: string; email: string };
   canManage: boolean;
+  timeZone: string;
 }) {
-  const { setMenuOpen, inboxOpen, setInboxOpen, searchRef, focusSearch } = useShell();
+  const { setMenuOpen, focusSearch } = useShell();
   useSlashToSearch(focusSearch);
   return (
     <header className="border-line sticky top-0 z-30 flex h-[58px] items-center gap-2 border-b bg-white px-3 sm:gap-3 sm:px-4">
@@ -94,47 +97,10 @@ export function TopBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Search: the box is here; results arrive with M9 (docs/06). */}
-      <form
-        role="search"
-        className="relative min-w-0 flex-1 sm:max-w-[520px]"
-        onSubmit={(e) => e.preventDefault()}
-      >
-        <Search
-          className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
-          aria-hidden
-        />
-        <input
-          ref={searchRef}
-          type="search"
-          aria-label="Search sheets, items and people"
-          placeholder="Search sheets, items and people"
-          className="border-line bg-soft h-9 w-full rounded-[10px] border pr-8 pl-8 text-[13.5px] outline-none focus:bg-white focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
-        />
-        <kbd
-          className="text-muted-foreground border-line desk-only pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border bg-white px-1.5 font-mono text-[11px]"
-          aria-hidden
-        >
-          /
-        </kbd>
-      </form>
+      <GlobalSearch org={current.slug} />
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
-        <Popover open={inboxOpen} onOpenChange={setInboxOpen}>
-          <PopoverTrigger
-            className="hover:bg-soft flex h-9 items-center gap-1.5 rounded-md px-2 font-semibold"
-            aria-label="Inbox"
-          >
-            <Bell className="size-[18px]" aria-hidden />
-            <span className="desk-only">Inbox</span>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-[min(340px,calc(100vw-24px))]">
-            <h2 className="font-bold">Inbox</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Nothing here yet. Notifications and requests for you will show here.
-            </p>
-          </PopoverContent>
-        </Popover>
+        <Inbox org={current.slug} orgId={current.id} userId={me.id} timeZone={timeZone} />
 
         <DropdownMenu>
           <DropdownMenuTrigger
