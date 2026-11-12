@@ -144,9 +144,9 @@ function Builder({
   return (
     <section
       aria-labelledby={`${id}-h`}
-      className="border-line flex flex-col gap-3 rounded-[var(--radius-card)] border p-4"
+      className="border-line flex flex-col gap-3 rounded-xl border bg-white p-5 shadow-xs"
     >
-      <h2 id={`${id}-h`} className="text-base font-bold">
+      <h2 id={`${id}-h`} className="text-[15px] font-semibold">
         Form builder
       </h2>
       {readOnly ? (
@@ -346,8 +346,8 @@ function PublicLink({
   }, [url]);
 
   return (
-    <section className="border-line flex flex-col gap-3 rounded-[var(--radius-card)] border p-4">
-      <h2 className="text-base font-bold">Public link</h2>
+    <section className="border-line flex flex-col gap-3 rounded-xl border bg-white p-5 shadow-xs">
+      <h2 className="text-[15px] font-semibold">Public link</h2>
       {link.isPending ? (
         <div aria-busy="true" className="bg-soft h-9 animate-pulse rounded" />
       ) : link.isError ? (
@@ -475,13 +475,13 @@ function Preview({
       : [...data.groups].sort((a, b) => (a.position < b.position ? -1 : 1))[0]?.id;
   return (
     <section aria-label="Preview" className="flex flex-col gap-2">
-      <h2 className="text-base font-bold">Preview</h2>
+      <h2 className="text-[15px] font-semibold">Preview</h2>
       <p className="text-muted-foreground text-xs">
         {canEdit ? 'Fill it in here to add an item as yourself.' : 'How the form looks on a phone.'}
       </p>
       <form
         noValidate
-        className="border-line mx-auto flex w-full max-w-[390px] flex-col gap-4 rounded-[var(--radius-card)] border bg-white p-4 shadow-sm"
+        className="border-line mx-auto flex w-full max-w-[390px] flex-col gap-4 rounded-[20px] border bg-white p-5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.18)]"
         onSubmit={async (e) => {
           e.preventDefault();
           if (!canEdit || !groupId) return;

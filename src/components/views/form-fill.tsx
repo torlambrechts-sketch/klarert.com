@@ -52,7 +52,7 @@ function Label({
   required: boolean;
 }) {
   return (
-    <label htmlFor={htmlFor} className="text-sm font-semibold">
+    <label htmlFor={htmlFor} className="text-[14px] font-medium">
       {children}
       {required ? (
         <>
