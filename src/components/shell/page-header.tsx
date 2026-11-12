@@ -23,7 +23,7 @@ export function PageHeader({
         {crumb ? <div className="text-muted-foreground text-[13px]">{crumb}</div> : null}
         <h1 className="m-0 break-words">{title}</h1>
         {description ? (
-          <p className="m-0 max-w-[780px] text-[14px] leading-normal text-pretty text-[#52525b]">
+          <p className="text-ink-3 m-0 max-w-[780px] text-[14px] leading-normal text-pretty">
             {description}
           </p>
         ) : null}

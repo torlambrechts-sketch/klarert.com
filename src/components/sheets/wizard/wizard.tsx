@@ -27,7 +27,7 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
                   aria-current={selected ? 'true' : undefined}
                   className={cn(
                     'flex h-full flex-col gap-1 rounded-[var(--radius-card)] border bg-white p-3',
-                    selected ? 'border-ink ring-ink ring-1' : 'border-line hover:border-[#9AA3B5]',
+                    selected ? 'border-ink ring-ink ring-1' : 'border-line hover:border-faint',
                   )}
                 >
                   <span className="flex items-center gap-1.5 font-bold">

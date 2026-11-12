@@ -7,6 +7,7 @@
      where text or a symbol says the same thing (CLAUDE.md, definition of done). */
   --ink: #09090b;
   --ink-2: #3f3f46;
+  --ink-3: #52525b;
   --muted: #71717a;
   --faint: #a1a1aa;
   --line: #e4e4e7;
@@ -19,6 +20,8 @@
   --focus: #71717a;
   --sel: #f4f4f5;
   --hover: #fafafa;
+  --nav-hover: #f0f0f1;
+  --nav-active: #ebebed;
 
   /* semantic: good · warn · crit · info, each with a soft fill for badges and banners */
   --good: #1e8449;
@@ -88,6 +91,7 @@
 @theme inline {
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
   --color-faint: var(--faint);
   --color-line: var(--line);
   --color-line-2: var(--line-2);
@@ -95,6 +99,8 @@
   --color-soft: var(--soft);
   --color-subtle: var(--subtle);
   --color-hover: var(--hover);
+  --color-nav-hover: var(--nav-hover);
+  --color-nav-active: var(--nav-active);
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
   --color-focus: var(--focus);

@@ -308,7 +308,7 @@ export function ItemPanel(props: ItemPanelProps) {
               <p className="m-0 flex flex-wrap items-center gap-2 text-xs">
                 <span className="text-muted-foreground font-mono">{item.displayId}</span>
                 {item.locked ? (
-                  <span className="border-warn/40 text-warn inline-flex items-center gap-1 rounded-full border bg-[#FFF8E6] px-2 py-0.5 font-semibold">
+                  <span className="border-warn/40 text-warn bg-warn-soft inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold">
                     <Lock className="size-3" aria-hidden />
                     {item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
                   </span>

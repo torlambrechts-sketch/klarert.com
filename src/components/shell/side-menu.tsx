@@ -75,7 +75,7 @@ function writeClosed(ids: Set<string>) {
 }
 
 const itemClass =
-  'flex h-[34px] w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[14px] text-ink-2 outline-offset-[-2px] hover:bg-[#f0f0f1] hover:text-ink aria-[current=page]:bg-[#ebebed] aria-[current=page]:font-medium aria-[current=page]:text-ink';
+  'flex h-[34px] w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[14px] text-ink-2 outline-offset-[-2px] hover:bg-nav-hover hover:text-ink aria-[current=page]:bg-nav-active aria-[current=page]:font-medium aria-[current=page]:text-ink';
 
 function NavLink({
   href,
@@ -136,7 +136,7 @@ function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: W
       <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center gap-2.5 rounded-md px-2 text-left outline-offset-[-2px]">
         <span
           aria-hidden
-          className="bg-ink flex size-[22px] shrink-0 items-center justify-center rounded-full text-[9.5px] font-semibold text-[#fafafa]"
+          className="bg-ink text-primary-foreground flex size-[22px] shrink-0 items-center justify-center rounded-full text-[9.5px] font-semibold"
         >
           {initialsOf(current.name)}
         </span>
@@ -153,7 +153,7 @@ function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: W
             <Link href={`/${w.slug}`} className="flex items-center gap-2">
               <span
                 aria-hidden
-                className="bg-ink flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-[#fafafa]"
+                className="bg-ink text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold"
               >
                 {initialsOf(w.name)}
               </span>
