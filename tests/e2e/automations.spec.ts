@@ -22,6 +22,39 @@ import { rest, signIn } from './helpers';
 test.describe.configure({ mode: 'default' });
 test.beforeEach(({}, info) => test.skip(info.project.name === 'phone', 'desktop grid'));
 
+test('an edit holds the row: "Editing" shows, the automation waits, Done runs it', async ({
+  page,
+}) => {
+  await signIn(page, 'james@example.com');
+  const sheet = await makeSheet(page, `Hold ${randomUUID().slice(0, 6)}`, [
+    { key: 'status', name: 'Status', type: 'status', config: STATUS },
+    { key: 'note', name: 'Note', type: 'text' },
+  ]);
+  const post = await addAutomation(page, sheet, {
+    name: 'Post on done',
+    trigger: { type: 'field_becomes', fieldKey: 'status', value: 'opt_done' },
+    actions: [{ type: 'post_update', message: 'Finished: {name}' }],
+  });
+  await seedItems(page, sheet, [{ name: 'Held pump' }, { name: 'Other pump' }]);
+  await page.goto(sheet.url);
+
+  await pickStatus(page, sheet, 'Held pump', 'Done', { finish: false });
+  const row = page
+    .getByRole('grid')
+    .getByRole('row')
+    .filter({ has: page.getByRole('gridcell', { name: 'Held pump', exact: false }) });
+  await expect(row.getByText('Editing', { exact: true })).toBeVisible();
+  await expect(sheet.cell(page, 'Held pump', 'Status')).toContainText('Done');
+  expect(await runsOf(page, post)).toEqual([]);
+
+  const answered = nextAnswer(page);
+  await row.getByRole('button', { name: 'Done', exact: true }).click();
+  await answered;
+  await expect(page.getByText(/^Post on done: Post an update$/)).toBeVisible();
+  await expect(row.getByText('Editing', { exact: true })).toHaveCount(0);
+  expect((await runsOf(page, post)).map((r) => [r.status, r.depth])).toEqual([['done', 0]]);
+});
+
 test('Done is blocked by a status rule, then closes out: the automation dates and locks the item', async ({
   page,
 }) => {

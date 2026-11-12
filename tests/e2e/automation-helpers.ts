@@ -156,12 +156,37 @@ export function nextAnswer(page: Page) {
   );
 }
 
-// a double click opens the editor whether or not the cell is the active one
-export async function pickStatus(page: Page, sheet: Sheet, item: string, label: string) {
+/**
+ * Finish the row an edit left held ("Editing" marker): its automations run now, against the final values. Waits for
+ * the server to answer the finish. Does nothing when the row is not held.
+ */
+export async function finishRow(page: Page, item: string) {
+  const row = page
+    .getByRole('grid')
+    .getByRole('row')
+    .filter({ has: page.getByRole('gridcell', { name: item, exact: false }) });
+  const done = row.getByRole('button', { name: 'Done', exact: true });
+  await done.waitFor({ state: 'visible', timeout: 1_000 }).catch(() => undefined);
+  if (!(await done.isVisible())) return;
+  const answered = nextAnswer(page);
+  await done.click();
+  await answered;
+}
+
+// a double click opens the editor whether or not the cell is the active one; the row is finished afterwards
+// (edits hold a row's automations until the person is done with it)
+export async function pickStatus(
+  page: Page,
+  sheet: Sheet,
+  item: string,
+  label: string,
+  opts: { finish?: boolean } = {},
+) {
   await sheet.cell(page, item, 'Status').dblclick();
   const answered = nextAnswer(page);
   await page.getByRole('listbox', { name: 'Status' }).getByRole('option', { name: label }).click();
   await answered;
+  if (opts.finish !== false) await finishRow(page, item);
 }
 
 export async function typeInto(
@@ -170,12 +195,14 @@ export async function typeInto(
   item: string,
   column: string,
   text: string,
+  opts: { finish?: boolean } = {},
 ) {
   await sheet.cell(page, item, column).dblclick();
   await page.getByRole('textbox', { name: column }).fill(text);
   const answered = nextAnswer(page);
   await page.keyboard.press('Enter');
   await answered;
+  if (opts.finish !== false) await finishRow(page, item);
 }
 
 export type Run = { status: string; depth: number; detail: string; steps: { outcome: string }[] };
