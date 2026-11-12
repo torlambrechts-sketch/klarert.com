@@ -143,6 +143,7 @@ function OptionPicker({
     opts.find((o) => o.id === id) ?? added.current.find((o) => o.id === id);
   return (
     <OptionsEditor
+      variant={multiple ? 'list' : 'blocks'}
       title={field.name}
       options={opts}
       selected={selectedKeys(field, value)}

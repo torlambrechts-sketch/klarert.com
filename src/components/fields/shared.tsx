@@ -386,7 +386,10 @@ export function OptionsEditor({
   allowClear = true,
   onAdd,
   onEditOptions,
+  variant = 'list',
 }: {
+  /** `blocks`: monday-style, each option a full-width button in its solid colour (single choice). */
+  variant?: 'list' | 'blocks';
   title: string;
   options: LabelOption[];
   selected: string[];
@@ -481,6 +484,124 @@ export function OptionsEditor({
       'flex min-h-9 cursor-pointer items-center gap-2.5 py-1.5 pr-3 pl-4 text-sm select-none',
       // active row (mouse or keyboard): soft fill and a focus-coloured bar on the left (>= 3:1 against white)
       on && 'bg-sel shadow-[inset_3px_0_0_var(--focus)]',
+    );
+
+  const searchBox = (placeholder: string) => (
+    <input
+      ref={searchRef}
+      role="combobox"
+      aria-expanded
+      aria-autocomplete="list"
+      aria-controls={listId}
+      aria-activedescendant={rows > 0 ? rowId(at) : undefined}
+      aria-label={`Search ${title.toLowerCase()}`}
+      placeholder={placeholder}
+      autoComplete="off"
+      spellCheck={false}
+      maxLength={120}
+      value={query}
+      onChange={(e) => {
+        setQuery(e.target.value);
+        setActive(0);
+      }}
+      onKeyDown={onKey}
+      className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground h-8 w-full rounded-md border bg-white px-2.5 text-sm outline-none focus-visible:ring-2"
+    />
+  );
+
+  if (variant === 'blocks' && !multiple)
+    return (
+      <div
+        data-flush
+        role="group"
+        aria-label={title}
+        className="flex w-[320px] max-w-full min-w-0 flex-col bg-white text-sm"
+      >
+        <div className="px-4 pt-3 pb-2 text-[14px] font-semibold">{title}</div>
+        <ul
+          ref={listRef}
+          id={listId}
+          role="listbox"
+          aria-label={title}
+          aria-busy={adding || undefined}
+          className="flex max-h-72 flex-col gap-1.5 overflow-y-auto px-2 pt-0.5 pb-1.5 outline-none"
+        >
+          {shown.map((o, i) => {
+            const on = current.includes(o.id);
+            return (
+              <li
+                key={o.id}
+                id={`${listId}-${o.id}`}
+                role="option"
+                aria-selected={on}
+                data-active={i === at}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(o.id)}
+                onMouseMove={() => i !== at && setActive(i)}
+                className={cn(
+                  'flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] px-3 text-[13px] font-semibold text-white select-none',
+                  on && 'ring-ink ring-2 ring-offset-2',
+                  i === at && !on && 'ring-ink/40 ring-2 ring-offset-1',
+                )}
+                style={{ background: solidVar(o.color) }}
+              >
+                <OptionMarks option={o}>
+                  <span className="truncate">{o.label}</span>
+                </OptionMarks>
+              </li>
+            );
+          })}
+          {add ? (
+            <li
+              id={`${listId}-add`}
+              role="option"
+              aria-selected={false}
+              aria-disabled={adding || undefined}
+              data-active={at === shown.length}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => void addTyped()}
+              onMouseMove={() => at !== shown.length && setActive(shown.length)}
+              className={cn(
+                'border-line text-ink flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] border border-dashed px-3 text-[13px] font-semibold select-none',
+                at === shown.length && 'bg-sel',
+              )}
+            >
+              <Plus className="size-3.5 shrink-0" aria-hidden />
+              <span className="truncate">{adding ? `Adding “${add}”…` : `Add “${add}”`}</span>
+            </li>
+          ) : null}
+          {canClear && !query ? (
+            <li role="presentation">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => onCommit([])}
+                className="bg-soft hover:bg-subtle text-muted-foreground flex min-h-[34px] w-full items-center justify-center rounded-[3px] text-[13px] font-semibold"
+              >
+                Clear
+              </button>
+            </li>
+          ) : null}
+        </ul>
+        {shown.length === 0 && !add ? (
+          <p role="status" className="text-muted-foreground px-4 pb-2 text-sm">
+            No matches
+          </p>
+        ) : null}
+        <div className="border-line flex flex-col gap-2 border-t px-3 py-2.5">
+          {searchBox(onAdd ? 'Search or add a label' : 'Search')}
+          <div className="text-muted-foreground flex items-center gap-2 text-xs leading-snug">
+            <span className="flex-1">
+              {onAdd ? 'Type a name to add a label.' : 'Labels are set in the field settings.'}
+            </span>
+            {onEditOptions ? (
+              <FooterAction onClick={onEditOptions}>
+                <Settings2 className="size-3.5" aria-hidden /> Edit options
+              </FooterAction>
+            ) : null}
+          </div>
+        </div>
+      </div>
     );
 
   return (
