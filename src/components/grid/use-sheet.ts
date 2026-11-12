@@ -12,6 +12,7 @@ import {
   changeFieldTypeAction,
   clickButtonAction,
   createItemAction,
+  finishItemAction,
   deleteFieldAction,
   duplicateFieldAction,
   lockItemAction,
@@ -485,7 +486,7 @@ export function useSheetActions(org: string, sheetId: string) {
       position: string,
       onSaved?: (tempId: string, item: Item) => void,
       /** Values to start with (calendar day, kanban lane, internal form) and the form it came from. */
-      extra: { values?: Record<string, unknown>; formViewId?: string } = {},
+      extra: { values?: Record<string, unknown>; formViewId?: string; hold?: boolean } = {},
     ): Promise<Item | null> => {
       const tempId = `temp-${newMutationId()}`;
       const now = new Date().toISOString();
@@ -514,6 +515,7 @@ export function useSheetActions(org: string, sheetId: string) {
             mutationId: tempId,
             ...(extra.values ? { values: extra.values } : {}),
             ...(extra.formViewId ? { formViewId: extra.formViewId } : {}),
+            ...(extra.hold ? { hold: true } : {}),
           }),
         );
         patch((d) => removeItems(d, [tempId]));
@@ -532,6 +534,21 @@ export function useSheetActions(org: string, sheetId: string) {
       }
     },
     [org, patch, run, sheetId],
+  );
+
+  /** The person left a new row added with `hold`: run its item_created automations now. */
+  const finishItem = useCallback(
+    async (itemId: string) => {
+      try {
+        const r = await finishItemAction({ org, sheetId, itemId });
+        if (!r.ok || !r.data) return;
+        patch((d) => upsertItem(d, r.data!.item));
+        showMessages(r.data.messages);
+      } catch {
+        // the scheduler releases the hold later
+      }
+    },
+    [org, patch, sheetId],
   );
 
   const moveItems = useCallback(
@@ -787,6 +804,7 @@ export function useSheetActions(org: string, sheetId: string) {
 
   return {
     pending,
+    finishItem,
     /** The cached sheet as it is now (newer than a render's `data` right after a write). */
     current: get,
     refresh,

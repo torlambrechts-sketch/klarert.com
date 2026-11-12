@@ -433,18 +433,47 @@ export function Table({
 
   // ───────────── add items ─────────────
 
+  // New rows hold their item_created automations until the person leaves the row (or the table).
+  const held = useRef(new Set<string>());
+  const finishRef = useRef(actions.finishItem);
+  finishRef.current = actions.finishItem;
+  useEffect(() => {
+    const release = (keep: string | null) => {
+      for (const id of [...held.current]) {
+        if (id === keep) continue;
+        held.current.delete(id);
+        void finishRef.current(id);
+      }
+    };
+    const unsub = store.subscribe((s, prev) => {
+      if (held.current.size && s.active?.itemId !== prev.active?.itemId)
+        release(s.active?.itemId ?? null);
+    });
+    return () => {
+      unsub();
+      release(null);
+    };
+  }, [store]);
+
   const addItem = async (group: Group, name: string) => {
     // after every item of the group, also those a filter hides, so keys never collide
     const list = data.items.filter((i) => i.groupId === group.id).sort(byPosition);
     const [position] = positionsAtEnd(list, 1);
-    await actions.createItem(group.id, name, position!, (tempId, saved) => {
-      // a cell of the new row may already be active: follow the row to its saved id
-      const s = store.getState();
-      const swap = (c: CellRef | null) =>
-        c && c.itemId === tempId ? { ...c, itemId: saved.id } : c;
-      if (s.active?.itemId === tempId || s.anchor?.itemId === tempId)
-        store.setState({ active: swap(s.active), anchor: swap(s.anchor) });
-    });
+    await actions.createItem(
+      group.id,
+      name,
+      position!,
+      (tempId, saved) => {
+        // a cell of the new row may already be active: follow the row to its saved id
+        const s = store.getState();
+        const swap = (c: CellRef | null) =>
+          c && c.itemId === tempId ? { ...c, itemId: saved.id } : c;
+        held.current.add(saved.id);
+        if (s.active?.itemId === tempId || s.anchor?.itemId === tempId)
+          store.setState({ active: swap(s.active), anchor: swap(s.anchor) });
+      },
+      { hold: true },
+    );
   };
 
   // ───────────── drag and drop ─────────────
