@@ -48,6 +48,7 @@ import {
   ExplainEditor,
   inputClass,
   Meter,
+  ScoreNumber,
   SaveCancel,
   Text,
   TextEditor,
@@ -575,7 +576,7 @@ export const riskmatrixUI: FieldTypeUI = {
     // Table: the score, then the meter by level (the level is the meter's name); elsewhere the level in words
     return density === 'table' ? (
       <span className="flex min-w-0 items-center gap-2">
-        <span className="tabular-nums">{v.l * v.i}</span>
+        <ScoreNumber>{v.l * v.i}</ScoreNumber>
         <Meter step={riskStep(level)} label={level} />
         <TrendLine field={field} item={item} value={v} ctx={ctx} />
       </span>

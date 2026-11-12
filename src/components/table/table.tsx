@@ -64,7 +64,7 @@ import {
   byPosition,
   columnId,
   endsCard,
-  fitWidths,
+  trailWidth,
   positionsAtEnd,
   rangeOf,
   rowHeight,
@@ -81,15 +81,18 @@ import {
 // fit. The grid element keeps keyboard focus and points at the active cell with aria-activedescendant, so focus
 // survives virtualisation. Shift+F10 opens the active row's actions menu.
 
-/** The trailing column: "+" in the column headers, the row actions menu in item rows. */
-const TRAIL = 48;
 /**
- * The leading part of the sticky column: the sheet's round row icon at rest; the checkbox replaces it on hover, focus
- * or selection, with the drag handle in the 16 px before it.
+ * The trailing column: "+" in the column headers, the row actions menu in item rows. At least this wide; it takes
+ * the room the columns leave in the card, so "+" follows the last column and "…" sits at the card's right edge.
  */
-const CHECK_W = 70;
-/** The room a trend line takes after a score: the line and the gap before it. */
-const TREND_W = 72;
+const TRAIL = 44;
+/**
+ * The leading part of the sticky column: 16 px (the drag handle), the sheet's 28 px round row icon, 14 px before the
+ * name. The checkbox replaces the icon on hover, focus or selection.
+ */
+const CHECK_W = 58;
+/** A column that shows a score with its meter and trend line is at least this wide. */
+const SCORE_W = 150;
 /** The card's left and right borders. */
 const EDGE = 2;
 const cellId = (itemId: string, col: string) => `cell-${itemId}-${col}`;
@@ -235,31 +238,29 @@ export function Table({
     [showTrends, trendHistory],
   );
   const baseWidth = useCallback(
-    (f: Field) =>
-      widths[f.id] ??
-      (f.width ?? resolveFieldType(f.type)?.defaultWidth ?? 140) +
-        (showTrends && trendPolarity(f) !== null ? TREND_W : 0),
+    (f: Field) => {
+      const w = widths[f.id] ?? f.width ?? resolveFieldType(f.type)?.defaultWidth ?? 140;
+      return showTrends && trendPolarity(f) !== null && widths[f.id] === undefined
+        ? Math.max(w, SCORE_W)
+        : w;
+    },
     [widths, showTrends],
   );
   const stickyW = CHECK_W + nameWidth;
-  // columns stretch to fill the card; wider tables keep their widths and scroll
-  const fitted = useMemo(() => {
-    const base = fieldCols.map((c) => baseWidth(c.field));
-    const w = fitWidths(base, stickyW + TRAIL + EDGE, viewW);
-    return new Map(fieldCols.map((c, i) => [c.field.id, { shown: w[i]!, base: base[i]! }]));
-  }, [fieldCols, baseWidth, stickyW, viewW]);
-  const widthOf = useCallback(
-    (f: Field) => fitted.get(f.id)?.shown ?? baseWidth(f),
-    [fitted, baseWidth],
+  // columns keep their widths (wider tables scroll); the trailing column takes the room left in the card
+  const widthOf = baseWidth;
+  const trailW = useMemo(
+    () =>
+      trailWidth(
+        fieldCols.map((c) => baseWidth(c.field)),
+        stickyW + EDGE,
+        viewW,
+        TRAIL,
+      ),
+    [fieldCols, baseWidth, stickyW, viewW],
   );
-  /** A width the person dragged to, back in stored terms (the stretch is added again when it fits). */
-  const toBase = useCallback(
-    (f: Field, shown: number) => {
-      const w = fitted.get(f.id);
-      return w && w.shown > 0 ? Math.round((shown * w.base) / w.shown) : shown;
-    },
-    [fitted],
-  );
+  /** A width the person dragged to, in stored terms. */
+  const toBase = useCallback((_f: Field, shown: number) => shown, []);
 
   const docTop = useDocumentTop(scrollRef);
   const rowV = useWindowVirtualizer({
@@ -267,7 +268,12 @@ export function Table({
     scrollMargin: docTop,
     // keyboard moves keep the active row clear of the sticky top bar
     scrollPaddingStart: 48,
-    estimateSize: (i) => rowHeight(layout.rows[i]!.kind, density),
+    // the last row of a card also carries the card's bottom border (item and header rows draw their own line)
+    estimateSize: (i) => {
+      const kind = layout.rows[i]!.kind;
+      const edge = kind !== 'item' && kind !== 'header' && endsCard(layout.rows, i) ? 1 : 0;
+      return rowHeight(kind, density) + edge;
+    },
     getItemKey: useCallback((i: number) => layout.rows[i]!.key, [layout.rows]),
     overscan: 10,
   });
@@ -275,7 +281,7 @@ export function Table({
     horizontal: true,
     count: fieldCols.length + 1,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (i) => (i < fieldCols.length ? widthOf(fieldCols[i]!.field) : TRAIL),
+    estimateSize: (i) => (i < fieldCols.length ? widthOf(fieldCols[i]!.field) : trailW),
     getItemKey: useCallback(
       (i: number) => (i < fieldCols.length ? fieldCols[i]!.field.id : '__trail'),
       [fieldCols],
@@ -284,7 +290,7 @@ export function Table({
     scrollPaddingStart: stickyW,
     overscan: 3,
   });
-  useEffect(() => colV.measure(), [colV, fitted, fieldCols, stickyW]);
+  useEffect(() => colV.measure(), [colV, widthOf, trailW, fieldCols, stickyW]);
   useEffect(() => rowV.measure(), [rowV, layout.rows, density]);
   /** ARIA row numbers: every row but the gaps between cards. */
   const ariaRows = useMemo(() => {
@@ -961,7 +967,7 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
         drop.isOver && 'bg-sel',
       )}
     >
-      <div className="sticky left-0 flex items-center px-[12px]">
+      <div className="sticky left-0 flex items-center px-4">
         <GroupTitle
           group={row.group}
           count={row.count}
@@ -984,20 +990,18 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
     <>
       <Sticky width={p.stickyW} role="columnheader" className="border-b-soft border-b">
         {p.canEdit ? (
-          <span className="flex w-[70px] shrink-0 justify-start pl-[16px]">
-            <span className="grid size-[40px] place-items-center">
-              <input
-                type="checkbox"
-                className="row-check"
-                aria-label={`Select all items in ${row.group.name}`}
-                checked={allSelected}
-                disabled={items.length === 0}
-                onChange={(e) => p.onSelectItems(items, e.target.checked)}
-              />
-            </span>
+          <span className="flex w-[58px] shrink-0 items-center pl-[24px]">
+            <input
+              type="checkbox"
+              className="row-check"
+              aria-label={`Select all items in ${row.group.name}`}
+              checked={allSelected}
+              disabled={items.length === 0}
+              onChange={(e) => p.onSelectItems(items, e.target.checked)}
+            />
           </span>
         ) : (
-          <span className="w-[70px] shrink-0" />
+          <span className="w-[58px] shrink-0" />
         )}
         <span className="text-muted-foreground text-label-12 truncate pl-[4px]">
           {p.ctx.sheet.itemLabel}
@@ -1009,7 +1013,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
             <div
               key="__trail"
               role="columnheader"
-              className="border-b-soft bg-background-100 absolute top-0 flex h-full items-center justify-center border-b"
+              className="border-b-soft bg-background-100 absolute top-0 flex h-full items-center border-b pl-1"
               style={{ left: vc.start, width: vc.size }}
             >
               {p.canEdit ? (
@@ -1119,7 +1123,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
           aria-readonly={!editable || undefined}
           className="flex h-full w-full items-center"
         >
-          <span className="relative flex h-full w-[70px] shrink-0 items-center">
+          <span className="relative flex h-full w-[58px] shrink-0 items-center">
             {!p.dragDisabled && editable ? (
               <button
                 ref={drag.setNodeRef}
@@ -1136,25 +1140,25 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                 <GripVertical className="size-3.5" aria-hidden />
               </button>
             ) : null}
-            <span className="absolute top-1/2 left-[16px] grid size-[40px] -translate-y-1/2 place-items-center">
-              {/* the sheet's row icon at rest; the checkbox takes its place on hover, focus or selection */}
-              <span
-                aria-hidden
-                className={cn(
-                  'border-line text-muted-foreground bg-background-100 col-start-1 row-start-1 grid size-[40px] place-items-center rounded-full border',
-                  p.canEdit && 'group-focus-within/row:invisible group-hover/row:invisible',
-                  p.canEdit && (rowActive || p.selected.size > 0) && 'invisible',
-                )}
-              >
-                <FileText className="size-[16px]" />
-              </span>
+            {/* the sheet's row icon at rest; the checkbox takes its place on hover, focus or selection */}
+            <span
+              aria-hidden
+              className={cn(
+                'border-line text-muted-foreground bg-background-100 absolute top-1/2 left-[16px] grid size-[28px] -translate-y-1/2 place-items-center rounded-full border',
+                p.canEdit && 'group-focus-within/row:invisible group-hover/row:invisible',
+                p.canEdit && (rowActive || p.selected.size > 0) && 'invisible',
+              )}
+            >
+              <FileText className="size-[14px]" />
+            </span>
+            <span className="absolute top-1/2 left-[24px] flex -translate-y-1/2">
               {p.canEdit ? (
                 <input
                   type="checkbox"
                   aria-label={`Select ${item.name}`}
                   checked={isSelected}
                   className={cn(
-                    'row-check col-start-1 row-start-1',
+                    'row-check',
                     reveal,
                     'group-focus-within/row:opacity-100',
                     isSelected && 'opacity-100',
@@ -1172,85 +1176,90 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
             onMouseDown={p.onMouseDown}
             onDoubleClick={p.onDoubleClick}
             className={cn(
-              'relative -ml-[6px] flex h-full min-w-0 flex-1 cursor-default flex-col justify-center gap-0.5 pr-2 pl-[6px]',
+              'relative -ml-[6px] flex h-full min-w-0 flex-1 cursor-default items-center gap-[14px] pr-[14px] pl-[6px]',
               inRange(0) && 'bg-sel',
               isActive('name') && 'outline-focus z-[1] outline-2 -outline-offset-2',
             )}
           >
-            <span className="text-label-16 flex min-w-0 items-center gap-2">
-              {item.id.startsWith('temp-') ? (
-                <span className="text-ink truncate">{item.name}</span>
-              ) : (
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  title={`Open ${item.displayId}`}
-                  className="text-ink min-w-0 truncate text-left font-normal hover:underline"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onDoubleClick={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    // the panel returns focus here when it closes
-                    e.currentTarget.focus();
-                    p.onOpenItem(item);
-                  }}
-                >
-                  {item.name}
-                </button>
-              )}
-              {p.comments > 0 ? (
-                <span
-                  className="border-line text-ink bg-background-100 text-label-13-mono -my-2 inline-flex size-[36px] shrink-0 items-center justify-center rounded-full border"
-                  title={p.comments === 1 ? '1 update' : `${p.comments} updates`}
-                >
-                  {p.comments}
-                  <span className="sr-only">{p.comments === 1 ? ' update' : ' updates'}</span>
-                </span>
-              ) : null}
-            </span>
-            {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
-              <span className="text-muted-foreground text-label-13-mono flex min-w-0 items-center gap-[7px] leading-[18px]">
-                <span className="shrink-0">{item.displayId}</span>
-                {ownerName ? (
-                  <>
-                    <span aria-hidden>·</span>
-                    <span className="truncate">{ownerName}</span>
-                  </>
-                ) : null}
-                {item.locked ? (
-                  <span
-                    className="flex shrink-0 items-center gap-0.5"
-                    title={item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
+            <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+              <span className="text-label-14 flex min-w-0 items-center">
+                {item.id.startsWith('temp-') ? (
+                  <span className="text-ink truncate">{item.name}</span>
+                ) : (
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    title={`Open ${item.displayId}`}
+                    className="text-ink min-w-0 truncate text-left font-normal hover:underline"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onDoubleClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      // the panel returns focus here when it closes
+                      e.currentTarget.focus();
+                      p.onOpenItem(item);
+                    }}
                   >
-                    <Lock className="size-3" aria-hidden />
-                    <span className="sr-only">
-                      {item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
-                    </span>
-                  </span>
-                ) : null}
-                {p.actions.held.has(item.id) ? (
-                  <span
-                    className="flex shrink-0 items-center gap-1"
-                    title="Actions run when you finish this row"
-                  >
-                    <span className="border-line text-ink rounded-full border px-1.5 leading-4">
-                      Editing
-                    </span>
-                    <span className="sr-only">Actions run when you finish this row.</span>
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      className="text-ink font-semibold underline-offset-2 hover:underline"
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void p.actions.finishItem(item.id);
-                      }}
-                    >
-                      Done
-                    </button>
-                  </span>
-                ) : null}
+                    {item.name}
+                  </button>
+                )}
               </span>
+              {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
+                <span className="text-muted-foreground text-label-12-mono flex min-w-0 items-center gap-[7px] leading-[17px]">
+                  <span className="shrink-0">{item.displayId}</span>
+                  {ownerName ? (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span className="truncate">{ownerName}</span>
+                    </>
+                  ) : null}
+                  {item.locked ? (
+                    <span
+                      className="flex shrink-0 items-center gap-0.5"
+                      title={item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
+                    >
+                      <Lock className="size-3" aria-hidden />
+                      <span className="sr-only">
+                        {item.lockReason ? `Locked: ${item.lockReason}` : 'Locked'}
+                      </span>
+                    </span>
+                  ) : null}
+                  {p.actions.held.has(item.id) ? (
+                    <span
+                      className="flex shrink-0 items-center gap-1"
+                      title="Actions run when you finish this row"
+                    >
+                      <span className="border-line text-ink rounded-full border px-1.5 leading-4">
+                        Editing
+                      </span>
+                      <span className="sr-only">Actions run when you finish this row.</span>
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        className="text-ink font-semibold underline-offset-2 hover:underline"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void p.actions.finishItem(item.id);
+                        }}
+                      >
+                        Done
+                      </button>
+                    </span>
+                  ) : null}
+                </span>
+              )}
+            </span>
+            {p.comments > 0 ? (
+              <span
+                className="text-ink bg-background-100 text-label-11-mono border-gray-alpha-500 inline-flex h-[22px] min-w-[28px] shrink-0 items-center justify-center rounded-full border px-1.5 font-semibold"
+                title={p.comments === 1 ? '1 update' : `${p.comments} updates`}
+              >
+                {p.comments}
+                <span className="sr-only">{p.comments === 1 ? ' update' : ' updates'}</span>
+              </span>
+            ) : (
+              // names line up whether or not a row has updates
+              <span aria-hidden className="w-[28px] shrink-0" />
             )}
             {isEditing('name') ? (
               <CellEditor
@@ -1344,7 +1353,7 @@ function RowMenu({
     <div
       role="gridcell"
       className={cn(
-        'border-b-line group-hover/row:bg-subtle bg-background-100 absolute top-0 flex h-full items-center justify-center border-b',
+        'border-b-line group-hover/row:bg-subtle bg-background-100 absolute top-0 flex h-full items-center justify-end border-b pr-2',
         selected && 'bg-sel group-hover/row:bg-sel',
       )}
       style={{ left, width }}
@@ -1460,7 +1469,7 @@ const TableCell = memo(function TableCell({
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'border-b-line text-ink group-hover/row:bg-subtle bg-background-100 text-label-14 absolute top-0 flex h-full items-center overflow-hidden border-b px-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] [&_[data-pill]]:-mx-1.5',
+        'border-b-line text-ink group-hover/row:bg-subtle bg-background-100 text-label-14 absolute top-0 flex h-full items-center overflow-hidden border-b px-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] has-[[data-box]]:px-2 [&_[data-pill]]:-mx-1.5',
         (selected || rowSelected) && 'bg-sel group-hover/row:bg-sel',
         active && 'outline-focus z-[1] outline-2 -outline-offset-2',
       )}
@@ -1584,7 +1593,7 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
       )}
     >
       <Sticky width={p.stickyW} className={cn(drop.isOver && 'bg-sel')}>
-        <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[70px]">
+        <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[58px]">
           <input
             ref={p.addRef}
             className="placeholder:text-muted-foreground text-ink text-label-14 h-full w-full bg-transparent px-[4px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
@@ -1627,7 +1636,7 @@ function SummaryRow(p: RowProps & { row: Extract<TableRow, { kind: 'summary' }> 
           <div
             key={field.id}
             role="gridcell"
-            className="bg-background-100 absolute top-0 flex h-full items-center pr-[14px] pl-[16px]"
+            className="bg-background-100 absolute top-0 flex h-full items-center px-[14px]"
             style={{ left: vc.start, width: vc.size }}
           >
             {fn ? (

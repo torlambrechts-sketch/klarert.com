@@ -133,8 +133,11 @@ export type Summary =
   | { kind: 'value'; fn: SummaryFn; value: number | null; text: string }
   | { kind: 'segments'; fn: SummaryFn; segments: Segment[]; total: number; text: string };
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(n);
+const fmt = (n: number, digits = 2) =>
+  new Intl.NumberFormat('en-GB', {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: 0,
+  }).format(n);
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const shortDate = (iso: string) => {
@@ -187,7 +190,9 @@ export function summarise(field: Field, items: Item[], ctx: Ctx, fn?: SummaryFn)
       const nums = items
         .map((it) => numberOf(it, field, ctx))
         .filter((n): n is number => n !== null);
-      return value(use, numberSummary(use, nums));
+      const v = numberSummary(use, nums);
+      // an average reads with one decimal ("12.3 average"), as the board design shows it
+      return value(use, v, use === 'average' && v !== null ? fmt(v, 1) : undefined);
     }
     case 'count_filled':
       return value(use, filled.length, `${fmt(filled.length)} of ${fmt(items.length)} filled`);

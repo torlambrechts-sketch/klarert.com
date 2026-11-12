@@ -23,9 +23,13 @@ export interface TrendState {
 
 export const TrendContext = createContext<TrendState>({ show: false, history: null });
 
-const W = 64;
+// the board design's 60 × 20 line: points from x 2 to 57, y 3 (highest) to 17 (lowest)
+const W = 60;
 const H = 20;
-const PAD = 3;
+const X0 = 2;
+const X1 = 57;
+const Y_TOP = 3;
+const Y_BOTTOM = 17;
 
 const STROKE: Record<TrendTone, string> = {
   good: 'var(--green-700)',
@@ -54,9 +58,9 @@ export function TrendLine({
   const min = Math.min(...points);
   const span = Math.max(...points) - min || 1;
   const xy = points.map((p, i) => [
-    PAD + (i / (points.length - 1)) * (W - PAD * 2),
+    X0 + (i / (points.length - 1)) * (X1 - X0),
     // a level line sits in the middle
-    Math.max(...points) === min ? H / 2 : H - PAD - ((p - min) / span) * (H - PAD * 2),
+    Math.max(...points) === min ? H / 2 : Y_BOTTOM - ((p - min) / span) * (Y_BOTTOM - Y_TOP),
   ]);
   const [ex, ey] = xy[xy.length - 1]!;
   const label = trendLabel(trend);
@@ -77,11 +81,11 @@ export function TrendLine({
         points={xy.map(([x, y]) => `${x!.toFixed(1)},${y!.toFixed(1)}`).join(' ')}
         fill="none"
         stroke={stroke}
-        strokeWidth={1.5}
+        strokeWidth={1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx={ex} cy={ey} r={2.5} fill={stroke} />
+      <circle cx={ex} cy={ey} r={2.4} fill={stroke} />
     </svg>
   );
 }

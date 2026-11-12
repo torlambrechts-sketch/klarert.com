@@ -5,7 +5,7 @@ import {
   buildLayout,
   cardFields,
   endsCard,
-  fitWidths,
+  trailWidth,
   rowHeight,
   positionAt,
   positionsAtEnd,
@@ -154,21 +154,19 @@ describe('buildLayout', () => {
 });
 
 describe('column widths', () => {
-  it('shares leftover space across columns in proportion, keeping the total exact', () => {
-    const w = fitWidths([100, 200, 100], 400, 1200);
-    expect(w).toEqual([200, 400, 200]);
-    expect(fitWidths([100, 100, 100], 0, 400)).toEqual([133, 133, 134]);
-    expect(w.reduce((x, y) => x + y, 0) + 400).toBe(1200);
+  it('gives the trailing column the room the columns leave in the card', () => {
+    // 380 sticky + 2 borders + 684 of columns in a 1126 px card: 60 px left for "+" and "…"
+    expect(trailWidth([84, 140, 150, 150, 160], 382, 1126, 44)).toBe(60);
+    expect(trailWidth([], 382, 1126, 44)).toBe(744);
   });
 
-  it('keeps widths when the columns do not fit (the table scrolls)', () => {
-    expect(fitWidths([300, 300], 400, 800)).toEqual([300, 300]);
-    expect(fitWidths([], 400, 1200)).toEqual([]);
+  it('keeps the trailing column at its minimum when the columns do not fit (the table scrolls)', () => {
+    expect(trailWidth([300, 300], 400, 800, 44)).toBe(44);
   });
 
   it('has taller rows when comfortable', () => {
-    expect(rowHeight('item')).toBe(76);
-    expect(rowHeight('item', 'compact')).toBe(44);
+    expect(rowHeight('item')).toBe(52);
+    expect(rowHeight('item', 'compact')).toBe(40);
     expect(rowHeight('header')).toBe(34);
   });
 });

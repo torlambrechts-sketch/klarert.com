@@ -47,7 +47,7 @@ export const number = base<number, NumberConfig>({
     higherIsBetter: z.boolean().optional(),
   }),
   defaultConfig: () => ({ unit: '', decimals: 2 }),
-  defaultWidth: 96,
+  defaultWidth: 84,
   formAllowed: true,
   kanbanCapable: false,
   calendarCapable: false,

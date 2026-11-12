@@ -2,13 +2,13 @@
 
 import { useEffect, useId, useState } from 'react';
 import {
-  CalendarDays,
+  Calendar,
   ChevronDown,
-  Columns3,
   FileText,
   MoreHorizontal,
   Plus,
-  Table2,
+  SquareKanban,
+  Table,
   User,
 } from 'lucide-react';
 import {
@@ -37,10 +37,10 @@ import type { ActiveView, ViewsState } from './use-views';
 // (Kanban), Calendar, Form, the other saved views, then "More ▾" with "+ New view"; the page's view options sit at the
 // right end. And the active view's menu (rename, duplicate, delete, save as a view, make default).
 
-const ICONS: Record<ViewType, typeof Table2> = {
-  table: Table2,
-  kanban: Columns3,
-  calendar: CalendarDays,
+const ICONS: Record<ViewType, typeof Table> = {
+  table: Table,
+  kanban: SquareKanban,
+  calendar: Calendar,
   form: FileText,
 };
 
@@ -72,7 +72,7 @@ function TabLink({
         // the focus ring shows for keyboard focus only (focus-visible), never as a box around the active tab
         'focus-visible:outline-focus text-label-14 relative flex h-[40px] items-center gap-[7px] rounded-sm px-px whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
         active
-          ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-sm after:bg-[var(--ink)]'
+          ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-[2px] after:bg-[var(--ink)]'
           : 'text-muted-foreground hover:text-ink',
       )}
     >
@@ -168,7 +168,7 @@ export function ViewTabs({
           </li>
         </ul>
       </nav>
-      {end ? <div className="flex shrink-0 items-center gap-1.5 pb-1">{end}</div> : null}
+      {end ? <div className="flex shrink-0 items-center gap-1.5">{end}</div> : null}
       <ViewDialog
         open={newOpen}
         onClose={() => setNewOpen(false)}
@@ -199,13 +199,13 @@ export function ViewMenu({ views, canEdit }: { views: ViewsState; canEdit: boole
   return (
     <>
       {unsaved ? (
-        <Button type="button" variant="outline" onClick={() => setDialog('save')}>
+        <Button type="button" variant="outline" size="sm" onClick={() => setDialog('save')}>
           Save view
         </Button>
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button type="button" variant="outline" size="icon" aria-label="View options">
+          <Button type="button" variant="outline" size="icon-sm" aria-label="View options">
             <MoreHorizontal aria-hidden />
           </Button>
         </DropdownMenuTrigger>

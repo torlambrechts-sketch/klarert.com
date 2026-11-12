@@ -48,7 +48,7 @@ export function TopBar({
   const { setMenuOpen, focusSearch } = useShell();
   useSlashToSearch(focusSearch);
   return (
-    <header className="border-line bg-background-100 sticky top-0 z-30 flex h-[48px] items-center gap-2 border-b px-3 sm:gap-3 sm:px-[28px]">
+    <header className="border-line bg-background-100 sticky top-0 z-30 flex h-[48px] items-center gap-2 border-b px-3 sm:gap-2.5 sm:px-[28px]">
       <button
         type="button"
         className="phone-only hover:bg-soft flex size-9 shrink-0 items-center justify-center rounded-md"

@@ -135,7 +135,7 @@ export function ColumnHeader({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-[14px] text-left font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
+            'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-3 text-left font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
             // the system-column mark sits right after the name
             field.locked ? 'flex-initial pr-0' : 'flex-1 pr-[14px]',
           )}

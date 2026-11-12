@@ -21,11 +21,12 @@ export type Density = 'comfortable' | 'compact';
 export function rowHeight(kind: TableRow['kind'], density: Density = 'comfortable'): number {
   switch (kind) {
     case 'group':
-      return 48;
+      // 48 and the card's top border
+      return 49;
     case 'header':
       return 34;
     case 'item':
-      return density === 'compact' ? 44 : 76;
+      return density === 'compact' ? 40 : 52;
     case 'add':
       return density === 'compact' ? 36 : 44;
     case 'summary':
@@ -42,20 +43,18 @@ export const endsCard = (rows: TableRow[], i: number) => {
 };
 
 /**
- * Column widths that fill the table: when the columns are narrower than `available`, the leftover space is shared
- * across them in proportion to their widths; wider tables keep their widths (and scroll).
+ * The width of the table's trailing column ("+" in the header, "…" in rows): the room the columns leave in the card,
+ * at least `min`. Columns keep their widths (docs/05 §3.1); when they do not fit, the trailing column is `min` wide
+ * and the table scrolls.
  */
-export function fitWidths(widths: number[], fixed: number, available: number): number[] {
-  const total = widths.reduce((a, b) => a + b, 0);
-  const room = available - fixed - total;
-  if (room <= 0 || total === 0) return widths;
-  let given = 0;
-  return widths.map((w, i) => {
-    if (i === widths.length - 1) return w + (room - given);
-    const extra = Math.floor((room * w) / total);
-    given += extra;
-    return w + extra;
-  });
+export function trailWidth(
+  widths: number[],
+  fixed: number,
+  available: number,
+  min: number,
+): number {
+  const used = fixed + widths.reduce((a, b) => a + b, 0);
+  return Math.max(min, available - used);
 }
 
 export interface Layout {

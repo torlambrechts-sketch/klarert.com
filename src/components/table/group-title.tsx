@@ -28,20 +28,24 @@ export function GroupTitle({
         type="button"
         aria-expanded={!collapsed}
         onClick={onToggle}
-        className="focus-visible:outline-focus hover:bg-soft flex h-[32px] max-w-full items-center gap-[8px] rounded-md px-[4px] text-left focus-visible:outline-2"
+        className="focus-visible:outline-focus group/title flex h-[32px] max-w-full items-center gap-2 rounded-md text-left focus-visible:outline-2"
       >
-        {collapsed ? (
-          <ChevronRight className="text-muted-foreground mr-1 size-4 shrink-0" aria-hidden />
-        ) : (
-          <ChevronDown className="text-muted-foreground mr-1 size-4 shrink-0" aria-hidden />
-        )}
-        <span
-          aria-hidden
-          className="size-[8px] shrink-0 rounded-full"
-          style={{ background: solidVar(group.color) }}
-        />
-        <span className="text-ink text-label-14 truncate font-semibold">{group.name}</span>
-        <span className="bg-soft text-ink text-label-12-mono shrink-0 rounded-full px-[8px] py-px leading-[17px] font-semibold tabular-nums">
+        <span className="group-hover/title:bg-soft grid size-6 shrink-0 place-items-center rounded-md">
+          {collapsed ? (
+            <ChevronRight className="text-muted-foreground size-4" strokeWidth={2.25} aria-hidden />
+          ) : (
+            <ChevronDown className="text-muted-foreground size-4" strokeWidth={2.25} aria-hidden />
+          )}
+        </span>
+        <span className="text-ink text-label-14 flex min-w-0 items-center gap-2 px-1 py-0.5 font-semibold">
+          <span
+            aria-hidden
+            className="size-[8px] shrink-0 rounded-full"
+            style={{ background: solidVar(group.color) }}
+          />
+          <span className="truncate">{group.name}</span>
+        </span>
+        <span className="bg-soft text-muted-foreground text-label-12-mono shrink-0 rounded-full px-[8px] py-px leading-[17px] font-semibold tabular-nums">
           {count === 1 ? '1 item' : `${count.toLocaleString('en-GB')} items`}
         </span>
         {donePct === null ? null : (

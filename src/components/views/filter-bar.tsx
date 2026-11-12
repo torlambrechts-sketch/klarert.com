@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { ArrowDownUp, ChevronDown, Filter, Plus, Search, X } from 'lucide-react';
+import { ArrowDownWideNarrow, ChevronDown, ListFilter, Plus, Search, X } from 'lucide-react';
 import { OPERATORS, kindOfKey, OP_LABEL, SPECIAL_KEYS } from '@/engine/conditions';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { ValueKind } from '@/engine/fields/types';
@@ -13,6 +13,12 @@ import { inputClass } from '@/components/fields/shared';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import {
+  toolbarButton,
+  toolbarCount,
+  toolbarPlaceholder,
+  toolbarSelect,
+} from '@/components/table/toolbar-styles';
 
 // Filters, sort and search of a view (docs/01 FR-26, docs/03 §4): conditions use the engine's operators per value
 // kind; the field picker offers the item's name, group and id besides the sheet's fields.
@@ -110,10 +116,10 @@ export function FilterButton({
         <Button
           type="button"
           variant="outline"
-          className="h-[40px] font-normal shadow-none"
+          className={toolbarButton}
           aria-label={count ? `Filter, ${count} active` : 'Filter'}
         >
-          <Filter aria-hidden /> Filter
+          <ListFilter aria-hidden /> Filter
           {count ? (
             <span className="bg-ink text-label-12 ml-0.5 rounded-full px-1.5 leading-4 font-bold text-white tabular-nums">
               {count}
@@ -384,10 +390,6 @@ function ValueInput({
 
 // ───────────────────────── sort ─────────────────────────
 
-/** A select-style toolbar trigger: 38 px, 14 px words, a chevron at the end (the design's board toolbar). */
-const toolbarSelect =
-  'border-line hover:bg-subtle focus-visible:outline-focus flex h-[40px] max-w-[240px] min-w-[150px] items-center gap-2 rounded-md border bg-background-100 pr-2.5 pl-3 text-label-14 focus-visible:outline-2';
-
 export function SortButton({
   config,
   setConfig,
@@ -407,12 +409,14 @@ export function SortButton({
     <Popover>
       <PopoverTrigger asChild>
         <button type="button" className={toolbarSelect}>
-          <ArrowDownUp className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
-          <span className="min-w-0 flex-1 truncate text-left">
+          <ArrowDownWideNarrow className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
+          <span
+            className={cn('min-w-0 flex-1 truncate text-left', !rules.length && toolbarPlaceholder)}
+          >
             {rules.length ? `Sorted by ${keyLabel(rules[0]!.fieldKey, ctx)}` : 'Default order'}
           </span>
           {rules.length > 1 ? (
-            <span className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px] font-normal tabular-nums">
+            <span className={toolbarCount}>
               +{rules.length - 1}
               <span className="sr-only"> more</span>
             </span>
@@ -513,8 +517,8 @@ export function SheetSearch({ value, onChange }: { value: string; onChange(v: st
       />
       <input
         type="search"
-        className={cn(inputClass, 'text-label-14 h-[40px] w-full pl-8')}
-        placeholder="Search this sheet"
+        className={cn(inputClass, 'text-label-14 h-[38px] w-full pl-8')}
+        placeholder="Search items…"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
