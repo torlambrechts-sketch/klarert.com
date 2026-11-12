@@ -60,7 +60,8 @@ const OUTCOME_WORDS: Record<Step['outcome'], string> = {
 
 /** "Set Status to Done", "Create "Follow-up" (FU-003)", "Notify (skipped: No one to notify)". */
 export function stepLine(step: Step): string {
-  if (step.outcome === 'done') return step.message ? `${step.summary} (${step.message})` : step.summary;
+  if (step.outcome === 'done')
+    return step.message ? `${step.summary} (${step.message})` : step.summary;
   const why = step.message ? `: ${step.message.replace(/\.$/, '')}` : '';
   return `${step.summary} (${OUTCOME_WORDS[step.outcome]}${why})`;
 }

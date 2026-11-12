@@ -228,15 +228,18 @@ export async function runChain(
       }
       if (!guard.enter(automation.id, w.item.id)) continue;
 
-      const planned = planActions(automation.actions, w.item, event, w.ctx, {
-        appUrl: opts.appUrl,
-        workspace: opts.workspace,
-        actor: opts.starter,
-        automation,
-        roleHolders: w.roleHolders,
-      });
       const steps: Step[] = [];
-      for (const p of planned) {
+      for (const action of automation.actions) {
+        // actions run in array order: each is planned on the item as the earlier ones left it
+        const now = (await world(event.sheetId, event.itemId)) ?? w;
+        const [p] = planActions([action], now.item, event, now.ctx, {
+          appUrl: opts.appUrl,
+          workspace: opts.workspace,
+          actor: opts.starter,
+          automation,
+          roleHolders: now.roleHolders,
+        });
+        if (!p) continue;
         const base = { action: p.action, summary: p.summary };
         if (stopped || guard.overBudget()) {
           stopped = true;
@@ -251,7 +254,7 @@ export async function runChain(
         for (const effect of p.effects) {
           let r: EffectResult;
           try {
-            r = await store.execute(effect, { automation, world: w });
+            r = await store.execute(effect, { automation, world: now });
           } catch (e) {
             r = {
               outcome: 'failed',

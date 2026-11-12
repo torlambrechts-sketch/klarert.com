@@ -58,7 +58,9 @@ describe('runStatus', () => {
 describe('messages', () => {
   it('lists the steps for the toast', () => {
     expect(stepLine(step('done', 'Set Status to Done'))).toBe('Set Status to Done');
-    expect(stepLine(step('done', 'Create "Follow-up"', 'FU-003'))).toBe('Create "Follow-up" (FU-003)');
+    expect(stepLine(step('done', 'Create "Follow-up"', 'FU-003'))).toBe(
+      'Create "Follow-up" (FU-003)',
+    );
     expect(stepLine(step('blocked', 'Set Status to Done', 'Fill in Root cause first.'))).toBe(
       'Set Status to Done (blocked: Fill in Root cause first)',
     );

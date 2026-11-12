@@ -645,9 +645,21 @@ export async function clickButton(input: unknown): Promise<Result<{ messages: st
         ],
         { orgId, userId: user.id, workspace: v.org },
       );
+      if (outcome.runs.length > 0 || outcome.messages.length > 0)
+        return ok({ messages: outcome.messages });
+      const { count } = await supabase
+        .from('automations')
+        .select('id', { count: 'exact', head: true })
+        .eq('sheet_id', v.sheetId)
+        .eq('enabled', true)
+        .eq('trigger->>type', 'button_clicked')
+        .eq('trigger->>fieldKey', field.key);
       return ok({
-        messages:
-          outcome.runs.length === 0 ? ['No automation uses this button yet.'] : outcome.messages,
+        messages: [
+          (count ?? 0) === 0
+            ? 'No automation uses this button yet.'
+            : 'Nothing ran: the automations of this button are paused for this item or their conditions are not met.',
+        ],
       });
     },
     'clickButton',

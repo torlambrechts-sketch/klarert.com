@@ -285,6 +285,28 @@ describe('runChain', () => {
     expect(saved).toHaveLength(1);
   });
 
+  it('plans each action on the item as the earlier actions left it', async () => {
+    const a = automation({
+      actions: [
+        { type: 'set_field', fieldKey: 'status', value: 'opt_done' },
+        { type: 'post_update', message: 'Now {status}' },
+      ],
+    });
+    const posts: string[] = [];
+    const { store } = fakeStore([a], [makeItem({}, { id: 'i-1' })], (e, s) => {
+      if (e.kind === 'post') posts.push(e.body);
+      if (e.kind !== 'set_values') return {};
+      const it = s.items.get('i-1')!;
+      s.items.set('i-1', {
+        ...it,
+        values: { ...it.values, ...(e.values as Record<string, Json>) },
+      });
+      return { touched: ['i-1'] };
+    });
+    await runChain([created('i-1')], store, opts());
+    expect(posts).toEqual(['Now Done']);
+  });
+
   it('summarises bulk runs in one line', async () => {
     const a = automation({ actions: [{ type: 'lock_item' }] });
     const { store } = fakeStore(
