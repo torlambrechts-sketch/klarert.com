@@ -20,5 +20,5 @@ test('fonts are self-hosted, no Google Fonts requests', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   expect(external).toEqual([]);
   const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-  expect(family).toMatch(/jakarta/i);
+  expect(family).toMatch(/geist/i);
 });

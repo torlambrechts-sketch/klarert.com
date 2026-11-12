@@ -1,20 +1,46 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* Tokens from docs/05 §6. Yellow is for navigation only, never for buttons. */
+/* Tokens from docs/05 §6 (shadcn suite: zinc neutrals, Geist). */
 :root {
-  --yel: #f7c948;
-  --yel-2: #fff6d6;
-  --ink: #111111;
-  --muted: #5e5c57;
-  --line: #e3e0d8;
-  --soft: #f7f6f2;
-  --brand: #16181d;
-  --focus: #2c4fd0;
-  --sel: #eef1f6;
-  --good: #188a50;
+  /* shadcn/ui "zinc" neutrals: near-black ink on white surfaces, hairline borders. Colour carries meaning only
+     where text or a symbol says the same thing (CLAUDE.md, definition of done). */
+  --ink: #09090b;
+  --ink-2: #3f3f46;
+  --muted: #71717a;
+  --faint: #a1a1aa;
+  --line: #e4e4e7;
+  --line-2: #eaeaec;
+  --line-strong: #d4d4d8;
+  --soft: #f4f4f5;
+  --subtle: #fafafa;
+  --brand: #18181b;
+  --brand-hover: #27272a;
+  --focus: #71717a;
+  --sel: #f4f4f5;
+  --hover: #fafafa;
+
+  /* semantic: good · warn · crit · info, each with a soft fill for badges and banners */
+  --good: #1e8449;
+  --good-soft: #e3f4ea;
   --warn: #8a5a00;
-  --crit: #b4232b;
+  --warn-soft: #fff4dc;
+  --crit: #dc2626;
+  --crit-ink: #b91c1c;
+  --crit-soft: #fef2f2;
+  --crit-line: #fecaca;
+  --info: #2c4fd0;
+  --info-soft: #ebf1fe;
+
+  /* heat scale (risk levels 1 to 4): fill and the text that sits on it */
+  --h1: #ddf1e4;
+  --h1i: #165e35;
+  --h2: #fbefc9;
+  --h2i: #7a5308;
+  --h3: #fcdcc3;
+  --h3i: #8a3d0a;
+  --h4: #f6c9c4;
+  --h4i: #8e1f18;
 
   --label-grey: #b4bcc4;
   --label-blue: #2f6fd6;
@@ -35,8 +61,8 @@
   --solid-orange: #b26009;
   --solid-pink: #c04d87;
 
-  --radius-card: 4px;
-  --radius-control: 8px;
+  --radius-card: 8px;
+  --radius-control: 6px;
 
   /* shadcn/ui variables mapped onto the tokens */
   --background: #ffffff;
@@ -46,31 +72,51 @@
   --popover: #ffffff;
   --popover-foreground: var(--ink);
   --primary: var(--brand);
-  --primary-foreground: #ffffff;
+  --primary-foreground: #fafafa;
   --secondary: var(--soft);
-  --secondary-foreground: var(--ink);
+  --secondary-foreground: var(--brand);
   --muted-foreground: var(--muted);
-  --accent: var(--sel);
-  --accent-foreground: var(--ink);
+  --accent: var(--soft);
+  --accent-foreground: var(--brand);
   --destructive: var(--crit);
   --border: var(--line);
   --input: var(--line);
   --ring: var(--focus);
-  --radius: var(--radius-control);
+  --radius: 8px;
 }
 
 @theme inline {
-  --color-yel: var(--yel);
-  --color-yel-2: var(--yel-2);
   --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-faint: var(--faint);
   --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-line-strong: var(--line-strong);
   --color-soft: var(--soft);
+  --color-subtle: var(--subtle);
+  --color-hover: var(--hover);
   --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
   --color-focus: var(--focus);
   --color-sel: var(--sel);
   --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
   --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
   --color-crit: var(--crit);
+  --color-crit-ink: var(--crit-ink);
+  --color-crit-soft: var(--crit-soft);
+  --color-crit-line: var(--crit-line);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-h1: var(--h1);
+  --color-h1i: var(--h1i);
+  --color-h2: var(--h2);
+  --color-h2i: var(--h2i);
+  --color-h3: var(--h3);
+  --color-h3i: var(--h3i);
+  --color-h4: var(--h4);
+  --color-h4i: var(--h4i);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -91,23 +137,28 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: 6px;
+  --radius-sm: 4px;
   --radius-md: var(--radius-control);
-  --radius-lg: 10px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-card: var(--radius-card);
 
+  /* Geist reads heavy above 600: headings and emphasis top out at semibold */
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 600;
+
   /* The sheet page's type scale (besides the h1): cell for values and names, label for view tabs, column headers
-     and option blocks, meta for ids, counts and hints. text-cell, text-label (semibold), text-meta. */
+     and option blocks, meta for ids, counts and hints. text-cell, text-label (medium), text-meta. */
   --text-cell: 1rem;
   --text-cell--line-height: 1.35;
-  --text-label: 0.875rem;
+  --text-label: 0.9286rem;
   --text-label--line-height: 1.25rem;
-  --text-label--font-weight: 600;
-  --text-meta: 0.75rem;
+  --text-label--font-weight: 500;
+  --text-meta: 0.8214rem;
   --text-meta--line-height: 1rem;
 
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 @layer base {
@@ -115,14 +166,19 @@
     @apply border-border;
   }
   html {
-    font-size: 13.5px;
+    font-size: 14px;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
   }
   h1 {
     font-size: 26px;
-    font-weight: 800;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
   }
   :focus-visible {
     outline: 2px solid var(--focus);
@@ -131,92 +187,20 @@
 }
 
 /* ───────────── app shell (docs/05 §2, §5) ─────────────
-   rail 76 px (236 px pinned or expanded), second panel 240 px (36 px collapsed), main column.
-   Preferences live in localStorage and are applied to <html> before paint (data-rail, data-panel). */
-:root {
-  --rail-w: 76px;
-  --rail-open-w: 236px;
-  --panel-w: 240px;
-}
-html[data-rail='pinned'] {
-  --rail-w: 236px;
-}
-html[data-panel='collapsed'] {
-  --panel-w: 36px;
-}
-
+   one 256 px side menu (folders collapse) and the main column; under 760 px a bottom bar and the menu as a sheet. */
 .app-shell {
   display: grid;
-  grid-template-columns: var(--rail-w) var(--panel-w) minmax(0, 1fr);
+  grid-template-columns: 256px minmax(0, 1fr);
   min-height: 100dvh;
 }
-.app-shell[data-no-panel] {
-  grid-template-columns: var(--rail-w) minmax(0, 1fr);
-}
 
-.rail-col {
+.side-col {
   position: sticky;
   top: 0;
   height: 100dvh;
   z-index: 40;
-}
-.rail {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--rail-w);
-  background: var(--yel);
-  overflow: hidden;
-  transition:
-    width 0.16s ease 0s,
-    box-shadow 0.16s ease 0s;
-}
-.rail-label {
-  opacity: 0;
-  transition: opacity 0.12s ease 0s;
-  white-space: nowrap;
-}
-/* hover expands after 150 ms; keyboard focus expands at once; leaving collapses at once */
-.rail-col:hover .rail {
-  width: var(--rail-open-w);
-  transition-delay: 0.15s;
-  box-shadow: 10px 0 30px rgb(20 20 20 / 0.14);
-}
-.rail-col:hover .rail-label {
-  opacity: 1;
-  transition-delay: 0.15s;
-}
-.rail:focus-within {
-  width: var(--rail-open-w);
-  box-shadow: 10px 0 30px rgb(20 20 20 / 0.14);
-}
-.rail:focus-within .rail-label,
-html[data-rail='pinned'] .rail-label,
-.rail[data-expanded] .rail-label {
-  opacity: 1;
-}
-html[data-rail='pinned'] .rail,
-.rail[data-expanded] {
-  box-shadow: none;
-}
-.rail[data-expanded] {
-  position: static;
-  width: 100%;
-  height: 100%;
-}
-.rail-sep {
-  border-top: 1px solid rgb(17 17 17 / 0.14);
-}
-
-.panel-col {
-  position: sticky;
-  top: 0;
-  height: 100dvh;
-  background: var(--yel-2);
+  background: var(--subtle);
   border-right: 1px solid var(--line);
-  overflow: hidden;
-}
-html[data-panel='collapsed'] .panel-body {
-  display: none;
 }
 
 .bottom-bar {
@@ -224,13 +208,11 @@ html[data-panel='collapsed'] .panel-body {
 }
 
 @media (max-width: 759.98px) {
-  .app-shell,
-  .app-shell[data-no-panel] {
+  .app-shell {
     grid-template-columns: minmax(0, 1fr);
     padding-bottom: 64px;
   }
-  .rail-col,
-  .panel-col {
+  .side-col {
     display: none;
   }
   .bottom-bar {
@@ -239,7 +221,8 @@ html[data-panel='collapsed'] .panel-body {
     position: fixed;
     inset: auto 0 0 0;
     height: 64px;
-    background: var(--yel);
+    background: var(--subtle);
+    border-top: 1px solid var(--line);
     z-index: 45;
   }
   .desk-only {
@@ -252,7 +235,7 @@ html[data-panel='collapsed'] .panel-body {
     z-index: 60;
     display: flex;
     align-items: center;
-    height: 58px;
+    height: 48px;
     max-width: none;
     padding: 0 12px;
     background: #fff;
@@ -266,22 +249,15 @@ html[data-panel='collapsed'] .panel-body {
   }
   .search-box[data-open] .search-results {
     position: fixed;
-    top: 58px;
+    top: 48px;
     left: 0;
     right: 0;
-    max-height: calc(100dvh - 58px - 64px);
+    max-height: calc(100dvh - 48px - 64px);
     border-radius: 0;
   }
 }
 @media (min-width: 760px) {
   .phone-only {
     display: none !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rail,
-  .rail-label {
-    transition: none;
   }
 }
