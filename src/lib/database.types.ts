@@ -663,14 +663,14 @@ isOneToOne: false
                   ]
                 },"scheduler_fired": {
                   Row: {
-                    "automation_id": string,"fired_at": string,"item_id": string,"occurrence": string
+                    "automation_id": string,"fired_at": string,"item_id": string,"occurrence": string,"org_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "automation_id": string,"fired_at"?: string,"item_id": string,"occurrence": string
+                    "automation_id": string,"fired_at"?: string,"item_id": string,"occurrence": string,"org_id": string
                   }
                   Update: {
-                    "automation_id"?: string,"fired_at"?: string,"item_id"?: string,"occurrence"?: string
+                    "automation_id"?: string,"fired_at"?: string,"item_id"?: string,"occurrence"?: string,"org_id"?: string
                   }
                   Relationships: [
                     {
@@ -684,6 +684,12 @@ isOneToOne: false
       columns: ["item_id"]
 isOneToOne: false
       referencedRelation: "items"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "scheduler_fired_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
       referencedColumns: ["id"]
     }
                   ]

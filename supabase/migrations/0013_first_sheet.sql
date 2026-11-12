@@ -45,3 +45,30 @@ end $$;
 
 revoke all on function create_items(uuid, uuid, jsonb, text) from public, anon;
 grant execute on function create_items(uuid, uuid, jsonb, text) to authenticated, service_role;
+
+-- Security review (docs/09): every workspace table has org_id (CLAUDE.md rule 6). scheduler_fired, the scheduler's
+-- dedupe table, was the one without; it gets the automation's workspace, filled for existing rows.
+alter table scheduler_fired add column org_id uuid references orgs(id) on delete cascade;
+update scheduler_fired f set org_id = a.org_id from automations a where a.id = f.automation_id;
+alter table scheduler_fired alter column org_id set not null;
+
+create or replace function claim_schedule_occurrence(p_automation uuid, p_item uuid, p_occurrence text)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare a automations; it items; n int;
+begin
+  select * into a from automations where id = p_automation;
+  if a.id is null then raise exception 'automation not found'; end if;
+  if not (coalesce(auth.role(), '') = 'service_role' or is_admin(a.org_id)) then raise exception 'not allowed'; end if;
+  select * into it from items where id = p_item;
+  if it.id is null or it.sheet_id <> a.sheet_id or it.archived_at is not null then
+    raise exception 'item not found';
+  end if;
+  if p_occurrence is null or char_length(p_occurrence) not between 1 and 100 then
+    raise exception 'bad occurrence';
+  end if;
+  insert into scheduler_fired(automation_id, item_id, occurrence, org_id)
+  values (p_automation, p_item, p_occurrence, a.org_id)
+  on conflict do nothing;
+  get diagnostics n = row_count;
+  return n = 1;
+end $$;
