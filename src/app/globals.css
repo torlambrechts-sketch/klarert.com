@@ -96,6 +96,16 @@
   --radius-lg: 10px;
   --radius-card: var(--radius-card);
 
+  /* The sheet page's type scale (besides the h1): cell for values and names, label for view tabs, column headers
+     and option blocks, meta for ids, counts and hints. text-cell, text-label (semibold), text-meta. */
+  --text-cell: 1rem;
+  --text-cell--line-height: 1.35;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.25rem;
+  --text-label--font-weight: 600;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1rem;
+
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
