@@ -46,7 +46,9 @@ const ATTEMPTS = 5;
 export async function signIn(page: Page, email: string, next?: string) {
   for (let attempt = 1; ; attempt += 1) {
     const started = Date.now();
-    await page.goto(next ? `/login?next=${encodeURIComponent(next)}` : '/login');
+    await page.goto(
+      next ? `/login?mode=link&next=${encodeURIComponent(next)}` : '/login?mode=link',
+    );
     await page.getByLabel('Work email').fill(email);
     await page.getByRole('button', { name: 'Send sign-in link' }).click();
     const sent = page.getByRole('heading', { name: 'Check your email' });
