@@ -137,10 +137,10 @@ function SheetCode({ code }: { code: string }) {
 function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: Ws[] }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center gap-2.5 rounded-md px-2 text-left outline-offset-[-2px]">
+      <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center gap-[9px] rounded-md px-2 text-left outline-offset-[-2px]">
         <span
           aria-hidden
-          className="bg-ink text-primary-foreground text-label-12 flex size-[28px] shrink-0 items-center justify-center rounded-full font-medium"
+          className="bg-ink text-primary-foreground text-label-9.5 flex size-[22px] shrink-0 items-center justify-center rounded-full font-semibold"
         >
           {initialsOf(current.name)}
         </span>
@@ -243,7 +243,7 @@ export function SideMenu({
       active={s.id === activeSheet}
       onNavigate={onNavigate}
       testId={`rail-sheet-${s.code}`}
-      className="text-label-14 h-8 px-2"
+      className="text-label-13.5 h-8 gap-[9px] px-2"
     />
   );
   const newSheet =
@@ -286,7 +286,7 @@ export function SideMenu({
         {onNavigate ? null : (
           <kbd
             aria-hidden
-            className="border-line bg-subtle text-label-12-mono rounded border px-1.5 leading-[18px]"
+            className="border-line bg-subtle text-label-11-mono rounded-[4px] border px-[5px] leading-[18px]"
           >
             F
           </kbd>
@@ -312,7 +312,7 @@ export function SideMenu({
             hidden={!hit('My work')}
             trailing={
               myWorkCount > 0 ? (
-                <span className="border-crit-line bg-crit-soft text-crit-ink text-label-12-mono rounded-full border px-1.5 leading-[17px]">
+                <span className="border-line bg-background-100 text-muted-foreground text-label-11-mono rounded-full border px-1.5 leading-[17px]">
                   {myWorkCount}
                   <span className="sr-only"> waiting</span>
                 </span>
@@ -323,9 +323,9 @@ export function SideMenu({
 
         {anyInsights ? (
           <>
-            <div className="bg-line mx-1 my-2.5 h-px" />
+            <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
             {q ? null : (
-              <h2 className="text-muted-foreground text-label-12 px-2.5 pb-1.5 font-medium">
+              <h2 className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
                 Insights
               </h2>
             )}
@@ -350,9 +350,11 @@ export function SideMenu({
           </>
         ) : null}
 
-        <div className="bg-line mx-1 my-2.5 h-px" />
+        <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
         {q ? null : (
-          <h2 className="text-muted-foreground text-label-12 px-2.5 pb-1.5 font-medium">Sheets</h2>
+          <h2 className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
+            Sheets
+          </h2>
         )}
         {sections.length === 0 ? <ul className="flex flex-col gap-px">{newSheet}</ul> : null}
         {sections.map((s, i) => {
@@ -396,9 +398,9 @@ export function SideMenu({
 
         {anyPlatform ? (
           <>
-            <div className="bg-line mx-1 my-2.5 h-px" />
+            <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
             {q ? null : (
-              <h2 className="text-muted-foreground text-label-12 px-2.5 pb-1.5 font-medium">
+              <h2 className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
                 Platform
               </h2>
             )}

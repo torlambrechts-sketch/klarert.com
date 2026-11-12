@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-// Page header and underline tabs shared by every page (docs/05 §2): an optional crumb, the h1 (heading-24), one line
+// Page header and underline tabs shared by every page (docs/05 §2): an optional crumb, the h1 (heading-26), one line
 // of description, actions on the right; tabs under it with a 2 px ink underline on the current one.
 
 export function PageHeader({
@@ -23,7 +23,7 @@ export function PageHeader({
         {crumb ? <div className="text-muted-foreground text-label-13">{crumb}</div> : null}
         <h1 className="m-0 break-words">{title}</h1>
         {description ? (
-          <p className="text-muted-foreground text-copy-14 m-0 max-w-[780px] text-pretty">
+          <p className="text-muted-foreground text-copy-14 m-0 max-w-[780px] leading-[21px] text-pretty">
             {description}
           </p>
         ) : null}
