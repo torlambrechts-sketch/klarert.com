@@ -1,13 +1,15 @@
 import { WorkflowScreen } from '@/components/workflow/workflow-screen';
+import { ListCrumb } from '@/components/shell/data-list';
 import { PageHeader } from '@/components/shell/page-header';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import { getWorkflow, type WorkflowData } from '@/server/repositories/workflow';
 
 export const metadata = { title: 'Workflow · Compliance OS' };
 
-// Workflow (docs/05 §4): the lifecycle of any sheet by one of its status or label fields (?sheet, ?field; the last
-// choice is remembered per browser). Stages are the field's options; each shows its items, the overdue ones, the
-// status rules that guard it and the automations that run when an item enters it. Moving an item uses setValues.
+// Workflow (docs/05 §4): every sheet's lifecycle by one of its status or label fields, as an expandable list (?sheet
+// opens a sheet, ?field picks its field; the last choice is remembered per browser). Stages are the field's options;
+// each shows its items, the overdue ones, the status rules that guard it and the automations that run when an item
+// enters it. Moving an item uses setValues.
 export default async function WorkflowPage({
   params,
   searchParams,
@@ -33,12 +35,34 @@ export default async function WorkflowPage({
   } catch {
     data = null;
   }
+  const running = data
+    ? data.rows.reduce(
+        (n, r) =>
+          n +
+          (r.lifecycle
+            ? r.lifecycle.stages.flatMap((s) => s.items).filter((i) => !i.done).length
+            : 0),
+        0,
+      )
+    : 0;
+  const lifecycles = data ? data.rows.filter((r) => r.lifecycle).length : 0;
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-0 px-4 py-6 sm:px-7 sm:pt-[26px]">
       <PageHeader
-        crumb="Build"
-        title={data?.sheet && data.lifecycle ? `${data.sheet.name} lifecycle` : 'Workflow'}
-        description="The stages an item moves through, read from a status or label field of any sheet: what each stage holds, what it needs and what happens when an item enters it."
+        className="pb-[18px]"
+        crumb={
+          <ListCrumb
+            section="Build"
+            page="Workflow"
+            badge={
+              data
+                ? `${lifecycles} ${lifecycles === 1 ? 'lifecycle' : 'lifecycles'} · ${running} running`
+                : undefined
+            }
+          />
+        }
+        title="Workflow"
+        description="The stages items move through, read from a status or label field of each sheet. Open a sheet to see its steps: what each stage needs, what runs when an item enters it and the items in it."
       />
       {data ? (
         <WorkflowScreen
