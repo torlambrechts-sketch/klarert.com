@@ -55,25 +55,18 @@ Every state that matters is in the URL: open item, view, search. Back/forward wo
 
 ## 3. Sheet page
 
-Header row: sheet name (26 px, 800) · view tabs (**List**, **Grid**, More ▾: Kanban, Calendar, Form, + New view) · right: **+ New** (black), sheet search, Filter ▾ (count badge when active), Columns (· n hidden), ⚡ n (automations on this sheet → side sheet), ⋯ (sheet settings, export CSV, archive).
+Header row: sheet name (26 px, 800) · view tabs (**Table**, saved views, More ▾: Kanban, Calendar, Form, + New view) · right: **+ New** (black), sheet search, Filter ▾ (count badge when active), Columns (· n hidden), ⚡ n (automations on this sheet → side sheet), ⋯ (sheet settings, export CSV, archive).
 
-### 3.1 List view (default)
-- Hint line (dismissible, remembered): "**Click any cell to edit.** Click a name to open the item. **+** adds a column. 🔒 kept by the app."
-- Table: sticky first column 360 px: checkbox · name (two-line wrap, 600) · small line "CA-014 · Maria Pereira". Status (first label field) is the first column after the name. Then the visible fields in order. Last header cell "+" adds a field.
-- Group header rows: chevron, colour dot, name, (count).
-- Cells: click opens the type's editor in a popover anchored to the cell; hover outline 1.5 px #9AA3B5.
-- Status pill (List and cards): tinted background (`color-mix(var(--c) 13 %, white)`), coloured border, dark text. Action-needed options (red/orange colours, not done): solid colour, white text, "!" in a circle. Done options: "✓" prefix. Colour is never the only signal.
-- Overflow: when columns overflow the right edge, a 130 px white fade with a "More columns →" pill (scrolls 60 % of the width).
-- Footer: items per page (25/50/100), "1–25 of 132", Prev/Next.
-- Locked fields show a small lock after the header name; tooltip "Kept by the app. You can hide it, not delete it."
-
-### 3.2 Grid view (spreadsheet)
-- monday-style: each group is a block with a 4 px left border in the group colour and a header (chevron, name in group colour, "n items"); column headers repeat per group; "+ Add item" row; summary row.
-- Status cells are solid colour blocks with white text (full cell); people cells show avatars; dates show date + small bar for relative time when the field has `relative`.
-- Selection model: single cell focus ring 2 px #2C4FD0; shift-arrows/shift-click range; copy/paste TSV; Delete clears (respecting required/locked); Enter edits; Esc cancels.
-- Column header menu: Sort A→Z / Z→A, Filter by this column, Hide, Settings…, Insert left/right, Duplicate, Delete (not for locked).
-- Resizing by dragging the header edge; reordering by dragging the header.
-- Virtualise rows and columns (`@tanstack/react-virtual`); keep the name column sticky.
+### 3.1 Table view (default)
+One view for working through items as rows; it replaced the former List and Grid views. `?view=list` and `?view=grid` (old links, saved defaults) open the Table, and saved views stored with type `list` or `grid` load as Table views (mapped when read; `views.type` stores a Table view as `list` until a migration adds `table`).
+- Hint line (dismissible, remembered): "**Click a cell, then click again or press Enter to edit.** Click a name to open the item. **+** adds a column. 🔒 kept by the app."
+- **One sticky column header** for the whole sheet, never repeated per group, set in `text-label` like the view tabs. Sticky name column (checkbox · drag handle · name); the header's checkbox selects every shown item; last header cell "+" adds a field. Locked fields show a lock after the name with the tooltip "Kept by the app. You can hide it, not delete it."
+- Groups are collapsible sections: a title row tinted with the group colour and a 4 px bar, chevron button (`aria-expanded`), name in the group colour, "n items", a checkbox selecting the group. Collapsed state is UI state.
+- Rows: name (600) on the first line, "CA-014 · avatar Maria Pereira" (display id, then the owner = first people-kind field, if any) in `text-meta` under it. Option fields render as rounded blocks, people cells show names. "+ Add item" row at the end of each group.
+- Group summaries are **off** by default. The column menu's "Show summary" turns one on (default function of the type), "Summary" chooses the function, "Hide summary" turns it off; kept per view in `views.config.summaries` (field key → function). A summary row appears under each open group when any visible column has one.
+- Interaction (spreadsheet model): click selects a cell, a second click, double-click, Enter, F2 or typing a character edits it in the type's editor popover; arrows, Tab, Esc; shift-arrows/shift-click range; copy/paste TSV; Delete clears (respecting required/locked) with Undo in the toast; space toggles checkboxes and opens the item from the name.
+- Column header menu: Sort A→Z / Z→A (saved in the view's sort), Hide, Show/Hide summary, Settings…, Insert left/right, Duplicate, Move, Delete (not for locked). Resize by dragging the header edge (or arrow keys on it); reorder by dragging the header. Drag rows within and between groups (off while sorted); bulk bar for selected rows.
+- Groups, items, add rows and summary rows are flattened into one row model and virtualised with `@tanstack/react-virtual` (rows and columns), so 10,000 rows stay fast. When columns overflow the right edge, a fade with a "More columns →" pill.
 
 ### 3.3 Kanban, Calendar, Form
 - Kanban: lanes per option of the chosen label field (first status field by default), lane header colour bar + count; cards (name, display id · first person, colour dot + group, first date right-aligned); drag to change; "+ Add" at the bottom of each lane.
@@ -98,14 +91,14 @@ Header row: sheet name (26 px, 800) · view tabs (**List**, **Grid**, More ▾: 
 - **My work:** KPI tiles (Overdue, Due in 14 days, Requests to me, Assigned to me) acting as filters; sections with rows (status pill · name + "CA-014 · Corrective actions · Due date" · due label right, red when overdue).
 - **Automations:** see docs/04 §10.
 - **Settings:** tabs Members (invite, role select, remove), Teams and job roles, Entities and sites.
-- **New sheet wizard:** step 1 choose a start (cards: Blank, Register, Tracker, Log, Inspection, Import a spreadsheet, Copy a sheet); step 2 name, item label, ID prefix (suggested from the name), folder, groups (comma list), columns table (name + type select, add/remove/reorder; CSV: detected types to confirm); Create → opens the sheet in List view with the panel closed and a toast "Sheet created. Add your first item."
+- **New sheet wizard:** step 1 choose a start (cards: Blank, Register, Tracker, Log, Inspection, Import a spreadsheet, Copy a sheet); step 2 name, item label, ID prefix (suggested from the name), folder, groups (comma list), columns table (name + type select, add/remove/reorder; CSV: detected types to confirm); Create → opens the sheet in the Table view with the panel closed and a toast "Sheet created. Add your first item."
 
 ## 5. Phones (< 760 px)
 
 - Rail becomes a bottom bar (64 px, yellow): Home, My work, Menu, Search, Inbox. **Menu** opens the full side menu as a left sheet (expanded style, 300 px) over a dark scrim.
 - Second panel hidden; group filter available as a select above the list.
 - Top bar: menu button, workspace logo, search (expands to full width on focus), inbox, avatar.
-- List view renders **cards**: name (14.5 px, 700), status pill + display id, first person left, first due date right (red when overdue); group headers between.
+- Below 640 px the Table renders **cards** under the same collapsible group titles: name (700), display id · owner, then up to three filled values as blocks (status first by field order), the first due date when it is not among them (red when overdue); tap opens the item panel; "+ Add" per group.
 - Item panel full screen (above the bottom bar); summary strip two columns; Expand hidden.
 - Tables on other pages scroll horizontally inside their card.
 

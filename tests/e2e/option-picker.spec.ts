@@ -4,7 +4,7 @@ import { popoverGone } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
 // The option picker (search on top, "Add “…”" for a new option, "Edit options") and where field settings are
-// reachable: the picker, the List column menu and the sheet settings page. Uses the seed (pnpm seed): maria owner,
+// reachable: the picker, the Table column menu and the sheet settings page. Uses the seed (pnpm seed): maria owner,
 // james editor, vic viewer of /meridian. Each test makes its own sheet named "OPK …".
 
 const unique = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
@@ -25,6 +25,10 @@ async function categorySheet(page: Page) {
   return { sheet, item: items['Laptop not encrypted']!, list: `/meridian/s/${sheet.id}` };
 }
 
+/** The Category cell of an item in the Table (cells are ids of item and field). */
+const categoryCell = (page: Page, sheet: Sheet, item: string) =>
+  page.getByRole('grid').locator(`[id="cell-${item}-${sheet.field('category')}"]`);
+
 const categoryOptions = async (page: Page, sheet: Sheet) =>
   (
     await rest<{ config: { options: Opt[] } }[]>(
@@ -41,7 +45,7 @@ async function as(browser: Browser, email: string) {
 }
 
 test.describe('desktop', () => {
-  test.beforeEach(({}, info) => test.skip(info.project.name === 'phone', 'desktop List view'));
+  test.beforeEach(({}, info) => test.skip(info.project.name === 'phone', 'desktop Table view'));
 
   test('search, add a new option inline, edit options, and the fields on the settings page', async ({
     page,
@@ -49,11 +53,10 @@ test.describe('desktop', () => {
     await signIn(page, 'james@example.com');
     const { sheet, item, list } = await categorySheet(page);
     await page.goto(list);
-    const cellButton = () =>
-      page.getByRole('button', { name: /^Category of Laptop not encrypted/ });
+    const cellButton = () => categoryCell(page, sheet, item);
 
     // the search is on top and focused; typing filters
-    await cellButton().click();
+    await cellButton().dblclick();
     const listbox = page.getByRole('listbox', { name: 'Category' });
     const search = page.getByRole('combobox', { name: 'Search category' });
     await expect(search).toBeFocused();
@@ -98,7 +101,7 @@ test.describe('desktop', () => {
       .toBe(hardware.id);
 
     // reopening shows it in the list, selected
-    await cellButton().click();
+    await cellButton().dblclick();
     await expect(listbox.getByRole('option', { name: 'Hardware' })).toHaveAttribute(
       'aria-selected',
       'true',
@@ -114,7 +117,7 @@ test.describe('desktop', () => {
     await page.keyboard.press('Escape');
     await expect(settings).toHaveCount(0);
 
-    // the List column menu has the settings too
+    // the Table column menu has the settings too
     await page.getByRole('button', { name: 'Category column menu' }).click();
     await page.getByRole('menuitem', { name: 'Settings' }).click();
     await expect(settings.getByRole('heading', { name: 'Category' })).toBeVisible();
@@ -146,7 +149,7 @@ test.describe('desktop', () => {
     browser,
   }) => {
     await signIn(page, 'maria@example.com');
-    const { sheet, list } = await categorySheet(page);
+    const { sheet, item, list } = await categorySheet(page);
     await rest(page, `fields?id=eq.${sheet.field('category')}`, {
       method: 'PATCH',
       body: { locked: true },
@@ -154,7 +157,7 @@ test.describe('desktop', () => {
 
     // the owner may change a locked field
     await page.goto(list);
-    await page.getByRole('button', { name: /^Category of Laptop not encrypted/ }).click();
+    await categoryCell(page, sheet, item).dblclick();
     await page.keyboard.type('Hardware');
     await expect(page.getByRole('option', { name: 'Add “Hardware”' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Edit options' })).toBeVisible();
@@ -164,7 +167,7 @@ test.describe('desktop', () => {
     // an editor still picks a value, but cannot add options or open the options
     const james = await as(browser, 'james@example.com');
     await james.goto(list);
-    await james.getByRole('button', { name: /^Category of Laptop not encrypted/ }).click();
+    await categoryCell(james, sheet, item).dblclick();
     const listbox = james.getByRole('listbox', { name: 'Category' });
     await expect(listbox).toBeVisible();
     await james.keyboard.type('Hardware');
@@ -175,9 +178,7 @@ test.describe('desktop', () => {
     const answered = nextAnswer(james);
     await listbox.getByRole('option', { name: 'Process' }).click();
     await answered;
-    await expect(
-      james.getByRole('button', { name: /^Category of Laptop not encrypted/ }),
-    ).toContainText('Process');
+    await expect(categoryCell(james, sheet, item)).toContainText('Process');
     // nothing was added to the locked field
     expect((await categoryOptions(james, sheet)).map((o) => o.label)).toEqual([
       'Software',
@@ -188,7 +189,7 @@ test.describe('desktop', () => {
     // a viewer opens no picker at all
     const vic = await as(browser, 'vic@example.com');
     await vic.goto(list);
-    await vic.getByRole('button', { name: /^Category of Laptop not encrypted/ }).click();
+    await categoryCell(vic, sheet, item).dblclick();
     await expect(
       vic.getByText('You can view this sheet. Ask an editor or admin to change it.').first(),
     ).toBeVisible();

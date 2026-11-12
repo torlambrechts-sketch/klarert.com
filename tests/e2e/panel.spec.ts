@@ -19,8 +19,7 @@ async function trackerSheet(page: Page, name = `Panel ${unique()}`) {
   await expect(page.getByLabel('ID prefix')).not.toHaveValue('');
   await page.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page).toHaveURL(/\/meridian\/s\/[0-9a-f-]{36}$/);
-  // M6: sheets open in the List view; these tests work in the Grid
-  const url = `${page.url()}?view=grid`;
+  const url = `${page.url()}?view=table`;
   await page.goto(url);
   await expect(page.getByRole('grid')).toBeVisible();
   return url;
@@ -353,7 +352,7 @@ test.describe('desktop', () => {
     await page.getByLabel(`Show on ${risksName} too`).check();
     await page.getByRole('button', { name: 'Create sheet' }).click();
     await expect(page).toHaveURL(/\/meridian\/s\/[0-9a-f-]{36}$/);
-    const actionsUrl = `${page.url()}?view=grid`;
+    const actionsUrl = `${page.url()}?view=table`;
     await page.goto(actionsUrl);
     await addItems(page, 'Open', ['Fix the handrail']);
 

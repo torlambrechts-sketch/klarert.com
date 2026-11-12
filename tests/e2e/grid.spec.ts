@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { rest, signIn } from './helpers';
 
-// M4: the Grid view and the command layer. Uses the seed (pnpm seed): maria@example.com owner, james@example.com
+// M4: the Table view's grid interactions and the command layer. Uses the seed (pnpm seed): maria@example.com owner, james@example.com
 // editor, vic@example.com viewer of /meridian. Each test creates its own sheet from the Tracker start
 // (Owner people, Status, Priority severity, Due date, Progress percent; groups Open and Done).
 
@@ -16,8 +16,7 @@ async function trackerSheet(page: Page, name = `Grid ${unique()}`) {
   await expect(page.getByLabel('ID prefix')).not.toHaveValue('');
   await page.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page).toHaveURL(/\/meridian\/s\/[0-9a-f-]{36}$/);
-  // M6: sheets open in the List view; these tests work in the Grid
-  const url = `${page.url()}?view=grid`;
+  const url = `${page.url()}?view=table`;
   await page.goto(url);
   await expect(page.getByRole('grid')).toBeVisible();
   return url;
