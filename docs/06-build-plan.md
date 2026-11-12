@@ -88,13 +88,13 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M6: List view (default) per docs/05 §3.1 incl. phone cards, Kanban, Calendar, Form view with public links, filters/sort/search, and saved views."
 
-- [ ] List view exactly as specified: 360 px name column, status first, editable cells, "+" column, locks, More columns fade, pagination, dismissible hint
-- [ ] Phone: cards per docs/05 §5
-- [ ] Kanban with drag (runs rules), lane choice per view
-- [ ] Calendar by any calendar-capable field; click a day to add
-- [ ] Form builder + `/f/[token]` public form (rate limit 10/min/IP, honeypot field), internal form; submit → `submit_form` → automations (M7)
-- [ ] Filters UI (conditions builder using the registry's operators), multi-sort, sheet search; server-side filtering for sheets > 2 000 items
-- [ ] Views: create, rename, duplicate, delete, personal vs shared, default view per sheet; URL `?view=`
+- [x] List view exactly as specified: 360 px name column, status first, editable cells, "+" column, locks, More columns fade, pagination, dismissible hint
+- [x] Phone: cards per docs/05 §5
+- [x] Kanban with drag (runs rules), lane choice per view
+- [x] Calendar by any calendar-capable field; click a day to add
+- [x] Form builder + `/f/[token]` public form (rate limit 10/min/IP, honeypot field), internal form; submit → `submit_form` → automations (M7)
+- [x] Filters UI (conditions builder using the registry's operators), multi-sort, sheet search; server-side filtering for sheets > 2 000 items
+- [x] Views: create, rename, duplicate, delete, personal vs shared, default view per sheet; URL `?view=`
 
 ## M7 · Automation runner  [Opus]
 
