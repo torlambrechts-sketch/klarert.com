@@ -250,6 +250,8 @@ export function Table({
   const rowV = useWindowVirtualizer({
     count: layout.rows.length,
     scrollMargin: docTop,
+    // keyboard moves keep the active row clear of the sticky top bar
+    scrollPaddingStart: 48,
     estimateSize: (i) => rowHeight(layout.rows[i]!.kind, density),
     getItemKey: useCallback((i: number) => layout.rows[i]!.key, [layout.rows]),
     overscan: 10,
@@ -803,15 +805,15 @@ export function Table({
         </div>
         {more ? (
           <div
-            className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] flex w-[130px] items-start justify-end"
+            className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] flex w-[56px] items-start justify-end"
             style={{
-              background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.96) 70%)',
+              background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.9))',
             }}
           >
             <button
               type="button"
               // stays in view while the page scrolls past a long table
-              className="border-line hover:border-line-strong focus-visible:outline-focus pointer-events-auto sticky top-[50vh] mt-[60px] mr-2 rounded-full border bg-white px-3 py-1 text-xs font-medium shadow-xs focus-visible:outline-2"
+              className="border-line hover:border-line-strong focus-visible:outline-focus pointer-events-auto sticky top-[50vh] mt-[60px] mr-2 shrink-0 rounded-full border bg-white px-3 py-1 text-xs font-medium whitespace-nowrap shadow-xs focus-visible:outline-2"
               onClick={() => {
                 const el = scrollRef.current;
                 if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
@@ -1151,7 +1153,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
             onMouseDown={p.onMouseDown}
             onDoubleClick={p.onDoubleClick}
             className={cn(
-              'relative flex h-full min-w-0 flex-1 cursor-default flex-col justify-center gap-0.5 pr-2',
+              'relative -ml-[6px] flex h-full min-w-0 flex-1 cursor-default flex-col justify-center gap-0.5 pr-2 pl-[6px]',
               inRange(0) && 'bg-sel',
               isActive('name') && 'outline-focus z-[1] outline-2 -outline-offset-2',
             )}
@@ -1188,7 +1190,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               ) : null}
             </span>
             {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
-              <span className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px]">
+              <span className="text-muted-foreground flex min-w-0 items-center gap-[7px] text-[12px] leading-[17px]">
                 <span className="shrink-0 font-mono">{item.displayId}</span>
                 {ownerName ? (
                   <>
