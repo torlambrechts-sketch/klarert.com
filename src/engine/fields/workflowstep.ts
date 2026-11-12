@@ -8,6 +8,7 @@ export const workflowstep = labelType({
   description: 'The step an item has reached; only automations move it.',
   defaultWidth: 140,
   formAllowed: false,
+  addable: false,
   defaultOptions: [
     { id: 'opt_draft', label: 'Draft', color: 'grey' },
     { id: 'opt_review', label: 'Review', color: 'blue' },

@@ -67,6 +67,16 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
   rank?(v: V | null, cfg: C): number | null;
   /** Option-like kinds: the options a picker, filter or kanban shows. */
   options?(cfg: C, ctx: Ctx): LabelOption[];
+  /**
+   * Label kinds whose options people define (status, dropdown, multiselect …): the config with one more option, made
+   * from a typed label (trimmed, at most 80 characters, the next unused colour, id `opt_…` from `newId`). null when the
+   * label is empty, too long or already an option (case-insensitive). Fixed lists have no hook.
+   */
+  addOption?(
+    cfg: C,
+    label: string,
+    newId: (prefix: string) => string,
+  ): { config: C; option: LabelOption } | null;
   /** Option-like kinds whose value is an object: the key filters compare (e.g. a site id). Default: the string value. */
   keyOf?(v: V | null, cfg: C): string | null;
   /** Kinds that depend on config (formula result type, lookup target). Default: `kind`. */
