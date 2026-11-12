@@ -115,7 +115,7 @@ export function ColumnHeader({
       role="columnheader"
       aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
       className={cn(
-        'border-line relative flex h-full items-center border-r border-b bg-white',
+        'border-b-line border-r-soft bg-subtle relative flex h-full items-center border-r border-b',
         drop.isOver && !drag.isDragging && 'bg-sel',
         drag.isDragging && 'opacity-50',
       )}
@@ -133,7 +133,7 @@ export function ColumnHeader({
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="hover:bg-soft text-meta text-muted-foreground flex h-full min-w-0 flex-1 items-center gap-1.5 px-2 text-left font-semibold tracking-wide uppercase outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+          className="hover:text-ink text-muted-foreground flex h-full min-w-0 flex-1 items-center gap-1.5 px-3 text-left text-[12.5px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
           aria-label={`${field.name} column menu`}
         >
           <Icon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />

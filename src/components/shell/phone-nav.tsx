@@ -4,25 +4,24 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bell, Home, Inbox, Menu, Search } from 'lucide-react';
 import { Dialog, DialogDescription, DialogTitle, SheetContent } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
-import { Rail, type RailProps } from './rail';
+import { SideMenu, type SideMenuProps } from './side-menu';
 import { useShell } from './shell-context';
 
 const cell =
-  'flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold outline-offset-[-3px]';
+  'flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground outline-offset-[-3px] aria-[current=page]:text-ink';
 
 /** Phones (< 760 px): bottom bar and the full side menu as a left sheet over a scrim (docs/05 §5). */
-export function PhoneNav(props: Omit<RailProps, 'expanded' | 'onNavigate'>) {
+export function PhoneNav(props: Omit<SideMenuProps, 'onNavigate'>) {
   const { menuOpen, setMenuOpen, setInboxOpen, focusSearch } = useShell();
   const path = usePathname();
   const is = (p: string) => path.startsWith(`/${props.org}/${p}`);
   return (
     <>
-      <nav aria-label="Bottom bar" className="bottom-bar border-t border-black/10">
+      <nav aria-label="Bottom bar" className="bottom-bar">
         <Link
           href={`/${props.org}/home`}
           aria-current={is('home') ? 'page' : undefined}
-          className={cn(cell, is('home') && 'font-extrabold')}
+          className={cell}
         >
           <Home className="size-5" aria-hidden />
           Home
@@ -30,7 +29,7 @@ export function PhoneNav(props: Omit<RailProps, 'expanded' | 'onNavigate'>) {
         <Link
           href={`/${props.org}/my-work`}
           aria-current={is('my-work') ? 'page' : undefined}
-          className={cn(cell, is('my-work') && 'font-extrabold')}
+          className={cell}
         >
           <Inbox className="size-5" aria-hidden />
           My work
@@ -49,12 +48,12 @@ export function PhoneNav(props: Omit<RailProps, 'expanded' | 'onNavigate'>) {
         </button>
       </nav>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent className="bg-yel">
+        <SheetContent className="bg-subtle">
           <DialogTitle className="sr-only">Menu</DialogTitle>
           <DialogDescription className="sr-only">
             Sheets and pages of this workspace
           </DialogDescription>
-          <Rail {...props} expanded onNavigate={() => setMenuOpen(false)} />
+          <SideMenu {...props} onNavigate={() => setMenuOpen(false)} />
         </SheetContent>
       </Dialog>
     </>

@@ -112,7 +112,7 @@ export function TemplateInput({
               aria-selected={i === active}
               className={cn(
                 'flex cursor-pointer items-baseline justify-between gap-2 rounded px-2 py-1 text-sm',
-                i === active && 'bg-yel',
+                i === active && 'bg-soft',
               )}
               onMouseDown={(e) => {
                 e.preventDefault();

@@ -21,9 +21,9 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-line flex flex-col gap-4 rounded-[var(--radius-card)] border bg-white p-4 sm:p-5">
-      <div className="flex flex-col gap-0.5">
-        <h2 className="text-base font-bold">{title}</h2>
+    <section className="border-line flex flex-col gap-4 rounded-xl border bg-white p-5 shadow-xs sm:px-[22px]">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
         {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
       </div>
       {children}
@@ -48,7 +48,7 @@ export default async function SheetSettingsPage({
   const canEdit = isEditorRole(role);
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]">
       <div className="flex flex-col gap-2">
         <Link
           href={`/${org}/s/${sheet.id}`}

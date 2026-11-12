@@ -210,7 +210,7 @@ function DayCell({
       className={cn(
         'border-line relative h-24 border p-1 align-top',
         !inMonth && 'bg-soft/60 text-muted-foreground',
-        today && 'bg-[#FFF6D6]',
+        today && 'bg-info-soft',
       )}
     >
       {onAdd ? (

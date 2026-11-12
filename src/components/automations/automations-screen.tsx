@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { PageHeader } from '@/components/shell/page-header';
+import { AutomationTabs } from './tabs';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BookOpen, CalendarClock, Loader2, Plus } from 'lucide-react';
@@ -162,33 +164,31 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
   const base = `/${org}/automations`;
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-6 sm:px-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1>Automations</h1>
-          <p className="text-muted-foreground m-0 text-sm">
-            When something happens on a sheet, if conditions hold, then actions run. Every run is
-            logged.
-          </p>
-        </div>
-        {perms.canEdit ? (
-          <div className="flex flex-wrap gap-2">
-            {perms.isAdmin ? <RunDateChecks org={org} orgId={orgId} /> : null}
-            <Button asChild variant="outline">
-              <Link href={`${base}?recipes=1${sheetFilter ? `&sheet=${sheetFilter}` : ''}`}>
-                <BookOpen aria-hidden /> Start from a recipe
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href={`${base}?new=1${sheetFilter ? `&sheet=${sheetFilter}` : ''}`}>
-                <Plus aria-hidden /> New automation
-              </Link>
-            </Button>
-          </div>
-        ) : null}
-      </div>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <PageHeader
+        title="Automations"
+        description="When something happens on a sheet, if conditions hold, then actions run. Every run is logged."
+        actions={
+          perms.canEdit ? (
+            <>
+              {perms.isAdmin ? <RunDateChecks org={org} orgId={orgId} /> : null}
+              <Button asChild variant="outline">
+                <Link href={`${base}?recipes=1${sheetFilter ? `&sheet=${sheetFilter}` : ''}`}>
+                  <BookOpen aria-hidden /> Start from a recipe
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href={`${base}?new=1${sheetFilter ? `&sheet=${sheetFilter}` : ''}`}>
+                  <Plus aria-hidden /> New automation
+                </Link>
+              </Button>
+            </>
+          ) : null
+        }
+      />
+      <AutomationTabs org={org} active="all" />
       <label className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-semibold">Sheet</span>
+        <span className="text-muted-foreground font-medium">Sheet</span>
         <select
           className={selectClass}
           value={sheetFilter ?? ''}
@@ -212,7 +212,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
       ) : autos.isPending ? (
         <ListSkeleton />
       ) : list.length === 0 ? (
-        <div className="border-line rounded-[var(--radius-card)] border border-dashed bg-white p-6">
+        <div className="border-line rounded-xl border border-dashed bg-white p-6">
           <p className="text-muted-foreground m-0">
             {sheetFilter ? 'No automations on this sheet yet.' : 'No automations yet.'}{' '}
             {perms.canEdit ? 'Start from a recipe or build a new one.' : ''}
@@ -244,14 +244,16 @@ function RecipeGallery(props: ScreenProps & { perms: ListPermissions }) {
   const [recipeId, setRecipeId] = useState(RECIPES[0]?.id ?? '');
   if (!props.perms.canEdit) return <ReadOnly org={props.org} />;
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
-      <div className="flex flex-col gap-1">
-        <h1>Start from a recipe</h1>
-        <p className="text-muted-foreground m-0 text-sm">
-          Pick a recipe and a sheet. Next you choose which fields of the sheet the recipe uses, then
-          adjust it in the builder.
-        </p>
-      </div>
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <PageHeader
+        crumb={
+          <Link href={`/${props.org}/automations`} className="hover:text-ink">
+            Automations
+          </Link>
+        }
+        title="Start from a recipe"
+        description="Pick a recipe and a sheet. Next you choose which fields of the sheet the recipe uses, then adjust it in the builder."
+      />
       <label className="flex flex-wrap items-center gap-2 text-sm">
         <span className="font-semibold">Sheet</span>
         <select
@@ -382,7 +384,7 @@ function RoleMappingStep({
 
 function ReadOnly({ org }: { org: string }) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
       <h1>Automations</h1>
       <p className="text-muted-foreground m-0">
         Viewers cannot change automations. Ask an editor or admin.
@@ -540,11 +542,16 @@ function BuilderScreen(props: ScreenProps & { perms: ListPermissions }) {
 
   const sheetName = sheets.data?.find((s) => s.id === sheetId)?.name;
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-6 sm:px-6">
-      <div className="flex flex-col gap-1">
-        <h1>{title}</h1>
-        {sheetName ? <p className="text-muted-foreground m-0 text-sm">On {sheetName}</p> : null}
-      </div>
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <PageHeader
+        crumb={
+          <Link href={`/${props.org}/automations`} className="hover:text-ink">
+            Automations
+          </Link>
+        }
+        title={title}
+        description={sheetName ? `On ${sheetName}` : undefined}
+      />
       {body}
     </main>
   );

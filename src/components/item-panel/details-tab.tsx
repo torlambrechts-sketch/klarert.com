@@ -21,11 +21,9 @@ import type { FileVersion } from './queries';
 
 function SummaryCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="border-line flex min-w-0 flex-col gap-1 border px-3 py-2.5">
-      <span className="text-muted-foreground text-[10.5px] font-extrabold tracking-[0.06em] uppercase">
-        {label}
-      </span>
-      <div className="min-w-0 text-[13.5px] font-bold">{children}</div>
+    <div className="border-line flex min-w-0 flex-col gap-1.5 rounded-lg border bg-white px-3.5 py-3 shadow-xs">
+      <span className="text-muted-foreground text-[12.5px] font-medium">{label}</span>
+      <div className="min-w-0 text-[14px] font-medium">{children}</div>
     </div>
   );
 }
@@ -119,7 +117,7 @@ function LinkedItems({
   });
   return (
     <section aria-labelledby={`linked-${item.id}`} className="flex flex-col gap-2">
-      <h3 id={`linked-${item.id}`} className="m-0 text-[13px] font-extrabold">
+      <h3 id={`linked-${item.id}`} className="m-0 text-[14px] font-semibold">
         Linked items · {rows.length}
       </h3>
       {loading && rows.length === 0 ? (
@@ -147,10 +145,10 @@ function LinkedItems({
             return (
               <li
                 key={`${edge.direction}:${edge.fieldId}:${other.id}`}
-                className="border-line flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5 text-[13px]"
+                className="border-line flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-[13px]"
               >
                 <span
-                  className="bg-soft border-line shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold"
+                  className="bg-soft border-line shrink-0 rounded-md border px-2 py-0.5 font-mono text-[11px]"
                   title={edge.direction === 'out' ? 'Links from this item' : 'Links to this item'}
                 >
                   {edge.direction === 'in' ? '← ' : ''}
@@ -159,7 +157,7 @@ function LinkedItems({
                 <span className="flex min-w-0 flex-1 flex-col">
                   <button
                     type="button"
-                    className="truncate text-left font-semibold hover:underline"
+                    className="truncate text-left font-medium hover:underline"
                     onClick={() => onOpen(other)}
                   >
                     {other.name}
@@ -253,7 +251,7 @@ export function DetailsTab({
       />
       <ItemAutomations org={org} item={item} ctx={ctx} canPause={canPause} />
       <section aria-labelledby={`fields-${item.id}`} className="flex flex-col gap-2">
-        <h3 id={`fields-${item.id}`} className="m-0 text-[13px] font-extrabold">
+        <h3 id={`fields-${item.id}`} className="m-0 text-[14px] font-semibold">
           All fields
         </h3>
         {!canEditItem ? (

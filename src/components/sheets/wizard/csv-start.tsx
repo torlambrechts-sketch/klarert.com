@@ -102,7 +102,7 @@ export function CsvStart({ ctx }: { ctx: WizardContext }) {
         {file ? (
           <p className="text-sm">
             Using <span className="font-semibold">{file.name}</span>.{' '}
-            <button type="button" className="text-focus underline" onClick={() => setFile(null)}>
+            <button type="button" className="text-info underline" onClick={() => setFile(null)}>
               Paste text instead
             </button>
           </p>

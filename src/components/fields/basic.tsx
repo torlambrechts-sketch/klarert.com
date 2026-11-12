@@ -113,7 +113,7 @@ export const emailUI = textUI({
           href={`mailto:${value}`}
           tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
-          className="text-focus shrink-0"
+          className="text-info shrink-0"
           aria-label={`Email ${value}`}
         >
           <AtSign className="size-3.5" aria-hidden />
@@ -145,7 +145,7 @@ export const urlUI = textUI({
           rel="noreferrer noopener"
           tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
-          className="text-focus shrink-0"
+          className="text-info shrink-0"
           aria-label={`Open ${urlHost(value)} in a new tab`}
         >
           <ExternalLink className="size-3.5" aria-hidden />

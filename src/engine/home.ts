@@ -74,3 +74,22 @@ export function homeSummary(work: MyWork, today: string): HomeSummary {
     line: parts.join(' · '),
   };
 }
+
+/** The Home greeting for an hour of the day (0–23) in the person's time zone. */
+export function greeting(hour: number): string {
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+/** The hour (0–23) of `now` in an IANA time zone; UTC when the zone is unknown. */
+export function hourIn(now: Date, timeZone: string): number {
+  try {
+    const h = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone })
+      .formatToParts(now)
+      .find((p) => p.type === 'hour')?.value;
+    return h ? Number(h) % 24 : now.getUTCHours();
+  } catch {
+    return now.getUTCHours();
+  }
+}

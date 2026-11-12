@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { PageHeader } from '@/components/shell/page-header';
+import { AutomationTabs } from './tabs';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { formatDateTime } from '@/engine/fields/helpers';
@@ -51,16 +53,15 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
   const filtered = !!(filters.sheetId || filters.automationId || filters.outcome);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-6 sm:px-6">
-      <div className="flex flex-col gap-1">
-        <h1>Run log</h1>
-        <p className="text-muted-foreground m-0 text-sm">
-          Every run of every automation, newest first, with what each step did.
-        </p>
-      </div>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <PageHeader
+        title="Run log"
+        description="Every run of every automation, newest first, with what each step did."
+      />
+      <AutomationTabs org={org} active="runs" />
       <div className="flex flex-wrap items-center gap-3" role="group" aria-label="Filters">
         <label className="flex items-center gap-2 text-sm">
-          <span className="font-semibold">Sheet</span>
+          <span className="text-muted-foreground font-medium">Sheet</span>
           <select
             className={selectClass}
             value={filters.sheetId ?? ''}
@@ -75,7 +76,7 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
           </select>
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <span className="font-semibold">Automation</span>
+          <span className="text-muted-foreground font-medium">Automation</span>
           <select
             className={selectClass}
             value={filters.automationId ?? ''}
@@ -90,7 +91,7 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
           </select>
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <span className="font-semibold">Outcome</span>
+          <span className="text-muted-foreground font-medium">Outcome</span>
           <select
             className={selectClass}
             value={filters.outcome ?? ''}

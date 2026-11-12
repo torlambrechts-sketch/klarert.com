@@ -495,15 +495,15 @@ export function SortButton({
 
 export function SheetSearch({ value, onChange }: { value: string; onChange(v: string): void }) {
   return (
-    <label className="relative flex items-center">
+    <label className="relative flex w-full items-center">
       <span className="sr-only">Search this sheet</span>
       <Search
-        className="text-muted-foreground pointer-events-none absolute left-2 size-4"
+        className="text-muted-foreground pointer-events-none absolute left-2.5 size-[15px]"
         aria-hidden
       />
       <input
         type="search"
-        className={cn(inputClass, 'h-9 w-44 pl-7 max-[759px]:w-full')}
+        className={cn(inputClass, 'h-[38px] w-full pl-8 text-[14px]')}
         placeholder="Search this sheet"
         value={value}
         onChange={(e) => onChange(e.target.value)}

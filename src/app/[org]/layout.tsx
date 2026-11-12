@@ -1,21 +1,17 @@
-import { PanelFrame } from '@/components/shell/panel-frame';
 import { PhoneNav } from '@/components/shell/phone-nav';
-import { ShellPrefsScript } from '@/components/shell/prefs-script';
-import { Rail } from '@/components/shell/rail';
 import { ShellProvider } from '@/components/shell/shell-context';
+import { SideMenu } from '@/components/shell/side-menu';
 import { TopBar } from '@/components/shell/top-bar';
 import { getMyWorkspaces, isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import { getMyWorkBadge } from '@/server/repositories/my-work';
 import { getNav } from '@/server/repositories/sheets';
 
-// App shell (docs/05 §2): rail · second panel (the @panel slot, one per page) · top bar and page.
+// App shell (docs/05 §2): the side menu, then the top bar and the page.
 export default async function OrgLayout({
   children,
-  panel,
   params,
 }: {
   children: React.ReactNode;
-  panel: React.ReactNode;
   params: Promise<{ org: string }>;
 }) {
   const { org } = await params;
@@ -25,9 +21,10 @@ export default async function OrgLayout({
     getNav(workspace.id),
     getMyWorkBadge(workspace.id, workspace.time_zone),
   ]);
-  const railProps = {
+  const menuProps = {
     org,
-    workspaceName: workspace.name,
+    current: { id: workspace.id, name: workspace.name, slug: workspace.slug },
+    workspaces,
     nav,
     canEdit: isEditorRole(role),
     canManage: isAdminRole(role),
@@ -35,16 +32,13 @@ export default async function OrgLayout({
   };
   return (
     <ShellProvider>
-      <ShellPrefsScript />
       <div className="app-shell">
-        <div className="rail-col">
-          <Rail {...railProps} />
-        </div>
-        <PanelFrame>{panel}</PanelFrame>
+        <aside className="side-col" aria-label="Workspace">
+          <SideMenu {...menuProps} />
+        </aside>
         <div className="flex min-w-0 flex-col">
           <TopBar
             current={workspace}
-            workspaces={workspaces}
             canManage={isAdminRole(role)}
             timeZone={workspace.time_zone}
             me={{
@@ -58,7 +52,7 @@ export default async function OrgLayout({
           <div className="min-w-0 flex-1">{children}</div>
         </div>
       </div>
-      <PhoneNav {...railProps} />
+      <PhoneNav {...menuProps} />
     </ShellProvider>
   );
 }

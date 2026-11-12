@@ -23,39 +23,36 @@ Every state that matters is in the URL: open item, view, search. Back/forward wo
 
 ## 2. App shell
 
+Visual reference for the shell and pages since the shadcn suite restyle: `21 Shadcn Suite` (Vercel-style side menu, zinc neutrals, Geist).
+
 ```
-┌──────┬──────────────┬──────────────────────────────────────────────────────────┐
-│ rail │ second panel │ top bar: [workspace ▾] [search……………… /]   [Inbox 3] [MP] │
-│ 76px │ 240px        ├──────────────────────────────────────────────────────────┤
-│      │ (collapsible │ page                                                     │
-│      │  to 36px)    │                                                          │
-└──────┴──────────────┴──────────────────────────────────────────────────────────┘
+┌──────────────┬──────────────────────────────────────────────────────────┐
+│ side menu    │ top bar: [search……………… /]                   [Inbox 3] [MP] │
+│ 256px        ├──────────────────────────────────────────────────────────┤
+│ #FAFAFA      │ page: crumb · h1 · description · actions, underline tabs  │
+└──────────────┴──────────────────────────────────────────────────────────┘
 ```
 
-### 2.1 Side menu ("rail")
-- Background `--yel` (#F7C948). 76 px wide, full height, sticky.
-- **Top block (fixed):** workspace logo (initials on #111), Home (icon), My work (icon + red count badge = overdue + requests to me).
-- **Middle (scrolls):** one section per folder; each sheet is a 40 px rounded square with a two-letter code on white 45 % (active: #111 square, yellow text). Codes: initials of the first two words, letters and digits only ("Hazards (HIRA)" → "HH"), unique within the workspace (if taken: first letter + next consonant). Sections separated by a thin line when collapsed. "+ New sheet" at the end of the last section.
-- **Bottom block (fixed):** Automations (icon), Settings (icon), "Keep menu open" (chevron).
-- **Expand:** hovering the rail for 150 ms overlays it at 236 px with names and section headings (uppercase 10.5 px, #6B5B26); leaving collapses it. **Pin:** "Keep menu open" makes it a 236 px column (remembered per user in localStorage). Tooltips show names when collapsed.
-- Keyboard: the rail is a `nav` landmark; items are links; focus shows names (expanded state on focus-within).
+### 2.1 Side menu
+- 256 px, background `--subtle` (#FAFAFA), right border `--line`, full height, sticky. A `nav` landmark "Side menu".
+- **Top:** workspace switcher (initials on a black circle, name, ⇅: the user's workspaces, New workspace), then **Find** (filters the menu as you type; `F` focuses it, Esc clears).
+- **Items:** Home, My work (count badge = overdue + requests to me, worded "n waiting" for screen readers). Then "Sheets": one collapsible folder per folder (folder icon, name, chevron; closed folders remembered per browser; the folder of the open sheet always opens), its sheets indented with their two-letter code in a small mono box, "+ New sheet" at the end of the last folder. Then "Platform": Automations, Workspace admin (owners and admins).
+- Active item: background #EBEBED, ink text, medium weight; hover #F0F0F1.
 
-### 2.2 Second panel
-- Background `--yel-2` (#FFF6D6), 240 px, collapsible to 36 px (toggle top right, remembered).
-- On a sheet: small caps folder name, sheet name (17 px, 800), "All items n", one row per group (colour square, name, count of items matching the current filters), "+ New group". Clicking a group filters the view to it.
-- On other pages: the area's pages (Home: Overview, My work; Automations: All automations, Run log; Settings: Members, Teams and roles, Entities and sites). My work: filters with counts (Everything, Overdue, Due in 14 days, Assigned to me, Requests to me, then By sheet).
-- Active row: background `--yel`.
+### 2.2 Page sub-navigation
+- No second panel. Pages with sections show underline tabs under the header (Automations: All automations, Run log; Workspace admin: Members, Teams and roles, Entities and sites).
+- On a sheet: the toolbar's **Show one group** menu (All groups and each group with its item count, "+ New group" for editors) filters the view to one group (`?group=`).
+- My work: filter chips with counts (Everything, Overdue, Due in 14 days, Assigned to me, Requests to me, then By sheet) under the KPI tiles.
 
 ### 2.3 Top bar
-- White, 58 px, sticky inside the main column, bottom border.
-- Workspace switcher (logo + name + "▾": list of the user's workspaces).
-- Search (max 520 px, placeholder "Search sheets, items and people   /"): results dropdown grouped "Sheets" and "Items" (display id + name + sheet), arrows + Enter, Esc closes.
+- White, 48 px, sticky inside the main column, bottom border.
+- Search (max 520 px, placeholder "Search sheets, items and people", `/`): results dropdown grouped "Sheets" and "Items" (display id + name + sheet), arrows + Enter, Esc closes.
 - Inbox button with unread count → popover (latest 10, "Mark all read", "Open My work").
-- Avatar → menu (Profile, Workspace settings, Sign out).
+- Avatar → menu (Workspace admin, Sign out).
 
 ## 3. Sheet page
 
-Header row: sheet name (26 px, 800) · view tabs (**Table**, saved views, More ▾: Kanban, Calendar, Form, + New view) · right: **+ New** (black), sheet search, Filter ▾ (count badge when active), Columns (· n hidden), ⚡ n (automations on this sheet → side sheet), ⋯ (sheet settings, export CSV, archive).
+Header: crumb (folder / sheet), sheet name (26 px, 600), "<view> · n items"; right: ⋯ view menu, sheet settings, **+ New** (black). Under it underline view tabs (**Table**, saved views, More ▾: Kanban, Calendar, Form, + New view). Toolbar: sheet search (grows), Show one group, Filter ▾ (count badge when active), Sort, Columns (· n hidden), ⚡ n (automations on this sheet → side sheet).
 
 ### 3.1 Table view (default)
 One view for working through items as rows; it replaced the former List and Grid views. `?view=list` and `?view=grid` (old links, saved defaults) open the Table, and saved views stored with type `list` or `grid` load as Table views (mapped when read; `views.type` stores a Table view as `list` until a migration adds `table`).
@@ -95,9 +92,8 @@ One view for working through items as rows; it replaced the former List and Grid
 
 ## 5. Phones (< 760 px)
 
-- Rail becomes a bottom bar (64 px, yellow): Home, My work, Menu, Search, Inbox. **Menu** opens the full side menu as a left sheet (expanded style, 300 px) over a dark scrim.
-- Second panel hidden; group filter available as a select above the list.
-- Top bar: menu button, workspace logo, search (expands to full width on focus), inbox, avatar.
+- Side menu becomes a bottom bar (64 px, #FAFAFA): Home, My work, Menu, Search, Inbox. **Menu** opens the full side menu as a left sheet over a dark scrim.
+- Top bar: menu button, search (expands to full width on focus), inbox, avatar.
 - Below 640 px the Table renders **cards** under the same collapsible group titles: name (700), display id · owner, then up to three filled values as blocks (status first by field order), the first due date when it is not among them (red when overdue); tap opens the item panel; "+ Add" per group.
 - Item panel full screen (above the bottom bar); summary strip two columns; Expand hidden.
 - Tables on other pages scroll horizontally inside their card.
@@ -105,15 +101,17 @@ One view for working through items as rows; it replaced the former List and Grid
 ## 6. Tokens
 
 ```
---yel #F7C948   --yel-2 #FFF6D6   --ink #111111   --muted #5E5C57   --line #E3E0D8   --soft #F7F6F2
---brand (primary buttons, focus-dark) #16181D   --focus #2C4FD0   --sel (selected row) #EEF1F6
---good #188A50  --warn #8A5A00  --crit #B4232B
+--ink #09090B   --ink-2 #3F3F46   --muted #71717A   --faint #A1A1AA   --line #E4E4E7   --line-2 #EAEAEC
+--soft #F4F4F5 (fills, selected row)   --subtle #FAFAFA (side menu, header rows)   --brand #18181B (primary)
+--focus #71717A   links: --info #2C4FD0
+--good #1E8449  --warn #8A5A00  --crit #DC2626 (text on soft fill #B91C1C), each with a soft fill (--good-soft …)
+heat h1–h4: #DDF1E4/#165E35 · #FBEFC9/#7A5308 · #FCDCC3/#8A3D0A · #F6C9C4/#8E1F18 (fill/text)
 label colours: grey #B4BCC4 · blue #2F6FD6 · navy #2F4F8F · teal #0B8389 · green #188A50 · yellow #E5B526
                orange #C46A0A · red #C93A46 · pink #C24E88 · purple #7E52C6 · dark #55606B
-Font: Plus Jakarta Sans 400/500/600/700/800 (self-hosted), IBM Plex Mono 400/500 for ids and hashes
-Base size 13.5 px; h1 26 px/800; radius cards 4 px, controls 8–10 px; borders 1 px var(--line)
+Font: Geist 400/500/600/700 and Geist Mono 400/500 for ids, codes and counts (self-hosted)
+Base size 14 px; h1 26 px/600, −0.03em; cards 12 px radius with a 1 px border and shadow-xs; tables and inputs 6–8 px
 ```
-Use shadcn/ui primitives (Popover, Dialog, Sheet, DropdownMenu, Command, Tooltip, Tabs, Toast via `sonner`) restyled with these tokens. No yellow on buttons (yellow is navigation only); primary buttons are `--brand` with white text.
+Use shadcn/ui primitives (Popover, Dialog, Sheet, DropdownMenu, Command, Tooltip, Tabs, Toast via `sonner`) restyled with these tokens. Primary buttons are `--brand` with near-white text; secondary buttons are white with a border. Option values show a colour dot with the label (plus "!" for action needed and a check for done).
 
 ## 7. States
 

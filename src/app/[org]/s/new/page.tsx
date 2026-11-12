@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/shell/page-header';
 import { NewSheetWizard } from '@/components/sheets/wizard/wizard';
 import { isEditorRole, requireMember } from '@/server/auth';
 import { getNav, getWizardData } from '@/server/repositories/sheets';
@@ -16,7 +17,7 @@ export default async function NewSheetPage({
   const { workspace, role } = await requireMember(org);
   if (!isEditorRole(role))
     return (
-      <main className="mx-auto max-w-3xl px-4 py-8">
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-7 sm:pt-[26px]">
         <h1>New sheet</h1>
         <p className="text-muted-foreground mt-2">
           Viewers cannot create sheets. Ask an editor or admin to create one for you.
@@ -25,14 +26,13 @@ export default async function NewSheetPage({
     );
   const [nav, data] = await Promise.all([getNav(workspace.id), getWizardData(workspace.id)]);
   return (
-    <main className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8">
-      <div className="flex flex-col gap-1">
-        <h1>New sheet</h1>
-        <p className="text-muted-foreground">
-          A sheet is a table of items. Every item gets the sheet’s fields; you can change them
-          later.
-        </p>
-      </div>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <PageHeader
+        className="border-line border-b pb-[18px]"
+        crumb={workspace.name}
+        title="New sheet"
+        description="A sheet is a table of items. Every item gets the sheet’s fields; you can change them later."
+      />
       <NewSheetWizard
         startId={start ?? null}
         ctx={{

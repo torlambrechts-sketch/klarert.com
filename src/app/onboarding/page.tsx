@@ -44,7 +44,7 @@ export default async function OnboardingPage({
                   {workspaces.map((w) => (
                     <li key={w.id}>
                       <Link
-                        className="text-focus underline-offset-4 hover:underline"
+                        className="text-info underline-offset-4 hover:underline"
                         href={`/${w.slug}`}
                       >
                         {w.name}

@@ -44,8 +44,10 @@ import { useOnline } from '@/components/states/use-online';
 import { useViewItems } from '@/components/views/use-view-items';
 import { useViews, type ViewsState } from '@/components/views/use-views';
 import { ViewMenu, ViewTabs } from '@/components/views/view-tabs';
+import { PageHeader } from '@/components/shell/page-header';
 import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
+import { GroupSelect } from '@/components/table/group-select';
 import { TableView } from '@/components/table/table-view';
 import { positionsAtEnd } from '@/components/table/table-model';
 import { createGridStore, GridStoreContext, useGrid, useGridStore } from './grid-store';
@@ -66,6 +68,8 @@ export interface SheetViewProps {
   org: string;
   sheetId: string;
   sheetName: string;
+  folderName: string | null;
+  archived: boolean;
   userId: string;
   timeZone: string;
   role: 'owner' | 'admin' | 'editor' | 'viewer';
@@ -204,65 +208,91 @@ function SheetBody(props: SheetViewProps) {
   const filterable = active.type !== 'form';
 
   return (
-    <main className="flex h-[calc(100dvh-58px)] min-w-0 flex-col gap-3 px-4 pt-5 pb-3 max-[759px]:h-[calc(100dvh-122px)] sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <h1 className="break-words">{sheetName}</h1>
-            <p className="text-muted-foreground text-sm">
-              {active.name} ·{' '}
-              {data
-                ? total === 1
-                  ? '1 item'
-                  : `${total.toLocaleString('en-GB')} items`
-                : 'loading items'}
-              {realtime === 'offline' && online ? ' · live updates paused, reconnecting' : ''}
-            </p>
-          </div>
-          <ViewTabs views={views} fields={data?.fields ?? []} />
-        </div>
-        <div className="flex flex-wrap items-center gap-2 max-[759px]:w-full">
-          {canEdit && active.type !== 'form' ? (
-            <Button
-              type="button"
-              onClick={() => (tabular ? setAddTick((t) => t + 1) : setNewItem({}))}
-              disabled={!data}
-            >
-              <Plus aria-hidden /> New {data?.sheet.itemLabel.toLowerCase() ?? 'item'}
+    <main className="flex h-[calc(100dvh-48px)] min-w-0 flex-col px-4 pt-5 pb-3 max-[759px]:h-[calc(100dvh-112px)] sm:px-7 sm:pt-[22px]">
+      <PageHeader
+        crumb={
+          props.folderName ? (
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="truncate">{props.folderName}</span>
+              <span aria-hidden className="text-line-strong">
+                /
+              </span>
+              <span className="text-ink truncate">{sheetName}</span>
+            </span>
+          ) : null
+        }
+        title={sheetName}
+        description={
+          <>
+            {active.name} ·{' '}
+            {data
+              ? total === 1
+                ? '1 item'
+                : `${total.toLocaleString('en-GB')} items`
+              : 'loading items'}
+            {realtime === 'offline' && online ? ' · live updates paused, reconnecting' : ''}
+          </>
+        }
+        actions={
+          <>
+            <ViewMenu views={views} canEdit={canEdit} />
+            <Button asChild variant="outline" size="icon">
+              <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
+                <Settings aria-hidden />
+              </Link>
             </Button>
-          ) : null}
-          {filterable ? <SheetSearch value={q} onChange={setQ} /> : null}
-          {data && ctx && filterable ? (
-            <>
-              <FilterButton
-                config={config}
-                setConfig={setConfig}
-                fields={data.fields}
-                ctx={ctx}
-                computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
-              />
-              <SortButton config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
-            </>
-          ) : null}
-          {data && tabular ? <ColumnsMenu fields={data.fields} hiddenCount={hiddenCount} /> : null}
-          <SheetAutomations
+            {canEdit && active.type !== 'form' ? (
+              <Button
+                type="button"
+                onClick={() => (tabular ? setAddTick((t) => t + 1) : setNewItem({}))}
+                disabled={!data}
+              >
+                <Plus aria-hidden /> New {data?.sheet.itemLabel.toLowerCase() ?? 'item'}
+              </Button>
+            ) : null}
+          </>
+        }
+      />
+      <ViewTabs views={views} fields={data?.fields ?? []} />
+      <div className="my-3.5 flex flex-wrap items-center gap-2">
+        {filterable ? (
+          <div className="flex min-w-0 flex-[1_1_260px] [&>*]:w-full">
+            <SheetSearch value={q} onChange={setQ} />
+          </div>
+        ) : null}
+        {data ? (
+          <GroupSelect
             org={org}
-            sheetId={sheetId}
-            sheetName={sheetName}
-            ctx={ctx}
-            role={role}
-            timeZone={timeZone}
+            data={data}
+            onlyGroup={props.onlyGroup}
+            canEdit={canEdit}
+            archived={props.archived}
           />
-          <ViewMenu views={views} canEdit={canEdit} />
-          <Button asChild variant="outline" size="icon">
-            <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
-              <Settings aria-hidden />
-            </Link>
-          </Button>
-        </div>
+        ) : null}
+        {data && ctx && filterable ? (
+          <>
+            <FilterButton
+              config={config}
+              setConfig={setConfig}
+              fields={data.fields}
+              ctx={ctx}
+              computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
+            />
+            <SortButton config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
+          </>
+        ) : null}
+        {data && tabular ? <ColumnsMenu fields={data.fields} hiddenCount={hiddenCount} /> : null}
+        <SheetAutomations
+          org={org}
+          sheetId={sheetId}
+          sheetName={sheetName}
+          ctx={ctx}
+          role={role}
+          timeZone={timeZone}
+        />
       </div>
       {!canEdit ? (
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground -mt-1 mb-3 text-sm">
           You can view this sheet. Ask an editor or admin to change it.
         </p>
       ) : null}

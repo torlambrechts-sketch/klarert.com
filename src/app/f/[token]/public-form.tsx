@@ -49,10 +49,10 @@ export function PublicFormView(props: {
     return (
       <section
         role="status"
-        className="border-line flex flex-col items-start gap-3 rounded-[var(--radius-card)] border bg-white p-6"
+        className="border-line flex flex-col items-start gap-3 rounded-xl border bg-white p-6 shadow-xs"
       >
         <CheckCircle2 className="text-good size-6" aria-hidden />
-        <h1 className="text-xl">Thank you. Your answers were sent.</h1>
+        <h1 className="text-[22px]">Thank you. Your answers were sent.</h1>
         {sent.displayId ? (
           <p className="text-sm">
             Reference <span className="font-mono">{sent.displayId}</span>
@@ -75,7 +75,7 @@ export function PublicFormView(props: {
   return (
     <form
       noValidate
-      className="border-line flex flex-col gap-5 rounded-[var(--radius-card)] border bg-white p-6"
+      className="border-line flex flex-col gap-5 rounded-xl border bg-white p-6 shadow-xs sm:p-7"
       onSubmit={async (e) => {
         e.preventDefault();
         setMessage(null);
@@ -100,8 +100,8 @@ export function PublicFormView(props: {
         }
       }}
     >
-      <header className="flex flex-col gap-1">
-        <h1 className="text-[22px]">{props.title}</h1>
+      <header className="border-line -mx-6 -mt-6 flex flex-col gap-1.5 border-b px-6 pt-6 pb-5 sm:-mx-7 sm:-mt-7 sm:px-7 sm:pt-7">
+        <h1 className="text-[24px]">{props.title}</h1>
         {props.description ? (
           <p className="text-muted-foreground text-sm whitespace-pre-line">{props.description}</p>
         ) : null}
@@ -135,8 +135,8 @@ export function PublicFormView(props: {
           {message}
         </p>
       ) : null}
-      <div>
-        <Button type="submit" disabled={sending}>
+      <div className="flex">
+        <Button type="submit" disabled={sending} className="h-10 flex-1 sm:flex-none sm:px-6">
           {sending ? 'Sending…' : 'Send'}
         </Button>
       </div>

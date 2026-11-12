@@ -6,7 +6,7 @@ export default function SheetNotFound() {
       <h1>Sheet not found</h1>
       <p className="text-muted-foreground mt-2">
         It may have been deleted, or the link is wrong.{' '}
-        <Link href=".." className="text-focus underline">
+        <Link href=".." className="text-info underline">
           Go back
         </Link>
       </p>

@@ -16,7 +16,7 @@ export function PageSkeleton({
 }) {
   return (
     <main
-      className={`mx-auto flex w-full ${width} flex-col gap-5 px-4 py-6 sm:px-6`}
+      className={`mx-auto flex w-full ${width} flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]`}
       aria-busy="true"
       aria-label={label}
     >
@@ -35,18 +35,19 @@ export function PageSkeleton({
 export function SheetSkeleton() {
   return (
     <main
-      className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-4 sm:px-6"
+      className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-5 sm:px-7 sm:pt-[22px]"
       aria-busy="true"
       aria-label="Loading the sheet"
     >
+      <Block className="h-4 w-48" />
       <Block className="h-8 w-64" />
-      <div className="flex gap-2">
+      <div className="border-line flex gap-[22px] border-b pb-2">
         {[0, 1, 2].map((i) => (
-          <Block key={i} className="h-9 w-20" />
+          <Block key={i} className="h-6 w-16" />
         ))}
       </div>
-      <Block className="h-9 w-full" />
-      <div className="border-line flex flex-col gap-px overflow-hidden rounded-[var(--radius-card)] border">
+      <Block className="h-[38px] w-full" />
+      <div className="border-line flex flex-col gap-px overflow-hidden rounded-lg border">
         {Array.from({ length: 10 }, (_, i) => (
           <Block key={i} className="h-10 rounded-none" />
         ))}

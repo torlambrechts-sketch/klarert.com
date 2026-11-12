@@ -193,7 +193,7 @@ function LaneColumn({
       aria-label={`${name}, ${lane.items.length} ${lane.items.length === 1 ? 'item' : 'items'}`}
       data-lane={name}
       className={cn(
-        'border-line flex w-[272px] shrink-0 flex-col rounded-[var(--radius-card)] border bg-[#FBFAF6]',
+        'border-line bg-subtle flex w-[272px] shrink-0 flex-col rounded-[var(--radius-card)] border',
         highlighted && 'outline-ink bg-sel outline-2 -outline-offset-2 outline-dashed',
       )}
     >

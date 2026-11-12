@@ -8,8 +8,8 @@ const out = new URL('../src/fonts/', import.meta.url);
 mkdirSync(out, { recursive: true });
 
 const sets = [
-  ['@fontsource/plus-jakarta-sans', 'plus-jakarta-sans', [400, 500, 600, 700, 800]],
-  ['@fontsource/ibm-plex-mono', 'ibm-plex-mono', [400, 500]],
+  ['@fontsource/geist-sans', 'geist-sans', [400, 500, 600, 700]],
+  ['@fontsource/geist-mono', 'geist-mono', [400, 500]],
 ];
 for (const [pkg, name, weights] of sets) {
   const dir = join(dirname(require.resolve(`${pkg}/package.json`)), 'files');

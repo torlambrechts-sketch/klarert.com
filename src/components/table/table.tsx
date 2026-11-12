@@ -25,13 +25,7 @@ import type { SummaryFn } from '@/engine/summaries';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { setSummary, type ViewConfig } from '@/engine/views/config';
 import { fieldUI } from '@/components/fields/registry';
-import {
-  Avatar,
-  cellValue,
-  colorVar,
-  editorPopoverClass,
-  TextEditor,
-} from '@/components/fields/shared';
+import { Avatar, cellValue, editorPopoverClass, TextEditor } from '@/components/fields/shared';
 import type { EditorProps } from '@/components/fields/types';
 import { FieldPicker } from '@/components/grid/field-picker';
 import { useGrid, useGridStore, type CellRef } from '@/components/grid/grid-store';
@@ -42,7 +36,7 @@ import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/compon
 import { cn } from '@/lib/utils';
 import { ColumnHeader } from './column-header';
 import { GroupSummary } from './group-summary';
-import { GroupTitle, groupTint } from './group-title';
+import { GroupTitle } from './group-title';
 import { useTableGroups } from './use-table-groups';
 import {
   buildLayout,
@@ -598,7 +592,7 @@ export function Table({
       onDragEnd={onDragEnd}
       onDragCancel={() => setDragging(null)}
     >
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="border-line relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border">
         <div
           ref={scrollRef}
           role="grid"
@@ -696,7 +690,7 @@ export function Table({
           >
             <button
               type="button"
-              className="border-line hover:border-ink focus-visible:outline-focus pointer-events-auto mr-2 rounded-full border bg-white px-3 py-1 text-xs font-bold shadow-sm focus-visible:outline-2"
+              className="border-line hover:border-line-strong focus-visible:outline-focus pointer-events-auto mr-2 rounded-full border bg-white px-3 py-1 text-xs font-medium shadow-xs focus-visible:outline-2"
               onClick={() => {
                 const el = scrollRef.current;
                 if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
@@ -753,7 +747,7 @@ function HeaderRow(p: {
     >
       <div
         role="columnheader"
-        className="border-line bg-soft sticky left-0 z-[2] flex shrink-0 items-center border-r border-b"
+        className="border-line bg-subtle sticky left-0 z-[2] flex shrink-0 items-center border-r border-b"
         style={{ width: p.stickyW, paddingLeft: BAR_W }}
       >
         {p.canEdit ? (
@@ -768,7 +762,7 @@ function HeaderRow(p: {
           </span>
         ) : null}
         <span
-          className="text-meta text-muted-foreground flex-1 truncate px-2 font-semibold tracking-wide uppercase"
+          className="text-muted-foreground flex-1 truncate px-2 text-[12.5px] font-medium"
           style={{ paddingLeft: p.canEdit ? 28 : 8 }}
         >
           {p.ctx.sheet.itemLabel}
@@ -780,7 +774,7 @@ function HeaderRow(p: {
             <div
               key="__add"
               role="columnheader"
-              className="border-line bg-soft absolute top-0 flex h-full items-center justify-center border-b"
+              className="border-line bg-subtle absolute top-0 flex h-full items-center justify-center border-b"
               style={{ left: vc.start, width: vc.size }}
             >
               <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
@@ -805,7 +799,7 @@ function HeaderRow(p: {
         return (
           <div
             key={field.id}
-            className="bg-soft absolute top-0 h-full"
+            className="bg-subtle absolute top-0 h-full"
             style={{ left: vc.start, width: vc.size }}
           >
             <ColumnHeader
@@ -909,7 +903,7 @@ function Sticky({
     <div
       role={role}
       className={cn(
-        'border-line sticky left-0 z-[2] flex shrink-0 items-center border-r border-b bg-white',
+        'border-b-line-2 border-r-line sticky left-0 z-[2] flex shrink-0 items-center border-r border-b bg-white',
         className,
       )}
       style={{ width, borderLeft: `${BAR_W}px solid transparent` }}
@@ -941,10 +935,12 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
     <div
       ref={drop.setNodeRef}
       role="gridcell"
-      className={cn('border-line flex w-full items-center border-b', drop.isOver && 'bg-sel')}
+      className={cn(
+        'border-line bg-subtle flex w-full items-center border-b',
+        drop.isOver && 'bg-sel',
+      )}
       style={{
-        borderLeft: `${BAR_W}px solid ${colorVar(row.group.color)}`,
-        background: drop.isOver ? undefined : groupTint(row.group.color),
+        borderLeft: `${BAR_W}px solid transparent`,
       }}
     >
       <div className="sticky left-0 flex items-center gap-1">
@@ -1056,13 +1052,13 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
           >
             <span className="text-cell flex min-w-0 items-center leading-tight">
               {item.id.startsWith('temp-') ? (
-                <span className="truncate font-semibold">{item.name}</span>
+                <span className="truncate font-medium">{item.name}</span>
               ) : (
                 <button
                   type="button"
                   tabIndex={-1}
                   title={`Open ${item.displayId}`}
-                  className="max-w-full truncate text-left font-semibold hover:underline"
+                  className="max-w-full truncate text-left font-medium hover:underline"
                   onMouseDown={(e) => e.stopPropagation()}
                   onDoubleClick={(e) => e.stopPropagation()}
                   onClick={(e) => {
@@ -1225,7 +1221,7 @@ const TableCell = memo(function TableCell({
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'border-line text-cell absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-2 hover:shadow-[inset_0_0_0_1.5px_#9AA3B5] [&_[data-pill]]:-mx-1.5',
+        'border-r-soft border-b-line-2 text-cell absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-3 hover:shadow-[inset_0_0_0_1px_var(--line-strong)] [&_[data-pill]]:-mx-1.5',
         selected && 'bg-sel',
         active && 'outline-focus z-[1] outline-2 -outline-offset-2',
       )}
@@ -1386,7 +1382,7 @@ function SummaryRow(p: RowProps & { row: Extract<TableRow, { kind: 'summary' }> 
           <div
             key={field.id}
             role="gridcell"
-            className="border-line bg-soft/60 absolute top-0 flex h-full items-center border-r border-b px-2"
+            className="border-line bg-subtle absolute top-0 flex h-full items-center border-r border-b px-2"
             style={{ left: vc.start, width: vc.size }}
           >
             {fn ? (

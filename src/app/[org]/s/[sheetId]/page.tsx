@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SheetView } from '@/components/grid/sheet-view';
 import { requireMember } from '@/server/auth';
@@ -36,47 +35,22 @@ export default async function SheetPage({
   const { workspace, role, user } = await requireMember(org);
   const sheet = await getSheet(workspace.id, sheetId);
   if (!sheet) notFound();
-  const base = `/${org}/s/${sheet.id}`;
   return (
     <>
       {sheet.archived_at ? (
         <p
           role="status"
-          className="border-warn/40 text-warn mx-4 mt-4 rounded-[var(--radius-card)] border bg-[#FFF8E6] px-3 py-2 text-sm sm:mx-6"
+          className="border-warn/40 text-warn bg-warn-soft mx-4 mt-4 rounded-[var(--radius-card)] border px-3 py-2 text-sm sm:mx-7"
         >
           This sheet is archived. It is hidden from the side menu. Restore it in its settings.
         </p>
-      ) : null}
-      {sheet.groups.length > 1 ? (
-        <nav aria-label="Groups" className="phone-only px-4 pt-4">
-          <ul className="flex flex-wrap gap-2 text-sm">
-            <li>
-              <Link
-                href={base}
-                aria-current={!group ? 'page' : undefined}
-                className="border-line aria-[current=page]:bg-ink rounded-full border px-3 py-1 aria-[current=page]:text-white"
-              >
-                All
-              </Link>
-            </li>
-            {sheet.groups.map((g) => (
-              <li key={g.id}>
-                <Link
-                  href={`${base}?group=${g.id}`}
-                  aria-current={group === g.id ? 'page' : undefined}
-                  className="border-line aria-[current=page]:bg-ink rounded-full border px-3 py-1 aria-[current=page]:text-white"
-                >
-                  {g.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
       ) : null}
       <SheetView
         org={org}
         sheetId={sheet.id}
         sheetName={sheet.name}
+        folderName={sheet.folderName}
+        archived={!!sheet.archived_at}
         userId={user.id}
         timeZone={workspace.time_zone}
         role={role}

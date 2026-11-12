@@ -1,9 +1,19 @@
 import Link from 'next/link';
-import { CircleCheck, Circle, Plus } from 'lucide-react';
+import {
+  AlertTriangle,
+  CalendarClock,
+  Circle,
+  CircleCheck,
+  MessageSquareText,
+  Plus,
+  UserRound,
+} from 'lucide-react';
 import { FolderManager } from '@/components/sheets/folders';
 import { WorkList } from '@/components/my-work/work-row';
+import { Card, PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
-import { checklistDone, homeSummary, type ChecklistStepId } from '@/engine/home';
+import { checklistDone, greeting, homeSummary, hourIn, type ChecklistStepId } from '@/engine/home';
+import { BUCKET_LABEL, type Bucket } from '@/engine/my-work';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import { getHome, getMyWork } from '@/server/repositories/my-work';
@@ -11,11 +21,17 @@ import { getNav } from '@/server/repositories/sheets';
 
 export const metadata = { title: 'Home · Compliance OS' };
 
-// Home (docs/05 §4): greeting and a one-line summary, Getting started (computed; hidden once done), Needs you,
-// Next 30 days and Recent activity. Every number comes from the workspace's data.
+// Home (docs/05 §4): greeting and a one-line summary, My work tiles, Getting started (computed; hidden once done),
+// Needs you, Next 30 days, Recent activity and Folders. Every number comes from the workspace's data.
 
-const card =
-  'border-line flex flex-col gap-3 rounded-[var(--radius-card)] border bg-white p-4 sm:p-5';
+const TILES: { bucket: Bucket; icon: typeof AlertTriangle }[] = [
+  { bucket: 'overdue', icon: AlertTriangle },
+  { bucket: 'due', icon: CalendarClock },
+  { bucket: 'requests', icon: MessageSquareText },
+  { bucket: 'assigned', icon: UserRound },
+];
+
+const textLink = 'text-ink text-[13px] font-medium underline-offset-4 hover:underline';
 
 export default async function HomePage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
@@ -53,51 +69,84 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
     }
   };
 
+  const hello = greeting(hourIn(new Date(), workspace.time_zone));
+
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-4 py-6 sm:px-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1>Good to see you, {first}</h1>
-          <p className="text-muted-foreground m-0" data-testid="home-summary">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <PageHeader
+        className="border-line mb-2 border-b pb-[18px]"
+        crumb={workspace.name}
+        title={`${hello}, ${first}`}
+        description={
+          <span data-testid="home-summary">
             {summary ? summary.line : 'Your work could not be loaded.'}
-          </p>
-        </div>
-        {canEdit ? (
-          <Button asChild>
-            <Link href={`/${org}/s/new`}>
-              <Plus aria-hidden /> New sheet
-            </Link>
-          </Button>
-        ) : null}
-      </div>
+          </span>
+        }
+        actions={
+          canEdit ? (
+            <Button asChild>
+              <Link href={`/${org}/s/new`}>
+                <Plus aria-hidden /> New sheet
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
+
+      {mine ? (
+        <nav aria-label="My work at a glance" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {TILES.map(({ bucket, icon: Icon }) => {
+            const n = mine.work.counts[bucket];
+            return (
+              <Link
+                key={bucket}
+                href={`/${org}/my-work?filter=${bucket}`}
+                className="border-line hover:border-line-strong flex flex-col gap-1.5 rounded-xl border bg-white px-5 py-[18px] shadow-xs outline-offset-2"
+              >
+                <span className="text-ink flex items-center justify-between gap-2 text-[13.5px] font-medium">
+                  {BUCKET_LABEL[bucket]}
+                  <Icon className="text-muted-foreground size-4" aria-hidden />
+                </span>
+                <span
+                  className={
+                    bucket === 'overdue' && n > 0
+                      ? 'text-crit text-[30px] leading-[1.1] font-bold tracking-[-0.03em] tabular-nums'
+                      : 'text-[30px] leading-[1.1] font-bold tracking-[-0.03em] tabular-nums'
+                  }
+                >
+                  {n}
+                </span>
+                <span className="text-muted-foreground text-[12.5px]">
+                  {n === 1 ? '1 item' : `${n} items`}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
 
       {home && !checklistDone(home.checklist) ? (
-        <section className={card} aria-labelledby="getting-started">
-          <div className="flex flex-col gap-0.5">
-            <h2 id="getting-started" className="text-base font-bold">
-              Getting started
-            </h2>
-            <p className="text-muted-foreground m-0 text-sm">
-              {home.checklist.filter((s) => s.done).length} of {home.checklist.length} done. This
-              list goes away once every step is done.
-            </p>
-          </div>
+        <Card
+          headingId="getting-started"
+          title="Getting started"
+          description={`${home.checklist.filter((s) => s.done).length} of ${home.checklist.length} done. This list goes away once every step is done.`}
+        >
           <ul className="m-0 flex list-none flex-col gap-1 p-0" data-testid="checklist">
             {home.checklist.map((s) => {
               const link = s.done ? null : stepLink(s.id);
               return (
-                <li key={s.id} className="flex min-h-9 items-center gap-2">
+                <li key={s.id} className="flex min-h-9 items-center gap-2.5">
                   {s.done ? (
-                    <CircleCheck className="text-good size-5 shrink-0" aria-hidden />
+                    <CircleCheck className="text-good size-[18px] shrink-0" aria-hidden />
                   ) : (
-                    <Circle className="text-muted-foreground size-5 shrink-0" aria-hidden />
+                    <Circle className="text-faint size-[18px] shrink-0" aria-hidden />
                   )}
-                  <span className={s.done ? 'text-muted-foreground line-through' : 'font-semibold'}>
+                  <span className={s.done ? 'text-muted-foreground line-through' : 'font-medium'}>
                     {s.label}
                   </span>
                   <span className="sr-only">{s.done ? ', done' : ', to do'}</span>
                   {link ? (
-                    <Link href={link.href} className="text-focus ml-auto text-sm font-semibold">
+                    <Link href={link.href} className={`${textLink} ml-auto`}>
                       {link.label}
                     </Link>
                   ) : null}
@@ -105,122 +154,149 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
               );
             })}
           </ul>
-        </section>
+        </Card>
       ) : null}
 
-      <section className="flex flex-col gap-2" aria-labelledby="needs-you">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 id="needs-you" className="text-base font-bold">
-            Needs you{' '}
-            {summary ? (
-              <span className="text-muted-foreground font-semibold">({summary.needsYouCount})</span>
-            ) : null}
-          </h2>
-          <Link href={`/${org}/my-work`} className="text-focus text-sm font-semibold">
-            Open My work
-          </Link>
-        </div>
-        {!summary ? (
-          <Retry org={org} what="Your work" />
-        ) : summary.needsYou.length === 0 ? (
-          <p className="border-line text-muted-foreground m-0 rounded-[var(--radius-card)] border border-dashed bg-white p-4">
-            Nothing is overdue, requested of you or due in the next 14 days.
-          </p>
-        ) : (
-          <WorkList org={org} rows={summary.needsYou} label="Needs you" />
-        )}
-      </section>
-
-      <section className="flex flex-col gap-2" aria-labelledby="next-30">
-        <h2 id="next-30" className="text-base font-bold">
-          Next 30 days{' '}
-          {summary ? (
-            <span className="text-muted-foreground font-semibold">({summary.next30.length})</span>
-          ) : null}
-        </h2>
-        {!summary ? (
-          <Retry org={org} what="Your dates" />
-        ) : summary.next30.length === 0 ? (
-          <p className="border-line text-muted-foreground m-0 rounded-[var(--radius-card)] border border-dashed bg-white p-4">
-            None of your items has a date in the next 30 days.
-          </p>
-        ) : (
-          <WorkList org={org} rows={summary.next30} label="Next 30 days" />
-        )}
-      </section>
-
-      <section className="flex flex-col gap-2" aria-labelledby="recent">
-        <h2 id="recent" className="text-base font-bold">
-          Recent activity
-        </h2>
-        {!home ? (
-          <Retry org={org} what="Recent activity" />
-        ) : home.recent.length === 0 ? (
-          <p className="border-line text-muted-foreground m-0 rounded-[var(--radius-card)] border border-dashed bg-white p-4">
-            No activity yet. Changes to items show here.
-          </p>
-        ) : (
-          <ol
-            aria-label="Recent activity"
-            className="border-line m-0 list-none overflow-hidden rounded-[var(--radius-card)] border bg-white p-0"
-          >
-            {home.recent.map((r) => (
-              <li key={r.id} className="border-line border-t first:border-t-0">
-                <Link
-                  href={`/${org}/s/${r.item.sheetId}?item=${encodeURIComponent(r.item.displayId)}`}
-                  className="hover:bg-soft flex flex-col gap-0.5 px-3 py-2 text-[13px] outline-offset-[-2px]"
-                >
-                  <span className="break-words">
-                    <b>{r.who}</b> · {r.text}
-                  </span>
-                  <span className="text-muted-foreground font-mono text-[11.5px]">
-                    {r.item.displayId} · {r.item.name} · {r.item.sheetName} ·{' '}
-                    {formatDateTime(r.at, workspace.time_zone)}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-
-      {canEdit ? (
-        <section className={card} aria-labelledby="folders">
-          <div className="flex flex-col gap-0.5">
-            <h2 id="folders" className="text-base font-bold">
-              Folders
-            </h2>
-            <p className="text-muted-foreground m-0 text-sm">
-              Folders are the sections of the side menu. A folder can be deleted once it is empty.
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card
+          headingId="needs-you"
+          title={
+            <>
+              Needs you{' '}
+              {summary ? (
+                <span className="text-muted-foreground font-mono text-xs font-normal">
+                  ({summary.needsYouCount})
+                </span>
+              ) : null}
+            </>
+          }
+          description="Overdue, requested of you or due in the next 14 days"
+          flush
+          footer={
+            <>
+              <span>Oldest first</span>
+              <Link href={`/${org}/my-work`} className={textLink}>
+                Open My work
+              </Link>
+            </>
+          }
+        >
+          {!summary ? (
+            <Retry org={org} what="Your work" />
+          ) : summary.needsYou.length === 0 ? (
+            <p className="text-muted-foreground m-0 px-[22px] py-7 text-center text-[13.5px]">
+              Nothing is overdue, requested of you or due in the next 14 days.
             </p>
-          </div>
-          <FolderManager
-            org={org}
-            folders={nav.folders.map((f) => ({
-              id: f.id,
-              name: f.name,
-              sheetCount: f.sheets.length,
-            }))}
-          />
-        </section>
-      ) : null}
+          ) : (
+            <WorkList org={org} rows={summary.needsYou} label="Needs you" bare />
+          )}
+        </Card>
+
+        <Card
+          headingId="next-30"
+          title={
+            <>
+              Next 30 days{' '}
+              {summary ? (
+                <span className="text-muted-foreground font-mono text-xs font-normal">
+                  ({summary.next30.length})
+                </span>
+              ) : null}
+            </>
+          }
+          description="Your items with a date coming up"
+          flush
+        >
+          {!summary ? (
+            <Retry org={org} what="Your dates" />
+          ) : summary.next30.length === 0 ? (
+            <p className="text-muted-foreground m-0 px-[22px] py-7 text-center text-[13.5px]">
+              None of your items has a date in the next 30 days.
+            </p>
+          ) : (
+            <WorkList org={org} rows={summary.next30} label="Next 30 days" bare />
+          )}
+        </Card>
+
+        <Card
+          headingId="recent"
+          title="Recent activity"
+          description="The latest changes across your sheets"
+          flush
+        >
+          {!home ? (
+            <Retry org={org} what="Recent activity" />
+          ) : home.recent.length === 0 ? (
+            <p className="text-muted-foreground m-0 px-[22px] py-7 text-center text-[13.5px]">
+              No activity yet. Changes to items show here.
+            </p>
+          ) : (
+            <ol aria-label="Recent activity" className="m-0 list-none p-0">
+              {home.recent.map((r) => (
+                <li key={r.id} className="border-soft border-t first:border-t-0">
+                  <Link
+                    href={`/${org}/s/${r.item.sheetId}?item=${encodeURIComponent(r.item.displayId)}`}
+                    className="hover:bg-subtle flex items-start gap-3 px-[22px] py-2.5 text-[13.5px] outline-offset-[-2px]"
+                  >
+                    <span
+                      aria-hidden
+                      className="bg-soft text-ink-2 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold"
+                    >
+                      {initials(r.who)}
+                    </span>
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span className="break-words">
+                        <span className="font-medium">{r.who}</span> · {r.text}
+                      </span>
+                      <span className="text-muted-foreground truncate font-mono text-[11.5px]">
+                        {r.item.displayId} · {r.item.name} · {r.item.sheetName} ·{' '}
+                        {formatDateTime(r.at, workspace.time_zone)}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Card>
+
+        {canEdit ? (
+          <Card
+            headingId="folders"
+            title="Folders"
+            description="Folders are the sections of the side menu. A folder can be deleted once it is empty."
+          >
+            <FolderManager
+              org={org}
+              folders={nav.folders.map((f) => ({
+                id: f.id,
+                name: f.name,
+                sheetCount: f.sheets.length,
+              }))}
+            />
+          </Card>
+        ) : null}
+      </div>
     </main>
   );
 }
 
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+
 function Retry({ org, what }: { org: string; what: string }) {
   return (
-    <div
-      role="alert"
-      className="border-line flex flex-col items-start gap-2 rounded-[var(--radius-card)] border bg-white p-4"
-    >
+    <div role="alert" className="flex flex-col items-start gap-2 px-[22px] py-4">
       <p className="m-0">{what} could not be loaded.</p>
-      <Link
-        href={`/${org}/home`}
-        className="border-line rounded-md border px-3 py-1.5 text-sm font-semibold"
-      >
-        Retry
-      </Link>
+      <Button asChild variant="outline" size="sm">
+        <Link href={`/${org}/home`}>Retry</Link>
+      </Button>
     </div>
   );
 }

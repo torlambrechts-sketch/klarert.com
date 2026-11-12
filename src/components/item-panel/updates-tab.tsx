@@ -171,7 +171,7 @@ function Body({ text, candidates }: { text: string; candidates: MentionCandidate
   spans.forEach((s, i) => {
     if (s.start > at) parts.push(text.slice(at, s.start));
     parts.push(
-      <strong key={i} className="text-focus font-semibold">
+      <strong key={i} className="text-info font-semibold">
         {text.slice(s.start, s.end)}
       </strong>,
     );

@@ -163,7 +163,7 @@ export function GlobalSearch({ org }: { org: string }) {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        className="border-line bg-soft h-9 w-full min-w-0 rounded-[10px] border pr-8 pl-8 text-[13.5px] outline-none focus:bg-white focus-visible:outline-2 focus-visible:outline-[var(--focus)]"
+        className="border-line placeholder:text-muted-foreground h-9 w-full min-w-0 rounded-md border bg-white pr-8 pl-8 text-[14px] shadow-xs outline-none focus-visible:border-[var(--faint)] focus-visible:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]"
       />
       {open ? (
         <button
@@ -178,7 +178,7 @@ export function GlobalSearch({ org }: { org: string }) {
         </button>
       ) : (
         <kbd
-          className="text-muted-foreground border-line desk-only pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border bg-white px-1.5 font-mono text-[11px]"
+          className="text-muted-foreground border-line bg-subtle desk-only pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border px-1.5 font-mono text-[11px] leading-[18px]"
           aria-hidden
         >
           /
@@ -198,7 +198,7 @@ export function GlobalSearch({ org }: { org: string }) {
         </button>
       ) : null}
       {showList ? (
-        <div className="search-results border-line absolute top-[calc(100%+6px)] right-0 left-0 z-50 max-h-[min(70vh,480px)] overflow-y-auto rounded-[10px] border bg-white p-1 shadow-lg">
+        <div className="search-results border-line absolute top-[calc(100%+6px)] right-0 left-0 z-50 max-h-[min(70vh,480px)] overflow-y-auto rounded-lg border bg-white p-1 shadow-lg">
           <p className="sr-only" role="status" aria-live="polite">
             {state.status === 'ready'
               ? `${options.length} ${options.length === 1 ? 'result' : 'results'}`
@@ -269,10 +269,7 @@ export function GlobalSearch({ org }: { org: string }) {
 
 function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="text-muted-foreground px-2 pt-2 pb-1 text-[11px] font-bold tracking-wide uppercase"
-      aria-hidden
-    >
+    <div className="text-muted-foreground px-2 pt-2 pb-1 text-[12px] font-medium" aria-hidden>
       {children}
     </div>
   );

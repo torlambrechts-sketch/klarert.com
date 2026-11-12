@@ -13,7 +13,7 @@ import { Avatar, cellValue, colorVar } from '@/components/fields/shared';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
-import { GroupTitle, groupTint } from './group-title';
+import { GroupTitle } from './group-title';
 import { useTableGroups } from './use-table-groups';
 import { donePercent } from '@/engine/views/group-by';
 import { buildLayout, byPosition, cardFields, positionsAtEnd, type TableRow } from './table-model';
@@ -124,13 +124,7 @@ export function TableCards({
               style={{ transform: `translateY(${vr.start}px)` }}
             >
               {row.kind === 'group' ? (
-                <div
-                  className="flex items-center rounded-[var(--radius-card)] py-0.5"
-                  style={{
-                    borderLeft: `4px solid ${colorVar(row.group.color)}`,
-                    background: groupTint(row.group.color),
-                  }}
-                >
+                <div className="border-line bg-subtle flex items-center rounded-[var(--radius-card)] border py-0.5">
                   <GroupTitle
                     group={row.group}
                     count={row.count}

@@ -80,10 +80,12 @@ test.describe('desktop', () => {
     const code = (await link.getAttribute('data-testid'))!.replace('rail-sheet-', '');
     await expect(link).toContainText(code);
 
-    // the second panel shows the groups
-    const panel = page.getByRole('complementary', { name: 'Page menu' });
-    await expect(panel.getByRole('link', { name: /All items/ })).toBeVisible();
-    await expect(panel.getByRole('link', { name: /Done/ })).toBeVisible();
+    // the group menu lists the groups
+    await page.getByRole('button', { name: /^Show one group/ }).click();
+    const groupsMenu = page.getByRole('navigation', { name: 'Groups' });
+    await expect(groupsMenu.getByRole('link', { name: /All groups/ })).toBeVisible();
+    await expect(groupsMenu.getByRole('link', { name: /Done/ })).toBeVisible();
+    await page.keyboard.press('Escape');
 
     // fields were created with their types and keys
     await page.getByRole('link', { name: 'Sheet settings' }).click();
@@ -92,24 +94,10 @@ test.describe('desktop', () => {
     await expect(fields.getByText('{evidence_link}')).toBeVisible();
     await expect(fields.getByText('Progress', { exact: true })).toHaveCount(0);
 
-    // keep the menu open: remembered across reloads
-    await page.getByRole('button', { name: 'Keep menu open' }).click();
-    await page.reload();
-    await expect(page.locator('html')).toHaveAttribute('data-rail', 'pinned');
-    await expect(page.getByRole('button', { name: 'Keep menu open' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await page.getByRole('button', { name: 'Keep menu open' }).click();
-    await page.reload();
-    await expect(page.locator('html')).not.toHaveAttribute('data-rail', 'pinned');
-
-    // the second panel collapses and remembers it
-    await page.getByRole('button', { name: 'Collapse page menu' }).click();
-    await page.reload();
-    await expect(page.locator('html')).toHaveAttribute('data-panel', 'collapsed');
-    await page.getByRole('button', { name: 'Expand page menu' }).click();
-    await expect(panel.getByRole('link', { name: /All items/ })).toBeVisible();
+    // Find filters the side menu
+    await rail.getByRole('searchbox', { name: 'Find in menu' }).fill(name);
+    await expect(rail.getByRole('link', { name })).toBeVisible();
+    await expect(rail.getByRole('link', { name: 'Home' })).toHaveCount(0);
   });
 
   test('CSV import detects types, lets the person change them and creates items', async ({
@@ -310,7 +298,7 @@ test.describe('phone', () => {
     await expect(bar).toBeVisible();
     for (const label of ['Home', 'My work', 'Menu', 'Search', 'Inbox'])
       await expect(bar.getByText(label, { exact: true })).toBeVisible();
-    await expect(page.getByRole('complementary', { name: 'Page menu' })).toBeHidden();
+    await expect(page.getByRole('complementary', { name: 'Workspace' })).toBeHidden();
 
     await bar.getByRole('button', { name: 'Menu' }).click();
     const menu = page.getByRole('dialog', { name: 'Menu' });

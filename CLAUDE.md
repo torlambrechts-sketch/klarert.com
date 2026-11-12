@@ -28,7 +28,7 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 ## Stack (do not change without asking)
 
 - Next.js 15 (App Router, React 19, Server Components + Server Actions), TypeScript `strict`
-- Tailwind CSS v4, shadcn/ui (Radix), lucide-react icons, Plus Jakarta Sans + IBM Plex Mono **self-hosted** via `next/font/local` (no Google Fonts requests)
+- Tailwind CSS v4, shadcn/ui (Radix), lucide-react icons, Geist + Geist Mono **self-hosted** via `next/font/local` (no Google Fonts requests)
 - Supabase: Postgres 15+, Auth, Storage, Realtime. **EU region (Frankfurt)**. Local dev with the Supabase CLI
 - Vercel for hosting (region `fra1`) and Vercel Cron for the scheduler
 - TanStack Query (server state, optimistic updates), Zustand (UI state only), Zod (all input), date-fns, `fractional-indexing` (ordering), dnd-kit (drag and drop), TanStack Table + `@tanstack/react-virtual` (grid)
