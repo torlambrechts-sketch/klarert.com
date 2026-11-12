@@ -16,7 +16,9 @@ import { getMyWork } from '@/server/repositories/my-work';
 export const metadata = { title: 'My work · Compliance OS' };
 
 // My work (docs/01 FR-37, docs/05 §4): KPI tiles that filter, then the rows by date. Filters: ?filter=<bucket> and
-// ?sheet=<id> (the second panel lists both with counts).
+// ?sheet=<id> (the second panel lists both with counts). Filter links are plain anchors: the client router at times
+// fetched a search-param-only navigation of this page (it has a parallel @panel slot) and never committed it, so the
+// click did nothing; a document navigation always lands.
 
 const TILES: { bucket: Bucket; icon: typeof AlertTriangle }[] = [
   { bucket: 'overdue', icon: AlertTriangle },
@@ -67,12 +69,12 @@ export default async function MyWorkPage({
           className="border-line flex flex-col items-start gap-2 rounded-[var(--radius-card)] border bg-white p-4"
         >
           <p className="m-0">My work could not be loaded.</p>
-          <Link
+          <a
             href={href(bucket)}
             className="border-line rounded-md border px-3 py-1.5 text-sm font-semibold"
           >
             Retry
-          </Link>
+          </a>
         </div>
       ) : (
         <>
@@ -80,7 +82,7 @@ export default async function MyWorkPage({
             {TILES.map(({ bucket: b, icon: Icon }) => {
               const active = bucket === b;
               return (
-                <Link
+                <a
                   key={b}
                   href={active ? href(null) : href(b)}
                   aria-current={active ? 'page' : undefined}
@@ -101,7 +103,7 @@ export default async function MyWorkPage({
                   >
                     {data.work.counts[b]}
                   </span>
-                </Link>
+                </a>
               );
             })}
           </nav>
@@ -140,9 +142,9 @@ function Rows({
     return (
       <div className="border-line flex flex-col items-start gap-2 rounded-[var(--radius-card)] border border-dashed bg-white p-6">
         <p className="text-muted-foreground m-0">Nothing matches this filter.</p>
-        <Link href={`/${org}/my-work`} className="text-focus font-semibold">
+        <a href={`/${org}/my-work`} className="text-focus font-semibold">
           Show everything
-        </Link>
+        </a>
       </div>
     );
   const title = [bucket ? BUCKET_LABEL[bucket] : null, sheetName].filter(Boolean).join(' · ');
@@ -153,9 +155,9 @@ function Rows({
           <h2 id="work-filtered" className="text-base font-bold">
             {title} <span className="text-muted-foreground font-semibold">({rows.length})</span>
           </h2>
-          <Link href={`/${org}/my-work`} className="text-focus text-sm font-semibold">
+          <a href={`/${org}/my-work`} className="text-focus text-sm font-semibold">
             Clear filter
-          </Link>
+          </a>
         </div>
         <WorkList org={org} rows={rows} label={title} />
       </section>

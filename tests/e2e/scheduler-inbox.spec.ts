@@ -51,6 +51,11 @@ async function freshWorkspace(page: Page, person: string) {
   return slug;
 }
 
+/** The shell is hydrated: the inbox has loaded on the client (links now navigate client-side). */
+async function hydrated(page: Page) {
+  await expect(page.locator('[data-testid="inbox-button"][data-state-loaded]')).toBeVisible();
+}
+
 /** Wait until a popover has gone (it stays the top layer during its exit animation). */
 async function closePopover(page: Page) {
   await page.keyboard.press('Escape');
@@ -151,6 +156,7 @@ test.describe('scheduler', () => {
     ]);
 
     await page.goto(`/meridian/automations?sheet=${sheet.id}`);
+    await hydrated(page);
     const button = page.getByRole('button', { name: 'Run date checks now' });
     await button.click();
     await expect(page.getByText(/^Date checks ran\./).first()).toBeVisible();
@@ -249,6 +255,7 @@ test.describe('inbox, requests and My work', () => {
     await expect(page.getByRole('list', { name: 'Due in 14 days' })).toContainText('Soon audit');
     await expect(page.getByRole('list', { name: 'Requests to me' })).toContainText('Ask me');
     await expect(page.getByText('Nobody')).toHaveCount(0);
+    await hydrated(page);
     await page.getByTestId('kpi-requests').click();
     await expect(page).toHaveURL(/filter=requests/);
     await expect(page.getByTestId('work-row')).toHaveCount(1);
@@ -333,6 +340,7 @@ test.describe('Home and search', () => {
     await expect(page.getByRole('list', { name: 'Recent activity' })).toContainText('Echo survey');
 
     // opening an item's activity log ticks its step
+    await hydrated(page);
     await checklist.getByRole('link', { name: 'Open an item' }).click();
     await page.getByRole('tab', { name: /Activity log/ }).click();
     await expect(page.getByRole('list', { name: 'Activity log' })).toBeVisible();
@@ -345,6 +353,7 @@ test.describe('Home and search', () => {
 
     // search: "/" focuses; a sheet by name
     const box = page.getByRole('combobox', { name: 'Search sheets, items and people' });
+    await hydrated(page);
     await page.locator('body').click({ position: { x: 5, y: 300 } });
     await page.keyboard.press('/');
     await expect(box).toBeFocused();
@@ -365,6 +374,7 @@ test.describe('Home and search', () => {
 
     // items by person; arrows move; Esc closes
     await page.goto(`/${slug}/home`);
+    await hydrated(page);
     await page.locator('body').press('/');
     await box.fill(person.split(' ')[1]!);
     await expect(results.getByRole('option')).toHaveCount(2);
@@ -382,6 +392,7 @@ test.describe('phone', () => {
   test('search expands to the full width of the top bar', async ({ page }) => {
     await signIn(page, 'vic@example.com');
     await page.goto('/meridian/home');
+    await hydrated(page);
     await page
       .getByRole('navigation', { name: 'Bottom bar' })
       .getByRole('button', { name: 'Search' })

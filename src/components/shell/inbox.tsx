@@ -150,6 +150,7 @@ export function Inbox({
         className="hover:bg-soft relative flex h-9 items-center gap-1.5 rounded-md px-2 font-semibold"
         aria-label={unread > 0 ? `Inbox, ${unread} unread` : 'Inbox'}
         data-testid="inbox-button"
+        data-state-loaded={state.status === 'ready' ? '' : undefined}
       >
         <Bell className="size-[18px]" aria-hidden />
         <span className="desk-only">Inbox</span>

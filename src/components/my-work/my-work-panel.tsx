@@ -1,12 +1,12 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { AreaPanel } from '@/components/shell/area-panel';
 
 // Second panel on My work (docs/05 §2.2): the Home area's pages, then filters with counts — Everything, Overdue,
-// Due in 14 days, Assigned to me, Requests to me, then By sheet.
+// Due in 14 days, Assigned to me, Requests to me, then By sheet. Plain anchors, like the page's filter tiles (see
+// src/app/[org]/my-work/page.tsx).
 
 export type PanelCounts = {
   everything: number;
@@ -41,7 +41,7 @@ function Row({
 }) {
   return (
     <li>
-      <Link
+      <a
         href={href}
         aria-current={active ? 'page' : undefined}
         className={cn(
@@ -51,7 +51,7 @@ function Row({
       >
         <span className="truncate">{label}</span>
         <span className="text-[12.5px] tabular-nums">{count}</span>
-      </Link>
+      </a>
     </li>
   );
 }
