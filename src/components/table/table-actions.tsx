@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Archive,
   ChevronDown,
-  ChevronsUpDown,
   CircleDot,
   Columns3,
   FolderInput,
@@ -151,7 +150,7 @@ export function StatusFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
         >
           {label}
         </span>
-        <ChevronsUpDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
+        <ChevronDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-80 w-60">
         <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
@@ -220,7 +219,7 @@ export function OwnerFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
         >
           {label}
         </span>
-        <ChevronsUpDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
+        <ChevronDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-80 w-64">
         <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">

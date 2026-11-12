@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { ArrowDownUp, Filter, Plus, Search, X } from 'lucide-react';
+import { ArrowDownUp, ChevronDown, Filter, Plus, Search, X } from 'lucide-react';
 import { OPERATORS, kindOfKey, OP_LABEL, SPECIAL_KEYS } from '@/engine/conditions';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { ValueKind } from '@/engine/fields/types';
@@ -382,6 +382,10 @@ function ValueInput({
 
 // ───────────────────────── sort ─────────────────────────
 
+/** A select-style toolbar trigger: 38 px, 14 px words, a chevron at the end (the design's board toolbar). */
+const toolbarSelect =
+  'border-line hover:bg-subtle focus-visible:outline-focus flex h-[38px] max-w-[240px] min-w-[150px] items-center gap-2 rounded-md border bg-white pr-2.5 pl-3 text-[14px] focus-visible:outline-2';
+
 export function SortButton({
   config,
   setConfig,
@@ -400,13 +404,9 @@ export function SortButton({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-[38px] max-w-[240px] justify-start shadow-none"
-        >
-          <ArrowDownUp aria-hidden />
-          <span className="min-w-0 truncate">
+        <button type="button" className={toolbarSelect}>
+          <ArrowDownUp className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 truncate text-left">
             {rules.length ? `Sorted by ${keyLabel(rules[0]!.fieldKey, ctx)}` : 'Default order'}
           </span>
           {rules.length > 1 ? (
@@ -415,7 +415,8 @@ export function SortButton({
               <span className="sr-only"> more</span>
             </span>
           ) : null}
-        </Button>
+          <ChevronDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
+        </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[min(440px,calc(100vw-24px))]">
         <div className="flex flex-col gap-3">

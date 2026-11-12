@@ -70,7 +70,7 @@ function TabLink({
       }}
       className={cn(
         // the focus ring shows for keyboard focus only (focus-visible), never as a box around the active tab
-        'focus-visible:outline-focus relative flex h-10 items-center gap-[7px] rounded-sm px-px text-[14px] whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
+        'focus-visible:outline-focus relative flex h-[40px] items-center gap-[7px] rounded-sm px-px text-[14px] whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
         active
           ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-sm after:bg-[var(--ink)]'
           : 'text-muted-foreground hover:text-ink',
@@ -96,9 +96,11 @@ export function ViewTabs({
   views,
   fields,
   end,
+  className,
 }: {
   views: ViewsState;
   fields: Field[];
+  className?: string;
   /** Controls at the right end of the tab bar (view options, settings). */
   end?: React.ReactNode;
 }) {
@@ -113,7 +115,7 @@ export function ViewTabs({
   return (
     <nav
       aria-label="Views"
-      className="border-line mt-[18px] flex min-w-0 items-center gap-2 border-b"
+      className={cn('border-line mt-[18px] flex min-w-0 items-center gap-2 border-b', className)}
     >
       <ul className="m-0 flex min-w-0 flex-1 [scrollbar-width:none] list-none items-center gap-[22px] overflow-x-auto p-0">
         <li>

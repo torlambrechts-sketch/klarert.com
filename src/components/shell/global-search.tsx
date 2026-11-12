@@ -136,7 +136,7 @@ export function GlobalSearch({ org }: { org: string }) {
     <form
       ref={box}
       role="search"
-      className="search-box relative min-w-0 flex-1 sm:max-w-[520px]"
+      className="search-box relative min-w-0 flex-1 min-[760px]:w-[260px] min-[760px]:flex-none"
       data-open={open ? '' : undefined}
       onSubmit={(e) => e.preventDefault()}
     >
@@ -155,7 +155,7 @@ export function GlobalSearch({ org }: { org: string }) {
         aria-activedescendant={showList && options.length > 0 ? optionId(active) : undefined}
         autoComplete="off"
         spellCheck={false}
-        placeholder="Search sheets, items and people"
+        placeholder="Search"
         value={text}
         onChange={(e) => {
           setText(e.target.value);
@@ -163,7 +163,7 @@ export function GlobalSearch({ org }: { org: string }) {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        className="border-line placeholder:text-muted-foreground h-9 w-full min-w-0 rounded-md border bg-white pr-8 pl-8 text-[14px] shadow-xs outline-none focus-visible:border-[var(--faint)] focus-visible:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]"
+        className="border-line placeholder:text-muted-foreground h-8 w-full min-w-0 rounded-md border bg-white pr-8 pl-8 text-[13.5px] outline-none focus-visible:border-[var(--faint)] focus-visible:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]"
       />
       {open ? (
         <button
@@ -198,7 +198,7 @@ export function GlobalSearch({ org }: { org: string }) {
         </button>
       ) : null}
       {showList ? (
-        <div className="search-results border-line absolute top-[calc(100%+6px)] right-0 left-0 z-50 max-h-[min(70vh,480px)] overflow-y-auto rounded-lg border bg-white p-1 shadow-lg">
+        <div className="search-results border-line absolute top-[calc(100%+6px)] right-0 left-0 z-50 max-h-[min(70vh,480px)] overflow-y-auto rounded-lg border bg-white p-1 shadow-lg min-[760px]:left-auto min-[760px]:w-[420px]">
           <p className="sr-only" role="status" aria-live="polite">
             {state.status === 'ready'
               ? `${options.length} ${options.length === 1 ? 'result' : 'results'}`

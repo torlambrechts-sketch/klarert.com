@@ -447,11 +447,12 @@ test('a sheet of 10 000 items and 30 fields scrolls without errors', async ({ pa
   await expect(g.getByText('Row 00001', { exact: true })).toBeVisible();
   // only a window of rows and columns is in the DOM
   expect(await g.getByRole('gridcell').count()).toBeLessThan(1500);
+  // rows scroll with the page; columns scroll inside the grid
   for (const top of [50_000, 150_000, 300_000]) {
-    await g.evaluate((el, y) => (el.scrollTop = y), top);
+    await page.evaluate((y) => window.scrollTo(0, y), top);
     await page.waitForTimeout(100);
   }
-  await g.evaluate((el) => (el.scrollTop = el.scrollHeight));
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect(g.getByText('Row 10000', { exact: true })).toBeVisible();
   await g.evaluate((el) => (el.scrollLeft = el.scrollWidth));
   await expect(g.getByRole('button', { name: 'Extra 25 column menu' }).first()).toBeVisible();
