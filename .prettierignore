@@ -10,3 +10,4 @@ test-results/
 src/lib/database.types.ts
 *.md
 scripts/test-migration.mjs
+.claude/
