@@ -60,7 +60,7 @@ function zoneOffset(t: number, timeZone: string): number {
 }
 
 /** Midnight at the start of an ISO date in a time zone, as epoch ms. */
-function zonedMidnight(iso: string, timeZone: string): number {
+export function zonedMidnight(iso: string, timeZone: string): number {
   const guess = Date.parse(`${iso}T00:00:00Z`);
   const t = guess - zoneOffset(guess, timeZone);
   return guess - zoneOffset(t, timeZone);
