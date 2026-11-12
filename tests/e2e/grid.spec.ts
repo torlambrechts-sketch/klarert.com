@@ -240,6 +240,8 @@ test('add a field from the picker, change its settings and change its type with 
 
   await grid(page).getByRole('button', { name: 'Add a field' }).first().click();
   await page.getByRole('button', { name: 'Number', exact: true }).click();
+  await expect(page.getByLabel('Field name')).toHaveValue('Number');
+  await page.getByRole('button', { name: 'Add field' }).click();
   await expect(page.getByText('Field added.')).toBeVisible();
   await expect(
     grid(page).getByRole('button', { name: 'Number column menu' }).first(),

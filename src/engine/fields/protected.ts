@@ -48,8 +48,6 @@ export const protectedText = base<ProtectedValue, ProtectedConfig>({
   compare: (a, b) => emptyLast(a, b, sortEmpty, (x, y) => cmpText(x!, y!)),
 });
 
-export { protectedText as protected };
-
 /** Whether a person may read (and, as an editor, write) a protected field: admins, or people the field lists. */
 export function canReadProtected(
   field: Field<ProtectedConfig>,

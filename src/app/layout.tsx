@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OfflineBanner } from '@/components/states/offline-banner';
 import { Toaster } from '@/components/ui/sonner';
 import { jakarta, plexMono } from './fonts';
 import './globals.css';
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${plexMono.variable}`}>
       <body>
+        <OfflineBanner />
         {children}
         <Toaster />
       </body>

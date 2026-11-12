@@ -41,6 +41,7 @@ import { FilterButton, SheetSearch, SortButton } from '@/components/views/filter
 import { FormView } from '@/components/views/form-view';
 import { KanbanView } from '@/components/views/kanban-view';
 import { NewItemDialog, type NewItemRequest } from '@/components/views/new-item-dialog';
+import { useOnline } from '@/components/states/use-online';
 import { useViewItems } from '@/components/views/use-view-items';
 import { useViews, type ViewsState } from '@/components/views/use-views';
 import { ViewMenu, ViewTabs } from '@/components/views/view-tabs';
@@ -50,7 +51,13 @@ import { FieldSettings } from './field-settings';
 import { Grid } from './grid';
 import { positionsAtEnd } from './grid-model';
 import { createGridStore, GridStoreContext, useGrid, useGridStore } from './grid-store';
-import { useSheetActions, useSheetQuery, useSheetRealtime, type SheetActions } from './use-sheet';
+import {
+  useRelatedRealtime,
+  useSheetActions,
+  useSheetQuery,
+  useSheetRealtime,
+  type SheetActions,
+} from './use-sheet';
 
 // The sheet page's client part: data (TanStack Query + realtime), the view tabs and the header actions (search,
 // filters, sort, columns), the active view (List, Grid, Kanban, Calendar, Form), the bulk bar for selected rows, the
@@ -83,22 +90,6 @@ export function SheetView(props: SheetViewProps) {
       </GridStoreContext.Provider>
     </QueryClientProvider>
   );
-}
-
-function useOnline() {
-  const [online, setOnline] = useState(true);
-  useEffect(() => {
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    setOnline(navigator.onLine);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
-    return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
-    };
-  }, []);
-  return online;
 }
 
 function useNarrow() {
@@ -161,6 +152,7 @@ function SheetBody(props: SheetViewProps) {
   const query = useSheetQuery(sheetId);
   const actions = useSheetActions(org, sheetId);
   const realtime = useSheetRealtime(sheetId, actions.pending);
+  useRelatedRealtime(sheetId, query.data?.related.sheets.map((s) => s.id) ?? []);
   const online = useOnline();
   const narrow = useNarrow();
   const canEdit = role !== 'viewer';
@@ -287,14 +279,6 @@ function SheetBody(props: SheetViewProps) {
           </Button>
         </div>
       </div>
-      {!online ? (
-        <p
-          role="status"
-          className="border-warn/40 text-warn rounded-[var(--radius-card)] border bg-[#FFF8E6] px-3 py-2 text-sm"
-        >
-          You are offline. Changes will fail until you reconnect.
-        </p>
-      ) : null}
       {!canEdit ? (
         <p className="text-muted-foreground text-sm">
           You can view this sheet. Ask an editor or admin to change it.
@@ -551,10 +535,10 @@ function ViewBody({
             Choose the type of the new field.
           </DialogDescription>
           <FieldPicker
-            onPick={(type) => {
+            onPick={(type, name) => {
               const at = store.getState().addFieldAt ?? undefined;
               store.getState().openAddField(null);
-              void actions.addField(type, at);
+              void actions.addField(type, at, name);
             }}
           />
         </DialogContent>

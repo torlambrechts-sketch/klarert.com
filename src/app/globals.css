@@ -27,6 +27,13 @@
   --label-pink: #c24e88;
   --label-purple: #7e52c6;
   --label-dark: #55606b;
+  /* fills behind white text (solid status blocks, action-needed pills): the label colour, darkened just enough
+     for 4.5:1 where it falls short (WCAG 2.1 AA, M10 axe pass) */
+  --solid-grey: #71767b;
+  --solid-yellow: #907218;
+  --solid-green: #18874e;
+  --solid-orange: #b26009;
+  --solid-pink: #c04d87;
 
   --radius-card: 4px;
   --radius-control: 8px;

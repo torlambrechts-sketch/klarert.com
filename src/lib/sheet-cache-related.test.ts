@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptySheetData } from '@/engine/sheet-data';
 import { makeField, makeFile, makeItem, sheet } from '@/engine/testing/fixtures';
-import { addFile, addRelated, missingItems } from './sheet-cache';
+import { addFile, addRelated, missingItems, patchRelated } from './sheet-cache';
 
 const own = makeItem({}, { id: 'a' });
 const base = { ...emptySheetData(sheet), items: [own] };
@@ -20,6 +20,16 @@ describe('related items loaded on demand', () => {
       newer,
     ]);
     expect(addRelated(d, { items: [], sheets: [], fields: [] })).toBe(d);
+  });
+
+  it('replaces a related item from realtime, drops it when archived, ignores unknown items', () => {
+    const d = addRelated(base, { items: [risk], sheets: [other], fields: [] });
+    const done = { ...risk, values: { rf: 'Low' } };
+    expect(patchRelated(d, done).related.items).toEqual([done]);
+    expect(patchRelated(d, { ...risk, archivedAt: '2026-11-11T09:00:00Z' }).related.items).toEqual(
+      [],
+    );
+    expect(patchRelated(d, makeItem({}, { id: 'unknown', sheetId: 's-risks' }))).toBe(d);
   });
 
   it('lists ids the cache cannot show', () => {

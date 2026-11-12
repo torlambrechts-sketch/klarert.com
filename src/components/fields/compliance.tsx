@@ -521,7 +521,7 @@ function RiskEditor({ value, field, onCommit, onCancel }: EditorProps) {
         <div
           className="grid gap-0.5"
           style={{ gridTemplateColumns: `repeat(${n}, 2rem)` }}
-          role="grid"
+          role="group"
           aria-label="Likelihood by impact"
         >
           {Array.from({ length: n }, (_, r) => n - r).map((l) =>

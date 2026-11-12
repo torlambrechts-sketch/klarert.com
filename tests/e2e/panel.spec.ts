@@ -54,6 +54,7 @@ async function addField(page: Page, search: string, label: RegExp) {
   await grid(page).getByRole('button', { name: 'Add a field' }).first().click();
   await page.getByLabel('Search field types').fill(search);
   await page.getByRole('button', { name: label }).first().click();
+  await page.getByRole('button', { name: 'Add field' }).click();
   await expect(page.getByText('Field added.')).toBeVisible();
 }
 
@@ -397,12 +398,11 @@ test.describe('desktop', () => {
       '100%',
     );
 
-    // the risks sheet got the inverse field, filled in both directions
+    // the risks sheet got the inverse field, named after what the actions sheet calls its items (Task), filled in
+    // both directions
     await page.goto(risksUrl);
     await expect(
-      grid(page)
-        .getByRole('button', { name: `${actionsName} column menu` })
-        .first(),
+      grid(page).getByRole('button', { name: 'Task column menu' }).first(),
     ).toBeVisible();
     const action = await itemByName(page, actionsUrl, 'Fix the handrail');
     await expect(grid(page).getByRole('row').filter({ hasText: 'Loose handrail' })).toContainText(
@@ -415,7 +415,7 @@ test.describe('desktop', () => {
 
     // editing the other side updates both: unlink from the risk
     await panel(page)
-      .getByRole('button', { name: new RegExp(`^Edit ${actionsName}`) })
+      .getByRole('button', { name: /^Edit Task/ })
       .click();
     await page.getByRole('button', { name: `Remove ${action.display_id}` }).click();
     await page.getByRole('button', { name: 'Save', exact: true }).click();

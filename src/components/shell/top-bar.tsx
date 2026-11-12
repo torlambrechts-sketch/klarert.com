@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { solidVar } from '@/components/fields/shared';
 import { GlobalSearch } from './global-search';
 import { Inbox } from './inbox';
 import { initialsOf } from './rail';
@@ -105,8 +106,8 @@ export function TopBar({
         <DropdownMenu>
           <DropdownMenuTrigger
             className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-            style={{ background: `var(--label-${me.color}, var(--label-blue))` }}
-            aria-label={`Account menu for ${me.displayName}`}
+            style={{ background: solidVar(me.color) }}
+            aria-label={`${me.initials}: account menu for ${me.displayName}`}
           >
             {me.initials}
           </DropdownMenuTrigger>

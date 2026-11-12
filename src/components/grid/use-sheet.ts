@@ -29,6 +29,7 @@ import {
   addRelated,
   missingItems,
   moveItem,
+  patchRelated,
   patchItem,
   removeField,
   removeGroup,
@@ -42,7 +43,7 @@ import {
   upsertItem,
   upsertLink,
 } from '@/lib/sheet-cache';
-import { fetchRelated, fetchSheetData } from '@/lib/sheet-query';
+import { fetchItemsById, fetchRelated, fetchSheetData } from '@/lib/sheet-query';
 import {
   toField,
   toGroup,
@@ -193,6 +194,64 @@ export function useSheetRealtime(sheetId: string, pending: Pending): RealtimeSta
     };
   }, [qc, sheetId, pending]);
   return status;
+}
+
+/**
+ * Items of the sheets this sheet links to (docs/07 B4: "Actions done" follows an action closed elsewhere without a
+ * refresh). One channel for all of them; it is rebuilt when the set of related sheets changes.
+ */
+export function useRelatedRealtime(sheetId: string, relatedSheetIds: string[]) {
+  const qc = useQueryClient();
+  const ids = [...new Set(relatedSheetIds)]
+    .filter((id) => id !== sheetId)
+    .sort()
+    .join(',');
+  useEffect(() => {
+    if (!ids) return;
+    const db = createClient();
+    const key = sheetKey(sheetId);
+    let cancelled = false;
+    let channel: ReturnType<typeof db.channel> | null = null;
+    // read the related items again: when the channel (re)joins, an update made before it joined was not sent, and
+    // every 30 s while the page is visible, because the realtime service can drop events (docs/02 §9)
+    const refresh = async () => {
+      const related = qc.getQueryData<SheetData>(key)?.related.items.map((i) => i.id) ?? [];
+      if (cancelled || related.length === 0) return;
+      try {
+        const fresh = await fetchItemsById(db, related.slice(0, 500));
+        qc.setQueryData<SheetData>(key, (d) => (d ? fresh.reduce(patchRelated, d) : d));
+      } catch {
+        // the next event or refresh brings them
+      }
+    };
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') void refresh();
+    }, 30_000);
+    (async () => {
+      const { data } = await db.auth.getSession();
+      if (cancelled) return;
+      if (data.session) db.realtime.setAuth(data.session.access_token);
+      channel = db
+        .channel(`related:${sheetId}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'items', filter: `sheet_id=in.(${ids})` },
+          (p) => {
+            const row = p.new as ItemDbRow | undefined;
+            if (!row?.id) return;
+            qc.setQueryData<SheetData>(key, (d) => (d ? patchRelated(d, toItem(row)) : d));
+          },
+        )
+        .subscribe((s) => {
+          if (s === 'SUBSCRIBED') void refresh();
+        });
+    })();
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      if (channel) void db.removeChannel(channel);
+    };
+  }, [qc, sheetId, ids]);
 }
 
 /** Fetch the given items (and their sheets and fields) into `related` when the cache lacks them. */
@@ -581,12 +640,14 @@ export function useSheetActions(org: string, sheetId: string) {
           clickButtonAction({ org, sheetId, itemId: item.id, fieldId: field.id }),
         );
         if (!r.ok) return showError(r.error);
+        const settled = r.data.item;
+        if (settled && !settled.archivedAt) patch((d) => upsertItem(d, settled));
         showMessages(r.data.messages);
       } finally {
         useRunningButtons.getState().stop(key);
       }
     },
-    [org, run, sheetId],
+    [org, patch, run, sheetId],
   );
 
   // ───────────── fields ─────────────
@@ -605,8 +666,11 @@ export function useSheetActions(org: string, sheetId: string) {
   );
 
   const addField = useCallback(
-    async (type: string, at?: { beforeFieldId?: string; afterFieldId?: string }) =>
-      fieldResult(await run(() => addFieldAction({ org, sheetId, type, ...at })), 'Field added.'),
+    async (type: string, at?: { beforeFieldId?: string; afterFieldId?: string }, name?: string) =>
+      fieldResult(
+        await run(() => addFieldAction({ org, sheetId, type, ...at, ...(name ? { name } : {}) })),
+        'Field added.',
+      ),
     [fieldResult, org, run, sheetId],
   );
 

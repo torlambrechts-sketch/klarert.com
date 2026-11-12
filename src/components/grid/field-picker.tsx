@@ -1,12 +1,15 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { fieldType, typesByFamily } from '@/engine/fields/registry';
 import { fieldUI } from '@/components/fields/registry';
 import { inputClass } from '@/components/fields/shared';
+import { Button } from '@/components/ui/button';
 
-// The add-field picker (docs/05 §3.5, FR-15): search, the 12 essentials, and every type grouped by family.
+// The add-field picker (docs/05 §3.5, FR-15): search, the 12 essentials, and every type grouped by family; then the
+// field's name. The key is made from the name when the field is created and never changes afterwards (CLAUDE.md
+// rule 5), so the name is asked for here: a Formula named "Priority score" gets the key {priority_score}.
 
 const ESSENTIALS = [
   'text',
@@ -23,7 +26,60 @@ const ESSENTIALS = [
   'formula',
 ] as const;
 
-export function FieldPicker({ onPick }: { onPick(type: string): void }) {
+export function FieldPicker({ onPick }: { onPick(type: string, name: string): void }) {
+  const [type, setType] = useState<string | null>(null);
+  if (type)
+    return (
+      <NameStep type={type} onBack={() => setType(null)} onAdd={(name) => onPick(type, name)} />
+    );
+  return <TypeStep onPick={setType} />;
+}
+
+function NameStep(p: { type: string; onBack(): void; onAdd(name: string): void }) {
+  const label = fieldType(p.type)?.label ?? 'Field';
+  const [name, setName] = useState(label);
+  const id = useId();
+  const Icon = fieldUI(p.type).icon;
+  const trimmed = name.trim();
+  return (
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (trimmed) p.onAdd(trimmed);
+      }}
+    >
+      <p className="flex items-center gap-1.5 text-sm font-semibold">
+        <Icon className="size-4" aria-hidden /> {label}
+      </p>
+      <label htmlFor={id} className="flex flex-col gap-1 text-sm font-semibold">
+        Field name
+        <input
+          id={id}
+          autoFocus
+          onFocus={(e) => e.currentTarget.select()}
+          className={inputClass}
+          value={name}
+          maxLength={80}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </label>
+      <p className="text-muted-foreground text-xs">
+        Formulas and templates use its key, made from this name. Renaming it later keeps the key.
+      </p>
+      <div className="flex justify-end gap-2">
+        <Button type="button" size="sm" variant="outline" onClick={p.onBack}>
+          Back
+        </Button>
+        <Button type="submit" size="sm" disabled={!trimmed}>
+          Add field
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function TypeStep({ onPick }: { onPick(type: string): void }) {
   const [query, setQuery] = useState('');
   const [all, setAll] = useState(false);
   const q = query.trim().toLowerCase();

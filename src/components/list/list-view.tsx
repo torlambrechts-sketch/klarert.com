@@ -13,7 +13,7 @@ import { groupRows } from '@/engine/views/apply';
 import { PAGE_SIZES, type PageSize, type ViewConfig } from '@/engine/views/config';
 import { paginate } from '@/engine/views/pagination';
 import { fieldUI } from '@/components/fields/registry';
-import { cellValue, colorVar } from '@/components/fields/shared';
+import { cellValue, colorVar, displayText } from '@/components/fields/shared';
 import { FieldPicker } from '@/components/grid/field-picker';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import { useValueCommit } from '@/components/grid/use-commit';
@@ -238,7 +238,12 @@ function LockedMark() {
   const text = 'Kept by the app. You can hide it, not delete it.';
   return (
     <span className="group/lock relative inline-flex">
-      <span tabIndex={0} aria-label={text} className="inline-flex rounded outline-offset-2">
+      <span
+        role="img"
+        tabIndex={0}
+        aria-label={text}
+        className="inline-flex rounded outline-offset-2"
+      >
         <Lock className="size-3 opacity-60" aria-hidden />
       </span>
       <span
@@ -350,9 +355,9 @@ function Table(
                     </PopoverTrigger>
                     <PopoverContent align="end" className="w-80">
                       <FieldPicker
-                        onPick={(type) => {
+                        onPick={(type, name) => {
                           setPickerOpen(false);
-                          void p.actions.addField(type);
+                          void p.actions.addField(type, undefined, name);
                         }}
                       />
                     </PopoverContent>
@@ -571,10 +576,12 @@ function Cell({
 }) {
   const ui = fieldUI(field.type);
   const value = cellValue(item, field, ctx);
+  const text = displayText(field, value, ctx);
   const trigger = (
     <button
       type="button"
-      aria-label={`${field.name} of ${item.name}`}
+      // the shown value is part of the name (WCAG 2.5.3 label in name)
+      aria-label={`${field.name} of ${item.name}${text ? `: ${text}` : ''}`}
       onClick={onEdit}
       className="flex min-h-9 w-full min-w-0 items-center px-3 py-1.5 text-left hover:bg-white hover:shadow-[inset_0_0_0_1.5px_#9AA3B5] focus-visible:shadow-[inset_0_0_0_2px_var(--focus)] focus-visible:outline-none"
     >

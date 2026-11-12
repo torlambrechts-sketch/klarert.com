@@ -26,6 +26,7 @@ export const date = base<string, DateConfig>({
   toText: (v) => (v ? formatDate(v) : ''),
   toDate: (v) => v ?? null,
   compare: (a, b) => emptyLast(a, b, isBlank, cmpText),
+  isDeadline: (cfg) => cfg.relative === true,
 });
 
 /** "in 3 days" / "today" / "2 days overdue" — the cell suffix when the item is not done (docs/03 §3.1). */

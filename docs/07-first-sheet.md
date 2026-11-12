@@ -50,3 +50,31 @@ Signed in as Maria (owner) in an empty workspace.
 | B12 | Archive "Shared admin account on firewall", then search for it | Not in views or search; restore brings it back; the activity log shows archive and restore |
 
 When every row passes: the core is ready for the first pack.
+
+## How the automated walkthrough runs (M10)
+
+`tests/e2e/first-sheet.spec.ts` (desktop project; the phone layout is step 11):
+
+- **Workspaces.** Part A seeds an empty workspace (`SEED_WORKSPACE=<slug> SEED_SHEETS=0`, people, teams, job roles and
+  the folder "Your sheets"); Part B seeds a fresh workspace with the template (`SEED_WORKSPACE=<slug>`). Every run
+  uses new workspaces, so runs never share data. Part B's rows build on each other and run in order.
+- **Clock.** The template's dates are relative (`$in:N`, `$today`), so the test uses the real date in Europe/London
+  instead of a fixed "today"; the expected values are computed from it (CA-001 is due in 5 days, its score is 17).
+- **Step 2** uses the Grid's "+ Add corrective action" row: the List view has no add row (docs/05 §3.1); its
+  "+ New" button opens a dialog.
+- **Step 3** names each field in the add-field popover, so keys come from the names (`priority_score`).
+- **Step 4**: the inverse link field is named after the source sheet's item label ("Corrective action").
+- **B7** checks My work through its Requests filter (an item shows in one section only; this one is due soon).
+- **B8** uses three automations: Ping (Corrective action becomes Investigating → set the linked actions Working on
+  it), Pong (an action's status changes → set its corrective action to Action set) and Ping again (Action set → set
+  the actions to Not started and the corrective action to Investigating). Each automation runs once per item in a
+  chain (docs/04 §7), so the chain grows through CA-001's two actions: Ping (0) → Pong ACT-003 (1) → Ping again (2) →
+  Pong ACT-001 (3) → Ping again at depth 4 is stopped.
+- **B9** moves the webhook row's next attempt to now between worker runs (directly in the local database) and checks
+  the waits grow (1, 5, 30, 120 minutes) until the fifth failure makes it a dead letter.
+- **B11** creates the form view, its public link and a `form_submitted` automation over REST first; the template has
+  neither.
+- **B12** restores the item from Sheet settings → Archived items.
+
+The template is loaded by `pnpm seed` (the importer, `src/server/templates/importer.ts`); there is no Settings →
+Import template page in the MVP.

@@ -200,6 +200,19 @@ export function addRelated(data: SheetData, more: SheetData['related']): SheetDa
   };
 }
 
+/**
+ * A newer row of an item on another sheet (realtime): replaces the related copy so lookups, rollups and progress
+ * follow it live; an archived one leaves. Items the sheet has not loaded are ignored.
+ */
+export function patchRelated(data: SheetData, item: Item): SheetData {
+  const at = data.related.items.findIndex((i) => i.id === item.id);
+  if (at < 0) return data;
+  const items = item.archivedAt
+    ? data.related.items.filter((i) => i.id !== item.id)
+    : data.related.items.map((i, j) => (j === at ? item : i));
+  return { ...data, related: { ...data.related, items } };
+}
+
 /** Ids among `ids` the cache cannot show yet (neither the sheet's items nor related items). */
 export function missingItems(data: SheetData, ids: Iterable<string>): string[] {
   const known = new Set([...data.items, ...data.related.items].map((i) => i.id));

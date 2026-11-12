@@ -143,6 +143,7 @@ test('List view: popover editing, add a field, locks, hint and pagination', asyn
   // "+" adds a field
   await page.getByRole('button', { name: 'Add a field' }).click();
   await page.getByRole('button', { name: /^Text/ }).first().click();
+  await page.getByRole('button', { name: 'Add field' }).click();
   await expect(headers.filter({ hasText: /^Text$/ })).toBeVisible();
 
   // the hint goes and stays gone

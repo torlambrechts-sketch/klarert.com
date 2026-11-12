@@ -616,7 +616,9 @@ export async function setLinks(input: unknown): Promise<Result<LinksResult>> {
 // ───────────────────────── buttons ─────────────────────────
 
 /** A button cell emits a `button_clicked` event (docs/04); the runner decides what happens. */
-export async function clickButton(input: unknown): Promise<Result<{ messages: string[] }>> {
+export async function clickButton(
+  input: unknown,
+): Promise<Result<{ messages: string[]; item: Item | null }>> {
   const p = clickButtonInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   const v = p.data;
@@ -645,8 +647,11 @@ export async function clickButton(input: unknown): Promise<Result<{ messages: st
         ],
         { orgId, userId: user.id, workspace: v.org },
       );
-      if (outcome.runs.length > 0 || outcome.messages.length > 0)
-        return ok({ messages: outcome.messages });
+      if (outcome.runs.length > 0 || outcome.messages.length > 0) {
+        // the item as the automations left it: the answer must not depend on the realtime echo arriving
+        const [fresh] = await fetchItemsById(supabase, [v.itemId]);
+        return ok({ messages: outcome.messages, item: fresh ?? null });
+      }
       const { count } = await supabase
         .from('automations')
         .select('id', { count: 'exact', head: true })
@@ -655,6 +660,7 @@ export async function clickButton(input: unknown): Promise<Result<{ messages: st
         .eq('trigger->>type', 'button_clicked')
         .eq('trigger->>fieldKey', field.key);
       return ok({
+        item: null,
         messages: [
           (count ?? 0) === 0
             ? 'No automation uses this button yet.'

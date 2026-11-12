@@ -97,7 +97,7 @@ export function ColumnsStart({
               : {}),
           })),
         }),
-      () => ({ text: 'Sheet created.' }),
+      () => ({ text: 'Sheet created. Add your first item.' }),
       ctx.org,
     );
   }

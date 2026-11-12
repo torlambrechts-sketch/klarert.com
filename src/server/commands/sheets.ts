@@ -198,7 +198,7 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
         const inverse = await createInverseField(
           supabase,
           orgId,
-          { fieldId: f.id, sheetId, sheetName: v.name },
+          { fieldId: f.id, sheetId, itemLabel: v.itemLabel },
           c.targetSheetId,
         );
         if (!inverse.ok) return inverse;

@@ -104,6 +104,25 @@ export async function getFields(sheetId: string) {
   return data ?? [];
 }
 
+/** Archived items of a sheet, newest first (FR-13: they can be restored from the sheet settings). */
+export async function getArchivedItems(sheetId: string) {
+  const session = await getSession();
+  if (!session) return [];
+  const { data } = await session.supabase
+    .from('items')
+    .select('id, display_id, name, archived_at')
+    .eq('sheet_id', sheetId)
+    .not('archived_at', 'is', null)
+    .order('archived_at', { ascending: false })
+    .limit(200);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    displayId: r.display_id,
+    name: r.name,
+    archivedAt: r.archived_at!,
+  }));
+}
+
 /** Prefixes in use (archived sheets keep theirs) and sheets that can be copied. */
 export async function getWizardData(orgId: string) {
   const session = await getSession();
