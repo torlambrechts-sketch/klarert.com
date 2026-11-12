@@ -8,15 +8,16 @@ select ok(not has_function_privilege('anon', '_create_item(uuid, uuid, text, tex
   'signed-out visitors cannot call _create_item');
 select ok(not has_function_privilege('authenticated', '_create_item(uuid, uuid, text, text, jsonb, text, uuid)', 'execute'),
   'signed-in people cannot call _create_item directly');
-select ok(has_function_privilege('anon', 'submit_public_form(text, text, text, jsonb, text, text)', 'execute'),
-  'signed-out visitors can still submit public forms (through the rate-limited entry point, 0009)');
+select ok(not has_function_privilege('anon', 'submit_public_form(text, text, text, jsonb, text, text)', 'execute')
+       and has_function_privilege('service_role', 'submit_public_form(text, text, text, jsonb, text, text)', 'execute'),
+  'public form submits go only through the route (service role), so the IP hash cannot be forged');
 select ok(has_function_privilege('authenticated', 'create_item(uuid, uuid, text, text, jsonb, uuid)', 'execute'),
   'signed-in people still call create_item, which checks permissions');
 select bag_eq(
   $$ select p.proname::text from pg_proc p
       where p.pronamespace = 'public'::regnamespace and p.prorettype <> 'trigger'::regtype
         and has_function_privilege('anon', p.oid, 'execute') $$,
-  $$ values ('submit_public_form'), ('get_public_form'), ('is_member'), ('has_role'), ('is_editor'), ('is_admin'), ('can_write'),
+  $$ values ('get_public_form'), ('is_member'), ('has_role'), ('is_editor'), ('is_admin'), ('can_write'),
             ('actor_kind_for'), ('activity_hash'), ('field_types'), ('non_value_types') $$,
   'signed-out visitors can run only public forms and the read-only helpers RLS uses');
 

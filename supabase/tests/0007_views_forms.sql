@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(24);
+select plan(25);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000009a1', 'owner@v.test'),
@@ -84,6 +84,10 @@ select is((get_public_form(repeat('ab', 32))->'fields'->0->>'key'), 'where_seen'
 select is(jsonb_array_length(get_public_form(repeat('ab', 32))->'fields'), 1, 'and only the fields on the form');
 select is(get_public_form(repeat('cd', 32)), null, 'a disabled link shows no form');
 
+select throws_ok($$ select submit_public_form(repeat('ab', 32), repeat('9', 64), 'Direct', '{}', 'a1', '') $$,
+  '42501', null, 'signed-out callers cannot call submit_public_form directly');
+reset role;
+set local role service_role;
 select is((submit_public_form(repeat('ab', 32), repeat('1', 64), 'Spill near bay 3',
   '{"a9a9a9a9-3333-0000-0000-000000000001":"Bay 3"}', 'a0', ''))->>'ok', 'true', 'a visitor submits the form');
 select is((submit_public_form(repeat('ab', 32), repeat('2', 64), 'Sneaky',

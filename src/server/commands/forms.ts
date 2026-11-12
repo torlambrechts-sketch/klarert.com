@@ -1,6 +1,6 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
-import { createClient as createSupabase } from '@supabase/supabase-js';
+import { createClient as createSupabase, type SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { keyBetween } from '@/engine/ordering';
 import type { Ctx, Field, Json } from '@/engine/types';
@@ -15,9 +15,10 @@ import { fail, invalid, ok, type Result } from '@/server/result';
 import { newId } from '@/server/sheet-context';
 import { log } from './context';
 
-// Public forms (docs/01 FR-25, /f/[token]): no session, no service role. The visitor's requests use the anon key and
-// two functions granted to anon: get_public_form (the layout and only its fields) and submit_public_form (rate limit
-// 10/min per hashed IP, honeypot, only fields on the form, then submit_form). The answers are checked with the field
+// Public forms (docs/01 FR-25, /f/[token]): no session. Reading uses the anon key and get_public_form (the layout and
+// only its fields). Submitting uses submit_public_form (rate limit 10/min per hashed IP, honeypot, only fields on the
+// form, then submit_form) through a service-role client the public form route passes in (CLAUDE.md rule 6), so the
+// IP hash comes from the server and cannot be forged by a caller. The answers are checked with the field
 // registry here first, exactly as the builder's preview does.
 
 /** A client with the anon key and no session: what a signed-out visitor may do, nothing more. */
@@ -120,6 +121,7 @@ const REASONS: Record<string, string> = {
 export async function submitPublicForm(
   input: unknown,
   ip: string,
+  submitter: SupabaseClient<Database>,
 ): Promise<Result<PublicSubmitResult>> {
   const p = publicSubmitInput.safeParse(input);
   if (!p.success) return invalid(p.error);
@@ -132,7 +134,7 @@ export async function submitPublicForm(
   if (Object.keys(check.errors).length > 0)
     return fail('invalid', 'Check the highlighted answers.', check.errors);
 
-  const { data, error } = await anon().rpc('submit_public_form', {
+  const { data, error } = await submitter.rpc('submit_public_form', {
     p_token: v.token,
     p_ip_hash: hashIp(ip),
     p_name: v.name.trim(),

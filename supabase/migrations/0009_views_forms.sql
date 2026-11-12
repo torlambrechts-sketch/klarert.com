@@ -1,7 +1,7 @@
 -- 0009_views_forms.sql · M6: saved views, public forms and server-side filters.
 -- 1. Public forms (docs/01 FR-25, NFR security): a form link serves the layout of one form view (form_links.view_id).
---    get_public_form(token) returns that layout and only the fields on it; submit_public_form(…) is the one entry
---    point for signed-out visitors: rate limit (10 submissions per minute per hashed IP, kept in Postgres so it holds
+--    get_public_form(token) returns that layout and only the fields on it; submit_public_form(…), called only by
+--    the public form route with the service role, is the one entry point for signed-out visitors: rate limit (10 submissions per minute per hashed IP, kept in Postgres so it holds
 --    across serverless instances; raw IPs are never stored), honeypot, only fields on the form, then submit_form.
 --    submit_form itself is no longer callable by the API roles, so the limit cannot be skipped.
 -- 2. Server-side filters for sheets above 2 000 items (docs/03 §4): src/server/query/filters.ts builds a
@@ -104,7 +104,10 @@ end $$;
 
 revoke execute on function submit_form(text, text, jsonb, text) from public, anon, authenticated;
 grant execute on function get_public_form(text) to anon, authenticated;
-grant execute on function submit_public_form(text, text, text, jsonb, text, text) to anon, authenticated;
+-- Only the public form route (service role, CLAUDE.md rule 6) may submit: it hashes the real visitor IP. Granting it
+-- to anon would let any caller with the public key send a fresh ip_hash each time and skip the rate limit.
+revoke execute on function submit_public_form(text, text, text, jsonb, text, text) from public, anon, authenticated;
+grant execute on function submit_public_form(text, text, text, jsonb, text, text) to service_role;
 
 -- ───────────────────────── server-side filters ─────────────────────────
 
