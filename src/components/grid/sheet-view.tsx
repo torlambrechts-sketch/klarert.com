@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Folder, Link2, Plus, Settings, Sheet } from 'lucide-react';
+import { Folder, Plus, Settings, Share, Sheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { sheetCtx } from '@/engine/sheet-data';
 import type { SheetData } from '@/engine/sheet-data';
@@ -53,6 +53,10 @@ import {
 // and New item); the view tabs; one toolbar row (search, Actions with the bulk actions for selected rows, groups,
 // status and owner filters, sort, filter, columns, row density, automations); the active view (Table, Kanban,
 // Calendar, Form), the item panel, field settings and the add-field picker.
+
+/** The page header's actions: the board design's 36 px buttons with 15 px icons. */
+const headerButton =
+  "text-label-13.5 h-9 gap-1.5 px-3.5 has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-[15px]";
 
 export interface SheetViewProps {
   org: string;
@@ -232,7 +236,7 @@ function SheetBody(props: SheetViewProps) {
           {props.folderName ? (
             <>
               <span className="text-muted-foreground flex min-w-0 items-center gap-2">
-                <Folder className="size-4 shrink-0" aria-hidden />
+                <Folder className="size-[15px] shrink-0" aria-hidden />
                 <span className="truncate">{props.folderName}</span>
               </span>
               <span aria-hidden className="text-line-strong text-label-20 leading-none font-light">
@@ -241,7 +245,7 @@ function SheetBody(props: SheetViewProps) {
             </>
           ) : null}
           <span className="text-ink flex min-w-0 items-center gap-2" aria-current="page">
-            <Sheet className="size-4 shrink-0" aria-hidden />
+            <Sheet className="size-[15px] shrink-0" aria-hidden />
             <span className="truncate font-medium">{sheetName}</span>
           </span>
           {props.archived || data?.sheet.isLibrary ? (
@@ -267,12 +271,18 @@ function SheetBody(props: SheetViewProps) {
         }
         actions={
           <>
-            <Button type="button" variant="outline" onClick={() => void share()}>
-              <Link2 aria-hidden /> Share
+            <Button
+              type="button"
+              variant="outline"
+              className={headerButton}
+              onClick={() => void share()}
+            >
+              <Share aria-hidden /> Share
             </Button>
             {canEdit && active.type !== 'form' ? (
               <Button
                 type="button"
+                className={cn(headerButton, 'font-semibold')}
                 onClick={() => (tabular ? setAddTick((t) => t + 1) : setNewItem({}))}
                 disabled={!data}
               >
@@ -297,9 +307,9 @@ function SheetBody(props: SheetViewProps) {
           </>
         }
       />
-      <div className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-[8px]">
+      <div className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-2">
         {filterable ? (
-          <div className="flex min-w-0 flex-[1_1_260px] [&>*]:w-full">
+          <div className="flex min-w-0 flex-[1_1_240px] [&>*]:w-full">
             <SheetSearch value={q} onChange={setQ} />
           </div>
         ) : null}

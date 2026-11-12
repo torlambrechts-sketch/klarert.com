@@ -66,11 +66,12 @@ export function GroupSelect({
     );
   };
   return (
-    <div className="flex items-center">
+    // 1 px under the control, as the design's chips row has: the toolbar's first row is 39 px tall
+    <div className="flex items-center pb-px">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           className={cn(
-            'border-line hover:bg-subtle bg-background-100 text-label-14 flex h-[40px] max-w-[260px] min-w-[170px] items-center gap-2 rounded-md border pr-2.5 pl-3',
+            'border-line hover:bg-subtle bg-background-100 text-label-14 flex h-[38px] max-w-[260px] min-w-[170px] items-center gap-2 rounded-md border pr-2.5 pl-3',
             current && 'border-faint',
           )}
         >
@@ -82,7 +83,7 @@ export function GroupSelect({
           <span className="min-w-0 flex-1 truncate text-left">
             {current ? current.name : 'All groups'}
           </span>
-          <span className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px] tabular-nums">
+          <span className="bg-soft text-muted-foreground text-label-11.5-mono rounded-[4px] px-[5px] leading-[18px] tabular-nums">
             {count(current?.id ?? null)}
           </span>
           <span className="sr-only">, show one group</span>
@@ -115,7 +116,7 @@ export function GroupSelect({
         <Link
           href={href(null)}
           aria-label="Show all groups"
-          className="border-line hover:bg-soft text-muted-foreground hover:text-ink bg-background-100 ml-1 flex size-[40px] items-center justify-center rounded-md border"
+          className="border-line hover:bg-soft text-muted-foreground hover:text-ink bg-background-100 ml-1 flex size-[38px] items-center justify-center rounded-md border"
         >
           <X className="size-3.5" aria-hidden />
         </Link>

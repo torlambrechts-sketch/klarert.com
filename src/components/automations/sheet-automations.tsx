@@ -15,6 +15,8 @@ import {
 import { AutomationList } from './automation-list';
 import { useAutomations } from './queries';
 import { ErrorBox, ListSkeleton } from './states';
+import { cn } from '@/lib/utils';
+import { toolbarButton, toolbarCount } from '@/components/table/toolbar-styles';
 
 // The ⚡ n button of the sheet header (docs/05 §3): this sheet's automations in a side sheet, with the on/off switch
 // and links into the builder.
@@ -43,18 +45,10 @@ export function SheetAutomations({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-[40px] font-normal shadow-none"
-          disabled={!ctx}
-        >
+        <Button type="button" variant="outline" className={toolbarButton} disabled={!ctx}>
           <Zap aria-hidden />
           Automations{' '}
-          <span
-            className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px] font-normal tabular-nums empty:hidden"
-            aria-hidden={autos.isPending}
-          >
+          <span className={cn(toolbarCount, 'empty:hidden')} aria-hidden={autos.isPending}>
             {autos.isPending ? '' : list.length}
           </span>
         </Button>

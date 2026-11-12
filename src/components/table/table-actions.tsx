@@ -46,14 +46,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { LockDialog } from './lock-dialog';
 import { positionsAtEnd } from './table-model';
+import { toolbarButton, toolbarCount, toolbarSelect } from '@/components/table/toolbar-styles';
 
 // The Table's toolbar controls (docs/05 §3.1), one row under the view tabs: "Actions" (bulk actions on the selected
 // rows and Group by), the status and owner filters, Columns and the row density. Filters and density are UI state;
 // density is kept per browser.
-
-/** A select-like trigger of the toolbar (38 px, muted while nothing is chosen). */
-export const toolbarSelectClass =
-  'border-line hover:bg-subtle focus-visible:outline-focus flex h-[40px] max-w-[240px] min-w-[150px] items-center gap-2 rounded-md border bg-background-100 pr-2.5 pl-3 text-label-14 focus-visible:outline-2';
 
 // ───────────────────────── density ─────────────────────────
 
@@ -91,7 +88,7 @@ export function DensityToggle() {
     <div
       role="group"
       aria-label="Row height"
-      className="border-line bg-background-100 flex h-[40px] items-center gap-0.5 rounded-md border p-0.5"
+      className="border-line bg-background-100 flex h-[38px] items-center gap-0.5 rounded-md border p-0.5"
     >
       {options.map(({ id, label, Icon }) => (
         <button
@@ -102,7 +99,7 @@ export function DensityToggle() {
           title={label}
           onClick={() => store.getState().setDensity(id)}
           className={cn(
-            'focus-visible:outline-focus grid size-8 place-items-center rounded text-[var(--muted)] focus-visible:outline-2 focus-visible:-outline-offset-2',
+            'focus-visible:outline-focus grid size-[30px] place-items-center rounded-[4px] text-[var(--muted)] focus-visible:outline-2 focus-visible:-outline-offset-2',
             density === id ? 'bg-soft text-ink' : 'hover:text-ink',
           )}
         >
@@ -130,7 +127,7 @@ export function StatusFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={cn(toolbarSelectClass, picked.length > 0 && 'border-faint')}
+        className={cn(toolbarSelect, picked.length > 0 && 'border-faint')}
         aria-label={`Filter by status: ${label}`}
       >
         {picked.length === 1 ? (
@@ -139,9 +136,9 @@ export function StatusFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
             className="size-2 shrink-0 rounded-full"
             style={{ background: solidVar(picked[0]!.option.color) }}
           />
-        ) : (
+        ) : picked.length > 1 ? (
           <CircleDot className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
-        )}
+        ) : null}
         <span
           className={cn(
             'min-w-0 flex-1 truncate text-left',
@@ -201,7 +198,7 @@ export function OwnerFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={cn(toolbarSelectClass, picked.length > 0 && 'border-faint')}
+        className={cn(toolbarSelect, picked.length > 0 && 'border-faint')}
         aria-label={`Filter by owner: ${label}`}
       >
         {picked.length === 1 ? (
@@ -255,10 +252,10 @@ export function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCo
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-[40px] font-normal shadow-none">
+        <Button type="button" variant="outline" className={toolbarButton}>
           <Columns3 aria-hidden /> Columns
           {hiddenCount ? (
-            <span className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px] font-normal tabular-nums">
+            <span className={toolbarCount}>
               +{hiddenCount}
               <span className="sr-only"> hidden</span>
             </span>
@@ -344,7 +341,7 @@ export function TableActions({
   const menu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className="h-[40px] font-normal shadow-none">
+        <Button type="button" variant="outline" className={toolbarButton}>
           <Layers3 aria-hidden /> Actions <ChevronDown aria-hidden />
         </Button>
       </DropdownMenuTrigger>
@@ -457,7 +454,7 @@ export function TableActions({
           <Button
             type="button"
             variant="ghost"
-            className="h-[40px] px-2.5"
+            className="h-[38px] px-2.5"
             onClick={() => store.getState().setSelected([])}
           >
             Clear
