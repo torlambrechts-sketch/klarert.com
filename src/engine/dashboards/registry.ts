@@ -4,11 +4,19 @@ import type { Ctx, Field } from '../types';
 import { automationRuns } from './widgets/automation-runs';
 import { byOption } from './widgets/by-option';
 import { count } from './widgets/count';
+import { doneBySheet } from './widgets/done-by-sheet';
 import { evidenceStatusWidget } from './widgets/evidence-status';
+import { followUp } from './widgets/follow-up';
+import { keyFigures } from './widgets/key-figures';
 import { overdue } from './widgets/overdue';
+import { riskHeatmap } from './widgets/risk-heatmap';
 import type { DashboardData, WidgetConfig, WidgetResult, WidgetTypeDef } from './types';
 
 export const WIDGET_TYPES: Record<string, WidgetTypeDef> = {
+  key_figures: keyFigures,
+  done_by_sheet: doneBySheet,
+  risk_heatmap: riskHeatmap,
+  follow_up: followUp,
   count,
   by_option: byOption,
   overdue,
@@ -50,7 +58,12 @@ export function widgetProblem(
   const s = w.sheetId ? sheet(w.sheetId) : undefined;
   if (w.sheetId && !s) return 'Choose a sheet of this workspace.';
   if (def.needs.field) {
-    if (!w.fieldKey) return def.needs.field === 'date' ? 'Choose a date field.' : 'Choose a field.';
+    if (!w.fieldKey)
+      return def.needs.field === 'date'
+        ? 'Choose a date field.'
+        : def.needs.field === 'matrix'
+          ? 'Choose a risk matrix field.'
+          : 'Choose a field.';
     if (!s || !widgetFieldChoices(w.type, s.fields, s.ctx).some((f) => f.key === w.fieldKey))
       return 'Choose a field of this sheet that the widget can use.';
   } else if (w.fieldKey) return 'This widget does not use a field.';

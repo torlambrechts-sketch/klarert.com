@@ -13,6 +13,7 @@ import {
   type SheetSource,
   type WidgetConfig,
 } from '.';
+import { monthPoints } from './history';
 
 beforeAll(() => installFieldTypes(Object.values(FIELD_TYPES)));
 
@@ -34,20 +35,40 @@ const found = makeField(
   { key: 'found', id: 'f-found', name: 'Found on', position: 'a2' },
 );
 const notes = makeField('text', {}, { key: 'notes', id: 'f-notes', position: 'a3' });
-const fields = [status, due, found, notes];
+const risk = makeField('riskmatrix', FIELD_TYPES.riskmatrix.defaultConfig(), {
+  key: 'risk',
+  id: 'f-risk',
+  name: 'Risk',
+  position: 'a4',
+});
+const fields = [status, due, found, notes, risk];
 
 const items = [
-  makeItem({ 'f-status': 'opt_wip', 'f-due': '2026-11-01', 'f-notes': 'urgent' }, { id: 'i1' }),
-  makeItem({ 'f-status': 'opt_wip', 'f-due': '2026-12-01' }, { id: 'i2' }),
-  makeItem({ 'f-status': 'opt_done', 'f-due': '2026-10-01' }, { id: 'i3' }),
-  makeItem({ 'f-due': '2026-11-10' }, { id: 'i4' }),
+  makeItem(
+    { 'f-status': 'opt_wip', 'f-due': '2026-11-01', 'f-notes': 'urgent', 'f-risk': { l: 2, i: 4 } },
+    { id: 'i1', createdAt: '2026-08-10T09:00:00Z' },
+  ),
+  makeItem(
+    { 'f-status': 'opt_wip', 'f-due': '2026-12-01', 'f-risk': { l: 2, i: 4 } },
+    { id: 'i2', createdAt: '2026-09-05T09:00:00Z' },
+  ),
+  makeItem(
+    { 'f-status': 'opt_done', 'f-due': '2026-10-01', 'f-risk': { l: 5, i: 5 } },
+    { id: 'i3', createdAt: '2026-06-01T09:00:00Z' },
+  ),
+  makeItem({ 'f-due': '2026-11-10' }, { id: 'i4', createdAt: '2026-11-01T09:00:00Z' }),
 ];
 const ctx = makeCtx({ fields, items });
 const source: SheetSource = { sheet, fields, items, ctx };
 
 const data: DashboardData = {
   today: '2026-11-11',
+  timeZone: 'Europe/London',
+  months: 6,
   sheet: (id) => (id === sheet.id ? source : undefined),
+  sheets: () => [source],
+  // i3 was "Working on it" until 20 Oct
+  changes: [{ itemId: 'i3', fieldId: 'f-status', old: 'opt_wip', date: '2026-10-20' }],
   evidence: [
     { sheetId: sheet.id, validUntil: '2026-10-01' },
     { sheetId: sheet.id, validUntil: '2026-11-20' },
@@ -117,6 +138,91 @@ describe('widget registry', () => {
     expect(r.caption).toBe('3 runs in the last 8 days');
   });
 
+  it('key_figures: done share and open items per month, from the change history', () => {
+    const r = computeWidget(w({ type: 'key_figures', sheetId: null }), data);
+    if (r.kind !== 'figures') throw new Error('figures expected');
+    expect(r.period).toBe('Jun 2026 to Nov 2026');
+    const [done, open] = r.figures;
+    expect(done!.series.map((p) => [p.label, p.value])).toEqual([
+      ['Jun', 0],
+      ['Jul', 0],
+      ['Aug', 0],
+      ['Sep', 0],
+      ['Oct', 33],
+      ['Nov', 25],
+    ]);
+    expect(done).toMatchObject({
+      display: '25%',
+      delta: { direction: 'up', text: '25 pts', tone: 'good' },
+    });
+    expect(done!.note).toBe('Across 1 sheet · 1 of 4 items done');
+    expect(open!.label).toBe('Open in Corrective actions');
+    expect(open!.series.map((p) => p.value)).toEqual([1, 1, 2, 3, 2, 3]);
+    expect(open!.delta).toMatchObject({ direction: 'up', text: '200%', tone: 'crit' });
+  });
+
+  it('key_figures: one sheet shows done, open and added', () => {
+    const r = computeWidget(w({ type: 'key_figures' }), { ...data, months: 3 });
+    if (r.kind !== 'figures') throw new Error('figures expected');
+    expect(r.figures.map((f) => [f.key, f.display])).toEqual([
+      ['done', '25%'],
+      ['open', '3'],
+      ['added', '2'],
+    ]);
+    const none = computeWidget(w({ type: 'key_figures', sheetId: null }), {
+      ...data,
+      sheets: () => [],
+    });
+    expect(none).toMatchObject({ kind: 'figures', figures: [] });
+  });
+
+  it('monthPoints: month ends, oldest first, ending today', () => {
+    const p = monthPoints('2026-11-11', 12);
+    expect(p).toHaveLength(12);
+    expect(p[0]).toEqual({ date: '2025-12-31', label: 'Dec' });
+    expect(p[2]).toEqual({ date: '2026-02-28', label: 'Feb' });
+    expect(p[11]).toEqual({ date: '2026-11-11', label: 'Nov' });
+  });
+
+  it('done_by_sheet: share of items done per sheet with a status field', () => {
+    const r = computeWidget(w({ type: 'done_by_sheet', sheetId: null }), data);
+    expect(r).toMatchObject({
+      kind: 'rows',
+      meta: '1 sheet',
+      rows: [{ label: 'Corrective actions', sub: '1 of 4 actions done', value: '25%', fill: 25 }],
+    });
+  });
+
+  it('risk_heatmap: items per cell and per level, highest impact first', () => {
+    const r = computeWidget(w({ type: 'risk_heatmap', fieldKey: 'risk' }), data);
+    if (r.kind !== 'heatmap') throw new Error('heatmap expected');
+    expect(r.total).toBe(3);
+    expect(r.axes).toEqual({ x: 'Likelihood', y: 'Impact' });
+    expect(r.rows[0]![4]).toMatchObject({ x: 5, y: 5, count: 1, level: 'Critical' });
+    expect(r.rows[1]![1]).toMatchObject({ x: 2, y: 4, count: 2, level: 'Medium' });
+    expect(r.levels.map((l) => [l.label, l.count])).toEqual([
+      ['Low', 0],
+      ['Medium', 2],
+      ['High', 0],
+      ['Critical', 1],
+    ]);
+    expect(widgetFieldChoices('risk_heatmap', fields, ctx).map((f) => f.key)).toEqual(['risk']);
+    const look = (id: string) => (id === sheet.id ? { fields, ctx } : undefined);
+    expect(widgetProblem(w({ type: 'risk_heatmap' }), look)).toBe('Choose a risk matrix field.');
+  });
+
+  it('follow_up: overdue per sheet, evidence and failed runs', () => {
+    const r = computeWidget(w({ type: 'follow_up', sheetId: null }), data);
+    if (r.kind !== 'rows') throw new Error('rows expected');
+    expect(r.rows.map((x) => [x.label, x.value, x.sub])).toEqual([
+      ['Corrective actions overdue', '2', '2 of 3 open · by due date'],
+      ['Evidence expiring in 30 days', '1', 'Of 4 current files'],
+      ['Evidence expired', '1', 'Renew or replace these files'],
+      ['Automation runs failed', '1', 'Last 30 days, from the run log'],
+    ]);
+    expect(r.meta).toBe('4 need attention');
+  });
+
   it('turns missing sheets, fields and unknown types into problems', () => {
     expect(computeWidget(w({ sheetId: crypto.randomUUID() }), data).kind).toBe('problem');
     expect(computeWidget(w({ type: 'by_option', fieldKey: 'gone' }), data).kind).toBe('problem');
@@ -148,18 +254,29 @@ describe('default dashboard', () => {
     let n = 0;
     const out = defaultWidgets([{ sheet, fields, ctx }], (p) => `${p}${++n}`);
     expect(out.map((x) => [x.type, x.fieldKey ?? null])).toEqual([
-      ['by_option', 'status'],
-      ['overdue', 'due'],
-      ['evidence_status', null],
-      ['automation_runs', null],
+      ['key_figures', null],
+      ['done_by_sheet', null],
+      ['risk_heatmap', 'risk'],
+      ['follow_up', null],
     ]);
     expect(new Set(out.map((x) => x.id)).size).toBe(out.length);
     for (const x of out) expect(WIDGET_TYPES[x.type]).toBeDefined();
   });
 
-  it('falls back to a count for sheets without status or dates', () => {
-    const c = makeCtx({ fields: [notes] });
-    const out = defaultWidgets([{ sheet, fields: [notes], ctx: c }], (p) => p + Math.random());
-    expect(out[0]).toMatchObject({ type: 'count', sheetId: sheet.id });
+  it('uses items by status when no sheet has a risk matrix, and skips what cannot be computed', () => {
+    const f = [status, due];
+    const c = makeCtx({ fields: f });
+    const out = defaultWidgets([{ sheet, fields: f, ctx: c }], (p) => p + Math.random());
+    expect(out.map((x) => [x.type, x.fieldKey ?? null])).toEqual([
+      ['key_figures', null],
+      ['done_by_sheet', null],
+      ['by_option', 'status'],
+      ['follow_up', null],
+    ]);
+    const bare = defaultWidgets(
+      [{ sheet, fields: [notes], ctx: makeCtx({ fields: [notes] }) }],
+      (p) => p + Math.random(),
+    );
+    expect(bare.map((x) => x.type)).toEqual(['key_figures', 'follow_up']);
   });
 });
