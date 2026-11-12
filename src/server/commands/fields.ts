@@ -6,8 +6,10 @@ import { isLinkType, needsLibraryTarget, planTypeChange } from '@/engine/fields/
 import { fieldKeyFromName, keyBetween } from '@/engine/ordering';
 import type { Field } from '@/engine/types';
 import type { Database } from '@/lib/database.types';
+import type { LabelOption } from '@/engine/fields/types';
 import {
   addFieldInput,
+  addFieldOptionInput,
   changeTypeInput,
   deletedFieldsInput,
   fieldRefInput,
@@ -18,7 +20,7 @@ import { FIELD_COLUMNS, toField } from '@/lib/sheet-rows';
 import type { Db } from '@/lib/sheet-query';
 import { isAdminRole } from '@/server/auth';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
-import { loadWriteContext } from '@/server/sheet-context';
+import { loadWriteContext, newId } from '@/server/sheet-context';
 import { withOrg } from './context';
 import { createInverseField, detachInverse } from './two-way';
 
@@ -228,6 +230,51 @@ export async function updateField(input: unknown): Promise<Result<{ field: Field
       return ok({ field: toField(data) });
     },
     'updateField',
+  );
+}
+
+export type AddOptionResult = { field: Field; option: LabelOption; mutationId?: string };
+
+/**
+ * Add an option to a label field from its picker ("Add “Hardware”"): editors on unlocked fields, admins always (the
+ * fields update policy). The type's addOption makes the option; a label that is already an option (someone added it
+ * a moment ago) returns that option and writes nothing. The value itself is set afterwards through setValues.
+ */
+export async function addFieldOption(input: unknown): Promise<Result<AddOptionResult>> {
+  const p = addFieldOptionInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId, role }) => {
+      const row = await fieldInOrg(supabase, orgId, v.fieldId);
+      if (!row || row.archived_at || row.sheet_id !== v.sheetId)
+        return fail('not_found', 'This field no longer exists.');
+      if (row.locked && !isAdminRole(role)) return fail('forbidden', LOCKED_FIELD);
+      const def = resolveFieldType(row.type);
+      if (!def?.addOption) return fail('invalid', 'Options of this field cannot be added here.');
+      const parsed = def.configSchema.safeParse(row.config);
+      if (!parsed.success) return fail('invalid', 'Check the field settings first.');
+      const field = toField(row);
+      // types with the hook keep their options in config.options
+      const existing = ((parsed.data as { options?: LabelOption[] }).options ?? []).find(
+        (o) => o.label.trim().toLowerCase() === v.label.toLowerCase(),
+      );
+      if (existing) return ok({ field, option: existing, mutationId: v.mutationId });
+      const added = def.addOption(parsed.data, v.label, newId);
+      if (!added) return fail('invalid', 'This option cannot be added.');
+      const { data, error } = await supabase
+        .from('fields')
+        .update({ config: { ...(row.config as object), ...(added.config as object) } as DbJson })
+        .eq('id', row.id)
+        .select(FIELD_COLUMNS)
+        .maybeSingle();
+      if (error) return fromDbError(error);
+      if (!data) return fail('forbidden', LOCKED_FIELD);
+      return ok({ field: toField(data), option: added.option, mutationId: v.mutationId });
+    },
+    'addFieldOption',
   );
 }
 

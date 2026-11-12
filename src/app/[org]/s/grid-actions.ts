@@ -32,6 +32,7 @@ export const clickButtonAction = bind(items.clickButton, false);
 
 export const addFieldAction = bind(fields.addField, true);
 export const updateFieldAction = bind(fields.updateField, true);
+export const addFieldOptionAction = bind(fields.addFieldOption, false);
 export const moveFieldAction = bind(fields.moveField, true);
 export const duplicateFieldAction = bind(fields.duplicateField, true);
 export const deleteFieldAction = bind(fields.deleteField, true);
