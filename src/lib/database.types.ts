@@ -1054,8 +1054,14 @@ isOneToOne: false
 "notify_mention":
 { Args: { "p_update": string,"p_user_ids": (string)[] }; Returns: number
                            },
+"pause_pair_ok":
+{ Args: { "p_automation": string,"p_item": string,"p_org": string }; Returns: boolean
+                           },
 "record_automation_run":
 { Args: { "p_automation": string,"p_chain": string,"p_depth": number,"p_detail": string,"p_event": Json,"p_item": string,"p_started_at": string,"p_status": string,"p_steps": Json }; Returns: number
+                           },
+"set_automation_pause":
+{ Args: { "p_automation": string,"p_item": string,"p_paused": boolean }; Returns: boolean
                            },
 "set_item_archived":
 { Args: { "p_archived": boolean,"p_item": string }; Returns: {
@@ -1150,6 +1156,9 @@ isOneToOne: false
       } },
 "set_protected_value":
 { Args: { "p_field": string,"p_item": string,"p_note"?: string,"p_value": string }; Returns: undefined
+                           },
+"sheet_in_org":
+{ Args: { "p_org": string,"p_sheet": string }; Returns: boolean
                            },
 "submit_form":
 { Args: { "p_name": string,"p_position": string,"p_token": string,"p_values": Json }; Returns: {

@@ -115,6 +115,14 @@ describe('activity lines', () => {
     [{ action: 'protected.cleared', fieldId: 'f-secret' }, 'Secret cleared'],
     [{ action: 'update.edited', oldValue: 'a', newValue: 'b' }, 'Edited an update'],
     [{ action: 'update.deleted', oldValue: 'a' }, 'Deleted an update'],
+    [
+      { action: 'automation.paused', note: 'Done → lock' },
+      'Paused the automation “Done → lock” for this item',
+    ],
+    [
+      { action: 'automation.resumed', note: 'Done → lock' },
+      'Resumed the automation “Done → lock” for this item',
+    ],
     [{ action: 'something.new' }, 'something.new'],
   ])('%o → %s', (over, text) => {
     expect(activityText(entry(over), look)).toBe(text);
