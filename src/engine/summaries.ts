@@ -69,6 +69,59 @@ export function defaultSummary(field: Field, ctx: Ctx): SummaryFn {
   return summaryOptions(field, ctx)[0]!;
 }
 
+/** Kinds whose group summary shows by default (the Table footer): averages, distributions and date ranges. */
+const AUTO_KINDS: ReadonlySet<ValueKind> = new Set([
+  'number',
+  'option',
+  'ordered',
+  'date',
+  'daterange',
+]);
+
+/** The summary a column shows when the view says nothing about it; null = none. */
+export function autoSummary(field: Field, ctx: Ctx): SummaryFn | null {
+  return AUTO_KINDS.has(kindOf(field, ctx)) ? defaultSummary(field, ctx) : null;
+}
+
+/**
+ * The summary of each column in a view: a chosen function wins, a switched-off column has none, else the column's
+ * automatic summary. Field key → function.
+ */
+export function columnSummaries(
+  fields: Field[],
+  chosen: Readonly<Record<string, SummaryFn>> | undefined,
+  off: readonly string[] | undefined,
+  ctx: Ctx,
+): Record<string, SummaryFn> {
+  const out: Record<string, SummaryFn> = {};
+  const offSet = new Set(off ?? []);
+  for (const f of fields) {
+    const fn = chosen?.[f.key] ?? (offSet.has(f.key) ? null : autoSummary(f, ctx));
+    if (fn) out[f.key] = fn;
+  }
+  return out;
+}
+
+/** The muted word after a summary value in the footer ("12.3 average"); empty when the text says it already. */
+export const SUMMARY_CAPTION: Record<SummaryFn, string> = {
+  sum: 'sum',
+  average: 'average',
+  median: 'median',
+  min: 'minimum',
+  max: 'maximum',
+  count_filled: '',
+  distribution: '',
+  distinct: '',
+  range: 'range',
+  count_overdue: '',
+  percent_checked: '',
+  count_checked: '',
+  freshness: '',
+  count_with_files: '',
+  total_links: '',
+  items_with_links: '',
+};
+
 export interface Segment {
   id: string;
   label: string;

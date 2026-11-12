@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { contract } from '../testing/contract';
-import { date, relativeDue } from './date';
+import { date, dateCountdown, relativeDue } from './date';
 
 describe('date', () => {
   contract(date, {
@@ -29,5 +29,22 @@ describe('date', () => {
     expect(relativeDue('2026-11-12', '2026-11-11')).toBe('tomorrow');
     expect(relativeDue('2026-11-09', '2026-11-11')).toBe('2 days overdue');
     expect(relativeDue('2026-11-10', '2026-11-11')).toBe('1 day overdue');
+  });
+
+  it('counts down to the date for the Table, with done and late states', () => {
+    expect(dateCountdown('2027-01-15', '2026-11-11', false)).toEqual({
+      text: 'in 65d',
+      tone: 'far',
+      pct: 28,
+    });
+    expect(dateCountdown('2026-11-20', '2026-11-11', false).tone).toBe('soon');
+    expect(dateCountdown('2026-11-11', '2026-11-11', false).text).toBe('today');
+    expect(dateCountdown('2026-11-08', '2026-11-11', false)).toEqual({
+      text: 'late 3d',
+      tone: 'late',
+      pct: 100,
+    });
+    expect(dateCountdown('2026-11-08', '2026-11-11', true).text).toBe('done');
+    expect(dateCountdown('2027-11-11', '2026-11-11', false).pct).toBe(6);
   });
 });

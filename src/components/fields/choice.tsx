@@ -12,7 +12,7 @@ import {
   UsersRound,
   UserSquare,
 } from 'lucide-react';
-import { Avatar, OptionsEditor, PeopleNames } from './shared';
+import { Avatar, Avatars, OptionsEditor, PeopleNames } from './shared';
 import { Empty, optionUI } from './kit';
 import type { FieldTypeUI } from './types';
 
@@ -33,9 +33,14 @@ export const severityUI = optionUI({ icon: ShieldAlert });
 
 export const peopleUI: FieldTypeUI = {
   icon: Users,
-  Cell: ({ value, ctx }) =>
+  Cell: ({ value, ctx, density }) =>
     Array.isArray(value) && value.length > 0 ? (
-      <PeopleNames ids={value as string[]} ctx={ctx} />
+      density === 'table' ? (
+        // stacked initials; each avatar carries the person's name (tooltip and screen readers)
+        <Avatars ids={value as string[]} ctx={ctx} />
+      ) : (
+        <PeopleNames ids={value as string[]} ctx={ctx} />
+      )
     ) : (
       <Empty />
     ),

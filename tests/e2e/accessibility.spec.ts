@@ -52,8 +52,7 @@ test('Home, the sheet Table and its cards, the item panel and the automation bui
   await page.goto(`/${slug}/s/${ca}?view=table`);
   const grid = page.getByRole('grid');
   await expect(grid.getByText('Guard bypassed on press 3')).toBeVisible();
-  await grid.getByRole('button', { name: 'Status column menu' }).click();
-  await page.getByRole('menuitem', { name: 'Show summary' }).click();
+  // status columns show their distribution in each group's footer by default
   await expect(grid.getByRole('gridcell', { name: /^Summary/ }).first()).toBeVisible();
   const groupToggle = grid.getByRole('button', { name: /^Closed\s/ });
   await groupToggle.click();

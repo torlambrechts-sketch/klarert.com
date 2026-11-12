@@ -24,6 +24,12 @@ export interface GridState {
   groupBy: string | null;
   /** Table person filter: user ids; empty = everyone. */
   people: ReadonlySet<string>;
+  /** Table status filter: option ids of the item status field; empty = every status. */
+  statuses: ReadonlySet<string>;
+  /** Table row height (kept per browser by the sheet page). */
+  density: 'comfortable' | 'compact';
+  /** The item whose row actions menu is open (keyboard: Shift+F10 on the grid). */
+  rowMenu: string | null;
   addFieldAt: { beforeFieldId?: string; afterFieldId?: string } | null;
 
   focus(cell: CellRef, extend?: boolean): void;
@@ -38,6 +44,10 @@ export interface GridState {
   setGroupBy(fieldId: string | null): void;
   togglePerson(userId: string): void;
   clearPeople(): void;
+  toggleStatus(optionId: string): void;
+  clearStatuses(): void;
+  setDensity(d: GridState['density']): void;
+  openRowMenu(itemId: string | null): void;
   openAddField(at: GridState['addFieldAt']): void;
 }
 
@@ -55,6 +65,9 @@ export function createGridStore(): StoreApi<GridState> {
     settingsFor: null,
     groupBy: null,
     people: new Set(),
+    statuses: new Set(),
+    density: 'comfortable',
+    rowMenu: null,
     addFieldAt: null,
 
     focus: (cell, extend) =>
@@ -69,6 +82,15 @@ export function createGridStore(): StoreApi<GridState> {
       set({ people: next });
     },
     clearPeople: () => set({ people: new Set() }),
+    toggleStatus: (optionId) => {
+      const next = new Set(get().statuses);
+      if (next.has(optionId)) next.delete(optionId);
+      else next.add(optionId);
+      set({ statuses: next });
+    },
+    clearStatuses: () => set({ statuses: new Set() }),
+    setDensity: (density) => set({ density }),
+    openRowMenu: (itemId) => set({ rowMenu: itemId }),
     toggleCollapsed: (groupId) => {
       const next = new Set(get().collapsed);
       if (next.has(groupId)) next.delete(groupId);

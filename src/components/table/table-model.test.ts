@@ -4,6 +4,9 @@ import { groups, makeField, makeItem } from '@/engine/testing/fixtures';
 import {
   buildLayout,
   cardFields,
+  endsCard,
+  fitWidths,
+  rowHeight,
   positionAt,
   positionsAtEnd,
   rangeOf,
@@ -16,17 +19,31 @@ const b = makeItem({}, { id: 'b', position: 'a0', groupId: 'g-open', name: 'A' }
 const c = makeItem({}, { id: 'c', position: 'a0', groupId: 'g-closed', name: 'C' });
 
 describe('buildLayout', () => {
-  it('flattens groups into one list: title, items, add row, a gap between groups, no header rows', () => {
+  it('flattens groups into cards: title, column header, items, add row, a gap between cards', () => {
     const l = buildLayout({ groups, items: [a, b, c], collapsed: new Set(), canAdd: true });
     expect(l.rows.map((r) => r.kind)).toEqual([
       'group',
+      'header',
       'item',
       'item',
       'add',
       'gap',
       'group',
+      'header',
       'item',
       'add',
+    ]);
+    expect(l.rows.map((_, i) => endsCard(l.rows, i))).toEqual([
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
     ]);
     expect(l.rows.filter((r) => r.kind === 'group').map((r) => r.key)).toEqual([
       'g:g-open',
@@ -38,14 +55,15 @@ describe('buildLayout', () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
-  it('collapses groups: the title stays with its count, items and add row go', () => {
+  it('collapses groups: the title stays with its count, header, items and add row go', () => {
     const l = buildLayout({
       groups,
       items: [a, b, c],
       collapsed: new Set(['g-open']),
       canAdd: true,
     });
-    expect(l.rows.map((r) => r.kind)).toEqual(['group', 'gap', 'group', 'item', 'add']);
+    expect(l.rows.map((r) => r.kind)).toEqual(['group', 'gap', 'group', 'header', 'item', 'add']);
+    expect(endsCard(l.rows, 0)).toBe(true);
     expect(l.rows[0]).toMatchObject({ kind: 'group', count: 2, collapsed: true });
     expect(l.flat.map((i) => i.id)).toEqual(['c']);
     // the items of a collapsed group are still known (select all, drop at the end)
@@ -64,6 +82,7 @@ describe('buildLayout', () => {
     });
     expect(on.rows.map((r) => r.kind)).toEqual([
       'group',
+      'header',
       'item',
       'item',
       'add',
@@ -85,13 +104,22 @@ describe('buildLayout', () => {
       canAdd: true,
       onlyGroup: 'g-closed',
     });
-    expect(one.rows.map((r) => r.kind)).toEqual(['group', 'item', 'add']);
+    expect(one.rows.map((r) => r.kind)).toEqual(['group', 'header', 'item', 'add']);
     expect(one.flat.map((i) => i.id)).toEqual(['c']);
   });
 
   it('keeps empty groups with their title and add row', () => {
     const l = buildLayout({ groups, items: [c], collapsed: new Set(), canAdd: true });
-    expect(l.rows.map((r) => r.kind)).toEqual(['group', 'add', 'gap', 'group', 'item', 'add']);
+    expect(l.rows.map((r) => r.kind)).toEqual([
+      'group',
+      'header',
+      'add',
+      'gap',
+      'group',
+      'header',
+      'item',
+      'add',
+    ]);
     expect(l.rows[0]).toMatchObject({ count: 0 });
   });
 
@@ -107,6 +135,26 @@ describe('buildLayout', () => {
   });
 });
 
+describe('column widths', () => {
+  it('shares leftover space across columns in proportion, keeping the total exact', () => {
+    const w = fitWidths([100, 200, 100], 400, 1200);
+    expect(w).toEqual([200, 400, 200]);
+    expect(fitWidths([100, 100, 100], 0, 400)).toEqual([133, 133, 134]);
+    expect(w.reduce((x, y) => x + y, 0) + 400).toBe(1200);
+  });
+
+  it('keeps widths when the columns do not fit (the table scrolls)', () => {
+    expect(fitWidths([300, 300], 400, 800)).toEqual([300, 300]);
+    expect(fitWidths([], 400, 1200)).toEqual([]);
+  });
+
+  it('has taller rows when comfortable', () => {
+    expect(rowHeight('item')).toBe(68);
+    expect(rowHeight('item', 'compact')).toBe(48);
+    expect(rowHeight('header')).toBe(34);
+  });
+});
+
 describe('phone cards', () => {
   it('group cards under the same titles as the table (no summaries, collapsible)', () => {
     const l = buildLayout({
@@ -114,6 +162,7 @@ describe('phone cards', () => {
       items: [a, b, c],
       collapsed: new Set(['g-closed']),
       canAdd: true,
+      headers: false,
     });
     expect(l.rows.map((r) => r.kind)).toEqual(['group', 'item', 'item', 'add', 'gap', 'group']);
   });

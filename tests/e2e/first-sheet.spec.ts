@@ -1128,8 +1128,9 @@ test.describe('Part B · automations on the reference template', () => {
     let answered = nextAnswer(page);
     await page
       .getByRole('region', { name: 'Selected items' })
-      .getByRole('button', { name: 'Archive' })
+      .getByRole('button', { name: 'Actions' })
       .click();
+    await page.getByRole('menuitem', { name: 'Archive' }).click();
     await answered;
     await expect(page.getByText('1 item archived.')).toBeVisible();
     await expect(grid(page).getByText('Shared admin account on firewall')).toHaveCount(0);

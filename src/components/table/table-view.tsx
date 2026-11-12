@@ -1,22 +1,21 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Lock, X } from 'lucide-react';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Item } from '@/engine/types';
 import type { ViewConfig } from '@/engine/views/config';
+import { quickFilter } from '@/engine/views/quick-filters';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import { Table } from './table';
-import { filterByPeople, ownersOf, TableToolbar } from './table-toolbar';
 import { TableCards } from './table-cards';
+import { useUpdateCounts } from './use-update-counts';
 
 // The Table view (docs/05 §3.1): the one view for working through a sheet's items as rows. Desktop and tablets get
-// the virtualised table; phones (< 640 px) get cards grouped the same way. Above both: the dismissible hint and the
-// empty states.
+// the virtualised table of group cards; phones (< 640 px) get item cards grouped the same way. Above both: the
+// empty states. The toolbar's status and owner filters (UI state) apply here.
 
-const HINT_KEY = 'table-hint-dismissed';
 const PHONE = '(max-width: 639px)';
 
 export interface TableViewProps {
@@ -62,16 +61,17 @@ export function TableView(p: TableViewProps) {
     [p.data.items, p.onlyGroup],
   );
   const total = inScope.length;
-  const chosen = useGrid((s) => s.people);
+  const people = useGrid((s) => s.people);
+  const statuses = useGrid((s) => s.statuses);
   const store = useGridStore();
-  const clearPeople = () => store.getState().clearPeople();
-  const people = useMemo(() => ownersOf(inScope, p.ctx), [inScope, p.ctx]);
-  const items = useMemo(() => filterByPeople(p.items, chosen, p.ctx), [p.items, chosen, p.ctx]);
-  const filtered = p.filtered || (chosen.size > 0 && people.length > 0);
+  const updateCounts = useUpdateCounts(p.data.sheet.id);
+  const items = useMemo(
+    () => quickFilter(p.items, people, statuses, p.ctx),
+    [p.items, people, statuses, p.ctx],
+  );
+  const filtered = p.filtered || items.length !== p.items.length;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <TableToolbar ctx={p.ctx} people={people} shown={items.length} total={total} />
-      {phone ? null : <Hint />}
       {total === 0 ? (
         <Notice>
           No items yet.{' '}
@@ -90,7 +90,8 @@ export function TableView(p: TableViewProps) {
             className="h-auto p-0"
             onClick={() => {
               p.onClearFilters();
-              clearPeople();
+              store.getState().clearPeople();
+              store.getState().clearStatuses();
             }}
           >
             Clear filters
@@ -110,7 +111,7 @@ export function TableView(p: TableViewProps) {
           viewCompare={p.compare}
         />
       ) : (
-        <div className="border-line flex min-h-[240px] flex-1 flex-col overflow-hidden rounded-[var(--radius-card)] border">
+        <div className="flex min-h-[240px] flex-1 flex-col">
           <Table
             data={p.data}
             ctx={p.ctx}
@@ -125,6 +126,7 @@ export function TableView(p: TableViewProps) {
             viewCompare={p.compare}
             config={p.config}
             setConfig={p.setConfig}
+            updateCounts={updateCounts}
           />
         </div>
       )}
@@ -137,44 +139,5 @@ function Notice({ children }: { children: React.ReactNode }) {
     <div className="border-line text-cell flex flex-wrap items-center gap-1 rounded-[var(--radius-card)] border border-dashed px-4 py-3">
       {children}
     </div>
-  );
-}
-
-function hintDismissed() {
-  try {
-    return localStorage.getItem(HINT_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function Hint() {
-  // read on first render (the view renders on the client, after the sheet loads): no layout shift
-  const [shown, setShown] = useState(() => typeof window !== 'undefined' && !hintDismissed());
-  if (!shown) return null;
-  return (
-    <p className="text-muted-foreground text-meta flex flex-wrap items-center gap-x-3 gap-y-1">
-      <span>
-        <b className="text-ink">Click a cell, then click again or press Enter to edit.</b> Click a
-        name to open the item. <b className="text-ink">+</b> adds a column.{' '}
-        <Lock className="inline size-3" aria-hidden />
-        <span className="sr-only">Lock</span> kept by the app.
-      </span>
-      <button
-        type="button"
-        aria-label="Dismiss hint"
-        className="hover:text-ink focus-visible:outline-focus rounded p-0.5 focus-visible:outline-2"
-        onClick={() => {
-          setShown(false);
-          try {
-            localStorage.setItem(HINT_KEY, '1');
-          } catch {
-            // blocked storage: hidden for this visit
-          }
-        }}
-      >
-        <X className="size-3.5" aria-hidden />
-      </button>
-    </p>
   );
 }

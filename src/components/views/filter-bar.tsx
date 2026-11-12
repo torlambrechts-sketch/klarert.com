@@ -110,6 +110,7 @@ export function FilterButton({
         <Button
           type="button"
           variant="outline"
+          className="h-[38px] shadow-none"
           aria-label={count ? `Filter, ${count} active` : 'Filter'}
         >
           <Filter aria-hidden /> Filter
@@ -402,12 +403,16 @@ export function SortButton({
         <Button
           type="button"
           variant="outline"
-          aria-label={rules.length ? `Sort, ${rules.length} levels` : 'Sort'}
+          className="h-[38px] max-w-[240px] justify-start shadow-none"
         >
-          <ArrowDownUp aria-hidden /> Sort
-          {rules.length ? (
-            <span className="bg-ink ml-0.5 rounded-full px-1.5 text-[11px] leading-4 font-bold text-white tabular-nums">
-              {rules.length}
+          <ArrowDownUp aria-hidden />
+          <span className="min-w-0 truncate">
+            {rules.length ? `Sorted by ${keyLabel(rules[0]!.fieldKey, ctx)}` : 'Default order'}
+          </span>
+          {rules.length > 1 ? (
+            <span className="bg-soft text-muted-foreground rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums">
+              +{rules.length - 1}
+              <span className="sr-only"> more</span>
             </span>
           ) : null}
         </Button>

@@ -49,6 +49,7 @@ export default async function SheetPage({
         org={org}
         sheetId={sheet.id}
         sheetName={sheet.name}
+        description={sheet.description}
         folderName={sheet.folderName}
         archived={!!sheet.archived_at}
         userId={user.id}

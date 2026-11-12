@@ -285,7 +285,8 @@ test('bulk archive with Undo, and dragging a row to another group', async ({ pag
   await page.getByRole('checkbox', { name: 'Select Archive B' }).click({ modifiers: ['Shift'] });
   const bar = page.getByRole('region', { name: 'Selected items' });
   await expect(bar).toContainText('2 selected');
-  await bar.getByRole('button', { name: 'Archive' }).click();
+  await bar.getByRole('button', { name: 'Actions' }).click();
+  await page.getByRole('menuitem', { name: 'Archive' }).click();
   await expect(page.getByText('2 items archived.')).toBeVisible();
   await expect(grid(page).getByText('Archive A')).toHaveCount(0);
   await page.getByRole('button', { name: 'Undo' }).click();
@@ -338,8 +339,9 @@ test('a locked item blocks an editor but not an admin', async ({ page, browser }
   await page.getByRole('checkbox', { name: 'Select Approved policy' }).check();
   await page
     .getByRole('region', { name: 'Selected items' })
-    .getByRole('button', { name: 'Lock' })
+    .getByRole('button', { name: 'Actions' })
     .click();
+  await page.getByRole('menuitem', { name: 'Lock' }).click();
   await page.getByLabel('Reason').fill('Approved by QA');
   await page.getByRole('dialog').getByRole('button', { name: 'Lock' }).click();
   await expect(page.getByText('Item locked.')).toBeVisible();

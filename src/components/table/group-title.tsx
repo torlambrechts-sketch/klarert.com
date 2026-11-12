@@ -28,7 +28,7 @@ export function GroupTitle({
         type="button"
         aria-expanded={!collapsed}
         onClick={onToggle}
-        className="focus-visible:outline-focus hover:bg-soft flex h-9 max-w-full items-center gap-2 rounded-md px-2 text-left focus-visible:outline-2"
+        className="focus-visible:outline-focus hover:bg-soft flex h-9 max-w-full items-center gap-2 rounded-md px-1.5 text-left focus-visible:outline-2"
       >
         {collapsed ? (
           <ChevronRight className="size-4 shrink-0" aria-hidden />
@@ -43,8 +43,12 @@ export function GroupTitle({
         <span className="text-ink truncate text-[14px] font-semibold">{group.name}</span>
         <span className="bg-soft text-muted-foreground shrink-0 rounded-full px-2 font-mono text-[12px] leading-5 tabular-nums">
           {count === 1 ? '1 item' : `${count.toLocaleString('en-GB')} items`}
-          {donePct === null ? '' : ` · ${donePct}% done`}
         </span>
+        {donePct === null ? null : (
+          <span className="text-muted-foreground shrink-0 text-[12.5px] tabular-nums">
+            {donePct}% done
+          </span>
+        )}
       </button>
     </h2>
   );

@@ -59,7 +59,7 @@ const groupButton = (page: Page, name: string) =>
 test.describe('desktop', () => {
   test.beforeEach(({}, info) => test.skip(info.project.name === 'phone', 'desktop table'));
 
-  test('one header row for two groups, collapsing a group, and old list and grid links', async ({
+  test('each group card has its own header row, collapsing a group, and old list and grid links', async ({
     page,
   }) => {
     await signIn(page, 'james@example.com');
@@ -71,23 +71,23 @@ test.describe('desktop', () => {
     await sheet.add('Done', [{ name: 'Calibrate scale' }]);
     await page.reload();
 
-    // exactly one row of column headers, above both groups
+    // one row of column headers at the top of each group card
     await expect(groupButton(page, 'Open')).toBeVisible();
     await expect(groupButton(page, 'Done')).toBeVisible();
     const headerRows = grid(page)
       .getByRole('row')
       .filter({ has: page.getByRole('columnheader') });
-    await expect(headerRows).toHaveCount(1);
-    await expect(grid(page).getByRole('button', { name: 'Status column menu' })).toHaveCount(1);
-    // the header uses the tab type size
-    const tabSize = await page
-      .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Table' })
-      .evaluate((el) => getComputedStyle(el).fontSize);
+    await expect(headerRows).toHaveCount(2);
+    await expect(grid(page).getByRole('button', { name: 'Status column menu' })).toHaveCount(2);
+    // small muted column names (12 px)
     const headSize = await grid(page)
       .getByRole('button', { name: 'Status column menu' })
+      .first()
       .evaluate((el) => getComputedStyle(el).fontSize);
-    expect(headSize).toBe(tabSize);
+    expect(headSize).toBe('12px');
+    await expect(
+      grid(page).getByRole('checkbox', { name: 'Select all items in Open' }),
+    ).toBeVisible();
 
     // rows show the display id and the owner (the first people field) under the name
     const nameCell = grid(page)
@@ -107,6 +107,7 @@ test.describe('desktop', () => {
     await expect(grid(page).getByText('Fix guard rail', { exact: true })).toHaveCount(0);
     await expect(page.getByRole('textbox', { name: 'Add task to Open' })).toHaveCount(0);
     await expect(grid(page).getByText('Calibrate scale', { exact: true })).toBeVisible();
+    // a collapsed card has no header row
     await expect(headerRows).toHaveCount(1);
     await open.click();
     await expect(open).toHaveAttribute('aria-expanded', 'true');
@@ -122,10 +123,15 @@ test.describe('desktop', () => {
     }
     await expect(page.getByRole('navigation', { name: 'Views' }).getByRole('link')).toHaveText([
       /Table/,
+      /Board/,
+      /Calendar/,
+      /Form/,
     ]);
   });
 
-  test('column summaries are off until switched on, and the choice stays', async ({ page }) => {
+  test('number, option and date columns show summaries by default; a column switches its own off', async ({
+    page,
+  }) => {
     await signIn(page, 'james@example.com');
     const sheet = await twoGroupSheet(page);
     await sheet.add('Open', [
@@ -137,18 +143,15 @@ test.describe('desktop', () => {
     await expect(grid(page).getByText('Alpha', { exact: true })).toBeVisible();
 
     const summaries = grid(page).getByRole('gridcell', { name: /^Summary of/ });
-    await expect(summaries).toHaveCount(0);
-
-    await grid(page).getByRole('button', { name: 'Progress column menu' }).click();
-    await page.getByRole('menuitem', { name: 'Show summary' }).click();
     await expect(summaries).toHaveCount(2);
     const openSummary = grid(page)
       .getByRole('row')
       .filter({ has: page.getByRole('gridcell', { name: 'Summary of Open' }) });
     await expect(openSummary).toContainText('40');
+    await expect(openSummary).toContainText('average');
 
     // another function from the same menu
-    await grid(page).getByRole('button', { name: 'Progress column menu' }).click();
+    await grid(page).getByRole('button', { name: 'Progress column menu' }).first().click();
     await page.getByRole('menuitem', { name: 'Summary', exact: true }).click();
     await page.getByRole('menuitemradio', { name: 'Maximum' }).click();
     await expect(openSummary).toContainText('60');
@@ -162,9 +165,12 @@ test.describe('desktop', () => {
     await groupButton(page, 'Done').click();
     await expect(summaries).toHaveCount(1);
 
-    await grid(page).getByRole('button', { name: 'Progress column menu' }).click();
+    await grid(page).getByRole('button', { name: 'Progress column menu' }).first().click();
     await page.getByRole('menuitem', { name: 'Hide summary' }).click();
-    await expect(summaries).toHaveCount(0);
+    await expect(openSummary).not.toContainText('60');
+    await page.reload();
+    await expect(grid(page).getByText('Alpha', { exact: true })).toBeVisible();
+    await expect(openSummary).not.toContainText('60');
   });
 
   test('type to edit: a key on a cell opens its editor with that key', async ({ page }) => {

@@ -117,8 +117,13 @@ export const viewConfigSchema = z.object({
   hidden: z.array(key).max(500).default([]),
   labelFieldKey: key.optional(),
   dateFieldKey: key.optional(),
-  /** Table: columns with a group summary, field key → function. Summaries are off unless listed. */
+  /**
+   * Table: columns with a chosen group summary, field key → function. Number, option and date columns show their
+   * default summary unless listed in `summaryOff`; other columns only when listed here.
+   */
   summaries: z.record(key, summaryFnSchema).optional(),
+  /** Table: columns whose group summary was switched off. */
+  summaryOff: z.array(key).max(500).optional(),
   form: formLayoutSchema.optional(),
 });
 export type ViewConfig = z.infer<typeof viewConfigSchema>;
@@ -148,6 +153,8 @@ export function parseViewConfig(raw: unknown): ViewConfig {
   if (date) cfg.dateFieldKey = date;
   const summaries = part(z.record(key, summaryFnSchema).optional(), o.summaries, undefined);
   if (summaries && Object.keys(summaries).length) cfg.summaries = summaries;
+  const off = part(z.array(key).max(500).optional(), o.summaryOff, undefined);
+  if (off && off.length) cfg.summaryOff = off;
   const form = part(formLayoutSchema.optional(), o.form, undefined);
   if (form) cfg.form = form;
   return cfg;
@@ -165,6 +172,7 @@ export function sameConfig(a: ViewConfig, b: ViewConfig): boolean {
       summaries: Object.fromEntries(
         Object.entries(c.summaries ?? {}).sort(([a], [b]) => (a < b ? -1 : 1)),
       ),
+      summaryOff: [...(c.summaryOff ?? [])].sort(),
       form: c.form ?? null,
     });
   return norm(a) === norm(b);
@@ -176,14 +184,25 @@ export function sameConfig(a: ViewConfig, b: ViewConfig): boolean {
  */
 export const isBuiltinViewId = (id: string): boolean => toViewType(id) !== null;
 
-/** Turn a column's group summary on (with a function) or off. */
+/** Turn a column's group summary on (with a function) or off (also a column that shows one by default). */
 export function setSummary(cfg: ViewConfig, fieldKey: string, fn: SummaryFn | null): ViewConfig {
   const next = { ...(cfg.summaries ?? {}) };
-  if (fn) next[fieldKey] = fn;
-  else delete next[fieldKey];
-  const { summaries: _drop, ...rest } = cfg;
+  const off = new Set(cfg.summaryOff ?? []);
+  if (fn) {
+    next[fieldKey] = fn;
+    off.delete(fieldKey);
+  } else {
+    delete next[fieldKey];
+    off.add(fieldKey);
+  }
+  const { summaries: _drop, summaryOff: _off, ...rest } = cfg;
   void _drop;
-  return Object.keys(next).length ? { ...rest, summaries: next } : rest;
+  void _off;
+  return {
+    ...rest,
+    ...(Object.keys(next).length ? { summaries: next } : {}),
+    ...(off.size ? { summaryOff: [...off].sort() } : {}),
+  };
 }
 
 /** A row of `views` as the app uses it. ownerId null = shared with every member. */

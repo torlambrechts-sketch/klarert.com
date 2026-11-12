@@ -118,7 +118,7 @@ test.describe('desktop', () => {
     await expect(settings).toHaveCount(0);
 
     // the Table column menu has the settings too
-    await page.getByRole('button', { name: 'Category column menu' }).click();
+    await page.getByRole('button', { name: 'Category column menu' }).first().click();
     await page.getByRole('menuitem', { name: 'Settings' }).click();
     await expect(settings.getByRole('heading', { name: 'Category' })).toBeVisible();
     await page.keyboard.press('Escape');

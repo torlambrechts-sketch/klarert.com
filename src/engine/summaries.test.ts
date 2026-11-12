@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import './fields/registry';
-import { defaultSummary, summarise, summaryOptions, type Summary } from './summaries';
+import {
+  autoSummary,
+  columnSummaries,
+  defaultSummary,
+  summarise,
+  summaryOptions,
+  type Summary,
+} from './summaries';
 import { makeCtx, makeField, makeFile, makeItem } from './testing/fixtures';
 
 const status = makeField('status', {
@@ -111,5 +118,29 @@ describe('summaries', () => {
 
   it('falls back to the default for an option the kind does not offer', () => {
     expect(summarise(num, items, ctx, 'distribution').fn).toBe('sum');
+  });
+
+  it('shows number, option and date summaries by default, others only when chosen', () => {
+    expect(autoSummary(pct, ctx)).toBe('average');
+    expect(autoSummary(status, ctx)).toBe('distribution');
+    expect(autoSummary(due, ctx)).toBe('range');
+    expect(autoSummary(txt, ctx)).toBeNull();
+    expect(autoSummary(owner, ctx)).toBeNull();
+    const fields = [status, num, pct, due, txt, owner];
+    expect(columnSummaries(fields, undefined, undefined, ctx)).toEqual({
+      [status.key]: 'distribution',
+      [num.key]: 'sum',
+      [pct.key]: 'average',
+      [due.key]: 'range',
+    });
+    // a chosen function wins, a switched-off column has none
+    expect(
+      columnSummaries(fields, { [txt.key]: 'count_filled', [num.key]: 'max' }, [due.key], ctx),
+    ).toEqual({
+      [status.key]: 'distribution',
+      [num.key]: 'max',
+      [pct.key]: 'average',
+      [txt.key]: 'count_filled',
+    });
   });
 });
