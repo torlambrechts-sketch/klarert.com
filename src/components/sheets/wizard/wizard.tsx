@@ -13,10 +13,13 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
   return (
     <div className="flex flex-col gap-8">
       <section aria-labelledby="wizard-step-1" className="flex flex-col gap-3">
-        <h2 id="wizard-step-1" className="text-base font-bold">
-          1. Start from
+        <h2 id="wizard-step-1" className="flex items-center gap-2 text-[15px] font-semibold">
+          <span className="bg-brand text-primary-foreground flex size-6 items-center justify-center rounded-full font-mono text-xs">
+            1
+          </span>
+          Start from
         </h2>
-        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-4">
           {STARTS.map((s) => {
             const selected = s.id === start?.id;
             return (
@@ -26,15 +29,17 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
                   scroll={false}
                   aria-current={selected ? 'true' : undefined}
                   className={cn(
-                    'flex h-full flex-col gap-1 rounded-[var(--radius-card)] border bg-white p-3',
-                    selected ? 'border-ink ring-ink ring-1' : 'border-line hover:border-faint',
+                    'flex h-full flex-col gap-1.5 rounded-xl border bg-white px-4 py-3.5 shadow-xs',
+                    selected ? 'border-brand ring-brand ring-1' : 'border-line hover:border-faint',
                   )}
                 >
-                  <span className="flex items-center gap-1.5 font-bold">
+                  <span className="flex items-center gap-1.5 text-[14px] font-semibold">
                     {selected ? <Check className="size-4" aria-hidden /> : null}
                     {s.title}
                   </span>
-                  <span className="text-muted-foreground text-sm">{s.description}</span>
+                  <span className="text-muted-foreground text-[13px] leading-snug">
+                    {s.description}
+                  </span>
                 </Link>
               </li>
             );
@@ -42,9 +47,15 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
         </ul>
       </section>
       {start ? (
-        <section aria-labelledby="wizard-step-2" className="flex flex-col gap-4">
-          <h2 id="wizard-step-2" className="text-base font-bold">
-            2. {start.title}
+        <section
+          aria-labelledby="wizard-step-2"
+          className="border-line flex flex-col gap-4 rounded-xl border bg-white p-5 shadow-xs sm:px-[22px]"
+        >
+          <h2 id="wizard-step-2" className="flex items-center gap-2 text-[15px] font-semibold">
+            <span className="bg-brand text-primary-foreground flex size-6 items-center justify-center rounded-full font-mono text-xs">
+              2
+            </span>
+            {start.title}
           </h2>
           {start.id === 'csv' ? (
             <CsvStart key="csv" ctx={ctx} />
