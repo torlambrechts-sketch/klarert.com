@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Link2, Plus, Settings } from 'lucide-react';
+import { Folder, Link2, Plus, Settings, Sheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { sheetCtx } from '@/engine/sheet-data';
 import type { SheetData } from '@/engine/sheet-data';
@@ -25,6 +25,8 @@ import { useViewItems } from '@/components/views/use-view-items';
 import { useViews, type ViewsState } from '@/components/views/use-views';
 import { ViewMenu, ViewTabs } from '@/components/views/view-tabs';
 import { PageHeader } from '@/components/shell/page-header';
+import { ShellCrumb } from '@/components/shell/shell-crumb';
+import { cn } from '@/lib/utils';
 import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
 import { GroupSelect } from '@/components/table/group-select';
@@ -216,21 +218,40 @@ function SheetBody(props: SheetViewProps) {
   const itemLabel = data?.sheet.itemLabel.toLowerCase() ?? 'item';
 
   return (
-    <main className="flex h-[calc(100dvh-48px)] min-w-0 flex-col px-4 pt-5 pb-3 max-[759px]:h-[calc(100dvh-112px)] sm:px-7 sm:pt-[22px]">
-      <PageHeader
-        crumb={
-          <span className="flex min-w-0 items-center gap-2">
-            {props.folderName ? (
-              <>
+    <main
+      className={cn(
+        'flex min-w-0 flex-col px-4 pt-5 sm:px-[28px] sm:pt-[26px]',
+        // the Table scrolls with the page; the other views fill the window and scroll inside
+        tabular
+          ? 'min-h-[calc(100dvh-48px)] pb-[24px]'
+          : 'h-[calc(100dvh-48px)] pb-3 max-[759px]:h-[calc(100dvh-112px)]',
+      )}
+    >
+      <ShellCrumb>
+        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2.5 text-[14px]">
+          {props.folderName ? (
+            <>
+              <span className="text-muted-foreground flex min-w-0 items-center gap-2">
+                <Folder className="size-4 shrink-0" aria-hidden />
                 <span className="truncate">{props.folderName}</span>
-                <span aria-hidden className="text-line-strong">
-                  /
-                </span>
-              </>
-            ) : null}
-            <span className="text-ink truncate">{sheetName}</span>
+              </span>
+              <span aria-hidden className="text-line-strong text-[20px] leading-none font-light">
+                /
+              </span>
+            </>
+          ) : null}
+          <span className="text-ink flex min-w-0 items-center gap-2" aria-current="page">
+            <Sheet className="size-4 shrink-0" aria-hidden />
+            <span className="truncate font-medium">{sheetName}</span>
           </span>
-        }
+          {props.archived || data?.sheet.isLibrary ? (
+            <span className="bg-soft text-ink-3 shrink-0 rounded-full px-[9px] py-0.5 text-[11.5px] font-medium">
+              {props.archived ? 'Archived' : 'Library'}
+            </span>
+          ) : null}
+        </nav>
+      </ShellCrumb>
+      <PageHeader
         title={sheetName}
         description={
           props.description || (realtime === 'offline' && online) ? (
@@ -262,6 +283,7 @@ function SheetBody(props: SheetViewProps) {
         }
       />
       <ViewTabs
+        className="-mx-4 px-4 sm:-mx-[28px] sm:px-[28px]"
         views={views}
         fields={data?.fields ?? []}
         end={
@@ -275,7 +297,7 @@ function SheetBody(props: SheetViewProps) {
           </>
         }
       />
-      <div className="mt-4 mb-3.5 flex flex-wrap items-center gap-2">
+      <div className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-[8px]">
         {filterable ? (
           <div className="flex min-w-0 flex-[1_1_260px] [&>*]:w-full">
             <SheetSearch value={q} onChange={setQ} />

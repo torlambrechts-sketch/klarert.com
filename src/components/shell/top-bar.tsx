@@ -14,6 +14,7 @@ import {
 import { solidVar } from '@/components/fields/shared';
 import { GlobalSearch } from './global-search';
 import { Inbox } from './inbox';
+import { CRUMB_SLOT } from './shell-crumb';
 import { useShell } from './shell-context';
 
 type Ws = { id: string; name: string; slug: string };
@@ -47,7 +48,7 @@ export function TopBar({
   const { setMenuOpen, focusSearch } = useShell();
   useSlashToSearch(focusSearch);
   return (
-    <header className="border-line-2 sticky top-0 z-30 flex h-12 items-center gap-2 border-b bg-white px-3 sm:gap-3 sm:px-6">
+    <header className="border-line-2 sticky top-0 z-30 flex h-[48px] items-center gap-2 border-b bg-white px-3 sm:gap-3 sm:px-[28px]">
       <button
         type="button"
         className="phone-only hover:bg-soft flex size-9 shrink-0 items-center justify-center rounded-md"
@@ -57,14 +58,17 @@ export function TopBar({
         <Menu className="size-5" aria-hidden />
       </button>
 
+      {/* the page's breadcrumb (folder / sheet and its badge) is rendered here by <ShellCrumb> */}
+      <div id={CRUMB_SLOT} className="desk-only flex min-w-0 flex-1 items-center" />
+
       <GlobalSearch org={current.slug} />
 
-      <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <Inbox org={current.slug} orgId={current.id} userId={me.id} timeZone={timeZone} />
 
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
+            className="flex size-7 shrink-0 items-center justify-center rounded-full text-[10.5px] font-semibold text-white"
             style={{ background: solidVar(me.color) }}
             aria-label={`${me.initials}: account menu for ${me.displayName}`}
           >

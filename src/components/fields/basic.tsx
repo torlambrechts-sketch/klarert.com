@@ -453,10 +453,10 @@ export const checkUI: FieldTypeUI = {
 // ───────────── dates ─────────────
 
 const COUNTDOWN_TONE = {
-  done: { bar: 'var(--good)', text: 'text-muted-foreground' },
-  late: { bar: 'var(--crit)', text: 'text-crit font-medium' },
+  done: { bar: 'var(--bar-good)', text: 'text-good' },
+  late: { bar: 'var(--bar-crit)', text: 'text-crit-ink' },
   soon: { bar: 'var(--label-orange)', text: 'text-muted-foreground' },
-  far: { bar: 'var(--line-strong)', text: 'text-muted-foreground' },
+  far: { bar: 'var(--faint)', text: 'text-muted-foreground' },
 } as const;
 
 /** The Table's date: the date, then a thin bar and "in 65d" / "today" / "late 3d" / "done" (docs/05 §3.1). */
@@ -473,15 +473,19 @@ function DateCountdownCell({
   const tone = COUNTDOWN_TONE[c.tone];
   return (
     <span className="flex w-full min-w-0 flex-col gap-1">
-      <span className="text-ink truncate text-[14px]">{formatDate(value)}</span>
-      <span className="flex min-w-0 items-center gap-2">
+      <span className="text-ink-2 truncate text-[12.5px] leading-[18px] font-medium">
+        {formatDate(value)}
+      </span>
+      <span className="flex min-w-0 items-center gap-1.5">
         <span aria-hidden className="bg-soft block h-1 min-w-6 flex-1 overflow-hidden rounded-full">
           <span
             className="block h-full rounded-full"
             style={{ width: `${c.pct}%`, background: tone.bar }}
           />
         </span>
-        <span className={cn('shrink-0 font-mono text-[11.5px] leading-none', tone.text)}>
+        <span
+          className={cn('shrink-0 font-mono text-[10.5px] leading-[15px] font-medium', tone.text)}
+        >
           {c.text}
         </span>
       </span>

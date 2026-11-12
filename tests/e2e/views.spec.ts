@@ -106,12 +106,12 @@ test('Table view: editing, add a field, locks, hint and all rows reachable', asy
   });
   await page.reload();
 
-  // every row is reachable in one scrolling table (no pages)
+  // every row is reachable in one table that scrolls with the page (no pages)
   await expect(listRow(page, 'Row 01')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveCount(0);
-  await table(page).evaluate((el) => (el.scrollTop = el.scrollHeight));
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect(listRow(page, 'Row 30')).toBeVisible();
-  await table(page).evaluate((el) => (el.scrollTop = 0));
+  await page.evaluate(() => window.scrollTo(0, 0));
   await expect(listRow(page, 'Row 01')).toBeVisible();
 
   // each group card starts with a header row: the item label, then the fields in field order

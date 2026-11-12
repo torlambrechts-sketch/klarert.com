@@ -164,12 +164,12 @@ export function Inbox({
   return (
     <Popover open={inboxOpen} onOpenChange={setInboxOpen}>
       <PopoverTrigger
-        className="hover:bg-soft relative flex h-9 items-center gap-1.5 rounded-md px-2.5 text-[14px] font-medium"
+        className="hover:bg-soft relative flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13.5px] font-medium"
         aria-label={unread > 0 ? `Inbox, ${unread} unread` : 'Inbox'}
         data-testid="inbox-button"
         data-state-loaded={state.status === 'ready' ? '' : undefined}
       >
-        <Bell className="size-[18px]" aria-hidden />
+        <Bell className="size-4" aria-hidden />
         <span className="desk-only">Inbox</span>
         {unread > 0 ? (
           <span

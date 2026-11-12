@@ -28,7 +28,9 @@ export function LinkCell({ item, field, ctx }: CellProps) {
           className="border-line bg-soft inline-flex max-w-[11rem] min-w-0 shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
           title={t ? `${t.displayId} ${t.name}` : 'Archived or hidden item'}
         >
-          <span className="font-mono text-[11px] font-medium">{t?.displayId ?? '—'}</span>
+          <span className="shrink-0 font-mono text-[11px] font-medium whitespace-nowrap">
+            {t?.displayId ?? '—'}
+          </span>
           {t ? <span className="truncate">{t.name}</span> : null}
         </span>
       ))}
