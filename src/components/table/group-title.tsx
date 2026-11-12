@@ -28,20 +28,20 @@ export function GroupTitle({
         type="button"
         aria-expanded={!collapsed}
         onClick={onToggle}
-        className="focus-visible:outline-focus hover:bg-soft flex h-9 max-w-full items-center gap-2 rounded-md px-1.5 text-left focus-visible:outline-2"
+        className="focus-visible:outline-focus hover:bg-soft flex h-[32px] max-w-full items-center gap-[8px] rounded-md px-[4px] text-left focus-visible:outline-2"
       >
         {collapsed ? (
-          <ChevronRight className="size-4 shrink-0" aria-hidden />
+          <ChevronRight className="text-muted-foreground mr-1 size-4 shrink-0" aria-hidden />
         ) : (
-          <ChevronDown className="size-4 shrink-0" aria-hidden />
+          <ChevronDown className="text-muted-foreground mr-1 size-4 shrink-0" aria-hidden />
         )}
         <span
           aria-hidden
-          className="size-2 shrink-0 rounded-full"
+          className="size-[8px] shrink-0 rounded-full"
           style={{ background: solidVar(group.color) }}
         />
         <span className="text-ink truncate text-[14px] font-semibold">{group.name}</span>
-        <span className="bg-soft text-muted-foreground shrink-0 rounded-full px-2 font-mono text-[12px] leading-5 tabular-nums">
+        <span className="bg-soft text-muted-foreground shrink-0 rounded-full px-[8px] py-px font-mono text-[12px] leading-[17px] font-semibold tabular-nums">
           {count === 1 ? '1 item' : `${count.toLocaleString('en-GB')} items`}
         </span>
         {donePct === null ? null : (

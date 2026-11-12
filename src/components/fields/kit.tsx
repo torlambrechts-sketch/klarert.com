@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import {
   Block,
   Chip,
+  Pill,
   defOf,
   displayText,
   ExplainEditor,
@@ -102,15 +103,32 @@ export function optionInput(field: Field, ctx: Ctx, o: LabelOption): unknown {
 }
 
 /**
- * An option cell: one option fills the cell as a rounded block (List and Grid alike); several (multi-select) are
- * compact chips side by side.
+ * How one option shows in the Table: `fill` colours the whole cell (status-like types: the state is what the column
+ * is for), `pill` is an outlined pill with the words (values picked from a list: dropdown, role, team …).
  */
-export function OptionCell({ value, field, ctx, density }: CellProps) {
+export type OptionLook = 'fill' | 'pill';
+
+/**
+ * An option cell: one option fills the cell as a block, or sits in an outlined pill in the Table when the type's look
+ * is `pill`; several (multi-select) are compact chips side by side.
+ */
+export function OptionCell({
+  value,
+  field,
+  ctx,
+  density,
+  look = 'fill',
+}: CellProps & { look?: OptionLook }) {
   const opts = optionsOf(field, ctx);
   const keys = selectedKeys(field, value);
   const chosen = keys.map((k) => opts.find((o) => o.id === k)).filter((o): o is LabelOption => !!o);
   if (chosen.length === 0) return <Empty />;
-  if (!Array.isArray(value)) return <Block option={chosen[0]!} density={density} />;
+  if (!Array.isArray(value))
+    return look === 'pill' && density === 'table' ? (
+      <Pill option={chosen[0]!} />
+    ) : (
+      <Block option={chosen[0]!} density={density} />
+    );
   const shown = chosen.slice(0, 3);
   return (
     <span className="flex min-w-0 items-center gap-1 overflow-hidden">
@@ -182,10 +200,12 @@ export function optionUI(spec: {
   icon: LucideIcon;
   multiple?: boolean | ((field: Field) => boolean);
   render?: (o: LabelOption) => React.ReactNode;
+  /** The Table look of one option (default fill). */
+  look?: OptionLook;
 }): FieldTypeUI {
   return {
     icon: spec.icon,
-    Cell: (p) => <OptionCell {...p} />,
+    Cell: (p) => <OptionCell {...p} look={spec.look} />,
     Editor: (p) => (
       <OptionPicker
         {...p}

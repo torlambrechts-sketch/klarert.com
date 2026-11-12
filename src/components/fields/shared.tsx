@@ -88,7 +88,7 @@ export function Block({
     // monday-style: the option fills the whole cell, white text on the option's solid colour
     return (
       <span
-        className="absolute inset-px flex min-w-0 items-center justify-center gap-1.5 px-2 text-[14px] font-medium text-white"
+        className="absolute inset-px flex min-w-0 items-center justify-center gap-1.5 px-[10px] text-[13.5px] font-medium text-white"
         style={{ background: solidVar(option.color) }}
       >
         <OptionMarks option={option}>
@@ -112,25 +112,58 @@ export function Block({
   );
 }
 
+/**
+ * One option as an outlined pill (the Table's look for picked-from-a-list values: dropdown, role, team …): the words
+ * and the marks, no colour fill. Status-like types fill the cell instead (Block).
+ */
+export function Pill({ option }: { option: LabelOption }) {
+  return (
+    <span className="border-line text-ink-2 inline-flex h-[24px] max-w-full min-w-0 items-center gap-1 rounded-full border bg-white px-[10px] text-[12.5px] leading-[18px] font-medium">
+      <OptionMarks option={option}>
+        <span className="truncate">{option.label}</span>
+      </OptionMarks>
+    </span>
+  );
+}
+
+/** A person's colour as a soft tint behind initials in that colour (the Table's avatars). */
+const softAvatar = (color: string) => ({
+  background: `color-mix(in srgb, ${colorVar(color)} 13%, white)`,
+  color: solidVar(color),
+});
+
 export function Avatar({
   id,
   ctx,
   size = 24,
   decorative = false,
+  tone = 'solid',
 }: {
   id: string;
   ctx: Ctx;
   size?: number;
   /** The name is written next to it: no tooltip and nothing for screen readers. */
   decorative?: boolean;
+  /** solid: white initials on the colour; soft: initials in the colour on a light tint. */
+  tone?: 'solid' | 'soft';
 }) {
   const p = ctx.people.get(id);
+  const color = p?.color ?? 'dark';
   return (
     <span
       aria-hidden={decorative || undefined}
       title={decorative ? undefined : (p?.name ?? 'Former member')}
-      className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-white"
-      style={{ width: size, height: size, background: solidVar(p?.color ?? 'dark') }}
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center rounded-full',
+        tone === 'solid'
+          ? 'border-2 border-white text-[10px] font-bold text-white'
+          : 'text-[10.5px] font-semibold shadow-[0_0_0_2px_#fff]',
+      )}
+      style={{
+        width: size,
+        height: size,
+        ...(tone === 'solid' ? { background: solidVar(color) } : softAvatar(color)),
+      }}
     >
       {/* initials as generated content: decoration only, so the name read out (and matched by "label in name")
           is the person's name */}
@@ -174,7 +207,7 @@ export function Avatars({ ids, ctx, max = 3 }: { ids: string[]; ctx: Ctx; max?: 
   return (
     <span className="flex items-center -space-x-1.5">
       {shown.map((id) => (
-        <Avatar key={id} id={id} ctx={ctx} />
+        <Avatar key={id} id={id} ctx={ctx} size={26} tone="soft" />
       ))}
       {ids.length > max ? (
         <span className="text-muted-foreground pl-2.5 text-xs font-semibold">
