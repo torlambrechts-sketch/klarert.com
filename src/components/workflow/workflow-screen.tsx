@@ -245,14 +245,18 @@ function FieldPicker({
   row,
   onField,
   className,
+  id,
 }: {
   row: WorkflowRow;
   onField(key: string): void;
   className?: string;
+  /** Labelled by a visible label (the phone layout) instead of its own name. */
+  id?: string;
 }) {
   return (
     <select
-      aria-label={`Stages of ${row.sheet.name} from`}
+      id={id}
+      aria-label={id ? undefined : `Stages of ${row.sheet.name} from`}
       className={cn(selectClass, className)}
       value={row.lifecycle?.field.key ?? ''}
       disabled={row.fields.length === 0}
@@ -350,8 +354,13 @@ function WorkflowListRow({
       {open ? (
         <RowDrawer id={drawer}>
           <div className="flex flex-col gap-1.5 py-2.5 md:hidden">
-            <span className="text-muted-foreground text-[12px] font-medium">Stages from</span>
-            <FieldPicker row={row} onField={onField} />
+            <label
+              htmlFor={`${drawer}-field`}
+              className="text-muted-foreground text-[12px] font-medium"
+            >
+              Stages from
+            </label>
+            <FieldPicker row={row} onField={onField} id={`${drawer}-field`} />
           </div>
           {l ? (
             <Steps org={org} row={row} canEdit={canEdit} mover={mover} />
