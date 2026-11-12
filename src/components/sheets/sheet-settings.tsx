@@ -17,6 +17,8 @@ export type SheetSettingsValue = {
   prefixLocked: boolean;
   folderId: string | null;
   isLibrary: boolean;
+  /** Automations wait until a row is finished (on unless switched off). */
+  holdAutomations: boolean;
   archived: boolean;
 };
 
@@ -32,10 +34,11 @@ export function SheetSettingsForm({
 }) {
   const descId = useId();
   const libId = useId();
+  const holdId = useId();
   return (
     <ActionForm
       action={updateSheetAction}
-      hidden={{ org, sheetId: sheet.id, isLibrary: 'false' }}
+      hidden={{ org, sheetId: sheet.id, isLibrary: 'false', holdAutomations: 'false' }}
       success="Sheet settings saved."
       className="flex flex-col gap-4"
       aria-label="Sheet settings"
@@ -97,6 +100,23 @@ export function SheetSettingsForm({
               <Label htmlFor={libId}>Library sheet</Label>
               <p className="text-muted-foreground text-sm">
                 Requirement and control link fields of other sheets can point at its items.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <input
+              id={holdId}
+              type="checkbox"
+              name="holdAutomations"
+              value="true"
+              defaultChecked={sheet.holdAutomations}
+              className="mt-0.5 size-4"
+            />
+            <div className="flex flex-col gap-0.5">
+              <Label htmlFor={holdId}>Run automations when a row is finished</Label>
+              <p className="text-muted-foreground text-sm">
+                Edits in the table and the item panel wait until you move to another row, press Done
+                or close the item. Switch off to run automations on every saved change.
               </p>
             </div>
           </div>

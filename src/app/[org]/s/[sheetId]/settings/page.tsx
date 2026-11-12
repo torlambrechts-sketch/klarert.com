@@ -76,6 +76,8 @@ export default async function SheetSettingsPage({
               prefixLocked: sheet.next_seq > 1,
               folderId: sheet.folder_id,
               isLibrary: sheet.is_library,
+              holdAutomations:
+                (sheet.settings as { holdAutomations?: boolean } | null)?.holdAutomations !== false,
               archived: !!sheet.archived_at,
             }}
           />
