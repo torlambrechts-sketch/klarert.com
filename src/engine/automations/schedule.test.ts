@@ -43,8 +43,9 @@ describe('scheduledMoment', () => {
   it('date_arrives: the date plus offsetDays at midnight in the workspace time zone', () => {
     const ctx = makeCtx({ fields });
     const item = makeItem({ 'f-due': '2026-12-11' });
-    expect(scheduledMoment(trig('date_arrives', { fieldKey: 'due', offsetDays: -30 }), item, ctx))
-      .toEqual({ at: Date.parse('2026-11-11T00:00:00Z'), occurrence: '2026-12-11' });
+    expect(
+      scheduledMoment(trig('date_arrives', { fieldKey: 'due', offsetDays: -30 }), item, ctx),
+    ).toEqual({ at: Date.parse('2026-11-11T00:00:00Z'), occurrence: '2026-12-11' });
     expect(scheduledMoment(trig('date_arrives', { fieldKey: 'due' }), item, ctx)?.at).toBe(
       Date.parse('2026-12-11T00:00:00Z'),
     );
@@ -62,18 +63,23 @@ describe('scheduledMoment', () => {
     const ctx = makeCtx({ fields });
     expect(scheduledMoment(trig('date_arrives', { fieldKey: 'due' }), makeItem(), ctx)).toBeNull();
     expect(
-      scheduledMoment(trig('date_arrives', { fieldKey: 'gone' }), makeItem({ 'f-due': '2026-11-11' }), ctx),
+      scheduledMoment(
+        trig('date_arrives', { fieldKey: 'gone' }),
+        makeItem({ 'f-due': '2026-11-11' }),
+        ctx,
+      ),
     ).toBeNull();
   });
 
   it('clock_warning: the deadline minus hoursLeft; occurrence is the deadline', () => {
     const ctx = makeCtx({ fields });
     const item = makeItem({ 'f-aware': '2026-11-10T00:00:00.000Z' });
-    expect(scheduledMoment(trig('clock_warning', { fieldKey: 'clock', hoursLeft: 24 }), item, ctx))
-      .toEqual({
-        at: Date.parse('2026-11-12T00:00:00Z'),
-        occurrence: '2026-11-13T00:00:00.000Z',
-      });
+    expect(
+      scheduledMoment(trig('clock_warning', { fieldKey: 'clock', hoursLeft: 24 }), item, ctx),
+    ).toEqual({
+      at: Date.parse('2026-11-12T00:00:00Z'),
+      occurrence: '2026-11-13T00:00:00.000Z',
+    });
   });
 
   it('clock_warning: a stopped or unstarted clock never warns', () => {

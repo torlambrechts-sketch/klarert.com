@@ -15,7 +15,11 @@ export const SCHEDULE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 const HOUR_MS = 60 * 60 * 1000;
 
-export const SCHEDULED_TRIGGERS: TriggerId[] = ['date_arrives', 'clock_warning', 'evidence_expiring'];
+export const SCHEDULED_TRIGGERS: TriggerId[] = [
+  'date_arrives',
+  'clock_warning',
+  'evidence_expiring',
+];
 
 export const isScheduledTrigger = (type: string): boolean =>
   (SCHEDULED_TRIGGERS as string[]).includes(type);
