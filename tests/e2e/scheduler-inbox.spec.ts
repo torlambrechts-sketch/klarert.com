@@ -221,7 +221,7 @@ test.describe('inbox, requests and My work', () => {
     // assign → a notification arrives (realtime) and the count shows
     await pickStatus(page, sheet, 'Assign me', 'Working on it');
     // realtime, or the 30 s poll when the local realtime connection drops events
-    await expect(inbox).toHaveAccessibleName('Inbox, 1 unread', { timeout: 40_000 });
+    await expect(inbox).toHaveAccessibleName('Inbox 1 unread', { timeout: 40_000 });
     await expect(page.getByTestId('inbox-count')).toHaveText('1');
     await inbox.click();
     const dialog = page.getByRole('dialog');
@@ -237,7 +237,7 @@ test.describe('inbox, requests and My work', () => {
 
     // stuck → a request to the owner (me)
     await pickStatus(page, sheet, 'Ask me', 'Stuck');
-    await expect(inbox).toHaveAccessibleName('Inbox, 1 unread', { timeout: 40_000 });
+    await expect(inbox).toHaveAccessibleName('Inbox 1 unread', { timeout: 40_000 });
 
     // My work: tiles, rows and the rail badge (overdue 1 + open requests 1)
     await page.goto(`/${slug}/my-work`);

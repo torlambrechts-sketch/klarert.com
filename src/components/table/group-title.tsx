@@ -41,7 +41,7 @@ export function GroupTitle({
           style={{ background: solidVar(group.color) }}
         />
         <span className="text-ink truncate text-[14px] font-semibold">{group.name}</span>
-        <span className="bg-soft text-muted-foreground shrink-0 rounded-full px-[8px] py-px font-mono text-[12px] leading-[17px] font-semibold tabular-nums">
+        <span className="bg-soft text-ink-3 shrink-0 rounded-full px-[8px] py-px font-mono text-[12px] leading-[17px] font-semibold tabular-nums">
           {count === 1 ? '1 item' : `${count.toLocaleString('en-GB')} items`}
         </span>
         {donePct === null ? null : (

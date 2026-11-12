@@ -10,7 +10,7 @@ export const TONE_BADGE: Record<Tone, string> = {
   good: 'bg-good-soft text-good',
   warn: 'bg-warn-soft text-warn',
   crit: 'bg-crit-soft text-crit-ink',
-  neutral: 'bg-soft text-muted-foreground',
+  neutral: 'bg-soft text-ink-3',
 };
 
 export const TONE_FILL: Record<Tone, string> = {

@@ -410,7 +410,7 @@ export function SortButton({
             {rules.length ? `Sorted by ${keyLabel(rules[0]!.fieldKey, ctx)}` : 'Default order'}
           </span>
           {rules.length > 1 ? (
-            <span className="bg-soft text-muted-foreground rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums">
+            <span className="bg-soft text-ink-3 rounded px-1.5 font-mono text-[11px] leading-[18px] font-normal tabular-nums">
               +{rules.length - 1}
               <span className="sr-only"> more</span>
             </span>

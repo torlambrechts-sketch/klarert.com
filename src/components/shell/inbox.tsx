@@ -165,20 +165,22 @@ export function Inbox({
     <Popover open={inboxOpen} onOpenChange={setInboxOpen}>
       <PopoverTrigger
         className="hover:bg-soft relative flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13.5px] font-medium"
-        aria-label={unread > 0 ? `Inbox, ${unread} unread` : 'Inbox'}
         data-testid="inbox-button"
         data-state-loaded={state.status === 'ready' ? '' : undefined}
       >
         <Bell className="size-4" aria-hidden />
-        <span className="desk-only">Inbox</span>
+        {/* Visible from 760 px; below that it stays as screen-reader text so the name always starts with it. */}
+        <span className="max-[759.98px]:sr-only">Inbox</span>
         {unread > 0 ? (
-          <span
-            className="bg-crit flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10.5px] font-bold text-white"
-            data-testid="inbox-count"
-            aria-hidden
-          >
-            {unread > 99 ? '99+' : unread}
-          </span>
+          <>
+            <span
+              className="bg-crit flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10.5px] font-bold text-white"
+              data-testid="inbox-count"
+            >
+              {unread > 99 ? '99+' : unread}
+            </span>
+            <span className="sr-only"> unread</span>
+          </>
         ) : null}
       </PopoverTrigger>
       <PopoverContent

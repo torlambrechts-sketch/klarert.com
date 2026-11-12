@@ -53,7 +53,7 @@ export function GroupSelect({
         >
           {mark}
           <span className="min-w-0 flex-1 truncate">{label}</span>
-          <span className="bg-soft text-muted-foreground rounded px-1.5 font-mono text-[11.5px] leading-[18px] tabular-nums">
+          <span className="bg-soft text-ink-3 rounded px-1.5 font-mono text-[11.5px] leading-[18px] tabular-nums">
             {count(id)}
           </span>
           {on ? (
@@ -73,8 +73,8 @@ export function GroupSelect({
             'border-line hover:bg-subtle flex h-[38px] max-w-[260px] min-w-[170px] items-center gap-2 rounded-md border bg-white pr-2.5 pl-3 text-[14px]',
             current && 'border-faint',
           )}
-          aria-label={`Show one group: ${current ? current.name : 'All groups'}`}
         >
+          <span className="sr-only">Show one group: </span>
           {current ? (
             <GroupSwatch color={current.color} className="size-2 rounded-full" />
           ) : (
@@ -83,7 +83,7 @@ export function GroupSelect({
           <span className="min-w-0 flex-1 truncate text-left">
             {current ? current.name : 'All groups'}
           </span>
-          <span className="bg-soft text-muted-foreground rounded px-1.5 font-mono text-[11.5px] leading-[18px] tabular-nums">
+          <span className="bg-soft text-ink-3 rounded px-1.5 font-mono text-[11.5px] leading-[18px] tabular-nums">
             {count(current?.id ?? null)}
           </span>
           <ChevronsUpDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />

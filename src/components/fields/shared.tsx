@@ -609,7 +609,7 @@ export function OptionsEditor({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onCommit([])}
-                className="bg-soft hover:bg-subtle text-muted-foreground flex min-h-[34px] w-full items-center justify-center rounded-[3px] text-[13px] font-semibold"
+                className="bg-soft hover:bg-subtle text-ink-3 flex min-h-[34px] w-full items-center justify-center rounded-[3px] text-[13px] font-semibold"
               >
                 Clear
               </button>

@@ -982,7 +982,9 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
         ) : (
           <span className="w-[58px] shrink-0" />
         )}
-        <span className="text-faint truncate pl-[4px] text-[12px]">{p.ctx.sheet.itemLabel}</span>
+        <span className="text-muted-foreground truncate pl-[4px] text-[12px]">
+          {p.ctx.sheet.itemLabel}
+        </span>
       </Sticky>
       {p.vCols.map((vc) => {
         if (vc.index >= p.fieldCols.length)
