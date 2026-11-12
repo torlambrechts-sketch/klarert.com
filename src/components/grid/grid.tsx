@@ -697,10 +697,10 @@ function GroupRow({ row, stickyW }: RowProps & { row: Extract<GridRow, { kind: '
           ) : (
             <ChevronDown className="size-4" aria-hidden />
           )}
-          <span className="text-[15px] font-bold" style={{ color: solidVar(row.group.color) }}>
+          <span className="text-cell font-bold" style={{ color: solidVar(row.group.color) }}>
             {row.group.name}
           </span>
-          <span className="text-muted-foreground text-xs font-semibold tabular-nums">
+          <span className="text-muted-foreground text-meta font-semibold tabular-nums">
             {row.count === 1 ? '1 item' : `${row.count.toLocaleString('en-GB')} items`}
           </span>
         </button>
@@ -737,7 +737,7 @@ function HeaderRow(p: RowProps & { row: Extract<GridRow, { kind: 'header' }> }) 
           </span>
         ) : null}
         <span
-          className="flex-1 truncate px-2 text-xs font-semibold"
+          className="text-label flex-1 truncate px-2"
           style={{ paddingLeft: p.canEdit ? 28 : 8 }}
         >
           {ctx.sheet.itemLabel}
@@ -935,7 +935,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<GridRow, { ki
                 </span>
               </span>
             ) : null}
-            <span className="text-muted-foreground shrink-0 font-mono text-[11px]">
+            <span className="text-muted-foreground text-meta shrink-0 font-mono">
               {item.displayId}
             </span>
             {isEditing('name') ? (
@@ -1039,7 +1039,7 @@ const GridCell = memo(function GridCell({
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'border-line absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-2 text-[13px]',
+        'border-line text-cell absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-2',
         selected && 'bg-sel',
         active && 'outline-focus z-[1] outline-2 -outline-offset-2',
       )}
