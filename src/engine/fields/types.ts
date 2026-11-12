@@ -88,6 +88,16 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
    * and Home prefer such a field over other dates of the sheet, so "Found on" never reads as overdue.
    */
   isDeadline?(cfg: C): boolean;
+  /**
+   * Matrix kinds (risk matrix): the grid a dashboard heatmap draws. `cell` places a value (x along the columns, y up
+   * the rows, both 1..size); `level` names the band of a cell, rank 1 (lowest) to 4 (highest).
+   */
+  matrix?: {
+    axes: { x: string; y: string };
+    size(cfg: C): number;
+    cell(v: V | null): { x: number; y: number } | null;
+    level(x: number, y: number, cfg: C): { rank: 1 | 2 | 3 | 4; label: string };
+  };
   /** Number kinds: the default group-footer summary (docs/03 §8). Default `sum`. */
   defaultSummary?: 'sum' | 'average';
   /**

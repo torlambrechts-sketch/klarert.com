@@ -58,4 +58,14 @@ describe('riskmatrix', () => {
     expect(riskmatrix.normalize('4x2', cfg, makeCtx())).toBeNull();
     expect(riskmatrix.normalize('3x3', cfg, makeCtx())).toEqual({ l: 3, i: 3 });
   });
+
+  it('places values on the heatmap grid with their band', () => {
+    const cfg = riskmatrix.defaultConfig();
+    const m = riskmatrix.matrix!;
+    expect(m.size(cfg)).toBe(5);
+    expect(m.cell({ l: 2, i: 4 })).toEqual({ x: 2, y: 4 });
+    expect(m.cell(null)).toBeNull();
+    expect(m.level(1, 1, cfg)).toEqual({ rank: 1, label: 'Low' });
+    expect(m.level(4, 5, cfg)).toEqual({ rank: 4, label: 'Critical' });
+  });
 });
