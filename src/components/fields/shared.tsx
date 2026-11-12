@@ -84,9 +84,10 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
 }
 
 /**
- * The value of a one-option cell. In the Table: a box inset 8 px in the cell, 6 px radius, the option's tint with a
- * border in the same hue and the words centred in its dark step, with "!" for options that need action and a check
- * for done ones. Elsewhere (Grid 30 px, List 34 px): a colour dot and the label, left-aligned.
+ * The value of a one-option cell. In the Table: a box that hugs its words (28 px tall, 4 × 10 px padding, 6 px
+ * radius), centred in the cell, the option's tint with a border in the same hue and the words in its dark step, with
+ * "!" for options that need action and a check for done ones. Elsewhere (Grid 30 px, List 34 px): a colour dot and
+ * the label, left-aligned.
  */
 export function Block({
   option,
@@ -97,14 +98,16 @@ export function Block({
 }) {
   if (density === 'table')
     return (
-      <span
-        data-box
-        className="text-label-14 absolute inset-[8px] flex min-w-0 items-center justify-center gap-1.5 rounded-md border px-[10px] font-medium"
-        style={tintStyle(option.color)}
-      >
-        <OptionMarks option={option}>
-          <span className="truncate">{option.label}</span>
-        </OptionMarks>
+      <span className="flex w-full min-w-0 items-center justify-center">
+        <span
+          data-box
+          className="text-label-14 inline-flex h-[28px] max-w-full min-w-0 items-center justify-center gap-1.5 rounded-md border px-[10px] py-1 font-medium"
+          style={tintStyle(option.color)}
+        >
+          <OptionMarks option={option}>
+            <span className="truncate">{option.label}</span>
+          </OptionMarks>
+        </span>
       </span>
     );
   return (

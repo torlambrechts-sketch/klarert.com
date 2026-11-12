@@ -342,6 +342,27 @@ export function NumberConfig(p: Props) {
           </p>
         ) : null}
       </fieldset>
+      {saved ? (
+        <Pick
+          label="A rising value is"
+          value={
+            p.config.higherIsBetter === true
+              ? 'better'
+              : p.config.higherIsBetter === false
+                ? 'worse'
+                : ''
+          }
+          options={[
+            { value: '', label: 'Neither good nor bad' },
+            { value: 'better', label: 'Better' },
+            { value: 'worse', label: 'Worse' },
+          ]}
+          onChange={(v) =>
+            set(p, { higherIsBetter: v === 'better' ? true : v === 'worse' ? false : undefined })
+          }
+          hint="Colours the Table's trend line: green when it moves the good way, red when it moves the bad way."
+        />
+      ) : null}
     </div>
   );
 }

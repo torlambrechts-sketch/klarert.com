@@ -9,6 +9,11 @@ export interface NumberConfig {
    * as a four-bar meter beside the number. Without bands the number shows alone.
    */
   bands?: [number, number, number];
+  /**
+   * With bands: whether a rising value is good (true), bad (false) or neither (unset). Colours the Table's trend
+   * line; the line's words say rising or falling either way.
+   */
+  higherIsBetter?: boolean;
 }
 
 export type MeterStep = 1 | 2 | 3 | 4;
@@ -39,6 +44,7 @@ export const number = base<number, NumberConfig>({
     unit: z.string().max(12),
     decimals: z.number().int().min(0).max(6),
     bands: bandsSchema.optional(),
+    higherIsBetter: z.boolean().optional(),
   }),
   defaultConfig: () => ({ unit: '', decimals: 2 }),
   defaultWidth: 96,
@@ -53,4 +59,15 @@ export const number = base<number, NumberConfig>({
     isEmpty(v) ? '' : `${formatNumber(v!, cfg.decimals)}${cfg.unit ? ` ${cfg.unit}` : ''}`,
   toNumber: (v) => (isEmpty(v) ? null : v),
   compare: (a, b) => emptyLast(a, b, isEmpty, cmpNumber),
+  trend: (cfg) =>
+    cfg.bands
+      ? {
+          higherIs:
+            cfg.higherIsBetter === true
+              ? 'better'
+              : cfg.higherIsBetter === false
+                ? 'worse'
+                : 'neutral',
+        }
+      : null,
 });

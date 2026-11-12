@@ -83,6 +83,8 @@ export const riskmatrix = base<RiskValue, RiskMatrixConfig>({
   isEmpty,
   toText: (v, cfg) => (isEmpty(v) ? '' : `${scoreOf(v!)} · ${riskLevel(scoreOf(v!), cfg.bands)}`),
   toNumber: (v) => (isEmpty(v) ? null : scoreOf(v!)),
+  // a risk score going up is a risk getting worse
+  trend: () => ({ higherIs: 'worse' }),
   matrix: {
     axes: { x: 'Likelihood', y: 'Impact' },
     size: (cfg) => cfg.size,

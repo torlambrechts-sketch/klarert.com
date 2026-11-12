@@ -33,8 +33,10 @@ import type { SheetData } from '@/engine/sheet-data';
 import { columnSummaries, type SummaryFn } from '@/engine/summaries';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { setSummary, type ViewConfig } from '@/engine/views/config';
+import { trendPolarity } from '@/engine/values/trend';
 import { fieldUI } from '@/components/fields/registry';
 import { cellValue, editorPopoverClass, TextEditor } from '@/components/fields/shared';
+import { TrendContext } from '@/components/fields/trend';
 import type { EditorProps } from '@/components/fields/types';
 import { FieldPicker } from '@/components/grid/field-picker';
 import { useGrid, useGridStore, type CellRef } from '@/components/grid/grid-store';
@@ -56,6 +58,7 @@ import { GroupTitle } from './group-title';
 import { LockDialog } from './lock-dialog';
 import { useDocumentTop } from './use-document-top';
 import { useTableGroups } from './use-table-groups';
+import { useTrendHistory } from './use-trends';
 import {
   buildLayout,
   byPosition,
@@ -85,6 +88,8 @@ const TRAIL = 48;
  * or selection, with the drag handle in the 16 px before it.
  */
 const CHECK_W = 70;
+/** The room a trend line takes after a score: the line and the gap before it. */
+const TREND_W = 72;
 /** The card's left and right borders. */
 const EDGE = 2;
 const cellId = (itemId: string, col: string) => `cell-${itemId}-${col}`;
@@ -221,9 +226,20 @@ export function Table({
     layout.rows.forEach((r, i) => r.kind === 'item' && m.set(r.item.id, i));
     return m;
   }, [layout.rows]);
+  // trend lines (comfortable density): the history loads after the sheet; columns that show one get its width
+  // up front, unless the person sized them, so nothing shifts when it arrives
+  const showTrends = density === 'comfortable';
+  const trendHistory = useTrendHistory(data, showTrends);
+  const trendState = useMemo(
+    () => ({ show: showTrends, history: trendHistory }),
+    [showTrends, trendHistory],
+  );
   const baseWidth = useCallback(
-    (f: Field) => widths[f.id] ?? f.width ?? resolveFieldType(f.type)?.defaultWidth ?? 140,
-    [widths],
+    (f: Field) =>
+      widths[f.id] ??
+      (f.width ?? resolveFieldType(f.type)?.defaultWidth ?? 140) +
+        (showTrends && trendPolarity(f) !== null ? TREND_W : 0),
+    [widths, showTrends],
   );
   const stickyW = CHECK_W + nameWidth;
   // columns stretch to fill the card; wider tables keep their widths and scroll
@@ -704,137 +720,139 @@ export function Table({
   const firstAddGroup = layout.rows.find((r) => r.kind === 'add')?.key;
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onDragCancel={() => setDragging(null)}
-    >
-      <div className="relative flex flex-col">
-        <div
-          ref={scrollRef}
-          role="grid"
-          aria-label={`${ctx.sheet.name} table`}
-          aria-rowcount={ariaRows.count}
-          aria-colcount={columns.length + 1}
-          aria-multiselectable
-          aria-activedescendant={activeId}
-          tabIndex={0}
-          onKeyDown={onKeyDown}
-          onCopy={onCopy}
-          onPaste={onPaste}
-          onFocus={(e) => {
-            if (e.target === scrollRef.current && !store.getState().active && layout.flat[0])
-              store.getState().focus({ itemId: layout.flat[0].id, col: 'name' });
-          }}
-          // rows scroll with the page; only wide tables scroll sideways here
-          className="grid-scroll relative overflow-x-auto overflow-y-hidden rounded-lg outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
-        >
-          <div style={{ height: rowV.getTotalSize(), width: totalW, position: 'relative' }}>
-            {vRows.map((vr) => {
-              const row = layout.rows[vr.index]!;
-              const first = row.kind === 'group';
-              const last = endsCard(layout.rows, vr.index);
-              return (
-                <div
-                  key={row.key}
-                  role={row.kind === 'gap' ? 'presentation' : 'row'}
-                  aria-rowindex={ariaRows.index.get(row.key)}
-                  className={cn(
-                    'absolute top-0 left-0 flex',
-                    row.kind !== 'gap' && 'border-line bg-background-100 overflow-clip border-x',
-                    row.kind === 'item' && 'group/row',
-                    first && 'rounded-t-[10px] border-t',
-                    last && 'rounded-b-[10px]',
-                    // item and header rows draw their own bottom line
-                    last && row.kind !== 'item' && row.kind !== 'header' && 'border-b',
-                  )}
-                  style={{
-                    height: vr.size,
-                    width: totalW,
-                    transform: `translateY(${vr.start - rowV.options.scrollMargin}px)`,
-                  }}
-                >
-                  <RowContent
-                    row={row}
-                    ctx={ctx}
-                    stickyW={stickyW}
-                    nameWidth={nameWidth}
-                    fieldCols={fieldCols}
-                    vCols={vCols}
-                    canEdit={canEdit}
-                    isAdmin={isAdmin}
-                    canEditItem={canEditItem}
-                    owner={owner}
-                    active={active}
-                    range={range}
-                    colIndex={colIndex}
-                    selected={selected}
-                    editing={editing}
-                    seed={seed}
-                    summaries={summaries}
-                    sort={sort}
-                    dragDisabled={dragDisabled}
-                    actions={actions}
-                    onMouseDown={onMouseDownStable}
-                    onDoubleClick={onDoubleClickStable}
-                    onSelectRow={selectRowStable}
-                    onSelectItems={selectItemsStable}
-                    onAdd={addItemStable}
-                    addRef={row.key === firstAddGroup ? firstAddRef : undefined}
-                    groupItems={layout.byGroup}
-                    onCommit={commitStable}
-                    onOpenItem={openItemStable}
-                    onCancelEdit={cancelEditStable}
-                    fieldProps={fieldPropsStable}
-                    editingItem={editingItem}
-                    comments={row.kind === 'item' ? (updateCounts.get(row.item.id) ?? 0) : 0}
-                    menuOpen={row.kind === 'item' && rowMenu === row.item.id}
-                    onRowAction={rowActionsStable}
-                    allFields={data.fields}
-                    widthOf={widthOf}
-                    columnActions={columnActions}
-                    density={density}
-                    endOfCard={last}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        {more ? (
+    <TrendContext.Provider value={trendState}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => setDragging(null)}
+      >
+        <div className="relative flex flex-col">
           <div
-            className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] flex w-[56px] items-start justify-end"
-            style={{
-              background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.9))',
+            ref={scrollRef}
+            role="grid"
+            aria-label={`${ctx.sheet.name} table`}
+            aria-rowcount={ariaRows.count}
+            aria-colcount={columns.length + 1}
+            aria-multiselectable
+            aria-activedescendant={activeId}
+            tabIndex={0}
+            onKeyDown={onKeyDown}
+            onCopy={onCopy}
+            onPaste={onPaste}
+            onFocus={(e) => {
+              if (e.target === scrollRef.current && !store.getState().active && layout.flat[0])
+                store.getState().focus({ itemId: layout.flat[0].id, col: 'name' });
             }}
+            // rows scroll with the page; only wide tables scroll sideways here
+            className="grid-scroll relative overflow-x-auto overflow-y-hidden rounded-lg outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
           >
-            <button
-              type="button"
-              // stays in view while the page scrolls past a long table
-              className="border-line hover:border-line-strong focus-visible:outline-focus bg-background-100 text-label-12 pointer-events-auto sticky top-[50vh] mt-[60px] mr-2 shrink-0 rounded-full border px-3 py-1 font-medium whitespace-nowrap focus-visible:outline-2"
-              onClick={() => {
-                const el = scrollRef.current;
-                if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
+            <div style={{ height: rowV.getTotalSize(), width: totalW, position: 'relative' }}>
+              {vRows.map((vr) => {
+                const row = layout.rows[vr.index]!;
+                const first = row.kind === 'group';
+                const last = endsCard(layout.rows, vr.index);
+                return (
+                  <div
+                    key={row.key}
+                    role={row.kind === 'gap' ? 'presentation' : 'row'}
+                    aria-rowindex={ariaRows.index.get(row.key)}
+                    className={cn(
+                      'absolute top-0 left-0 flex',
+                      row.kind !== 'gap' && 'border-line bg-background-100 overflow-clip border-x',
+                      row.kind === 'item' && 'group/row',
+                      first && 'rounded-t-[10px] border-t',
+                      last && 'rounded-b-[10px]',
+                      // item and header rows draw their own bottom line
+                      last && row.kind !== 'item' && row.kind !== 'header' && 'border-b',
+                    )}
+                    style={{
+                      height: vr.size,
+                      width: totalW,
+                      transform: `translateY(${vr.start - rowV.options.scrollMargin}px)`,
+                    }}
+                  >
+                    <RowContent
+                      row={row}
+                      ctx={ctx}
+                      stickyW={stickyW}
+                      nameWidth={nameWidth}
+                      fieldCols={fieldCols}
+                      vCols={vCols}
+                      canEdit={canEdit}
+                      isAdmin={isAdmin}
+                      canEditItem={canEditItem}
+                      owner={owner}
+                      active={active}
+                      range={range}
+                      colIndex={colIndex}
+                      selected={selected}
+                      editing={editing}
+                      seed={seed}
+                      summaries={summaries}
+                      sort={sort}
+                      dragDisabled={dragDisabled}
+                      actions={actions}
+                      onMouseDown={onMouseDownStable}
+                      onDoubleClick={onDoubleClickStable}
+                      onSelectRow={selectRowStable}
+                      onSelectItems={selectItemsStable}
+                      onAdd={addItemStable}
+                      addRef={row.key === firstAddGroup ? firstAddRef : undefined}
+                      groupItems={layout.byGroup}
+                      onCommit={commitStable}
+                      onOpenItem={openItemStable}
+                      onCancelEdit={cancelEditStable}
+                      fieldProps={fieldPropsStable}
+                      editingItem={editingItem}
+                      comments={row.kind === 'item' ? (updateCounts.get(row.item.id) ?? 0) : 0}
+                      menuOpen={row.kind === 'item' && rowMenu === row.item.id}
+                      onRowAction={rowActionsStable}
+                      allFields={data.fields}
+                      widthOf={widthOf}
+                      columnActions={columnActions}
+                      density={density}
+                      endOfCard={last}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {more ? (
+            <div
+              className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] flex w-[56px] items-start justify-end"
+              style={{
+                background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.9))',
               }}
             >
-              More columns →
-            </button>
-          </div>
-        ) : null}
-      </div>
-      <DragOverlay dropAnimation={null}>
-        {dragging?.startsWith('row:') ? (
-          <div className="bg-ink text-label-13 shadow-menu rounded-md px-3 py-1.5 font-semibold text-white">
-            {selected.has(dragging.slice(4)) && selected.size > 1
-              ? `${selected.size} items`
-              : (layout.flat.find((i) => i.id === dragging.slice(4))?.name ?? '')}
-          </div>
-        ) : null}
-      </DragOverlay>
-      <LockDialog items={lockFor} actions={actions} onClose={() => setLockFor(null)} />
-      {valueCommit.dialog}
-    </DndContext>
+              <button
+                type="button"
+                // stays in view while the page scrolls past a long table
+                className="border-line hover:border-line-strong focus-visible:outline-focus bg-background-100 text-label-12 pointer-events-auto sticky top-[50vh] mt-[60px] mr-2 shrink-0 rounded-full border px-3 py-1 font-medium whitespace-nowrap focus-visible:outline-2"
+                onClick={() => {
+                  const el = scrollRef.current;
+                  if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
+                }}
+              >
+                More columns →
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <DragOverlay dropAnimation={null}>
+          {dragging?.startsWith('row:') ? (
+            <div className="bg-ink text-label-13 shadow-menu rounded-md px-3 py-1.5 font-semibold text-white">
+              {selected.has(dragging.slice(4)) && selected.size > 1
+                ? `${selected.size} items`
+                : (layout.flat.find((i) => i.id === dragging.slice(4))?.name ?? '')}
+            </div>
+          ) : null}
+        </DragOverlay>
+        <LockDialog items={lockFor} actions={actions} onClose={() => setLockFor(null)} />
+        {valueCommit.dialog}
+      </DndContext>
+    </TrendContext.Provider>
   );
 }
 

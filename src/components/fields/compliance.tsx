@@ -52,6 +52,7 @@ import {
   Text,
   TextEditor,
 } from './shared';
+import { TrendLine } from './trend';
 import type { EditorProps, FieldTypeUI } from './types';
 
 // Compliance types (docs/03 §3.3).
@@ -567,7 +568,7 @@ function RiskEditor({ value, field, onCommit, onCancel }: EditorProps) {
 
 export const riskmatrixUI: FieldTypeUI = {
   icon: Grid3x3,
-  Cell: ({ value, field, density }) => {
+  Cell: ({ value, field, item, ctx, density }) => {
     const v = value as { l: number; i: number } | null;
     if (!v) return <Empty />;
     const level = riskLevel(v.l * v.i, (field.config as RiskMatrixConfig).bands);
@@ -576,6 +577,7 @@ export const riskmatrixUI: FieldTypeUI = {
       <span className="flex min-w-0 items-center gap-2">
         <span className="tabular-nums">{v.l * v.i}</span>
         <Meter step={riskStep(level)} label={level} />
+        <TrendLine field={field} item={item} value={v} ctx={ctx} />
       </span>
     ) : (
       <span className="flex min-w-0 items-center gap-1.5">
