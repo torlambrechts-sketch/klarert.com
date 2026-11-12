@@ -39,14 +39,14 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 grid w-[min(480px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-[var(--radius-card)] border bg-white p-5 shadow-lg',
+          'bg-background-100 shadow-modal fixed top-1/2 left-1/2 z-50 grid w-[min(480px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border p-5',
           className,
         )}
         {...props}
       >
         {children}
         <DialogPrimitive.Close
-          className="hover:bg-soft absolute top-3 right-3 rounded-md p-1"
+          className="text-muted-foreground hover:bg-gray-alpha-100 hover:text-ink absolute top-3 right-3 rounded-md p-1 transition-colors duration-150"
           aria-label="Close"
         >
           <XIcon className="size-4" aria-hidden />
@@ -68,7 +68,7 @@ function SheetContent({
       <DialogPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 flex w-[min(300px,calc(100vw-40px))] flex-col shadow-xl',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left shadow-fullscreen fixed inset-y-0 left-0 z-50 flex w-[min(300px,calc(100vw-40px))] flex-col',
           className,
         )}
         {...props}
@@ -91,14 +91,14 @@ function SideSheetContent({
       <DialogPrimitive.Content
         data-slot="side-sheet-content"
         className={cn(
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-[min(470px,100vw)] flex-col bg-white shadow-xl',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right bg-background-100 shadow-fullscreen fixed inset-y-0 right-0 z-50 flex w-[min(470px,100vw)] flex-col border-l',
           className,
         )}
         {...props}
       >
         {children}
         <DialogPrimitive.Close
-          className="hover:bg-soft absolute top-3 right-3 rounded-md p-1"
+          className="text-muted-foreground hover:bg-gray-alpha-100 hover:text-ink absolute top-3 right-3 rounded-md p-1 transition-colors duration-150"
           aria-label="Close"
         >
           <XIcon className="size-4" aria-hidden />
