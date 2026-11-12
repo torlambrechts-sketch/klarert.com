@@ -113,7 +113,12 @@ describe('view config', () => {
     expect(setSummary(on, 'cost', 'average').summaries).toEqual({ cost: 'average' });
     const off = setSummary(on, 'cost', null);
     expect(off).not.toHaveProperty('summaries');
-    expect(sameConfig(off, emptyConfig())).toBe(true);
+    // off is remembered: number, option and date columns show a summary by default
+    expect(off.summaryOff).toEqual(['cost']);
+    expect(sameConfig(off, emptyConfig())).toBe(false);
+    const back = setSummary(off, 'cost', 'sum');
+    expect(back).not.toHaveProperty('summaryOff');
+    expect(parseViewConfig({ summaryOff: ['cost'] }).summaryOff).toEqual(['cost']);
   });
 
   it('offers every summary function the engine has', () => {
