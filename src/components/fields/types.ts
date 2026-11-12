@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import type { LabelOption } from '@/engine/fields/types';
 import type { Ctx, Field, Item, Sheet } from '@/engine/types';
 
 // The UI half of the field contract (docs/03 §1). One entry per type id in ./registry.tsx; nothing else in the UI
@@ -26,6 +27,13 @@ export interface EditorProps<V = unknown, C = unknown> {
   onButton?(): void;
   /** Open the item panel (the grid's file cells upload from there). */
   onOpenItem?(): void;
+  /**
+   * Add an option typed in the picker to the field (types with addOption, people who may edit the field). Resolves
+   * to the new option once the field holds it, or null when it could not be added (the host shows why).
+   */
+  onAddOption?(label: string): Promise<LabelOption | null>;
+  /** Open the field's settings (options, rules); the host closes the editor first. */
+  onEditField?(): void;
 }
 
 export interface ConfigEnv {
