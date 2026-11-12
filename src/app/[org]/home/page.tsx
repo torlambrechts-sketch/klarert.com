@@ -38,7 +38,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
       case 'items':
         return canEdit && sheet ? { href: sheet, label: 'Open the sheet' } : null;
       case 'status':
-        return canEdit && sheet ? { href: `${sheet}?view=grid`, label: 'Add a field' } : null;
+        return canEdit && sheet ? { href: `${sheet}?view=table`, label: 'Add a field' } : null;
       case 'invite':
         return canManage ? { href: `/${org}/settings`, label: 'Invite' } : null;
       case 'automation':

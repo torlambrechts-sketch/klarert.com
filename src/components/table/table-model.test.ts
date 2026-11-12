@@ -1,50 +1,83 @@
 import { describe, expect, it } from 'vitest';
+import '@/engine/fields/registry';
 import { groups, makeField, makeItem } from '@/engine/testing/fixtures';
-import { buildLayout, gridColumns, positionAt, positionsAtEnd, rangeOf, step } from './grid-model';
+import {
+  buildLayout,
+  cardFields,
+  positionAt,
+  positionsAtEnd,
+  rangeOf,
+  step,
+  tableColumns,
+} from './table-model';
 
 const a = makeItem({}, { id: 'a', position: 'a1', groupId: 'g-open', name: 'B' });
 const b = makeItem({}, { id: 'b', position: 'a0', groupId: 'g-open', name: 'A' });
 const c = makeItem({}, { id: 'c', position: 'a0', groupId: 'g-closed', name: 'C' });
 
 describe('buildLayout', () => {
-  it('lays out groups with header, items, add row, summary and gap', () => {
+  it('flattens groups into one list: title, items, add row, a gap between groups, no header rows', () => {
     const l = buildLayout({ groups, items: [a, b, c], collapsed: new Set(), canAdd: true });
     expect(l.rows.map((r) => r.kind)).toEqual([
       'group',
-      'header',
       'item',
       'item',
       'add',
-      'summary',
       'gap',
       'group',
-      'header',
       'item',
       'add',
-      'summary',
-      'gap',
+    ]);
+    expect(l.rows.filter((r) => r.kind === 'group').map((r) => r.key)).toEqual([
+      'g:g-open',
+      'g:g-closed',
     ]);
     expect(l.flat.map((i) => i.id)).toEqual(['b', 'a', 'c']);
     expect(l.index.get('c')).toBe(2);
+    const keys = l.rows.map((r) => r.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 
-  it('collapses groups, hides the add row for viewers and filters to one group', () => {
+  it('collapses groups: the title stays with its count, items and add row go', () => {
     const l = buildLayout({
       groups,
       items: [a, b, c],
       collapsed: new Set(['g-open']),
-      canAdd: false,
+      canAdd: true,
     });
-    expect(l.rows.map((r) => r.kind)).toEqual([
+    expect(l.rows.map((r) => r.kind)).toEqual(['group', 'gap', 'group', 'item', 'add']);
+    expect(l.rows[0]).toMatchObject({ kind: 'group', count: 2, collapsed: true });
+    expect(l.flat.map((i) => i.id)).toEqual(['c']);
+    // the items of a collapsed group are still known (select all, drop at the end)
+    expect(l.byGroup.get('g-open')!.map((i) => i.id)).toEqual(['b', 'a']);
+  });
+
+  it('adds summary rows only when a column shows its summary, never for collapsed groups', () => {
+    const off = buildLayout({ groups, items: [a, b, c], collapsed: new Set(), canAdd: true });
+    expect(off.rows.some((r) => r.kind === 'summary')).toBe(false);
+    const on = buildLayout({
+      groups,
+      items: [a, b, c],
+      collapsed: new Set(['g-closed']),
+      canAdd: true,
+      summaries: true,
+    });
+    expect(on.rows.map((r) => r.kind)).toEqual([
       'group',
-      'gap',
-      'group',
-      'header',
       'item',
+      'item',
+      'add',
       'summary',
       'gap',
+      'group',
     ]);
-    expect(l.flat.map((i) => i.id)).toEqual(['c']);
+    const summary = on.rows.find((r) => r.kind === 'summary')!;
+    expect(summary.kind === 'summary' && summary.items.map((i) => i.id)).toEqual(['b', 'a']);
+  });
+
+  it('hides the add row for viewers and filters to one group', () => {
+    const l = buildLayout({ groups, items: [a, b, c], collapsed: new Set(), canAdd: false });
+    expect(l.rows.some((r) => r.kind === 'add')).toBe(false);
     const one = buildLayout({
       groups,
       items: [a, b, c],
@@ -52,7 +85,14 @@ describe('buildLayout', () => {
       canAdd: true,
       onlyGroup: 'g-closed',
     });
+    expect(one.rows.map((r) => r.kind)).toEqual(['group', 'item', 'add']);
     expect(one.flat.map((i) => i.id)).toEqual(['c']);
+  });
+
+  it('keeps empty groups with their title and add row', () => {
+    const l = buildLayout({ groups, items: [c], collapsed: new Set(), canAdd: true });
+    expect(l.rows.map((r) => r.kind)).toEqual(['group', 'add', 'gap', 'group', 'item', 'add']);
+    expect(l.rows[0]).toMatchObject({ count: 0 });
   });
 
   it('sorts inside groups with a comparator', () => {
@@ -67,12 +107,44 @@ describe('buildLayout', () => {
   });
 });
 
+describe('phone cards', () => {
+  it('group cards under the same titles as the table (no summaries, collapsible)', () => {
+    const l = buildLayout({
+      groups,
+      items: [a, b, c],
+      collapsed: new Set(['g-closed']),
+      canAdd: true,
+    });
+    expect(l.rows.map((r) => r.kind)).toEqual(['group', 'item', 'item', 'add', 'gap', 'group']);
+  });
+
+  it('show the first visible value fields, without the owner and computed fields', () => {
+    const owner = makeField('people', { multiple: true }, { id: 'f-owner' });
+    const status = makeField('status', {}, { id: 'f-status' });
+    const formula = makeField('formula', { expr: '1', result: 'number' }, { id: 'f-formula' });
+    const due = makeField('date', {}, { id: 'f-due' });
+    const notes = makeField('text', {}, { id: 'f-notes' });
+    const prio = makeField('dropdown', {}, { id: 'f-prio' });
+    const fields = [owner, status, formula, due, notes, prio];
+    expect(cardFields(fields, new Set(), 'f-owner').map((f) => f.id)).toEqual([
+      'f-status',
+      'f-due',
+      'f-notes',
+    ]);
+    expect(cardFields(fields, new Set(['f-due']), 'f-owner', 2).map((f) => f.id)).toEqual([
+      'f-status',
+      'f-notes',
+    ]);
+    expect(cardFields(fields, new Set(), null, 1).map((f) => f.id)).toEqual(['f-owner']);
+  });
+});
+
 describe('columns and positions', () => {
   it('lists the name then the visible fields', () => {
     const f1 = makeField('text', {}, { id: 'f1' });
     const f2 = makeField('text', {}, { id: 'f2' });
     expect(
-      gridColumns([f1, f2], new Set(['f1'])).map((c) => (c.kind === 'name' ? 'name' : c.field.id)),
+      tableColumns([f1, f2], new Set(['f1'])).map((c) => (c.kind === 'name' ? 'name' : c.field.id)),
     ).toEqual(['name', 'f2']);
   });
   it('computes fractional keys between neighbours', () => {

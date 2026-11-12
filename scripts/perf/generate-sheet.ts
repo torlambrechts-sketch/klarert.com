@@ -125,7 +125,7 @@ export async function generateSheet(
     sheetId,
     items,
     fields: specs.length,
-    url: `${perfEnv.APP_URL}/${perfEnv.WORKSPACE}/s/${sheetId}?view=grid`,
+    url: `${perfEnv.APP_URL}/${perfEnv.WORKSPACE}/s/${sheetId}?view=table`,
     ms: Date.now() - started,
   };
 }
