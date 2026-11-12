@@ -5,8 +5,8 @@ import { createStore, useStore, type StoreApi } from 'zustand';
 import type { SummaryFn } from '@/engine/summaries';
 
 // UI state of one grid (Zustand, UI state only): the active cell and range, the open editor, selected rows,
-// collapsed groups, the column sort, hidden columns and summary choices. Hidden columns and summaries are
-// remembered per sheet in this browser (there are no saved views yet).
+// collapsed groups, the column sort, hidden columns and summary choices. Hidden columns belong to the active view
+// (the sheet page syncs them both ways through `onHiddenChange`); summaries are remembered per sheet in this browser.
 
 export type CellRef = { itemId: string; col: string };
 
@@ -31,6 +31,8 @@ export interface GridState {
   toggleCollapsed(groupId: string): void;
   setSort(sort: GridState['sort']): void;
   setHidden(fieldId: string, hidden: boolean): void;
+  /** Called with the new hidden set when a column is hidden or shown (the active view saves it). */
+  onHiddenChange: ((hidden: ReadonlySet<string>) => void) | null;
   setSummary(fieldId: string, fn: SummaryFn): void;
   setWidth(fieldId: string, width: number | null): void;
   openSettings(fieldId: string | null): void;
@@ -39,31 +41,26 @@ export interface GridState {
 
 const prefsKey = (sheetId: string) => `grid:${sheetId}`;
 
-function readPrefs(sheetId: string): { hidden: string[]; summaries: Record<string, SummaryFn> } {
+function readPrefs(sheetId: string): { summaries: Record<string, SummaryFn> } {
   try {
     const raw = localStorage.getItem(prefsKey(sheetId));
-    const p = raw
-      ? (JSON.parse(raw) as { hidden?: string[]; summaries?: Record<string, SummaryFn> })
-      : {};
-    return { hidden: p.hidden ?? [], summaries: p.summaries ?? {} };
+    const p = raw ? (JSON.parse(raw) as { summaries?: Record<string, SummaryFn> }) : {};
+    return { summaries: p.summaries ?? {} };
   } catch {
-    return { hidden: [], summaries: {} };
+    return { summaries: {} };
   }
 }
 
-function writePrefs(sheetId: string, s: Pick<GridState, 'hidden' | 'summaries'>) {
+function writePrefs(sheetId: string, s: Pick<GridState, 'summaries'>) {
   try {
-    localStorage.setItem(
-      prefsKey(sheetId),
-      JSON.stringify({ hidden: [...s.hidden], summaries: s.summaries }),
-    );
+    localStorage.setItem(prefsKey(sheetId), JSON.stringify({ summaries: s.summaries }));
   } catch {
     // private mode or blocked storage: preferences last for this visit only
   }
 }
 
 export function createGridStore(sheetId: string): StoreApi<GridState> {
-  const prefs = typeof window === 'undefined' ? { hidden: [], summaries: {} } : readPrefs(sheetId);
+  const prefs = typeof window === 'undefined' ? { summaries: {} } : readPrefs(sheetId);
   return createStore<GridState>()((set, get) => ({
     active: null,
     anchor: null,
@@ -72,7 +69,8 @@ export function createGridStore(sheetId: string): StoreApi<GridState> {
     lastSelected: null,
     collapsed: new Set(),
     sort: null,
-    hidden: new Set(prefs.hidden),
+    hidden: new Set(),
+    onHiddenChange: null,
     summaries: prefs.summaries,
     widths: {},
     settingsFor: null,
@@ -94,7 +92,7 @@ export function createGridStore(sheetId: string): StoreApi<GridState> {
       if (hidden) next.add(fieldId);
       else next.delete(fieldId);
       set({ hidden: next });
-      writePrefs(sheetId, get());
+      get().onHiddenChange?.(next);
     },
     setSummary: (fieldId, fn) => {
       set({ summaries: { ...get().summaries, [fieldId]: fn } });

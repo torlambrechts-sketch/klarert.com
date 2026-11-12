@@ -8,16 +8,53 @@ import type { SortRule } from './config';
 /** Above this many items the server filters (src/server/query/filters.ts). */
 export const CLIENT_FILTER_LIMIT = 2000;
 
-/** Conditions that can run, and the ones that cannot (deleted field, wrong operator) with the reason. */
+const blank = (v: unknown) =>
+  v === undefined || v === null || (typeof v === 'string' && v.trim() === '');
+
+/**
+ * A condition still being written in the filter builder: its operator needs a value and has none yet (an empty
+ * text, an empty choice, half a range). Views skip it instead of hiding every item.
+ */
+export function isIncomplete(c: Condition): boolean {
+  if (NO_VALUE_OPS.has(c.op)) return false;
+  const v = c.value;
+  if (Array.isArray(v)) return v.length === 0 || (c.op === 'between' && v.some(blank));
+  return blank(v);
+}
+
+/** Operators that take no value (docs/03 §4). */
+export const NO_VALUE_OPS = new Set([
+  'is_empty',
+  'is_not_empty',
+  'is_today',
+  'overdue',
+  'is_done',
+  'is_not_done',
+  'includes_me',
+  'is_checked',
+  'is_not_checked',
+  'has_any',
+  'has_none',
+  'has_files',
+  'is_signed',
+  'is_not_signed',
+]);
+
+/**
+ * Conditions that can run, the ones that cannot (deleted field, wrong operator) with the reason, and the ones still
+ * waiting for a value.
+ */
 export function splitConditions(conds: Condition[], ctx: Ctx) {
   const valid: Condition[] = [];
   const invalid: { cond: Condition; problem: string }[] = [];
+  const incomplete: Condition[] = [];
   for (const c of conds) {
     const problem = conditionProblem(c, ctx);
     if (problem) invalid.push({ cond: c, problem });
+    else if (isIncomplete(c)) incomplete.push(c);
     else valid.push(c);
   }
-  return { valid, invalid };
+  return { valid, invalid, incomplete };
 }
 
 /** Sheet search: name, display id and the text of every field the person can read. */

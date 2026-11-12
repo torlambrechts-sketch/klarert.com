@@ -8,8 +8,8 @@ import {
   type ViewType,
 } from '@/engine/views/config';
 import { formLayoutProblems } from '@/engine/views/form';
-import type { Database } from '@/lib/database.types';
 import { fetchSheetMeta, type Db } from '@/lib/sheet-query';
+import { toView } from '@/lib/sheet-rows';
 import {
   createViewInput,
   deleteViewInput,
@@ -28,18 +28,6 @@ import { withOrg } from './context';
 
 // Saved views (docs/01 FR-26) and form links (FR-25). Views are structure: written with the user's client under RLS
 // (personal views: their owner; shared views: editors). Form links are created and disabled by editors.
-
-type ViewRow = Database['public']['Tables']['views']['Row'];
-
-export const toView = (r: ViewRow): SavedView => ({
-  id: r.id,
-  sheetId: r.sheet_id,
-  name: r.name,
-  type: r.type as ViewType,
-  config: parseViewConfig(r.config),
-  ownerId: r.owner_id,
-  position: r.position,
-});
 
 const SHARED_NEEDS_EDITOR = 'Viewers can save personal views only. Ask an editor to share one.';
 const viewNotFound = () => fail('not_found', 'This view no longer exists.');

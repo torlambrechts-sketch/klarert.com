@@ -33,6 +33,7 @@ import {
   buildLayout,
   columnId,
   gridColumns,
+  byPosition,
   positionsAtEnd,
   rangeOf,
   ROW_HEIGHT,
@@ -63,6 +64,10 @@ export interface GridProps {
   addFocusTick: number;
   /** Open the item panel (name click, Space on the name cell, "Open item" in file cells). */
   onOpenItem(item: Item): void;
+  /** The items the active view shows (filters and search); default all. */
+  visibleItems?: Item[];
+  /** The view's sort, used while no column sort is set. */
+  viewCompare?: ((a: Item, b: Item) => number) | null;
 }
 
 const storageOf = (f: Field) => resolveFieldType(f.type)?.storage;
@@ -83,6 +88,8 @@ export function Grid({
   nameWidth,
   addFocusTick,
   onOpenItem,
+  visibleItems,
+  viewCompare,
 }: GridProps) {
   const store = useGridStore();
   const collapsed = useGrid((s) => s.collapsed);
@@ -99,20 +106,21 @@ export function Grid({
 
   const sortField = sort ? data.fields.find((f) => f.id === sort.fieldId) : undefined;
   const compare = useMemo(
-    () => (sortField ? compareItems(sortField, ctx, sort!.dir) : null),
-    [sortField, ctx, sort],
+    () => (sortField ? compareItems(sortField, ctx, sort!.dir) : (viewCompare ?? null)),
+    [sortField, ctx, sort, viewCompare],
   );
+  const shown = visibleItems ?? data.items;
   const layout = useMemo(
     () =>
       buildLayout({
         groups: data.groups,
-        items: data.items,
+        items: shown,
         collapsed,
         compare,
         canAdd: canEdit,
         onlyGroup,
       }),
-    [data.groups, data.items, collapsed, compare, canEdit, onlyGroup],
+    [data.groups, shown, collapsed, compare, canEdit, onlyGroup],
   );
   const columns = useMemo(() => gridColumns(data.fields, hidden), [data.fields, hidden]);
   const fieldCols = useMemo(
@@ -362,7 +370,8 @@ export function Grid({
   // ───────────── add items ─────────────
 
   const addItem = async (group: Group, name: string) => {
-    const list = layout.byGroup.get(group.id) ?? [];
+    // after every item of the group, also those a filter hides, so keys never collide
+    const list = data.items.filter((i) => i.groupId === group.id).sort(byPosition);
     const [position] = positionsAtEnd(list, 1);
     await actions.createItem(group.id, name, position!, (tempId, saved) => {
       // a cell of the new row may already be active: follow the row to its saved id

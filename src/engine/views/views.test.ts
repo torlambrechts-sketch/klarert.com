@@ -355,6 +355,17 @@ describe('apply a view', () => {
       ctx,
     );
     expect(valid).toHaveLength(1);
+    expect(
+      splitConditions(
+        [
+          { fieldKey: 'title', op: 'contains', value: ' ' },
+          { fieldKey: 'status', op: 'is_any_of', value: [] },
+          { fieldKey: 'cost', op: 'between', value: [1, ''] },
+          { fieldKey: 'due', op: 'overdue' },
+        ],
+        ctx,
+      ).incomplete.map((c) => c.fieldKey),
+    ).toEqual(['title', 'status', 'cost']);
     expect(invalid.map((i) => i.problem)).toEqual([
       'Field "gone" no longer exists.',
       '"gt" cannot be used on this field.',
