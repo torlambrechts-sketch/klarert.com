@@ -143,6 +143,16 @@ export const updateFieldInput = z.object({
 });
 
 export const fieldRefInput = z.object({ org: slugInput, fieldId: uuid });
+/** A new option typed in a picker (label types whose options people define). */
+export const addFieldOptionInput = z.object({
+  ...base,
+  fieldId: uuid,
+  label: z
+    .string()
+    .trim()
+    .min(1, 'Type a name for the option.')
+    .max(80, 'An option can be at most 80 characters.'),
+});
 export const moveFieldInput = fieldRefInput.extend({ toIndex: z.number().int().min(0) });
 export const changeTypeInput = fieldRefInput.extend({
   to: z.string().min(1).max(40),

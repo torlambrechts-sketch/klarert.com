@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { buttonKey, useRunningButtons } from '@/components/automations/running-buttons';
 import {
   addFieldAction,
+  addFieldOptionAction,
   archiveItemsAction,
   bulkSetValuesAction,
   changeFieldTypeAction,
@@ -91,6 +92,24 @@ export function useSheetQuery(sheetId: string) {
     },
     staleTime: 60_000,
     refetchOnWindowFocus: false,
+  });
+}
+
+/** The workspace's sheets (link targets in field settings). */
+export function useSheetsList(orgId: string | undefined) {
+  return useQuery({
+    queryKey: ['sheets-list', orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data } = await createClient()
+        .from('sheets')
+        .select('id, name, is_library')
+        .eq('org_id', orgId!)
+        .is('archived_at', null)
+        .order('name');
+      return (data ?? []).map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library }));
+    },
+    staleTime: 60_000,
   });
 }
 
@@ -686,6 +705,28 @@ export function useSheetActions(org: string, sheetId: string) {
     [fieldResult, get, org, patch, run],
   );
 
+  /** Add an option typed in a picker; the cache holds the field with it before this returns. */
+  const addFieldOption = useCallback(
+    async (field: Field, label: string) => {
+      const r = await run(() =>
+        addFieldOptionAction({
+          org,
+          sheetId,
+          fieldId: field.id,
+          label,
+          mutationId: newMutationId(),
+        }),
+      );
+      if (!r.ok) {
+        showError(r.error);
+        return null;
+      }
+      patch((d) => upsertField(d, r.data.field));
+      return r.data;
+    },
+    [org, patch, run, sheetId],
+  );
+
   const moveField = useCallback(
     async (field: Field, toIndex: number) =>
       fieldResult(await run(() => moveFieldAction({ org, fieldId: field.id, toIndex }))),
@@ -746,6 +787,8 @@ export function useSheetActions(org: string, sheetId: string) {
 
   return {
     pending,
+    /** The cached sheet as it is now (newer than a render's `data` right after a write). */
+    current: get,
     refresh,
     loadRelated,
     addFileVersion,
@@ -759,6 +802,7 @@ export function useSheetActions(org: string, sheetId: string) {
     clickButton,
     addField,
     updateField,
+    addFieldOption,
     moveField,
     duplicateField,
     deleteField,

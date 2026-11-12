@@ -175,6 +175,30 @@ export const optionSchema = z.object({
   done: z.boolean().optional(),
 });
 
+/** The longest option label (optionSchema). */
+export const OPTION_LABEL_MAX = 80;
+
+/**
+ * One more option from a typed label: trimmed, at most 80 characters, the first colour no option uses yet (then round
+ * the palette), id `opt_…` from the injected generator. null when the label is empty, too long or taken.
+ */
+export function appendOption(
+  options: LabelOption[],
+  label: string,
+  newId: (prefix: string) => string,
+): { options: LabelOption[]; option: LabelOption } | null {
+  const t = label.trim();
+  if (!t || t.length > OPTION_LABEL_MAX) return null;
+  if (options.some((o) => o.label.trim().toLowerCase() === t.toLowerCase())) return null;
+  const used = new Set(options.map((o) => o.color));
+  const color = COLORS.find((c) => !used.has(c)) ?? COLORS[options.length % COLORS.length]!;
+  const taken = new Set(options.map((o) => o.id));
+  let id = newId('opt_');
+  while (taken.has(id)) id = newId('opt_');
+  const option: LabelOption = { id, label: t, color };
+  return { options: [...options, option], option };
+}
+
 /** Match an option by id, then by label (case-insensitive) — used by normalise and parseText. */
 export function findOption(options: LabelOption[], input: unknown): LabelOption | undefined {
   if (typeof input !== 'string') return undefined;

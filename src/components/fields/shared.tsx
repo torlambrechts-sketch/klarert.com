@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Plus, Search, Settings2 } from 'lucide-react';
 import type { LabelOption } from '@/engine/fields/types';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { Ctx, Field, Item } from '@/engine/types';
 import { valueOf } from '@/engine/values';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { searchOptions } from './option-search';
 
 // Building blocks for cells and editors: label chips and blocks (docs/05 §3.1, §6), avatars, editor frames, a text
 // editor and an option list editor. Type-agnostic; each type's file composes them.
@@ -266,8 +267,42 @@ export function TextEditor({
 }
 
 /**
- * Pick one or several options. Arrows move, Enter or Space picks; with `multiple` the choice is saved with Done or
- * Enter on the search box. A search box appears for long lists.
+ * The popover every cell editor opens in (Grid, List, item panel): white, rounded, a soft shadow. Editors that draw
+ * edge to edge (the option picker) mark themselves `data-flush` and the padding goes.
+ */
+export const editorPopoverClass =
+  'rounded-[10px] border-line p-3 shadow-[0_10px_28px_rgb(20_20_20/0.12),0_2px_6px_rgb(20_20_20/0.06)] has-[[data-flush]]:p-0';
+
+/** Quiet text action for the picker footer. */
+function FooterAction({
+  children,
+  onClick,
+  className,
+}: {
+  children: React.ReactNode;
+  onClick(): void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      className={cn(
+        'text-muted-foreground hover:text-ink focus-visible:outline-focus inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-[13px] font-semibold focus-visible:outline-2',
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * Pick one or several options: a search field on top (focused on open), the list, and a slim footer. Arrows move,
+ * Enter picks (with `multiple` it toggles; Ctrl/Cmd+Enter or Done saves); Space picks while nothing is typed; Esc
+ * closes. With `onAdd`, a search no option has exactly ends the list with "Add “text”", which adds the option and
+ * picks it. `onEditOptions` puts "Edit options" in the footer.
  */
 export function OptionsEditor({
   title,
@@ -278,6 +313,8 @@ export function OptionsEditor({
   onCancel,
   render,
   allowClear = true,
+  onAdd,
+  onEditOptions,
 }: {
   title: string;
   options: LabelOption[];
@@ -287,9 +324,13 @@ export function OptionsEditor({
   onCancel(): void;
   render?: (o: LabelOption) => React.ReactNode;
   allowClear?: boolean;
+  /** Add a typed option to the field; resolves to it, or null when it could not be added. */
+  onAdd?: (label: string) => Promise<LabelOption | null>;
+  onEditOptions?: () => void;
 }) {
   const [picked, setPicked] = useState<string[]>(selected);
   const [query, setQuery] = useState('');
+  const [adding, setAdding] = useState(false);
   const [active, setActive] = useState(() =>
     Math.max(
       0,
@@ -297,107 +338,194 @@ export function OptionsEditor({
     ),
   );
   const listId = useId();
-  const listRef = useRef<HTMLUListElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const showSearch = options.length > 8;
-  const shown = useMemo(
-    () =>
-      query ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase())) : options,
-    [options, query],
+  const listRef = useRef<HTMLUListElement>(null);
+  const { shown, add } = useMemo(
+    () => searchOptions(options, query, !!onAdd),
+    [options, query, onAdd],
   );
+  const rows = shown.length + (add ? 1 : 0);
+  const at = Math.min(active, rows - 1);
   useEffect(() => {
-    if (showSearch) searchRef.current?.focus();
-    else listRef.current?.focus();
-  }, [showSearch]);
+    searchRef.current?.focus();
+    // again after the popover's own focus handling (inside a modal, e.g. the item panel, it mounts after this)
+    const raf = requestAnimationFrame(() => searchRef.current?.focus());
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  // keep the active row in view while moving with the keyboard
+  useEffect(() => {
+    listRef.current
+      ?.querySelector<HTMLElement>('[data-active="true"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [at]);
 
   const pick = (id: string) => {
     if (!multiple) return onCommit([id]);
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   };
+  const addTyped = async () => {
+    if (!onAdd || !add || adding) return;
+    setAdding(true);
+    const o = await onAdd(add);
+    setAdding(false);
+    if (!o) return;
+    if (!multiple) return onCommit([o.id]);
+    setPicked((p) => (p.includes(o.id) ? p : [...p, o.id]));
+    setQuery('');
+    setActive(options.length);
+  };
+  const choose = (i: number) => {
+    if (i < shown.length) pick(shown[i]!.id);
+    else if (add) void addTyped();
+  };
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActive((a) => Math.min(shown.length - 1, a + 1));
+      setActive(Math.min(rows - 1, at + 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setActive((a) => Math.max(0, a - 1));
-    } else if (e.key === 'Enter' || (e.key === ' ' && e.target === listRef.current)) {
+      setActive(Math.max(0, at - 1));
+    } else if (e.key === 'Home' && !query) {
       e.preventDefault();
-      const o = shown[active];
-      if (multiple && e.key === 'Enter' && e.target === searchRef.current && !query)
-        return onCommit(picked);
-      if (o) pick(o.id);
+      setActive(0);
+    } else if (e.key === 'End' && !query) {
+      e.preventDefault();
+      setActive(rows - 1);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (multiple && (e.metaKey || e.ctrlKey)) return onCommit(picked);
+      if (rows > 0) choose(at);
+    } else if (e.key === ' ' && !query) {
+      // nothing typed yet: Space picks, as in a listbox
+      e.preventDefault();
+      if (rows > 0) choose(at);
     }
   };
-  const activeId = shown[active] ? `${listId}-${shown[active]!.id}` : undefined;
+  const rowId = (i: number) =>
+    i < shown.length ? `${listId}-${shown[i]!.id}` : add ? `${listId}-add` : undefined;
+  const current = multiple ? picked : selected;
+  const canClear = allowClear && current.length > 0;
+  const rowClass = (on: boolean) =>
+    cn(
+      'flex min-h-9 cursor-pointer items-center gap-2.5 py-1.5 pr-3 pl-4 text-sm select-none',
+      // active row (mouse or keyboard): soft fill and a focus-coloured bar on the left (>= 3:1 against white)
+      on && 'bg-sel shadow-[inset_3px_0_0_var(--focus)]',
+    );
+
   return (
-    <EditorFrame
-      title={title}
-      footer={
-        multiple ? (
-          <SaveCancel onSave={() => onCommit(picked)} onCancel={onCancel} saveLabel="Done" />
-        ) : allowClear && selected.length > 0 ? (
-          <Button type="button" size="sm" variant="ghost" onClick={() => onCommit([])}>
-            Clear
-          </Button>
-        ) : undefined
-      }
+    <div
+      data-flush
+      role="group"
+      aria-label={title}
+      className="flex min-w-0 flex-col bg-white text-sm"
     >
-      {showSearch ? (
-        <input
-          ref={searchRef}
-          className={inputClass}
-          placeholder="Search"
-          aria-label={`Search ${title.toLowerCase()}`}
-          aria-controls={listId}
-          aria-activedescendant={activeId}
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setActive(0);
-          }}
-          onKeyDown={onKey}
-        />
-      ) : null}
+      <div className="p-2">
+        <div className="relative">
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+            aria-hidden
+          />
+          <input
+            ref={searchRef}
+            role="combobox"
+            aria-expanded
+            aria-autocomplete="list"
+            aria-controls={listId}
+            aria-activedescendant={rows > 0 ? rowId(at) : undefined}
+            aria-label={`Search ${title.toLowerCase()}`}
+            placeholder="Search"
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={120}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActive(0);
+            }}
+            onKeyDown={onKey}
+            className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground h-9 w-full rounded-md border bg-white pr-2 pl-8 text-sm outline-none focus-visible:ring-2"
+          />
+        </div>
+      </div>
+      <div className="border-line border-t" />
       <ul
         ref={listRef}
         id={listId}
         role="listbox"
         aria-label={title}
         aria-multiselectable={multiple || undefined}
-        aria-activedescendant={showSearch ? undefined : activeId}
-        tabIndex={showSearch ? -1 : 0}
-        onKeyDown={onKey}
-        className="flex max-h-64 flex-col gap-0.5 overflow-auto outline-none"
+        aria-busy={adding || undefined}
+        className="max-h-64 overflow-y-auto py-1 outline-none"
       >
-        {shown.length === 0 ? (
-          <li className="text-muted-foreground px-2 py-1 text-sm">No matches</li>
-        ) : null}
         {shown.map((o, i) => {
-          const on = (multiple ? picked : selected).includes(o.id);
+          const on = current.includes(o.id);
           return (
             <li
               key={o.id}
               id={`${listId}-${o.id}`}
               role="option"
               aria-selected={on}
+              data-active={i === at}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => pick(o.id)}
-              onMouseEnter={() => setActive(i)}
-              className={cn(
-                'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm',
-                i === active && 'bg-sel ring-focus ring-1',
-              )}
+              onMouseMove={() => i !== at && setActive(i)}
+              className={rowClass(i === at)}
             >
-              <span className="flex size-4 shrink-0 items-center justify-center">
-                {on ? <Check className="size-4" aria-hidden /> : null}
+              <span className="flex min-w-0 flex-1 items-center">
+                {render ? render(o) : <Chip option={o} />}
               </span>
-              {render ? render(o) : <Chip option={o} />}
+              <span className="flex size-4 shrink-0 items-center justify-center">
+                {on ? <Check className="text-ink size-4" aria-hidden /> : null}
+              </span>
             </li>
           );
         })}
+        {add ? (
+          <li
+            id={`${listId}-add`}
+            role="option"
+            aria-selected={false}
+            aria-disabled={adding || undefined}
+            data-active={at === shown.length}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => void addTyped()}
+            onMouseMove={() => at !== shown.length && setActive(shown.length)}
+            className={cn(rowClass(at === shown.length), 'text-ink font-semibold')}
+          >
+            <Plus className="text-muted-foreground size-4 shrink-0" aria-hidden />
+            <span className="min-w-0 flex-1 truncate">
+              {adding ? `Adding “${add}”…` : `Add “${add}”`}
+            </span>
+          </li>
+        ) : null}
       </ul>
-    </EditorFrame>
+      {shown.length === 0 ? (
+        <p role="status" className="text-muted-foreground px-4 pt-0.5 pb-2 text-sm">
+          No matches
+        </p>
+      ) : null}
+      {multiple || canClear || onEditOptions ? (
+        <div className="border-line flex min-h-10 items-center gap-1 border-t px-2 py-1">
+          {onEditOptions ? (
+            <FooterAction onClick={onEditOptions}>
+              <Settings2 className="size-3.5" aria-hidden /> Edit options
+            </FooterAction>
+          ) : null}
+          <span className="flex-1" />
+          {canClear ? <FooterAction onClick={() => onCommit([])}>Clear</FooterAction> : null}
+          {multiple ? (
+            <>
+              <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="button" size="sm" onClick={() => onCommit(picked)}>
+                Done
+              </Button>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 }
 

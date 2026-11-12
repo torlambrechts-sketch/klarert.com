@@ -1,7 +1,15 @@
 // Factory for single-option label types (status, dropdown, severity, classification, finding, workflowstep).
 import { z } from 'zod';
 import type { TriggerId } from '../types';
-import { base, cmpNumber, emptyLast, findOption, isBlank, optionSchema } from './helpers';
+import {
+  appendOption,
+  base,
+  cmpNumber,
+  emptyLast,
+  findOption,
+  isBlank,
+  optionSchema,
+} from './helpers';
 import type { FieldTypeDef, Family, LabelOption } from './types';
 
 export interface LabelConfig {
@@ -20,6 +28,11 @@ export function labelType(spec: {
   ordered?: boolean;
   /** Fixed options cannot be edited (finding). */
   fixed?: boolean;
+  /**
+   * People may add an option while picking a value (default: unless fixed). Off for lists only automations use
+   * (workflow step), whose values no one picks.
+   */
+  addable?: boolean;
   kanbanCapable?: boolean;
   formAllowed?: boolean;
   triggers?: TriggerId[];
@@ -58,5 +71,12 @@ export function labelType(spec: {
       ),
     rank: spec.ordered ? (v, cfg) => (index(v, cfg) >= 0 ? index(v, cfg) : null) : undefined,
     options: (cfg) => opts(cfg),
+    addOption:
+      (spec.addable ?? !spec.fixed)
+        ? (cfg, label, newId) => {
+            const r = appendOption(cfg.options, label, newId);
+            return r ? { config: { ...cfg, options: r.options }, option: r.option } : null;
+          }
+        : undefined,
   });
 }

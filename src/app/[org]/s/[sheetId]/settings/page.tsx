@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { ArchivedItems } from '@/components/sheets/archived-items';
 import { GroupsManager } from '@/components/sheets/groups-manager';
 import { ArchiveSheet, SheetSettingsForm } from '@/components/sheets/sheet-settings';
 import { GroupSwatch } from '@/components/sheets/group-swatch';
-import { fieldType } from '@/engine/fields/registry';
+import { SheetFields } from '@/components/sheets/sheet-fields';
 import { isEditorRole, requireMember } from '@/server/auth';
 import { getArchivedItems, getFields, getNav, getSheet } from '@/server/repositories/sheets';
 
@@ -37,7 +37,7 @@ export default async function SheetSettingsPage({
   params: Promise<{ org: string; sheetId: string }>;
 }) {
   const { org, sheetId } = await params;
-  const { workspace, role } = await requireMember(org);
+  const { workspace, role, user } = await requireMember(org);
   const sheet = await getSheet(workspace.id, sheetId);
   if (!sheet) notFound();
   const [nav, fields, archivedItems] = await Promise.all([
@@ -124,26 +124,16 @@ export default async function SheetSettingsPage({
 
       <Card
         title={`Fields · ${fields.length}`}
-        description="The columns every item of this sheet has."
+        description="The columns every item of this sheet has. Edit a field to change its name, options and rules."
       >
-        {fields.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No fields yet.</p>
-        ) : (
-          <ul className="divide-line flex flex-col divide-y" aria-label="Fields">
-            {fields.map((f) => (
-              <li key={f.id} className="flex items-center justify-between gap-3 py-2">
-                <span className="flex items-center gap-1.5 font-semibold">
-                  {f.name}
-                  {f.locked ? <Lock className="size-3.5" aria-label="Kept by the app" /> : null}
-                </span>
-                <span className="text-muted-foreground text-sm">
-                  {fieldType(f.type)?.label ?? f.type}{' '}
-                  <span className="font-mono text-xs">{`{${f.key}}`}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <SheetFields
+          org={org}
+          sheetId={sheet.id}
+          userId={user.id}
+          timeZone={workspace.time_zone}
+          role={role}
+          archived={!!sheet.archived_at}
+        />
       </Card>
 
       {canEdit ? (

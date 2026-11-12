@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import type { LabelOption } from '@/engine/fields/types';
 import type { Ctx, Field } from '@/engine/types';
@@ -119,6 +120,58 @@ export function OptionCell({ value, field, ctx, block, density }: CellProps & { 
   );
 }
 
+/** The picker of an option type, with "Add …" and "Edit options" when the host passes them. */
+function OptionPicker({
+  value,
+  field,
+  ctx,
+  onCommit,
+  onCancel,
+  onAddOption,
+  onEditField,
+  multiple,
+  render,
+}: EditorProps & { multiple: boolean; render?: (o: LabelOption) => React.ReactNode }) {
+  // options added here are in the field's config by the time they are picked, but maybe not in this render's props
+  const added = useRef<LabelOption[]>([]);
+  const opts = optionsOf(field, ctx);
+  const find = (id: string) =>
+    opts.find((o) => o.id === id) ?? added.current.find((o) => o.id === id);
+  return (
+    <OptionsEditor
+      title={field.name}
+      options={opts}
+      selected={selectedKeys(field, value)}
+      multiple={multiple}
+      render={render}
+      onCancel={onCancel}
+      onAdd={
+        onAddOption
+          ? async (label) => {
+              const o = await onAddOption(label);
+              if (o) added.current = [...added.current, o];
+              return o;
+            }
+          : undefined
+      }
+      onEditOptions={onEditField}
+      onCommit={(ids) => {
+        const chosen = ids.map(find).filter((o): o is LabelOption => !!o);
+        if (chosen.length === 0) return onCommit(null);
+        const fresh = added.current.some((o) => o.id === chosen[0]!.id);
+        onCommit(
+          multiple
+            ? chosen.map((o) => o.id)
+            : // a new option is read by its label: this render's config may not have its id yet
+              fresh
+              ? chosen[0]!.label
+              : optionInput(field, ctx, chosen[0]!),
+        );
+      }}
+    />
+  );
+}
+
 /** A type picked from its options (status, dropdown, role, team …). */
 export function optionUI(spec: {
   icon: LucideIcon;
@@ -129,27 +182,13 @@ export function optionUI(spec: {
   return {
     icon: spec.icon,
     Cell: (p) => <OptionCell {...p} block={spec.block} />,
-    Editor: ({ value, field, ctx, onCommit, onCancel }) => {
-      const opts = optionsOf(field, ctx);
-      const multiple = typeof spec.multiple === 'function' ? spec.multiple(field) : !!spec.multiple;
-      return (
-        <OptionsEditor
-          title={field.name}
-          options={opts}
-          selected={selectedKeys(field, value)}
-          multiple={multiple}
-          render={spec.render}
-          onCancel={onCancel}
-          onCommit={(ids) => {
-            const chosen = ids
-              .map((id) => opts.find((o) => o.id === id))
-              .filter((o): o is LabelOption => !!o);
-            if (chosen.length === 0) return onCommit(null);
-            onCommit(multiple ? chosen.map((o) => o.id) : optionInput(field, ctx, chosen[0]!));
-          }}
-        />
-      );
-    },
+    Editor: (p) => (
+      <OptionPicker
+        {...p}
+        multiple={typeof spec.multiple === 'function' ? spec.multiple(p.field) : !!spec.multiple}
+        render={spec.render}
+      />
+    ),
   };
 }
 

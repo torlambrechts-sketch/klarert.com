@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  appendOption,
   base,
   cmpNumber,
   emptyLast,
@@ -72,4 +73,8 @@ export const multiselect: FieldTypeDef<V, MultiselectConfig> = base<V, Multisele
       return cmpNumber(ix, iy) || cmpNumber(x.length, y.length);
     }),
   options: (cfg) => cfg.options,
+  addOption: (cfg, label, newId) => {
+    const r = appendOption(cfg.options, label, newId);
+    return r ? { config: { ...cfg, options: r.options }, option: r.option } : null;
+  },
 });

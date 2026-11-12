@@ -25,6 +25,7 @@ the body (admin-only branches, item and field locks, own rows).
 | `setAutomationPause` | `automations.ts` | `pauseAutomationInput` | editor |  |
 | `addField` | `fields.ts` | `addFieldInput` | editor |  |
 | `updateField` | `fields.ts` | `updateFieldInput` | editor | admin-only branch, locks |
+| `addFieldOption` | `fields.ts` | `addFieldOptionInput` | editor | locks |
 | `moveField` | `fields.ts` | `moveFieldInput` | editor | admin-only branch, locks |
 | `duplicateField` | `fields.ts` | `fieldRefInput` | editor |  |
 | `deleteField` | `fields.ts` | `fieldRefInput` | editor | locks |

@@ -22,7 +22,14 @@ import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { compareItems } from '@/engine/values';
 import { fieldUI } from '@/components/fields/registry';
-import { cellValue, colorVar, solidVar, TextEditor } from '@/components/fields/shared';
+import {
+  cellValue,
+  colorVar,
+  editorPopoverClass,
+  solidVar,
+  TextEditor,
+} from '@/components/fields/shared';
+import type { EditorProps } from '@/components/fields/types';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -472,6 +479,9 @@ export function Grid({
     store.getState().edit(null);
     focusGrid();
   });
+  const fieldPropsStable = useStableEvent((field: Field) =>
+    valueCommit.fieldProps(field, { canEdit, isAdmin }, () => store.getState().edit(null)),
+  );
 
   const vRows = rowV.getVirtualItems();
   const vCols = colV.getVirtualItems();
@@ -557,6 +567,7 @@ export function Grid({
                   onCommit={commitStable}
                   onOpenItem={openItemStable}
                   onCancelEdit={cancelEditStable}
+                  fieldProps={fieldPropsStable}
                   editingItem={editingItem}
                 />
               </div>
@@ -611,6 +622,8 @@ interface RowProps {
   groupItems: Map<string, Item[]>;
   onCommit(item: Item, col: string, raw: unknown): void;
   onCancelEdit(): void;
+  /** "Add …" and "Edit options" for the open editor (people who may edit the field). */
+  fieldProps(field: Field): Pick<EditorProps, 'onAddOption' | 'onEditField'>;
 }
 
 function Sticky({
@@ -965,6 +978,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<GridRow, { ki
             onCancel={p.onCancelEdit}
             actions={p.actions}
             canEdit={editable}
+            editorProps={isEditing(field.id) ? p.fieldProps(field) : undefined}
             onOpenItem={p.onOpenItem}
           />
         );
@@ -990,6 +1004,7 @@ const GridCell = memo(function GridCell({
   onCancel,
   actions,
   onOpenItem,
+  editorProps,
 }: {
   item: Item;
   field: Field;
@@ -1007,6 +1022,7 @@ const GridCell = memo(function GridCell({
   onCancel(): void;
   actions: SheetActions;
   onOpenItem(item: Item): void;
+  editorProps?: Pick<EditorProps, 'onAddOption' | 'onEditField'>;
 }) {
   const ui = fieldUI(field.type);
   const value = cellValue(item, field, ctx);
@@ -1062,6 +1078,7 @@ const GridCell = memo(function GridCell({
                 onCancel();
                 onOpenItem(item);
               }}
+              {...editorProps}
             />
           }
         />
@@ -1087,7 +1104,7 @@ function CellEditor({
       <PopoverContent
         align="start"
         sideOffset={2}
-        className="p-3"
+        className={editorPopoverClass}
         style={{ width: Math.min(width, 420) }}
         onOpenAutoFocus={(e) => e.preventDefault()}
         onCloseAutoFocus={(e) => e.preventDefault()}

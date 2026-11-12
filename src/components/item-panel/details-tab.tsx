@@ -11,6 +11,7 @@ import { fieldUI } from '@/components/fields/registry';
 import { Avatar, cellValue, colorVar } from '@/components/fields/shared';
 import { cn } from '@/lib/utils';
 import { ItemAutomations } from '@/components/automations/item-automations';
+import type { EditorProps } from '@/components/fields/types';
 import { FieldRow } from './field-row';
 import { FilesField } from './files-field';
 import type { FileVersion } from './queries';
@@ -198,6 +199,7 @@ export function DetailsTab({
   versions,
   onCommit,
   onButton,
+  fieldProps,
   onOpenLinked,
   onFileSaved,
 }: {
@@ -214,6 +216,8 @@ export function DetailsTab({
   versions: FileVersion[];
   onCommit(item: Item, fieldId: string, raw: unknown): Promise<void> | void;
   onButton(field: Field): void;
+  /** "Add …" and "Edit options" for a field's editor; `close` closes it first. */
+  fieldProps?(field: Field, close: () => void): Pick<EditorProps, 'onAddOption' | 'onEditField'>;
   onOpenLinked(target: Item): void;
   onFileSaved(file: FileRow, replaces: string | null): void;
 }) {
@@ -271,6 +275,7 @@ export function DetailsTab({
                 readOnlyReason={readOnlyReason}
                 onCommit={onCommit}
                 onButton={() => onButton(f)}
+                fieldProps={fieldProps ? (close) => fieldProps(f, close) : undefined}
               >
                 {resolveFieldType(f.type)?.storage === 'files' ? (
                   <FilesField
