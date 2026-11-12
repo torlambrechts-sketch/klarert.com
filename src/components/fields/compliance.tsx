@@ -74,7 +74,7 @@ export const controllinkUI: FieldTypeUI = {
   editorWidth: 340,
 };
 
-// ───────────── files (upload arrives with the item panel) ─────────────
+// ───────────── files (uploaded in the item panel) ─────────────
 
 const FRESH: Record<Freshness, { label: string; color: string }> = {
   current: { label: 'Current', color: 'green' },
@@ -101,7 +101,8 @@ function filesUI(icon: FieldTypeUI['icon'], expiry: boolean): FieldTypeUI {
         </span>
       );
     },
-    explain: ({ value, ctx }) => {
+    explain: (p) => {
+      const { value, ctx } = p;
       const rows = (value as FileRow[] | null) ?? [];
       return (
         <>
@@ -123,9 +124,19 @@ function filesUI(icon: FieldTypeUI['icon'], expiry: boolean): FieldTypeUI {
             </ul>
           )}
           <Muted className="text-xs">
-            Files are added and replaced in the item panel, with a checksum and version history. The
-            item panel is not available yet, so files cannot be uploaded from the grid.
+            Files are added and replaced in the item panel, with a checksum and version history.
           </Muted>
+          {p.onOpenItem ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="self-start"
+              onClick={p.onOpenItem}
+            >
+              Open item to upload
+            </Button>
+          ) : null}
           {rows.length > 0 && expiry ? (
             <Muted className="text-xs">
               Freshness: {FRESH[freshness(rows, ctx.today)].label.toLowerCase()}.

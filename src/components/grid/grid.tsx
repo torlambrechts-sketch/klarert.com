@@ -20,14 +20,13 @@ import { resolveFieldType } from '@/engine/fields/resolve';
 import { keysBetween } from '@/engine/ordering';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
-import { compareItems, valueOf } from '@/engine/values';
+import { compareItems } from '@/engine/values';
 import { fieldUI } from '@/components/fields/registry';
-import { colorVar, TextEditor } from '@/components/fields/shared';
+import { cellValue, colorVar, TextEditor } from '@/components/fields/shared';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { ColumnHeader } from './column-header';
-import { CommentDialog } from './comment-dialog';
 import { FieldPicker } from './field-picker';
 import { useGrid, useGridStore, type CellRef } from './grid-store';
 import {
@@ -42,6 +41,7 @@ import {
 } from './grid-model';
 import { GroupSummary } from './group-summary';
 import type { SheetActions } from './use-sheet';
+import { useValueCommit } from './use-commit';
 
 // The Grid view (docs/05 §3.2, FR-21): group blocks with a colour bar, a sticky name column, column headers per
 // group, "+ Add item" and a summary row, virtualised rows and columns. The grid element keeps keyboard focus and
@@ -61,6 +61,8 @@ export interface GridProps {
   nameWidth: number;
   /** Focus requests for the first group's "+ Add item" (the header's New item button). */
   addFocusTick: number;
+  /** Open the item panel (name click, Space on the name cell, "Open item" in file cells). */
+  onOpenItem(item: Item): void;
 }
 
 const storageOf = (f: Field) => resolveFieldType(f.type)?.storage;
@@ -71,13 +73,6 @@ const explainOnly = (f: Field) => {
   return s === 'computed' || s === 'files' || s === 'none';
 };
 
-function cellValue(item: Item, field: Field, ctx: Ctx): unknown {
-  // protected: undefined means "may not see" and must reach the cell as such
-  return storageOf(field) === 'protected'
-    ? ctx.protectedValue(item.id, field.id)
-    : valueOf(item, field, ctx);
-}
-
 export function Grid({
   data,
   ctx,
@@ -87,6 +82,7 @@ export function Grid({
   onlyGroup,
   nameWidth,
   addFocusTick,
+  onOpenItem,
 }: GridProps) {
   const store = useGridStore();
   const collapsed = useGrid((s) => s.collapsed);
@@ -99,12 +95,6 @@ export function Grid({
   const selected = useGrid((s) => s.selected);
   const summaries = useGrid((s) => s.summaries);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [comment, setComment] = useState<{
-    item: Item;
-    field: Field;
-    value: unknown;
-    message: string;
-  } | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
 
   const sortField = sort ? data.fields.find((f) => f.id === sort.fieldId) : undefined;
@@ -269,7 +259,10 @@ export function Grid({
         return;
       startEdit(active);
     } else if (e.key === ' ') {
-      if (column.kind === 'field' && toggle(item, column.field)) e.preventDefault();
+      if (column.kind === 'name' && !item.id.startsWith('temp-')) {
+        e.preventDefault();
+        onOpenItem(item);
+      } else if (column.kind === 'field' && toggle(item, column.field)) e.preventDefault();
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault();
       if (!canEdit || !range) return;
@@ -315,47 +308,11 @@ export function Grid({
 
   // ───────────── commits ─────────────
 
+  const valueCommit = useValueCommit(data, ctx, actions);
   const commit = async (item: Item, col: string, raw: unknown, note?: string) => {
     store.getState().edit(null);
     focusGrid();
-    if (col === 'name') {
-      const name = typeof raw === 'string' ? raw.trim() : '';
-      if (!name) return toast.error('A name is required.');
-      if (name !== item.name) await actions.setCell(item, { name });
-      return;
-    }
-    const field = data.fields.find((f) => f.id === col);
-    if (!field) return;
-    const def = resolveFieldType(field.type)!;
-    if (def.storage === 'links')
-      return actions.setLinks(item, field, Array.isArray(raw) ? (raw as string[]) : []);
-    if (def.storage !== 'values' && def.storage !== 'protected') return;
-    const value = raw === null || raw === undefined ? null : def.normalize(raw, field.config, ctx);
-    if (raw !== null && raw !== undefined && value === null)
-      return toast.error(`This is not a valid ${field.name.toLowerCase()}.`);
-    if (
-      def.storage === 'values' &&
-      JSON.stringify(item.values[field.id] ?? null) === JSON.stringify(value)
-    )
-      return;
-    const r = await actions.setCell(item, {
-      fieldId: field.id,
-      value,
-      note,
-      expectedUpdatedAt: fieldUI(field.type).conflictCheck ? item.updatedAt : undefined,
-    });
-    if (r.ok) return;
-    if (r.error.code === 'comment_required')
-      setComment({ item, field, value, message: r.error.message });
-    if (r.error.code === 'conflict')
-      toast(r.error.message, {
-        duration: 10000,
-        action: {
-          label: 'Keep mine',
-          onClick: () => void actions.setCell(item, { fieldId: field.id, value }),
-        },
-        cancel: { label: 'Use theirs', onClick: () => void actions.refresh() },
-      });
+    await valueCommit.commit(item, col, raw, note);
   };
 
   // ───────────── pointer ─────────────
@@ -557,6 +514,7 @@ export function Grid({
                   addRef={row.key === firstAddGroup ? firstAddRef : undefined}
                   groupItems={layout.byGroup}
                   onCommit={commit}
+                  onOpenItem={onOpenItem}
                   onCancelEdit={() => {
                     store.getState().edit(null);
                     focusGrid();
@@ -577,18 +535,7 @@ export function Grid({
           </div>
         ) : null}
       </DragOverlay>
-      <CommentDialog
-        open={!!comment}
-        message={comment?.message ?? ''}
-        onCancel={() => setComment(null)}
-        onSubmit={async (note) => {
-          if (!comment) return;
-          const { item, field, value } = comment;
-          setComment(null);
-          const r = await actions.setCell(item, { fieldId: field.id, value, note });
-          if (r.ok) toast('Saved with your comment.');
-        }}
-      />
+      {valueCommit.dialog}
     </DndContext>
   );
 }
@@ -597,6 +544,7 @@ export function Grid({
 
 interface RowProps {
   row: GridRow;
+  onOpenItem(item: Item): void;
   ctx: Ctx;
   stickyW: number;
   nameWidth: number;
@@ -894,7 +842,27 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<GridRow, { ki
               isActive('name') && 'outline-focus z-[1] outline-2 -outline-offset-2',
             )}
           >
-            <span className="min-w-0 flex-1 truncate font-semibold">{item.name}</span>
+            <span className="min-w-0 flex-1 truncate">
+              {item.id.startsWith('temp-') ? (
+                <span className="font-semibold">{item.name}</span>
+              ) : (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  title={`Open ${item.displayId}`}
+                  className="max-w-full truncate text-left font-semibold hover:underline"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onDoubleClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    // the panel returns focus here when it closes
+                    e.currentTarget.focus();
+                    p.onOpenItem(item);
+                  }}
+                >
+                  {item.name}
+                </button>
+              )}
+            </span>
             {item.locked ? (
               <span
                 className="text-muted-foreground shrink-0"
@@ -949,6 +917,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<GridRow, { ki
             onCancel={p.onCancelEdit}
             actions={p.actions}
             canEdit={editable}
+            onOpenItem={p.onOpenItem}
           />
         );
       })}
@@ -972,6 +941,7 @@ const GridCell = memo(function GridCell({
   onCommit,
   onCancel,
   actions,
+  onOpenItem,
 }: {
   item: Item;
   field: Field;
@@ -988,6 +958,7 @@ const GridCell = memo(function GridCell({
   onCommit(item: Item, col: string, raw: unknown): void;
   onCancel(): void;
   actions: SheetActions;
+  onOpenItem(item: Item): void;
 }) {
   const ui = fieldUI(field.type);
   const value = cellValue(item, field, ctx);
@@ -1039,6 +1010,10 @@ const GridCell = memo(function GridCell({
                     }
                   : undefined
               }
+              onOpenItem={() => {
+                onCancel();
+                onOpenItem(item);
+              }}
             />
           }
         />

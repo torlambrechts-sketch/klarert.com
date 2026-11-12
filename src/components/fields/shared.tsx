@@ -4,7 +4,8 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import type { LabelOption } from '@/engine/fields/types';
 import { resolveFieldType } from '@/engine/fields/resolve';
-import type { Ctx, Field } from '@/engine/types';
+import type { Ctx, Field, Item } from '@/engine/types';
+import { valueOf } from '@/engine/values';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -413,4 +414,11 @@ export function ExplainEditor({
       <div className="flex flex-col gap-1.5 text-sm">{children}</div>
     </EditorFrame>
   );
+}
+
+/** The value a cell shows: protected values keep `undefined` for "may not see" (the cell says Restricted). */
+export function cellValue(item: Item, field: Field, ctx: Ctx): unknown {
+  return defOf(field).storage === 'protected'
+    ? ctx.protectedValue(item.id, field.id)
+    : valueOf(item, field, ctx);
 }

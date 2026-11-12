@@ -6,10 +6,18 @@ import { createSheetAction } from '@/app/[org]/s/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { fieldType, typesByFamily } from '@/engine/fields/registry';
+import { isLinkType, needsLibraryTarget } from '@/engine/fields/type-change';
 import { BasicsFields, useBasics, useCreate, type WizardContext } from './basics';
 import { selectClass } from './fields';
 
-type Column = { key: number; name: string; type: string };
+type Column = {
+  key: number;
+  name: string;
+  type: string;
+  /** Link types: the sheet to link to and whether it shows the link too. */
+  targetSheetId?: string;
+  twoWay?: boolean;
+};
 
 const FAMILIES = typesByFamily();
 
@@ -81,7 +89,13 @@ export function ColumnsStart({
           idPrefix: v.idPrefix,
           folderId: v.folderId,
           groups: v.groups,
-          columns: columns.map((c) => ({ name: c.name, type: c.type })),
+          columns: columns.map((c) => ({
+            name: c.name,
+            type: c.type,
+            ...(isLinkType(c.type) && c.targetSheetId
+              ? { targetSheetId: c.targetSheetId, twoWay: !!c.twoWay }
+              : {}),
+          })),
         }),
       () => ({ text: 'Sheet created.' }),
       ctx.org,
@@ -126,9 +140,18 @@ export function ColumnsStart({
                     onChange={(type) => update(c.key, { type })}
                   />
                 </div>
-                <span className="text-muted-foreground min-w-0 flex-1 text-xs">
-                  {fieldType(c.type)?.description}
-                </span>
+                {isLinkType(c.type) ? (
+                  <LinkTarget
+                    column={c}
+                    index={i}
+                    sheets={ctx.sheets.filter((s) => !needsLibraryTarget(c.type) || s.isLibrary)}
+                    onChange={(patch) => update(c.key, patch)}
+                  />
+                ) : (
+                  <span className="text-muted-foreground min-w-0 flex-1 text-xs">
+                    {fieldType(c.type)?.description}
+                  </span>
+                )}
                 <span className="flex gap-1">
                   <Button
                     type="button"
@@ -188,5 +211,53 @@ export function ColumnsStart({
         </Button>
       </div>
     </form>
+  );
+}
+
+/** Link columns: which sheet they link to, and "Show on <sheet> too" (creates the inverse field there). */
+function LinkTarget({
+  column,
+  index,
+  sheets,
+  onChange,
+}: {
+  column: Column;
+  index: number;
+  sheets: { id: string; name: string }[];
+  onChange(patch: Partial<Column>): void;
+}) {
+  const target = sheets.find((s) => s.id === column.targetSheetId);
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <select
+        aria-label={`Sheet that field ${index + 1} links to`}
+        className={selectClass}
+        value={column.targetSheetId ?? ''}
+        onChange={(e) => onChange({ targetSheetId: e.target.value || undefined })}
+      >
+        <option value="">
+          {sheets.length ? 'Choose the sheet to link to' : 'No sheets to link to yet'}
+        </option>
+        {sheets.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+      </select>
+      {target ? (
+        <label className="flex items-center gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={!!column.twoWay}
+            onChange={(e) => onChange({ twoWay: e.target.checked })}
+          />
+          Show on {target.name} too
+        </label>
+      ) : (
+        <span className="text-muted-foreground text-xs">
+          You can also choose the sheet later in the field settings.
+        </span>
+      )}
+    </div>
   );
 }

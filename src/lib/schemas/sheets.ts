@@ -93,6 +93,10 @@ const sheetBasics = {
 export const columnInput = z.object({
   name: z.string().trim().max(80, 'A field name can be at most 80 characters.'),
   type: z.string().refine(isFieldTypeId, 'Choose a field type.'),
+  /** Link types: the sheet the field links to. */
+  targetSheetId: z.uuid().optional(),
+  /** Link types: also show the link on the target sheet (creates the inverse field). */
+  twoWay: z.boolean().optional(),
 });
 
 export const createSheetInput = z.object({

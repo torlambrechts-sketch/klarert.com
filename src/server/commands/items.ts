@@ -510,6 +510,25 @@ export async function setLinks(input: unknown): Promise<Result<LinksResult>> {
           return fail('invalid', 'Choose items from a library sheet.');
       }
       const before = w.ctx.links(item.id, field.id);
+      if (cfg.inverseFieldId && !isAdminRole(role)) {
+        // the inverse side is written too: a locked item on the other sheet refuses the whole change up front
+        const touched = [
+          ...to.filter((id) => !before.includes(id)),
+          ...before.filter((id) => !to.includes(id)),
+        ];
+        if (touched.length > 0) {
+          const { data: locked } = await supabase
+            .from('items')
+            .select('display_id')
+            .in('id', touched)
+            .eq('locked', true);
+          if ((locked ?? []).length > 0)
+            return fail(
+              'forbidden',
+              `${locked![0]!.display_id} is locked, so its side of this link cannot change. Ask an owner or admin.`,
+            );
+        }
+      }
       const { data, error } = await supabase.rpc('set_item_links', {
         p_field: field.id,
         p_from: item.id,

@@ -1,7 +1,7 @@
 // Pure reducers over SheetData: optimistic updates, server results and realtime events patch the TanStack Query
 // cache through these, never by hand (docs/02 §9). Each returns a new object; unchanged parts are shared.
 import type { LinkRow, ProtectedRow, SheetData } from '@/engine/sheet-data';
-import type { Field, Group, Item, Json } from '@/engine/types';
+import type { Field, FileRow, Group, Item, Json } from '@/engine/types';
 
 const byPosition = <T extends { position: string; id: string }>(a: T, b: T) =>
   a.position < b.position
@@ -167,4 +167,48 @@ export function shouldApplyRemote(
   if (pending.has(remote.id)) return false;
   if (!local) return true;
   return remote.updatedAt > local.updatedAt;
+}
+
+/**
+ * Items of other sheets reached through links, with their sheets and fields, merged into `related` (lookups,
+ * rollups and link chips read them through the Ctx). Loaded on demand by id; newer rows replace older ones.
+ */
+export function addRelated(data: SheetData, more: SheetData['related']): SheetData {
+  if (more.items.length === 0 && more.sheets.length === 0 && more.fields.length === 0) return data;
+  const mergeById = <T extends { id: string }>(a: T[], b: T[]) => {
+    const m = new Map(a.map((x) => [x.id, x]));
+    for (const x of b) m.set(x.id, x);
+    return [...m.values()];
+  };
+  const own = new Set(data.items.map((i) => i.id));
+  return {
+    ...data,
+    related: {
+      sheets: mergeById(
+        data.related.sheets,
+        more.sheets.filter((s) => s.id !== data.sheet.id),
+      ),
+      fields: mergeById(
+        data.related.fields,
+        more.fields.filter((f) => f.sheetId !== data.sheet.id),
+      ),
+      items: mergeById(
+        data.related.items,
+        more.items.filter((i) => !own.has(i.id)),
+      ),
+    },
+  };
+}
+
+/** Ids among `ids` the cache cannot show yet (neither the sheet's items nor related items). */
+export function missingItems(data: SheetData, ids: Iterable<string>): string[] {
+  const known = new Set([...data.items, ...data.related.items].map((i) => i.id));
+  return [...new Set(ids)].filter((id) => !known.has(id));
+}
+
+/** A new file version: added to the item's current files; the version it replaces leaves them. */
+export function addFile(data: SheetData, file: FileRow, replaces?: string | null): SheetData {
+  if (!data.items.some((i) => i.id === file.itemId)) return data;
+  const files = data.files.filter((f) => f.id !== file.id && f.id !== replaces);
+  return { ...data, files: [...files, file] };
 }
