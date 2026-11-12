@@ -60,14 +60,14 @@ test.describe('desktop', () => {
     await page.getByRole('button', { name: 'Create sheet' }).click();
     await expect(page.getByText('Sheet created.')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
-    // M6: a new sheet opens in the List view; its groups show in the Grid
+    // a new sheet opens in the Table view, its groups as sections
     await expect(
-      page.getByRole('navigation', { name: 'Views' }).getByRole('link', { name: 'List' }),
+      page.getByRole('navigation', { name: 'Views' }).getByRole('link', { name: 'Table' }),
     ).toHaveAttribute('aria-current', 'page');
     await expect(page.getByText('No items yet.').first()).toBeVisible();
     await page
       .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Grid' })
+      .getByRole('link', { name: 'Table' })
       .click();
     await expect(page.getByRole('heading', { name: /^Open/ })).toBeVisible();
     await expect(page.getByText('No items yet.').first()).toBeVisible();
@@ -145,7 +145,7 @@ test.describe('desktop', () => {
     await expect(page.getByText('Replace eye-wash station')).toBeVisible();
     await page
       .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Grid' })
+      .getByRole('link', { name: 'Table' })
       .click();
     await expect(page.getByRole('button', { name: /^Imported.*3 items$/ })).toBeVisible();
 
@@ -185,7 +185,7 @@ test.describe('desktop', () => {
     await page.getByRole('link', { name: /Back to/ }).click();
     await page
       .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Grid' })
+      .getByRole('link', { name: 'Table' })
       .click();
     await expect(page.getByRole('button', { name: /^Archive.*3 items$/ })).toBeVisible();
   });
@@ -212,7 +212,7 @@ test.describe('desktop', () => {
     await expect(page.getByRole('heading', { level: 1, name: `${source} copy` })).toBeVisible();
     await page
       .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Grid' })
+      .getByRole('link', { name: 'Table' })
       .click();
     await expect(page.getByRole('button', { name: /^Active.*0 items$/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Retired.*0 items$/ })).toBeVisible();
@@ -272,7 +272,7 @@ test.describe('desktop', () => {
     await page.getByRole('link', { name: /Back to/ }).click();
     await page
       .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Grid' })
+      .getByRole('link', { name: 'Table' })
       .click();
     const toggle = page.getByRole('button', { name: /^In progress.*0 items$/ });
     await toggle.click();

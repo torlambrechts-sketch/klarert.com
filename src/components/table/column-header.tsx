@@ -18,7 +18,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { SUMMARY_LABELS, summaryOptions, type SummaryFn } from '@/engine/summaries';
+import { defaultSummary, SUMMARY_LABELS, summaryOptions, type SummaryFn } from '@/engine/summaries';
 import type { Ctx, Field } from '@/engine/types';
 import { fieldUI } from '@/components/fields/registry';
 import {
@@ -43,17 +43,18 @@ export interface ColumnMenuActions {
   duplicate(): void;
   move(by: -1 | 1): void;
   remove(): void;
-  summary(fn: SummaryFn): void;
+  /** Show the column's group summary with this function, or hide it (null). */
+  summary(fn: SummaryFn | null): void;
   resize(width: number, done: boolean): void;
 }
 
 /**
- * A column header (docs/05 §3.2): menu (sort, hide, settings, insert left/right, duplicate, move, summary, delete),
- * resize by dragging or with the arrow keys on the edge, reorder by dragging the header.
+ * A column header of the Table (docs/05 §3.1): menu (sort, hide, show or hide the group summary and choose its
+ * function, settings, insert left/right, duplicate, move, delete), resize by dragging or with the arrow keys on the
+ * edge, reorder by dragging the header.
  */
 export function ColumnHeader({
   field,
-  groupId,
   width,
   ctx,
   canEdit,
@@ -66,7 +67,6 @@ export function ColumnHeader({
   dragDisabled,
 }: {
   field: Field;
-  groupId: string;
   width: number;
   ctx: Ctx;
   canEdit: boolean;
@@ -81,12 +81,12 @@ export function ColumnHeader({
   const Icon = fieldUI(field.type).icon;
   const editable = canEdit && (!field.locked || isAdmin);
   const drag = useDraggable({
-    id: `col:${groupId}:${field.id}`,
+    id: `col:${field.id}`,
     data: { type: 'column', fieldId: field.id },
     disabled: !editable || dragDisabled,
   });
   const drop = useDroppable({
-    id: `coldrop:${groupId}:${field.id}`,
+    id: `coldrop:${field.id}`,
     data: { type: 'column', fieldId: field.id },
   });
   const startX = useRef(0);
@@ -138,12 +138,6 @@ export function ColumnHeader({
         >
           <Icon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
           <span className="truncate">{field.name}</span>
-          {field.locked ? (
-            <span title="Kept by the app. You can hide it, not delete it." className="shrink-0">
-              <Lock className="size-3" aria-hidden />
-              <span className="sr-only">(kept by the app)</span>
-            </span>
-          ) : null}
           {sorted ? (
             sorted === 'asc' ? (
               <ArrowDownAZ className="size-3.5 shrink-0" aria-label="sorted A to Z" />
@@ -168,25 +162,36 @@ export function ColumnHeader({
           <DropdownMenuItem onSelect={actions.hide}>
             <EyeOff aria-hidden /> Hide
           </DropdownMenuItem>
-          {options.length > 1 ? (
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Sigma aria-hidden className="text-muted-foreground size-4" /> Summary
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup
-                  value={summary ?? options[0]}
-                  onValueChange={(v) => actions.summary(v as SummaryFn)}
-                >
-                  {options.map((o) => (
-                    <DropdownMenuRadioItem key={o} value={o}>
-                      {SUMMARY_LABELS[o]}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          ) : null}
+          {summary ? (
+            <>
+              {options.length > 1 ? (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Sigma aria-hidden className="text-muted-foreground size-4" /> Summary
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup
+                      value={summary}
+                      onValueChange={(v) => actions.summary(v as SummaryFn)}
+                    >
+                      {options.map((o) => (
+                        <DropdownMenuRadioItem key={o} value={o}>
+                          {SUMMARY_LABELS[o]}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              ) : null}
+              <DropdownMenuItem onSelect={() => actions.summary(null)}>
+                <Sigma aria-hidden /> Hide summary
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <DropdownMenuItem onSelect={() => actions.summary(defaultSummary(field, ctx))}>
+              <Sigma aria-hidden /> Show summary
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={actions.settings}>
             <Settings2 aria-hidden /> {editable ? 'Settings' : 'About this field'}
           </DropdownMenuItem>
@@ -224,6 +229,7 @@ export function ColumnHeader({
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
+      {field.locked ? <LockedMark /> : null}
       {editable ? (
         <div
           role="separator"
@@ -248,6 +254,29 @@ export function ColumnHeader({
         />
       ) : null}
     </div>
+  );
+}
+
+/** The lock after a locked field's name, with its explanation on hover and focus. */
+function LockedMark() {
+  const text = 'Kept by the app. You can hide it, not delete it.';
+  return (
+    <span className="group/lock relative mr-2 inline-flex shrink-0">
+      <span
+        role="img"
+        tabIndex={0}
+        aria-label={text}
+        className="focus-visible:outline-focus inline-flex rounded outline-offset-2 focus-visible:outline-2"
+      >
+        <Lock className="size-3 opacity-60" aria-hidden />
+      </span>
+      <span
+        role="tooltip"
+        className="bg-ink pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-52 rounded px-2 py-1 text-xs font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
+      >
+        {text}
+      </span>
+    </span>
   );
 }
 

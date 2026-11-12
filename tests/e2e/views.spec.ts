@@ -2,7 +2,7 @@ import { expect, test, type Browser, type Locator, type Page } from '@playwright
 import { generateNKeysBetween } from 'fractional-indexing';
 import { rest, signIn } from './helpers';
 
-// M6: the List view (default), phone cards, Kanban, Calendar, the Form view with its public link, filters, sort,
+// M6: the Table view (default), phone cards, Kanban, Calendar, the Form view with its public link, filters, sort,
 // search and saved views. Uses the seed (pnpm seed): maria@example.com owner, james@example.com editor of
 // /meridian. Each test creates its own sheet from the Tracker start (Owner people, Status, Priority severity,
 // Due date, Progress percent; groups Open and Done).
@@ -65,11 +65,14 @@ async function addRows(
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const daysFromToday = (n: number) => iso(new Date(Date.now() + n * 86_400_000));
 const views = (page: Page) => page.getByRole('navigation', { name: 'Views' });
-const listTable = (page: Page) => page.getByRole('table');
+const table = (page: Page) => page.getByRole('grid');
 const listRow = (page: Page, name: string) =>
-  listTable(page)
+  table(page)
     .getByRole('row')
     .filter({ has: page.getByRole('button', { name, exact: true }) });
+/** The cell of an item's field in the Table (cells are ids of item and field). */
+const cellOf = (page: Page, row: string, fieldId: string) =>
+  listRow(page, row).locator(`[id$="-${fieldId}"]`);
 
 async function drag(page: Page, source: Locator, target: Locator) {
   const s = (await source.boundingBox())!;
@@ -82,13 +85,13 @@ async function drag(page: Page, source: Locator, target: Locator) {
   await page.mouse.up();
 }
 
-test('List view: popover editing, add a field, locks, hint and pagination', async ({
+test('Table view: editing, add a field, locks, hint and all rows reachable', async ({
   page,
 }, info) => {
   desktopOnly(info.project.name);
   await signIn(page, 'maria@example.com');
   const sheet = await trackerSheet(page);
-  await expect(views(page).getByRole('link', { name: 'List' })).toHaveAttribute(
+  await expect(views(page).getByRole('link', { name: 'Table' })).toHaveAttribute(
     'aria-current',
     'page',
   );
@@ -103,33 +106,37 @@ test('List view: popover editing, add a field, locks, hint and pagination', asyn
   });
   await page.reload();
 
-  // pagination
-  const footer = page.getByText('1–25 of 30');
-  await expect(footer).toBeVisible();
-  await expect(listRow(page, 'Row 25')).toBeVisible();
-  await expect(listRow(page, 'Row 26')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await expect(page.getByText('26–30 of 30')).toBeVisible();
+  // every row is reachable in one scrolling table (no pages)
+  await expect(listRow(page, 'Row 01')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Next', exact: true })).toHaveCount(0);
+  await table(page).evaluate((el) => (el.scrollTop = el.scrollHeight));
   await expect(listRow(page, 'Row 30')).toBeVisible();
-  await page.getByRole('button', { name: 'Prev', exact: true }).click();
-  await page.getByLabel('Items per page').selectOption('50');
-  await expect(page.getByText('1–30 of 30')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeDisabled();
+  await table(page).evaluate((el) => (el.scrollTop = 0));
+  await expect(listRow(page, 'Row 01')).toBeVisible();
 
-  // status is the first column after the name; click a cell to edit it in a popover
-  const headers = listTable(page).getByRole('columnheader');
-  await expect(headers.nth(1)).toHaveText('Status');
-  await page.getByRole('button', { name: 'Status of Row 01' }).click();
+  // one header row: the item label, then the fields in field order
+  const headers = table(page).getByRole('columnheader');
+  await expect(headers).toHaveText([
+    'Task',
+    'Owner',
+    'Status',
+    'Priority',
+    'Due date',
+    /^Progress/,
+    '',
+  ]);
+  // click a cell to select it, click again to edit it in a popover
+  const status = sheet.field('status').id;
+  await cellOf(page, 'Row 01', status).click();
+  await cellOf(page, 'Row 01', status).click();
   await page
     .getByRole('listbox', { name: 'Status' })
     .getByRole('option', { name: 'Working on it' })
     .click();
-  await expect(page.getByRole('button', { name: 'Status of Row 01' })).toContainText(
-    'Working on it (needs action)',
-  );
-  await page.getByRole('button', { name: 'Status of Row 02' }).click();
+  await expect(cellOf(page, 'Row 01', status)).toContainText('Working on it (needs action)');
+  await cellOf(page, 'Row 02', status).dblclick();
   await page.getByRole('listbox', { name: 'Status' }).getByRole('option', { name: 'Done' }).click();
-  await expect(page.getByRole('button', { name: 'Status of Row 02' })).toContainText('Done (done)');
+  await expect(cellOf(page, 'Row 02', status)).toContainText('Done (done)');
 
   // locked header: lock with its explanation
   const lock = headers
@@ -147,14 +154,18 @@ test('List view: popover editing, add a field, locks, hint and pagination', asyn
   await expect(headers.filter({ hasText: /^Text$/ })).toBeVisible();
 
   // the hint goes and stays gone
-  await expect(page.getByText('Click any cell to edit.')).toBeVisible();
+  await expect(
+    page.getByText('Click a cell, then click again or press Enter to edit.'),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Dismiss hint' }).click();
   await page.reload();
-  await expect(page.getByText('1–30 of 30')).toBeVisible();
-  await expect(page.getByText('Click any cell to edit.')).toHaveCount(0);
+  await expect(listRow(page, 'Row 01')).toBeVisible();
+  await expect(
+    page.getByText('Click a cell, then click again or press Enter to edit.'),
+  ).toHaveCount(0);
 });
 
-test('List view on a phone shows cards', async ({ page }, info) => {
+test('Table view on a phone shows cards', async ({ page }, info) => {
   test.skip(info.project.name !== 'phone', 'phone layout');
   await signIn(page, 'maria@example.com');
   const sheet = await trackerSheet(page);
@@ -174,6 +185,7 @@ test('List view on a phone shows cards', async ({ page }, info) => {
   await expect(card).toContainText(/-001/);
   await expect(card).toContainText('overdue');
   await expect(page.getByRole('table')).toHaveCount(0);
+  await expect(page.getByRole('grid')).toHaveCount(0);
   await card.click();
   await expect(page).toHaveURL(/item=/);
 });
@@ -382,7 +394,7 @@ test('filters, sort and search', async ({ page }, info) => {
     { name: 'Guard rail', values: { [s]: sheet.option('status', 'Stuck') } },
   ]);
   await page.reload();
-  const names = () => listTable(page).locator('tbody td:first-child button').allInnerTexts();
+  const names = () => table(page).locator('[data-cell$="|name"] button').allInnerTexts();
   await expect.poll(names).toEqual(['Pump A seal', 'Pump B seal', 'Valve check', 'Guard rail']);
 
   // text contains
@@ -489,9 +501,9 @@ test('saved views: personal stays personal, shared is shared, ?view= opens a vie
   await expect(maria.locator('[data-lane="Stuck"]').getByText('Pump seal')).toBeVisible();
   await maria.goto(personalUrl);
   await expect(
-    maria.getByText('That view no longer exists or is not shared with you. Showing the list.'),
+    maria.getByText('That view no longer exists or is not shared with you. Showing the table.'),
   ).toBeVisible();
-  await expect(views(maria).getByRole('link', { name: 'List' })).toHaveAttribute(
+  await expect(views(maria).getByRole('link', { name: 'Table' })).toHaveAttribute(
     'aria-current',
     'page',
   );

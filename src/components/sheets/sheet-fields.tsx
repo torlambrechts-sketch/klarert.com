@@ -39,7 +39,7 @@ export function SheetFields(props: SheetFieldsProps) {
     () =>
       new QueryClient({ defaultOptions: { mutations: { retry: false }, queries: { retry: 1 } } }),
   );
-  const [store] = useState(() => createGridStore(props.sheetId));
+  const [store] = useState(() => createGridStore());
   return (
     <QueryClientProvider client={client}>
       <GridStoreContext.Provider value={store}>

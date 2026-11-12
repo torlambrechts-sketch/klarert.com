@@ -13,90 +13,24 @@ import {
 } from '@/app/[org]/s/view-actions';
 import {
   emptyConfig,
-  isBuiltinViewId,
   parseViewConfig,
+  toViewType,
   sameConfig,
-  VIEW_TYPE_LABEL,
   type SavedView,
   type ViewConfig,
   type ViewType,
 } from '@/engine/views/config';
 import { toView } from '@/lib/sheet-rows';
+import { buildTabs, resolveActive, type ActiveView } from './tabs-model';
 import { createClient } from '@/lib/supabase/client';
 
 // The sheet's views (docs/01 FR-26): saved views from the database (RLS: shared ones and my personal ones), the
-// built-in List/Grid/Kanban/Calendar/Form views, the active view from ?view=, and its configuration.
+// built-in Table/Kanban/Calendar/Form views, the active view from ?view=, and its configuration.
 // A saved view I may change saves itself as I change it; anything else is a draft I can "Save as view".
 
 export const viewsKey = (sheetId: string) => ['views', sheetId] as const;
 
-export interface ActiveView {
-  /** The id in the URL: a saved view's uuid or a built-in type. */
-  id: string;
-  type: ViewType;
-  name: string;
-  saved: SavedView | null;
-  /** Changes save to the view (personal: mine; shared: I am an editor). */
-  canWrite: boolean;
-}
-
-export interface ViewTabs {
-  /** The List and Grid tabs: the first shared view of that type, else the built-in one. */
-  list: ActiveView;
-  grid: ActiveView;
-  /** Kanban, Calendar and Form under "More": the first shared view of that type, else the built-in one. */
-  more: Record<'kanban' | 'calendar' | 'form', ActiveView>;
-  /** Other saved views, each its own tab. */
-  others: ActiveView[];
-}
-
-const byPosition = (a: SavedView, b: SavedView) =>
-  a.position < b.position ? -1 : a.position > b.position ? 1 : 0;
-
-export function buildTabs(views: SavedView[], userId: string, canEdit: boolean): ViewTabs {
-  const sorted = [...views].sort(byPosition);
-  const writable = (v: SavedView) => (v.ownerId === null ? canEdit : v.ownerId === userId);
-  const asActive = (v: SavedView): ActiveView => ({
-    id: v.id,
-    type: v.type,
-    name: v.name,
-    saved: v,
-    canWrite: writable(v),
-  });
-  const builtin = (type: ViewType): ActiveView => ({
-    id: type,
-    type,
-    name: VIEW_TYPE_LABEL[type],
-    saved: null,
-    canWrite: false,
-  });
-  const base = (type: ViewType) => sorted.find((v) => v.type === type && v.ownerId === null);
-  const listBase = base('list');
-  const gridBase = base('grid');
-  const used = new Set([listBase?.id, gridBase?.id]);
-  const firstOf = (type: 'kanban' | 'calendar' | 'form') => {
-    const v = base(type);
-    return v ? asActive(v) : builtin(type);
-  };
-  return {
-    list: listBase ? { ...asActive(listBase), name: 'List' } : builtin('list'),
-    grid: gridBase ? { ...asActive(gridBase), name: 'Grid' } : builtin('grid'),
-    more: { kanban: firstOf('kanban'), calendar: firstOf('calendar'), form: firstOf('form') },
-    others: sorted.filter((v) => !used.has(v.id)).map(asActive),
-  };
-}
-
-/** The view a URL id (or the sheet's default) opens. Unknown ids fall back to List. */
-export function resolveActive(tabs: ViewTabs, id: string): ActiveView | null {
-  if (isBuiltinViewId(id)) {
-    if (id === 'list') return tabs.list;
-    if (id === 'grid') return tabs.grid;
-    return tabs.more[id];
-  }
-  for (const v of [tabs.list, tabs.grid, ...Object.values(tabs.more), ...tabs.others])
-    if (v.id === id) return v;
-  return null;
-}
+export { buildTabs, resolveActive, type ActiveView, type ViewTabs } from './tabs-model';
 
 const localKey = (sheetId: string, id: string) => `view:${sheetId}:${id}`;
 
@@ -146,15 +80,16 @@ export function useViews(input: {
   // ───────────── the active view: ?view=, else the sheet's default, else List ─────────────
   const search = useSearchParams();
   const param = search.get('view');
-  const [defaultViewId, setDefaultViewId] = useState(input.defaultViewId);
-  const wanted = param ?? defaultViewId ?? 'list';
+  const [storedDefault, setDefaultViewId] = useState(input.defaultViewId);
+  // a default saved before the Table view ('list', 'grid') is the Table
+  const defaultViewId = storedDefault ? (toViewType(storedDefault) ?? storedDefault) : null;
+  const wanted = param ?? defaultViewId ?? 'table';
   const resolved = query.isSuccess ? resolveActive(tabs, wanted) : null;
-  const active: ActiveView =
-    resolved ?? (isBuiltinViewId(wanted) ? resolveActive(tabs, wanted)! : tabs.list);
+  const active: ActiveView = resolved ?? resolveActive(tabs, toViewType(wanted) ?? 'table')!;
   const missing = query.isSuccess && !resolved;
   useEffect(() => {
     if (!missing || !param) return;
-    toast.error('That view no longer exists or is not shared with you. Showing the list.');
+    toast.error('That view no longer exists or is not shared with you. Showing the table.');
     const url = new URL(window.location.href);
     url.searchParams.delete('view');
     window.history.replaceState(null, '', url.toString());
@@ -269,7 +204,7 @@ export function useViews(input: {
         list?.filter((v) => v.id !== view.id),
       );
       if (defaultViewId === view.id) setDefaultViewId(null);
-      open('list');
+      open('table');
       toast('View deleted.');
     },
     [defaultViewId, open, org, qc, sheetId],
@@ -296,7 +231,7 @@ export function useViews(input: {
     /** Shared views need an editor. */
     canShare: canEdit,
     ready: query.isSuccess || query.isError,
-    defaultViewId: defaultViewId ?? 'list',
+    defaultViewId: defaultViewId ?? 'table',
     open,
     create,
     rename,

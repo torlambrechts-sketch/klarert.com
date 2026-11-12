@@ -30,7 +30,7 @@ test('keyboard only: add an item, set its status, open it, post an update, close
   await signIn(page, 'maria@example.com', `/${slug}/home`);
   const ids = await idsOf(page, slug);
   const ca = ids.sheets['Corrective actions']!;
-  await page.goto(`/${slug}/s/${ca}?view=grid`);
+  await page.goto(`/${slug}/s/${ca}?view=table`);
   await expect(page.locator('[data-testid="inbox-button"][data-state-loaded]')).toBeVisible();
   await expect(page.getByRole('grid').getByText('Guard bypassed on press 3')).toBeVisible();
 

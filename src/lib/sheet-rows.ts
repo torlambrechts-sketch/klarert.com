@@ -12,7 +12,7 @@ import type {
   StatusRule,
   Validation,
 } from '@/engine/types';
-import { parseViewConfig, type SavedView, type ViewType } from '@/engine/views/config';
+import { parseViewConfig, toViewType, type SavedView } from '@/engine/views/config';
 import type { Database } from './database.types';
 
 type Tables = Database['public']['Tables'];
@@ -130,7 +130,8 @@ export function toView(r: ViewDbRow): SavedView {
     id: r.id,
     sheetId: r.sheet_id,
     name: r.name,
-    type: r.type as ViewType,
+    type: toViewType(r.type) ?? 'table',
+    ...(toViewType(r.type) !== r.type ? { legacyType: r.type } : {}),
     config: parseViewConfig(r.config),
     ownerId: r.owner_id,
     position: r.position,

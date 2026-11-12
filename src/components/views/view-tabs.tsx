@@ -6,7 +6,6 @@ import {
   ChevronDown,
   Columns3,
   FileText,
-  LayoutList,
   MoreHorizontal,
   Plus,
   Table2,
@@ -34,12 +33,11 @@ import {
 import { cn } from '@/lib/utils';
 import type { ActiveView, ViewsState } from './use-views';
 
-// The view tab bar (docs/05 §3, FR-26): List, Grid, saved views, then "More ▾" with Kanban, Calendar, Form and
+// The view tab bar (docs/05 §3, FR-26): Table, saved views, then "More ▾" with Kanban, Calendar, Form and
 // "+ New view"; and the active view's menu (rename, duplicate, delete, save as a view, make default).
 
 const ICONS: Record<ViewType, typeof Table2> = {
-  list: LayoutList,
-  grid: Table2,
+  table: Table2,
   kanban: Columns3,
   calendar: CalendarDays,
   form: FileText,
@@ -90,28 +88,19 @@ function TabLink({
 export function ViewTabs({ views, fields }: { views: ViewsState; fields: Field[] }) {
   const { tabs, active, open, defaultViewId } = views;
   const [newOpen, setNewOpen] = useState(false);
-  const shown = [tabs.list, tabs.grid, ...tabs.others];
+  const shown = [tabs.table, ...tabs.others];
   const extra = shown.some((v) => v.id === active.id) ? null : active;
   const isDefault = (v: ActiveView) =>
-    v.id === defaultViewId || (v === tabs.list && defaultViewId === 'list');
+    v.id === defaultViewId || (v === tabs.table && defaultViewId === 'table');
   return (
     <nav aria-label="Views" className="min-w-0">
       <ul className="flex flex-wrap items-center gap-1">
         <li>
           <TabLink
-            view={tabs.list}
-            label="List"
-            active={active.id === tabs.list.id}
-            isDefault={isDefault(tabs.list)}
-            open={open}
-          />
-        </li>
-        <li>
-          <TabLink
-            view={tabs.grid}
-            label="Grid"
-            active={active.id === tabs.grid.id}
-            isDefault={isDefault(tabs.grid)}
+            view={tabs.table}
+            label="Table"
+            active={active.id === tabs.table.id}
+            isDefault={isDefault(tabs.table)}
             open={open}
           />
         </li>
@@ -175,7 +164,7 @@ export function ViewMenu({ views, canEdit }: { views: ViewsState; canEdit: boole
   const saved = active.saved;
   const isDefault =
     views.defaultViewId === active.id ||
-    (active.id === views.tabs.list.id && views.defaultViewId === 'list');
+    (active.id === views.tabs.table.id && views.defaultViewId === 'table');
   return (
     <>
       {unsaved ? (
@@ -304,14 +293,14 @@ function ViewDialog({
 }) {
   const id = useId();
   const [name, setName] = useState(initialName);
-  const [type, setType] = useState<ViewType>(initialType ?? 'list');
+  const [type, setType] = useState<ViewType>(initialType ?? 'table');
   const [shared, setShared] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (!open) return;
     setName(initialName);
-    setType(initialType ?? 'list');
+    setType(initialType ?? 'table');
     setShared(false);
     setError(null);
   }, [open, initialName, initialType]);

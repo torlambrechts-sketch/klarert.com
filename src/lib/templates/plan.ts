@@ -7,6 +7,7 @@ import { basicCtx } from '@/engine/context';
 import { addDays } from '@/engine/fields/helpers';
 import { fieldType } from '@/engine/fields/registry';
 import { keysBetween } from '@/engine/ordering';
+import { STORED_VIEW_TYPE } from '@/engine/views/config';
 import type {
   Automation,
   Condition,
@@ -246,7 +247,7 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
         org_id: env.orgId,
         sheet_id: sheetId,
         name: v.name,
-        type: v.type,
+        type: STORED_VIEW_TYPE[v.type],
         config: v.config as Json,
         position: viewPositions[vi]!,
         owner_id: null,

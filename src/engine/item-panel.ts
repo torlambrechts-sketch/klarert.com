@@ -19,17 +19,27 @@ export interface ItemSummary {
 const byPosition = (a: Field, b: Field) =>
   a.position < b.position ? -1 : a.position > b.position ? 1 : 0;
 
+/** The sheet's owner field: its first field whose values are people (by value kind, any type). */
+export function ownerField(ctx: Ctx): Field | null {
+  return (
+    [...ctx.fieldsByKey.values()].sort(byPosition).find((f) => kindOf(f, ctx) === 'people') ?? null
+  );
+}
+
+/** The first person in an item's owner field. */
+export function ownerOf(item: Item, field: Field, ctx: Ctx): string | null {
+  const v = valueOf(item, field, ctx);
+  return (Array.isArray(v) ? v.find((x): x is string => typeof x === 'string') : undefined) ?? null;
+}
+
 export function itemSummary(item: Item, ctx: Ctx): ItemSummary {
   const fields = [...ctx.fieldsByKey.values()].sort(byPosition);
   const status = itemStatusField(ctx);
   const done = status ? isDoneOf(item, status, ctx) : false;
-  const peopleField = fields.find((f) => kindOf(f, ctx) === 'people');
-  let person: ItemSummary['person'] = null;
-  if (peopleField) {
-    const v = valueOf(item, peopleField, ctx);
-    const first = Array.isArray(v) ? v.find((x): x is string => typeof x === 'string') : undefined;
-    person = { field: peopleField, userId: first ?? null };
-  }
+  const peopleField = ownerField(ctx);
+  const person: ItemSummary['person'] = peopleField
+    ? { field: peopleField, userId: ownerOf(item, peopleField, ctx) }
+    : null;
   let due: ItemSummary['due'] = null;
   for (const f of fields) {
     if (resolveFieldType(f.type)?.kind !== 'date') continue;

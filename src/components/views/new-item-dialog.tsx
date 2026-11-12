@@ -5,7 +5,7 @@ import type { Group, Item, Sheet } from '@/engine/types';
 import { inputClass } from '@/components/fields/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { byPosition, positionsAtEnd } from '@/components/grid/grid-model';
+import { byPosition, positionsAtEnd } from '@/components/table/table-model';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
 

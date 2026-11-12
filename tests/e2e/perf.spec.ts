@@ -81,7 +81,7 @@ test('a 10 000-item × 30-field sheet scrolls within the frame budget', async ({
   const sheet = JSON.parse(out.trim().split('\n').at(-1)!) as { sheetId: string; items: number };
   expect(sheet.items).toBe(10_000);
 
-  await page.goto(`/${slug}/s/${sheet.sheetId}?view=grid`);
+  await page.goto(`/${slug}/s/${sheet.sheetId}?view=table`);
   await expect(page.getByRole('heading', { name: /^All rows\s*10,000 items/ })).toBeVisible({
     timeout: 60_000,
   });

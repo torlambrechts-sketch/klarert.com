@@ -23,7 +23,7 @@ const ROWS = 10;
 async function main() {
   const signedIn = await signInForPerf();
   const sheetId = process.env.PERF_SHEET_ID || (await generateSheet(30, signedIn)).sheetId;
-  const url = `${perfEnv.APP_URL}/${perfEnv.WORKSPACE}/s/${sheetId}?view=grid`;
+  const url = `${perfEnv.APP_URL}/${perfEnv.WORKSPACE}/s/${sheetId}?view=table`;
   const cookies = (await sessionCookies(signedIn.session)).map((c) => ({
     ...c,
     url: perfEnv.APP_URL,

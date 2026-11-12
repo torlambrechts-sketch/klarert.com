@@ -3,7 +3,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { idsOf, seedWorkspace } from './first-sheet-helpers';
 import { signIn } from './helpers';
 
-// M10 accessibility (docs/01 §6: WCAG 2.1 AA): axe on Home, the sheet (List, Grid), the item panel and the automation
+// M10 accessibility (docs/01 §6: WCAG 2.1 AA): axe on Home, the sheet (Table, with a summary row and a collapsed
+// group, and its phone cards), the item panel and the automation
 // builder, against a workspace seeded with the first-sheet template so every page has real content. Zero serious or
 // critical violations. The keyboard-only pass of a core flow is in keyboard.spec.ts (docs/08-accessibility.md).
 
@@ -32,7 +33,7 @@ async function axe(page: Page, what: string) {
   expect(report, `${what}: serious or critical axe violations`).toEqual([]);
 }
 
-test('Home, the sheet in List and Grid, the item panel and the automation builder', async ({
+test('Home, the sheet Table and its cards, the item panel and the automation builder', async ({
   page,
 }) => {
   test.setTimeout(180_000);
@@ -45,13 +46,27 @@ test('Home, the sheet in List and Grid, the item panel and the automation builde
   const ca = ids.sheets['Corrective actions']!;
   await page.goto(`/${slug}/s/${ca}`);
   await expect(page.getByText('Guard bypassed on press 3').first()).toBeVisible();
-  await axe(page, 'Sheet · List');
+  await axe(page, 'Sheet · Table');
 
-  await page.goto(`/${slug}/s/${ca}?view=grid`);
-  await expect(page.getByRole('grid').getByText('Guard bypassed on press 3')).toBeVisible();
-  await axe(page, 'Sheet · Grid');
+  // a summary row and a collapsed group
+  await page.goto(`/${slug}/s/${ca}?view=table`);
+  const grid = page.getByRole('grid');
+  await expect(grid.getByText('Guard bypassed on press 3')).toBeVisible();
+  await grid.getByRole('button', { name: 'Status column menu' }).click();
+  await page.getByRole('menuitem', { name: 'Show summary' }).click();
+  await expect(grid.getByRole('gridcell', { name: /^Summary/ }).first()).toBeVisible();
+  const groupToggle = grid.getByRole('button', { name: /^Closed\s/ });
+  await groupToggle.click();
+  await expect(groupToggle).toHaveAttribute('aria-expanded', 'false');
+  await axe(page, 'Sheet · Table with a summary row and a collapsed group');
 
-  await page.goto(`/${slug}/s/${ca}?view=grid&item=CA-001`);
+  // phones: cards
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByTestId('item-card').first()).toBeVisible();
+  await axe(page, 'Sheet · Table cards at 390 px');
+  await page.setViewportSize({ width: 1280, height: 720 });
+
+  await page.goto(`/${slug}/s/${ca}?view=table&item=CA-001`);
   const panel = page.getByRole('dialog');
   await expect(panel.getByRole('heading', { name: 'Burrs on bracket 44-210' })).toBeVisible();
   await expect(panel.getByRole('list', { name: 'Automations on this item' })).toBeVisible();

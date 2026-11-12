@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ACTION_IDS, TRIGGER_IDS } from '@/engine/automations';
 import { isFieldTypeId } from '@/engine/fields/registry';
 import type { Json } from '@/engine/types';
-import { VIEW_TYPES } from '@/engine/views/config';
+import { viewTypeInput } from '@/engine/views/config';
 import { ID_PREFIX, LABEL_COLORS } from '@/lib/schemas/sheets';
 
 // Sheet templates (templates/*.json, docs/07 Part B): people, a folder, sheets with fields, groups, views and items,
@@ -72,7 +72,7 @@ export const templateSheet = z.object({
     .array(
       z.object({
         name: z.string().min(1).max(80),
-        type: z.enum(VIEW_TYPES),
+        type: viewTypeInput,
         config: z.record(z.string(), json).default({}),
       }),
     )

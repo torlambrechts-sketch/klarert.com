@@ -93,7 +93,7 @@ export async function makeSheet(
     orgId,
     idPrefix,
     groups,
-    url: `/${slug}/s/${id}?view=grid`,
+    url: `/${slug}/s/${id}?view=table`,
     field: (key: string) => ids[key]!,
     /** Grid cell of an item: column 0 is the name, then the fields in order. */
     cell: (p: Page, item: string, column: string) =>

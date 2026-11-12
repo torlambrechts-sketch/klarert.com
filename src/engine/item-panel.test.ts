@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import './fields/registry';
 import { status } from './fields/status';
-import { itemSummary, linkEdges, neighbours } from './item-panel';
+import { itemSummary, linkEdges, neighbours, ownerField, ownerOf } from './item-panel';
 import { makeCtx, makeField, makeItem } from './testing/fixtures';
 
 const statusField = makeField('status', status.defaultConfig(), { id: 'f-status', position: 'a0' });
@@ -45,6 +45,21 @@ describe('itemSummary', () => {
       due: null,
       done: false,
     });
+  });
+});
+
+describe('ownerField', () => {
+  it('is the first people field by position, whatever its type', () => {
+    const lead = makeField('people', { multiple: false }, { id: 'f-lead', position: 'a0' });
+    const ctx = makeCtx({ fields: [...fields, lead], items: [] });
+    expect(ownerField(ctx)?.id).toBe('f-lead');
+    const item = makeItem({ 'f-lead': ['u-maria'] });
+    expect(ownerOf(item, lead, ctx)).toBe('u-maria');
+    expect(ownerOf(makeItem(), lead, ctx)).toBeNull();
+  });
+
+  it('is null without a people field', () => {
+    expect(ownerField(makeCtx({ fields: [statusField, due], items: [] }))).toBeNull();
   });
 });
 

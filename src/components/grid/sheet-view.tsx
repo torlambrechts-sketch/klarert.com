@@ -35,7 +35,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SheetAutomations } from '@/components/automations/sheet-automations';
 import { ItemPanel } from '@/components/item-panel/item-panel';
-import { ListView } from '@/components/list/list-view';
 import { CalendarView } from '@/components/views/calendar-view';
 import { FilterButton, SheetSearch, SortButton } from '@/components/views/filter-bar';
 import { FormView } from '@/components/views/form-view';
@@ -47,8 +46,8 @@ import { useViews, type ViewsState } from '@/components/views/use-views';
 import { ViewMenu, ViewTabs } from '@/components/views/view-tabs';
 import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
-import { Grid } from './grid';
-import { positionsAtEnd } from './grid-model';
+import { TableView } from '@/components/table/table-view';
+import { positionsAtEnd } from '@/components/table/table-model';
 import { createGridStore, GridStoreContext, useGrid, useGridStore } from './grid-store';
 import {
   useRelatedRealtime,
@@ -60,7 +59,7 @@ import {
 } from './use-sheet';
 
 // The sheet page's client part: data (TanStack Query + realtime), the view tabs and the header actions (search,
-// filters, sort, columns), the active view (List, Grid, Kanban, Calendar, Form), the bulk bar for selected rows, the
+// filters, sort, columns), the active view (Table, Kanban, Calendar, Form), the bulk bar for selected rows, the
 // item panel, field settings and the add-field picker.
 
 export interface SheetViewProps {
@@ -71,7 +70,7 @@ export interface SheetViewProps {
   timeZone: string;
   role: 'owner' | 'admin' | 'editor' | 'viewer';
   onlyGroup: string | null;
-  /** sheets.settings.defaultViewId: a saved view's id or a built-in view; null = List. */
+  /** sheets.settings.defaultViewId: a saved view's id or a built-in view; null = Table. */
   defaultViewId: string | null;
 }
 
@@ -82,7 +81,7 @@ export function SheetView(props: SheetViewProps) {
         defaultOptions: { mutations: { retry: false }, queries: { retry: 1 } },
       }),
   );
-  const [store] = useState(() => createGridStore(props.sheetId));
+  const [store] = useState(() => createGridStore());
   return (
     <QueryClientProvider client={client}>
       <GridStoreContext.Provider value={store}>
@@ -201,7 +200,7 @@ function SheetBody(props: SheetViewProps) {
 
   const hiddenCount = data ? data.fields.filter((f) => hidden.has(f.id)).length : 0;
   const total = data?.items.length ?? 0;
-  const tabular = active.type === 'list' || active.type === 'grid';
+  const tabular = active.type === 'table';
   const filterable = active.type !== 'form';
 
   return (
@@ -226,7 +225,7 @@ function SheetBody(props: SheetViewProps) {
           {canEdit && active.type !== 'form' ? (
             <Button
               type="button"
-              onClick={() => (active.type === 'grid' ? setAddTick((t) => t + 1) : setNewItem({}))}
+              onClick={() => (tabular ? setAddTick((t) => t + 1) : setNewItem({}))}
               disabled={!data}
             >
               <Plus aria-hidden /> New {data?.sheet.itemLabel.toLowerCase() ?? 'item'}
@@ -380,6 +379,7 @@ function ViewBody({
     [setItemParam],
   );
   const clearFilters = () => setConfig((c) => ({ ...c, filters: [] }));
+  const [localAddTick, setLocalAddTick] = useState(0);
 
   return (
     <>
@@ -393,46 +393,24 @@ function ViewBody({
           items.
         </p>
       ) : null}
-      {active.type === 'grid' ? (
-        <>
-          {data.items.length === 0 && canEdit ? (
-            <p className="text-sm">
-              No items yet. Use “+ Add item” in a group to add the first one.
-            </p>
-          ) : null}
-          <div className="border-line flex min-h-[240px] flex-1 flex-col overflow-hidden rounded-[var(--radius-card)] border">
-            <Grid
-              data={data}
-              ctx={ctx}
-              actions={actions}
-              canEdit={canEdit}
-              isAdmin={isAdmin}
-              onlyGroup={onlyGroup}
-              nameWidth={narrow ? 150 : 300}
-              addFocusTick={addTick}
-              onOpenItem={openItem}
-              visibleItems={view.items}
-              viewCompare={view.compare}
-            />
-          </div>
-        </>
-      ) : active.type === 'list' ? (
-        <ListView
+      {active.type === 'table' ? (
+        <TableView
           data={data}
           ctx={ctx}
           actions={actions}
-          items={view.items}
-          config={config}
-          setConfig={setConfig}
           canEdit={canEdit}
           isAdmin={isAdmin}
+          onlyGroup={onlyGroup}
           narrow={narrow}
-          filtered={view.filtered}
-          onClearFilters={() => {
-            clearFilters();
-          }}
+          addFocusTick={addTick + localAddTick}
           onOpenItem={openItem}
-          onNew={() => setNewItem({ groupId: onlyGroup })}
+          items={view.items}
+          compare={view.compare}
+          filtered={view.filtered}
+          onClearFilters={clearFilters}
+          onNew={() => setLocalAddTick((t) => t + 1)}
+          config={config}
+          setConfig={setConfig}
         />
       ) : active.type === 'kanban' ? (
         <KanbanView
@@ -479,7 +457,7 @@ function ViewBody({
         items={data.items}
         actions={actions}
       />
-      {canEdit && selected.size > 0 && (active.type === 'grid' || active.type === 'list') ? (
+      {canEdit && selected.size > 0 && active.type === 'table' ? (
         <BulkBar
           actions={actions}
           fields={data.fields}
@@ -534,7 +512,7 @@ function GridSkeleton() {
   return (
     <div
       aria-busy="true"
-      aria-label="Loading the grid"
+      aria-label="Loading the table"
       className="border-line flex flex-1 flex-col gap-2 rounded-[var(--radius-card)] border p-3"
     >
       {Array.from({ length: 8 }, (_, i) => (

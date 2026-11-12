@@ -100,7 +100,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   await page.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page.getByText('Sheet created. Add your first item.')).toBeVisible();
   await expect(page.getByRole('heading', { level: 1, name: 'Corrective actions' })).toBeVisible();
-  await expect(views(page).getByRole('link', { name: 'List' })).toHaveAttribute(
+  await expect(views(page).getByRole('link', { name: 'Table' })).toHaveAttribute(
     'aria-current',
     'page',
   );
@@ -112,8 +112,8 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   await expect(rail.getByText('Your sheets')).toBeVisible();
   const caUrl = page.url().replace(/\?.*$/, '');
 
-  // ── 2. "+ Add item" in Open (the Grid's add row), Enter to continue, Esc
-  await views(page).getByRole('link', { name: 'Grid' }).click();
+  // ── 2. "+ Add item" in Open (the Table's add row), Enter to continue, Esc
+  await views(page).getByRole('link', { name: 'Table' }).click();
   const add = page.getByRole('textbox', { name: 'Add corrective action to Open' });
   await add.click();
   await add.fill('Burrs on bracket 44-210');
@@ -210,12 +210,12 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   await page.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Actions' })).toBeVisible();
   const actUrl = page.url().replace(/\?.*$/, '');
-  await page.goto(`${caUrl}?view=grid`);
+  await page.goto(`${caUrl}?view=table`);
   await addField(page, /^Link to items/, 'link to items', 'Actions', async (s) => {
     await s.getByLabel('Links to sheet').selectOption({ label: 'Actions' });
     await s.getByLabel('Show on Actions too').check();
   });
-  await page.goto(`${actUrl}?view=grid`);
+  await page.goto(`${actUrl}?view=table`);
   await expect(
     grid(page).getByRole('button', { name: 'Corrective action column menu' }).first(),
   ).toBeVisible();
@@ -238,7 +238,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   await expect(
     page.getByRole('textbox', { name: 'Search items for Corrective action' }),
   ).toHaveCount(0);
-  await page.goto(`${caUrl}?view=grid&item=CA-001`);
+  await page.goto(`${caUrl}?view=table&item=CA-001`);
   await expect(panel(page).getByRole('list', { name: 'Linked items' })).toContainText(
     'Deburr lot 2210',
   );
@@ -265,7 +265,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   await expect(page.getByText('Field settings saved.').first()).toBeVisible();
 
   // ── 6. CA-001: Owner Tom, Source Customer complaint, Priority Medium, Due date in 5 days, Risk 3×3
-  await page.goto(`${caUrl}?view=grid&item=CA-001`);
+  await page.goto(`${caUrl}?view=table&item=CA-001`);
   const p = panel(page);
   await p.getByRole('button', { name: /^Edit Owner/ }).click();
   await page
@@ -443,7 +443,7 @@ test.describe('Part B · automations on the reference template', () => {
 
   /** Open an item's panel by its display id. */
   async function openItem(page: Page, sheetId: string, displayId: string) {
-    await page.goto(`/${slug}/s/${sheetId}?view=grid&item=${displayId}`);
+    await page.goto(`/${slug}/s/${sheetId}?view=table&item=${displayId}`);
     await expect(panel(page).getByText(displayId).first()).toBeVisible();
     return panel(page);
   }
@@ -499,7 +499,7 @@ test.describe('Part B · automations on the reference template', () => {
     expect(new Set(log.map((l) => `${l.actor_kind}:${l.note}`))).toEqual(
       new Set(['system:Template import']),
     );
-    // the List view hides what the template says; the template's Kanban is under More
+    // the Table view hides what the template says; the template's Kanban is under More
     await page.goto(`/${slug}/s/${ca}`);
     await expect(page.getByText('Guard bypassed on press 3').first()).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'What happened' })).toHaveCount(0);
@@ -631,7 +631,7 @@ test.describe('Part B · automations on the reference template', () => {
 
     // B4: a second tab keeps the corrective action open; ACT-003 → Done in this one
     const second = await page.context().newPage();
-    await second.goto(`/${slug}/s/${ca}?view=grid&item=${burrs.display_id}`);
+    await second.goto(`/${slug}/s/${ca}?view=table&item=${burrs.display_id}`);
     const watching = panel(second);
     await expect(watching.getByRole('button', { name: /^About Actions done/ })).toContainText('0%');
     await second.waitForTimeout(1500); // let the realtime channel join
@@ -762,7 +762,7 @@ test.describe('Part B · automations on the reference template', () => {
     // James (editor) cannot edit it
     const james = await browser.newPage();
     await signIn(james, 'james@example.com', `/${slug}/home`);
-    await james.goto(`/${slug}/s/${ca}?view=grid&item=${sup.display_id}`);
+    await james.goto(`/${slug}/s/${ca}?view=table&item=${sup.display_id}`);
     await expect(panel(james).getByText('Locked: Closed').first()).toBeVisible();
     // the panel shows the values read-only; in the grid, editing is refused with the reason
     await expect(panel(james).getByRole('button', { name: /^Edit Root cause/ })).toHaveCount(0);
@@ -1096,7 +1096,7 @@ test.describe('Part B · automations on the reference template', () => {
   }) => {
     const ids = await as(page, 'maria@example.com');
     const fw = await ids.item('Corrective actions', 'Shared admin account on firewall');
-    await page.goto(`/${slug}/s/${ca}?view=grid`);
+    await page.goto(`/${slug}/s/${ca}?view=table`);
     await page.getByRole('checkbox', { name: 'Select Shared admin account on firewall' }).check();
     let answered = nextAnswer(page);
     await page
