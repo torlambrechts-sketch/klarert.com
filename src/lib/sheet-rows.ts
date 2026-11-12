@@ -1,4 +1,5 @@
 // Database rows → domain types (docs/02 §10). Pure; used by the sheet query (browser and server) and realtime.
+import { parseDashboardConfig, type WidgetConfig } from '@/engine/dashboards/types';
 import type { LinkRow } from '@/engine/sheet-data';
 import type {
   Condition,
@@ -138,5 +139,28 @@ export function toView(r: ViewDbRow): SavedView {
     config: parseViewConfig(r.config),
     ownerId: r.owner_id,
     position: r.position,
+  };
+}
+
+export type DashboardDbRow = Tables['dashboards']['Row'];
+
+/** A dashboard as the pages use it: its widgets read leniently from the stored config. */
+export interface Dashboard {
+  id: string;
+  name: string;
+  position: string;
+  widgets: WidgetConfig[];
+  updatedAt: string;
+}
+
+export function toDashboard(
+  r: Pick<DashboardDbRow, 'id' | 'name' | 'position' | 'config' | 'updated_at'>,
+): Dashboard {
+  return {
+    id: r.id,
+    name: r.name,
+    position: r.position,
+    widgets: parseDashboardConfig(r.config).widgets,
+    updatedAt: r.updated_at,
   };
 }

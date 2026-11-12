@@ -18,6 +18,7 @@ orgs ─┬─ memberships ── profiles (auth.users)
       │                                     ├─ scheduler_fired (dedupe)
       │                                     └─ outbound_webhooks (queue)
       ├─ notifications (per user)
+      ├─ dashboards (config: { widgets: [...] })
       └─ activity_log (append-only, hash chain per item / per sheet for schema)
 ```
 
@@ -106,6 +107,7 @@ Commands also write: `item_updates` (comments), `notifications`, `automation_run
 | files | members | editors, as themselves, after the hash check |
 | protected_values | admins + `fields.config.allowedUserIds` | same |
 | notifications | the recipient | the recipient may set `read_at`/`done_at` |
+| dashboards | members | editors, through the dashboard commands; inserted as yourself (`created_by = auth.uid()`); workspace and creator never change (0016). `config`: `{ widgets: [{ id, type, title, sheetId?, fieldKey?, conditions?, days? }] }`, at most 24 widgets; widget types live in `src/engine/dashboards` (fields by key, sheets by id). Changes are audited by `audit_schema` as `dashboards.insert/update/delete` on the workspace chain `sheet:<org_id>` |
 | scheduler_fired, outbound_webhooks | service role only | service role only |
 
 Automation posts, notifications, webhook queue rows, run rows (`record_automation_run`) and the automation's item writes (the RPCs with `p_automation`) are made by the automation runner. In a request it uses a **server-only** client created with the service role, scoped by the org id it has already authorised. This is the one allowed service-role use in a request path; keep it inside `src/server/automations/effects.ts`. System notifications about an automation carry `notifications.automation_id` (failure notices at most once per hour).
