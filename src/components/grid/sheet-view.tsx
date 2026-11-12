@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   Archive,
   Columns3,
@@ -45,7 +45,6 @@ import { useOnline } from '@/components/states/use-online';
 import { useViewItems } from '@/components/views/use-view-items';
 import { useViews, type ViewsState } from '@/components/views/use-views';
 import { ViewMenu, ViewTabs } from '@/components/views/view-tabs';
-import { createClient } from '@/lib/supabase/client';
 import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
 import { Grid } from './grid';
@@ -56,6 +55,7 @@ import {
   useSheetActions,
   useSheetQuery,
   useSheetRealtime,
+  useSheetsList,
   type SheetActions,
 } from './use-sheet';
 
@@ -102,23 +102,6 @@ function useNarrow() {
     return () => mq.removeEventListener('change', set);
   }, []);
   return narrow;
-}
-
-function useSheetsList(orgSheetOrg: string | undefined) {
-  return useQuery({
-    queryKey: ['sheets-list', orgSheetOrg],
-    enabled: !!orgSheetOrg,
-    queryFn: async () => {
-      const { data } = await createClient()
-        .from('sheets')
-        .select('id, name, is_library')
-        .eq('org_id', orgSheetOrg!)
-        .is('archived_at', null)
-        .order('name');
-      return (data ?? []).map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library }));
-    },
-    staleTime: 60_000,
-  });
 }
 
 /** The sheet search, kept in ?q= (replaced, not pushed, while typing). */

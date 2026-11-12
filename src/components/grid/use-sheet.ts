@@ -95,6 +95,24 @@ export function useSheetQuery(sheetId: string) {
   });
 }
 
+/** The workspace's sheets (link targets in field settings). */
+export function useSheetsList(orgId: string | undefined) {
+  return useQuery({
+    queryKey: ['sheets-list', orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data } = await createClient()
+        .from('sheets')
+        .select('id, name, is_library')
+        .eq('org_id', orgId!)
+        .is('archived_at', null)
+        .order('name');
+      return (data ?? []).map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library }));
+    },
+    staleTime: 60_000,
+  });
+}
+
 export type RealtimeStatus = 'connecting' | 'live' | 'offline';
 
 /** Subscribe to the sheet's rows and patch the cache; reconnects refetch so nothing is missed. */
