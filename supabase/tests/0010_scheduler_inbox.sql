@@ -47,6 +47,10 @@ insert into outbound_webhooks (id, org_id, automation_id, item_id, url, payload,
   ('c0c0c0c0-6666-0000-0000-000000000004', 'c0c0c0c0-0000-0000-0000-000000000000', 'c0c0c0c0-4444-0000-0000-000000000001',
    'c0c0c0c0-5555-0000-0000-000000000001', 'https://hooks.example.com/d', '{}', 'sent', 0, now() - interval '1 hour');
 
+-- rows other tests or a local run left behind are not due in this transaction (rolled back at the end)
+update outbound_webhooks set next_attempt_at = now() + interval '1 day'
+ where org_id <> 'c0c0c0c0-0000-0000-0000-000000000000';
+
 -- ───────────── grants ─────────────
 select ok(not has_function_privilege('authenticated', 'claim_outbound_webhooks(integer)', 'execute')
        and not has_function_privilege('anon', 'claim_outbound_webhooks(integer)', 'execute')
@@ -84,7 +88,8 @@ select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 set local role service_role;
 select is(claim_schedule_occurrence('c0c0c0c0-4444-0000-0000-000000000001', 'c0c0c0c0-5555-0000-0000-000000000001', '2026-11-20'),
   false, 'the cron route (service role) sees the same dedupe');
-select is((select count(*)::int from scheduler_fired), 3, 'three occurrences recorded');
+select is((select count(*)::int from scheduler_fired where automation_id = 'c0c0c0c0-4444-0000-0000-000000000001'), 3,
+  'three occurrences recorded');
 
 -- ───────────── webhook worker ─────────────
 select bag_eq($$ select id::text from claim_outbound_webhooks(50) $$,
