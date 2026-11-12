@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
@@ -18,8 +18,9 @@ import {
 import { toast } from 'sonner';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { sheetCtx } from '@/engine/sheet-data';
-import { compareItems } from '@/engine/values';
-import type { Field, Item } from '@/engine/types';
+import type { SheetData } from '@/engine/sheet-data';
+import type { Ctx, Field, Item } from '@/engine/types';
+import { CLIENT_FILTER_LIMIT, groupRows } from '@/engine/views/apply';
 import { fieldUI } from '@/components/fields/registry';
 import { inputClass } from '@/components/fields/shared';
 import type { ConfigEnv } from '@/components/fields/types';
@@ -33,16 +34,26 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ItemPanel } from '@/components/item-panel/item-panel';
+import { ListView } from '@/components/list/list-view';
+import { CalendarView } from '@/components/views/calendar-view';
+import { FilterButton, SheetSearch, SortButton } from '@/components/views/filter-bar';
+import { FormView } from '@/components/views/form-view';
+import { KanbanView } from '@/components/views/kanban-view';
+import { NewItemDialog, type NewItemRequest } from '@/components/views/new-item-dialog';
+import { useViewItems } from '@/components/views/use-view-items';
+import { useViews, type ViewsState } from '@/components/views/use-views';
+import { ViewMenu, ViewTabs } from '@/components/views/view-tabs';
 import { createClient } from '@/lib/supabase/client';
 import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
 import { Grid } from './grid';
-import { buildLayout, positionsAtEnd } from './grid-model';
+import { positionsAtEnd } from './grid-model';
 import { createGridStore, GridStoreContext, useGrid, useGridStore } from './grid-store';
 import { useSheetActions, useSheetQuery, useSheetRealtime, type SheetActions } from './use-sheet';
 
-// The sheet page's client part: data (TanStack Query + realtime), the header actions, the Grid, the bulk bar for
-// selected rows, field settings and the add-field picker.
+// The sheet page's client part: data (TanStack Query + realtime), the view tabs and the header actions (search,
+// filters, sort, columns), the active view (List, Grid, Kanban, Calendar, Form), the bulk bar for selected rows, the
+// item panel, field settings and the add-field picker.
 
 export interface SheetViewProps {
   org: string;
@@ -52,6 +63,8 @@ export interface SheetViewProps {
   timeZone: string;
   role: 'owner' | 'admin' | 'editor' | 'viewer';
   onlyGroup: string | null;
+  /** sheets.settings.defaultViewId: a saved view's id or a built-in view; null = List. */
+  defaultViewId: string | null;
 }
 
 export function SheetView(props: SheetViewProps) {
@@ -116,7 +129,34 @@ function useSheetsList(orgSheetOrg: string | undefined) {
   });
 }
 
-function SheetBody({ org, sheetId, sheetName, userId, timeZone, role, onlyGroup }: SheetViewProps) {
+/** The sheet search, kept in ?q= (replaced, not pushed, while typing). */
+function useSearchParam(): [string, (v: string) => void] {
+  const params = useSearchParams();
+  const fromUrl = params.get('q') ?? '';
+  const [q, setQ] = useState(fromUrl);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    setQ((cur) => (timer.current ? cur : fromUrl));
+  }, [fromUrl]);
+  const set = useCallback((v: string) => {
+    setQ(v);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      const url = new URL(window.location.href);
+      if (v.trim()) url.searchParams.set('q', v);
+      else url.searchParams.delete('q');
+      window.history.replaceState(null, '', url.toString());
+    }, 300);
+  }, []);
+  return [q, set];
+}
+
+const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) =>
+  a.size === b.size && [...a].every((x) => b.has(x));
+
+function SheetBody(props: SheetViewProps) {
+  const { org, sheetId, sheetName, userId, timeZone, role } = props;
   const query = useSheetQuery(sheetId);
   const actions = useSheetActions(org, sheetId);
   const realtime = useSheetRealtime(sheetId, actions.pending);
@@ -144,20 +184,30 @@ function SheetBody({ org, sheetId, sheetName, userId, timeZone, role, onlyGroup 
     [data, now, timeZone, userId, isAdmin],
   );
   const sheets = useSheetsList(data?.sheet.orgId);
-  const [addTick, setAddTick] = useState(0);
   const store = useGridStore();
-  const settingsFor = useGrid((s) => s.settingsFor);
-  const addFieldAt = useGrid((s) => s.addFieldAt);
-  const hidden = useGrid((s) => s.hidden);
-  const selected = useGrid((s) => s.selected);
+  const views = useViews({ org, sheetId, userId, canEdit, defaultViewId: props.defaultViewId });
+  const { active, config, setConfig } = views;
+  const [q, setQ] = useSearchParam();
+  const [addTick, setAddTick] = useState(0);
+  const [newItem, setNewItem] = useState<NewItemRequest | null>(null);
 
-  // drop selections of items that left the sheet
+  // hidden columns belong to the view: view → grid store, and column menu → view
+  const fields = data?.fields;
   useEffect(() => {
-    if (!data || selected.size === 0) return;
-    const ids = new Set(data.items.map((i) => i.id));
-    const kept = [...selected].filter((id) => ids.has(id));
-    if (kept.length !== selected.size) store.getState().setSelected(kept);
-  }, [data, selected, store]);
+    if (!fields) return;
+    const ids = new Set(fields.filter((f) => config.hidden.includes(f.key)).map((f) => f.id));
+    if (!sameSet(ids, store.getState().hidden)) store.setState({ hidden: ids });
+  }, [config.hidden, fields, store]);
+  useEffect(() => {
+    store.setState({
+      onHiddenChange: (ids) =>
+        setConfig((c) => ({
+          ...c,
+          hidden: (fields ?? []).filter((f) => ids.has(f.id)).map((f) => f.key),
+        })),
+    });
+  }, [fields, setConfig, store]);
+  const hidden = useGrid((s) => s.hidden);
 
   const env: ConfigEnv | null = useMemo(
     () =>
@@ -173,63 +223,57 @@ function SheetBody({ org, sheetId, sheetName, userId, timeZone, role, onlyGroup 
     [data, ctx, sheets.data],
   );
 
-  // ───────────── item panel: ?item=<display id> (FR-27) ─────────────
-  const search = useSearchParams();
-  const itemParam = search.get('item');
-  const sort = useGrid((s) => s.sort);
-  const setItemParam = useCallback((displayId: string | null, mode: 'push' | 'replace') => {
-    const url = new URL(window.location.href);
-    if (displayId) url.searchParams.set('item', displayId);
-    else url.searchParams.delete('item');
-    window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', url.toString());
-  }, []);
-  const panelItem = itemParam ? data?.items.find((i) => i.displayId === itemParam) : undefined;
-  useEffect(() => {
-    if (!itemParam || !data || panelItem) return;
-    toast.error(`${itemParam} no longer exists in this sheet or was archived.`);
-    setItemParam(null, 'replace');
-  }, [itemParam, data, panelItem, setItemParam]);
-  const order = useMemo(() => {
-    if (!data || !ctx) return [];
-    const sortField = sort ? data.fields.find((f) => f.id === sort.fieldId) : undefined;
-    return buildLayout({
-      groups: data.groups,
-      items: data.items,
-      collapsed: new Set(),
-      compare: sortField ? compareItems(sortField, ctx, sort!.dir) : null,
-      canAdd: false,
-      onlyGroup: onlyGroup && data.groups.some((g) => g.id === onlyGroup) ? onlyGroup : null,
-    }).flat;
-  }, [data, ctx, sort, onlyGroup]);
-
   const hiddenCount = data ? data.fields.filter((f) => hidden.has(f.id)).length : 0;
   const total = data?.items.length ?? 0;
+  const tabular = active.type === 'list' || active.type === 'grid';
+  const filterable = active.type !== 'form';
 
   return (
     <main className="flex h-[calc(100dvh-58px)] min-w-0 flex-col gap-3 px-4 pt-5 pb-3 max-[759px]:h-[calc(100dvh-122px)] sm:px-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="break-words">{sheetName}</h1>
-          <p className="text-muted-foreground text-sm">
-            Grid ·{' '}
-            {data
-              ? total === 1
-                ? '1 item'
-                : `${total.toLocaleString('en-GB')} items`
-              : 'loading items'}
-            {realtime === 'offline' && online ? ' · live updates paused, reconnecting' : ''}
-          </p>
+        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <h1 className="break-words">{sheetName}</h1>
+            <p className="text-muted-foreground text-sm">
+              {active.name} ·{' '}
+              {data
+                ? total === 1
+                  ? '1 item'
+                  : `${total.toLocaleString('en-GB')} items`
+                : 'loading items'}
+              {realtime === 'offline' && online ? ' · live updates paused, reconnecting' : ''}
+            </p>
+          </div>
+          <ViewTabs views={views} fields={data?.fields ?? []} />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {canEdit ? (
-            <Button type="button" onClick={() => setAddTick((t) => t + 1)} disabled={!data}>
+        <div className="flex flex-wrap items-center gap-2 max-[759px]:w-full">
+          {canEdit && active.type !== 'form' ? (
+            <Button
+              type="button"
+              onClick={() => (active.type === 'grid' ? setAddTick((t) => t + 1) : setNewItem({}))}
+              disabled={!data}
+            >
               <Plus aria-hidden /> New {data?.sheet.itemLabel.toLowerCase() ?? 'item'}
             </Button>
           ) : null}
-          {data ? <ColumnsMenu fields={data.fields} hiddenCount={hiddenCount} /> : null}
-          <Button asChild variant="outline">
-            <Link href={`/${org}/s/${sheetId}/settings`}>
-              <Settings aria-hidden /> Sheet settings
+          {filterable ? <SheetSearch value={q} onChange={setQ} /> : null}
+          {data && ctx && filterable ? (
+            <>
+              <FilterButton
+                config={config}
+                setConfig={setConfig}
+                fields={data.fields}
+                ctx={ctx}
+                computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
+              />
+              <SortButton config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
+            </>
+          ) : null}
+          {data && tabular ? <ColumnsMenu fields={data.fields} hiddenCount={hiddenCount} /> : null}
+          <ViewMenu views={views} canEdit={canEdit} />
+          <Button asChild variant="outline" size="icon">
+            <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
+              <Settings aria-hidden />
             </Link>
           </Button>
         </div>
@@ -258,20 +302,126 @@ function SheetBody({ org, sheetId, sheetName, userId, timeZone, role, onlyGroup 
             Retry
           </Button>
         </div>
-      ) : !data || !ctx || !env ? (
+      ) : views.query.isError ? (
+        <div
+          role="alert"
+          className="border-line flex flex-col items-start gap-2 rounded-[var(--radius-card)] border p-4"
+        >
+          <p className="font-semibold">The views of this sheet could not be loaded.</p>
+          <Button type="button" variant="outline" onClick={() => void views.query.refetch()}>
+            Retry
+          </Button>
+        </div>
+      ) : !data || !ctx || !env || !views.ready ? (
         <GridSkeleton />
       ) : (
+        <ViewBody
+          {...props}
+          data={data}
+          ctx={ctx}
+          env={env}
+          actions={actions}
+          views={views}
+          search={q}
+          narrow={narrow}
+          canEdit={canEdit}
+          isAdmin={isAdmin}
+          addTick={addTick}
+          newItem={newItem}
+          setNewItem={setNewItem}
+        />
+      )}
+    </main>
+  );
+}
+
+function ViewBody({
+  org,
+  onlyGroup: groupParam,
+  data,
+  ctx,
+  env,
+  actions,
+  views,
+  search,
+  narrow,
+  canEdit,
+  isAdmin,
+  addTick,
+  newItem,
+  setNewItem,
+}: SheetViewProps & {
+  data: SheetData;
+  ctx: Ctx;
+  env: ConfigEnv;
+  actions: SheetActions;
+  views: ViewsState;
+  search: string;
+  narrow: boolean;
+  canEdit: boolean;
+  isAdmin: boolean;
+  addTick: number;
+  newItem: NewItemRequest | null;
+  setNewItem(r: NewItemRequest | null): void;
+}) {
+  const store = useGridStore();
+  const settingsFor = useGrid((s) => s.settingsFor);
+  const addFieldAt = useGrid((s) => s.addFieldAt);
+  const selected = useGrid((s) => s.selected);
+  const { active, config, setConfig } = views;
+  const onlyGroup = groupParam && data.groups.some((g) => g.id === groupParam) ? groupParam : null;
+  const view = useViewItems({ org, data, ctx, config, search, onlyGroup });
+
+  // drop selections of items that left the sheet
+  useEffect(() => {
+    if (selected.size === 0) return;
+    const ids = new Set(data.items.map((i) => i.id));
+    const kept = [...selected].filter((id) => ids.has(id));
+    if (kept.length !== selected.size) store.getState().setSelected(kept);
+  }, [data, selected, store]);
+
+  // ───────────── item panel: ?item=<display id> (FR-27) ─────────────
+  const params = useSearchParams();
+  const itemParam = params.get('item');
+  const setItemParam = useCallback((displayId: string | null, mode: 'push' | 'replace') => {
+    const url = new URL(window.location.href);
+    if (displayId) url.searchParams.set('item', displayId);
+    else url.searchParams.delete('item');
+    window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', url.toString());
+  }, []);
+  const panelItem = itemParam ? data.items.find((i) => i.displayId === itemParam) : undefined;
+  useEffect(() => {
+    if (!itemParam || panelItem) return;
+    toast.error(`${itemParam} no longer exists in this sheet or was archived.`);
+    setItemParam(null, 'replace');
+  }, [itemParam, panelItem, setItemParam]);
+  const order = useMemo(() => {
+    const groups = [...data.groups].sort((a, b) => (a.position < b.position ? -1 : 1));
+    return groupRows(groups, view.items).flatMap((r) => r.items);
+  }, [data.groups, view.items]);
+  const openItem = useCallback(
+    (item: Item) => setItemParam(item.displayId, 'push'),
+    [setItemParam],
+  );
+  const clearFilters = () => setConfig((c) => ({ ...c, filters: [] }));
+
+  return (
+    <>
+      {view.filtered && active.type !== 'form' ? (
+        <p className="text-muted-foreground -mt-1 text-xs" aria-live="polite">
+          Showing {view.items.length.toLocaleString('en-GB')} of{' '}
+          {(onlyGroup
+            ? data.items.filter((i) => i.groupId === onlyGroup).length
+            : data.items.length
+          ).toLocaleString('en-GB')}{' '}
+          items.
+        </p>
+      ) : null}
+      {active.type === 'grid' ? (
         <>
-          {total === 0 && canEdit ? (
+          {data.items.length === 0 && canEdit ? (
             <p className="text-sm">
-              No items yet.{' '}
-              <button
-                type="button"
-                className="text-focus font-semibold underline"
-                onClick={() => setAddTick((t) => t + 1)}
-              >
-                Add the first one.
-              </button>
+              No items yet. Use “+ Add item” in a group to add the first one.
             </p>
           ) : null}
           <div className="border-line flex min-h-[240px] flex-1 flex-col overflow-hidden rounded-[var(--radius-card)] border">
@@ -281,67 +431,126 @@ function SheetBody({ org, sheetId, sheetName, userId, timeZone, role, onlyGroup 
               actions={actions}
               canEdit={canEdit}
               isAdmin={isAdmin}
-              onlyGroup={
-                onlyGroup && data.groups.some((g) => g.id === onlyGroup) ? onlyGroup : null
-              }
+              onlyGroup={onlyGroup}
               nameWidth={narrow ? 150 : 300}
               addFocusTick={addTick}
-              onOpenItem={(item) => setItemParam(item.displayId, 'push')}
+              onOpenItem={openItem}
+              visibleItems={view.items}
+              viewCompare={view.compare}
             />
           </div>
-          {canEdit && selected.size > 0 ? (
-            <BulkBar
-              actions={actions}
-              fields={data.fields}
-              env={env}
-              allItems={data.items}
-              isAdmin={isAdmin}
-            />
-          ) : null}
-          {panelItem ? (
-            <ItemPanel
-              org={org}
-              data={data}
-              ctx={ctx}
-              actions={actions}
-              item={panelItem}
-              order={order}
-              canEdit={canEdit}
-              isAdmin={isAdmin}
-              onClose={() => setItemParam(null, 'push')}
-              onNavigate={(it) => setItemParam(it.displayId, 'replace')}
-            />
-          ) : null}
-          <FieldSettings
-            field={data.fields.find((f) => f.id === settingsFor) ?? null}
-            ctx={ctx}
-            env={env}
-            canEdit={canEdit}
-            isAdmin={isAdmin}
-            actions={actions}
-            onClose={() => store.getState().openSettings(null)}
-          />
-          <Dialog
-            open={!!addFieldAt}
-            onOpenChange={(o) => !o && store.getState().openAddField(null)}
-          >
-            <DialogContent className="w-[min(380px,calc(100vw-32px))]">
-              <DialogTitle className="text-lg font-bold">Add a field</DialogTitle>
-              <DialogDescription className="sr-only">
-                Choose the type of the new field.
-              </DialogDescription>
-              <FieldPicker
-                onPick={(type) => {
-                  const at = store.getState().addFieldAt ?? undefined;
-                  store.getState().openAddField(null);
-                  void actions.addField(type, at);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
         </>
+      ) : active.type === 'list' ? (
+        <ListView
+          data={data}
+          ctx={ctx}
+          actions={actions}
+          items={view.items}
+          config={config}
+          setConfig={setConfig}
+          canEdit={canEdit}
+          isAdmin={isAdmin}
+          narrow={narrow}
+          filtered={view.filtered}
+          onClearFilters={() => {
+            clearFilters();
+          }}
+          onOpenItem={openItem}
+          onNew={() => setNewItem({ groupId: onlyGroup })}
+        />
+      ) : active.type === 'kanban' ? (
+        <KanbanView
+          data={data}
+          ctx={ctx}
+          actions={actions}
+          items={view.items}
+          config={config}
+          setConfig={setConfig}
+          canEdit={canEdit}
+          isAdmin={isAdmin}
+          onOpenItem={openItem}
+          onNew={(r) => setNewItem({ ...r, groupId: onlyGroup })}
+        />
+      ) : active.type === 'calendar' ? (
+        <CalendarView
+          data={data}
+          ctx={ctx}
+          items={view.items}
+          config={config}
+          setConfig={setConfig}
+          canEdit={canEdit}
+          onOpenItem={openItem}
+          onNew={(r) => setNewItem({ ...r, groupId: onlyGroup })}
+        />
+      ) : (
+        <FormView
+          org={org}
+          data={data}
+          ctx={ctx}
+          actions={actions}
+          view={active}
+          config={config}
+          setConfig={setConfig}
+          views={views}
+          canEdit={canEdit}
+        />
       )}
-    </main>
+      <NewItemDialog
+        request={newItem}
+        onClose={() => setNewItem(null)}
+        sheet={data.sheet}
+        groups={data.groups}
+        items={data.items}
+        actions={actions}
+      />
+      {canEdit && selected.size > 0 && (active.type === 'grid' || active.type === 'list') ? (
+        <BulkBar
+          actions={actions}
+          fields={data.fields}
+          env={env}
+          allItems={data.items}
+          isAdmin={isAdmin}
+        />
+      ) : null}
+      {panelItem ? (
+        <ItemPanel
+          org={org}
+          data={data}
+          ctx={ctx}
+          actions={actions}
+          item={panelItem}
+          order={order.some((i) => i.id === panelItem.id) ? order : [panelItem]}
+          canEdit={canEdit}
+          isAdmin={isAdmin}
+          onClose={() => setItemParam(null, 'push')}
+          onNavigate={(it) => setItemParam(it.displayId, 'replace')}
+        />
+      ) : null}
+      <FieldSettings
+        field={data.fields.find((f) => f.id === settingsFor) ?? null}
+        ctx={ctx}
+        env={env}
+        canEdit={canEdit}
+        isAdmin={isAdmin}
+        actions={actions}
+        onClose={() => store.getState().openSettings(null)}
+      />
+      <Dialog open={!!addFieldAt} onOpenChange={(o) => !o && store.getState().openAddField(null)}>
+        <DialogContent className="w-[min(380px,calc(100vw-32px))]">
+          <DialogTitle className="text-lg font-bold">Add a field</DialogTitle>
+          <DialogDescription className="sr-only">
+            Choose the type of the new field.
+          </DialogDescription>
+          <FieldPicker
+            onPick={(type) => {
+              const at = store.getState().addFieldAt ?? undefined;
+              store.getState().openAddField(null);
+              void actions.addField(type, at);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -398,9 +607,7 @@ function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCount: nu
               );
             })}
           </div>
-          <p className="text-muted-foreground pt-1 text-xs">
-            Hidden columns are remembered in this browser.
-          </p>
+          <p className="text-muted-foreground pt-1 text-xs">Hidden columns belong to this view.</p>
         </fieldset>
       </PopoverContent>
     </Popover>

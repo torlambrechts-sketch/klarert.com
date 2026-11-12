@@ -119,6 +119,15 @@ export function useSheetRealtime(sheetId: string, pending: Pending): RealtimeSta
             const row = p.new as ItemDbRow | undefined;
             if (!row?.id) return;
             const item = toItem(row);
+            // the echo of my own new item can arrive before the command answers: it replaces the temporary row
+            patch((d) => {
+              if (p.eventType !== 'INSERT' || d.items.some((i) => i.id === item.id)) return d;
+              const temp = d.items.find(
+                (i) =>
+                  i.id.startsWith('temp-') && i.groupId === item.groupId && i.name === item.name,
+              );
+              return temp ? removeItems(d, [temp.id]) : d;
+            });
             patch((d) =>
               shouldApplyRemote(
                 d.items.find((i) => i.id === item.id),
@@ -396,6 +405,8 @@ export function useSheetActions(org: string, sheetId: string) {
       name: string,
       position: string,
       onSaved?: (tempId: string, item: Item) => void,
+      /** Values to start with (calendar day, kanban lane, internal form) and the form it came from. */
+      extra: { values?: Record<string, unknown>; formViewId?: string } = {},
     ): Promise<Item | null> => {
       const tempId = `temp-${newMutationId()}`;
       const now = new Date().toISOString();
@@ -415,7 +426,16 @@ export function useSheetActions(org: string, sheetId: string) {
       patch((d) => upsertItem(d, temp));
       try {
         const r = await run(() =>
-          createItemAction({ org, sheetId, groupId, name, position, mutationId: tempId }),
+          createItemAction({
+            org,
+            sheetId,
+            groupId,
+            name,
+            position,
+            mutationId: tempId,
+            ...(extra.values ? { values: extra.values } : {}),
+            ...(extra.formViewId ? { formViewId: extra.formViewId } : {}),
+          }),
         );
         patch((d) => removeItems(d, [tempId]));
         if (!r.ok) {

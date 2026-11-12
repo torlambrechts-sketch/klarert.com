@@ -177,6 +177,16 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       if (!w) return sheetNotFound();
       if (!w.data.groups.some((g) => g.id === v.groupId))
         return fail('not_found', 'This group no longer exists.');
+      if (v.formViewId) {
+        const { data: form } = await supabase
+          .from('views')
+          .select('id')
+          .eq('id', v.formViewId)
+          .eq('sheet_id', v.sheetId)
+          .eq('type', 'form')
+          .maybeSingle();
+        if (!form) return fail('not_found', 'This form no longer exists.');
+      }
       const now = w.ctx.now.toISOString();
       const blank: Item = {
         id: '00000000-0000-0000-0000-000000000000',
@@ -216,7 +226,11 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       if (error) return fromDbError(error);
       const item = toItem(data);
       const messages = await automations(
-        [{ type: 'item_created', sheetId: v.sheetId, itemId: item.id }],
+        [
+          v.formViewId
+            ? { type: 'form_submitted', sheetId: v.sheetId, itemId: item.id, formId: v.formViewId }
+            : { type: 'item_created', sheetId: v.sheetId, itemId: item.id },
+        ],
         orgId,
         user.id,
       );

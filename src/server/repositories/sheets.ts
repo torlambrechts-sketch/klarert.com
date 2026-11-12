@@ -60,7 +60,7 @@ export const getSheet = cache(async (orgId: string, sheetId: string) => {
   const { data: sheet } = await db
     .from('sheets')
     .select(
-      'id, name, description, item_label, id_prefix, next_seq, is_library, folder_id, archived_at, created_at, folders(name)',
+      'id, name, description, item_label, id_prefix, next_seq, is_library, folder_id, archived_at, created_at, settings, folders(name)',
     )
     .eq('id', sheetId)
     .eq('org_id', orgId)

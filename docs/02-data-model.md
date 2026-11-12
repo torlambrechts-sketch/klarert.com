@@ -65,7 +65,10 @@ UI (optimistic) ─► Server Action ─► src/server/commands/<command>.ts
 | `set_item_archived(item, archived)` | archive/restore | `item.archived` / `item.restored` |
 | `set_item_lock(item, locked, reason?, automation?)` | admin lock, automation `lock` | `item.locked` / `item.unlocked` |
 | `set_item_links(field, from, to[], mode, automation?)` | link editors, automation `create`/`updlinked` | `link.changed` (before → after id arrays) |
-| `submit_form(token, name, values, position)` | public form route (anon) | `item.created` with actor `form` |
+| `submit_form(token, name, values, position)` | `submit_public_form` only (not executable by API roles since 0009) | `item.created` with actor `form` |
+| `submit_public_form(token, ip_hash, name, values, position, honeypot)` | public form route (anon): rate limit 10/min per hashed IP (`form_rate_limits`), honeypot, only fields on the form's layout, then `submit_form` | as `submit_form` |
+| `get_public_form(token)` | public form page (anon): the form view's layout and only the fields on it | — |
+| `filter_item_ids(sheet, where, params)` | server-side filters for sheets > 2 000 items (SECURITY INVOKER: RLS applies; refuses clauses with tokens `src/server/query/filters.ts` does not emit) | — |
 | `verify_activity_chain(chain_key)` | Verify button | — |
 
 Structure tables (folders, sheets, fields, groups, views, automations) are written directly by commands with the user's Supabase client under RLS; triggers log them to the sheet's chain (`sheets.insert`, `fields.update` …), ignoring bookkeeping columns.
@@ -96,7 +99,7 @@ Commands also write: `item_updates` (comments), `notifications`, `automation_run
 | Workspace admin tables (memberships, invites, teams, job_roles, entities, sites) | members (invites: admins) | admins |
 | folders, sheets, groups, form_links, automation_pauses | members | editors |
 | fields, automations | members | editors if not `locked`; admins always |
-| views | shared views: members; personal: owner | owner (personal) or editors (shared) |
+| views | shared views: members; personal: owner | owner (personal) or editors (shared). `config` (field keys, not ids): `{ filters, sort[], hidden[], labelFieldKey, dateFieldKey, pageSize, form }`; `sheets.settings.defaultViewId` is a shared view's id or a built-in view (`list`, `grid` …). A form link serves the layout of one form view (`form_links.view_id`) |
 | items, item_links, activity_log | members | **only via RPCs** (no write policies) |
 | item_updates | members | editors, as themselves, kind `update`; automation posts are written by the runner (below) |
 | files | members | editors, as themselves, after the hash check |

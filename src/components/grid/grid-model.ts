@@ -31,7 +31,7 @@ export interface Layout {
   byGroup: Map<string, Item[]>;
 }
 
-const byPosition = (a: Item, b: Item) =>
+export const byPosition = (a: Item, b: Item) =>
   a.position < b.position ? -1 : a.position > b.position ? 1 : a.id < b.id ? -1 : 1;
 
 export function buildLayout(input: {

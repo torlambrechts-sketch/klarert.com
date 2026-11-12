@@ -16,8 +16,11 @@ async function trackerSheet(page: Page, name = `Grid ${unique()}`) {
   await expect(page.getByLabel('ID prefix')).not.toHaveValue('');
   await page.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page).toHaveURL(/\/meridian\/s\/[0-9a-f-]{36}$/);
+  // M6: sheets open in the List view; these tests work in the Grid
+  const url = `${page.url()}?view=grid`;
+  await page.goto(url);
   await expect(page.getByRole('grid')).toBeVisible();
-  return page.url();
+  return url;
 }
 
 const grid = (page: Page) => page.getByRole('grid');

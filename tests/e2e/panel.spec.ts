@@ -19,8 +19,11 @@ async function trackerSheet(page: Page, name = `Panel ${unique()}`) {
   await expect(page.getByLabel('ID prefix')).not.toHaveValue('');
   await page.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page).toHaveURL(/\/meridian\/s\/[0-9a-f-]{36}$/);
-  await expect(grid(page)).toBeVisible();
-  return page.url();
+  // M6: sheets open in the List view; these tests work in the Grid
+  const url = `${page.url()}?view=grid`;
+  await page.goto(url);
+  await expect(page.getByRole('grid')).toBeVisible();
+  return url;
 }
 
 async function addItems(page: Page, group: string, names: string[]) {
@@ -61,7 +64,7 @@ test.describe('phone', () => {
     const url = await trackerSheet(page);
     await addItems(page, 'Open', ['Phone item']);
     const item = await itemByName(page, url, 'Phone item');
-    await page.goto(`${url}?item=${item.display_id}`);
+    await page.goto(`${url}&item=${item.display_id}`);
     const dialog = panel(page);
     await expect(dialog.getByRole('heading', { name: 'Phone item' })).toBeVisible();
     const box = (await dialog.boundingBox())!;
@@ -89,7 +92,7 @@ test.describe('desktop', () => {
     await openByName(page, 'Second thing');
     const dialog = panel(page);
     await expect(dialog.getByRole('heading', { name: 'Second thing' })).toBeVisible();
-    await expect(page).toHaveURL(new RegExp(`\\?item=${second.display_id}$`));
+    await expect(page).toHaveURL(new RegExp(`[?&]item=${second.display_id}$`));
     await expect(dialog).toContainText(second.display_id);
     await expect(dialog).toContainText('› Open');
     await expect(dialog.getByRole('tab', { name: 'Details' })).toHaveAttribute(
@@ -125,6 +128,8 @@ test.describe('desktop', () => {
     await dialog.getByRole('button', { name: /^Edit Status/ }).click();
     await page.getByRole('option', { name: 'Working on it' }).click();
     await expect(dialog.getByRole('button', { name: 'Edit Status: Working on it' })).toBeVisible();
+    // the status popover stays the top layer until its exit animation ends, taking clicks and Esc meanwhile
+    await expect(page.getByRole('dialog')).toHaveCount(1);
     await dialog.getByRole('button', { name: 'Rename' }).click();
     await dialog.getByRole('textbox', { name: 'Task name' }).fill('Second thing, renamed');
     await page.keyboard.press('Enter');
@@ -142,7 +147,7 @@ test.describe('desktop', () => {
     ).toBeFocused();
 
     // a deep link opens the panel on load
-    await page.goto(`${url}?item=${second.display_id}`);
+    await page.goto(`${url}&item=${second.display_id}`);
     await expect(panel(page).getByRole('heading', { name: 'Second thing, renamed' })).toBeVisible();
   });
 
@@ -344,7 +349,8 @@ test.describe('desktop', () => {
     await page.getByLabel(`Show on ${risksName} too`).check();
     await page.getByRole('button', { name: 'Create sheet' }).click();
     await expect(page).toHaveURL(/\/meridian\/s\/[0-9a-f-]{36}$/);
-    const actionsUrl = page.url();
+    const actionsUrl = `${page.url()}?view=grid`;
+    await page.goto(actionsUrl);
     await addItems(page, 'Open', ['Fix the handrail']);
 
     // link from the action's panel with the picker
@@ -408,7 +414,7 @@ test.describe('desktop', () => {
     await page.getByRole('button', { name: `Remove ${action.display_id}` }).click();
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(panel(page).getByRole('heading', { name: 'Linked items · 0' })).toBeVisible();
-    await page.goto(`${actionsUrl}?item=${action.display_id}`);
+    await page.goto(`${actionsUrl}&item=${action.display_id}`);
     await expect(panel(page).getByRole('heading', { name: 'Linked items · 0' })).toBeVisible();
   });
 });

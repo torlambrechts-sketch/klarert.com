@@ -263,14 +263,14 @@ isOneToOne: false
                   ]
                 },"form_links": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"enabled": boolean,"group_id": string | null,"id": string,"org_id": string,"sheet_id": string,"token": string
+                    "created_at": string,"created_by": string | null,"enabled": boolean,"group_id": string | null,"id": string,"org_id": string,"sheet_id": string,"token": string,"view_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"group_id"?: string | null,"id"?: string,"org_id": string,"sheet_id": string,"token"?: string
+                    "created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"group_id"?: string | null,"id"?: string,"org_id": string,"sheet_id": string,"token"?: string,"view_id"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"group_id"?: string | null,"id"?: string,"org_id"?: string,"sheet_id"?: string,"token"?: string
+                    "created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"group_id"?: string | null,"id"?: string,"org_id"?: string,"sheet_id"?: string,"token"?: string,"view_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -297,7 +297,27 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "sheets"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "form_links_view_id_fkey"
+      columns: ["view_id"]
+isOneToOne: false
+      referencedRelation: "views"
+      referencedColumns: ["id"]
     }
+                  ]
+                },"form_rate_limits": {
+                  Row: {
+                    "hits": number,"ip_hash": string,"window_start": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "hits"?: number,"ip_hash": string,"window_start": string
+                  }
+                  Update: {
+                    "hits"?: number,"ip_hash"?: string,"window_start"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"groups": {
                   Row: {
@@ -971,10 +991,16 @@ isOneToOne: false
 "field_types":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
                            },
+"filter_item_ids":
+{ Args: { "p_params": Json,"p_sheet": string,"p_where": string }; Returns: (string)[]
+                           },
 "get_invite":
 { Args: { "p_token": string }; Returns: {
               "accepted": boolean,"email": string,"invited_by_name": string,"org_name": string,"org_slug": string,"role": Database["public"]['Enums']["member_role"]
             }[]
+                           },
+"get_public_form":
+{ Args: { "p_token": string }; Returns: Json
                            },
 "has_role":
 { Args: { "o": string,"roles": (Database["public"]['Enums']["member_role"])[] }; Returns: boolean
@@ -1141,6 +1167,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"submit_public_form":
+{ Args: { "p_honeypot": string,"p_ip_hash": string,"p_name": string,"p_position": string,"p_token": string,"p_values": Json }; Returns: Json
+                           },
 "verify_activity_chain":
 { Args: { "p_chain_key": string }; Returns: Json
                            },

@@ -23,6 +23,8 @@ export const createItemInput = z.object({
   name: itemName,
   position,
   values: values.optional(),
+  /** Set when the item comes from a form view (internal form): automations see form_submitted. */
+  formViewId: uuid.optional(),
 });
 
 export const setValuesInput = z.object({

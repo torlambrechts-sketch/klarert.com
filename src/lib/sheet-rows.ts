@@ -12,6 +12,7 @@ import type {
   StatusRule,
   Validation,
 } from '@/engine/types';
+import { parseViewConfig, type SavedView, type ViewType } from '@/engine/views/config';
 import type { Database } from './database.types';
 
 type Tables = Database['public']['Tables'];
@@ -20,6 +21,7 @@ export type FieldDbRow = Tables['fields']['Row'];
 export type GroupDbRow = Tables['groups']['Row'];
 export type LinkDbRow = Tables['item_links']['Row'];
 export type FileDbRow = Tables['files']['Row'];
+export type ViewDbRow = Tables['views']['Row'];
 
 export const ITEM_COLUMNS =
   'id, org_id, sheet_id, group_id, seq, display_id, name, values, position, locked, lock_reason, created_by, created_at, updated_by, updated_at, archived_at';
@@ -120,5 +122,17 @@ export function toSheet(r: {
     itemLabel: r.item_label,
     idPrefix: r.id_prefix,
     isLibrary: r.is_library,
+  };
+}
+
+export function toView(r: ViewDbRow): SavedView {
+  return {
+    id: r.id,
+    sheetId: r.sheet_id,
+    name: r.name,
+    type: r.type as ViewType,
+    config: parseViewConfig(r.config),
+    ownerId: r.owner_id,
+    position: r.position,
   };
 }

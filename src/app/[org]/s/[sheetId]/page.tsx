@@ -4,6 +4,14 @@ import { SheetView } from '@/components/grid/sheet-view';
 import { requireMember } from '@/server/auth';
 import { getSheet } from '@/server/repositories/sheets';
 
+function defaultViewOf(settings: unknown): string | null {
+  const id =
+    settings && typeof settings === 'object' && 'defaultViewId' in settings
+      ? (settings as { defaultViewId?: unknown }).defaultViewId
+      : null;
+  return typeof id === 'string' && /^[0-9a-z-]{4,36}$/.test(id) ? id : null;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -15,8 +23,7 @@ export async function generateMetadata({
   return { title: `${sheet?.name ?? 'Sheet'} · Compliance OS` };
 }
 
-// The sheet page (docs/05 §3): the Grid view. The List view and saved views arrive with M6; until then the Grid is
-// the only view and the header shows no view tabs.
+// The sheet page (docs/05 §3): the view tabs and the active view (?view=, else the sheet's default view, else List).
 export default async function SheetPage({
   params,
   searchParams,
@@ -74,6 +81,7 @@ export default async function SheetPage({
         timeZone={workspace.time_zone}
         role={role}
         onlyGroup={group ?? null}
+        defaultViewId={defaultViewOf(sheet.settings)}
       />
     </>
   );
