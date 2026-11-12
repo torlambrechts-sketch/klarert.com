@@ -6,16 +6,21 @@ import { makeCtx, makeField, makeItem, people } from '../testing/fixtures';
 import type { Item } from '../types';
 import { applyView, groupRows, matchesSearch, sortComparator, splitConditions } from './apply';
 import { calendarEntries, entriesByDay, monthGrid, shiftMonth } from './calendar';
+import { SUMMARY_LABELS } from '../summaries';
 import {
   emptyConfig,
   isBuiltinViewId,
   parseViewConfig,
   sameConfig,
+  setSummary,
+  STORED_VIEW_TYPE,
+  SUMMARY_FNS,
+  toViewType,
   viewConfigSchema,
+  viewTypeInput,
 } from './config';
 import { checkFormAnswers, defaultFormLayout, formLayoutProblems, formQuestions } from './form';
 import { kanbanLanes, laneField, laneFields } from './kanban';
-import { pageOf, paginate } from './pagination';
 
 beforeAll(() => installFieldTypes(Object.values(FIELD_TYPES)));
 
@@ -57,10 +62,10 @@ describe('view config', () => {
       sort: [{ fieldKey: 'due', dir: 'desc' }],
       hidden: ['title'],
       labelFieldKey: 'status',
-      pageSize: 50,
+      summaries: { cost: 'average' },
       extra: true,
     });
-    expect(cfg.pageSize).toBe(50);
+    expect(cfg.summaries).toEqual({ cost: 'average' });
     expect(cfg.sort).toEqual([{ fieldKey: 'due', dir: 'desc' }]);
     expect(cfg).not.toHaveProperty('extra');
   });
@@ -68,18 +73,21 @@ describe('view config', () => {
   it('drops only the broken part of a stored config', () => {
     const cfg = parseViewConfig({
       filters: 'nope',
-      pageSize: 7,
+      summaries: { cost: 'nonsense' },
       hidden: ['a'],
       sort: [{ fieldKey: 'x' }],
+      // the List's page size, from before the Table view: ignored
+      pageSize: 50,
     });
     expect(cfg.filters).toEqual([]);
-    expect(cfg.pageSize).toBe(25);
+    expect(cfg).not.toHaveProperty('summaries');
+    expect(cfg).not.toHaveProperty('pageSize');
     expect(cfg.hidden).toEqual(['a']);
     expect(cfg.sort).toEqual([]);
   });
 
   it('rejects bad input when validating a command', () => {
-    expect(viewConfigSchema.safeParse({ pageSize: 30 }).success).toBe(false);
+    expect(viewConfigSchema.safeParse({ summaries: { cost: 'avg' } }).success).toBe(false);
     expect(
       viewConfigSchema.safeParse({ sort: Array(6).fill({ fieldKey: 'a', dir: 'asc' }) }).success,
     ).toBe(false);
@@ -89,56 +97,45 @@ describe('view config', () => {
     ).toBe(false);
   });
 
-  it('compares configs ignoring hidden order', () => {
+  it('compares configs ignoring hidden and summary order', () => {
     expect(
       sameConfig(
-        { ...emptyConfig(), hidden: ['a', 'b'] },
-        { ...emptyConfig(), hidden: ['b', 'a'] },
+        { ...emptyConfig(), hidden: ['a', 'b'], summaries: { a: 'sum', b: 'range' } },
+        { ...emptyConfig(), hidden: ['b', 'a'], summaries: { b: 'range', a: 'sum' } },
       ),
     ).toBe(true);
-    expect(sameConfig(emptyConfig(), { ...emptyConfig(), pageSize: 50 })).toBe(false);
+    expect(sameConfig(emptyConfig(), { ...emptyConfig(), summaries: { a: 'sum' } })).toBe(false);
   });
 
-  it('knows the built-in view ids', () => {
+  it('turns column summaries on and off', () => {
+    const on = setSummary(emptyConfig(), 'cost', 'sum');
+    expect(on.summaries).toEqual({ cost: 'sum' });
+    expect(setSummary(on, 'cost', 'average').summaries).toEqual({ cost: 'average' });
+    const off = setSummary(on, 'cost', null);
+    expect(off).not.toHaveProperty('summaries');
+    expect(sameConfig(off, emptyConfig())).toBe(true);
+  });
+
+  it('offers every summary function the engine has', () => {
+    expect([...SUMMARY_FNS].sort()).toEqual(Object.keys(SUMMARY_LABELS).sort());
+  });
+
+  it('knows the built-in view ids, the former List and Grid included', () => {
+    expect(isBuiltinViewId('table')).toBe(true);
     expect(isBuiltinViewId('list')).toBe(true);
+    expect(isBuiltinViewId('grid')).toBe(true);
     expect(isBuiltinViewId('8b1c2d3e-0000-4000-8000-000000000000')).toBe(false);
   });
-});
 
-describe('pagination', () => {
-  it('labels and bounds pages', () => {
-    expect(paginate(132, 25, 0)).toMatchObject({
-      from: 0,
-      to: 25,
-      pages: 6,
-      hasPrev: false,
-      hasNext: true,
-      label: '1–25 of 132',
-    });
-    expect(paginate(132, 25, 5)).toMatchObject({
-      from: 125,
-      to: 132,
-      hasNext: false,
-      label: '126–132 of 132',
-    });
-    expect(paginate(132, 100, 1).label).toBe('101–132 of 132');
-  });
-  it('clamps pages that no longer exist', () => {
-    expect(paginate(30, 25, 9).page).toBe(1);
-    expect(paginate(0, 25, 3)).toMatchObject({
-      page: 0,
-      pages: 1,
-      from: 0,
-      to: 0,
-      label: '0 of 0',
-      hasNext: false,
-    });
-    expect(paginate(2500, 50, 0).label).toBe('1–50 of 2,500');
-  });
-  it('finds the page of a row', () => {
-    expect(pageOf(0, 25)).toBe(0);
-    expect(pageOf(25, 25)).toBe(1);
-    expect(pageOf(99, 50)).toBe(1);
+  it('reads the former List and Grid types as Table and stores Table as the database accepts it', () => {
+    expect(toViewType('list')).toBe('table');
+    expect(toViewType('grid')).toBe('table');
+    expect(toViewType('table')).toBe('table');
+    expect(toViewType('kanban')).toBe('kanban');
+    expect(toViewType('gallery')).toBeNull();
+    expect(STORED_VIEW_TYPE.table).toBe('list');
+    expect(viewTypeInput.parse('grid')).toBe('table');
+    expect(viewTypeInput.safeParse('gallery').success).toBe(false);
   });
 });
 

@@ -307,8 +307,8 @@
       ],
       "views": [
         {
-          "name": "List",
-          "type": "list",
+          "name": "Table",
+          "type": "table",
           "config": {
             "hidden": [
               "ref",
@@ -316,11 +316,6 @@
               "description"
             ]
           }
-        },
-        {
-          "name": "Grid",
-          "type": "grid",
-          "config": {}
         },
         {
           "name": "By status",
@@ -547,13 +542,8 @@
       ],
       "views": [
         {
-          "name": "List",
-          "type": "list",
-          "config": {}
-        },
-        {
-          "name": "Grid",
-          "type": "grid",
+          "name": "Table",
+          "type": "table",
           "config": {}
         },
         {

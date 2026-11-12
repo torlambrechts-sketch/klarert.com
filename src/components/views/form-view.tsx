@@ -21,7 +21,7 @@ import {
   formQuestions,
 } from '@/engine/views/form';
 import { inputClass } from '@/components/fields/shared';
-import { byPosition, positionsAtEnd } from '@/components/grid/grid-model';
+import { byPosition, positionsAtEnd } from '@/components/table/table-model';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
 import { env } from '@/lib/env';

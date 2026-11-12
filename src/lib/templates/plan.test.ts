@@ -54,7 +54,7 @@ describe('first-sheet template', () => {
     expect(plan.sheets).toHaveLength(2);
     expect(plan.sheets.map((s) => s.fields.length)).toEqual([18, 7]);
     expect(plan.sheets.map((s) => s.groups.length)).toEqual([2, 2]);
-    expect(plan.sheets.map((s) => s.views.length)).toEqual([4, 3]);
+    expect(plan.sheets.map((s) => s.views.length)).toEqual([3, 2]);
     expect(plan.sheets.map((s) => s.items.reduce((a, g) => a + g.rows.length, 0))).toEqual([5, 2]);
     // two links in the template, each mirrored on the inverse field
     expect(plan.links).toHaveLength(4);

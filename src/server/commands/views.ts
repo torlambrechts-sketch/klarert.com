@@ -3,6 +3,7 @@ import { keyBetween } from '@/engine/ordering';
 import type { Json } from '@/engine/types';
 import {
   parseViewConfig,
+  STORED_VIEW_TYPE,
   type SavedView,
   type ViewConfig,
   type ViewType,
@@ -70,7 +71,7 @@ async function insertView(
       org_id: row.orgId,
       sheet_id: row.sheetId,
       name: row.name,
-      type: row.type,
+      type: STORED_VIEW_TYPE[row.type],
       config: row.config as unknown as NonNullable<Json>,
       owner_id: row.ownerId,
       position: keyBetween(await lastPosition(db, row.sheetId), null),
