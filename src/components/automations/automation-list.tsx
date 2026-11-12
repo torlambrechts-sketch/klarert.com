@@ -111,14 +111,17 @@ export function AutomationList({
 
   return (
     <>
-      <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Automations">
+      <ul
+        className="border-line m-0 flex list-none flex-col overflow-hidden rounded-[10px] border bg-white p-0"
+        aria-label="Automations"
+      >
         {automations.map((a) => {
           const ctx = ctxOf(a.sheetId);
           const mayChange = perms.canEdit && (!a.locked || perms.isAdmin);
           return (
             <li
               key={a.id}
-              className="border-line flex flex-wrap items-start gap-3 rounded-[var(--radius-card)] border bg-white p-3"
+              className="border-line-2 hover:bg-subtle flex flex-wrap items-start gap-3 border-t px-4 py-3.5 first:border-t-0"
             >
               <div className="flex items-center gap-2 pt-0.5">
                 <Switch
@@ -127,10 +130,12 @@ export function AutomationList({
                   aria-label={a.name}
                   onCheckedChange={(v) => void toggle(a, v)}
                 />
-                <span className="w-7 text-xs font-semibold">{a.enabled ? 'On' : 'Off'}</span>
+                <span className="text-muted-foreground w-7 text-xs font-medium">
+                  {a.enabled ? 'On' : 'Off'}
+                </span>
               </div>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="font-semibold break-words">
+                <span className="font-medium break-words">
                   {mayChange ? (
                     <Link href={editHref(a)} className="hover:underline">
                       {a.name}
@@ -155,7 +160,7 @@ export function AutomationList({
                   <span>
                     Last run {a.lastRunAt ? formatDateTime(a.lastRunAt, timeZone) : 'never'}
                   </span>
-                  <span className="border-line rounded-full border px-1.5 py-px">
+                  <span className="border-line rounded-full border bg-white px-1.5 py-px font-mono text-[11px]">
                     {sourceLabel(a.source)} · v{a.version}
                   </span>
                   {a.locked ? (
