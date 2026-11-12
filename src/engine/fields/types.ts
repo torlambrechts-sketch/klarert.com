@@ -98,6 +98,12 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
     cell(v: V | null): { x: number; y: number } | null;
     level(x: number, y: number, cfg: C): { rank: 1 | 2 | 3 | 4; label: string };
   };
+  /**
+   * Number kinds the Table can draw a trend line for (the value's history from the activity log, docs/05 §3.1):
+   * whether a higher value is better, worse or neither for this config. null: no trend (e.g. a number without meter
+   * bands). No hook: never.
+   */
+  trend?(cfg: C): { higherIs: 'better' | 'worse' | 'neutral' } | null;
   /** Number kinds: the default group-footer summary (docs/03 §8). Default `sum`. */
   defaultSummary?: 'sum' | 'average';
   /**
