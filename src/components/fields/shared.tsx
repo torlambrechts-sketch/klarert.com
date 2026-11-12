@@ -101,7 +101,7 @@ export function Block({
       <span className="flex w-full min-w-0 items-center justify-center">
         <span
           data-box
-          className="text-label-14 inline-flex h-7 max-w-full min-w-0 items-center justify-center gap-1.5 rounded-md border px-[10px] py-1 font-medium"
+          className="text-label-14 inline-flex h-[28px] max-w-full min-w-0 items-center justify-center gap-1.5 rounded-md border px-[10px] py-1 font-medium"
           style={tintStyle(option.color)}
         >
           <OptionMarks option={option}>
