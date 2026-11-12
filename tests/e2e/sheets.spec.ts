@@ -322,10 +322,11 @@ test.describe('phone', () => {
 
     await bar.getByRole('button', { name: 'Search' }).click();
     await expect(
-      page.getByRole('searchbox', { name: 'Search sheets, items and people' }),
+      page.getByRole('combobox', { name: 'Search sheets, items and people' }),
     ).toBeFocused();
     await bar.getByRole('button', { name: 'Inbox' }).click();
-    await expect(page.getByText('Nothing here yet.')).toBeVisible();
+    await expect(page.getByRole('dialog').getByRole('heading', { name: 'Inbox' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open My work' })).toBeVisible();
 
     // no horizontal scrolling at 390 px
     const overflow = await page.evaluate(
