@@ -13,9 +13,6 @@ import { searchOptions } from './option-search';
 // Building blocks for cells and editors: label chips and blocks (docs/05 §3.1, §6), avatars, editor frames, a text
 // editor and an option list editor. Type-agnostic; each type's file composes them.
 
-/** Label colours too light for white text: shown as a tint with dark text. */
-const LIGHT = new Set(['grey', 'yellow']);
-
 export const colorVar = (color: string) => `var(--label-${color}, var(--label-grey))`;
 /** A label colour as a fill behind white text: darker where the label colour is short of 4.5:1. */
 export const solidVar = (color: string) => `var(--solid-${color}, ${colorVar(color)})`;
@@ -35,38 +32,6 @@ export function Bang() {
   );
 }
 
-/**
- * Fill, border and text of an option label: the contrast-safe solid colour with white text, or for light colours
- * (grey, yellow) a tint with a border and dark text.
- */
-function optionStyle(option: LabelOption): React.CSSProperties {
-  return LIGHT.has(option.color)
-    ? {
-        background: `color-mix(in srgb, ${colorVar(option.color)} 22%, white)`,
-        borderColor: colorVar(option.color),
-        color: 'var(--ink)',
-      }
-    : {
-        background: solidVar(option.color),
-        borderColor: solidVar(option.color),
-        color: '#fff',
-      };
-}
-
-/**
- * A table cell's option pill: a tint of the label colour with a darker shade of the same hue as text (at least
- * 4.5:1 on the tint for every label colour), so the pill reads without relying on colour alone: the words stay, with
- * a check for done options and "!" for ones that need action.
- */
-function pillStyle(option: LabelOption): React.CSSProperties {
-  const hue = solidVar(option.color);
-  return {
-    background: `color-mix(in srgb, ${colorVar(option.color)} 20%, white)`,
-    borderColor: `color-mix(in srgb, ${colorVar(option.color)} 45%, white)`,
-    color: `color-mix(in srgb, ${hue} 45%, black)`,
-  };
-}
-
 /** "!" for options that need action and a check for done ones, with their words for screen readers. */
 function OptionMarks({ option, children }: { option: LabelOption; children: React.ReactNode }) {
   return (
@@ -80,16 +45,27 @@ function OptionMarks({ option, children }: { option: LabelOption; children: Reac
   );
 }
 
-/** A compact option label: several in one cell (multi-select), cards, pickers. */
+/** The colour dot in front of an option label. Decorative: the label sits next to it. */
+export function OptionDot({ option }: { option: LabelOption }) {
+  return (
+    <span
+      aria-hidden
+      className="size-[9px] shrink-0 rounded-full"
+      style={{ background: solidVar(option.color) }}
+    />
+  );
+}
+
+/** A compact option label: several in one cell (multi-select), cards, pickers. A dot, the words and the marks. */
 export function Chip({ option, className }: { option: LabelOption; className?: string }) {
   return (
     <span
       className={cn(
-        'text-meta inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-md border px-2 font-semibold',
+        'border-line text-ink inline-flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-full border bg-white px-2.5 text-[12.5px] font-medium',
         className,
       )}
-      style={optionStyle(option)}
     >
+      <OptionDot option={option} />
       <OptionMarks option={option}>
         <span className="truncate">{option.label}</span>
       </OptionMarks>
@@ -98,19 +74,19 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
 }
 
 /**
- * The value of a one-option cell (List and Grid): a rounded block across the cell, label centred. The Grid's 36 px
- * rows take a 30 px block, the List's taller rows 34 px.
+ * The value of a one-option cell (Table): a colour dot and the label, left-aligned, with "!" for options that need
+ * action and a check for done ones. The Grid density keeps a 30 px line, the List density 34 px.
  */
 export function Block({ option, density }: { option: LabelOption; density: 'grid' | 'list' }) {
   return (
     <span
       data-pill
       className={cn(
-        'text-label flex w-full min-w-0 items-center justify-center gap-1 rounded-md border px-2',
+        'text-ink flex w-full min-w-0 items-center gap-2 px-1.5 text-[14px] font-medium',
         density === 'grid' ? 'h-[30px]' : 'h-[34px]',
       )}
-      style={pillStyle(option)}
     >
+      <OptionDot option={option} />
       <OptionMarks option={option}>
         <span className="truncate">{option.label}</span>
       </OptionMarks>
@@ -248,7 +224,7 @@ export function SaveCancel({
 }
 
 export const inputClass =
-  'border-input h-8 w-full rounded-md border bg-white px-2 text-sm outline-none focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus/30';
+  'border-input h-8 w-full rounded-md border bg-white px-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-faint focus-visible:ring-[3px] focus-visible:ring-faint/25';
 
 /**
  * One-line (or multi-line) text editor. Enter saves (Ctrl/Cmd+Enter when multi-line); an input the type cannot read

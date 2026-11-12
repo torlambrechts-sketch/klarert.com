@@ -68,11 +68,13 @@ function TabLink({
         open(view.id);
       }}
       className={cn(
-        'text-label flex h-9 items-center gap-1.5 rounded-md px-2.5 whitespace-nowrap',
-        active ? 'bg-ink text-white' : 'hover:bg-soft',
+        'relative flex h-10 items-center gap-[7px] px-px text-[14px] whitespace-nowrap outline-offset-[-2px]',
+        active
+          ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-sm after:bg-[var(--ink)]'
+          : 'text-muted-foreground hover:text-ink',
       )}
     >
-      <Icon className="size-4" aria-hidden />
+      <Icon className="size-[15px]" aria-hidden />
       {label ?? view.name}
       {personal ? (
         <>
@@ -93,8 +95,8 @@ export function ViewTabs({ views, fields }: { views: ViewsState; fields: Field[]
   const isDefault = (v: ActiveView) =>
     v.id === defaultViewId || (v === tabs.table && defaultViewId === 'table');
   return (
-    <nav aria-label="Views" className="min-w-0">
-      <ul className="flex flex-wrap items-center gap-1">
+    <nav aria-label="Views" className="border-line mt-[18px] min-w-0 border-b">
+      <ul className="m-0 flex [scrollbar-width:none] list-none items-center gap-[22px] overflow-x-auto p-0">
         <li>
           <TabLink
             view={tabs.table}
@@ -117,7 +119,11 @@ export function ViewTabs({ views, fields }: { views: ViewsState; fields: Field[]
         <li>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" className="text-label h-9 px-2.5">
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-muted-foreground hover:text-ink h-8 px-2 text-[14px] font-normal"
+              >
                 More <ChevronDown aria-hidden />
               </Button>
             </DropdownMenuTrigger>
