@@ -228,6 +228,33 @@ html[data-panel='collapsed'] .panel-body {
   .desk-only {
     display: none !important;
   }
+  /* search takes the whole top bar while in use (docs/05 §5) */
+  .search-box[data-open] {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    height: 58px;
+    max-width: none;
+    padding: 0 12px;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+  }
+  .search-box[data-open] .search-icon {
+    left: 22px;
+  }
+  .search-box[data-open] .search-cancel {
+    display: inline-flex;
+  }
+  .search-box[data-open] .search-results {
+    position: fixed;
+    top: 58px;
+    left: 0;
+    right: 0;
+    max-height: calc(100dvh - 58px - 64px);
+    border-radius: 0;
+  }
 }
 @media (min-width: 760px) {
   .phone-only {

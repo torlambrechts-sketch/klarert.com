@@ -123,14 +123,14 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 
 **Prompt:** "Implement M9: the scheduler and webhook worker per docs/04 §8–§9 with Vercel Cron, the inbox, My work, Home, and global search."
 
-- [ ] `/api/cron/scheduler` (secret) fires date/clock/evidence triggers exactly once per occurrence; "Run date checks now" for admins
-- [ ] `/api/cron/webhooks` with backoff, dead letter, SSRF guard, creator notification
-- [ ] `vercel.json` cron entries
-- [ ] Inbox popover with unread count, mark read, open item; realtime
-- [ ] Requests marked done when the requested person next changes the item
-- [ ] My work page per docs/05 §4 with filters in the second panel; rail badge
-- [ ] Home per docs/05 §4 (all numbers computed from data)
-- [ ] Global search (`/`): sheets, items by id/name, items by person; keyboard
+- [x] `/api/cron/scheduler` (secret) fires date/clock/evidence triggers exactly once per occurrence; "Run date checks now" for admins
+- [x] `/api/cron/webhooks` with backoff, dead letter, SSRF guard, creator notification
+- [x] `vercel.json` cron entries
+- [x] Inbox popover with unread count, mark read, open item; realtime
+- [x] Requests marked done when the requested person next changes the item
+- [x] My work page per docs/05 §4 with filters in the second panel; rail badge
+- [x] Home per docs/05 §4 (all numbers computed from data)
+- [x] Global search (`/`): sheets, items by id/name, items by person; keyboard
 
 ## M10 · First sheet, hardening, acceptance  [Opus]
 

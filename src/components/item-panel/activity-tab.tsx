@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CircleCheck, CircleX, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { verifyActivityAction } from '@/app/[org]/s/panel-actions';
+import { noteActivityLogOpenedAction } from '@/app/[org]/shell-actions';
 import { activityLine, isItemEntry, type ActivityLookup } from '@/engine/activity';
 import { formatDateTime } from '@/engine/fields/helpers';
 import type { Ctx, Item } from '@/engine/types';
@@ -13,7 +14,10 @@ import type { VerifyResult } from '@/server/commands/panel';
 import type { ActivityData } from './queries';
 
 // Activity log (docs/05 §3.4, FR-28/FR-40): the item's hash-chained entries, newest first, as readable sentences
-// with who, when and the short hash; "Verify audit trail" recomputes the chain in the database.
+// with who, when and the short hash; "Verify audit trail" recomputes the chain in the database. Opening it once is a
+// step of Home's Getting started checklist.
+
+let notedOpened = false;
 
 export function ActivityTab({
   org,
@@ -32,6 +36,14 @@ export function ActivityTab({
 }) {
   const [verifying, setVerifying] = useState(false);
   const [result, setResult] = useState<VerifyResult | null>(null);
+
+  useEffect(() => {
+    if (notedOpened) return;
+    notedOpened = true;
+    noteActivityLogOpenedAction({ org }).catch(() => {
+      notedOpened = false;
+    });
+  }, [org]);
 
   const verify = async () => {
     setVerifying(true);

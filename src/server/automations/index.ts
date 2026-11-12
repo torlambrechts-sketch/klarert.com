@@ -28,12 +28,14 @@ export async function runAutomations(
     workspace?: string;
     /** Bulk edits: one summary line (docs/04 §7.9). */
     summarise?: boolean;
+    /** Who started the chain when it is not the person or a form: the scheduler starts chains as `system`. */
+    starter?: Actor;
   },
 ): Promise<AutomationOutcome> {
   if (events.length === 0) return { runs: [], messages: [] };
-  const starter: Actor = context.userId
-    ? { kind: 'user', id: context.userId }
-    : { kind: 'form', id: null };
+  const starter: Actor =
+    context.starter ??
+    (context.userId ? { kind: 'user', id: context.userId } : { kind: 'form', id: null });
   const chainId = randomUUID();
   const started = Date.now();
   try {

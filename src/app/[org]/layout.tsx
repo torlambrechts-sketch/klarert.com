@@ -5,7 +5,8 @@ import { Rail } from '@/components/shell/rail';
 import { ShellProvider } from '@/components/shell/shell-context';
 import { TopBar } from '@/components/shell/top-bar';
 import { getMyWorkspaces, isAdminRole, isEditorRole, requireMember } from '@/server/auth';
-import { getMyWorkCount, getNav } from '@/server/repositories/sheets';
+import { getMyWorkBadge } from '@/server/repositories/my-work';
+import { getNav } from '@/server/repositories/sheets';
 
 // App shell (docs/05 §2): rail · second panel (the @panel slot, one per page) · top bar and page.
 export default async function OrgLayout({
@@ -22,7 +23,7 @@ export default async function OrgLayout({
   const [workspaces, nav, myWorkCount] = await Promise.all([
     getMyWorkspaces(),
     getNav(workspace.id),
-    getMyWorkCount(workspace.id),
+    getMyWorkBadge(workspace.id, workspace.time_zone),
   ]);
   const railProps = {
     org,
@@ -45,7 +46,9 @@ export default async function OrgLayout({
             current={workspace}
             workspaces={workspaces}
             canManage={isAdminRole(role)}
+            timeZone={workspace.time_zone}
             me={{
+              id: user.id,
               displayName: profile.display_name,
               initials: profile.initials,
               color: profile.color,

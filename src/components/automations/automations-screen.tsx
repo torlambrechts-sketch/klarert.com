@@ -4,7 +4,9 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Plus } from 'lucide-react';
+import { BookOpen, CalendarClock, Loader2, Plus } from 'lucide-react';
+import { toast } from 'sonner';
+import { runDateChecksNowAction } from '@/app/[org]/automations/actions';
 import {
   applyRecipe,
   defaultMapping,
@@ -39,8 +41,8 @@ import { RunLog } from './run-log';
 import { ErrorBox, ListSkeleton } from './states';
 
 // The Automations page (docs/04 §10, docs/05 §4): all automations or one sheet's (?sheet=), the builder (?new=1,
-// ?edit=<id>), recipes (?recipes=1, then ?recipe=<id>&sheet=<id>) and the run log (?tab=runs). "Run date checks now"
-// needs the scheduler and arrives with it (M9).
+// ?edit=<id>), recipes (?recipes=1, then ?recipe=<id>&sheet=<id>) and the run log (?tab=runs). Owners and admins can
+// "Run date checks now": the scheduler's own code for this workspace (docs/04 §8).
 
 export interface ScreenProps {
   org: string;
@@ -116,6 +118,37 @@ export function useSummaryCtx(orgId: string, timeZone: string, userId: string) {
   }, [sheets.data, fields.data, dir.data, timeZone, userId]);
 }
 
+/** "Run date checks now" (admins): same code as the scheduler, for this workspace only. */
+function RunDateChecks({ org, orgId }: { org: string; orgId: string }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true);
+    try {
+      const r = await runDateChecksNowAction({ org });
+      if (!r.ok) {
+        toast.error(r.error.message);
+        return;
+      }
+      for (const m of r.data.messages) toast.success(m);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: automationsKey(orgId) }),
+        qc.invalidateQueries({ queryKey: ['automation-runs', orgId] }),
+      ]);
+    } catch {
+      toast.error('Date checks could not run. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Button variant="outline" onClick={run} disabled={busy} aria-busy={busy}>
+      {busy ? <Loader2 className="animate-spin" aria-hidden /> : <CalendarClock aria-hidden />}
+      Run date checks now
+    </Button>
+  );
+}
+
 function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
   const { org, orgId, perms } = props;
   const params = useSearchParams();
@@ -140,6 +173,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
         </div>
         {perms.canEdit ? (
           <div className="flex flex-wrap gap-2">
+            {perms.isAdmin ? <RunDateChecks org={org} orgId={orgId} /> : null}
             <Button asChild variant="outline">
               <Link href={`${base}?recipes=1${sheetFilter ? `&sheet=${sheetFilter}` : ''}`}>
                 <BookOpen aria-hidden /> Start from a recipe

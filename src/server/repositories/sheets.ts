@@ -120,17 +120,3 @@ export async function getWizardData(orgId: string) {
       .map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library })),
   };
 }
-
-/** Open requests to me: the part of the My work badge that exists before M9 (overdue items arrive with M9). */
-export const getMyWorkCount = cache(async (orgId: string) => {
-  const session = await getSession();
-  if (!session) return 0;
-  const { count } = await session.supabase
-    .from('notifications')
-    .select('id', { count: 'exact', head: true })
-    .eq('org_id', orgId)
-    .eq('user_id', session.user.id)
-    .eq('kind', 'request')
-    .is('done_at', null);
-  return count ?? 0;
-});
