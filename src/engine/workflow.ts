@@ -160,3 +160,16 @@ export function lifecycle(
     overdue,
   };
 }
+
+export interface RunningItem extends StageItem {
+  /** Stage the item is in; null = no stage. */
+  stageKey: string | null;
+  stageLabel: string;
+}
+
+/** Items still moving through the lifecycle (not done), in stage order: the "Running now" list. */
+export function runningItems(l: Pick<Lifecycle, 'stages'>): RunningItem[] {
+  return l.stages.flatMap((s) =>
+    s.items.filter((i) => !i.done).map((i) => ({ ...i, stageKey: s.key, stageLabel: s.label })),
+  );
+}

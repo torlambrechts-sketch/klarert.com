@@ -3,7 +3,7 @@ import { FIELD_TYPES } from './fields/registry';
 import { installFieldTypes } from './fields/resolve';
 import { makeCtx, makeField, makeItem } from './testing/fixtures';
 import type { Automation } from './types';
-import { lifecycle, rulesFor, stageField, stageFields } from './workflow';
+import { lifecycle, rulesFor, runningItems, stageField, stageFields } from './workflow';
 
 beforeAll(() => installFieldTypes(Object.values(FIELD_TYPES)));
 
@@ -105,6 +105,15 @@ describe('lifecycle', () => {
     expect(l.onChange.map((x) => x.id)).toEqual(['a2']);
     expect(rulesFor(status, 'opt_stuck', ctx)).toEqual([
       { id: 'r2', requires: null, comment: true, message: null },
+    ]);
+  });
+
+  it('lists the running items (not done) in stage order with their stage', () => {
+    const l = lifecycle(status, [a, b, c, d], [], ctx);
+    expect(runningItems(l).map((i) => [i.id, i.stageLabel, i.stageKey])).toEqual([
+      ['i-a', 'Working on it', 'opt_wip'],
+      ['i-b', 'Working on it', 'opt_wip'],
+      ['i-d', 'No stage', null],
     ]);
   });
 });
