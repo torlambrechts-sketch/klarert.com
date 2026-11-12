@@ -832,3 +832,24 @@ export function insertTemplateKey(
   const token = `{${key}}`;
   return { text: text.slice(0, start) + token + text.slice(caret), caret: start + token.length };
 }
+
+/**
+ * The builder's Ctx: the sheet's own Ctx, with the fields of every other sheet of the workspace (create_item values,
+ * update_linked targets and incoming links). Pure; the browser and the commands build it the same way.
+ */
+export function withWorkspaceFields(ctx: Ctx, fields: Field[]): Ctx {
+  const bySheet = new Map<string, Field[]>();
+  for (const f of [...fields].sort((a, b) =>
+    a.position < b.position ? -1 : a.position > b.position ? 1 : 0,
+  )) {
+    if (f.sheetId === ctx.sheet.id) continue;
+    bySheet.set(f.sheetId, [...(bySheet.get(f.sheetId) ?? []), f]);
+  }
+  return {
+    ...ctx,
+    fieldsOf: (sheetId) =>
+      sheetId === ctx.sheet.id
+        ? ctx.fieldsOf(sheetId)
+        : (bySheet.get(sheetId) ?? ctx.fieldsOf(sheetId)),
+  };
+}
