@@ -1,17 +1,29 @@
 'use client';
 
 import { useId, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChartColumn,
+  LayoutGrid,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Trash2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import {
   createDashboardAction,
   deleteDashboardAction,
   updateDashboardAction,
 } from '@/app/[org]/dashboards/actions';
-import { WIDGET_TYPES, type WidgetConfig } from '@/engine/dashboards';
+import { PERIODS, WIDGET_TYPES, type WidgetConfig } from '@/engine/dashboards';
 import { inputClass } from '@/components/fields/shared';
 import { PageHeader, PageTabs } from '@/components/shell/page-header';
+import { ShellCrumb } from '@/components/shell/shell-crumb';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -24,18 +36,22 @@ import {
 import type { Dashboard } from '@/lib/sheet-rows';
 import { cn } from '@/lib/utils';
 import type { DashboardView } from '@/server/repositories/dashboards';
-import { WidgetBody } from './widget-card';
+import { KeyFigures } from './key-figures';
+import { WidgetBody, resultMeta } from './widget-card';
 import { WidgetDialog, type WidgetEditorData } from './widget-dialog';
 
-// One dashboard (docs/05 §4, mockup "Compliance overview"): header with Add widget and a menu (Rename, New dashboard,
-// Delete), tabs for the workspace's dashboards, then the widgets as cards in a responsive grid. Each card has a menu
-// to edit, move or remove it. Every change is one updateDashboard command; the page then renders again.
+// One dashboard (docs/05 §4, design "Compliance overview"): the crumb in the top bar, the header with Add widget and
+// a menu (Rename, New dashboard, Delete), tabs for the workspace's dashboards, the period switch when a widget
+// follows it, then the widgets as cards in a grid of columns at least 320 px wide (key figures take the whole row).
+// Each card has a menu to edit, move or remove it. Every change is one updateDashboard command; the page then
+// renders again. The period is a view setting in the URL (?months=), not a write.
 
 export function DashboardScreen({
   org,
   dashboards,
   dashboard,
   view,
+  months,
   canEdit,
   editor,
 }: {
@@ -43,6 +59,7 @@ export function DashboardScreen({
   dashboards: { id: string; name: string }[];
   dashboard: Dashboard;
   view: DashboardView | null;
+  months: number;
   canEdit: boolean;
   editor: WidgetEditorData | null;
 }) {
@@ -52,6 +69,7 @@ export function DashboardScreen({
   const [nameDialog, setNameDialog] = useState<'rename' | 'new' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const widgets = dashboard.widgets;
+  const usesPeriod = widgets.some((w) => WIDGET_TYPES[w.type]?.usesPeriod);
   const refresh = () => startTransition(() => router.refresh());
 
   const saveWidgets = async (next: WidgetConfig[]) => {
@@ -72,12 +90,18 @@ export function DashboardScreen({
 
   const actions = canEdit ? (
     <>
-      <Button type="button" onClick={() => setWidgetDialog({})} disabled={!editor}>
+      <Button type="button" className="h-9" onClick={() => setWidgetDialog({})} disabled={!editor}>
         <Plus aria-hidden /> Add widget
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button type="button" variant="outline" size="icon" aria-label="Dashboard options">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-[36px]"
+            aria-label="Dashboard options"
+          >
             <MoreHorizontal aria-hidden />
           </Button>
         </DropdownMenuTrigger>
@@ -99,13 +123,31 @@ export function DashboardScreen({
 
   return (
     <main
-      className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]"
+      className="mx-auto flex w-full max-w-[1184px] flex-col gap-4 px-4 pt-6 pb-8 sm:px-7 sm:pt-[42px]"
       aria-busy={pending}
     >
+      <ShellCrumb>
+        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2.5 text-[14px]">
+          <span className="text-muted-foreground flex items-center gap-2">
+            <ChartColumn className="size-[15px] shrink-0" aria-hidden />
+            Insights
+          </span>
+          <span aria-hidden className="text-line-strong text-[20px] leading-none font-light">
+            /
+          </span>
+          <span className="text-ink flex min-w-0 items-center gap-2" aria-current="page">
+            <LayoutGrid className="size-[15px] shrink-0" aria-hidden />
+            <span className="truncate font-medium">{dashboard.name}</span>
+          </span>
+          <span className="bg-soft text-ink-3 shrink-0 rounded-full px-[9px] py-0.5 text-[11.5px] font-medium">
+            Dashboard
+          </span>
+        </nav>
+      </ShellCrumb>
       <PageHeader
-        crumb="Insights"
+        className="pb-0.5"
         title={dashboard.name}
-        description="Widgets that read from your sheets, the evidence library and the run log. Figures are worked out each time the page opens."
+        description="Widgets read live from your sheets, the evidence library and the run log."
         actions={actions}
       />
       {dashboards.length > 1 ? (
@@ -119,6 +161,7 @@ export function DashboardScreen({
           }))}
         />
       ) : null}
+      {usesPeriod && view ? <PeriodSwitch months={months} /> : null}
 
       {!view ? (
         <div
@@ -142,10 +185,11 @@ export function DashboardScreen({
           ) : null}
         </div>
       ) : (
-        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4 p-0">
+        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-4 gap-y-8 p-0">
           {widgets.map((w, i) => (
             <WidgetCard
               key={w.id}
+              org={org}
               widget={w}
               view={view}
               canEdit={canEdit && !!editor}
@@ -227,7 +271,30 @@ export function DashboardScreen({
   );
 }
 
+/** 3, 6 or 12 months: links that set ?months= (keyboard reachable, the current one marked). */
+function PeriodSwitch({ months }: { months: number }) {
+  return (
+    <nav aria-label="Period" className="mt-[19px] mb-5 flex flex-wrap items-center gap-2">
+      <ul className="border-line m-0 inline-flex h-[38px] list-none gap-0.5 rounded-md border bg-white p-0.5">
+        {PERIODS.map((p) => (
+          <li key={p} className="flex">
+            <Link
+              href={`?months=${p}`}
+              scroll={false}
+              aria-current={p === months ? 'true' : undefined}
+              className="text-muted-foreground hover:text-ink aria-[current=true]:bg-soft aria-[current=true]:text-ink inline-flex items-center rounded px-3 text-[13.5px] whitespace-nowrap no-underline aria-[current=true]:font-medium"
+            >
+              {p} months
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 function WidgetCard({
+  org,
   widget,
   view,
   canEdit,
@@ -237,6 +304,7 @@ function WidgetCard({
   onMove,
   onRemove,
 }: {
+  org: string;
   widget: WidgetConfig;
   view: DashboardView;
   canEdit: boolean;
@@ -248,54 +316,66 @@ function WidgetCard({
 }) {
   const headingId = useId();
   const def = WIDGET_TYPES[widget.type];
+  const result = view.results[widget.id];
   const sheetName = widget.sheetId ? view.sheetNames[widget.id] : null;
   const scope = widget.sheetId ? (sheetName ?? 'Sheet removed') : 'All sheets';
+  const menu = canEdit ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="ghost"
+          className="-mr-1.5"
+          aria-label={`Options for ${widget.title}`}
+        >
+          <MoreHorizontal aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={onEdit}>
+          <Pencil aria-hidden /> Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={first} onSelect={() => onMove(-1)}>
+          <ArrowUp aria-hidden /> Move earlier
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={last} onSelect={() => onMove(1)}>
+          <ArrowDown aria-hidden /> Move later
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onSelect={onRemove}>
+          <Trash2 aria-hidden /> Remove
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : null;
+
+  if (result?.kind === 'figures')
+    return (
+      <li className="col-span-full min-w-0">
+        <KeyFigures result={result} title={widget.title} org={org} menu={menu} />
+      </li>
+    );
+  const meta = resultMeta(result) ?? `${def?.label ?? 'Widget'} · ${scope}`;
   return (
     <li
       aria-labelledby={headingId}
-      className="border-line flex min-w-0 flex-col rounded-xl border bg-white shadow-xs"
+      className={cn(
+        'border-line flex min-w-0 flex-col rounded-[10px] border bg-white',
+        def?.wide && 'col-span-full',
+      )}
     >
-      <div className="flex items-start gap-2 px-5 pt-4 pb-1">
-        <div className="min-w-0 flex-1">
-          <h2 id={headingId} className="m-0 text-[15px] font-semibold tracking-[-0.01em]">
-            {widget.title}
-          </h2>
-          <p className="text-muted-foreground m-0 mt-0.5 text-[12.5px]">
-            {def?.label ?? 'Widget'} · {scope}
-          </p>
-        </div>
-        {canEdit ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                size="icon-sm"
-                variant="ghost"
-                aria-label={`Options for ${widget.title}`}
-              >
-                <MoreHorizontal aria-hidden />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={onEdit}>
-                <Pencil aria-hidden /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={first} onSelect={() => onMove(-1)}>
-                <ArrowUp aria-hidden /> Move earlier
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={last} onSelect={() => onMove(1)}>
-                <ArrowDown aria-hidden /> Move later
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onSelect={onRemove}>
-                <Trash2 aria-hidden /> Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
+      <div className="border-line-2 flex min-h-[52px] items-center justify-between gap-2.5 border-b px-[16px] py-2">
+        <h2 id={headingId} className="m-0 min-w-0 text-[14px] leading-tight font-semibold">
+          {widget.title}
+        </h2>
+        <span className="flex min-w-0 shrink items-center gap-1.5">
+          <span className="text-muted-foreground truncate text-right text-[12.5px]">{meta}</span>
+          {menu}
+        </span>
       </div>
-      <div className="flex-1 px-5 pt-2 pb-4">
-        <WidgetBody result={view.results[widget.id]} />
+      <div className="flex-1">
+        <WidgetBody result={result} org={org} />
       </div>
     </li>
   );

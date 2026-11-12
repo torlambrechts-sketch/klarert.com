@@ -12,6 +12,17 @@ export const CRUMB_SLOT = 'shell-crumb';
  */
 export function ShellCrumb({ children }: { children: React.ReactNode }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
-  useEffect(() => setSlot(document.getElementById(CRUMB_SLOT)), []);
+  useEffect(() => {
+    // The top bar can mount after the page (a server redirect, as /[org]/dashboards makes) or be replaced: follow
+    // the slot that is in the document now.
+    const find = () => {
+      const el = document.getElementById(CRUMB_SLOT);
+      setSlot((s) => (s === el ? s : el));
+    };
+    find();
+    const observer = new MutationObserver(find);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
   return slot ? createPortal(children, slot) : null;
 }
