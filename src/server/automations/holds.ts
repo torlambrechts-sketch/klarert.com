@@ -29,23 +29,25 @@ export async function releaseHold(
   const snap = data as Snapshot;
   const userId = who.userId ?? snap.by ?? null;
   const actor: Actor = userId ? { kind: 'user', id: userId } : { kind: 'system', id: null };
-  let events: AutomationEvent[];
-  if (snap.created) {
-    events = [{ type: 'item.created', sheetId: item.sheetId, itemId: item.id, actor }];
-  } else {
-    const { data: row } = await db.from('items').select('values').eq('id', item.id).maybeSingle();
-    const before = snap.values ?? {};
-    const after = (row?.values ?? {}) as Record<string, unknown>;
-    const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(
-      (k) => !same(before[k], after[k]),
-    );
-    events = valueEvents(
+  // a new row runs item_created first, then one value change per field that differs from the values it was
+  // created with (so "Owner becomes …" still fires for a new row); an existing row only the value changes
+  const { data: row } = await db.from('items').select('values').eq('id', item.id).maybeSingle();
+  const before = snap.values ?? {};
+  const after = (row?.values ?? {}) as Record<string, unknown>;
+  const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(
+    (k) => !same(before[k], after[k]),
+  );
+  const events: AutomationEvent[] = [
+    ...(snap.created
+      ? [{ type: 'item.created' as const, sheetId: item.sheetId, itemId: item.id, actor }]
+      : []),
+    ...valueEvents(
       { sheetId: item.sheetId, id: item.id, values: before },
       { values: after },
       changed,
       actor,
-    );
-  }
+    ),
+  ];
   const out = await runAutomations(events, {
     orgId: item.orgId,
     userId,
