@@ -57,8 +57,8 @@ export function NewItemDialog({
   return (
     <Dialog open={!!request} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[min(420px,calc(100vw-32px))]">
-        <DialogTitle className="text-lg font-bold">New {label}</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-sm">
+        <DialogTitle className="text-heading-16">New {label}</DialogTitle>
+        <DialogDescription className="text-muted-foreground text-label-13">
           {request?.note ?? `Add a ${label} to this sheet.`}
         </DialogDescription>
         <form
@@ -87,7 +87,7 @@ export function NewItemDialog({
             if (item) onCreated?.(item);
           }}
         >
-          <label htmlFor={`${id}-name`} className="flex flex-col gap-1 text-sm font-semibold">
+          <label htmlFor={`${id}-name`} className="text-label-13 flex flex-col gap-1 font-semibold">
             Name
             <input
               id={`${id}-name`}
@@ -101,7 +101,7 @@ export function NewItemDialog({
             />
           </label>
           {sorted.length > 1 ? (
-            <label className="flex flex-col gap-1 text-sm font-semibold">
+            <label className="text-label-13 flex flex-col gap-1 font-semibold">
               Group
               <select
                 className={cn(inputClass, 'h-9 font-normal')}
@@ -117,7 +117,7 @@ export function NewItemDialog({
             </label>
           ) : null}
           {error ? (
-            <p id={`${id}-error`} className="text-crit text-sm">
+            <p id={`${id}-error`} className="text-crit text-copy-13">
               {error}
             </p>
           ) : null}

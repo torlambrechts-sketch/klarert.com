@@ -70,7 +70,7 @@ function TabLink({
       }}
       className={cn(
         // the focus ring shows for keyboard focus only (focus-visible), never as a box around the active tab
-        'focus-visible:outline-focus relative flex h-[40px] items-center gap-[7px] rounded-sm px-px text-[14px] whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
+        'focus-visible:outline-focus text-label-14 relative flex h-[40px] items-center gap-[7px] rounded-sm px-px whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
         active
           ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-sm after:bg-[var(--ink)]'
           : 'text-muted-foreground hover:text-ink',
@@ -154,7 +154,7 @@ export function ViewTabs({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="text-muted-foreground hover:text-ink h-8 px-2 text-[14px] font-normal"
+                  className="text-muted-foreground hover:text-ink text-label-14 h-8 px-2 font-normal"
                 >
                   More <ChevronDown aria-hidden />
                 </Button>
@@ -273,8 +273,8 @@ export function ViewMenu({ views, canEdit }: { views: ViewsState; canEdit: boole
       />
       <Dialog open={dialog === 'delete'} onOpenChange={(o) => !o && setDialog(null)}>
         <DialogContent className="w-[min(400px,calc(100vw-32px))]">
-          <DialogTitle className="text-lg font-bold">Delete {saved?.name}?</DialogTitle>
-          <DialogDescription className="text-muted-foreground text-sm">
+          <DialogTitle className="text-heading-16">Delete {saved?.name}?</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-label-13">
             {saved?.ownerId === null
               ? 'Everyone loses this view. Items are not changed.'
               : 'Only the view goes. Items are not changed.'}
@@ -338,7 +338,7 @@ function ViewDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[min(420px,calc(100vw-32px))]">
-        <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
+        <DialogTitle className="text-heading-16">{title}</DialogTitle>
         <DialogDescription className="sr-only">
           Name the view and choose who sees it.
         </DialogDescription>
@@ -355,7 +355,7 @@ function ViewDialog({
             onClose();
           }}
         >
-          <label htmlFor={`${id}-name`} className="flex flex-col gap-1 text-sm font-semibold">
+          <label htmlFor={`${id}-name`} className="text-label-13 flex flex-col gap-1 font-semibold">
             View name
             <input
               id={`${id}-name`}
@@ -369,10 +369,10 @@ function ViewDialog({
           </label>
           {chooseType ? (
             <fieldset className="flex flex-col gap-1">
-              <legend className="mb-1 text-sm font-semibold">Type</legend>
+              <legend className="text-label-13 mb-1 font-semibold">Type</legend>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {VIEW_TYPES.map((t) => (
-                  <label key={t} className="flex items-center gap-1.5 text-sm">
+                  <label key={t} className="text-label-13 flex items-center gap-1.5">
                     <input
                       type="radio"
                       name={`${id}-type`}
@@ -386,7 +386,7 @@ function ViewDialog({
             </fieldset>
           ) : null}
           {canShare !== undefined ? (
-            <label className="flex items-start gap-2 text-sm">
+            <label className="text-label-13 flex items-start gap-2">
               <input
                 type="checkbox"
                 className="mt-0.5"
@@ -396,7 +396,7 @@ function ViewDialog({
               />
               <span>
                 Share with everyone in the workspace
-                <span className="text-muted-foreground block text-xs">
+                <span className="text-muted-foreground text-label-12 block">
                   {canShare
                     ? 'Unticked, only you see this view.'
                     : 'Viewers save personal views only. Only you will see it.'}
@@ -404,7 +404,7 @@ function ViewDialog({
               </span>
             </label>
           ) : null}
-          {error ? <p className="text-crit text-sm">{error}</p> : null}
+          {error ? <p className="text-crit text-copy-13">{error}</p> : null}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel

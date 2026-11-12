@@ -1,6 +1,6 @@
 # 05 · UI layout and screens
 
-Visual reference: open `reference/compliance-os-sun-v2.html` in a browser (it is a self-contained mockup; click around, resize to 390 px). Build the real app to look and behave like it. Where the mockup shows things outside the MVP scope (dashboards with readiness, Speak-up, partner console, app builder), keep the slot in the menu out of the MVP unless docs/01 lists it.
+Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it is a self-contained mockup; click around, resize to 390 px) for screens and flows. The look is Vercel's Geist design system as set out in §6; where the mockup's styling differs, §6 wins. Where the mockup shows things outside the MVP scope (dashboards with readiness, Speak-up, partner console, app builder), keep the slot in the menu out of the MVP unless docs/01 lists it.
 
 ## 1. Routes (Next.js App Router)
 
@@ -27,21 +27,21 @@ Every state that matters is in the URL: open item, view, search. Back/forward wo
 
 ## 2. App shell
 
-Visual reference for the shell and pages since the shadcn suite restyle: `21 Shadcn Suite` (Vercel-style side menu, zinc neutrals, Geist).
+The shell and pages use the Geist design system (§6): a Vercel-style side menu, Geist grays, flat bordered cards.
 
 ```
 ┌──────────────┬──────────────────────────────────────────────────────────┐
 │ side menu    │ top bar: [search……………… /]                   [Inbox 3] [MP] │
 │ 256px        ├──────────────────────────────────────────────────────────┤
-│ #FAFAFA      │ page: crumb · h1 · description · actions, underline tabs  │
+│ bg-200       │ page: crumb · h1 · description · actions, underline tabs  │
 └──────────────┴──────────────────────────────────────────────────────────┘
 ```
 
 ### 2.1 Side menu
-- 256 px, background `--subtle` (#FAFAFA), right border `--line`, full height, sticky. A `nav` landmark "Side menu".
+- 256 px, background `--subtle` (Geist background-200), right border `--line`, full height, sticky. A `nav` landmark "Side menu".
 - **Top:** workspace switcher (initials on a black circle, name, ⇅: the user's workspaces, New workspace), then **Find** (filters the menu as you type; `F` focuses it, Esc clears).
 - **Items:** Home, My work (count badge = overdue + requests to me, worded "n waiting" for screen readers). Then "Insights": Dashboards, Evidence library. Then "Sheets": one collapsible folder per folder (folder icon, name, chevron; closed folders remembered per browser; the folder of the open sheet always opens), its sheets indented with their two-letter code in a small mono box, "+ New sheet" at the end of the last folder. Then "Platform": Workflow, Automations, Workspace admin (owners and admins).
-- Active item: background #EBEBED, ink text, medium weight; hover #F0F0F1.
+- Active item: background `--nav-active` (gray-alpha-200), ink text, medium weight; hover `--nav-hover` (gray-alpha-100).
 
 ### 2.2 Page sub-navigation
 - No second panel. Pages with sections show underline tabs under the header (Workspace admin: Members, Teams and roles, Entities and sites).
@@ -56,14 +56,15 @@ Visual reference for the shell and pages since the shadcn suite restyle: `21 Sha
 
 ## 3. Sheet page
 
-Header: crumb (folder / sheet), sheet name (26 px, 600), "<view> · n items"; right: ⋯ view menu, sheet settings, **+ New** (black). Under it underline view tabs (**Table**, saved views, More ▾: Kanban, Calendar, Form, + New view). Toolbar: sheet search (grows), Show one group, Filter ▾ (count badge when active), Sort, Columns (· n hidden), ⚡ n (automations on this sheet → side sheet).
+Header: crumb (folder / sheet), sheet name (`h1`: `text-heading-24`), "<view> · n items"; right: ⋯ view menu, sheet settings, **+ New** (black). Under it underline view tabs (**Table**, saved views, More ▾: Kanban, Calendar, Form, + New view). Toolbar: sheet search (grows), Show one group, Filter ▾ (count badge when active), Sort, Columns (· n hidden), ⚡ n (automations on this sheet → side sheet).
 
 ### 3.1 Table view (default)
 One view for working through items as rows; it replaced the former List and Grid views. `?view=list` and `?view=grid` (old links, saved defaults) open the Table, and saved views stored with type `list` or `grid` load as Table views (mapped when read; `views.type` stores a Table view as `list` until a migration adds `table`).
 - Hint line (dismissible, remembered): "**Click a cell, then click again or press Enter to edit.** Click a name to open the item. **+** adds a column. 🔒 kept by the app."
-- **One sticky column header** for the whole sheet, never repeated per group, set in `text-label` like the view tabs. Sticky name column (checkbox · drag handle · name); the header's checkbox selects every shown item; last header cell "+" adds a field. Locked fields show a lock after the name with the tooltip "Kept by the app. You can hide it, not delete it."
+- **One sticky column header** per group card, muted `text-label-12` names. Sticky name column (checkbox · drag handle · name); the header's checkbox selects every shown item; last header cell "+" adds a field. Locked fields show a lock after the name with the tooltip "Kept by the app. You can hide it, not delete it."
 - Groups are collapsible sections: a title row tinted with the group colour and a 4 px bar, chevron button (`aria-expanded`), name in the group colour, "n items", a checkbox selecting the group. Collapsed state is UI state.
-- Rows: name (600) on the first line, "CA-014 · avatar Maria Pereira" (display id, then the owner = first people-kind field, if any) in `text-meta` under it. Option fields render as rounded blocks, people cells show names. "+ Add item" row at the end of each group.
+- Rows: 76 px (compact 44 px). A 40 px round icon with a 1 px border (the checkbox takes its place on hover or selection), the name in `text-label-16` on the first line, "CA-014 · Maria Pereira" (display id, then the owner = first people-kind field, if any) in `text-label-13-mono` under it, and the update count as a 36 px round bordered bubble after the name. "…" row menu at the far right. "+ Add item" row at the end of each group.
+- Cells (all from the field UI registry, 14 px side padding, vertically centred): a one-option value (status, dropdown, severity …) is a box inset 8 px in the cell, 6 px radius, the option's tint (`--tint-<colour>-bg`), a 1 px border in the same hue (`-line`) and centred `text-label-14` medium words in its dark step (`-ink`, ≥ 4.5:1), with "!" for action needed and a check for done; several options are tinted chips; people are small round avatars with a soft tint and initials; a date is `text-label-14` over a thin track with "in 65d" / "late 3d" / "done" in mono (grey upcoming, red late, green done); a number field with meter bands and a risk score show the number then a four-bar meter (`--meter-1…4`) named by its step or level; checkboxes are black when ticked; link values are mono-id chips; progress is a thin bar and the percentage. A sparkline of a number's history is not shown: the Table has no per-item history loaded.
 - Group summaries are **off** by default. The column menu's "Show summary" turns one on (default function of the type), "Summary" chooses the function, "Hide summary" turns it off; kept per view in `views.config.summaries` (field key → function). A summary row appears under each open group when any visible column has one.
 - Interaction (spreadsheet model): click selects a cell, a second click, double-click, Enter, F2 or typing a character edits it in the type's editor popover; arrows, Tab, Esc; shift-arrows/shift-click range; copy/paste TSV; Delete clears (respecting required/locked) with Undo in the toast; space toggles checkboxes and opens the item from the name.
 - Column header menu: Sort A→Z / Z→A (saved in the view's sort), Hide, Show/Hide summary, Settings…, Insert left/right, Duplicate, Move, Delete (not for locked). Resize by dragging the header edge (or arrow keys on it); reorder by dragging the header. Drag rows within and between groups (off while sorted); bulk bar for selected rows.
@@ -76,7 +77,7 @@ One view for working through items as rows; it replaced the former List and Grid
 
 ### 3.4 Item panel
 - Right drawer 470 px (Expand → `min(1080px, 100vw − 100px)`), overlay on phones. Esc closes. J/K previous/next.
-- Header: breadcrumb "Sheet › Group", name (editable, 18 px 800), display id (mono), Lock badge, buttons: Expand, Copy link, Close.
+- Header: breadcrumb "Sheet › Group", name (editable, `text-heading-20`), display id (mono), Lock badge, buttons: Expand, Copy link, Close.
 - Tabs: **Details** · **Updates · n** · **Activity log · n**.
 - Details: summary strip (cards: Status, first person, first due date with relative text red when overdue, Group); "Linked items n" list (both directions: chip with the link field or source sheet name, name, display id · sheet, status pill; click opens that item); "Automations on this item" (name + pause toggle); "All fields" as a label/value list (two columns when expanded), each value editable in place.
 - Updates: textarea with @mention autocomplete (people, job roles), Post; feed newest first; automation posts with a lightning avatar.
@@ -99,26 +100,50 @@ One view for working through items as rows; it replaced the former List and Grid
 
 ## 5. Phones (< 760 px)
 
-- Side menu becomes a bottom bar (64 px, #FAFAFA): Home, My work, Menu, Search, Inbox. **Menu** opens the full side menu as a left sheet over a dark scrim.
+- Side menu becomes a bottom bar (64 px, `--subtle`): Home, My work, Menu, Search, Inbox. **Menu** opens the full side menu as a left sheet over a dark scrim.
 - Top bar: menu button, search (expands to full width on focus), inbox, avatar.
 - Below 640 px the Table renders **cards** under the same collapsible group titles: name (700), display id · owner, then up to three filled values as blocks (status first by field order), the first due date when it is not among them (red when overdue); tap opens the item panel; "+ Add" per group.
 - Item panel full screen (above the bottom bar); summary strip two columns; Expand hidden.
 - Tables on other pages scroll horizontally inside their card.
 
-## 6. Tokens
+## 6. Design system: Geist
 
-```
---ink #09090B   --ink-2 #3F3F46   --muted #71717A   --faint #A1A1AA   --line #E4E4E7   --line-2 #EAEAEC
---soft #F4F4F5 (fills, selected row)   --subtle #FAFAFA (side menu, header rows)   --brand #18181B (primary)
---focus #71717A   links: --info #2C4FD0
---good #1E8449  --warn #8A5A00  --crit #DC2626 (text on soft fill #B91C1C), each with a soft fill (--good-soft …)
-heat h1–h4: #DDF1E4/#165E35 · #FBEFC9/#7A5308 · #FCDCC3/#8A3D0A · #F6C9C4/#8E1F18 (fill/text)
-label colours: grey #B4BCC4 · blue #2F6FD6 · navy #2F4F8F · teal #0B8389 · green #188A50 · yellow #E5B526
-               orange #C46A0A · red #C93A46 · pink #C24E88 · purple #7E52C6 · dark #55606B
-Font: Geist 400/500/600/700 and Geist Mono 400/500 for ids, codes and counts (self-hosted)
-Base size 14 px; h1 26 px/600, −0.03em; cards 12 px radius with a 1 px border and shadow-xs; tables and inputs 6–8 px
-```
-Use shadcn/ui primitives (Popover, Dialog, Sheet, DropdownMenu, Command, Tooltip, Tabs, Toast via `sonner`) restyled with these tokens. Primary buttons are `--brand` with near-white text; secondary buttons are white with a border. Option values show a colour dot with the label (plus "!" for action needed and a check for done).
+The whole app follows Vercel's Geist design system with the stack we already have (Geist Sans and Mono self-hosted, Tailwind v4, shadcn/ui on Radix, lucide-react). No other UI library. Everything below lives in `src/app/globals.css`; components use the tokens and type styles, never hex colours or ad-hoc px font sizes.
+
+**Light only for now.** Every colour is a step on a Geist scale defined on `:root`; the semantic tokens point at those steps. A dark theme later redefines the scales (for example under `[data-theme='dark']`) and nothing else.
+
+### 6.1 Colour
+
+- Scales (light values): `--background-100` (white), `--background-200`; `--gray-100…1000` and `--gray-alpha-100…1000`; `--blue`, `--red`, `--amber`, `--green`, `--teal`, `--purple`, `--pink` each `100…1000`. Tailwind classes exist for every step (`bg-gray-100`, `text-blue-900`, `border-gray-alpha-400` …).
+- Semantic tokens (what components use): `--ink` gray-1000 (primary text), `--muted` gray-900 (secondary text: 5.7:1 on white, 5.1:1 on gray-100), `--faint` gray-700 (icons and marks only, never text), `--line` gray-alpha-400 (1 px borders), `--line-strong` gray-alpha-500 (hover borders), `--soft` gray-100 (fills, skeletons), `--subtle` background-200 (side menu, header rows, row hover), `--sel` gray-100 (selected rows), `--brand` gray-1000 (primary buttons), `--focus` blue-700, `--nav-hover` / `--nav-active` gray-alpha-100 / 200.
+- States: `--good` green-900, `--warn` amber-900, `--crit` red-900, `--info` blue-900 (links), each with a `-soft` fill (100/200 step); text is ≥ 4.5:1 on white and on its soft fill. `--bar-good` / `--bar-crit` are the bright 700 steps for thin bars beside words.
+- Option colours (`--label-<colour>`, stored by name on each option) stay for dots, group bars, Kanban and Calendar; `--solid-<colour>` where white text sits on them. In the Table, options use the tint triplets `--tint-<colour>-bg / -line / -ink` (Geist 100 / 400 / 900 steps; orange, navy and the neutrals use the nearest steps).
+- Meters: `--meter-1…4` (green, amber, orange, red 700 steps) and `--meter-off`. Heat scale `--h1…h4` (fill) / `--h1i…h4i` (text) for the risk heatmap.
+- **When colour is allowed:** option and status values, focus, links and the semantic states (good, warn, crit, info), always next to text or a symbol that says the same. Everything else is monochrome.
+
+### 6.2 Type
+
+Tailwind utilities with Geist's sizes, line heights and tracking (px, independent of the 14 px root):
+
+| Style | Classes | Use |
+|---|---|---|
+| Heading (600, negative tracking) | `text-heading-72/64/56/48/40/32/24/20/16/14` | page `h1` = heading-24, card and dialog titles heading-16, KPI numbers heading-32 |
+| Label (single line) | `text-label-20/18/16/14/13/12`, `text-label-14-mono/13-mono/12-mono` | controls, cells, menus, meta; ids, codes and counts in mono |
+| Copy (running text) | `text-copy-24/20/18/16/14/13`, `text-copy-14-mono/13-mono` | descriptions, help, empty states |
+
+Label and copy set no weight: add `font-medium` (500) or `font-semibold` (600, the heaviest Geist weight we use). `cn()` knows these are font sizes (`src/lib/utils.ts`).
+
+### 6.3 Materials and radius
+
+- Cards and sections: white, a 1 px `--line` border, **no shadow**. Shadows only on floating surfaces: `shadow-tooltip`, `shadow-menu` (popovers, menus, cell editors, search results), `shadow-modal` (dialogs), `shadow-fullscreen` (side sheets, the item panel).
+- Radius: `rounded-md` 6 px controls and option boxes, `rounded-lg` 8 px cards, `rounded-xl` 12 px large surfaces (dialogs, the public form), `rounded-full` pills and avatars.
+
+### 6.4 Controls
+
+- Buttons (`src/components/ui/button.tsx`): `default` primary (black, near-white text), `outline` / `secondary` (white, 1 px border), `ghost` / `tertiary` (no border, gray-alpha hover), `destructive` (red), `link`. Sizes: `sm` 32 px, default 40 px, `lg` 48 px; icon buttons the same squares. 150 ms transitions on colour, background and border; `active:scale-[0.98]`. Toolbars use 40 px controls.
+- Focus: a 2 px `--focus` (blue) outline 2 px clear of the control, everywhere (`globals.css`); text inputs show a blue border and a soft blue ring instead.
+- Inputs and selects: 40 px (32 px inside editors and dense rows), white, 1 px `--line` border, `--line-strong` on hover, 6 px radius. Menus and popovers: 8 px radius, border, `shadow-menu`, 14 px items with a gray-alpha highlight. Switch: black when on, gray-700 when off, always with its state word. Toasts: dark, bottom centre.
+- Option values outside the Table show a colour dot with the label (plus "!" for action needed and a check for done).
 
 ## 7. States
 

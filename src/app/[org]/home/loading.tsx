@@ -12,12 +12,12 @@ export default function Loading() {
       </div>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="bg-soft h-[118px] animate-pulse rounded-xl" />
+          <div key={i} className="bg-soft h-[118px] animate-pulse rounded-lg" />
         ))}
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="bg-soft h-64 animate-pulse rounded-xl" />
+          <div key={i} className="bg-soft h-64 animate-pulse rounded-lg" />
         ))}
       </div>
     </main>

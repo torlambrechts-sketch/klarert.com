@@ -93,7 +93,7 @@ Option model for label types (`status`, `dropdown`, `multiselect`, `severity`, `
 | `text` | Text | `"string"` ≤ 500, trimmed | `{}` | text | single-line editor |
 | `longtext` | Long text | `"string"` ≤ 20 000, keeps line breaks | `{}` | text | grid shows first line + "…"; editor popover with textarea; conflict check on save |
 | `comment` | Comment | `{"text":"…","by":"<userId>","at":"<ISO>"}` | `{}` | text | editor stamps `by`/`at`; display "text — Maria, 11 Nov" |
-| `number` | Number | `12.5` | `{"unit":"","decimals":2}` | number | display with unit, `en-GB` grouping |
+| `number` | Number | `12.5` | `{"unit":"","decimals":2}` (optional `"bands":[5,10,15]`) | number | display with unit, `en-GB` grouping; with `bands` (three ascending thresholds) the Table shows a four-bar meter after the number (`meterStep`: step 1 ≤ b0 < 2 ≤ b1 < 3 ≤ b2 < 4) |
 | `value` | Value | `{"amount":1200,"currency":"EUR"}` | `{"currency":"EUR","allowOther":false}` | number | ISO 4217; `toNumber` = amount |
 | `percent` | Percentage | `0`–`100` | `{"bar":true}` | number | bar in cell when `bar` |
 | `yesno` | Yes / No | `"yes" \| "no" \| "na"` | `{"allowNA":true}` | option | fixed options Yes (green, done), No (red), N/A (grey, done) |
@@ -139,7 +139,7 @@ Option model for label types (`status`, `dropdown`, `multiselect`, `severity`, `
 | `finding` | Finding | `"opt_…"` | ordered fixed: Conformity (green, done), Observation (blue), Opportunity for improvement (teal), Minor nonconformity (orange), Major nonconformity (red) | ordered | audit verdict |
 | `checklist` | Checklist | `{"answers":{"<lineId>":{"a":"yes\|no\|na","note":"…","by":"<userId>","at":"<ISO>"}}}` | `{"lines":[{"id":"l1","text":"First check","noteOnNo":true}]}` | number | `toNumber` = score % = yes / (yes + no); progress = answered / lines; trigger "an answer becomes No" |
 | `question` | Question | `"opt_…"` | `{"question":"How well is this in place?","options":[{"id":"q0","label":"Not in place","score":0},{"id":"q1","label":"Partly","score":1},{"id":"q2","label":"Fully","score":2}],"weight":1}` | option | `toNumber` = score × weight |
-| `riskmatrix` | Risk matrix | `{"l":4,"i":5}` | `{"size":5,"bands":[4,9,15],"likelihoodLabels":[],"impactLabels":[]}` | number | `toNumber` = l × i; level Low ≤ 4 < Medium ≤ 9 < High ≤ 15 < Critical; editor = size×size grid |
+| `riskmatrix` | Risk matrix | `{"l":4,"i":5}` | `{"size":5,"bands":[4,9,15],"likelihoodLabels":[],"impactLabels":[]}` | number | `toNumber` = l × i; level Low ≤ 4 < Medium ≤ 9 < High ≤ 15 < Critical; editor = size×size grid; Table cell = score and a four-bar meter by level (`riskStep`) |
 | `maturity` | Maturity | integer `0`–`5` | labels None, Initial, Repeatable, Defined, Managed, Optimised | ordered | ≥ 3 counts as done |
 | `measurement` | Measurement | `[{"at":"2026-11-01","v":12.5,"by":"<userId>","note":""}]` | `{"unit":"","target":null,"direction":"down"}` | number | `toNumber` = latest reading; cell = latest + sparkline of **real** readings + on/off target |
 | `clock` | Statutory clock | computed | `{"startFieldKey":null,"hours":72,"stopFieldKey":null}` | date | states: not started, running (time left), warning (< ⅓ left), overdue, met, missed; `toDate` = deadline; trigger "clock has less than N hours" |

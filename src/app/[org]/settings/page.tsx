@@ -31,10 +31,10 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-line flex flex-col gap-4 rounded-xl border bg-white p-5 shadow-xs sm:px-[22px]">
+    <section className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
       <div className="flex flex-col gap-1">
-        <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
-        {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
+        <h2 className="text-heading-16">{title}</h2>
+        {description ? <p className="text-muted-foreground text-copy-13">{description}</p> : null}
       </div>
       {children}
     </section>
@@ -44,7 +44,7 @@ function Card({
 function Avatar({ initials, color }: { initials: string; color: string }) {
   return (
     <span
-      className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
+      className="text-label-12 flex size-8 shrink-0 items-center justify-center rounded-full font-semibold text-white"
       style={{ background: `var(--label-${color}, var(--label-blue))` }}
       aria-hidden
     >
@@ -166,7 +166,7 @@ async function MembersTab({
                       <span className="text-muted-foreground font-normal"> (you)</span>
                     ) : null}
                   </span>
-                  <span className="text-muted-foreground text-sm">{ROLE_LABELS[m.role]}</span>
+                  <span className="text-muted-foreground text-label-13">{ROLE_LABELS[m.role]}</span>
                 </div>
               </div>
               <MemberRowControls org={org} member={m} myRole={myRole} />
@@ -184,7 +184,7 @@ async function MembersTab({
               >
                 <div className="flex flex-col">
                   <span className="font-medium">{i.email}</span>
-                  <span className="text-muted-foreground text-sm">
+                  <span className="text-muted-foreground text-label-13">
                     {ROLE_LABELS[i.role]} · not accepted yet
                   </span>
                 </div>
@@ -223,7 +223,9 @@ async function TeamsTab({
       >
         <AddByName kind="team" org={org} label="New team" placeholder="Quality" />
         {(teams ?? []).length === 0 ? (
-          <p className="text-muted-foreground text-sm">No teams yet. Add the first one above.</p>
+          <p className="text-muted-foreground text-copy-13">
+            No teams yet. Add the first one above.
+          </p>
         ) : (
           <ul className="divide-line flex flex-col divide-y">
             {(teams ?? []).map((t) => (
@@ -253,7 +255,7 @@ async function TeamsTab({
       >
         <AddByName kind="jobRole" org={org} label="New job role" placeholder="Compliance manager" />
         {(roles ?? []).length === 0 ? (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-copy-13">
             No job roles yet. Add the first one above.
           </p>
         ) : (
@@ -284,7 +286,7 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
     >
       <AddEntity org={org} />
       {(entities ?? []).length === 0 ? (
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-copy-13">
           No entities yet. Add your legal entity above.
         </p>
       ) : (
@@ -294,13 +296,13 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">
                   {e.name}{' '}
-                  <span className="text-muted-foreground font-mono text-xs">{e.country}</span>
+                  <span className="text-muted-foreground text-label-12-mono">{e.country}</span>
                 </span>
                 <DeleteButton kind="entity" org={org} id={e.id} name={e.name} />
               </div>
               <ul className="flex flex-col gap-1 pl-3" aria-label={`Sites of ${e.name}`}>
                 {e.sites.length === 0 ? (
-                  <li className="text-muted-foreground text-sm">No sites yet.</li>
+                  <li className="text-muted-foreground text-label-13">No sites yet.</li>
                 ) : null}
                 {[...e.sites]
                   .sort((a, b) => a.name.localeCompare(b.name))

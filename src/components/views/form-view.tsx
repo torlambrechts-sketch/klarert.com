@@ -57,7 +57,7 @@ export function FormView({
 }) {
   if (!view.saved)
     return (
-      <div className="border-line flex flex-col items-start gap-3 rounded-[var(--radius-card)] border border-dashed p-6 text-sm">
+      <div className="border-line text-label-13 flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">
         <p>
           No form yet. A form lets people add {data.sheet.itemLabel.toLowerCase()}s without opening
           the sheet, signed in or through a public link.
@@ -144,18 +144,18 @@ function Builder({
   return (
     <section
       aria-labelledby={`${id}-h`}
-      className="border-line flex flex-col gap-3 rounded-xl border bg-white p-5 shadow-xs"
+      className="border-line bg-background-100 flex flex-col gap-3 rounded-lg border p-5"
     >
-      <h2 id={`${id}-h`} className="text-[15px] font-semibold">
+      <h2 id={`${id}-h`} className="text-heading-16">
         Form builder
       </h2>
       {readOnly ? (
-        <p className="text-muted-foreground text-sm">Only editors can change this form.</p>
+        <p className="text-muted-foreground text-copy-13">Only editors can change this form.</p>
       ) : null}
       <fieldset disabled={readOnly} className="flex flex-col gap-3">
         <legend className="sr-only">Form settings</legend>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm font-semibold">
+          <label className="text-label-13 flex flex-col gap-1 font-semibold">
             Title
             <input
               className={cn(inputClass, 'font-normal')}
@@ -165,7 +165,7 @@ function Builder({
               onChange={(e) => onChange({ ...layout, title: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-semibold">
+          <label className="text-label-13 flex flex-col gap-1 font-semibold">
             New items go to
             <select
               className={cn(inputClass, 'font-normal')}
@@ -181,7 +181,7 @@ function Builder({
             </select>
           </label>
         </div>
-        <label className="flex flex-col gap-1 text-sm font-semibold">
+        <label className="text-label-13 flex flex-col gap-1 font-semibold">
           Description
           <textarea
             className={cn(inputClass, 'h-16 py-1 font-normal')}
@@ -190,7 +190,7 @@ function Builder({
             onChange={(e) => onChange({ ...layout, description: e.target.value })}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-semibold">
+        <label className="text-label-13 flex flex-col gap-1 font-semibold">
           Name question
           <input
             className={cn(inputClass, 'font-normal')}
@@ -200,9 +200,11 @@ function Builder({
             onChange={(e) => onChange({ ...layout, nameLabel: e.target.value })}
           />
         </label>
-        <h3 className="text-sm font-bold">Questions on the form</h3>
+        <h3 className="text-label-13 font-bold">Questions on the form</h3>
         {on.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Only the name is asked. Add fields below.</p>
+          <p className="text-muted-foreground text-copy-13">
+            Only the name is asked. Add fields below.
+          </p>
         ) : null}
         <ol className="flex flex-col gap-2">
           {on.map((q, i) => {
@@ -210,7 +212,7 @@ function Builder({
             return (
               <li key={q.key} className="border-line flex flex-col gap-2 rounded-md border p-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold">
+                  <label className="text-label-13 flex items-center gap-2 font-semibold">
                     <input
                       type="checkbox"
                       checked
@@ -220,7 +222,7 @@ function Builder({
                     />
                     {f.name}
                   </label>
-                  <label className="ml-auto flex items-center gap-1.5 text-sm">
+                  <label className="text-label-13 ml-auto flex items-center gap-1.5">
                     <input
                       type="checkbox"
                       checked={q.required ?? f.required}
@@ -273,11 +275,11 @@ function Builder({
         </ol>
         {off.length ? (
           <>
-            <h3 className="text-sm font-bold">Not on the form</h3>
+            <h3 className="text-label-13 font-bold">Not on the form</h3>
             <ul className="flex flex-wrap gap-x-4 gap-y-1">
               {off.map((f) => (
                 <li key={f.id}>
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className="text-label-13 flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={false}
@@ -295,7 +297,7 @@ function Builder({
             </ul>
           </>
         ) : null}
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-label-12">
           Calculated fields, links, files and other values the app keeps cannot be asked on a form.
         </p>
       </fieldset>
@@ -346,12 +348,12 @@ function PublicLink({
   }, [url]);
 
   return (
-    <section className="border-line flex flex-col gap-3 rounded-xl border bg-white p-5 shadow-xs">
-      <h2 className="text-[15px] font-semibold">Public link</h2>
+    <section className="border-line bg-background-100 flex flex-col gap-3 rounded-lg border p-5">
+      <h2 className="text-heading-16">Public link</h2>
       {link.isPending ? (
         <div aria-busy="true" className="bg-soft h-9 animate-pulse rounded" />
       ) : link.isError ? (
-        <div role="alert" className="flex items-center gap-2 text-sm">
+        <div role="alert" className="text-label-13 flex items-center gap-2">
           The link could not be loaded.
           <Button type="button" size="sm" variant="outline" onClick={() => void link.refetch()}>
             Retry
@@ -360,14 +362,14 @@ function PublicLink({
       ) : url ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-copy-13">
               Anyone with this link can send the form without signing in. At most 10 answers per
               minute from one network.
             </p>
             <input
               aria-label="Public link"
               readOnly
-              className={cn(inputClass, 'font-mono text-xs')}
+              className={cn(inputClass, 'text-label-12-mono')}
               value={url}
             />
             <div className="flex flex-wrap gap-2">
@@ -419,7 +421,7 @@ function PublicLink({
         </div>
       ) : canEdit && shared ? (
         <div className="flex flex-col items-start gap-2">
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-copy-13">
             No public link. Create one to share the form.
           </p>
           <Button
@@ -438,7 +440,7 @@ function PublicLink({
           </Button>
         </div>
       ) : (
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-copy-13">
           {shared
             ? 'No public link. Ask an editor to create one.'
             : 'Share this view to publish a public link.'}
@@ -475,13 +477,13 @@ function Preview({
       : [...data.groups].sort((a, b) => (a.position < b.position ? -1 : 1))[0]?.id;
   return (
     <section aria-label="Preview" className="flex flex-col gap-2">
-      <h2 className="text-[15px] font-semibold">Preview</h2>
-      <p className="text-muted-foreground text-xs">
+      <h2 className="text-heading-16">Preview</h2>
+      <p className="text-muted-foreground text-label-12">
         {canEdit ? 'Fill it in here to add an item as yourself.' : 'How the form looks on a phone.'}
       </p>
       <form
         noValidate
-        className="border-line mx-auto flex w-full max-w-[390px] flex-col gap-4 rounded-[20px] border bg-white p-5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.18)]"
+        className="border-line bg-background-100 mx-auto flex w-full max-w-[390px] flex-col gap-4 rounded-lg border p-5"
         onSubmit={async (e) => {
           e.preventDefault();
           if (!canEdit || !groupId) return;
@@ -504,9 +506,9 @@ function Preview({
         }}
       >
         <header className="flex flex-col gap-1">
-          <p className="text-lg font-extrabold">{layout.title?.trim() || data.sheet.name}</p>
+          <p className="text-copy-16 font-extrabold">{layout.title?.trim() || data.sheet.name}</p>
           {layout.description?.trim() ? (
-            <p className="text-muted-foreground text-sm whitespace-pre-line">
+            <p className="text-muted-foreground text-copy-13 whitespace-pre-line">
               {layout.description}
             </p>
           ) : null}

@@ -51,11 +51,11 @@ export function TextField({
         {...props}
       />
       {error ? (
-        <p id={`${id}-error`} className="text-crit text-sm">
+        <p id={`${id}-error`} className="text-crit text-copy-13">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-muted-foreground text-sm">
+        <p id={`${id}-hint`} className="text-muted-foreground text-copy-13">
           {hint}
         </p>
       ) : null}
@@ -79,7 +79,7 @@ export function FormError({ state }: { state: FormState }) {
   if (!state || state.ok || state.error.code !== 'invalid' || !state.error.fieldErrors?._)
     return null;
   return (
-    <p role="alert" className="text-crit text-sm">
+    <p role="alert" className="text-crit text-copy-13">
       {state.error.fieldErrors._}
     </p>
   );

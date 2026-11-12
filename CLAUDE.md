@@ -18,7 +18,7 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 | `docs/02-data-model.md` | Touching the database, RPCs, RLS, storage |
 | `docs/03-field-types.md` | Touching any cell, editor, validation, filter, summary or formula |
 | `docs/04-automations.md` | Touching triggers, conditions, actions, scheduler, run log, notifications |
-| `docs/05-ui-layout.md` | Building any screen. Visual reference: `reference/compliance-os-sun-v2.html` |
+| `docs/05-ui-layout.md` | Building any screen. Look: the Geist design system (§6, tokens in `src/app/globals.css`); behaviour reference: `reference/compliance-os-sun-v2.html` |
 | `docs/06-build-plan.md` | Picking the next milestone; tick acceptance boxes as you finish |
 | `docs/07-first-sheet.md` | Milestone M10 and the end-to-end acceptance test |
 | `supabase/migrations/0001_core.sql` | The schema. Change it only through new numbered migrations. `node scripts/test-migration.mjs` smoke-tests it without Docker |
@@ -99,3 +99,5 @@ Add these scripts in M0 if they do not exist.
 ## Definition of done for any UI work
 
 Keyboard reachable, visible focus, labels on icon buttons, colour never the only signal (status shows text, and a symbol for action-needed and done states), works at 390 px wide, no layout shift when data loads, empty state written, loading state skeleton, error state with a retry.
+
+Uses the Geist tokens and type styles from globals.css (docs/05 Design system); no ad-hoc px font sizes or hex colours.

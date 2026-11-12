@@ -51,11 +51,11 @@ export function ItemAutomations({
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-1.5">
-      <h3 id={headingId} className="m-0 text-[13px] font-extrabold">
+      <h3 id={headingId} className="text-label-13 m-0 font-extrabold">
         Automations on this item
       </h3>
       {autos.isError || pauses.isError ? (
-        <p className="text-muted-foreground m-0 text-[13px]">
+        <p className="text-muted-foreground text-copy-13 m-0">
           Automations could not be loaded.{' '}
           <button
             type="button"
@@ -75,7 +75,7 @@ export function ItemAutomations({
           aria-label="Loading"
         />
       ) : list.length === 0 ? (
-        <p className="text-muted-foreground m-0 text-[13px]">
+        <p className="text-muted-foreground text-copy-13 m-0">
           No automations on this sheet.{' '}
           {canPause ? (
             <Link className="underline" href={`/${org}/automations?new=1&sheet=${item.sheetId}`}>
@@ -93,7 +93,7 @@ export function ItemAutomations({
                 ? 'Paused for this item'
                 : 'Runs';
             return (
-              <li key={a.id} className="flex items-start gap-2 text-[13px]">
+              <li key={a.id} className="text-label-13 flex items-start gap-2">
                 <Switch
                   className="mt-0.5"
                   checked={!paused}
@@ -103,7 +103,7 @@ export function ItemAutomations({
                 />
                 <span className="flex min-w-0 flex-col">
                   <span className="font-semibold break-words">{a.name}</span>
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-muted-foreground text-label-12">
                     {state} · {describeTrigger(a.trigger, ctx)}
                   </span>
                 </span>

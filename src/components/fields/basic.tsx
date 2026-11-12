@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { dateCountdown, relativeDue } from '@/engine/fields/date';
 import { DURATION_UNITS } from '@/engine/fields/duration';
+import { meterStep, type NumberConfig } from '@/engine/fields/number';
 import { addDays, formatDate, isoDateInZone } from '@/engine/fields/helpers';
 import { firstLine } from '@/engine/fields/longtext';
 import { RECURRENCE_UNITS } from '@/engine/fields/recurrence';
@@ -32,7 +33,16 @@ import { isItemDone, isOverdueOf } from '@/engine/values';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Bar, Empty, Muted, optionUI, textUI, TextCell } from './kit';
-import { defOf, EditorFrame, inputClass, SaveCancel, Text, TextEditor } from './shared';
+import {
+  defOf,
+  displayText,
+  EditorFrame,
+  inputClass,
+  Meter,
+  SaveCancel,
+  Text,
+  TextEditor,
+} from './shared';
 import type { CellProps, EditorProps, FieldTypeUI } from './types';
 
 // Basic input types (docs/03 §3.1).
@@ -53,7 +63,7 @@ function Labelled({
   const id = useId();
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-semibold">
+      <label htmlFor={id} className="text-label-12 font-semibold">
         {label}
       </label>
       {children(id)}
@@ -158,12 +168,29 @@ export const urlUI = textUI({
 
 // ───────────── numbers ─────────────
 
+/** A number; in the Table, followed by the four-bar meter when the field has meter bands. */
+function NumberCell(p: CellProps) {
+  const cfg = p.field.config as NumberConfig;
+  const t = displayText(p.field, p.value, p.ctx);
+  if (!t) return <Empty />;
+  if (p.density !== 'table' || !cfg.bands || typeof p.value !== 'number')
+    return <Text className="text-right tabular-nums">{t}</Text>;
+  const step = meterStep(p.value, cfg.bands);
+  return (
+    <span className="flex w-full min-w-0 items-center justify-end gap-2">
+      <Text className="tabular-nums">{t}</Text>
+      <Meter step={step} label={`Step ${step} of 4`} />
+    </span>
+  );
+}
+
 export const numberUI = textUI({
   icon: Hash,
   inputMode: 'decimal',
   align: 'right',
   invalid: 'Enter a number, like 12.5.',
   toInput: (v) => String(v),
+  Cell: NumberCell,
 });
 
 export const percentUI: FieldTypeUI = {
@@ -231,7 +258,7 @@ function ValueEditor({ value, field, ctx, onCommit, onCancel }: EditorProps) {
         </div>
       </div>
       {error ? (
-        <p role="alert" className="text-crit text-xs">
+        <p role="alert" className="text-crit text-label-12">
           {error}
         </p>
       ) : null}
@@ -308,7 +335,7 @@ function UnitAmountEditor({
         </Labelled>
       </div>
       {error ? (
-        <p role="alert" className="text-crit text-xs">
+        <p role="alert" className="text-crit text-label-12">
           {error}
         </p>
       ) : null}
@@ -417,7 +444,9 @@ export const checkUI: FieldTypeUI = {
         aria-hidden
         className={cn(
           'flex size-4 items-center justify-center rounded border',
-          value === true ? 'bg-good border-good text-white' : 'border-muted-foreground bg-white',
+          value === true
+            ? 'bg-ink border-ink text-background-100'
+            : 'border-muted-foreground bg-background-100',
         )}
       >
         {value === true ? '✓' : ''}
@@ -436,7 +465,7 @@ export const checkUI: FieldTypeUI = {
           </Button>
         }
       >
-        <label className="flex items-center gap-2 text-sm">
+        <label className="text-label-13 flex items-center gap-2">
           <input
             ref={ref}
             type="checkbox"
@@ -455,7 +484,7 @@ export const checkUI: FieldTypeUI = {
 const COUNTDOWN_TONE = {
   done: { bar: 'var(--bar-good)', text: 'text-good' },
   late: { bar: 'var(--bar-crit)', text: 'text-crit-ink' },
-  soon: { bar: 'var(--label-orange)', text: 'text-muted-foreground' },
+  soon: { bar: 'var(--faint)', text: 'text-muted-foreground' },
   far: { bar: 'var(--faint)', text: 'text-muted-foreground' },
 } as const;
 
@@ -472,20 +501,19 @@ function DateCountdownCell({
   const c = dateCountdown(value, ctx.today, isItemDone(item, ctx));
   const tone = COUNTDOWN_TONE[c.tone];
   return (
-    <span className="flex w-full min-w-0 flex-col gap-1">
-      <span className="text-ink-2 truncate text-[12.5px] leading-[18px] font-medium">
-        {formatDate(value)}
-      </span>
+    <span className="flex w-full min-w-0 flex-col gap-1.5">
+      <span className="text-ink text-label-14 truncate">{formatDate(value)}</span>
       <span className="flex min-w-0 items-center gap-1.5">
-        <span aria-hidden className="bg-soft block h-1 min-w-6 flex-1 overflow-hidden rounded-full">
+        <span
+          aria-hidden
+          className="bg-gray-alpha-200 block h-1 min-w-6 flex-1 overflow-hidden rounded-full"
+        >
           <span
             className="block h-full rounded-full"
             style={{ width: `${c.pct}%`, background: tone.bar }}
           />
         </span>
-        <span
-          className={cn('shrink-0 font-mono text-[10.5px] leading-[15px] font-medium', tone.text)}
-        >
+        <span className={cn('text-label-12-mono shrink-0 leading-[15px] font-medium', tone.text)}>
           {c.text}
         </span>
       </span>
@@ -512,7 +540,7 @@ function DateCell({ value, field, item, ctx, density }: CellProps) {
   const overdue = days < 0;
   return (
     <span className="flex w-full min-w-0 flex-col gap-0.5">
-      <span className={cn('truncate text-[12.5px]', overdue && 'text-crit font-semibold')}>
+      <span className={cn('text-label-13 truncate', overdue && 'text-crit font-semibold')}>
         {formatDate(value).replace(/ \d{4}$/, '')} · {rel}
       </span>
       <Bar
@@ -611,7 +639,7 @@ function DateTimeEditor({ value, field, ctx, onCommit, onCancel }: EditorProps) 
         </Labelled>
       </div>
       {error ? (
-        <p role="alert" className="text-crit text-xs">
+        <p role="alert" className="text-crit text-label-12">
           {error}
         </p>
       ) : null}
@@ -670,7 +698,7 @@ function TimelineEditor({ value, field, ctx, onCommit, onCancel }: EditorProps) 
         </Labelled>
       </div>
       {error ? (
-        <p role="alert" className="text-crit text-xs">
+        <p role="alert" className="text-crit text-label-12">
           {error}
         </p>
       ) : null}
@@ -690,7 +718,7 @@ export const timelineUI: FieldTypeUI = {
     );
     return (
       <span className="flex w-full min-w-0 flex-col gap-0.5">
-        <span className="truncate text-[12.5px]">
+        <span className="text-label-13 truncate">
           {formatDate(v.start).replace(/ \d{4}$/, '')} – {formatDate(v.end)}
         </span>
         <Bar pct={(done / total) * 100} color="var(--label-blue)" />
@@ -764,7 +792,7 @@ function RecurrenceEditor({ value, field, ctx, onCommit, onCancel }: EditorProps
         </Labelled>
       </div>
       {error ? (
-        <p role="alert" className="text-crit text-xs">
+        <p role="alert" className="text-crit text-label-12">
           {error}
         </p>
       ) : null}
@@ -796,7 +824,9 @@ function LocationEditor({ value, field, ctx, onCommit, onCancel }: EditorProps) 
           </Button>
         }
       >
-        <Muted className="text-sm">No sites yet. An admin adds sites in workspace settings.</Muted>
+        <Muted className="text-label-13">
+          No sites yet. An admin adds sites in workspace settings.
+        </Muted>
       </EditorFrame>
     );
   return (

@@ -116,7 +116,7 @@ export function ColumnHeader({
       role="columnheader"
       aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
       className={cn(
-        'group/col border-b-soft relative flex h-full items-center border-b bg-white',
+        'group/col border-b-soft bg-background-100 relative flex h-full items-center border-b',
         drop.isOver && !drag.isDragging && 'bg-sel',
         drag.isDragging && 'opacity-50',
       )}
@@ -135,7 +135,7 @@ export function ColumnHeader({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            'hover:text-ink text-muted-foreground flex h-full min-w-0 items-center gap-1.5 pl-[14px] text-left text-[12px] font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
+            'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-[14px] text-left font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
             // the system-column mark sits right after the name
             field.locked ? 'flex-initial pr-0' : 'flex-1 pr-[14px]',
           )}
@@ -275,12 +275,12 @@ function LockedMark() {
         {/* the design's system-column mark: a small outlined square after the name */}
         <span
           aria-hidden
-          className="inline-block h-2 w-[7px] rounded-[2px] border border-current text-[var(--faint)]"
+          className="text-faint inline-block h-2 w-[7px] rounded-[2px] border border-current"
         />
       </span>
       <span
         role="tooltip"
-        className="bg-ink pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-52 rounded px-2 py-1 text-xs font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
+        className="bg-ink text-label-12 pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-52 rounded px-2 py-1 font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
       >
         {text}
       </span>

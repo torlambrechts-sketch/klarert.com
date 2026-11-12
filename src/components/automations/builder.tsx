@@ -47,7 +47,7 @@ import { ValuePicker } from './value-picker';
 
 const selectClass = cn(
   inputClass,
-  'select-chevron h-8 w-auto max-w-[280px] text-[13.5px] shadow-none',
+  'select-chevron h-8 w-auto max-w-[280px] text-label-14 shadow-none',
 );
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 const num = (v: unknown, d = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
@@ -73,7 +73,7 @@ export interface BuilderProps {
 
 function Problem({ id, text }: { id: string; text?: string }) {
   return text ? (
-    <p id={id} className="text-crit m-0 text-xs" role="alert">
+    <p id={id} className="text-crit text-label-12 m-0" role="alert">
       {text}
     </p>
   ) : null;
@@ -97,7 +97,7 @@ function Row({
       <span
         id={labelId}
         className={cn(
-          'text-muted-foreground w-full shrink-0 text-[12px] font-medium sm:w-24',
+          'text-muted-foreground text-label-12 w-full shrink-0 font-medium sm:w-24',
           top ? 'sm:pt-2' : 'self-center',
         )}
       >
@@ -179,7 +179,7 @@ export function AutomationBuilder(props: BuilderProps) {
   const sentence = describeAutomation(draft, ctx, sheetName);
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="border-line flex flex-col rounded-lg border bg-white px-3.5 py-1.5">
+      <div className="border-line bg-background-100 flex flex-col rounded-lg border px-3.5 py-1.5">
         {props.head}
         <Row label="When" labelId={`${ids}-when`}>
           <div role="group" aria-labelledby={`${ids}-when`} className="flex flex-col gap-1.5">
@@ -225,7 +225,7 @@ export function AutomationBuilder(props: BuilderProps) {
               ) : null}
               {spec?.param === 'value' && tField ? (
                 <>
-                  <span className="text-sm">becomes</span>
+                  <span className="text-label-13">becomes</span>
                   <ValuePicker
                     field={tField}
                     ctx={ctx}
@@ -259,7 +259,7 @@ export function AutomationBuilder(props: BuilderProps) {
               ) : null}
               {spec?.param === 'hoursLeft' ? (
                 <>
-                  <span className="text-sm">with less than</span>
+                  <span className="text-label-13">with less than</span>
                   <input
                     type="number"
                     min={1}
@@ -270,12 +270,12 @@ export function AutomationBuilder(props: BuilderProps) {
                       setTrigger({ ...draft.trigger, hoursLeft: Number(e.target.value) })
                     }
                   />
-                  <span className="text-sm">hours left</span>
+                  <span className="text-label-13">hours left</span>
                 </>
               ) : null}
               {spec?.param === 'days' ? (
                 <>
-                  <span className="text-sm">within</span>
+                  <span className="text-label-13">within</span>
                   <input
                     type="number"
                     min={1}
@@ -284,13 +284,13 @@ export function AutomationBuilder(props: BuilderProps) {
                     value={num(draft.trigger.days, 30)}
                     onChange={(e) => setTrigger({ ...draft.trigger, days: Number(e.target.value) })}
                   />
-                  <span className="text-sm">days</span>
+                  <span className="text-label-13">days</span>
                 </>
               ) : null}
             </div>
           </div>
           {spec?.scheduled ? (
-            <p className="text-muted-foreground m-0 text-[12.5px]">
+            <p className="text-muted-foreground text-copy-13 m-0">
               Date checks run on a schedule, once per item for each date.
             </p>
           ) : null}
@@ -301,7 +301,7 @@ export function AutomationBuilder(props: BuilderProps) {
         <Row label="and only if" labelId={`${ids}-if`} top>
           <div role="group" aria-labelledby={`${ids}-if`} className="flex flex-col gap-2">
             {draft.conditions.length === 0 ? (
-              <p className="text-muted-foreground m-0 pt-1.5 text-sm">
+              <p className="text-muted-foreground text-copy-13 m-0 pt-1.5">
                 No conditions: it runs every time the trigger fires.
               </p>
             ) : (
@@ -415,7 +415,7 @@ export function AutomationBuilder(props: BuilderProps) {
           </div>
         </Row>
         <div className="border-soft border-b py-2 last:border-b-0">
-          <p className="bg-soft text-ink-2 m-0 rounded-md px-3 py-2.5 text-[13.5px] leading-normal">
+          <p className="bg-soft text-ink text-copy-14 m-0 rounded-md px-3 py-2.5 leading-normal">
             <b className="text-ink font-medium">Reads as:</b> {sentence}
           </p>
         </div>
@@ -424,18 +424,18 @@ export function AutomationBuilder(props: BuilderProps) {
             id={`${ids}-name`}
             type="text"
             maxLength={200}
-            className={cn(inputClass, 'h-8 text-[13.5px] shadow-none')}
+            className={cn(inputClass, 'text-label-14 h-8 shadow-none')}
             placeholder={generated}
             value={draft.name}
             onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
           />
-          <p className="text-muted-foreground m-0 text-[12.5px]">
+          <p className="text-muted-foreground text-copy-13 m-0">
             Leave it empty to use “{generated}”.
           </p>
         </Row>
         <Row label="Test on" labelId={`${ids}-test`}>
           {props.items.length === 0 ? (
-            <p className="text-muted-foreground m-0 text-sm">
+            <p className="text-muted-foreground text-copy-13 m-0">
               This sheet has no items yet. Add one to test the automation on it.
             </p>
           ) : (
@@ -468,7 +468,7 @@ export function AutomationBuilder(props: BuilderProps) {
                   ? `Save as v${(props.version ?? 0) + 1}`
                   : 'Turn on automation'}
             </Button>
-            <p className="text-muted-foreground m-0 text-[12.5px]">
+            <p className="text-muted-foreground text-copy-13 m-0">
               Status rules still apply to its changes, and every run is logged.
             </p>
           </div>
@@ -601,7 +601,7 @@ function ActionRow({
             />
             {field ? (
               <>
-                <span className="text-sm">to</span>
+                <span className="text-label-13">to</span>
                 <ValuePicker
                   field={field}
                   ctx={ctx}
@@ -648,7 +648,7 @@ function ActionRow({
                 </option>
               ))}
             </select>
-            <span className="text-sm">to</span>
+            <span className="text-label-13">to</span>
             <FieldSelect
               label={label('field')}
               value={fieldKey}
@@ -676,7 +676,7 @@ function ActionRow({
         ) : null}
         {type === 'create_item' ? (
           <>
-            <span className="text-sm">on</span>
+            <span className="text-label-13">on</span>
             <select
               aria-label={label('sheet')}
               className={selectClass}
@@ -740,7 +740,7 @@ function ActionRow({
             value={str(action.name)}
             onChange={(m) => set({ name: m })}
           />
-          <label className="flex items-center gap-2 text-sm">
+          <label className="text-label-13 flex items-center gap-2">
             <input
               type="checkbox"
               checked={action.link === true}
@@ -752,7 +752,7 @@ function ActionRow({
           typeof action.values === 'object' &&
           !Array.isArray(action.values) &&
           Object.keys(action.values).length ? (
-            <p className="text-muted-foreground m-0 text-xs">
+            <p className="text-muted-foreground text-label-12 m-0">
               Also fills {Object.keys(action.values).join(', ')} on the new item.
             </p>
           ) : null}
@@ -827,11 +827,11 @@ function Recipients({
   ];
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-sm">Notify</span>
+      <span className="text-label-13">Notify</span>
       {to.map((entry) => (
         <span
           key={entry}
-          className="border-line inline-flex items-center gap-1 rounded-full border bg-white py-0.5 pr-0.5 pl-2 text-sm"
+          className="border-line bg-background-100 text-label-13 inline-flex items-center gap-1 rounded-full border py-0.5 pr-0.5 pl-2"
         >
           {describeRecipients([entry], ctx)}
           <button
@@ -962,7 +962,7 @@ function UpdateLinked({
           ))}
         </select>
       )}
-      <span className="text-sm">: set</span>
+      <span className="text-label-13">: set</span>
       <FieldSelect
         label={label('linked field')}
         value={str(action.fieldKey)}
@@ -971,7 +971,7 @@ function UpdateLinked({
       />
       {targetField ? (
         <>
-          <span className="text-sm">to</span>
+          <span className="text-label-13">to</span>
           <ValuePicker
             field={targetField}
             ctx={ctx}
@@ -994,16 +994,16 @@ function TestPanel({ result, item }: { result: TestResult; item: Item }) {
         ? 'Runs on the event'
         : 'Does not match';
   return (
-    <div role="region" aria-label="Test result" className="flex flex-col gap-3 text-sm">
+    <div role="region" aria-label="Test result" className="text-label-13 flex flex-col gap-3">
       <p className="m-0 font-semibold">
         {result.wouldRun ? 'Would run on' : 'Would not run on'} {item.displayId} {item.name}
       </p>
       <div className="flex flex-col gap-1">
-        <h3 className="m-0 text-[13px] font-extrabold">Trigger matches?</h3>
+        <h3 className="text-label-13 m-0 font-extrabold">Trigger matches?</h3>
         <p className="m-0 flex flex-wrap items-center gap-2">
           <span
             className={cn(
-              'rounded-full border px-2 py-0.5 text-xs font-semibold',
+              'text-label-12 rounded-full border px-2 py-0.5 font-semibold',
               result.trigger.check === 'no_match'
                 ? 'border-crit/40 text-crit'
                 : 'border-good/40 text-good',
@@ -1016,7 +1016,7 @@ function TestPanel({ result, item }: { result: TestResult; item: Item }) {
         </p>
       </div>
       <div className="flex flex-col gap-1">
-        <h3 className="m-0 text-[13px] font-extrabold">Conditions?</h3>
+        <h3 className="text-label-13 m-0 font-extrabold">Conditions?</h3>
         {result.conditions.length === 0 ? (
           <p className="text-muted-foreground m-0">No conditions.</p>
         ) : (
@@ -1025,7 +1025,7 @@ function TestPanel({ result, item }: { result: TestResult; item: Item }) {
               <li key={i} className="flex flex-wrap items-center gap-2">
                 <span
                   className={cn(
-                    'rounded-full border px-2 py-0.5 text-xs font-semibold',
+                    'text-label-12 rounded-full border px-2 py-0.5 font-semibold',
                     c.ok ? 'border-good/40 text-good' : 'border-crit/40 text-crit',
                   )}
                 >
@@ -1038,7 +1038,7 @@ function TestPanel({ result, item }: { result: TestResult; item: Item }) {
         )}
       </div>
       <div className="flex flex-col gap-1">
-        <h3 className="m-0 text-[13px] font-extrabold">Planned steps</h3>
+        <h3 className="text-label-13 m-0 font-extrabold">Planned steps</h3>
         <ol className="m-0 flex flex-col gap-1 pl-5">
           {result.steps.map((s, i) => (
             <li key={i}>
@@ -1051,7 +1051,7 @@ function TestPanel({ result, item }: { result: TestResult; item: Item }) {
           ))}
         </ol>
       </div>
-      <p className="text-muted-foreground m-0 text-xs">
+      <p className="text-muted-foreground text-label-12 m-0">
         Nothing was changed. The test only plans the steps; when the automation runs, status rules
         and locks still apply.
       </p>

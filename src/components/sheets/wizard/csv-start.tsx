@@ -94,13 +94,13 @@ export function CsvStart({ ctx }: { ctx: WizardContext }) {
     <form onSubmit={submit} className="flex flex-col gap-6" aria-label="Import details" noValidate>
       <BasicsFields basics={basics} ctx={ctx} errors={errors} />
       <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-base font-bold">Spreadsheet</legend>
-        <p className="text-muted-foreground text-sm">
+        <legend className="text-label-14 mb-1 font-bold">Spreadsheet</legend>
+        <p className="text-muted-foreground text-copy-13">
           The first row holds the field names; the first column becomes the item name. At most{' '}
           {CSV_LIMITS.rows.toLocaleString('en-GB')} rows, {CSV_LIMITS.columns} columns and 10 MB.
         </p>
         {file ? (
-          <p className="text-sm">
+          <p className="text-copy-13">
             Using <span className="font-semibold">{file.name}</span>.{' '}
             <button type="button" className="text-info underline" onClick={() => setFile(null)}>
               Paste text instead
@@ -119,7 +119,7 @@ export function CsvStart({ ctx }: { ctx: WizardContext }) {
                 'Item,Owner email,Due,Hours\nCalibrate torque wrench,grace@example.com,2026-11-25,2'
               }
               aria-invalid={parsed && !parsed.ok ? true : undefined}
-              className="border-input focus-visible:ring-ring/50 rounded-md border bg-white p-2 font-mono text-[12.5px] outline-none focus-visible:ring-[3px]"
+              className="border-input focus-visible:ring-focus/25 bg-background-100 text-label-13-mono rounded-md border p-2 outline-none focus-visible:ring-[3px]"
             />
           </div>
         )}
@@ -128,36 +128,36 @@ export function CsvStart({ ctx }: { ctx: WizardContext }) {
           <Input id={fileId} type="file" accept=".csv,.txt,text/csv,text/plain" onChange={onFile} />
         </div>
         {fileError ? (
-          <p role="alert" className="text-crit text-sm">
+          <p role="alert" className="text-crit text-copy-13">
             {fileError}
           </p>
         ) : null}
         {parsed && !parsed.ok ? (
-          <p role="alert" className="text-crit text-sm">
+          <p role="alert" className="text-crit text-copy-13">
             {parsed.message}
           </p>
         ) : null}
-        {errors.csv ? <p className="text-crit text-sm">{errors.csv}</p> : null}
+        {errors.csv ? <p className="text-crit text-copy-13">{errors.csv}</p> : null}
       </fieldset>
 
       {parsed?.ok ? (
         <section aria-labelledby="csv-confirm" className="flex flex-col gap-3">
-          <h2 id="csv-confirm" className="text-base font-bold">
+          <h2 id="csv-confirm" className="text-heading-14">
             Confirm the fields
           </h2>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-copy-13">
             {rows.length === 1 ? '1 row' : `${rows.length.toLocaleString('en-GB')} rows`} will
             become {basics.values.itemLabel.toLowerCase() || 'item'}s named from “
             {parsed.table.header[0]}”. Check the type of each column; a value that does not fit its
             type is left empty.
           </p>
           {plan.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-copy-13">
               The file has only one column, so no fields will be created.
             </p>
           ) : (
-            <div className="border-line overflow-x-auto rounded-[var(--radius-card)] border bg-white">
-              <table className="w-full min-w-[560px] text-left text-sm">
+            <div className="border-line bg-background-100 overflow-x-auto rounded-lg border">
+              <table className="text-label-13 w-full min-w-[560px] text-left">
                 <thead className="bg-soft">
                   <tr>
                     <th scope="col" className="px-3 py-2 font-semibold">

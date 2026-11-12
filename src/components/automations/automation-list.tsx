@@ -112,7 +112,7 @@ export function AutomationList({
   return (
     <>
       <ul
-        className="border-line m-0 flex list-none flex-col overflow-hidden rounded-[10px] border bg-white p-0"
+        className="border-line bg-background-100 m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0"
         aria-label="Automations"
       >
         {automations.map((a) => {
@@ -121,7 +121,7 @@ export function AutomationList({
           return (
             <li
               key={a.id}
-              className="border-line-2 hover:bg-subtle flex flex-wrap items-start gap-3 border-t px-4 py-3.5 first:border-t-0"
+              className="border-line hover:bg-subtle flex flex-wrap items-start gap-3 border-t px-4 py-3.5 first:border-t-0"
             >
               <div className="flex items-center gap-2 pt-0.5">
                 <Switch
@@ -130,7 +130,7 @@ export function AutomationList({
                   aria-label={a.name}
                   onCheckedChange={(v) => void toggle(a, v)}
                 />
-                <span className="text-muted-foreground w-7 text-xs font-medium">
+                <span className="text-muted-foreground text-label-12 w-7 font-medium">
                   {a.enabled ? 'On' : 'Off'}
                 </span>
               </div>
@@ -150,17 +150,17 @@ export function AutomationList({
                     </span>
                   ) : null}
                 </span>
-                <span className="text-muted-foreground text-[13px]">
+                <span className="text-muted-foreground text-label-13">
                   {ctx ? describeTrigger(a.trigger, ctx) : 'Loading…'}
                 </span>
-                <span className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="text-muted-foreground text-label-12 flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span>
                     {a.runCount === 1 ? '1 run' : `${a.runCount.toLocaleString('en-GB')} runs`}
                   </span>
                   <span>
                     Last run {a.lastRunAt ? formatDateTime(a.lastRunAt, timeZone) : 'never'}
                   </span>
-                  <span className="border-line rounded-full border bg-white px-1.5 py-px font-mono text-[11px]">
+                  <span className="border-line bg-background-100 text-label-12-mono rounded-full border px-1.5 py-px">
                     {sourceLabel(a.source)} · v{a.version}
                   </span>
                   {a.locked ? (

@@ -72,12 +72,12 @@ export default async function EvidencePage({
       {!lib ? (
         <div
           role="alert"
-          className="border-line flex flex-col items-start gap-2 rounded-xl border bg-white p-5 shadow-xs"
+          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
         >
           <p className="m-0">The evidence library could not be loaded.</p>
           <a
             href={href({})}
-            className="border-line hover:bg-soft inline-flex h-9 items-center rounded-md border bg-white px-3.5 text-[13.5px] font-medium shadow-xs"
+            className="border-line hover:bg-soft bg-background-100 text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
           >
             Retry
           </a>
@@ -94,17 +94,17 @@ export default async function EvidencePage({
                   aria-current={active ? 'page' : undefined}
                   data-testid={`evidence-tile-${s}`}
                   className={cn(
-                    'border-line hover:border-line-strong flex flex-col gap-1.5 rounded-xl border bg-white px-5 py-[18px] shadow-xs outline-offset-2',
+                    'border-line hover:border-line-strong bg-background-100 flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2',
                     active && 'border-brand ring-brand ring-1',
                   )}
                 >
-                  <span className="text-ink flex items-center justify-between gap-1.5 text-[13.5px] font-medium">
+                  <span className="text-ink text-label-14 flex items-center justify-between gap-1.5 font-medium">
                     {EVIDENCE_STATUS_LABEL[s]}
                     <EvidenceStatusIcon status={s} className="text-muted-foreground" />
                   </span>
                   <span
                     className={cn(
-                      'text-[30px] leading-[1.1] font-bold tracking-[-0.03em] tabular-nums',
+                      'text-heading-32 leading-none tabular-nums',
                       s === 'expired' && lib.counts.expired > 0 && 'text-crit',
                     )}
                   >
@@ -122,7 +122,7 @@ export default async function EvidencePage({
             aria-label="Filter files"
             className="flex flex-wrap items-end gap-2"
           >
-            <label className="flex min-w-[220px] flex-[1_1_280px] flex-col gap-1 text-[13px] font-medium">
+            <label className="text-label-13 flex min-w-[220px] flex-[1_1_280px] flex-col gap-1 font-medium">
               Search
               <span className="relative">
                 <Search
@@ -134,13 +134,17 @@ export default async function EvidencePage({
                   name="q"
                   defaultValue={q}
                   placeholder="File, item, sheet or field"
-                  className={cn(inputClass, 'h-9 pl-8')}
+                  className={cn(inputClass, 'h-[40px] pl-8')}
                 />
               </span>
             </label>
-            <label className="flex flex-[0_1_220px] flex-col gap-1 text-[13px] font-medium">
+            <label className="text-label-13 flex flex-[0_1_220px] flex-col gap-1 font-medium">
               Sheet
-              <select name="sheet" defaultValue={sheetId ?? ''} className={cn(inputClass, 'h-9')}>
+              <select
+                name="sheet"
+                defaultValue={sheetId ?? ''}
+                className={cn(inputClass, 'h-[40px]')}
+              >
                 <option value="">All sheets</option>
                 {lib.sheets.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -149,9 +153,13 @@ export default async function EvidencePage({
                 ))}
               </select>
             </label>
-            <label className="flex flex-[0_1_220px] flex-col gap-1 text-[13px] font-medium">
+            <label className="text-label-13 flex flex-[0_1_220px] flex-col gap-1 font-medium">
               Status
-              <select name="status" defaultValue={status ?? ''} className={cn(inputClass, 'h-9')}>
+              <select
+                name="status"
+                defaultValue={status ?? ''}
+                className={cn(inputClass, 'h-[40px]')}
+              >
                 <option value="">Every status</option>
                 {EVIDENCE_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -160,13 +168,13 @@ export default async function EvidencePage({
                 ))}
               </select>
             </label>
-            <Button type="submit" variant="outline" className="h-9">
+            <Button type="submit" variant="outline">
               Apply
             </Button>
             {q || sheetId || status ? (
               <a
                 href={base}
-                className="text-ink inline-flex h-9 items-center text-sm font-medium underline underline-offset-4"
+                className="text-ink text-label-13 inline-flex h-[40px] items-center font-medium underline underline-offset-4"
               >
                 Clear filters
               </a>
@@ -174,7 +182,7 @@ export default async function EvidencePage({
           </form>
 
           {total === 0 ? (
-            <div className="border-line flex flex-col items-start gap-2 rounded-xl border border-dashed bg-white p-6">
+            <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
               <p className="text-muted-foreground m-0">
                 No files yet. Files added to evidence and attachment fields of an item show here.
               </p>
@@ -186,7 +194,7 @@ export default async function EvidencePage({
               </Link>
             </div>
           ) : lib.shown.length === 0 ? (
-            <div className="border-line flex flex-col items-start gap-2 rounded-xl border border-dashed bg-white p-6">
+            <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
               <p className="text-muted-foreground m-0">Nothing matches these filters.</p>
               <a href={base} className="text-ink font-medium underline underline-offset-4">
                 Show every file
@@ -194,16 +202,16 @@ export default async function EvidencePage({
             </div>
           ) : (
             <section aria-labelledby="evidence-files" className="flex flex-col gap-2">
-              <h2 id="evidence-files" className="text-[15px] font-semibold tracking-[-0.01em]">
+              <h2 id="evidence-files" className="text-heading-16">
                 Files{' '}
-                <span className="text-muted-foreground font-mono text-xs font-normal">
+                <span className="text-muted-foreground text-label-12-mono font-normal">
                   ({lib.shown.length})
                 </span>
               </h2>
-              <div className="border-line overflow-x-auto rounded-xl border bg-white shadow-xs">
-                <table className="w-full min-w-[980px] border-collapse text-[13px]">
+              <div className="border-line bg-background-100 overflow-x-auto rounded-lg border">
+                <table className="text-label-13 w-full min-w-[980px] border-collapse">
                   <thead>
-                    <tr className="border-line bg-subtle text-muted-foreground border-b text-left text-[12px] font-medium">
+                    <tr className="border-line bg-subtle text-muted-foreground text-label-12 border-b text-left font-medium">
                       <th scope="col" className="px-3 py-2 font-medium">
                         File
                       </th>
@@ -232,7 +240,7 @@ export default async function EvidencePage({
                   </thead>
                   <tbody>
                     {lib.shown.slice(0, MAX_ROWS).map((r) => (
-                      <tr key={r.fileId} className="border-line-2 border-t first:border-t-0">
+                      <tr key={r.fileId} className="border-line border-t first:border-t-0">
                         <td className="max-w-[260px] px-3 py-2">
                           <span className="flex min-w-0 items-center gap-1">
                             <DownloadButton org={org} fileId={r.fileId} filename={r.filename} />
@@ -249,7 +257,7 @@ export default async function EvidencePage({
                             })}
                             className="hover:text-ink flex min-w-0 flex-col underline-offset-4 hover:underline"
                           >
-                            <span className="text-muted-foreground font-mono text-[11.5px]">
+                            <span className="text-muted-foreground text-label-12-mono">
                               {r.item.displayId}
                             </span>
                             <span className="truncate">{r.item.name}</span>
@@ -258,7 +266,7 @@ export default async function EvidencePage({
                         <td className="px-3 py-2">
                           <span className="flex flex-col">
                             <span>{r.sheet.name}</span>
-                            <span className="text-muted-foreground text-[12px]">
+                            <span className="text-muted-foreground text-label-12">
                               {r.field.name}
                             </span>
                           </span>
@@ -271,7 +279,7 @@ export default async function EvidencePage({
                           <span className="flex flex-col">
                             <span>{r.validUntilLabel}</span>
                             {r.validityDetail ? (
-                              <span className="text-muted-foreground text-[12px]">
+                              <span className="text-muted-foreground text-label-12">
                                 {r.validityDetail}
                               </span>
                             ) : null}
@@ -287,7 +295,7 @@ export default async function EvidencePage({
                 </table>
               </div>
               {lib.shown.length > MAX_ROWS ? (
-                <p className="text-muted-foreground m-0 text-[13px]">
+                <p className="text-muted-foreground text-copy-13 m-0">
                   Showing the first {MAX_ROWS} of {lib.shown.length} files. Search or choose a sheet
                   to see the rest.
                 </p>

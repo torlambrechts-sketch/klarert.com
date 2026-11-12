@@ -8,7 +8,7 @@ export default function Loading() {
       <h1>My work</h1>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="bg-soft h-[100px] animate-pulse rounded-xl" />
+          <div key={i} className="bg-soft h-[100px] animate-pulse rounded-lg" />
         ))}
       </div>
       <div className="flex flex-col gap-2">

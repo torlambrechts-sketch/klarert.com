@@ -25,7 +25,7 @@ export function rowHeight(kind: TableRow['kind'], density: Density = 'comfortabl
     case 'header':
       return 34;
     case 'item':
-      return density === 'compact' ? 40 : 52;
+      return density === 'compact' ? 44 : 76;
     case 'add':
       return density === 'compact' ? 36 : 44;
     case 'summary':

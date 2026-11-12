@@ -52,7 +52,7 @@ export function ProfileForm({ email, next }: { email: string; next?: string }) {
         state={state}
       />
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1.5 text-sm font-medium">Avatar colour</legend>
+        <legend className="text-label-13 mb-1.5 font-medium">Avatar colour</legend>
         <input type="hidden" name="color" value={color} />
         <div className="flex flex-wrap gap-2">
           {PROFILE_COLORS.map((c) => (
@@ -63,7 +63,7 @@ export function ProfileForm({ email, next }: { email: string; next?: string }) {
               aria-pressed={color === c}
               aria-label={c}
               title={c}
-              className="flex size-9 items-center justify-center rounded-full text-xs font-bold text-white ring-offset-2 aria-pressed:ring-2 aria-pressed:ring-[var(--ink)]"
+              className="text-label-12 flex size-9 items-center justify-center rounded-full font-bold text-white ring-offset-2 aria-pressed:ring-2 aria-pressed:ring-[var(--ink)]"
               style={{ background: `var(--label-${c})` }}
             >
               {color === c ? initials || '·' : ''}
@@ -123,7 +123,7 @@ export function CreateWorkspaceForm({ defaultTimeZone }: { defaultTimeZone: stri
           name="timeZone"
           value={zone}
           onChange={(e) => setZone(e.target.value)}
-          className="border-input h-9 rounded-md border bg-white px-3"
+          className="border-input bg-background-100 h-[40px] rounded-md border px-3"
         >
           {zones.map((z) => (
             <option key={z} value={z}>

@@ -62,7 +62,7 @@ export function InviteForm({ org, canInviteOwner }: { org: string; canInviteOwne
                 id="invite-role"
                 name="role"
                 defaultValue="editor"
-                className="border-input h-9 rounded-md border bg-white px-3"
+                className="border-input bg-background-100 h-[40px] rounded-md border px-3"
               >
                 {ROLES.filter((r) => r !== 'owner' || canInviteOwner).map((r) => (
                   <option key={r} value={r}>
@@ -80,10 +80,10 @@ export function InviteForm({ org, canInviteOwner }: { org: string; canInviteOwne
           role="status"
           className="bg-subtle border-line flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center"
         >
-          <p className="text-sm">
+          <p className="text-copy-13">
             Send this link to the person you invited. It works once, for that email address.
           </p>
-          <code className="min-w-0 flex-1 truncate font-mono text-xs" data-testid="invite-link">
+          <code className="text-label-12-mono min-w-0 flex-1 truncate" data-testid="invite-link">
             {link}
           </code>
           <Button type="button" variant="outline" size="sm" onClick={() => copy(link)}>
@@ -109,7 +109,7 @@ export function MemberRowControls({
   const locked = member.role === 'owner' && myRole !== 'owner';
   if (locked) {
     return (
-      <span className="text-muted-foreground flex items-center gap-1 text-sm">
+      <span className="text-muted-foreground text-label-13 flex items-center gap-1">
         <Lock className="size-3.5" aria-hidden /> Owner
       </span>
     );
@@ -131,7 +131,7 @@ export function MemberRowControls({
           name="role"
           defaultValue={member.role}
           onChange={(e) => e.currentTarget.form?.requestSubmit()}
-          className="border-input h-8 rounded-md border bg-white px-2 text-sm"
+          className="border-input bg-background-100 text-label-13 h-[32px] rounded-md border px-2"
         >
           {ROLES.filter((r) => r !== 'owner' || myRole === 'owner').map((r) => (
             <option key={r} value={r}>

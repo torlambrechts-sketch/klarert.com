@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { contract } from '../testing/contract';
 import { makeCtx } from '../testing/fixtures';
-import { number } from './number';
+import { meterStep, number } from './number';
 
 describe('number', () => {
   contract(number, {
@@ -34,5 +34,22 @@ describe('number', () => {
 
   it('shows the unit and rounds to the configured decimals', () => {
     expect(number.toText(1.23456, { unit: 'kg', decimals: 1 }, makeCtx())).toBe('1.2 kg');
+  });
+
+  it('puts a value on the four-step meter by the configured bands', () => {
+    const bands = [5, 10, 15] as const;
+    expect([0, 5, 6, 10, 11, 15, 16].map((v) => meterStep(v, bands))).toEqual([
+      1, 1, 2, 2, 3, 3, 4,
+    ]);
+  });
+
+  it('accepts optional ascending meter bands and refuses others', () => {
+    expect(number.configSchema.safeParse({ unit: '', decimals: 0 }).success).toBe(true);
+    expect(
+      number.configSchema.safeParse({ unit: '', decimals: 0, bands: [5, 10, 15] }).success,
+    ).toBe(true);
+    expect(
+      number.configSchema.safeParse({ unit: '', decimals: 0, bands: [10, 5, 15] }).success,
+    ).toBe(false);
   });
 });

@@ -46,7 +46,7 @@ export function SheetSkeleton() {
           <Block key={i} className="h-6 w-16" />
         ))}
       </div>
-      <Block className="h-[38px] w-full" />
+      <Block className="h-[40px] w-full" />
       <div className="border-line flex flex-col gap-px overflow-hidden rounded-lg border">
         {Array.from({ length: 10 }, (_, i) => (
           <Block key={i} className="h-10 rounded-none" />

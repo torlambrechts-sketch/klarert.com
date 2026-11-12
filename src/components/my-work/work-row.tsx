@@ -14,7 +14,7 @@ export const itemHref = (org: string, r: Pick<WorkRow, 'sheetId' | 'displayId'>)
 export function WorkRowView({ org, row }: { org: string; row: WorkRow }) {
   const meta = [row.displayId, row.sheetName, row.due?.fieldName].filter(Boolean).join(' · ');
   return (
-    <li className="border-line-2 border-t first:border-t-0">
+    <li className="border-line border-t first:border-t-0">
       <Link
         href={itemHref(org, row)}
         className="hover:bg-subtle flex min-w-0 items-center gap-3 px-4 py-3 outline-offset-[-2px] [ul[data-bare]_&]:px-[22px]"
@@ -24,9 +24,9 @@ export function WorkRowView({ org, row }: { org: string; row: WorkRow }) {
           {row.status ? <Chip option={row.status} /> : null}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-[14px] font-medium break-words">{row.name}</span>
-          <span className="text-muted-foreground flex min-w-0 flex-wrap items-center gap-x-2 text-[12px]">
-            <span className="truncate font-mono text-[11.5px]">{meta}</span>
+          <span className="text-label-14 font-medium break-words">{row.name}</span>
+          <span className="text-muted-foreground text-label-12 flex min-w-0 flex-wrap items-center gap-x-2">
+            <span className="text-label-12-mono truncate">{meta}</span>
             {row.status ? (
               <span className="sm:hidden">
                 <Chip option={row.status} />
@@ -45,12 +45,12 @@ export function WorkRowView({ org, row }: { org: string; row: WorkRow }) {
         {row.due ? (
           <span
             className={cn(
-              'flex shrink-0 flex-col items-end text-right text-[12.5px]',
+              'text-label-13 flex shrink-0 flex-col items-end text-right',
               row.overdue ? 'text-crit font-medium' : 'text-ink',
             )}
           >
             <span>{formatDate(row.due.date)}</span>
-            {!row.done ? <span className="text-[11.5px]">{row.due.relative}</span> : null}
+            {!row.done ? <span className="text-label-12">{row.due.relative}</span> : null}
           </span>
         ) : null}
       </Link>
@@ -75,8 +75,8 @@ export function WorkList({
       aria-label={label}
       data-bare={bare ? '' : undefined}
       className={cn(
-        'm-0 list-none overflow-hidden bg-white p-0',
-        !bare && 'border-line rounded-[10px] border',
+        'bg-background-100 m-0 list-none overflow-hidden p-0',
+        !bare && 'border-line rounded-lg border',
       )}
     >
       {rows.map((r) => (

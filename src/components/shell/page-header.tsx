@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-// Page header and underline tabs shared by every page (docs/05 §2): an optional crumb, the h1 (26 px, 600), one line
+// Page header and underline tabs shared by every page (docs/05 §2): an optional crumb, the h1 (heading-24), one line
 // of description, actions on the right; tabs under it with a 2 px ink underline on the current one.
 
 export function PageHeader({
@@ -20,10 +20,10 @@ export function PageHeader({
   return (
     <div className={cn('flex flex-wrap items-start justify-between gap-x-5 gap-y-3', className)}>
       <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-1.5">
-        {crumb ? <div className="text-muted-foreground text-[13px]">{crumb}</div> : null}
+        {crumb ? <div className="text-muted-foreground text-label-13">{crumb}</div> : null}
         <h1 className="m-0 break-words">{title}</h1>
         {description ? (
-          <p className="text-ink-3 m-0 max-w-[780px] text-[14px] leading-normal text-pretty">
+          <p className="text-muted-foreground text-copy-14 m-0 max-w-[780px] text-pretty">
             {description}
           </p>
         ) : null}
@@ -56,7 +56,7 @@ export function PageTabs({
             <Link
               href={t.href}
               aria-current={t.id === active ? 'page' : undefined}
-              className="text-muted-foreground hover:text-ink aria-[current=page]:text-ink relative flex h-10 items-center px-px text-[14px] whitespace-nowrap outline-offset-[-2px] aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:-bottom-px aria-[current=page]:after:h-0.5 aria-[current=page]:after:rounded-sm aria-[current=page]:after:bg-[var(--ink)]"
+              className="text-muted-foreground hover:text-ink aria-[current=page]:text-ink text-label-14 relative flex h-10 items-center px-px whitespace-nowrap outline-offset-[-2px] aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:-bottom-px aria-[current=page]:after:h-0.5 aria-[current=page]:after:rounded-sm aria-[current=page]:after:bg-[var(--ink)]"
             >
               {t.label}
             </Link>
@@ -67,7 +67,7 @@ export function PageTabs({
   );
 }
 
-/** A card in the shadcn style: 12 px radius, hairline border, a whisper of shadow. */
+/** A card in the Geist material: 8 px radius, 1 px border, no shadow. */
 export function Card({
   title,
   description,
@@ -90,23 +90,23 @@ export function Card({
     <section
       aria-labelledby={headingId}
       className={cn(
-        'border-line flex min-w-0 flex-col rounded-xl border bg-white shadow-xs',
+        'border-line bg-background-100 flex min-w-0 flex-col rounded-lg border',
         className,
       )}
     >
       {title ? (
         <div className="px-[22px] pt-5 pb-1.5">
-          <h2 id={headingId} className="m-0 text-[15px] font-semibold tracking-[-0.01em]">
+          <h2 id={headingId} className="text-heading-16 m-0">
             {title}
           </h2>
           {description ? (
-            <p className="text-muted-foreground m-0 mt-1 text-[13px]">{description}</p>
+            <p className="text-muted-foreground text-copy-13 m-0 mt-1">{description}</p>
           ) : null}
         </div>
       ) : null}
       <div className={cn('flex-1', flush ? 'pt-2 pb-1' : 'px-[22px] py-3.5')}>{children}</div>
       {footer ? (
-        <div className="border-soft text-muted-foreground flex items-center justify-between gap-2.5 border-t px-[22px] py-3 text-[12.5px]">
+        <div className="border-soft text-muted-foreground text-label-13 flex items-center justify-between gap-2.5 border-t px-[22px] py-3">
           {footer}
         </div>
       ) : null}

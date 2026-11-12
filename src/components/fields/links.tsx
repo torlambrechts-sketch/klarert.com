@@ -25,17 +25,17 @@ export function LinkCell({ item, field, ctx }: CellProps) {
       {shown.map((t, i) => (
         <span
           key={ids[i]}
-          className="border-line bg-soft inline-flex max-w-[11rem] min-w-0 shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
+          className="border-line bg-soft text-label-12 inline-flex max-w-[11rem] min-w-0 shrink-0 items-center gap-1 rounded-full border px-2 py-0.5"
           title={t ? `${t.displayId} ${t.name}` : 'Archived or hidden item'}
         >
-          <span className="shrink-0 font-mono text-[11px] font-medium whitespace-nowrap">
+          <span className="text-label-12-mono shrink-0 font-medium whitespace-nowrap">
             {t?.displayId ?? '—'}
           </span>
           {t ? <span className="truncate">{t.name}</span> : null}
         </span>
       ))}
       {ids.length > 2 ? (
-        <span className="text-muted-foreground text-xs font-semibold">+{ids.length - 2}</span>
+        <span className="text-muted-foreground text-label-12 font-semibold">+{ids.length - 2}</span>
       ) : null}
     </span>
   );
@@ -99,7 +99,7 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
           </Button>
         }
       >
-        <Muted className="text-sm">
+        <Muted className="text-label-13">
           Choose the sheet this field links to in the field settings first.
         </Muted>
       </EditorFrame>
@@ -126,7 +126,7 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
             return (
               <li
                 key={id}
-                className="bg-soft border-line flex max-w-full items-center gap-1 rounded-full border py-0.5 pr-1 pl-2 text-xs"
+                className="bg-soft border-line text-label-12 flex max-w-full items-center gap-1 rounded-full border py-0.5 pr-1 pl-2"
               >
                 <span className="font-mono">{t?.displayId ?? '—'}</span>
                 <span className="truncate">{t?.name ?? 'Item'}</span>
@@ -160,18 +160,18 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
       />
       <ul id={listId} className="flex max-h-56 flex-col gap-0.5 overflow-auto" aria-busy={loading}>
         {error ? (
-          <li className="text-crit text-xs">Items could not be loaded. Try again.</li>
+          <li className="text-crit text-label-12">Items could not be loaded. Try again.</li>
         ) : null}
         {!loading && !error && rows.length === 0 ? (
-          <li className="text-muted-foreground text-xs">No matching items</li>
+          <li className="text-muted-foreground text-label-12">No matching items</li>
         ) : null}
         {rows
           .filter((r) => r.id !== item.id)
           .map((r) => (
             <li key={r.id}>
-              <label className="hover:bg-sel flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm">
+              <label className="hover:bg-sel text-label-13 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1">
                 <input type="checkbox" checked={picked.includes(r.id)} onChange={() => toggle(r)} />
-                <span className="font-mono text-xs">{r.displayId}</span>
+                <span className="text-label-12-mono">{r.displayId}</span>
                 <span className="truncate">{r.name}</span>
               </label>
             </li>

@@ -79,7 +79,7 @@ function writeClosed(ids: Set<string>) {
 }
 
 const itemClass =
-  'flex h-[34px] w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[14px] text-ink-2 outline-offset-[-2px] hover:bg-nav-hover hover:text-ink aria-[current=page]:bg-nav-active aria-[current=page]:font-medium aria-[current=page]:text-ink';
+  'flex h-[34px] w-full items-center gap-2.5 rounded-md px-2.5 text-left text-label-14 text-ink outline-offset-[-2px] hover:bg-nav-hover hover:text-ink aria-[current=page]:bg-nav-active aria-[current=page]:font-medium aria-[current=page]:text-ink';
 
 function NavLink({
   href,
@@ -127,7 +127,7 @@ function SheetCode({ code }: { code: string }) {
   return (
     <span
       aria-hidden
-      className="border-line text-ink-2 flex h-5 min-w-6 shrink-0 items-center justify-center rounded-[5px] border bg-white px-1 font-mono text-[10.5px] font-medium tracking-tight"
+      className="border-line text-ink bg-background-100 text-label-12-mono flex h-5 min-w-6 shrink-0 items-center justify-center rounded-[5px] border px-1 font-medium tracking-tight"
     >
       {code}
     </span>
@@ -140,16 +140,16 @@ function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: W
       <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center gap-2.5 rounded-md px-2 text-left outline-offset-[-2px]">
         <span
           aria-hidden
-          className="bg-ink text-primary-foreground flex size-[22px] shrink-0 items-center justify-center rounded-full text-[9.5px] font-semibold"
+          className="bg-ink text-primary-foreground text-label-12 flex size-[28px] shrink-0 items-center justify-center rounded-full font-medium"
         >
           {initialsOf(current.name)}
         </span>
-        <span className="min-w-0 flex-1 truncate text-[14px] font-medium">{current.name}</span>
+        <span className="text-label-14 min-w-0 flex-1 truncate font-medium">{current.name}</span>
         <ChevronsUpDown className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
         <span className="sr-only">Switch workspace</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-60">
-        <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
+        <DropdownMenuLabel className="text-muted-foreground text-label-12 font-medium">
           Your workspaces
         </DropdownMenuLabel>
         {workspaces.map((w) => (
@@ -157,7 +157,7 @@ function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: W
             <Link href={`/${w.slug}`} className="flex items-center gap-2">
               <span
                 aria-hidden
-                className="bg-ink text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold"
+                className="bg-ink text-primary-foreground text-label-12 flex size-[28px] shrink-0 items-center justify-center rounded-full font-medium"
               >
                 {initialsOf(w.name)}
               </span>
@@ -243,7 +243,7 @@ export function SideMenu({
       active={s.id === activeSheet}
       onNavigate={onNavigate}
       testId={`rail-sheet-${s.code}`}
-      className="h-8 px-2 text-[13.5px]"
+      className="text-label-14 h-8 px-2"
     />
   );
   const newSheet =
@@ -254,7 +254,7 @@ export function SideMenu({
         icon={<Plus className={iconClass} aria-hidden />}
         active={path === `/${org}/s/new`}
         onNavigate={onNavigate}
-        className="text-muted-foreground h-8 px-2 text-[13.5px]"
+        className="text-muted-foreground text-label-14 h-8 px-2"
       />
     ) : null;
   const lastIndex = sections.length - 1;
@@ -265,7 +265,7 @@ export function SideMenu({
   return (
     <nav aria-label="Side menu" className="flex h-full flex-col px-2 pt-2.5 pb-4">
       <WorkspaceSwitcher current={current} workspaces={workspaces} />
-      <label className="border-line text-muted-foreground focus-within:border-faint my-2 mb-2.5 flex h-[34px] cursor-text items-center gap-2 rounded-md border bg-white pr-1.5 pl-2.5 focus-within:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]">
+      <label className="border-line text-muted-foreground focus-within:border-focus bg-background-100 my-2 mb-2.5 flex h-[34px] cursor-text items-center gap-2 rounded-md border pr-1.5 pl-2.5 focus-within:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]">
         <Search className="size-4 shrink-0" aria-hidden />
         <input
           ref={findRef}
@@ -281,12 +281,12 @@ export function SideMenu({
           placeholder="Find"
           aria-label="Find in menu"
           autoComplete="off"
-          className="text-ink placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-[14px] outline-none [&::-webkit-search-cancel-button]:hidden"
+          className="text-ink placeholder:text-muted-foreground text-label-14 min-w-0 flex-1 bg-transparent outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         {onNavigate ? null : (
           <kbd
             aria-hidden
-            className="border-line bg-subtle rounded border px-1.5 font-mono text-[11px] leading-[18px]"
+            className="border-line bg-subtle text-label-12-mono rounded border px-1.5 leading-[18px]"
           >
             F
           </kbd>
@@ -312,7 +312,7 @@ export function SideMenu({
             hidden={!hit('My work')}
             trailing={
               myWorkCount > 0 ? (
-                <span className="border-crit-line bg-crit-soft text-crit-ink rounded-full border px-1.5 font-mono text-[11px] leading-[17px]">
+                <span className="border-crit-line bg-crit-soft text-crit-ink text-label-12-mono rounded-full border px-1.5 leading-[17px]">
                   {myWorkCount}
                   <span className="sr-only"> waiting</span>
                 </span>
@@ -325,7 +325,9 @@ export function SideMenu({
           <>
             <div className="bg-line mx-1 my-2.5 h-px" />
             {q ? null : (
-              <h2 className="text-muted-foreground px-2.5 pb-1.5 text-xs font-medium">Insights</h2>
+              <h2 className="text-muted-foreground text-label-12 px-2.5 pb-1.5 font-medium">
+                Insights
+              </h2>
             )}
             <ul className="flex flex-col gap-px">
               <NavLink
@@ -350,7 +352,7 @@ export function SideMenu({
 
         <div className="bg-line mx-1 my-2.5 h-px" />
         {q ? null : (
-          <h2 className="text-muted-foreground px-2.5 pb-1.5 text-xs font-medium">Sheets</h2>
+          <h2 className="text-muted-foreground text-label-12 px-2.5 pb-1.5 font-medium">Sheets</h2>
         )}
         {sections.length === 0 ? <ul className="flex flex-col gap-px">{newSheet}</ul> : null}
         {sections.map((s, i) => {
@@ -396,7 +398,9 @@ export function SideMenu({
           <>
             <div className="bg-line mx-1 my-2.5 h-px" />
             {q ? null : (
-              <h2 className="text-muted-foreground px-2.5 pb-1.5 text-xs font-medium">Platform</h2>
+              <h2 className="text-muted-foreground text-label-12 px-2.5 pb-1.5 font-medium">
+                Platform
+              </h2>
             )}
             <ul className="flex flex-col gap-px">
               <NavLink
@@ -434,7 +438,7 @@ export function SideMenu({
         !hit('Home') &&
         !hit('My work') &&
         sections.every((s) => !s.sheets.some((x) => hit(x.name)) && !hit(s.name)) ? (
-          <p className="text-muted-foreground px-2.5 py-2 text-[13px]">Nothing matches.</p>
+          <p className="text-muted-foreground text-copy-13 px-2.5 py-2">Nothing matches.</p>
         ) : null}
       </div>
     </nav>

@@ -36,14 +36,14 @@ export default async function PublicFormPage({ params }: { params: Promise<{ tok
             layout={form.layout}
           />
         ) : (
-          <section className="border-line rounded-xl border bg-white p-6 shadow-xs">
-            <h1 className="text-[22px]">This form is not available</h1>
-            <p className="text-muted-foreground mt-2 text-sm">
+          <section className="border-line bg-background-100 rounded-xl border p-6">
+            <h1 className="text-heading-24">This form is not available</h1>
+            <p className="text-muted-foreground text-copy-13 mt-2">
               The link was turned off or is not complete. Ask the person who sent it for a new one.
             </p>
           </section>
         )}
-        <p className="text-muted-foreground text-center text-xs">Compliance OS</p>
+        <p className="text-muted-foreground text-label-12 text-center">Compliance OS</p>
       </div>
     </main>
   );

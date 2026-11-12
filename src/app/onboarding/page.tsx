@@ -18,7 +18,7 @@ export default async function OnboardingPage({
 
   return (
     <main className="bg-soft flex min-h-dvh items-center justify-center px-4 py-10">
-      <div className="bg-card border-line w-full max-w-md rounded-[var(--radius-card)] border p-6 sm:p-8">
+      <div className="bg-card border-line w-full max-w-md rounded-lg border p-6 sm:p-8">
         {!session.profile ? (
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-1">
@@ -39,7 +39,7 @@ export default async function OnboardingPage({
             <CreateWorkspaceForm defaultTimeZone="Europe/London" />
             {workspaces.length > 0 ? (
               <div className="border-line flex flex-col gap-2 border-t pt-4">
-                <h2 className="text-sm font-semibold">Your workspaces</h2>
+                <h2 className="text-label-13 font-semibold">Your workspaces</h2>
                 <ul className="flex flex-col gap-1">
                   {workspaces.map((w) => (
                     <li key={w.id}>

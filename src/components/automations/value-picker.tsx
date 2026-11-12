@@ -117,7 +117,7 @@ export function ValuePicker({
                       setDays(Math.max(0, Math.min(3650, Number(e.target.value) || 0)))
                     }
                   />
-                  <span className="text-sm">days</span>
+                  <span className="text-label-13">days</span>
                 </div>
               ) : (
                 <Button

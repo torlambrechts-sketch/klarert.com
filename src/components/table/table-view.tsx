@@ -136,7 +136,7 @@ export function TableView(p: TableViewProps) {
 
 function Notice({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-line text-cell flex flex-wrap items-center gap-1 rounded-[var(--radius-card)] border border-dashed px-4 py-3">
+    <div className="border-line text-label-14 flex flex-wrap items-center gap-1 rounded-lg border border-dashed px-4 py-3">
       {children}
     </div>
   );

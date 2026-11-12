@@ -19,7 +19,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
   return (
     <main className="bg-soft flex min-h-dvh items-center justify-center px-4 py-10">
-      <div className="bg-card border-line flex w-full max-w-md flex-col gap-5 rounded-[var(--radius-card)] border p-6 sm:p-8">
+      <div className="bg-card border-line flex w-full max-w-md flex-col gap-5 rounded-lg border p-6 sm:p-8">
         {!invite ? (
           <>
             <h1>Invite not found</h1>
@@ -49,7 +49,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
               </p>
             </div>
             {invite.email.toLowerCase() !== email.toLowerCase() ? (
-              <p role="alert" className="text-warn text-sm">
+              <p role="alert" className="text-warn text-copy-13">
                 You are signed in as {email}. Sign out and sign in as {invite.email} to accept.
               </p>
             ) : (

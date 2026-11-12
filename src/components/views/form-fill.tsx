@@ -52,7 +52,7 @@ function Label({
   required: boolean;
 }) {
   return (
-    <label htmlFor={htmlFor} className="text-[14px] font-medium">
+    <label htmlFor={htmlFor} className="text-label-14 font-medium">
       {children}
       {required ? (
         <>
@@ -86,7 +86,7 @@ export function FormFill(p: FormFillProps) {
           onChange={(e) => p.onName(e.target.value)}
         />
         {p.errors.__name ? (
-          <p id={`${nameId}-error`} className="text-crit text-sm">
+          <p id={`${nameId}-error`} className="text-crit text-copy-13">
             {p.errors.__name}
           </p>
         ) : null}
@@ -145,7 +145,7 @@ function Question({
         {q.label}
       </Label>
       {q.help ? (
-        <p id={`${id}-help`} className="text-muted-foreground -mt-1 text-xs">
+        <p id={`${id}-help`} className="text-muted-foreground text-label-12 -mt-1">
           {q.help}
         </p>
       ) : null}
@@ -208,7 +208,7 @@ function Question({
         </Popover>
       )}
       {error ? (
-        <p id={`${id}-error`} className="text-crit text-sm">
+        <p id={`${id}-error`} className="text-crit text-copy-13">
           {error}
         </p>
       ) : null}

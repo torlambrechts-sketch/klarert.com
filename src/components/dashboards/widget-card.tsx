@@ -26,11 +26,11 @@ export const resultMeta = (result: WidgetResult | undefined): string | null =>
 export function WidgetBody({ result, org }: { result: WidgetResult | undefined; org: string }) {
   if (!result)
     return (
-      <p className="text-muted-foreground m-0 p-4 text-[13px]">This widget could not be loaded.</p>
+      <p className="text-muted-foreground text-copy-13 m-0 p-4">This widget could not be loaded.</p>
     );
   if (result.kind === 'problem')
     return (
-      <p className="text-muted-foreground m-0 flex items-start gap-1.5 p-4 text-[13px]">
+      <p className="text-muted-foreground text-copy-13 m-0 flex items-start gap-1.5 p-4">
         <AlertTriangle className="text-warn mt-0.5 size-4 shrink-0" aria-hidden />
         <span>{result.message} Edit or remove this widget.</span>
       </p>
@@ -41,7 +41,7 @@ export function WidgetBody({ result, org }: { result: WidgetResult | undefined; 
         <span className="flex items-center gap-2">
           <span
             className={cn(
-              'text-[28px] leading-[1.1] font-semibold tracking-[-0.03em] tabular-nums',
+              'text-heading-32 leading-none tabular-nums',
               result.tone === 'crit' && result.value > 0 && 'text-crit-ink',
             )}
           >
@@ -53,7 +53,7 @@ export function WidgetBody({ result, org }: { result: WidgetResult | undefined; 
             </ToneBadge>
           ) : null}
         </span>
-        <span className="text-muted-foreground text-[13px]">{result.caption}</span>
+        <span className="text-muted-foreground text-label-13">{result.caption}</span>
       </div>
     );
   if (result.kind === 'bars')
@@ -71,13 +71,13 @@ function Bars({ bars, total, caption }: { bars: Bar[]; total: number; caption: s
         {bars.map((b) => (
           <li
             key={b.key}
-            className="grid grid-cols-[minmax(0,140px)_minmax(0,1fr)_auto] items-center gap-2.5 text-[13px]"
+            className="text-label-13 grid grid-cols-[minmax(0,140px)_minmax(0,1fr)_auto] items-center gap-2.5"
           >
             <span className="min-w-0 truncate" title={b.label}>
               {b.option ? (
                 <Chip option={b.option} className="max-w-full" />
               ) : (
-                <span className="text-ink-2">{b.label}</span>
+                <span className="text-ink">{b.label}</span>
               )}
             </span>
             <span aria-hidden className="bg-soft h-2.5 overflow-hidden rounded-full">
@@ -92,14 +92,14 @@ function Bars({ bars, total, caption }: { bars: Bar[]; total: number; caption: s
                 }}
               />
             </span>
-            <span className="text-ink w-8 text-right font-mono text-[12.5px] tabular-nums">
+            <span className="text-ink text-label-13-mono w-8 text-right tabular-nums">
               {b.value}
               <span className="sr-only"> of {total}</span>
             </span>
           </li>
         ))}
       </ul>
-      <p className="text-muted-foreground m-0 text-[12.5px]">{caption}</p>
+      <p className="text-muted-foreground text-copy-13 m-0">{caption}</p>
     </div>
   );
 }
@@ -107,7 +107,7 @@ function Bars({ bars, total, caption }: { bars: Bar[]; total: number; caption: s
 function Rows({ result, org }: { result: Extract<WidgetResult, { kind: 'rows' }>; org: string }) {
   if (result.rows.length === 0)
     return (
-      <p className="text-muted-foreground m-0 p-4 text-[13px]">
+      <p className="text-muted-foreground text-copy-13 m-0 p-4">
         {result.empty ?? 'Nothing to show yet.'}
       </p>
     );
@@ -116,7 +116,7 @@ function Rows({ result, org }: { result: Extract<WidgetResult, { kind: 'rows' }>
       {result.columns ? (
         <div
           aria-hidden
-          className="text-muted-foreground flex justify-between px-[10px] pt-[4px] pb-[6px] text-[12px]"
+          className="text-muted-foreground text-label-12 flex justify-between px-[10px] pt-[4px] pb-[6px]"
         >
           <span>{result.columns[0]}</span>
           <span>{result.columns[1]}</span>
@@ -141,22 +141,22 @@ function RowLine({ row, href, column }: { row: WidgetRow; href: string | null; c
       {filled ? (
         <i
           aria-hidden
-          className="bg-soft group-hover:bg-line-2 absolute inset-y-1 left-0 rounded-[5px]"
+          className="bg-soft group-hover:bg-gray-alpha-200 absolute inset-y-1 left-0 rounded-[5px]"
           style={{ width: `${Math.max(0, Math.min(100, row.fill!))}%` }}
         />
       ) : null}
-      <span className="relative flex min-w-0 flex-1 flex-col text-[13.5px] font-medium">
+      <span className="text-label-14 relative flex min-w-0 flex-1 flex-col font-medium">
         <span className="truncate">{row.label}</span>
         <small
           className={cn(
-            'truncate text-[12px] font-normal',
-            filled ? 'text-ink-3' : 'text-muted-foreground',
+            'text-label-12 truncate font-normal',
+            filled ? 'text-muted-foreground' : 'text-muted-foreground',
           )}
         >
           {row.sub}
         </small>
       </span>
-      <b className="relative font-mono text-[13.5px] font-medium tabular-nums">
+      <b className="text-label-14-mono relative font-medium tabular-nums">
         {column ? <span className="sr-only">{column}: </span> : null}
         {row.value}
         {attention ? <span className="sr-only"> (needs attention)</span> : null}
@@ -202,7 +202,7 @@ function Heatmap({ result }: { result: Extract<WidgetResult, { kind: 'heatmap' }
           <div role="row" key={row[0]!.y} className="contents">
             <span
               role="rowheader"
-              className="text-muted-foreground grid place-items-center font-mono text-[11.5px]"
+              className="text-muted-foreground text-label-12-mono grid place-items-center"
             >
               <span className="sr-only">{axes.y} </span>
               {row[0]!.y}
@@ -213,7 +213,7 @@ function Heatmap({ result }: { result: Extract<WidgetResult, { kind: 'heatmap' }
                 key={c.x}
                 title={`${axes.y} ${c.y} · ${axes.x.toLowerCase()} ${c.x}: ${c.count} · ${c.level}`}
                 className={cn(
-                  'grid aspect-[1.5/1] min-h-[36px] place-items-center rounded-md text-[13.5px] font-semibold tabular-nums',
+                  'text-label-14 grid aspect-[1.5/1] min-h-[36px] place-items-center rounded-md font-semibold tabular-nums',
                   c.count > 0 ? HEAT[c.rank] : 'bg-subtle',
                 )}
               >
@@ -230,14 +230,14 @@ function Heatmap({ result }: { result: Extract<WidgetResult, { kind: 'heatmap' }
           {result.rows[0]!.map((c) => (
             <span
               key={c.x}
-              className="text-muted-foreground grid h-[20px] place-items-center font-mono text-[11.5px]"
+              className="text-muted-foreground text-label-12-mono grid h-[20px] place-items-center"
             >
               {c.x}
             </span>
           ))}
         </div>
       </div>
-      <div className="text-muted-foreground mt-[12px] flex flex-wrap justify-between gap-2.5 text-[12px]">
+      <div className="text-muted-foreground text-label-12 mt-[12px] flex flex-wrap justify-between gap-2.5">
         <span>
           Rows: {axes.y.toLowerCase()} · Columns: {axes.x.toLowerCase()}
         </span>
@@ -246,7 +246,7 @@ function Heatmap({ result }: { result: Extract<WidgetResult, { kind: 'heatmap' }
             <li key={l.rank} className="flex items-center gap-1">
               <i aria-hidden className={cn('size-2.5 rounded-[3px]', HEAT[l.rank])} />
               {l.label}
-              <span className="text-ink-3 font-mono tabular-nums">{l.count}</span>
+              <span className="text-muted-foreground font-mono tabular-nums">{l.count}</span>
             </li>
           ))}
         </ul>

@@ -11,13 +11,13 @@ export default function Loading() {
         <h1 className="m-0">Dashboards</h1>
         <div className="bg-soft h-5 w-full max-w-[560px] animate-pulse rounded" />
       </div>
-      <div className="bg-soft h-[38px] w-[260px] animate-pulse rounded-md" />
-      <div className="border-line h-[440px] animate-pulse rounded-[10px] border bg-white" />
+      <div className="bg-soft h-[40px] w-[260px] animate-pulse rounded-md" />
+      <div className="border-line bg-background-100 h-[440px] animate-pulse rounded-lg border" />
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="border-line bg-subtle h-[380px] animate-pulse rounded-[10px] border"
+            className="border-line bg-subtle h-[380px] animate-pulse rounded-lg border"
           />
         ))}
       </div>

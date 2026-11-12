@@ -180,7 +180,7 @@ export function ItemPanel(props: ItemPanelProps) {
             }
           }}
           className={cn(
-            'group/panel fixed top-0 right-0 bottom-0 z-40 flex w-[min(470px,100vw)] flex-col border-l border-[var(--line)] bg-white shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] outline-none',
+            'group/panel border-line bg-background-100 shadow-fullscreen fixed top-0 right-0 bottom-0 z-40 flex w-[min(470px,100vw)] flex-col border-l outline-none',
             'data-[wide=true]:w-[min(1080px,calc(100vw-100px))]',
             'max-[759px]:bottom-[64px] max-[759px]:w-full max-[759px]:data-[wide=true]:w-full',
           )}
@@ -188,7 +188,7 @@ export function ItemPanel(props: ItemPanelProps) {
           <Tabs.Root value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col">
             <header className="border-line flex flex-col gap-1.5 border-b px-4 pt-3.5 sm:px-6">
               <div className="flex items-center gap-1">
-                <p className="text-muted-foreground m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate text-[13px]">
+                <p className="text-muted-foreground text-copy-13 m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate">
                   <span className="truncate">{ctx.sheet.name}</span>
                   <span aria-hidden className="text-line-strong">
                     /
@@ -270,7 +270,7 @@ export function ItemPanel(props: ItemPanelProps) {
                   <input
                     autoFocus
                     aria-label={`${ctx.sheet.itemLabel} name`}
-                    className="border-input focus-visible:border-faint min-w-0 flex-1 rounded-md border px-2 py-1 text-[20px] font-semibold outline-none"
+                    className="border-input focus-visible:border-focus text-heading-20 min-w-0 flex-1 rounded-md border px-2 py-1 outline-none"
                     value={name}
                     maxLength={500}
                     onChange={(e) => setName(e.target.value)}
@@ -291,7 +291,7 @@ export function ItemPanel(props: ItemPanelProps) {
                     ref={titleRef}
                     tabIndex={-1}
                     className={cn(
-                      'm-0 min-w-0 flex-1 text-[20px] leading-snug font-semibold tracking-[-0.02em] break-words outline-none focus-visible:underline',
+                      'text-heading-20 m-0 min-w-0 flex-1 break-words outline-none focus-visible:underline',
                       canEditItem && 'cursor-text',
                     )}
                     onClick={() => canEditItem && setRenaming(true)}
@@ -312,8 +312,8 @@ export function ItemPanel(props: ItemPanelProps) {
                   ) : null}
                 </div>
               )}
-              <p className="m-0 flex flex-wrap items-center gap-2 text-xs">
-                <span className="bg-soft text-ink-2 rounded px-1.5 font-mono text-[11.5px] leading-[18px]">
+              <p className="text-label-12 m-0 flex flex-wrap items-center gap-2">
+                <span className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px]">
                   {item.displayId}
                 </span>
                 {item.locked ? (
@@ -332,7 +332,7 @@ export function ItemPanel(props: ItemPanelProps) {
                   <Tabs.Trigger
                     key={v}
                     value={v!}
-                    className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus h-10 border-b-2 border-transparent px-px text-[14px] focus-visible:outline-2"
+                    className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-14 h-10 border-b-2 border-transparent px-px focus-visible:outline-2"
                   >
                     {label}
                   </Tabs.Trigger>

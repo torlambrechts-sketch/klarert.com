@@ -18,7 +18,7 @@ export function OfflineBanner() {
         <p
           role="status"
           data-testid="offline-banner"
-          className="border-warn/40 text-warn bg-warn-soft pointer-events-auto m-0 flex items-center gap-2 rounded-[var(--radius-card)] border px-3 py-2 text-sm font-semibold shadow-sm"
+          className="border-warn/40 text-warn bg-warn-soft text-copy-13 shadow-tooltip pointer-events-auto m-0 flex items-center gap-2 rounded-lg border px-3 py-2 font-semibold"
         >
           <WifiOff className="size-4" aria-hidden />
           You are offline. Changes will fail until you reconnect.

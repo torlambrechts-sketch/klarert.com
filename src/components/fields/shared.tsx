@@ -25,7 +25,7 @@ export function Bang() {
   return (
     <span
       aria-hidden
-      className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full border border-current text-[9px] leading-none font-bold"
+      className="text-label-12 inline-flex size-[16px] shrink-0 items-center justify-center rounded-full border border-current leading-none font-bold"
     >
       !
     </span>
@@ -56,16 +56,26 @@ export function OptionDot({ option }: { option: LabelOption }) {
   );
 }
 
-/** A compact option label: several in one cell (multi-select), cards, pickers. A dot, the words and the marks. */
+/** An option colour as the Table's soft box: the tint, a border in the same hue and the hue's dark step for words. */
+export const tintStyle = (color: string): React.CSSProperties => ({
+  background: `var(--tint-${color}-bg, var(--tint-grey-bg))`,
+  borderColor: `var(--tint-${color}-line, var(--tint-grey-line))`,
+  color: `var(--tint-${color}-ink, var(--tint-grey-ink))`,
+});
+
+/**
+ * A compact option label: several in one cell (multi-select), cards, pickers. The option's tint, its words and the
+ * marks ("!" for action needed, a check for done).
+ */
 export function Chip({ option, className }: { option: LabelOption; className?: string }) {
   return (
     <span
       className={cn(
-        'border-line text-ink inline-flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-full border bg-white px-2.5 text-[12.5px] font-medium',
+        'text-label-13 inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-full border px-2.5 font-medium',
         className,
       )}
+      style={tintStyle(option.color)}
     >
-      <OptionDot option={option} />
       <OptionMarks option={option}>
         <span className="truncate">{option.label}</span>
       </OptionMarks>
@@ -74,8 +84,9 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
 }
 
 /**
- * The value of a one-option cell (Table): a colour dot and the label, left-aligned, with "!" for options that need
- * action and a check for done ones. The Grid density keeps a 30 px line, the List density 34 px.
+ * The value of a one-option cell. In the Table: a box inset 8 px in the cell, 6 px radius, the option's tint with a
+ * border in the same hue and the words centred in its dark step, with "!" for options that need action and a check
+ * for done ones. Elsewhere (Grid 30 px, List 34 px): a colour dot and the label, left-aligned.
  */
 export function Block({
   option,
@@ -85,11 +96,11 @@ export function Block({
   density: 'grid' | 'list' | 'table';
 }) {
   if (density === 'table')
-    // monday-style: the option fills the whole cell, white text on the option's solid colour
     return (
       <span
-        className="absolute inset-px flex min-w-0 items-center justify-center gap-1.5 px-[10px] text-[13.5px] font-medium text-white"
-        style={{ background: solidVar(option.color) }}
+        data-box
+        className="text-label-14 absolute inset-[8px] flex min-w-0 items-center justify-center gap-1.5 rounded-md border px-[10px] font-medium"
+        style={tintStyle(option.color)}
       >
         <OptionMarks option={option}>
           <span className="truncate">{option.label}</span>
@@ -100,7 +111,7 @@ export function Block({
     <span
       data-pill
       className={cn(
-        'text-ink flex w-full min-w-0 items-center gap-2 px-1.5 text-[14px] font-medium',
+        'text-ink text-label-14 flex w-full min-w-0 items-center gap-2 px-1.5 font-medium',
         density === 'grid' ? 'h-[30px]' : 'h-[34px]',
       )}
     >
@@ -113,15 +124,24 @@ export function Block({
 }
 
 /**
- * One option as an outlined pill (the Table's look for picked-from-a-list values: dropdown, role, team …): the words
- * and the marks, no colour fill. Status-like types fill the cell instead (Block).
+ * A four-bar meter beside a number (number fields with bands, risk scores): `step` bars of four are filled in the
+ * step's colour. Decorative for sight; `label` (the level in words) is read out and shown on hover.
  */
-export function Pill({ option }: { option: LabelOption }) {
+export function Meter({ step, label }: { step: 1 | 2 | 3 | 4; label: string }) {
   return (
-    <span className="border-line text-ink-2 inline-flex h-[24px] max-w-full min-w-0 items-center gap-1 rounded-full border bg-white px-[10px] text-[12.5px] leading-[18px] font-medium">
-      <OptionMarks option={option}>
-        <span className="truncate">{option.label}</span>
-      </OptionMarks>
+    <span className="inline-flex shrink-0 items-end gap-[2px]" title={label}>
+      {[1, 2, 3, 4].map((n) => (
+        <span
+          key={n}
+          aria-hidden
+          className="block w-[4px] rounded-full"
+          style={{
+            height: `${6 + n * 2}px`,
+            background: n <= step ? `var(--meter-${step})` : 'var(--meter-off)',
+          }}
+        />
+      ))}
+      <span className="sr-only">{label}</span>
     </span>
   );
 }
@@ -149,6 +169,8 @@ export function Avatar({
 }) {
   const p = ctx.people.get(id);
   const color = p?.color ?? 'dark';
+  // 24 px is the smallest circle that holds two initials in text-label-12
+  const px = Math.max(size, 24);
   return (
     <span
       aria-hidden={decorative || undefined}
@@ -156,12 +178,12 @@ export function Avatar({
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full',
         tone === 'solid'
-          ? 'border-2 border-white text-[10px] font-bold text-white'
-          : 'text-[10.5px] font-semibold shadow-[0_0_0_2px_#fff]',
+          ? 'text-label-12 border-2 border-white font-bold text-white'
+          : 'text-label-12 font-semibold shadow-[0_0_0_2px_var(--background-100)]',
       )}
       style={{
-        width: size,
-        height: size,
+        width: px,
+        height: px,
         ...(tone === 'solid' ? { background: solidVar(color) } : softAvatar(color)),
       }}
     >
@@ -186,7 +208,7 @@ export function PeopleNames({ ids, ctx }: { ids: string[]; ctx: Ctx }) {
       <Avatar id={first} ctx={ctx} size={22} decorative />
       <span className="min-w-0 truncate">{ctx.people.get(first)?.name ?? 'Former member'}</span>
       {rest > 0 ? (
-        <span className="text-muted-foreground text-meta shrink-0 font-semibold">
+        <span className="text-muted-foreground text-label-12 shrink-0 font-semibold">
           +{rest}
           <span className="sr-only">
             {' '}
@@ -210,7 +232,7 @@ export function Avatars({ ids, ctx, max = 3 }: { ids: string[]; ctx: Ctx; max?: 
         <Avatar key={id} id={id} ctx={ctx} size={26} tone="soft" />
       ))}
       {ids.length > max ? (
-        <span className="text-muted-foreground pl-2.5 text-xs font-semibold">
+        <span className="text-muted-foreground text-label-12 pl-2.5 font-semibold">
           +{ids.length - max}
           <span className="sr-only">
             {' '}
@@ -247,7 +269,7 @@ export function EditorFrame({
 }) {
   return (
     <div className="flex flex-col gap-2" role="group" aria-label={title}>
-      <p className="text-muted-foreground text-xs font-semibold">{title}</p>
+      <p className="text-muted-foreground text-label-12 font-semibold">{title}</p>
       {children}
       {footer ? <div className="flex flex-wrap justify-end gap-2 pt-1">{footer}</div> : null}
     </div>
@@ -283,7 +305,7 @@ export function SaveCancel({
 }
 
 export const inputClass =
-  'border-input h-8 w-full rounded-md border bg-white px-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-faint focus-visible:ring-[3px] focus-visible:ring-faint/25';
+  'border-input h-[32px] w-full rounded-md border bg-background-100 px-2 text-label-13 outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground hover:border-line-strong focus-visible:border-focus focus-visible:ring-[3px] focus-visible:ring-focus/25';
 
 /**
  * One-line (or multi-line) text editor. Enter saves (Ctrl/Cmd+Enter when multi-line); an input the type cannot read
@@ -358,11 +380,11 @@ export function TextEditor({
         <input {...props} inputMode={inputMode} className={inputClass} />
       )}
       {error ? (
-        <p id={`${id}-err`} role="alert" className="text-crit text-xs">
+        <p id={`${id}-err`} role="alert" className="text-crit text-label-12">
           {error}
         </p>
       ) : (
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-label-12">
           {multiline ? 'Ctrl+Enter saves. Esc cancels.' : 'Enter saves. Esc cancels.'}
         </p>
       )}
@@ -371,11 +393,10 @@ export function TextEditor({
 }
 
 /**
- * The popover every cell editor opens in (Grid, List, item panel): white, rounded, a soft shadow. Editors that draw
- * edge to edge (the option picker) mark themselves `data-flush` and the padding goes.
+ * The popover every cell editor opens in (Grid, List, item panel): Geist menu material (white, 8 px, border, the
+ * menu shadow). Editors that draw edge to edge (the option picker) mark themselves `data-flush` and the padding goes.
  */
-export const editorPopoverClass =
-  'rounded-[10px] border-line p-3 shadow-[0_10px_28px_rgb(20_20_20/0.12),0_2px_6px_rgb(20_20_20/0.06)] has-[[data-flush]]:p-0';
+export const editorPopoverClass = 'rounded-lg border-line p-3 shadow-menu has-[[data-flush]]:p-0';
 
 /** Quiet text action for the picker footer. */
 function FooterAction({
@@ -393,7 +414,7 @@ function FooterAction({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={cn(
-        'text-muted-foreground hover:text-ink focus-visible:outline-focus text-label inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 focus-visible:outline-2',
+        'text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-13 inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 font-medium focus-visible:outline-2',
         className,
       )}
     >
@@ -514,7 +535,7 @@ export function OptionsEditor({
   const canClear = allowClear && current.length > 0;
   const rowClass = (on: boolean) =>
     cn(
-      'flex min-h-9 cursor-pointer items-center gap-2.5 py-1.5 pr-3 pl-4 text-sm select-none',
+      'flex min-h-9 cursor-pointer items-center gap-2.5 py-1.5 pr-3 pl-4 text-label-13 select-none',
       // active row (mouse or keyboard): soft fill and a focus-coloured bar on the left (>= 3:1 against white)
       on && 'bg-sel shadow-[inset_3px_0_0_var(--focus)]',
     );
@@ -538,7 +559,7 @@ export function OptionsEditor({
         setActive(0);
       }}
       onKeyDown={onKey}
-      className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground h-8 w-full rounded-md border bg-white px-2.5 text-sm outline-none focus-visible:ring-2"
+      className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground bg-background-100 text-label-13 h-8 w-full rounded-md border px-2.5 outline-none focus-visible:ring-2"
     />
   );
 
@@ -548,9 +569,9 @@ export function OptionsEditor({
         data-flush
         role="group"
         aria-label={title}
-        className="flex w-[320px] max-w-full min-w-0 flex-col bg-white text-sm"
+        className="bg-background-100 text-label-13 flex w-[320px] max-w-full min-w-0 flex-col"
       >
-        <div className="px-4 pt-3 pb-2 text-[14px] font-semibold">{title}</div>
+        <div className="text-label-14 px-4 pt-3 pb-2 font-semibold">{title}</div>
         <ul
           ref={listRef}
           id={listId}
@@ -572,7 +593,7 @@ export function OptionsEditor({
                 onClick={() => pick(o.id)}
                 onMouseMove={() => i !== at && setActive(i)}
                 className={cn(
-                  'flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] px-3 text-[13px] font-semibold text-white select-none',
+                  'text-label-13 flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] px-3 font-semibold text-white select-none',
                   on && 'ring-ink ring-2 ring-offset-2',
                   i === at && !on && 'ring-ink/40 ring-2 ring-offset-1',
                 )}
@@ -595,7 +616,7 @@ export function OptionsEditor({
               onClick={() => void addTyped()}
               onMouseMove={() => at !== shown.length && setActive(shown.length)}
               className={cn(
-                'border-line text-ink flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] border border-dashed px-3 text-[13px] font-semibold select-none',
+                'border-line text-ink text-label-13 flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] border border-dashed px-3 font-semibold select-none',
                 at === shown.length && 'bg-sel',
               )}
             >
@@ -609,7 +630,7 @@ export function OptionsEditor({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onCommit([])}
-                className="bg-soft hover:bg-subtle text-muted-foreground flex min-h-[34px] w-full items-center justify-center rounded-[3px] text-[13px] font-semibold"
+                className="bg-soft hover:bg-subtle text-muted-foreground text-label-13 flex min-h-[34px] w-full items-center justify-center rounded-[3px] font-semibold"
               >
                 Clear
               </button>
@@ -617,13 +638,13 @@ export function OptionsEditor({
           ) : null}
         </ul>
         {shown.length === 0 && !add ? (
-          <p role="status" className="text-muted-foreground px-4 pb-2 text-sm">
+          <p role="status" className="text-muted-foreground text-copy-13 px-4 pb-2">
             No matches
           </p>
         ) : null}
         <div className="border-line flex flex-col gap-2 border-t px-3 py-2.5">
           {searchBox(onAdd ? 'Search or add a label' : 'Search')}
-          <div className="text-muted-foreground flex items-center gap-2 text-xs leading-snug">
+          <div className="text-muted-foreground text-label-12 flex items-center gap-2 leading-snug">
             <span className="flex-1">
               {onAdd ? 'Type a name to add a label.' : 'Labels are set in the field settings.'}
             </span>
@@ -642,7 +663,7 @@ export function OptionsEditor({
       data-flush
       role="group"
       aria-label={title}
-      className="flex min-w-0 flex-col bg-white text-sm"
+      className="bg-background-100 text-label-13 flex min-w-0 flex-col"
     >
       <div className="p-2">
         <div className="relative">
@@ -668,7 +689,7 @@ export function OptionsEditor({
               setActive(0);
             }}
             onKeyDown={onKey}
-            className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground h-9 w-full rounded-md border bg-white pr-2 pl-8 text-sm outline-none focus-visible:ring-2"
+            className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground bg-background-100 text-label-13 h-9 w-full rounded-md border pr-2 pl-8 outline-none focus-visible:ring-2"
           />
         </div>
       </div>
@@ -725,7 +746,7 @@ export function OptionsEditor({
         ) : null}
       </ul>
       {shown.length === 0 ? (
-        <p role="status" className="text-muted-foreground px-4 pt-0.5 pb-2 text-sm">
+        <p role="status" className="text-muted-foreground text-copy-13 px-4 pt-0.5 pb-2">
           No matches
         </p>
       ) : null}
@@ -775,7 +796,7 @@ export function ExplainEditor({
         </Button>
       }
     >
-      <div className="flex flex-col gap-1.5 text-sm">{children}</div>
+      <div className="text-label-13 flex flex-col gap-1.5">{children}</div>
     </EditorFrame>
   );
 }

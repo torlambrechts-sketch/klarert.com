@@ -9,7 +9,9 @@ export function Toaster(props: ToasterProps) {
       theme="dark"
       position="bottom-center"
       duration={4000}
-      toastOptions={{ style: { background: 'var(--brand)', color: '#fff', border: 'none' } }}
+      toastOptions={{
+        style: { background: 'var(--brand)', color: 'var(--background-100)', border: 'none' },
+      }}
       {...props}
     />
   );
