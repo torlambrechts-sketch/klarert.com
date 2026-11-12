@@ -118,7 +118,7 @@ begin
   foreach tok in array array[
     '\$1->>?\d+\M',
     '''[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''',
-    '''(number|array|string|boolean|object)?''',
+    '''(number|array|string|boolean|object|start|end)?''',
     '::(numeric|date|text|jsonb|uuid|int)(\[\])?\M',
     '\mi\.(values|name|display_id|group_id|id)\M',
     '\mitem_links l\M', '\mfiles f\M',
