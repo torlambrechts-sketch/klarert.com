@@ -60,7 +60,9 @@ test('a sheet opens to its steps; Running now moves items, asks for a comment an
     running.getByRole('listitem').filter({ hasText: name }).filter({ hasText: 'Pump B' }),
   ).toHaveCount(0);
 
+  const moved = nextAnswer(page);
   await pumpA.getByLabel(/^Move .+-001 to stage$/).selectOption({ label: 'Working on it' });
+  await moved;
   await expect(pumpA).toContainText(`${name} · Working on it`);
 
   // Stuck needs a comment; then the automation runs

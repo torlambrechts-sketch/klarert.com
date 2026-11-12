@@ -104,6 +104,35 @@ export async function fetchItems(db: Db, sheetId: string): Promise<Item[]> {
   return rows.map(toItem);
 }
 
+/** Every live item of the given sheets in one paged read, by sheet (workspace-wide pages such as Workflow). */
+export async function fetchItemsOfSheets(
+  db: Db,
+  orgId: string,
+  sheetIds: string[],
+): Promise<Map<string, Item[]>> {
+  const out = new Map<string, Item[]>(sheetIds.map((id) => [id, []]));
+  if (sheetIds.length === 0) return out;
+  const head = await db
+    .from('items')
+    .select('id', { count: 'exact', head: true })
+    .eq('org_id', orgId)
+    .is('archived_at', null);
+  if (head.error) throw new Error(head.error.message);
+  const rows = await paged(head.count ?? 0, (from, to) =>
+    db
+      .from('items')
+      .select(ITEM_COLUMNS)
+      .eq('org_id', orgId)
+      .is('archived_at', null)
+      .order('sheet_id')
+      .order('position')
+      .order('id')
+      .range(from, to),
+  );
+  for (const it of rows.map(toItem)) out.get(it.sheetId)?.push(it);
+  return out;
+}
+
 export async function fetchItemsById(db: Db, ids: string[]): Promise<Item[]> {
   return chunked(ids, async (part) =>
     must(await db.from('items').select(ITEM_COLUMNS).in('id', part)).map(toItem),
