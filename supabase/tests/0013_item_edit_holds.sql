@@ -1,8 +1,8 @@
--- item_created holds (0014_item_created_settle.sql). Run: pnpm db:test
+-- Edit holds (0015_item_edit_holds.sql). Run: pnpm db:test
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(5);
+select plan(7);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000c1', 'hold-editor@a.test'),
@@ -21,17 +21,22 @@ insert into groups (id, org_id, sheet_id, name, position) values
 
 set local role authenticated;
 create temp table t_new as
-  select (create_item('cccccccc-1111-0000-0000-000000000000', 'cccccccc-2222-0000-0000-000000000000', 'New row', 'a0')).id;
+  select (create_item('cccccccc-1111-0000-0000-000000000000', 'cccccccc-2222-0000-0000-000000000000', 'New row', 'a0',
+                      '{"f1":"before"}')).id;
 
-select lives_ok($$ select hold_item_created((select id from t_new)) $$, 'the creator can hold item_created');
-select isnt((select created_pending_at from items where id = (select id from t_new)), null, 'the item is held');
+select is(hold_item((select id from t_new)), true, 'an editor can hold an item');
+update items set values = '{"f1":"after"}' where id = (select id from t_new);
+select is(hold_item((select id from t_new)), true, 'holding again extends the hold');
+select is((select held_snapshot from items where id = (select id from t_new)), '{"f1":"before"}'::jsonb,
+  'the snapshot keeps the values from the start of the edit');
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c2","role":"authenticated"}', true);
-select throws_ok($$ select release_item_created((select id from t_new)) $$, 'not allowed', 'a viewer cannot release a hold');
+select throws_ok($$ select release_item((select id from t_new)) $$, 'not allowed', 'a viewer cannot release a hold');
+select throws_ok($$ select hold_item((select id from t_new)) $$, 'not allowed', 'a viewer cannot hold an item');
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
-select is(release_item_created((select id from t_new)), true, 'the first release runs the automations');
-select is(release_item_created((select id from t_new)), false, 'a second release does nothing');
+select is(release_item((select id from t_new)) -> 'values', '{"f1":"before"}'::jsonb, 'release returns the snapshot once');
+select is(release_item((select id from t_new)), null, 'a second release returns nothing');
 
 select * from finish();
 rollback;

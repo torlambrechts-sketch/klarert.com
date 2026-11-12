@@ -16,7 +16,10 @@ import { parseViewConfig, toViewType, type SavedView } from '@/engine/views/conf
 import type { Database } from './database.types';
 
 type Tables = Database['public']['Tables'];
-export type ItemDbRow = Omit<Tables['items']['Row'], 'created_pending_at'>;
+export type ItemDbRow = Omit<
+  Tables['items']['Row'],
+  'held_at' | 'held_by' | 'held_created' | 'held_snapshot'
+>;
 export type FieldDbRow = Tables['fields']['Row'];
 export type GroupDbRow = Tables['groups']['Row'];
 export type LinkDbRow = Tables['item_links']['Row'];

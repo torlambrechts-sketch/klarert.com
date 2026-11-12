@@ -56,7 +56,7 @@ export function ItemPanel(props: ItemPanelProps) {
     typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null),
   );
   const contentRef = useRef<HTMLDivElement>(null);
-  const valueCommit = useValueCommit(data, ctx, actions);
+  const valueCommit = useValueCommit(data, ctx, actions, { hold: true });
 
   useEffect(() => {
     setRenaming(false);
