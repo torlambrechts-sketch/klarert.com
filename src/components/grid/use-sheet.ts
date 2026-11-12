@@ -43,7 +43,7 @@ import {
   upsertItem,
   upsertLink,
 } from '@/lib/sheet-cache';
-import { fetchRelated, fetchSheetData } from '@/lib/sheet-query';
+import { fetchItemsById, fetchRelated, fetchSheetData } from '@/lib/sheet-query';
 import {
   toField,
   toGroup,
@@ -211,8 +211,22 @@ export function useRelatedRealtime(sheetId: string, relatedSheetIds: string[]) {
     const db = createClient();
     const key = sheetKey(sheetId);
     let cancelled = false;
-    let wasLive = false;
     let channel: ReturnType<typeof db.channel> | null = null;
+    // read the related items again: when the channel (re)joins, an update made before it joined was not sent, and
+    // every 30 s while the page is visible, because the realtime service can drop events (docs/02 §9)
+    const refresh = async () => {
+      const related = qc.getQueryData<SheetData>(key)?.related.items.map((i) => i.id) ?? [];
+      if (cancelled || related.length === 0) return;
+      try {
+        const fresh = await fetchItemsById(db, related.slice(0, 500));
+        qc.setQueryData<SheetData>(key, (d) => (d ? fresh.reduce(patchRelated, d) : d));
+      } catch {
+        // the next event or refresh brings them
+      }
+    };
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') void refresh();
+    }, 30_000);
     (async () => {
       const { data } = await db.auth.getSession();
       if (cancelled) return;
@@ -229,14 +243,12 @@ export function useRelatedRealtime(sheetId: string, relatedSheetIds: string[]) {
           },
         )
         .subscribe((s) => {
-          // a reconnect may have missed updates: read the sheet again
-          if (s !== 'SUBSCRIBED') return;
-          if (wasLive) void qc.invalidateQueries({ queryKey: key });
-          wasLive = true;
+          if (s === 'SUBSCRIBED') void refresh();
         });
     })();
     return () => {
       cancelled = true;
+      clearInterval(timer);
       if (channel) void db.removeChannel(channel);
     };
   }, [qc, sheetId, ids]);
@@ -628,12 +640,14 @@ export function useSheetActions(org: string, sheetId: string) {
           clickButtonAction({ org, sheetId, itemId: item.id, fieldId: field.id }),
         );
         if (!r.ok) return showError(r.error);
+        const settled = r.data.item;
+        if (settled && !settled.archivedAt) patch((d) => upsertItem(d, settled));
         showMessages(r.data.messages);
       } finally {
         useRunningButtons.getState().stop(key);
       }
     },
-    [org, run, sheetId],
+    [org, patch, run, sheetId],
   );
 
   // ───────────── fields ─────────────

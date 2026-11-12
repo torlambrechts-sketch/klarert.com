@@ -85,8 +85,10 @@ test('a 10 000-item × 30-field sheet scrolls within the frame budget', async ({
     timeout: 60_000,
   });
   await expect(page.getByRole('grid').getByText('Row 00001', { exact: true })).toBeVisible();
-  // let the first paint settle
-  await page.waitForTimeout(1000);
+  // warm up (first renders of each cell type, JIT), back to the top, let the page settle
+  await scrollAndSample(page, 'top', 120, 120);
+  await page.getByRole('grid').evaluate((el) => (el.scrollTop = 0));
+  await page.waitForTimeout(1500);
 
   const down = await scrollAndSample(page, 'top', 600, 120);
   const across = await scrollAndSample(page, 'left', 120, 60);
