@@ -54,18 +54,17 @@ const byPosition = (a: Field, b: Field) =>
   a.position < b.position ? -1 : a.position > b.position ? 1 : 0;
 
 /**
- * The field that holds the item's deadline: the first field (in sheet order) whose type can fire "a date arrives" and
- * is not a file field (evidence expiry is not a deadline). Created/updated dates never are: they cannot fire it.
+ * The field that holds the item's deadline: among the fields (in sheet order) whose type can fire "a date arrives" and
+ * that are not file fields (evidence expiry is not a deadline), the first one set up as a deadline (a date showing time
+ * left), else the first one. Created/updated dates never are: they cannot fire it. A "Found on" record date before a
+ * "Due date" is therefore not the deadline (docs/07 B7).
  */
 export function dueField(ctx: Ctx, sheetId = ctx.sheet.id): Field | null {
-  return (
-    [...ctx.fieldsOf(sheetId)].sort(byPosition).find((f) => {
-      const def = defOf(f);
-      return (
-        def.kind === 'date' && def.storage !== 'files' && def.triggers.includes('date_arrives')
-      );
-    }) ?? null
-  );
+  const dates = [...ctx.fieldsOf(sheetId)].sort(byPosition).filter((f) => {
+    const def = defOf(f);
+    return def.kind === 'date' && def.storage !== 'files' && def.triggers.includes('date_arrives');
+  });
+  return dates.find((f) => defOf(f).isDeadline?.(f.config) === true) ?? dates[0] ?? null;
 }
 
 /** The selected option of the item's status field, if any. */

@@ -713,9 +713,9 @@ function HeaderRow(p: RowProps & { row: Extract<GridRow, { kind: 'header' }> }) 
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-80">
                   <FieldPicker
-                    onPick={(type) => {
+                    onPick={(type, name) => {
                       setPickerOpen(false);
-                      void p.actions.addField(type);
+                      void p.actions.addField(type, undefined, name);
                     }}
                   />
                 </PopoverContent>

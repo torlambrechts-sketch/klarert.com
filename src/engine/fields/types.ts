@@ -73,6 +73,11 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
   effectiveKind?(field: Field<C>, ctx: Ctx): ValueKind;
   /** Types with the checklist_no trigger: how many answers are "No" (the trigger fires when it increases). */
   countNo?(v: V | null, cfg: C): number;
+  /**
+   * Date kinds: whether this field is set up as a deadline (a date shows "in 3 days" until the item is done). My work
+   * and Home prefer such a field over other dates of the sheet, so "Found on" never reads as overdue.
+   */
+  isDeadline?(cfg: C): boolean;
   /** Number kinds: the default group-footer summary (docs/03 §8). Default `sum`. */
   defaultSummary?: 'sum' | 'average';
   /**

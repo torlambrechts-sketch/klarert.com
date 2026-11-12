@@ -142,13 +142,13 @@ async function twoWayChange(
     if (!target) return fail('invalid', 'Choose the sheet to link to first.');
     const { data: sheet } = await db
       .from('sheets')
-      .select('name')
+      .select('item_label')
       .eq('id', row.sheet_id)
       .maybeSingle();
     const created = await createInverseField(
       db,
       orgId,
-      { fieldId: row.id, sheetId: row.sheet_id, sheetName: sheet?.name ?? 'Linked items' },
+      { fieldId: row.id, sheetId: row.sheet_id, itemLabel: sheet?.item_label ?? 'Linked item' },
       target,
     );
     return created.ok ? ok(created.data.id) : created;

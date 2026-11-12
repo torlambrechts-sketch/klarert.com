@@ -20,12 +20,13 @@ function freshName(base: string, taken: string[]): string {
 
 /**
  * Create the inverse link field on `targetSheetId` for the link field `sourceFieldId` of `sourceSheetId`, named after
- * the source sheet, and copy the existing links into it. Returns the new field.
+ * what the source sheet calls its items (docs/07 step 4: an "Actions" link on Corrective actions gives Actions a
+ * "Corrective action" field), and copy the existing links into it. Returns the new field.
  */
 export async function createInverseField(
   db: Db,
   orgId: string,
-  source: { fieldId: string; sheetId: string; sheetName: string },
+  source: { fieldId: string; sheetId: string; itemLabel: string },
   targetSheetId: string,
 ): Promise<Result<Field>> {
   const { data: target } = await db
@@ -43,7 +44,7 @@ export async function createInverseField(
   if (e1) return fromDbError(e1);
   const live = (existing ?? []).filter((f) => !f.archived_at);
   const name = freshName(
-    source.sheetName.slice(0, 80),
+    source.itemLabel.slice(0, 80),
     live.map((f) => f.name),
   );
   const def = fieldType('link')!;

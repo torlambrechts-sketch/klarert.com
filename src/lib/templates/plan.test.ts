@@ -25,6 +25,11 @@ const env = (): PlanEnv => {
     timeZone: 'Europe/London',
     newId: () => `00000000-0000-4000-8000-${String((n += 1)).padStart(12, '0')}`,
     lastSheetPosition: null,
+    jobRoles: [
+      { id: 'role-cm', name: 'Compliance manager' },
+      { id: 'role-hse', name: 'HSE manager' },
+    ],
+    teams: [],
   };
 };
 
@@ -104,6 +109,12 @@ describe('first-sheet template', () => {
   it('resolves refs and option tokens in the automations', () => {
     const byName = (start: string) => plan.automations.find((a) => a.name.startsWith(start))!;
     expect(byName('Critical severity').trigger).toMatchObject({ value: 'opt_critical' });
+    expect(byName('Critical severity').actions).toEqual([
+      expect.objectContaining({ type: 'notify', to: ['jobRole:role-hse'] }),
+    ]);
+    expect(byName('Stuck').actions).toEqual([
+      expect.objectContaining({ to: ['field:owner', 'jobRole:role-cm'] }),
+    ]);
     expect(byName('Priority score above 15').conditions).toEqual([
       { fieldKey: 'severity', op: 'at_most', value: 'opt_medium' },
     ]);
@@ -127,9 +138,11 @@ describe('first-sheet template', () => {
     broken.sheets[0].items[0].values.due_date = 'not a date';
     broken.automations[0].trigger.fieldKey = 'source';
     broken.automations[0].trigger.value = '$option:Nope';
+    broken.automations[1].actions[0].to = ['jobRole:Chief of nothing'];
     const p = planTemplateImport(parseTemplate(broken), env());
     expect(p.problems.some((x) => x.includes('Due date: not a valid date'))).toBe(true);
     expect(p.problems.some((x) => x.includes('no option "Nope"'))).toBe(true);
+    expect(p.problems.some((x) => x.includes('no job role "Chief of nothing"'))).toBe(true);
   });
 
   it('refuses unknown refs', () => {

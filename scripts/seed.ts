@@ -200,7 +200,13 @@ async function main() {
   let sheetsLine = 'no sheets (SEED_SHEETS=0)';
   if (env.SEED_SHEETS === '1') {
     const now = new Date();
+    const jobRoles = check(
+      await db.from('job_roles').select('id, name').eq('org_id', org.id),
+      'job roles lookup',
+    );
     const outcome = await importTemplate(db, template, {
+      jobRoles,
+      teams,
       orgId: org.id,
       folderId,
       people: people.map((p, i) => ({

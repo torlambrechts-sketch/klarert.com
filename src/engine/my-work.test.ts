@@ -65,6 +65,17 @@ describe('dueField', () => {
     expect(dueField(makeCtx({ fields }))?.id).toBe('f-due');
     expect(dueField(makeCtx({ fields: [created, status] }))).toBeNull();
   });
+
+  it('prefers a date set up as a deadline over an earlier record date (Found on before Due date)', () => {
+    const foundOn = makeField(
+      'date',
+      { relative: false },
+      { key: 'found_on', id: 'f-found', position: 'a2a', name: 'Found on' },
+    );
+    expect(dueField(makeCtx({ fields: [created, status, foundOn, due] }))?.id).toBe('f-due');
+    // with no deadline-style date, the first date still counts
+    expect(dueField(makeCtx({ fields: [created, foundOn, review] }))?.id).toBe('f-found');
+  });
 });
 
 describe('buildMyWork', () => {

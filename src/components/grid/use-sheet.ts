@@ -29,6 +29,7 @@ import {
   addRelated,
   missingItems,
   moveItem,
+  patchRelated,
   patchItem,
   removeField,
   removeGroup,
@@ -193,6 +194,52 @@ export function useSheetRealtime(sheetId: string, pending: Pending): RealtimeSta
     };
   }, [qc, sheetId, pending]);
   return status;
+}
+
+/**
+ * Items of the sheets this sheet links to (docs/07 B4: "Actions done" follows an action closed elsewhere without a
+ * refresh). One channel for all of them; it is rebuilt when the set of related sheets changes.
+ */
+export function useRelatedRealtime(sheetId: string, relatedSheetIds: string[]) {
+  const qc = useQueryClient();
+  const ids = [...new Set(relatedSheetIds)]
+    .filter((id) => id !== sheetId)
+    .sort()
+    .join(',');
+  useEffect(() => {
+    if (!ids) return;
+    const db = createClient();
+    const key = sheetKey(sheetId);
+    let cancelled = false;
+    let wasLive = false;
+    let channel: ReturnType<typeof db.channel> | null = null;
+    (async () => {
+      const { data } = await db.auth.getSession();
+      if (cancelled) return;
+      if (data.session) db.realtime.setAuth(data.session.access_token);
+      channel = db
+        .channel(`related:${sheetId}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'items', filter: `sheet_id=in.(${ids})` },
+          (p) => {
+            const row = p.new as ItemDbRow | undefined;
+            if (!row?.id) return;
+            qc.setQueryData<SheetData>(key, (d) => (d ? patchRelated(d, toItem(row)) : d));
+          },
+        )
+        .subscribe((s) => {
+          // a reconnect may have missed updates: read the sheet again
+          if (s !== 'SUBSCRIBED') return;
+          if (wasLive) void qc.invalidateQueries({ queryKey: key });
+          wasLive = true;
+        });
+    })();
+    return () => {
+      cancelled = true;
+      if (channel) void db.removeChannel(channel);
+    };
+  }, [qc, sheetId, ids]);
 }
 
 /** Fetch the given items (and their sheets and fields) into `related` when the cache lacks them. */
@@ -605,8 +652,11 @@ export function useSheetActions(org: string, sheetId: string) {
   );
 
   const addField = useCallback(
-    async (type: string, at?: { beforeFieldId?: string; afterFieldId?: string }) =>
-      fieldResult(await run(() => addFieldAction({ org, sheetId, type, ...at })), 'Field added.'),
+    async (type: string, at?: { beforeFieldId?: string; afterFieldId?: string }, name?: string) =>
+      fieldResult(
+        await run(() => addFieldAction({ org, sheetId, type, ...at, ...(name ? { name } : {}) })),
+        'Field added.',
+      ),
     [fieldResult, org, run, sheetId],
   );
 

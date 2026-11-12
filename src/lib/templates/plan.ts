@@ -37,6 +37,9 @@ export interface PlanEnv {
   newId: () => string;
   /** Position of the workspace's last sheet; the template's sheets go after it. */
   lastSheetPosition: string | null;
+  /** The workspace's job roles and teams: recipients name them (`jobRole:HSE manager`), automations store ids. */
+  jobRoles?: { id: string; name: string }[];
+  teams?: { id: string; name: string }[];
 }
 
 export interface PlannedSheet {
@@ -112,6 +115,7 @@ const OPTION = /^\$option:(.+)$/;
 const PERSON = /^\$person:(.+)$/;
 const IN_DAYS = /^\$in:(-?\d{1,4})$/;
 const ITEM = /^\$item:([a-z][a-z0-9_]*):(.+)$/;
+const GROUP_RECIPIENT = /^(jobRole|team):(.+)$/;
 
 type Obj = Record<string, Json>;
 const isObj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -387,7 +391,19 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
         }
       }
 
-  // automations: refs to ids, $option: to option ids, $person: to user ids; then the builder's own checks
+  /** `jobRole:<name>` / `team:<name>` → the same with the workspace's id (an id already given is kept). */
+  const recipient = (kind: 'jobRole' | 'team', ref: string, where: string): Json => {
+    const list = (kind === 'jobRole' ? env.jobRoles : env.teams) ?? [];
+    const hit = list.find((x) => x.id === ref || x.name.toLowerCase() === ref.toLowerCase());
+    if (!hit) {
+      problems.push(`${where}: no ${kind === 'jobRole' ? 'job role' : 'team'} "${ref}" in the workspace.`);
+      return `${kind}:${ref}`;
+    }
+    return `${kind}:${hit.id}`;
+  };
+
+  // automations: refs to ids, $option: to option ids, $person: to user ids, job roles and teams by name to ids;
+  // then the builder's own checks
   const automations = t.automations.map((a) => {
     const ctx = ctxFor(a.sheet);
     const where = `Automation "${a.name}"`;
@@ -407,6 +423,8 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
             if (typeof x !== 'string') return x;
             const person = x.match(PERSON);
             if (person) return people.get(person[1]!)?.id ?? null;
+            const group = k === 'to' ? x.match(GROUP_RECIPIENT) : null;
+            if (group) return recipient(group[1] as 'jobRole' | 'team', group[2]!, where);
             return OPTION.test(x) ? option(field, x, fctx, where) : x;
           });
       }

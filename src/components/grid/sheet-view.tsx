@@ -50,7 +50,13 @@ import { FieldSettings } from './field-settings';
 import { Grid } from './grid';
 import { positionsAtEnd } from './grid-model';
 import { createGridStore, GridStoreContext, useGrid, useGridStore } from './grid-store';
-import { useSheetActions, useSheetQuery, useSheetRealtime, type SheetActions } from './use-sheet';
+import {
+  useRelatedRealtime,
+  useSheetActions,
+  useSheetQuery,
+  useSheetRealtime,
+  type SheetActions,
+} from './use-sheet';
 
 // The sheet page's client part: data (TanStack Query + realtime), the view tabs and the header actions (search,
 // filters, sort, columns), the active view (List, Grid, Kanban, Calendar, Form), the bulk bar for selected rows, the
@@ -161,6 +167,7 @@ function SheetBody(props: SheetViewProps) {
   const query = useSheetQuery(sheetId);
   const actions = useSheetActions(org, sheetId);
   const realtime = useSheetRealtime(sheetId, actions.pending);
+  useRelatedRealtime(sheetId, query.data?.related.sheets.map((s) => s.id) ?? []);
   const online = useOnline();
   const narrow = useNarrow();
   const canEdit = role !== 'viewer';
@@ -551,10 +558,10 @@ function ViewBody({
             Choose the type of the new field.
           </DialogDescription>
           <FieldPicker
-            onPick={(type) => {
+            onPick={(type, name) => {
               const at = store.getState().addFieldAt ?? undefined;
               store.getState().openAddField(null);
-              void actions.addField(type, at);
+              void actions.addField(type, at, name);
             }}
           />
         </DialogContent>
