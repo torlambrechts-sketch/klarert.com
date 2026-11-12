@@ -110,7 +110,7 @@ export function FilterButton({
         <Button
           type="button"
           variant="outline"
-          className="h-[38px] shadow-none"
+          className="h-[38px] font-normal shadow-none"
           aria-label={count ? `Filter, ${count} active` : 'Filter'}
         >
           <Filter aria-hidden /> Filter

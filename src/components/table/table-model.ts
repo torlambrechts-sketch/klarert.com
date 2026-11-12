@@ -98,19 +98,25 @@ export function buildLayout(input: {
   const groups = input.onlyGroup
     ? input.groups.filter((g) => g.id === input.onlyGroup)
     : input.groups;
+  // when every group is empty, the first keeps its column header (the columns stay visible and "+" stays reachable)
+  const allEmpty = groups.every((g) => (byGroup.get(g.id) ?? []).length === 0);
   groups.forEach((group, gi) => {
     const items = byGroup.get(group.id) ?? [];
     const collapsed = input.collapsed.has(group.id);
     if (gi > 0) rows.push({ kind: 'gap', key: `x:${group.id}` });
     rows.push({ kind: 'group', key: `g:${group.id}`, group, count: items.length, collapsed });
     if (collapsed) return;
-    if (input.headers !== false) rows.push({ kind: 'header', key: `h:${group.id}`, group });
+    // an empty group stays compact: its title and "+ Add" only (no column header, no summary)
+    const empty = items.length === 0 && !(allEmpty && gi === 0);
+    if (input.headers !== false && !empty)
+      rows.push({ kind: 'header', key: `h:${group.id}`, group });
     for (const item of items) {
       rows.push({ kind: 'item', key: `i:${item.id}`, group, item, index: flat.length });
       flat.push(item);
     }
     if (input.canAdd) rows.push({ kind: 'add', key: `a:${group.id}`, group });
-    if (input.summaries) rows.push({ kind: 'summary', key: `s:${group.id}`, group, items });
+    if (input.summaries && !empty)
+      rows.push({ kind: 'summary', key: `s:${group.id}`, group, items });
   });
   return { rows, flat, index: new Map(flat.map((it, i) => [it.id, i])), byGroup };
 }

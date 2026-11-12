@@ -43,7 +43,12 @@ export function SheetAutomations({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" className="h-[38px] shadow-none" disabled={!ctx}>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-[38px] font-normal shadow-none"
+          disabled={!ctx}
+        >
           <Zap aria-hidden />
           Automations{' '}
           <span
