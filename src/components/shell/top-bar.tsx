@@ -78,7 +78,7 @@ export function TopBar({
             <DropdownMenuSeparator />
             {canManage ? (
               <DropdownMenuItem asChild>
-                <Link href={`/${current.slug}/settings`}>Workspace settings</Link>
+                <Link href={`/${current.slug}/settings`}>Workspace admin</Link>
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuItem asChild>

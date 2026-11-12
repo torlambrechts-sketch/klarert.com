@@ -1,7 +1,6 @@
-import Link from 'next/link';
 import { env } from '@/lib/env';
 import type { ServerClient } from '@/lib/supabase/server';
-import { cn } from '@/lib/utils';
+import { PageHeader, PageTabs } from '@/components/shell/page-header';
 import { ROLE_LABELS } from '@/lib/schemas/workspace';
 import { isAdminRole, requireMember } from '@/server/auth';
 import {
@@ -32,9 +31,9 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-line flex flex-col gap-4 rounded-[var(--radius-card)] border bg-white p-4 sm:p-5">
-      <div className="flex flex-col gap-0.5">
-        <h2 className="text-base font-bold">{title}</h2>
+    <section className="border-line flex flex-col gap-4 rounded-xl border bg-white p-5 shadow-xs sm:px-[22px]">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
         {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
       </div>
       {children}
@@ -45,7 +44,7 @@ function Card({
 function Avatar({ initials, color }: { initials: string; color: string }) {
   return (
     <span
-      className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
       style={{ background: `var(--label-${color}, var(--label-blue))` }}
       aria-hidden
     >
@@ -68,8 +67,8 @@ export default async function SettingsPage({
 
   if (!isAdminRole(role)) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1>Workspace settings</h1>
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-7 sm:pt-[26px]">
+        <h1>Workspace admin</h1>
         <p className="text-muted-foreground mt-2">
           Only owners and admins can change workspace settings.
         </p>
@@ -94,28 +93,17 @@ export default async function SettingsPage({
   const nameOf = new Map(people.map((p) => [p.userId, p.name]));
 
   return (
-    <main className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8">
-      <h1>Workspace settings</h1>
-      <nav
-        aria-label="Settings sections"
-        className="border-line flex gap-1 overflow-x-auto border-b"
-      >
-        {TABS.map((t) => (
-          <Link
-            key={t.id}
-            href={`/${org}/settings?tab=${t.id}`}
-            aria-current={tab === t.id ? 'page' : undefined}
-            className={cn(
-              '-mb-px border-b-2 px-3 py-2 text-sm font-semibold whitespace-nowrap',
-              tab === t.id
-                ? 'border-ink text-ink'
-                : 'text-muted-foreground hover:text-ink border-transparent',
-            )}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <PageHeader
+        crumb={workspace.name}
+        title="Workspace admin"
+        description="Members and roles, teams and job roles, entities and sites."
+      />
+      <PageTabs
+        label="Settings sections"
+        active={tab}
+        tabs={TABS.map((t) => ({ id: t.id, label: t.label, href: `/${org}/settings?tab=${t.id}` }))}
+      />
 
       {tab === 'members' ? (
         <MembersTab db={supabase} org={org} orgId={workspace.id} members={members} myRole={role} />
@@ -172,7 +160,7 @@ async function MembersTab({
               <div className="flex items-center gap-3">
                 <Avatar initials={m.initials} color={m.color} />
                 <div className="flex flex-col">
-                  <span className="font-semibold">
+                  <span className="font-medium">
                     {m.name}
                     {m.isMe ? (
                       <span className="text-muted-foreground font-normal"> (you)</span>
@@ -195,7 +183,7 @@ async function MembersTab({
                 className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex flex-col">
-                  <span className="font-semibold">{i.email}</span>
+                  <span className="font-medium">{i.email}</span>
                   <span className="text-muted-foreground text-sm">
                     {ROLE_LABELS[i.role]} · not accepted yet
                   </span>
@@ -241,7 +229,7 @@ async function TeamsTab({
             {(teams ?? []).map((t) => (
               <li key={t.id} className="flex flex-col gap-2 py-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold">{t.name}</span>
+                  <span className="font-medium">{t.name}</span>
                   <DeleteButton kind="team" org={org} id={t.id} name={t.name} />
                 </div>
                 <TeamMembers
@@ -304,7 +292,7 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
           {(entities ?? []).map((e) => (
             <li key={e.id} className="flex flex-col gap-3 py-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold">
+                <span className="font-medium">
                   {e.name}{' '}
                   <span className="text-muted-foreground font-mono text-xs">{e.country}</span>
                 </span>

@@ -78,7 +78,7 @@ export function InviteForm({ org, canInviteOwner }: { org: string; canInviteOwne
       {link ? (
         <div
           role="status"
-          className="bg-yel-2 flex flex-col gap-2 rounded-md p-3 sm:flex-row sm:items-center"
+          className="bg-subtle border-line flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center"
         >
           <p className="text-sm">
             Send this link to the person you invited. It works once, for that email address.
