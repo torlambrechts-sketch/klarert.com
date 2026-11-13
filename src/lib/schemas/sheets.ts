@@ -2,22 +2,10 @@ import { z } from 'zod';
 import { isFieldTypeId } from '@/engine/fields/registry';
 import { csvImportable } from '@/engine/fields/csv';
 import { columnGroupsSchema } from '@/engine/views/column-groups';
+import { ID_PREFIX, LABEL_COLORS } from '@/engine/labels';
 import { slugInput } from './workspace';
 
-/** The 11 label colours (docs/05 §6), in the order new groups take them. */
-export const LABEL_COLORS = [
-  'green',
-  'orange',
-  'red',
-  'blue',
-  'purple',
-  'teal',
-  'navy',
-  'yellow',
-  'grey',
-  'pink',
-  'dark',
-] as const;
+export { LABEL_COLORS, ID_PREFIX } from '@/engine/labels';
 export type GroupColor = (typeof LABEL_COLORS)[number];
 export const COLOR_LABELS: Record<GroupColor, string> = {
   green: 'Green',
@@ -32,8 +20,6 @@ export const COLOR_LABELS: Record<GroupColor, string> = {
   pink: 'Pink',
   dark: 'Dark',
 };
-
-export const ID_PREFIX = /^[A-Z0-9]{1,6}-$/;
 
 const text = (label: string, max: number) =>
   z
