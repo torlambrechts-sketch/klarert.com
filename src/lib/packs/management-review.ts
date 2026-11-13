@@ -1,5 +1,6 @@
-// Where management review inputs come from (docs/11 Audit outputs): the ISO/IEC 27001 pack's sheets, named by pack
-// ref so renaming a sheet or a field changes nothing. Data, not code: another pack can be added here as one more entry.
+// Where management review inputs come from (docs/11 Audit outputs): the ISO/IEC 27001 and ISO 9001 packs' sheets,
+// named by pack ref so renaming a sheet or a field changes nothing. When both are installed, each input comes from the
+// first pack listed that has it. Data, not code: another pack can be added here as one more entry.
 // The compilation itself is the pure compileManagementReview (src/engine/audit/management-review.ts).
 import type { ReviewSectionKey, ReviewSourceKey } from '@/engine/audit/management-review';
 
@@ -53,6 +54,36 @@ export const REVIEW_PACK_SOURCES: ReviewPackSource[] = [
         nonconformities: ['in_performance'],
         monitoring: ['in_performance'],
         audits: ['in_performance'],
+        risks: ['in_risks'],
+        opportunities: ['in_improve'],
+      },
+    },
+  },
+  {
+    pack: 'iso-9001',
+    sheets: {
+      reviews: 'review',
+      context: 'context',
+      nonconformities: 'nc',
+      risks: 'risk',
+      audits: 'audit',
+      findings: 'finding',
+      training: 'competence',
+    },
+    dateFields: { reviews: 'meeting_date', audits: 'audit_date', nonconformities: 'found_on' },
+    detailFields: { risks: 'level' },
+    partyGroups: ['context.parties'],
+    issueGroups: ['context.internal', 'context.external'],
+    review: {
+      source: 'reviews',
+      groupRef: 'review.planned',
+      checks: {
+        previous_actions: ['in_actions'],
+        issues: ['in_changes'],
+        parties: ['in_feedback'],
+        nonconformities: ['in_nc'],
+        monitoring: ['in_monitoring'],
+        audits: ['in_audits'],
         risks: ['in_risks'],
         opportunities: ['in_improve'],
       },
