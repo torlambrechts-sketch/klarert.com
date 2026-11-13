@@ -190,9 +190,9 @@ test.describe('desktop', () => {
     const g = grid(page);
     const left = () => g.evaluate((el) => el.scrollLeft);
     await expect(g.getByText('Fix guard rail', { exact: true })).toBeVisible();
-    // more columns to the right: the right edge shadow; nothing scrolled yet: no left one
+    // more columns to the right (no edge shadow by design; the pinned scrollbar shows it); nothing scrolled yet
     await expect(g).toHaveAttribute('data-more-right', 'true');
-    await expect(page.locator('[data-edge="right"]')).toBeVisible();
+    await expect(page.locator('[data-edge="right"]')).toHaveCount(0);
     await expect(g).toHaveAttribute('data-scrolled-left', 'false');
     await expect(page.getByRole('button', { name: 'More columns →' })).toHaveCount(0);
 
