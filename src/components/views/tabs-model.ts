@@ -26,6 +26,8 @@ export interface ViewTabs {
   others: ActiveView[];
   /** The former Grid tab's view when the List one backs the Table: no tab, opens by its id. */
   merged: ActiveView[];
+  /** The sheet's forms (shared form views): listed on the Forms tab, never tabs of their own (docs/05 §3.3). */
+  forms: ActiveView[];
 }
 
 const byPosition = (a: SavedView, b: SavedView) =>
@@ -60,23 +62,32 @@ export function buildTabs(views: SavedView[], userId: string, canEdit: boolean):
     const v = base(type);
     return v ? asActive(v) : builtin(type);
   };
+  const forms = sorted.filter((v) => v.type === 'form' && v.ownerId === null).map(asActive);
   return {
     table: tableBase ? { ...asActive(tableBase), name: 'Table' } : builtin('table'),
     more: {
       insights: firstOf('insights'),
       kanban: firstOf('kanban'),
       calendar: firstOf('calendar'),
-      form: firstOf('form'),
+      // one tab for all the sheet's forms; who may change them is decided per form (owners and admins)
+      form: { ...builtin('form'), name: forms.length > 1 ? `Forms (${forms.length})` : 'Forms' },
     },
-    others: sorted.filter((v) => v.id !== tableBase?.id && v.id !== merged?.id).map(asActive),
+    others: sorted
+      .filter((v) => v.id !== tableBase?.id && v.id !== merged?.id && v.type !== 'form')
+      .map(asActive),
     merged: merged ? [asActive(merged)] : [],
+    forms,
   };
 }
 
-/** The view a URL id (or the sheet's default) opens. Former ids (list, grid) open the Table. */
+/**
+ * The view a URL id (or the sheet's default) opens. Former ids (list, grid) open the Table; a form's id opens the
+ * Forms tab (which then shows that form).
+ */
 export function resolveActive(tabs: ViewTabs, id: string): ActiveView | null {
   const type = toViewType(id);
   if (type) return type === 'table' ? tabs.table : tabs.more[type];
+  if (tabs.forms.some((f) => f.id === id)) return tabs.more.form;
   for (const v of [tabs.table, ...Object.values(tabs.more), ...tabs.others, ...tabs.merged])
     if (v.id === id) return v;
   return null;
@@ -112,6 +123,7 @@ export interface TabLayout {
 export function tabName(tabs: ViewTabs, v: ActiveView): string {
   if (v.id === tabs.table.id) return 'Table';
   return v.saved ? v.name : v.type === 'kanban' ? 'Board' : v.name;
+  // (the Forms tab's name, "Forms" or "Forms (3)", is set in buildTabs)
 }
 
 /**

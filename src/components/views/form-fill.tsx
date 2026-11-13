@@ -107,7 +107,7 @@ export function FormFill(p: FormFillProps) {
   );
 }
 
-function Question({
+export function Question({
   q,
   ctx,
   raw,

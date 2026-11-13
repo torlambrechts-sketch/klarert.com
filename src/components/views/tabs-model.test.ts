@@ -117,7 +117,7 @@ describe('tab layout (settings.tabs)', () => {
       'Insights',
       'By status',
       'Calendar',
-      'Form',
+      'Forms',
       'Overdue',
       'Audit table',
     ]);
@@ -129,7 +129,7 @@ describe('tab layout (settings.tabs)', () => {
       'Insights',
       'Board',
       'Calendar',
-      'Form',
+      'Forms',
     ]);
   });
 
@@ -144,7 +144,7 @@ describe('tab layout (settings.tabs)', () => {
       { id: 'v-audit' },
     ]);
     expect(words(layout.shown)).toEqual(['By status', 'Table', 'Dashboard', 'Late', 'Audit table']);
-    expect(words(layout.hidden)).toEqual(['Calendar', 'Form']);
+    expect(words(layout.hidden)).toEqual(['Calendar', 'Forms']);
     // a hidden tab still resolves by its id (?view=calendar)
     expect(resolveActive(tabs, 'calendar')?.id).toBe('calendar');
     expect(layout.shown[0]).toMatchObject({ entryId: 'kanban', view: { id: 'v-board' } });
@@ -162,7 +162,7 @@ describe('tab layout (settings.tabs)', () => {
       'Insights',
       'By status',
       'Calendar',
-      'Form',
+      'Forms',
       'Overdue',
     ]);
     expect(words(layout.hidden)).toEqual(['Audit table']);
@@ -181,5 +181,31 @@ describe('tab layout (settings.tabs)', () => {
       { id: 'table' },
       { id: 'v-board', label: 'Board' },
     ]);
+  });
+});
+
+describe('the Forms tab', () => {
+  it('lists every form of the sheet under one tab, and a form id opens it', () => {
+    const tabs = buildTabs(
+      [
+        row('v-list', 'List', 'list', 'a0'),
+        row('v-f1', 'Report an incident', 'form', 'a1'),
+        row('v-f2', 'Investigator intake', 'form', 'a2'),
+      ],
+      'u1',
+      true,
+    );
+    expect(tabs.more.form).toMatchObject({ id: 'form', name: 'Forms (2)', saved: null });
+    expect(tabs.forms.map((f) => f.name)).toEqual(['Report an incident', 'Investigator intake']);
+    expect(tabs.others).toEqual([]);
+    expect(resolveActive(tabs, 'v-f2')).toBe(tabs.more.form);
+    expect(applyTabLayout(tabs, null).shown.map((t) => t.label)).toEqual([
+      'Table',
+      'Insights',
+      'Board',
+      'Calendar',
+      'Forms (2)',
+    ]);
+    expect(buildTabs([row('v-f1', 'Only', 'form', 'a1')], 'u1', true).more.form.name).toBe('Forms');
   });
 });

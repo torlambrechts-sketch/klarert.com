@@ -185,7 +185,9 @@ export async function saveForm(input: unknown): Promise<Result<{ view: SavedView
         if (!reviewed) delete form.notice!.reviewedVersion;
       }
       const problems =
-        formStatus(form) === 'open' ? openProblems(form, w.fields) : formLayoutProblems(form, w.fields);
+        formStatus(form) === 'open'
+          ? openProblems(form, w.fields)
+          : formLayoutProblems(form, w.fields);
       if (form.groupId && !w.data.groups.some((g) => g.id === form.groupId))
         problems.push('Choose a group of this sheet for new items.');
       if (problems.length) return fail('invalid', problems[0]!);
@@ -304,10 +306,10 @@ export async function changeFormLink(input: unknown): Promise<Result<{ link: For
   const p = formLinkInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   const v = p.data;
-  return withOrg<{ link: FormLink }>(
+  return withOrg(
     v.org,
     'admin',
-    async ({ supabase, orgId }) => {
+    async ({ supabase, orgId }): Promise<Result<{ link: FormLink }>> => {
       const found = await loadForm(supabase, orgId, v.viewId);
       if (!found) return notFound();
       if (v.op === 'disable') {

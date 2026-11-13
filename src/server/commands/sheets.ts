@@ -29,6 +29,8 @@ import { startById } from '@/lib/starts';
 import type { ServerClient } from '@/lib/supabase/server';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { log, withOrg } from './context';
+import { isAdminRole } from '@/server/auth';
+import { templateFormLayout } from '@/lib/templates/plan';
 import { activeFolders, insertFolder } from './folders';
 import { setUpSubitems } from './subitems';
 import { createInverseField } from './two-way';
@@ -178,7 +180,7 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
   return withOrg(
     v.org,
     'editor',
-    async ({ supabase, orgId }) => {
+    async ({ supabase, orgId, role }) => {
       if (await prefixTaken(supabase, orgId, v.idPrefix)) return prefixConflict();
       const columns = v.columns.filter((c) => c.name);
       // link columns: the chosen sheet must be in the workspace (and a library for requirement/control link)
@@ -262,6 +264,42 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
       if (set) {
         const sub = await setUpSubitems(supabase, orgId, created.data, set);
         if (!sub.ok) return sub;
+      }
+      // the start's ready-made forms (drafts; their notices still need a review). Only owners and admins write
+      // forms (RLS), so an editor's sheet starts without them.
+      const forms = v.startId ? startById(v.startId)?.forms : undefined;
+      if (forms?.length && isAdminRole(role)) {
+        const keys = new Set(fields.map((f) => f.key));
+        const groupRows = await supabase.from('groups').select('id, name').eq('sheet_id', sheetId);
+        const positions = keysBetween(null, null, forms.length);
+        const rows = forms.map((f, i) => {
+          const layout = templateFormLayout(
+            f,
+            groupRows.data?.find((g) => g.name === f.groupRef)?.id ?? null,
+          );
+          return {
+            org_id: orgId,
+            sheet_id: sheetId,
+            name: f.name,
+            type: 'form',
+            owner_id: null,
+            position: positions[i]!,
+            config: {
+              filters: [],
+              sort: [],
+              hidden: [],
+              form: {
+                ...layout,
+                fields: layout.fields.filter((q) => keys.has(q.key)),
+                ...(layout.prefill
+                  ? { prefill: layout.prefill.filter((p) => keys.has(p.key)) }
+                  : {}),
+              },
+            } as unknown as NonNullable<Json>,
+          };
+        });
+        const { error } = await supabase.from('views').insert(rows);
+        if (error) return fromDbError(error);
       }
       return ok({ sheetId: created.data });
     },

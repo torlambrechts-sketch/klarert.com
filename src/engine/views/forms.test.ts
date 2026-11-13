@@ -145,7 +145,9 @@ describe('the privacy notice gates opening a public form', () => {
     expect(needsConsent(publicForm({ notice: { ...notice, legalBasis: 'consent' } }))).toBe(true);
     expect(needsConsent(publicForm({ notice }))).toBe(false);
     expect(
-      needsConsent(publicForm({ access: 'internal', notice: { ...notice, legalBasis: 'consent' } })),
+      needsConsent(
+        publicForm({ access: 'internal', notice: { ...notice, legalBasis: 'consent' } }),
+      ),
     ).toBe(false);
   });
 });
@@ -185,7 +187,9 @@ describe('version and fingerprint', () => {
         notice: { ...a.notice!, reviewedVersion: 1, reviewedAt: 'now' },
       }),
     ).toBe(formFingerprint('Report', a));
-    expect(formFingerprint('Report', { ...a, title: 'New' })).not.toBe(formFingerprint('Report', a));
+    expect(formFingerprint('Report', { ...a, title: 'New' })).not.toBe(
+      formFingerprint('Report', a),
+    );
     expect(formFingerprint('Renamed', a)).not.toBe(formFingerprint('Report', a));
     expect(formFingerprint('Report', a)).toMatch(/^[0-9a-f]{8}$/);
   });
@@ -194,7 +198,11 @@ describe('version and fingerprint', () => {
 describe('duplicate and copy to another sheet', () => {
   const reviewed = publicForm({
     groupId: 'g-src-triage',
-    fields: [{ key: 'where_seen', label: 'Where was it?' }, { key: 'description' }, { key: 'injury' }],
+    fields: [
+      { key: 'where_seen', label: 'Where was it?' },
+      { key: 'description' },
+      { key: 'injury' },
+    ],
     prefill: [{ key: 'channel', value: 'QR' }],
     notice: { ...notice, version: 3, reviewedVersion: 3, reviewedAt: 'then', reviewedBy: 'u1' },
   });

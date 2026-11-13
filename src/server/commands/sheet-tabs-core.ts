@@ -77,6 +77,8 @@ export async function setSheetTabsWith(
   };
   const name = (id: string) => {
     if (id === 'table') return 'Table';
+    // the Forms tab lists every form of the sheet (docs/05 §3.3); it is not named after one of them
+    if (id === 'form') return 'Forms';
     if (isBuiltinTab(id))
       return backing(id)?.name ?? (id === 'kanban' ? 'Board' : VIEW_TYPE_LABEL[id]);
     return byId.get(id)?.name ?? 'A view';

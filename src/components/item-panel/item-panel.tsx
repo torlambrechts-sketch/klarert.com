@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  FileText,
   ArrowLeft,
   ChevronDown,
   ChevronUp,
@@ -18,7 +19,9 @@ import { Dialog as DialogPrimitive, Tabs } from 'radix-ui';
 import { toast } from 'sonner';
 import { neighbours } from '@/engine/item-panel';
 import type { SheetData } from '@/engine/sheet-data';
-import type { Ctx, Field, FileRow, Item } from '@/engine/types';
+import type { Ctx, Field, FileRow, Item, ItemSource } from '@/engine/types';
+import type { SavedView } from '@/engine/views/config';
+import { viewsKey } from '@/components/views/use-views';
 import { Button } from '@/components/ui/button';
 import { useValueCommit } from '@/components/grid/use-commit';
 import type { SheetActions } from '@/components/grid/use-sheet';
@@ -370,6 +373,7 @@ export function ItemPanel(props: ItemPanelProps) {
                 <span className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px]">
                   {item.displayId}
                 </span>
+                {item.source ? <FormSource source={item.source} sheetId={item.sheetId} /> : null}
                 {item.locked ? (
                   <span className="border-warn/40 text-warn bg-warn-soft inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold">
                     <Lock className="size-3" aria-hidden />
@@ -462,5 +466,21 @@ export function ItemPanel(props: ItemPanelProps) {
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+/** Where the item came from (docs/02 §8): "From form: Report an incident (v3) · Public". */
+function FormSource({ source, sheetId }: { source: ItemSource; sheetId: string }) {
+  const qc = useQueryClient();
+  const name = source.formId
+    ? qc.getQueryData<SavedView[]>(viewsKey(sheetId))?.find((v) => v.id === source.formId)?.name
+    : null;
+  return (
+    <span className="text-muted-foreground inline-flex items-center gap-1">
+      <FileText className="size-3" aria-hidden />
+      From form: {name ?? 'a deleted form'}
+      {source.formVersion ? ` (v${source.formVersion})` : ''} ·{' '}
+      {source.channel === 'public' ? 'Public' : 'Internal'}
+    </span>
   );
 }

@@ -5,13 +5,7 @@ import { formEligible, publicFormEligible } from '../fields/view-support';
 import { resolveFieldType } from '../fields/resolve';
 import type { Ctx, Field, Item, Json, Sheet } from '../types';
 import { validateItem } from '../validation';
-import type {
-  FormAccess,
-  FormLayout,
-  FormStatus,
-  LegalBasis,
-  PrivacyNotice,
-} from './config';
+import type { FormAccess, FormLayout, FormStatus, LegalBasis, PrivacyNotice } from './config';
 
 export interface FormQuestion {
   field: Field;
@@ -64,7 +58,8 @@ export function formLayoutProblems(layout: FormLayout, fields: Field[]): string[
     const f = byKey.get(p.key);
     if (!f) out.push(`Hidden value: field "${p.key}" no longer exists.`);
     else if (!formEligible(f)) out.push(`${f.name} cannot hold a hidden value.`);
-    else if (asked.has(p.key)) out.push(`${f.name} is asked on the form and cannot also be hidden.`);
+    else if (asked.has(p.key))
+      out.push(`${f.name} is asked on the form and cannot also be hidden.`);
   }
   const opens = layout.opensAt ? Date.parse(layout.opensAt) : null;
   const closes = layout.closesAt ? Date.parse(layout.closesAt) : null;
@@ -235,7 +230,9 @@ export const noticeReviewed = (notice: PrivacyNotice | undefined): boolean =>
 
 const STAMPS = ['version', 'reviewedVersion', 'reviewedAt', 'reviewedBy'] as const;
 /** The words of a notice, without its version and review stamp. */
-export function noticeContent(notice: PrivacyNotice | undefined): Omit<PrivacyNotice, (typeof STAMPS)[number]> {
+export function noticeContent(
+  notice: PrivacyNotice | undefined,
+): Omit<PrivacyNotice, (typeof STAMPS)[number]> {
   const out: Record<string, unknown> = { ...(notice ?? {}) };
   for (const k of STAMPS) delete out[k];
   return out as Omit<PrivacyNotice, (typeof STAMPS)[number]>;
@@ -299,7 +296,8 @@ export function formFingerprint(name: string, form: FormLayout): string {
 
 const SPECIAL =
   /\b(health|medical|injur\w*|illness|sick\w*|disab\w*|diagnos\w*|religio\w*|belief|ethnic\w*|race|racial|trade union|union member\w*|sexual\w*|sex life|orientation|biometric|genetic|criminal|convictions?|political)\b/i;
-const PERSONAL = /\b(name|e-?mail|phone|mobile|address|date of birth|birthday|national id|passport)\b/i;
+const PERSONAL =
+  /\b(name|e-?mail|phone|mobile|address|date of birth|birthday|national id|passport)\b/i;
 
 /**
  * Plain-words warnings for the builder: the form collects names or contact details, or may collect health or other
@@ -310,7 +308,9 @@ export function privacyWarnings(questions: FormQuestion[], nameLabel: string): s
   const out: string[] = [];
   const personal =
     PERSONAL.test(nameLabel) ||
-    questions.some((q) => q.field.type === 'email' || q.field.type === 'phone' || PERSONAL.test(text(q)));
+    questions.some(
+      (q) => q.field.type === 'email' || q.field.type === 'phone' || PERSONAL.test(text(q)),
+    );
   if (personal)
     out.push('This form collects names or contact details. Ask only for what you need.');
   const special = questions.filter((q) => SPECIAL.test(text(q)) || SPECIAL.test(nameLabel));
@@ -357,7 +357,8 @@ export function mapFormToSheet(
   });
   const prefill = (form.prefill ?? []).filter((p) => {
     const f = byKey.get(p.key);
-    const ok = !!f && formEligible(f) && f.type === source.fields.find((s) => s.key === p.key)?.type;
+    const ok =
+      !!f && formEligible(f) && f.type === source.fields.find((s) => s.key === p.key)?.type;
     if (!ok) missing.push(`${srcName.get(p.key) ?? p.key} (hidden value)`);
     return ok;
   });

@@ -124,7 +124,10 @@ export const privacyNoticeSchema = z.object({
     .string()
     .trim()
     .max(500)
-    .refine((u) => u === '' || /^https?:\/\/\S+$/.test(u), 'Enter a web address starting with https://')
+    .refine(
+      (u) => u === '' || /^https?:\/\/\S+$/.test(u),
+      'Enter a web address starting with https://',
+    )
     .optional(),
   version: z.number().int().min(1).optional(),
   reviewedVersion: z.number().int().min(1).optional(),

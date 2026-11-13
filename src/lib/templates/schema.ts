@@ -2,7 +2,14 @@ import { z } from 'zod';
 import { ACTION_IDS, TRIGGER_IDS } from '@/engine/automations';
 import { isFieldTypeId } from '@/engine/fields/registry';
 import type { Json } from '@/engine/types';
-import { toViewType, viewTypeInput } from '@/engine/views/config';
+import {
+  FORM_ACCESS,
+  formFieldSchema,
+  formPrefillSchema,
+  privacyNoticeSchema,
+  toViewType,
+  viewTypeInput,
+} from '@/engine/views/config';
 import { MAX_TABS, tabLabelSchema } from '@/engine/views/tabs';
 import { ID_PREFIX, LABEL_COLORS } from '@/lib/schemas/sheets';
 
@@ -98,6 +105,63 @@ export const subitemSetSchema = z
   });
 export type SubitemSet = z.infer<typeof subitemSetSchema>;
 
+/**
+ * A ready-made form of a template sheet or a wizard start (docs/05 §3.3): created as a draft whose privacy notice
+ * still needs an owner's or admin's review. `groupRef` is a group ref (templates) or a group name (starts); the
+ * layout and hidden values name fields by key. Automations name it by `ref` in `form_submitted.formId`.
+ */
+export const templateForm = z.object({
+  ref,
+  name: z.string().trim().min(1).max(60),
+  groupRef: z.string().min(1).max(80).optional(),
+  access: z.enum(FORM_ACCESS),
+  layout: z.object({
+    title: z.string().trim().max(200).optional(),
+    description: z.string().trim().max(2000).optional(),
+    nameLabel: z.string().trim().max(200).optional(),
+    fields: z.array(formFieldSchema).max(100),
+  }),
+  settings: z
+    .object({
+      confirmation: z.string().trim().max(1000).optional(),
+      maxResponses: z.number().int().min(1).max(1_000_000).optional(),
+      prefill: z.array(formPrefillSchema).max(50).optional(),
+    })
+    .optional(),
+  notice: privacyNoticeSchema
+    .omit({ version: true, reviewedVersion: true, reviewedAt: true, reviewedBy: true })
+    .optional(),
+});
+export type TemplateForm = z.infer<typeof templateForm>;
+
+/**
+ * Problems in a sheet's forms: refs once each, the group, the fields asked and hidden. `groupOk` decides what a
+ * group reference may be.
+ */
+export function formProblems(
+  forms: readonly TemplateForm[],
+  fieldKeys: ReadonlySet<string>,
+  groupOk: (ref: string) => boolean,
+): { index: number; message: string }[] {
+  const out: { index: number; message: string }[] = [];
+  const seen = new Set<string>();
+  for (const [i, f] of forms.entries()) {
+    if (seen.has(f.ref)) out.push({ index: i, message: `Duplicate form ref "${f.ref}".` });
+    seen.add(f.ref);
+    if (f.groupRef !== undefined && !groupOk(f.groupRef))
+      out.push({ index: i, message: `Unknown group "${f.groupRef}".` });
+    for (const q of f.layout.fields)
+      if (!fieldKeys.has(q.key)) out.push({ index: i, message: `Unknown field "${q.key}".` });
+    for (const p of f.settings?.prefill ?? [])
+      if (!fieldKeys.has(p.key)) out.push({ index: i, message: `Unknown field "${p.key}".` });
+  }
+  return out;
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** A form_submitted trigger's formId in a template: null, or the ref of a form of the same sheet. */
+export const isFormRef = (v: unknown): v is string => typeof v === 'string' && !UUID_RE.test(v);
+
 /** A starting tab of a template sheet or a wizard start (resolved by resolveTemplateTabs). */
 export const templateTab = z.object({
   ref: z.string().min(1).max(80),
@@ -134,6 +198,8 @@ export const templateSheet = z.object({
   defaultView: z.string().min(1).max(80).optional(),
   /** Sub-items for this sheet: a hidden child sheet with these fields (docs/02 §12). */
   subitems: subitemSetSchema.optional(),
+  /** Ready-made forms (drafts; their notices still need a review). */
+  forms: z.array(templateForm).max(20).default([]),
 });
 
 export const templateAutomation = z.object({
@@ -251,6 +317,8 @@ export const sheetTemplateSchema = z
         if (!tabRef(s.defaultView)) problem(at('defaultView'), `Unknown view "${s.defaultView}".`);
         else if (tab?.hidden) problem(at('defaultView'), 'The view that opens first cannot be hidden.');
       }
+      for (const p of formProblems(s.forms, new Set(keys.keys()), (r) => groups.has(r)))
+        problem(at('forms', p.index), p.message);
       for (const [ii, item] of s.items.entries()) {
         if (!groups.has(item.group)) problem(at('items', ii), `Unknown group "${item.group}".`);
         for (const k of Object.keys(item.values))
@@ -288,6 +356,11 @@ export const sheetTemplateSchema = z
           !target.groups.some((g) => g.ref === action.groupRef)
         )
           problem(['automations', ai], `Unknown group "${action.groupRef}".`);
+      }
+      if (a.trigger.type === 'form_submitted' && a.trigger.formId != null) {
+        const formRef = a.trigger.formId;
+        if (!isFormRef(formRef) || !s.forms.some((f) => f.ref === formRef))
+          problem(['automations', ai], `Unknown form "${String(formRef)}".`);
       }
       for (const p of personRefs([a.trigger, a.conditions, a.actions] as unknown as Json))
         if (!people.has(p)) problem(['automations', ai], `Unknown person "${p}".`);
