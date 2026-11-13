@@ -38,6 +38,8 @@ export interface GridState {
   /** The item whose row actions menu is open (keyboard: Shift+F10 on the grid). */
   rowMenu: string | null;
   addFieldAt: { beforeFieldId?: string; afterFieldId?: string } | null;
+  /** The Columns menu: closed, open, or open at its hidden list ("Hidden · N"). */
+  columnsMenu: null | 'all' | 'hidden';
 
   focus(cell: CellRef, extend?: boolean): void;
   edit(cell: CellRef | null): void;
@@ -59,6 +61,7 @@ export interface GridState {
   setDensity(d: GridState['density']): void;
   openRowMenu(itemId: string | null): void;
   openAddField(at: GridState['addFieldAt']): void;
+  openColumns(at: GridState['columnsMenu']): void;
 }
 
 export function createGridStore(): StoreApi<GridState> {
@@ -81,6 +84,7 @@ export function createGridStore(): StoreApi<GridState> {
     density: 'comfortable',
     rowMenu: null,
     addFieldAt: null,
+    columnsMenu: null,
 
     focus: (cell, extend) =>
       set({ active: cell, anchor: extend ? (get().anchor ?? get().active ?? cell) : cell }),
@@ -132,6 +136,7 @@ export function createGridStore(): StoreApi<GridState> {
     },
     openSettings: (fieldId) => set({ settingsFor: fieldId }),
     openAddField: (at) => set({ addFieldAt: at }),
+    openColumns: (at) => set({ columnsMenu: at }),
   }));
 }
 

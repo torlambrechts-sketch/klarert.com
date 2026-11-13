@@ -15,6 +15,7 @@ import {
 import { useVirtualizer, useWindowVirtualizer } from '@tanstack/react-virtual';
 import {
   Archive,
+  ChevronDown,
   ChevronRight,
   ExternalLink,
   FileText,
@@ -25,7 +26,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { copyRange, planClear, planPaste, type GridColumn } from '@/engine/clipboard';
+import { cellColumns, copyRange, planClear, planPaste, type GridColumn } from '@/engine/clipboard';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { ownerField, ownerOf } from '@/engine/item-panel';
 import { donePercent } from '@/engine/views/group-by';
@@ -34,6 +35,13 @@ import type { SheetData } from '@/engine/sheet-data';
 import { columnSummaries, type SummaryFn } from '@/engine/summaries';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { setSummary, type ViewConfig } from '@/engine/views/config';
+import {
+  groupByKey,
+  liveCollapsed,
+  parseColumnGroups,
+  stubField,
+} from '@/engine/views/column-groups';
+import { textOf } from '@/engine/values';
 import { trendPolarity } from '@/engine/values/trend';
 import { fieldUI } from '@/components/fields/registry';
 import { cellValue, TextEditor } from '@/components/fields/shared';
@@ -80,7 +88,9 @@ import {
   buildLayout,
   byPosition,
   columnId,
+  columnRuns,
   endsCard,
+  GROUP_LABEL_H,
   ownLine,
   trailWidth,
   positionsAtEnd,
@@ -113,6 +123,23 @@ const CHECK_W = 58;
 const SCORE_W = 150;
 /** The card's left and right borders. */
 const EDGE = 2;
+/** A collapsed column group's stub column. */
+const STUB_W = 168;
+
+/** A column after the name: a field or a collapsed group's stub. */
+type BodyCol = Exclude<GridColumn, { kind: 'name' }>;
+type StubCol = Extract<GridColumn, { kind: 'stub' }>;
+
+/** A column group's label over its columns (left and width in table pixels). */
+interface RunBox {
+  key: string;
+  groupId: string | null;
+  name: string;
+  size: number;
+  collapsed: boolean;
+  left: number;
+  width: number;
+}
 
 export interface TableProps {
   data: SheetData;
@@ -141,6 +168,8 @@ export interface TableProps {
   subMatches?: ReadonlyMap<string, ReadonlySet<string>>;
   /** Open a sub-item in the item panel. */
   onOpenSubitem?(item: Item): void;
+  /** The item the item panel shows: its row is marked and kept in view. */
+  currentItemId?: string | null;
 }
 
 /**
@@ -173,6 +202,7 @@ export function Table({
   sub = null,
   subMatches,
   onOpenSubitem,
+  currentItemId = null,
 }: TableProps) {
   const store = useGridStore();
   const collapsed = useGrid((s) => s.collapsed);
@@ -222,21 +252,64 @@ export function Table({
   const [seed, setSeed] = useState<string | null>(null);
 
   const sort = config.sort.length === 1 ? config.sort[0]! : null;
-  const columns = useMemo(() => tableColumns(data.fields, hidden), [data.fields, hidden]);
+  // column groups (docs/05 §3.1): defined on the sheet, collapsed per view
+  const groupList = useMemo(
+    () =>
+      parseColumnGroups(
+        data.sheet.columnGroups ?? [],
+        data.fields.map((f) => f.key),
+      ),
+    [data.sheet.columnGroups, data.fields],
+  );
+  const collapsedGroups = useMemo(
+    () => new Set(liveCollapsed(groupList, config.collapsedGroups)),
+    [groupList, config.collapsedGroups],
+  );
+  /** Every column as drawn: the name, fields and collapsed groups' stubs. */
+  const drawn = useMemo(
+    () => tableColumns(data.fields, hidden, { list: groupList, collapsed: collapsedGroups }),
+    [data.fields, hidden, groupList, collapsedGroups],
+  );
+  /** The selection axis: the drawn columns without stubs (selection, copy and paste skip them). */
+  const columns = useMemo(() => cellColumns(drawn), [drawn]);
+  const bodyCols = useMemo(() => drawn.slice(1) as BodyCol[], [drawn]);
   const fieldCols = useMemo(
     () => columns.filter((c): c is Extract<GridColumn, { kind: 'field' }> => c.kind === 'field'),
     [columns],
+  );
+  const runs = useMemo(() => columnRuns(drawn, groupList), [drawn, groupList]);
+  const labels = runs.length > 0;
+  /** The member a stub shows for each collapsed group. */
+  const stubFields = useMemo(() => {
+    const m = new Map<string, Field | null>();
+    for (const c of bodyCols) if (c.kind === 'stub') m.set(c.groupId, stubField(c.fields, ctx));
+    return m;
+  }, [bodyCols, ctx]);
+  const toggleGroup = useCallback(
+    (groupId: string) =>
+      setConfig((c) => {
+        const next = new Set(c.collapsedGroups ?? []);
+        if (next.has(groupId)) next.delete(groupId);
+        else next.add(groupId);
+        const { collapsedGroups: _drop, ...rest } = c;
+        void _drop;
+        return next.size ? { ...rest, collapsedGroups: [...next] } : rest;
+      }),
+    [setConfig],
   );
   // number, option and date columns show a summary unless switched off; others when chosen
   const summaries = useMemo(
     () =>
       columnSummaries(
-        fieldCols.map((c) => c.field),
+        [
+          ...fieldCols.map((c) => c.field),
+          ...[...stubFields.values()].filter((f): f is Field => !!f),
+        ],
         config.summaries,
         config.summaryOff,
         ctx,
       ),
-    [fieldCols, config.summaries, config.summaryOff, ctx],
+    [fieldCols, stubFields, config.summaries, config.summaryOff, ctx],
   );
   const showSummaries = Object.keys(summaries).length > 0;
   const tg = useTableGroups({
@@ -311,6 +384,8 @@ export function Table({
   layoutRef.current = layout;
   const owner = useMemo(() => ownerField(ctx), [ctx]);
   const colIndex = useMemo(() => new Map(columns.map((c, i) => [columnId(c), i])), [columns]);
+  /** column id → its index among the drawn columns (stubs included). */
+  const drawnIndex = useMemo(() => new Map(drawn.map((c, i) => [columnId(c), i])), [drawn]);
   const rowIndexOfItem = useMemo(() => {
     const m = new Map<string, number>();
     layout.rows.forEach(
@@ -338,16 +413,33 @@ export function Table({
   const stickyW = CHECK_W + nameWidth;
   // columns keep their widths (wider tables scroll); the trailing column takes the room left in the card
   const widthOf = baseWidth;
-  const trailW = useMemo(
-    () =>
-      trailWidth(
-        fieldCols.map((c) => baseWidth(c.field)),
-        stickyW + EDGE,
-        viewW,
-        TRAIL,
-      ),
-    [fieldCols, baseWidth, stickyW, viewW],
+  const colWidth = useCallback(
+    (c: BodyCol) => (c.kind === 'stub' ? STUB_W : baseWidth(c.field)),
+    [baseWidth],
   );
+  const trailW = useMemo(
+    () => trailWidth(bodyCols.map(colWidth), stickyW + EDGE, viewW, TRAIL),
+    [bodyCols, colWidth, stickyW, viewW],
+  );
+  // the group labels' boxes over their columns
+  const runBoxes = useMemo<RunBox[]>(() => {
+    if (!labels) return [];
+    const starts: number[] = [];
+    let x = stickyW;
+    for (const c of bodyCols) {
+      starts.push(x);
+      x += colWidth(c);
+    }
+    return runs.map((r) => ({
+      key: r.key,
+      groupId: r.groupId,
+      name: r.name,
+      size: r.size,
+      collapsed: r.collapsed,
+      left: starts[r.from]!,
+      width: starts[r.to]! + colWidth(bodyCols[r.to]!) - starts[r.from]!,
+    }));
+  }, [labels, runs, bodyCols, colWidth, stickyW]);
   /** A width the person dragged to, in stored terms. */
   const toBase = useCallback((_f: Field, shown: number) => shown, []);
 
@@ -361,26 +453,26 @@ export function Table({
     estimateSize: (i) => {
       const kind = layout.rows[i]!.kind;
       const edge = !ownLine(kind) && endsCard(layout.rows, i) ? 1 : 0;
-      return rowHeight(kind, density) + edge;
+      return rowHeight(kind, density, labels) + edge;
     },
     getItemKey: useCallback((i: number) => layout.rows[i]!.key, [layout.rows]),
     overscan: 10,
   });
   const colV = useVirtualizer({
     horizontal: true,
-    count: fieldCols.length + 1,
+    count: bodyCols.length + 1,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (i) => (i < fieldCols.length ? widthOf(fieldCols[i]!.field) : trailW),
+    estimateSize: (i) => (i < bodyCols.length ? colWidth(bodyCols[i]!) : trailW),
     getItemKey: useCallback(
-      (i: number) => (i < fieldCols.length ? fieldCols[i]!.field.id : '__trail'),
-      [fieldCols],
+      (i: number) => (i < bodyCols.length ? columnId(bodyCols[i]!) : '__trail'),
+      [bodyCols],
     ),
     paddingStart: stickyW,
     scrollPaddingStart: stickyW,
     overscan: 3,
   });
-  useEffect(() => colV.measure(), [colV, widthOf, trailW, fieldCols, stickyW]);
-  useEffect(() => rowV.measure(), [rowV, layout.rows, density]);
+  useEffect(() => colV.measure(), [colV, colWidth, trailW, bodyCols, stickyW]);
+  useEffect(() => rowV.measure(), [rowV, layout.rows, density, labels]);
   /** ARIA row numbers: every row but the gaps between cards. */
   const ariaRows = useMemo(() => {
     const m = new Map<string, number>();
@@ -426,10 +518,34 @@ export function Table({
       const item = layout.flat[p.row];
       const r = item ? rowIndexOfItem.get(item.id) : undefined;
       if (r !== undefined) rowV.scrollToIndex(r, { align: 'auto' });
-      if (p.col > 0) colV.scrollToIndex(p.col - 1, { align: 'auto' });
+      const col = columns[p.col];
+      const at = col ? drawnIndex.get(columnId(col)) : p.col;
+      if (p.col > 0 && at !== undefined) colV.scrollToIndex(at - 1, { align: 'auto' });
     },
-    [colV, layout.flat, rowIndexOfItem, rowV],
+    [colV, columns, drawnIndex, layout.flat, rowIndexOfItem, rowV],
   );
+
+  /** ←/→ with the grid focused and no active cell: scroll one column (the name column stays). */
+  const scrollColumn = (dir: 1 | -1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const edge = el.scrollLeft + stickyW;
+    const cols = colV.measurementsCache.slice(0, bodyCols.length);
+    const target =
+      dir > 0
+        ? cols.find((m) => m.start > edge + 1)
+        : [...cols].reverse().find((m) => m.start < edge - 1);
+    if (target) colV.scrollToIndex(target.index, { align: 'start' });
+    else el.scrollLeft = dir > 0 ? el.scrollWidth : 0;
+  };
+
+  // the item panel's item: keep its row in view as Prev/Next (J/K) move
+  useEffect(() => {
+    if (!currentItemId) return;
+    const r = rowIndexOfItem.get(currentItemId);
+    if (r !== undefined) rowV.scrollToIndex(r, { align: 'auto' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentItemId]);
 
   const lockedMessage = (item: Item) =>
     item.lockReason
@@ -576,6 +692,17 @@ export function Table({
       return toggleAll();
     }
     if (active && layout.subIndex.has(active.itemId)) return onSubKey(e, active);
+    if (
+      !active &&
+      (e.key === 'ArrowLeft' || e.key === 'ArrowRight') &&
+      !e.shiftKey &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey
+    ) {
+      e.preventDefault();
+      return scrollColumn(e.key === 'ArrowRight' ? 1 : -1);
+    }
     const rows = layout.flat.length;
     if (rows === 0) return;
     // a parent's name: → opens its sub-items, ← closes them, ↓ goes into them, Shift+Enter adds one
@@ -839,6 +966,12 @@ export function Table({
     if (!a || !o) return;
     if (a.type === 'column' && o.type === 'column' && a.fieldId !== o.fieldId) {
       const field = data.fields.find((f) => f.id === a.fieldId)!;
+      const over = data.fields.find((f) => f.id === o.fieldId);
+      const of = groupByKey(groupList);
+      if (over && of.get(field.key)?.id !== of.get(over.key)?.id) {
+        toast('Columns stay within their group. Change a column’s group from Columns.');
+        return;
+      }
       const toIndex = data.fields
         .filter((f) => f.id !== a.fieldId)
         .findIndex((f) => f.id === o.fieldId);
@@ -881,9 +1014,10 @@ export function Table({
     );
   };
 
-  // ───────────── "More columns →" ─────────────
+  // ───────────── sideways scrolling: edge shadows and the pinned scrollbar ─────────────
 
   const [more, setMore] = useState(false);
+  const [scrolledLeft, setScrolledLeft] = useState(false);
   const [wide, setWide] = useState(false);
   // a scrollbar pinned to the bottom of the window while the table is in view: rows scroll with the page, so the
   // table's own scrollbar sits at its very end, out of reach on a long sheet
@@ -892,11 +1026,26 @@ export function Table({
     const el = scrollRef.current;
     const bar = barRef.current;
     if (!el || !bar) return;
+    // Each side remembers the offset it last set on the other. A scroll event that lands on that offset is the echo of
+    // our own sync and is ignored: echoing it back would set the grid to a one-frame-old offset and stop a smooth
+    // scroll (scrollBy, scrollIntoView, ←/→) after a pixel.
+    let barSet = -1;
+    let gridSet = -1;
     const fromGrid = () => {
-      if (Math.abs(bar.scrollLeft - el.scrollLeft) > 1) bar.scrollLeft = el.scrollLeft;
+      if (Math.abs(el.scrollLeft - gridSet) <= 1) return;
+      gridSet = -1;
+      if (Math.abs(bar.scrollLeft - el.scrollLeft) > 1) {
+        bar.scrollLeft = el.scrollLeft;
+        barSet = bar.scrollLeft;
+      }
     };
     const fromBar = () => {
-      if (Math.abs(el.scrollLeft - bar.scrollLeft) > 1) el.scrollLeft = bar.scrollLeft;
+      if (Math.abs(bar.scrollLeft - barSet) <= 1) return;
+      barSet = -1;
+      if (Math.abs(el.scrollLeft - bar.scrollLeft) > 1) {
+        el.scrollLeft = bar.scrollLeft;
+        gridSet = el.scrollLeft;
+      }
     };
     el.addEventListener('scroll', fromGrid, { passive: true });
     bar.addEventListener('scroll', fromBar, { passive: true });
@@ -911,6 +1060,7 @@ export function Table({
     if (!el) return;
     const update = () => {
       setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+      setScrolledLeft(el.scrollLeft > 2);
       setWide(el.scrollWidth > el.clientWidth + 1);
     };
     update();
@@ -921,7 +1071,7 @@ export function Table({
       el.removeEventListener('scroll', update);
       ro.disconnect();
     };
-  }, [fieldCols.length, widths]);
+  }, [bodyCols.length, widths]);
 
   // ───────────── render ─────────────
 
@@ -967,7 +1117,15 @@ export function Table({
         .getState()
         .openAddField(side === 'left' ? { beforeFieldId: field.id } : { afterFieldId: field.id }),
     duplicate: () => void actions.duplicateField(field),
-    move: (by) => void actions.moveField(field, Math.max(0, index + by)),
+    move: (by) => {
+      const next = data.fields[index + by];
+      const of = groupByKey(groupList);
+      if (next && of.get(field.key)?.id !== of.get(next.key)?.id) {
+        toast('Columns stay within their group. Change a column’s group from Columns.');
+        return;
+      }
+      void actions.moveField(field, Math.max(0, index + by));
+    },
     remove: () => void actions.deleteField(field),
     summary: (fn: SummaryFn | null) => setConfig((c) => setSummary(c, field.key, fn)),
     resize: (w, done) => {
@@ -1088,20 +1246,18 @@ export function Table({
             role="grid"
             aria-label={`${ctx.sheet.name} table`}
             aria-rowcount={ariaRows.count}
-            aria-colcount={columns.length + 1}
+            aria-colcount={drawn.length + 1}
+            data-scrolled-left={scrolledLeft}
+            data-more-right={more}
             aria-multiselectable
             aria-activedescendant={activeId}
             tabIndex={0}
             onKeyDown={onKeyDown}
             onCopy={onCopy}
             onPaste={onPaste}
-            onFocus={(e) => {
-              if (e.target === scrollRef.current && !store.getState().active && layout.flat[0])
-                store.getState().focus({ itemId: layout.flat[0].id, col: 'name' });
-            }}
             // rows scroll with the page; only wide tables scroll sideways here
             className={cn(
-              'grid-scroll relative overflow-x-auto overflow-y-hidden rounded-lg outline-none',
+              'grid-scroll group/grid relative overflow-x-auto overflow-y-hidden rounded-lg outline-none',
               wide && '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
             )}
           >
@@ -1114,6 +1270,9 @@ export function Table({
                   <div
                     key={row.key}
                     role={row.kind === 'gap' ? 'presentation' : 'row'}
+                    data-current={
+                      row.kind === 'item' && row.item.id === currentItemId ? true : undefined
+                    }
                     aria-rowindex={ariaRows.index.get(row.key)}
                     className={cn(
                       'absolute top-0 left-0 flex',
@@ -1135,8 +1294,12 @@ export function Table({
                       ctx={ctx}
                       stickyW={stickyW}
                       nameWidth={nameWidth}
-                      fieldCols={fieldCols}
+                      bodyCols={bodyCols}
                       vCols={vCols}
+                      runs={runBoxes}
+                      stubFields={stubFields}
+                      onToggleGroup={toggleGroup}
+                      current={row.kind === 'item' && row.item.id === currentItemId}
                       canEdit={canEdit}
                       isAdmin={isAdmin}
                       canEditItem={canEditItem}
@@ -1196,26 +1359,13 @@ export function Table({
           >
             <div style={{ width: totalW, height: 1 }} />
           </div>
-          {more ? (
-            <div
-              className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] flex w-[56px] items-start justify-end"
-              style={{
-                background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.9))',
-              }}
-            >
-              <button
-                type="button"
-                // stays in view while the page scrolls past a long table
-                className="border-line hover:border-line-strong focus-visible:outline-focus bg-background-100 text-label-12 pointer-events-auto sticky top-[50vh] mt-[60px] mr-2 shrink-0 rounded-full border px-3 py-1 font-medium whitespace-nowrap focus-visible:outline-2"
-                onClick={() => {
-                  const el = scrollRef.current;
-                  if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
-                }}
-              >
-                More columns →
-              </button>
-            </div>
-          ) : null}
+          {/* the right edge while more columns remain: a 1 px line and a soft shadow (the left one is on the name column) */}
+          <div
+            aria-hidden
+            data-edge="right"
+            hidden={!more}
+            className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] w-[14px] rounded-r-lg bg-[linear-gradient(270deg,var(--gray-alpha-200),transparent)] shadow-[inset_-1px_0_0_var(--line)]"
+          />
         </div>
         <DragOverlay dropAnimation={null}>
           {dragging?.startsWith('row:') ? (
@@ -1262,7 +1412,15 @@ interface RowProps {
   ctx: Ctx;
   stickyW: number;
   nameWidth: number;
-  fieldCols: Extract<GridColumn, { kind: 'field' }>[];
+  /** Columns after the name: fields and collapsed groups' stubs. */
+  bodyCols: BodyCol[];
+  /** Column group labels (empty: the sheet has no column groups). */
+  runs: RunBox[];
+  /** collapsed group id → the member its stub shows. */
+  stubFields: Map<string, Field | null>;
+  onToggleGroup(groupId: string): void;
+  /** Item rows: the item panel shows this item. */
+  current: boolean;
   vCols: { index: number; start: number; size: number; key: React.Key }[];
   canEdit: boolean;
   isAdmin: boolean;
@@ -1384,41 +1542,124 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
   );
 }
 
+/** A collapsed group's stub in a card's column header: its name and how many columns it hides; a click expands it. */
+function StubHeader({ col, onToggle }: { col: StubCol; onToggle(groupId: string): void }) {
+  const n = col.fields.length;
+  return (
+    <button
+      type="button"
+      title={`Show ${col.name}: ${col.fields.map((f) => f.name).join(', ')}`}
+      className="text-muted-foreground hover:text-ink hover:bg-subtle focus-visible:outline-focus text-label-12 flex h-full w-full items-center gap-1 truncate px-[14px] text-left focus-visible:outline-2 focus-visible:-outline-offset-2"
+      onClick={() => onToggle(col.groupId)}
+    >
+      <span className="truncate">
+        {col.name} · {n} hidden
+      </span>
+    </button>
+  );
+}
+
+/** The slim line of column group labels above a card's column names (sheets with column groups). */
+function GroupLabels({
+  runs,
+  stickyW,
+  onToggle,
+}: {
+  runs: RunBox[];
+  stickyW: number;
+  onToggle(groupId: string): void;
+}) {
+  return (
+    <>
+      {runs.map((r) => (
+        <div
+          key={r.key}
+          role="columnheader"
+          className="absolute top-0 flex items-center"
+          style={{ left: r.left, width: r.width, height: GROUP_LABEL_H }}
+        >
+          {/* the label stays in view while its columns scroll under the name column */}
+          <div
+            className="sticky flex max-w-full min-w-0 items-center px-1.5"
+            style={{ left: stickyW }}
+          >
+            {r.groupId ? (
+              <button
+                type="button"
+                aria-expanded={!r.collapsed}
+                title={r.collapsed ? `Show ${r.name}` : `Collapse ${r.name}`}
+                className="text-muted-foreground hover:text-ink hover:bg-soft focus-visible:outline-focus text-label-12 flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-md pr-2 pl-1 font-medium focus-visible:outline-2"
+                onClick={() => onToggle(r.groupId!)}
+              >
+                {r.collapsed ? (
+                  <ChevronRight className="size-3.5 shrink-0" aria-hidden />
+                ) : (
+                  <ChevronDown className="size-3.5 shrink-0" aria-hidden />
+                )}
+                <span className="truncate">{r.name}</span>
+                <span className="text-label-11-mono shrink-0 text-[var(--muted)]">
+                  {r.size}
+                  <span className="sr-only"> columns</span>
+                </span>
+              </button>
+            ) : (
+              <span className="text-muted-foreground text-label-12 truncate pl-1 font-medium">
+                {r.name}
+              </span>
+            )}
+          </div>
+          <span aria-hidden className="bg-line absolute right-1.5 bottom-0 left-1.5 h-px" />
+        </div>
+      ))}
+    </>
+  );
+}
+
 /** The column header at the top of a group card: select all of the group, the column names, "+" add a column. */
 function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> }) {
   const { row } = p;
   const [pickerOpen, setPickerOpen] = useState(false);
   const items = p.groupItems.get(row.group.id) ?? [];
   const allSelected = items.length > 0 && items.every((i) => p.selected.has(i.id));
+  // with column groups the label line sits above the column names
+  const top = p.runs.length > 0 ? GROUP_LABEL_H : 0;
+  const cell = { top, height: 34 };
   return (
     <>
-      <Sticky width={p.stickyW} role="columnheader" className="border-b-soft border-b">
-        {p.canEdit ? (
-          <span className="flex w-[58px] shrink-0 items-center pl-[24px]">
-            <input
-              type="checkbox"
-              className="row-check"
-              aria-label={`Select all items in ${row.group.name}`}
-              checked={allSelected}
-              disabled={items.length === 0}
-              onChange={(e) => p.onSelectItems(items, e.target.checked)}
-            />
+      <Sticky
+        width={p.stickyW}
+        role="columnheader"
+        className="border-b-soft items-end self-stretch border-b"
+      >
+        <span className="flex h-[34px] w-full items-center">
+          {p.canEdit ? (
+            <span className="flex w-[58px] shrink-0 items-center pl-[24px]">
+              <input
+                type="checkbox"
+                className="row-check"
+                aria-label={`Select all items in ${row.group.name}`}
+                checked={allSelected}
+                disabled={items.length === 0}
+                onChange={(e) => p.onSelectItems(items, e.target.checked)}
+              />
+            </span>
+          ) : (
+            <span className="w-[58px] shrink-0" />
+          )}
+          <span className="text-muted-foreground text-label-12 truncate pl-[4px]">
+            {p.ctx.sheet.itemLabel}
           </span>
-        ) : (
-          <span className="w-[58px] shrink-0" />
-        )}
-        <span className="text-muted-foreground text-label-12 truncate pl-[4px]">
-          {p.ctx.sheet.itemLabel}
         </span>
       </Sticky>
+      {top ? <GroupLabels runs={p.runs} stickyW={p.stickyW} onToggle={p.onToggleGroup} /> : null}
       {p.vCols.map((vc) => {
-        if (vc.index >= p.fieldCols.length)
+        if (vc.index >= p.bodyCols.length)
           return (
             <div
               key="__trail"
               role="columnheader"
-              className="border-b-soft bg-background-100 absolute top-0 flex h-full items-center border-b pl-1"
-              style={{ left: vc.start, width: vc.size }}
+              className="border-b-soft bg-background-100 absolute flex items-center border-b pl-1"
+              style={{ left: vc.start, width: vc.size, ...cell }}
             >
               {p.canEdit ? (
                 <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
@@ -1447,13 +1688,25 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
               )}
             </div>
           );
-        const field = p.fieldCols[vc.index]!.field;
+        const col = p.bodyCols[vc.index]!;
+        if (col.kind === 'stub')
+          return (
+            <div
+              key={`stub:${col.groupId}`}
+              role="columnheader"
+              className="border-b-soft bg-background-200 absolute border-b"
+              style={{ left: vc.start, width: vc.size, ...cell }}
+            >
+              <StubHeader col={col} onToggle={p.onToggleGroup} />
+            </div>
+          );
+        const field = col.field;
         const index = p.allFields.findIndex((f) => f.id === field.id);
         return (
           <div
             key={field.id}
-            className="absolute top-0 h-full"
-            style={{ left: vc.start, width: vc.size }}
+            className="absolute"
+            style={{ left: vc.start, width: vc.size, ...cell }}
           >
             <ColumnHeader
               scope={row.group.id}
@@ -1476,8 +1729,62 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
   );
 }
 
+/** A collapsed group's cell in an item row: the value of the member that matters most; a click expands the group. */
+function StubCell({
+  col,
+  item,
+  field,
+  ctx,
+  left,
+  width,
+  selected,
+  onToggle,
+}: {
+  col: StubCol;
+  item: Item;
+  field: Field | null;
+  ctx: Ctx;
+  left: number;
+  width: number;
+  selected: boolean;
+  onToggle(groupId: string): void;
+}) {
+  const ui = field ? fieldUI(field.type) : null;
+  const title = [
+    ...col.fields.map((f) => `${f.name}: ${textOf(item, f, ctx) || '–'}`),
+    `Click to show ${col.name}`,
+  ].join('\n');
+  return (
+    <div
+      role="gridcell"
+      title={title}
+      onClick={() => onToggle(col.groupId)}
+      className={cn(
+        'border-b-line bg-background-200 group-hover/row:bg-subtle text-label-13 absolute top-0 flex h-full cursor-pointer items-center overflow-hidden border-b px-[14px] [&_[data-pill]]:-mx-1.5',
+        selected && 'bg-sel group-hover/row:bg-sel',
+      )}
+      style={{ left, width }}
+    >
+      {field && ui ? (
+        <span className="pointer-events-none flex min-w-0 flex-1 items-center">
+          <ui.Cell
+            value={cellValue(item, field, ctx) as never}
+            field={field}
+            item={item}
+            ctx={ctx}
+            density="table"
+          />
+        </span>
+      ) : (
+        <span className="text-muted-foreground">–</span>
+      )}
+      <span className="sr-only">{title}</span>
+    </div>
+  );
+}
+
 const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { kind: 'item' }> }) {
-  const { row, ctx, fieldCols, vCols } = p;
+  const { row, ctx, bodyCols, vCols } = p;
   const item = row.item;
   const editable = p.canEditItem(item);
   const isSelected = p.selected.has(item.id);
@@ -1514,10 +1821,15 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
         className={cn(
           'border-b-line group-hover/row:bg-subtle border-b',
           isSelected && 'bg-sel group-hover/row:bg-sel',
+          p.current && 'bg-soft',
           drop.isOver && 'shadow-[inset_0_2px_0_var(--focus)]',
           drag.isDragging && 'opacity-40',
         )}
       >
+        {/* the row the item panel shows: a 2 px ink marker */}
+        {p.current ? (
+          <span aria-hidden className="bg-ink absolute inset-y-0 left-0 z-[1] w-0.5" />
+        ) : null}
         {/* the name cell holds the row's checkbox and drag handle too (rows own only cells) */}
         <div
           ref={drop.setNodeRef}
@@ -1702,7 +2014,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
         </div>
       </Sticky>
       {vCols.map((vc) => {
-        if (vc.index >= fieldCols.length)
+        if (vc.index >= bodyCols.length)
           return (
             <RowMenu
               key="__trail"
@@ -1716,7 +2028,22 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               onAction={p.onRowAction}
             />
           );
-        const field = fieldCols[vc.index]!.field;
+        const bc = bodyCols[vc.index]!;
+        if (bc.kind === 'stub')
+          return (
+            <StubCell
+              key={`stub:${bc.groupId}`}
+              col={bc}
+              item={item}
+              field={p.stubFields.get(bc.groupId) ?? null}
+              ctx={ctx}
+              left={vc.start}
+              width={vc.size}
+              selected={isSelected}
+              onToggle={p.onToggleGroup}
+            />
+          );
+        const field = bc.field;
         const col = p.colIndex.get(field.id)!;
         const cellEditing = isEditing(field.id);
         return (
@@ -1879,19 +2206,21 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
 }
 
 function SummaryRow(p: RowProps & { row: Extract<TableRow, { kind: 'summary' }> }) {
-  const { row, ctx, fieldCols, vCols } = p;
+  const { row, ctx, bodyCols, vCols } = p;
   return (
     <>
       <Sticky width={p.stickyW}>
         <span className="sr-only">Summary of {row.group.name}</span>
       </Sticky>
       {vCols.map((vc) => {
-        if (vc.index >= fieldCols.length) return null;
-        const field = fieldCols[vc.index]!.field;
+        if (vc.index >= bodyCols.length) return null;
+        const bc = bodyCols[vc.index]!;
+        const field = bc.kind === 'stub' ? p.stubFields.get(bc.groupId) : bc.field;
+        if (!field) return null;
         const fn = p.summaries[field.key];
         return (
           <div
-            key={field.id}
+            key={columnId(bc)}
             role="gridcell"
             className="bg-background-100 absolute top-0 flex h-full items-center px-[14px]"
             style={{ left: vc.start, width: vc.size }}

@@ -418,7 +418,7 @@ export function ViewMenu({ views, canEdit }: { views: ViewsState; canEdit: boole
   );
 }
 
-function ViewDialog({
+export function ViewDialog({
   open,
   onClose,
   title,

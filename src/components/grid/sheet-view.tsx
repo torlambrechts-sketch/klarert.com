@@ -37,8 +37,9 @@ import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
 import { GroupSelect } from '@/components/table/group-select';
 import { TableView } from '@/components/table/table-view';
+import { ColumnsMenu } from '@/components/table/columns-menu';
+import { ViewBar } from '@/components/views/view-bar';
 import {
-  ColumnsMenu,
   DensityToggle,
   OwnerFilter,
   StatusFilter,
@@ -207,7 +208,6 @@ function SheetBody(props: SheetViewProps) {
         })),
     });
   }, [fields, setConfig, store]);
-  const hidden = useGrid((s) => s.hidden);
 
   const env: ConfigEnv | null = useMemo(
     () =>
@@ -223,7 +223,6 @@ function SheetBody(props: SheetViewProps) {
     [data, ctx, sheets.data],
   );
 
-  const hiddenCount = data ? data.fields.filter((f) => hidden.has(f.id)).length : 0;
   const tabular = active.type === 'table';
   const filterable = active.type !== 'form';
   const inScope = useMemo(
@@ -380,7 +379,18 @@ function SheetBody(props: SheetViewProps) {
         ) : null}
         {data && tabular ? (
           <>
-            <ColumnsMenu fields={data.fields} hiddenCount={hiddenCount} />
+            {ctx ? (
+              <ColumnsMenu
+                org={org}
+                data={data}
+                ctx={ctx}
+                views={views}
+                userId={userId}
+                canEdit={canEdit}
+                isAdmin={isAdmin}
+                actions={actions}
+              />
+            ) : null}
             <DensityToggle />
           </>
         ) : null}
@@ -393,6 +403,15 @@ function SheetBody(props: SheetViewProps) {
           timeZone={timeZone}
         />
       </div>
+      {data && tabular && views.ready ? (
+        <ViewBar
+          views={views}
+          sheet={data.sheet}
+          fields={data.fields}
+          userId={userId}
+          isAdmin={isAdmin}
+        />
+      ) : null}
       {!canEdit ? (
         <p className="text-muted-foreground text-copy-13 -mt-1 mb-3">
           You can view this sheet. Ask an editor or admin to change it.
@@ -621,6 +640,7 @@ function ViewBody({
           onNew={() => setLocalAddTick((t) => t + 1)}
           config={config}
           setConfig={setConfig}
+          currentItemId={panelItem?.id ?? null}
         />
       ) : active.type === 'insights' ? (
         <InsightsView

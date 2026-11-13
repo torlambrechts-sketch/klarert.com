@@ -9,6 +9,7 @@ import { ownerField } from '../item-panel';
 import { dueField } from '../my-work';
 import { keysBetween } from '../ordering';
 import { defOf, kindOf } from '../values';
+import { trendPolarity } from '../values/trend';
 import type { Ctx, Field } from '../types';
 
 export const MAX_COLUMN_GROUPS = 30;
@@ -225,7 +226,7 @@ export function keyColumns(ctx: Ctx): Map<string, KeyColumn> {
 
 /**
  * The member a collapsed group shows in its stub: a key column first (status, then the main date, then the owner),
- * then the first option, date or number member, then the first member that holds values.
+ * then the first option, date, score or number member, then the first member that holds values.
  */
 export function stubField(members: readonly Field[], ctx: Ctx): Field | null {
   if (members.length === 0) return null;
@@ -234,8 +235,16 @@ export function stubField(members: readonly Field[], ctx: Ctx): Field | null {
     const f = members.find((m) => keys.get(m.id) === k);
     if (f) return f;
   }
-  for (const kinds of [['option', 'ordered'], ['date'], ['number']]) {
-    const f = members.find((m) => kinds.includes(kindOf(m, ctx)));
+  const kindIs = (m: Field, kinds: string[]) => kinds.includes(kindOf(m, ctx));
+  const picks: ((m: Field) => boolean)[] = [
+    (m) => kindIs(m, ['option', 'ordered']),
+    (m) => kindIs(m, ['date']),
+    // a score (a number with a better or worse direction) before other numbers
+    (m) => kindIs(m, ['number']) && trendPolarity(m) !== null,
+    (m) => kindIs(m, ['number']),
+  ];
+  for (const pick of picks) {
+    const f = members.find(pick);
     if (f) return f;
   }
   return members.find((m) => defOf(m).storage === 'values') ?? members[0]!;

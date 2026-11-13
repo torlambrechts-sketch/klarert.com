@@ -130,6 +130,13 @@ describe('key columns', () => {
     expect(stubField([notes, due, owner], ctx)?.id).toBe(due.id);
     expect(stubField([notes, found], ctx)?.id).toBe(found.id);
     expect(stubField([notes], ctx)?.id).toBe(notes.id);
+    const plain = makeField('number', {}, { key: 'likelihood' });
+    const score = makeField(
+      'number',
+      { bands: [4, 9, 15], higherIsBetter: false },
+      { key: 'score' },
+    );
+    expect(stubField([notes, plain, score], ctx)?.id).toBe(score.id);
     expect(stubField([], ctx)).toBeNull();
   });
 });
