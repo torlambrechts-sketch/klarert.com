@@ -62,6 +62,16 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   ],
   [/invites_open_email_idx/, 'conflict', 'This person already has an open invite.'],
   [/memberships_pkey/, 'conflict', 'This person is already a member.'],
+  [/pack already installed/, 'conflict', 'This pack is already installed in this workspace.'],
+  [/pack already archived/, 'conflict', 'This pack is already archived.'],
+  [/pack changed/, 'conflict', 'This pack changed since you previewed it. Preview it again.'],
+  [/pack not found|pack install not found/, 'not_found', 'This pack is no longer available.'],
+  [
+    /only owners and admins (install|archive) packs/,
+    'forbidden',
+    'Only owners and admins can install and archive packs.',
+  ],
+  [/pack plan: (.*)/, 'invalid', 'This pack does not fit the workspace. Preview it again.'],
   [/item locked: (.*)/, 'forbidden', 'This item is locked. Only owners and admins can change it.'],
   [/item locked/, 'forbidden', 'This item is locked. Only owners and admins can change it.'],
   [

@@ -640,7 +640,8 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
   const state = conflicts.length ? 'blocked' : 'ready';
   const preview: PackPreview = {
     ...base,
-    counts: { ...base.counts, links: linkRows.length },
+    // folders the workspace already has are used, not counted as new
+    counts: { ...base.counts, folders: folderRows.length, links: linkRows.length },
     state,
     conflicts: [...new Set(conflicts)],
     warnings: [...new Set(tp.warnings)],

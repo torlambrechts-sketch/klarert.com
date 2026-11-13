@@ -17,6 +17,9 @@ import {
 } from './members';
 import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
+import { ArchivePack, PackPreview } from './packs';
+import { listPacks } from '@/server/commands/packs';
+import { Check } from 'lucide-react';
 
 export const metadata = { title: 'Settings · Compliance OS' };
 
@@ -24,6 +27,7 @@ const TABS = [
   { id: 'members', label: 'Members' },
   { id: 'teams', label: 'Teams and roles' },
   { id: 'entities', label: 'Entities and sites' },
+  { id: 'packs', label: 'Packs' },
   { id: 'archived', label: 'Archived' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
@@ -105,7 +109,7 @@ export default async function SettingsPage({
       <PageHeader
         crumb={workspace.name}
         title="Workspace admin"
-        description="Members and roles, teams and job roles, entities and sites, archived folders and sheets."
+        description="Members and roles, teams and job roles, entities and sites, packs, archived folders and sheets."
       />
       <PageTabs
         label="Settings sections"
@@ -120,6 +124,7 @@ export default async function SettingsPage({
         <TeamsTab db={supabase} org={org} orgId={workspace.id} people={people} nameOf={nameOf} />
       ) : null}
       {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
+      {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
       {tab === 'archived' ? (
         <ArchivedTab
           db={supabase}
@@ -344,6 +349,140 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
         </ul>
       )}
     </Card>
+  );
+}
+
+/** Packs (docs/11): the catalogue, what is installed here and the pack entries of the activity log. */
+async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
+  const r = await listPacks({ org });
+  if (!r.ok)
+    return (
+      <Card title="Packs">
+        <div role="alert" className="flex flex-col items-start gap-2">
+          <p className="m-0">{r.error.message}</p>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/${org}/settings?tab=packs`}>Retry</Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  const { available, installed, log, canInstall } = r.data;
+  return (
+    <>
+      <Card
+        title="Available packs"
+        description="Ready-made sheets, links, forms, automations and dashboards. Preview a pack to see exactly what it creates here before you install it."
+      >
+        {available.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13">No packs are available yet.</p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Available packs">
+            {available.map((p) => (
+              <li
+                key={p.key}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+              >
+                <div className="flex min-w-0 flex-col gap-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{p.title}</span>
+                    <span className="text-label-12-mono text-muted-foreground">{p.version}</span>
+                    {p.installedVersion ? (
+                      <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                        <Check className="text-good size-3" aria-hidden /> Installed
+                      </span>
+                    ) : null}
+                  </span>
+                  {p.description ? (
+                    <span className="text-copy-13 text-muted-foreground">{p.description}</span>
+                  ) : null}
+                  <span className="text-label-13">
+                    Inside: {p.inside}
+                    <span className="text-muted-foreground"> · {p.sheets.join(', ')}</span>
+                  </span>
+                </div>
+                {canInstall ? (
+                  <div className="shrink-0">
+                    <PackPreview
+                      org={org}
+                      pack={{ key: p.key, title: p.title, version: p.version }}
+                    />
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card
+        title="Installed packs"
+        description="Archiving a pack archives its sheets, folders and dashboards and turns its automations off. Items and the activity log are kept, and archived sheets can be restored from Archived."
+      >
+        {installed.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13">No packs installed yet.</p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Installed packs">
+            {installed.map((i) => (
+              <li
+                key={i.id}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 flex-col">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{i.title}</span>
+                    <span className="text-label-12-mono text-muted-foreground">{i.version}</span>
+                    <span className="text-label-12 text-muted-foreground">
+                      {i.status === 'installed' ? 'Installed' : 'Archived'}
+                    </span>
+                  </span>
+                  <span className="text-muted-foreground text-label-13">
+                    Installed by {i.installedBy}, {formatDateTime(i.installedAt, timeZone)}
+                    {i.archivedAt
+                      ? ` · archived by ${i.archivedBy ?? 'System'}, ${formatDateTime(i.archivedAt, timeZone)}`
+                      : ''}
+                  </span>
+                </div>
+                {i.status === 'installed' ? (
+                  <div className="flex flex-wrap gap-1">
+                    {i.firstSheetId ? (
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/${org}/s/${i.firstSheetId}`} aria-label={`Open ${i.title}`}>
+                          Open
+                        </Link>
+                      </Button>
+                    ) : null}
+                    {canInstall ? <ArchivePack org={org} installId={i.id} title={i.title} /> : null}
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card
+        title="Pack activity"
+        description="Installs and archives from the activity log, newest first."
+      >
+        {log.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13">No pack activity yet.</p>
+        ) : (
+          <ol
+            className="divide-line m-0 flex list-none flex-col divide-y p-0"
+            aria-label="Pack activity"
+          >
+            {log.map((e) => (
+              <li key={e.id} className="flex flex-col gap-0.5 py-2">
+                <span>
+                  <span className="font-medium">{e.actor}</span> · {e.text}
+                </span>
+                <span className="text-muted-foreground text-label-12-mono">
+                  {formatDateTime(e.at, timeZone)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Card>
+    </>
   );
 }
 

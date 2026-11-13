@@ -118,6 +118,7 @@ export async function updateDashboard(input: unknown): Promise<Result<{ dashboar
         .select('id')
         .eq('id', v.dashboardId)
         .eq('org_id', orgId)
+        .is('archived_at', null)
         .maybeSingle();
       if (!row) return notFound();
       const widgets = v.widgets as WidgetConfig[] | undefined;
@@ -188,6 +189,7 @@ export async function seedDashboard(
         .from('dashboards')
         .select(COLUMNS)
         .eq('org_id', orgId)
+        .is('archived_at', null)
         .order('position')
         .limit(1);
       if (readError) return fromDbError(readError);
