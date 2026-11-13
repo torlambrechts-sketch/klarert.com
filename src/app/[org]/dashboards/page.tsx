@@ -14,7 +14,7 @@ export default async function DashboardsPage({ params }: { params: Promise<{ org
   const list = await listDashboards(supabase, workspace.id);
   if (list[0]) redirect(`/${org}/dashboards/${list[0].id}`);
   return (
-    <main className="mx-auto flex w-full max-w-[1184px] flex-col gap-4 px-4 pt-6 pb-8 sm:px-7 sm:pt-[42px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         crumb="Insights"
         title="Dashboards"

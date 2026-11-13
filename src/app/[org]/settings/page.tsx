@@ -67,7 +67,7 @@ export default async function SettingsPage({
 
   if (!isAdminRole(role)) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <main className="w-full px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
         <h1>Workspace admin</h1>
         <p className="text-muted-foreground mt-2">
           Only owners and admins can change workspace settings.
@@ -93,7 +93,7 @@ export default async function SettingsPage({
   const nameOf = new Map(people.map((p) => [p.userId, p.name]));
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         crumb={workspace.name}
         title="Workspace admin"

@@ -72,7 +72,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
   const hello = greeting(hourIn(new Date(), workspace.time_zone));
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         className="border-line mb-2 border-b pb-[18px]"
         crumb={workspace.name}
