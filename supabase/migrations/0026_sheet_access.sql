@@ -610,7 +610,7 @@ begin
   else
     update access_grants set level = p_level, granted_by = auth.uid(), granted_at = now()
      where user_id = p_user and (sheet_id = s.id or folder_id = f.id);
-    act := 'access.changed';
+    act := 'access.level_changed';
   end if;
   perform _access_changed();
   insert into activity_log(org_id, sheet_id, chain_key, actor_kind, actor_id, action, old_value, new_value, note)

@@ -51,6 +51,12 @@ language sql stable security definer set search_path = public as $$
                   false)
 $$;
 
+-- fields.field_hidden (a computed column the app selects with the fields): the caller may not see this field's values.
+create or replace function field_hidden(f fields) returns boolean
+language sql stable set search_path = public as $$
+  select f.restricted_to is not null and f.id = any (hidden_field_ids())
+$$;
+
 -- A marker that stands for a restricted value in the log.
 create or replace function activity_value_masked(v jsonb) returns boolean language sql immutable as $$
   select v is null or (jsonb_typeof(v) = 'object' and v ? '$restricted')
@@ -630,7 +636,7 @@ revoke all on function _field_visible_for(uuid, uuid, jsonb), _full_values(uuid,
 revoke all on function restricted_activity_append_only(), restricted_values_guard(), items_restricted_split(),
   activity_a_mask(), fields_restricted_guard() from public, anon, authenticated;
 revoke all on function hidden_field_ids(), hidden_field_keys(), field_visible(uuid), activity_value_masked(jsonb),
-  set_field_restriction(uuid, boolean, uuid[], text[]) from public, anon;
+  field_hidden(fields), set_field_restriction(uuid, boolean, uuid[], text[]) from public, anon;
 grant execute on function hidden_field_ids(), hidden_field_keys(), field_visible(uuid), activity_value_masked(jsonb),
-  set_field_restriction(uuid, boolean, uuid[], text[]) to authenticated;
-grant execute on function hidden_field_ids(), field_visible(uuid) to service_role;
+  field_hidden(fields), set_field_restriction(uuid, boolean, uuid[], text[]) to authenticated;
+grant execute on function hidden_field_ids(), field_visible(uuid), field_hidden(fields) to service_role;
