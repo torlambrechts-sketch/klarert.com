@@ -1,5 +1,6 @@
 'use client';
 
+import { itemRequirementRef } from '@/engine/frameworks/refs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Lock } from 'lucide-react';
@@ -245,6 +246,15 @@ function ItemCard({
         </button>
       </h3>
       <span className="text-muted-foreground text-label-12 flex min-w-0 items-center gap-1.5">
+        {itemRequirementRef(item) ? (
+          <>
+            <span className="text-foreground shrink-0 font-mono font-semibold">
+              <span className="sr-only">Ref </span>
+              {itemRequirementRef(item)}
+            </span>
+            <span aria-hidden>·</span>
+          </>
+        ) : null}
         <span className="shrink-0 font-mono">{item.displayId}</span>
         {ownerId ? (
           <>

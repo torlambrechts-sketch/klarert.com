@@ -33,3 +33,8 @@ export function frameworkPackKey(frameworkKey: string): string {
 export function frameworkPackVersion(f: Pick<Framework, 'version' | 'revision'>): string {
   return `${Number.parseInt(f.version, 10)}.${f.revision}.0`;
 }
+
+/** The reference number of a library item ("A.5.1"), or null for any other item. */
+export function itemRequirementRef(item: { requirementRef?: string }): string | null {
+  return item.requirementRef ? (parseRequirementKey(item.requirementRef)?.ref ?? null) : null;
+}

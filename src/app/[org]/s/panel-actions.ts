@@ -2,6 +2,7 @@
 
 import * as documents from '@/server/commands/documents';
 import * as files from '@/server/commands/files';
+import * as frameworks from '@/server/commands/frameworks';
 import * as panel from '@/server/commands/panel';
 import * as updates from '@/server/commands/updates';
 
@@ -23,3 +24,5 @@ export const searchDocumentsAction = async (input: unknown) => documents.searchD
 export const addDocumentsFieldAction = async (input: unknown) => documents.addDocumentsField(input);
 export const setDocumentsRegisterAction = async (input: unknown) =>
   documents.setDocumentsRegister(input);
+export const requirementContextAction = async (input: unknown) =>
+  frameworks.requirementContext(input);

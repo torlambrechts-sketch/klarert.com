@@ -20,7 +20,9 @@ import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
 import { ArchivePack, PackPreview } from './packs';
 import { listPacks } from '@/server/commands/packs';
-import { Check } from 'lucide-react';
+import { listFrameworks } from '@/server/commands/frameworks';
+import { AdoptFramework } from './frameworks';
+import { Check, ExternalLink } from 'lucide-react';
 
 export const metadata = { title: 'Settings · Compliance OS' };
 
@@ -29,6 +31,7 @@ const TABS = [
   { id: 'teams', label: 'Teams and roles' },
   { id: 'entities', label: 'Entities and sites' },
   { id: 'packs', label: 'Packs' },
+  { id: 'frameworks', label: 'Frameworks' },
   { id: 'archived', label: 'Archived' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
@@ -120,7 +123,7 @@ export default async function SettingsPage({
       <PageHeader
         crumb={workspace.name}
         title="Workspace admin"
-        description="Members and roles, teams and job roles, entities and sites, packs, archived folders and sheets."
+        description="Members and roles, teams and job roles, entities and sites, packs, frameworks, archived folders and sheets."
       />
       <PageTabs
         label="Settings sections"
@@ -143,6 +146,7 @@ export default async function SettingsPage({
       ) : null}
       {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
       {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
+      {tab === 'frameworks' ? <FrameworksTab org={org} /> : null}
       {tab === 'archived' ? (
         <ArchivedTab
           db={supabase}
@@ -505,6 +509,137 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
               </li>
             ))}
           </ol>
+        )}
+      </Card>
+    </>
+  );
+}
+
+const KIND_LABEL: Record<string, string> = {
+  standard: 'Standard',
+  law: 'EU law',
+  regulation: 'Regulation',
+  internal: 'Internal',
+};
+
+/** A coverage bar with its words: colour is never the only signal. */
+function CoverageBar({ percent, label }: { percent: number | null; label: string }) {
+  return (
+    <span className="flex min-w-0 flex-col gap-1">
+      <span className="bg-soft h-1.5 w-full max-w-[240px] overflow-hidden rounded" aria-hidden>
+        <span className="bg-good block h-full rounded" style={{ width: `${percent ?? 0}%` }} />
+      </span>
+      <span className="text-label-13">{label}</span>
+    </span>
+  );
+}
+
+/** Frameworks (docs/12): adopted frameworks with coverage, and the catalogue to adopt from. */
+async function FrameworksTab({ org }: { org: string }) {
+  const r = await listFrameworks({ org });
+  if (!r.ok)
+    return (
+      <Card title="Frameworks">
+        <div role="alert" className="flex flex-col items-start gap-2">
+          <p className="m-0">{r.error.message}</p>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/${org}/settings?tab=frameworks`}>Retry</Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  const { frameworks, canAdopt, controlsSheets } = r.data;
+  const adopted = frameworks.filter((f) => f.adopted);
+  return (
+    <>
+      <Card
+        title={`Adopted frameworks · ${adopted.length}`}
+        description="Each adopted framework is a library sheet: one item per requirement, with applicability, justification, implementation status and evidence. Coverage is the share of requirements in scope with an implemented control or current evidence."
+      >
+        {adopted.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13">
+            No frameworks adopted yet. Adopt one from the catalogue below.
+          </p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Adopted frameworks">
+            {adopted.map((f) => (
+              <li
+                key={f.key}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+              >
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{f.title}</span>
+                    <span className="text-muted-foreground text-label-13">
+                      {f.adopted!.sheetName}
+                    </span>
+                  </span>
+                  <CoverageBar
+                    percent={f.adopted!.coverage.percent}
+                    label={f.adopted!.coverageText}
+                  />
+                </div>
+                <Button asChild variant="outline" size="sm" className="self-start sm:self-center">
+                  <Link href={`/${org}/s/${f.adopted!.sheetId}`} aria-label={`Open ${f.title}`}>
+                    Open
+                  </Link>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card
+        title="Framework catalogue"
+        description="Reference numbers with short titles in our own words. The text of standards is not included: buy the standard for it. EU laws link to EUR-Lex."
+      >
+        {frameworks.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13">No frameworks are available yet.</p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Framework catalogue">
+            {frameworks.map((f) => (
+              <li
+                key={`${f.key}@${f.version}`}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+              >
+                <div className="flex min-w-0 flex-col gap-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{f.title}</span>
+                    <span className="text-label-12 bg-soft rounded px-1.5 py-0.5">
+                      {KIND_LABEL[f.kind] ?? f.kind}
+                    </span>
+                    {f.adopted ? (
+                      <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                        <Check className="text-good size-3" aria-hidden /> Adopted
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-label-13">
+                    {f.requirements} requirements · {f.publisher}
+                  </span>
+                  <span className="text-copy-13 text-muted-foreground">{f.licence}</span>
+                  <a
+                    href={f.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-label-13 flex w-fit items-center gap-1 underline-offset-2 hover:underline"
+                  >
+                    Source <ExternalLink className="size-3" aria-hidden />
+                    <span className="sr-only">(opens in a new tab)</span>
+                  </a>
+                </div>
+                {canAdopt && !f.adopted ? (
+                  <div className="shrink-0">
+                    <AdoptFramework
+                      org={org}
+                      framework={{ key: f.key, version: f.version, title: f.title }}
+                      controls={controlsSheets}
+                    />
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
     </>

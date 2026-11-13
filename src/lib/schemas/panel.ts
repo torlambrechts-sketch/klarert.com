@@ -80,8 +80,13 @@ export const addDocumentsFieldInput = z.object({
 });
 export const setRegisterInput = z.object({ org: slugInput, sheetId: uuid, documents: z.boolean() });
 export const verifyActivityInput = z.object({ org: slugInput, itemId: uuid });
-export const searchItemsInput = z.object({
-  org: slugInput,
-  sheetId: uuid,
-  query: z.string().max(100),
-});
+export const searchItemsInput = z
+  .object({
+    org: slugInput,
+    /** The target sheet of a link field. */
+    sheetId: uuid.optional(),
+    /** Requirement and control link fields with no target sheet: items of every library sheet (docs/12). */
+    library: z.literal(true).optional(),
+    query: z.string().max(100),
+  })
+  .refine((v) => Boolean(v.sheetId) !== Boolean(v.library), 'Choose a sheet.');

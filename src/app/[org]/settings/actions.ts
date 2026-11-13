@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import * as frameworks from '@/server/commands/frameworks';
 import * as members from '@/server/commands/members';
 import * as packs from '@/server/commands/packs';
 import * as structure from '@/server/commands/structure';
@@ -48,6 +49,28 @@ export async function installPackAction(input: { org: string; key: string; hash:
 
 export async function archivePackAction(input: { org: string; installId: string }) {
   const result = await packs.archivePack(input);
+  if (result.ok) revalidatePath(`/${input.org}`, 'layout');
+  return result;
+}
+
+// Frameworks (docs/12): adopting creates a folder and a library sheet, so the workspace layout is revalidated.
+export async function previewAdoptionAction(input: {
+  org: string;
+  framework: string;
+  version: string;
+  controlsSheetId: string | null;
+}) {
+  return frameworks.previewAdoption(input);
+}
+
+export async function adoptFrameworkAction(input: {
+  org: string;
+  framework: string;
+  version: string;
+  hash: string;
+  controlsSheetId: string | null;
+}) {
+  const result = await frameworks.adoptFramework(input);
   if (result.ok) revalidatePath(`/${input.org}`, 'layout');
   return result;
 }

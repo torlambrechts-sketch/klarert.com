@@ -127,20 +127,22 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
         return ok({
           canInstall: isAdminRole(role),
           // a framework's library is adopted from Frameworks (docs/12), not listed here
-          available: catalogue.filter((c) => !isFrameworkPack(c.manifest)).map((c) => {
-            const counts = manifestCounts(c.manifest);
-            return {
-              key: c.key,
-              version: c.version,
-              title: c.title,
-              description: c.description,
-              hash: c.hash,
-              counts,
-              inside: countsText(counts),
-              sheets: c.manifest.sheets.map((s) => s.name),
-              installedVersion: live.get(c.key) ?? null,
-            };
-          }),
+          available: catalogue
+            .filter((c) => !isFrameworkPack(c.manifest))
+            .map((c) => {
+              const counts = manifestCounts(c.manifest);
+              return {
+                key: c.key,
+                version: c.version,
+                title: c.title,
+                description: c.description,
+                hash: c.hash,
+                counts,
+                inside: countsText(counts),
+                sheets: c.manifest.sheets.map((s) => s.name),
+                installedVersion: live.get(c.key) ?? null,
+              };
+            }),
           installed: (installs.data ?? []).map((i) => ({
             id: i.id,
             key: i.pack_key,

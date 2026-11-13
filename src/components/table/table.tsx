@@ -1,5 +1,6 @@
 'use client';
 
+import { itemRequirementRef } from '@/engine/frameworks/refs';
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
@@ -1936,6 +1937,15 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               </span>
               {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
                 <span className="text-muted-foreground text-label-12-mono flex min-w-0 items-center gap-[7px] leading-[17px]">
+                  {itemRequirementRef(item) ? (
+                    <>
+                      <span className="text-foreground shrink-0 font-semibold">
+                        <span className="sr-only">Ref </span>
+                        {itemRequirementRef(item)}
+                      </span>
+                      <span aria-hidden>·</span>
+                    </>
+                  ) : null}
                   <span className="shrink-0">{item.displayId}</span>
                   {ownerName ? (
                     <>

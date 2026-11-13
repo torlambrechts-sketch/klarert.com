@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { ItemAutomations } from '@/components/automations/item-automations';
 import type { EditorProps } from '@/components/fields/types';
 import { FieldRow } from './field-row';
+import { RequirementLinks, showsRequirements } from './requirements';
 import { FilesField } from './files-field';
 import type { FileVersion } from './queries';
 
@@ -255,6 +256,21 @@ export function DetailsTab({
         loading={incomingLoading}
         onOpen={onOpenLinked}
       />
+      {showsRequirements(data.sheet, data.fields) ? (
+        <RequirementLinks
+          org={org}
+          item={item}
+          ctx={ctx}
+          fields={data.fields}
+          onOpen={(t) =>
+            onOpenLinked(
+              ctx.item(t.itemId) ??
+                ({ id: t.itemId, sheetId: t.sheetId, displayId: t.displayId } as Item),
+            )
+          }
+          onLink={(fieldId, to) => onCommit(item, fieldId, to)}
+        />
+      ) : null}
       <ItemAutomations org={org} item={item} ctx={ctx} canPause={canPause} />
       <section aria-labelledby={`fields-${item.id}`} className="flex flex-col gap-2">
         <h3 id={`fields-${item.id}`} className="text-heading-14 m-0">
