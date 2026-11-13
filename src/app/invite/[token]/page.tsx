@@ -45,7 +45,15 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
               <p className="text-muted-foreground">
                 {invite.invited_by_name ?? 'An admin'} invited{' '}
                 <strong className="text-foreground">{invite.email}</strong> as{' '}
-                {ROLE_LABELS[invite.role].toLowerCase()}.
+                {ROLE_LABELS[invite.role].toLowerCase()}
+                {invite.role === 'auditor' && invite.expires_at
+                  ? `, with read-only access until ${new Intl.DateTimeFormat('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    }).format(new Date(invite.expires_at))}`
+                  : null}
+                .
               </p>
             </div>
             {invite.email.toLowerCase() !== email.toLowerCase() ? (

@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Copy,
   GripVertical,
+  Lock,
   EyeOff,
   Settings2,
   Sigma,
@@ -142,6 +143,9 @@ export function ColumnHeader({
           aria-label={`${field.name} column menu`}
         >
           <span className="truncate">{field.name}</span>
+          {field.restrictedTo ? (
+            <Lock className="size-3 shrink-0" aria-label="restricted field" />
+          ) : null}
           {sorted ? (
             sorted === 'asc' ? (
               <ArrowDownAZ className="size-3.5 shrink-0" aria-label="sorted A to Z" />

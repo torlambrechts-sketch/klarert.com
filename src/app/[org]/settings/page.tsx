@@ -1,3 +1,4 @@
+import { todayIn } from '@/engine/sheet-data';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { ORGANISE_ACTIONS, organiseText } from '@/engine/organise';
 import Link from 'next/link';
@@ -90,7 +91,7 @@ export default async function SettingsPage({
 
   const { data: memberRows } = await supabase
     .from('memberships')
-    .select('user_id, role, profiles!inner(display_name, initials, color)')
+    .select('user_id, role, expires_at, profiles!inner(display_name, initials, color)')
     .eq('org_id', workspace.id)
     .order('created_at');
   const members: MemberRow[] = (memberRows ?? []).map((m) => ({
@@ -100,7 +101,17 @@ export default async function SettingsPage({
     color: m.profiles.color,
     role: m.role,
     isMe: m.user_id === user.id,
+    expiresAt: m.expires_at,
+    expiresLabel: m.expires_at
+      ? new Intl.DateTimeFormat('en-GB', {
+          timeZone: workspace.time_zone,
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        }).format(new Date(m.expires_at))
+      : null,
   }));
+  const today = todayIn(new Date(), workspace.time_zone);
   const people = members.map((m) => ({ userId: m.userId, name: m.name }));
   const nameOf = new Map(people.map((p) => [p.userId, p.name]));
 
@@ -118,7 +129,14 @@ export default async function SettingsPage({
       />
 
       {tab === 'members' ? (
-        <MembersTab db={supabase} org={org} orgId={workspace.id} members={members} myRole={role} />
+        <MembersTab
+          db={supabase}
+          org={org}
+          orgId={workspace.id}
+          members={members}
+          myRole={role}
+          today={today}
+        />
       ) : null}
       {tab === 'teams' ? (
         <TeamsTab db={supabase} org={org} orgId={workspace.id} people={people} nameOf={nameOf} />
@@ -144,16 +162,18 @@ async function MembersTab({
   orgId,
   members,
   myRole,
+  today,
 }: {
   db: ServerClient;
   org: string;
   orgId: string;
   members: MemberRow[];
   myRole: MemberRow['role'];
+  today: string;
 }) {
   const { data: inviteRows } = await db
     .from('invites')
-    .select('id, email, role, token, created_at')
+    .select('id, email, role, token, created_at, expires_at')
     .eq('org_id', orgId)
     .is('accepted_at', null)
     .order('created_at', { ascending: false });
@@ -170,7 +190,7 @@ async function MembersTab({
         title="Invite a member"
         description="Create a link and send it to them. They sign in with that email address to join."
       >
-        <InviteForm org={org} canInviteOwner={myRole === 'owner'} />
+        <InviteForm org={org} canInviteOwner={myRole === 'owner'} today={today} />
       </Card>
       <Card title={`Members · ${members.length}`}>
         <ul className="divide-line flex flex-col divide-y">
@@ -188,10 +208,15 @@ async function MembersTab({
                       <span className="text-muted-foreground font-normal"> (you)</span>
                     ) : null}
                   </span>
-                  <span className="text-muted-foreground text-label-13">{ROLE_LABELS[m.role]}</span>
+                  <span className="text-muted-foreground text-label-13">
+                    {ROLE_LABELS[m.role]}
+                    {m.role === 'auditor' && m.expiresLabel
+                      ? ` · read-only until ${m.expiresLabel}`
+                      : null}
+                  </span>
                 </div>
               </div>
-              <MemberRowControls org={org} member={m} myRole={myRole} />
+              <MemberRowControls org={org} member={m} myRole={myRole} today={today} />
             </li>
           ))}
         </ul>

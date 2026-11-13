@@ -28,6 +28,7 @@ import {
   Folder,
   FolderInput,
   GripVertical,
+  Lock,
   MoreHorizontal,
   Plus,
 } from 'lucide-react';
@@ -62,6 +63,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { Result } from '@/server/result';
 import type { Nav, NavSheet } from '@/server/repositories/sheets';
+import { AccessDialog, type AccessTarget } from '@/components/access/access-panel';
 import { SheetCode, iconClass, itemClass, revealClass } from './menu-bits';
 
 // The "Sheets" part of the side menu (docs/05 §2.1): folders with their sheets, then "Other sheets". Editors rename
@@ -88,7 +90,8 @@ type Renaming = { kind: 'folder' | 'sheet'; id: string } | { kind: 'new-folder' 
 
 const UNFILED = 'unfiled';
 const OPEN_DELAY = 600;
-const NEW_FOLDER_NOTE = 'Folders organise sheets. They do not restrict who can see them.';
+const NEW_FOLDER_NOTE =
+  'Folders organise sheets. To choose who sees a folder’s sheets, use Access in its menu.';
 
 /** A folder shown before the server has answered: no menu actions on it yet. */
 const isTemp = (id: string) => id.startsWith('new-');
@@ -147,6 +150,7 @@ export function MenuSheets(props: MenuSheetsProps) {
   treeRef.current = tree;
   const [renaming, setRenaming] = useState<Renaming>(null);
   const [moveTo, setMoveTo] = useState<NavSheet | null>(null);
+  const [accessFor, setAccessFor] = useState<AccessTarget | null>(null);
   const [archiving, setArchiving] = useState<
     { kind: 'folder'; id: string } | { kind: 'sheet'; id: string } | null
   >(null);
@@ -507,9 +511,16 @@ export function MenuSheets(props: MenuSheetsProps) {
         id: f.id,
         folder: true as const,
         name: f.name,
+        restricted: !!(f as { restricted?: boolean }).restricted,
         sheets: f.sheets,
       })),
-      { id: UNFILED, folder: false as const, name: 'Other sheets', sheets: tree.unfiled },
+      {
+        id: UNFILED,
+        folder: false as const,
+        name: 'Other sheets',
+        restricted: false,
+        sheets: tree.unfiled,
+      },
     ],
     [tree],
   );
@@ -623,6 +634,7 @@ export function MenuSheets(props: MenuSheetsProps) {
               id={s.id}
               folder={s.folder}
               name={s.name}
+              restricted={s.restricted}
               sheetNames={s.sheets.map((x) => x.name)}
               open={open}
               into={into}
@@ -644,6 +656,7 @@ export function MenuSheets(props: MenuSheetsProps) {
                     }
                     onSort={() => sortFolder(s.id)}
                     onArchive={() => setArchiving({ kind: 'folder', id: s.id })}
+                    onAccess={() => setAccessFor({ kind: 'folder', id: s.id, name: s.name })}
                   />
                 ) : null
               }
@@ -660,7 +673,7 @@ export function MenuSheets(props: MenuSheetsProps) {
                   dimmed={dragging?.kind === 'sheet' && dragging.id === x.id}
                   onKey={(e) => onSheetKey(e, x)}
                   menu={
-                    canEdit ? (
+                    canEdit && !x.noAccess ? (
                       <SheetMenu
                         {...shared}
                         sheet={x}
@@ -672,6 +685,7 @@ export function MenuSheets(props: MenuSheetsProps) {
                         }}
                         onMoveTo={() => setMoveTo(x)}
                         onArchive={() => setArchiving({ kind: 'sheet', id: x.id })}
+                        onAccess={() => setAccessFor({ kind: 'sheet', id: x.id, name: x.name })}
                       />
                     ) : null
                   }
@@ -719,6 +733,7 @@ export function MenuSheets(props: MenuSheetsProps) {
         onCancel={() => setArchiving(null)}
         onConfirm={archive}
       />
+      <AccessDialog org={org} target={accessFor} onClose={() => setAccessFor(null)} />
     </>
   );
 }
@@ -819,6 +834,7 @@ function FolderSection({
   id,
   folder,
   name,
+  restricted,
   open,
   into,
   line,
@@ -836,6 +852,7 @@ function FolderSection({
   id: string;
   folder: boolean;
   name: string;
+  restricted?: boolean;
   sheetNames: string[];
   open: boolean;
   into: boolean;
@@ -907,6 +924,12 @@ function FolderSection({
               <span data-side-text className="min-w-0 flex-1 truncate">
                 {name}
               </span>
+              {restricted ? (
+                <span data-side-text title="Restricted" className="text-muted-foreground shrink-0">
+                  <Lock className="size-3.5" aria-hidden />
+                  <span className="sr-only">Restricted</span>
+                </span>
+              ) : null}
               <ChevronRight
                 data-side-text
                 className={cn(
@@ -998,6 +1021,28 @@ function SheetRow({
             icon={<SheetCode code={sheet.code} />}
           />
         </div>
+      ) : sheet.noAccess ? (
+        // owners and admins see a restricted sheet's name; it opens nothing (docs/02 §16)
+        <span
+          data-menu-row={sheet.id}
+          tabIndex={0}
+          onKeyDown={onKey}
+          aria-disabled="true"
+          aria-label={`${sheet.name}, restricted: you do not have access`}
+          title="Restricted. Ask an owner to give you access."
+          className={cn(
+            itemClass,
+            'text-muted-foreground text-label-13.5 h-8 min-w-0 flex-1 cursor-default gap-[9px] px-2',
+          )}
+        >
+          <SheetCode code={sheet.code} />
+          <span data-side-text className="min-w-0 flex-1 truncate">
+            {sheet.name}
+          </span>
+          <span data-side-text className="text-label-12 flex shrink-0 items-center gap-1">
+            <Lock className="size-3.5" aria-hidden /> Restricted
+          </span>
+        </span>
       ) : (
         <Link
           href={`/${org}/s/${sheet.id}`}
@@ -1014,6 +1059,12 @@ function SheetRow({
           <span data-side-text className="min-w-0 flex-1 truncate">
             {sheet.name}
           </span>
+          {sheet.restricted ? (
+            <span data-side-text title="Restricted" className="text-muted-foreground shrink-0">
+              <Lock className="size-3.5" aria-hidden />
+              <span className="sr-only">Restricted</span>
+            </span>
+          ) : null}
         </Link>
       )}
       {canDrag && !isRenaming ? (
@@ -1143,6 +1194,7 @@ function FolderMenu({
   onMove,
   onSort,
   onArchive,
+  onAccess,
   setRenaming,
   newSheetHref,
   onNavigate,
@@ -1155,6 +1207,7 @@ function FolderMenu({
   onMove: (delta: -1 | 1) => void;
   onSort: () => void;
   onArchive: () => void;
+  onAccess: () => void;
 }) {
   const renameNext = useRef(false);
   return (
@@ -1192,6 +1245,14 @@ function FolderMenu({
               Move down
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={onSort}>Sort A–Z</DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                renameNext.current = true;
+                onAccess();
+              }}
+            >
+              <Lock className="size-4" aria-hidden /> Access…
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={onArchive}>
               Archive
@@ -1213,6 +1274,7 @@ function SheetMenu({
   onMove,
   onMoveTo,
   onArchive,
+  onAccess,
   setRenaming,
   onNavigate,
 }: Shared & {
@@ -1222,6 +1284,7 @@ function SheetMenu({
   onMove: (delta: -1 | 1) => void;
   onMoveTo: () => void;
   onArchive: () => void;
+  onAccess: () => void;
 }) {
   const keepFocus = useRef(false);
   return (
@@ -1271,6 +1334,14 @@ function SheetMenu({
         </DropdownMenuItem>
         {canManage ? (
           <>
+            <DropdownMenuItem
+              onSelect={() => {
+                keepFocus.current = true;
+                onAccess();
+              }}
+            >
+              <Lock className="size-4" aria-hidden /> Access…
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={onArchive}>
               Archive

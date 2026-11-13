@@ -33,14 +33,17 @@ export function SheetAutomations({
   sheetId: string;
   sheetName: string;
   ctx: Ctx | null;
-  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'auditor';
   timeZone: string;
 }) {
   const [open, setOpen] = useState(false);
   const orgId = ctx?.sheet.orgId;
   const autos = useAutomations(orgId);
   const list = (autos.data ?? []).filter((a) => a.sheetId === sheetId);
-  const perms = { canEdit: role !== 'viewer', isAdmin: role === 'owner' || role === 'admin' };
+  const perms = {
+    canEdit: role !== 'viewer' && role !== 'auditor',
+    isAdmin: role === 'owner' || role === 'admin',
+  };
   const base = `/${org}/automations`;
   return (
     <Dialog open={open} onOpenChange={setOpen}>

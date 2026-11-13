@@ -1,8 +1,10 @@
 import { notFound, redirect } from 'next/navigation';
 import { SheetView } from '@/components/grid/sheet-view';
 import { readTabSettings } from '@/engine/views/tabs';
+import { NoAccess } from '@/components/access/no-access';
+import { toLevel } from '@/engine/access';
 import { requireMember } from '@/server/auth';
-import { getSheet } from '@/server/repositories/sheets';
+import { getSheet, getSheetAccess } from '@/server/repositories/sheets';
 
 function defaultViewOf(settings: unknown): string | null {
   const id =
@@ -34,7 +36,12 @@ export default async function SheetPage({
   const { org, sheetId } = await params;
   const { group, item } = await searchParams;
   const { workspace, role, user } = await requireMember(org);
-  const sheet = await getSheet(workspace.id, sheetId);
+  const [sheet, access] = await Promise.all([
+    getSheet(workspace.id, sheetId),
+    getSheetAccess(workspace.id, sheetId),
+  ]);
+  // a restricted sheet the person cannot open: owners and admins see that it exists (docs/02 §16)
+  if (!sheet && access?.level === 'none') return <NoAccess org={org} name={access.name} />;
   if (!sheet) notFound();
   // sub-items live inside their parent sheet (docs/02 §12)
   if (sheet.parent_sheet_id)
@@ -61,6 +68,8 @@ export default async function SheetPage({
         userId={user.id}
         timeZone={workspace.time_zone}
         role={role}
+        access={toLevel(access?.level ?? 'none')}
+        restricted={!!access?.restricted}
         onlyGroup={group ?? null}
         defaultViewId={defaultViewOf(sheet.settings)}
         tabSet={readTabSettings(sheet.settings)}

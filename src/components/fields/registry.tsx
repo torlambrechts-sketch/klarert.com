@@ -9,6 +9,9 @@ import * as compliance from './compliance';
 import * as computed from './computed';
 import * as cfg from './config-forms';
 import type { ConfigFormProps, FieldTypeUI } from './types';
+import { Lock } from 'lucide-react';
+import { hiddenFor } from '@/engine/values';
+import { ExplainEditor } from './shared';
 
 type AnyConfigForm = React.FC<ConfigFormProps<Record<string, unknown>>>;
 
@@ -79,10 +82,44 @@ export const FIELD_UI: Record<FieldTypeId, FieldTypeUI> = {
   subitems: computed.subitemsUI,
 };
 
+// Restricted fields (docs/02 §16): a field whose values the person may not see shows "Restricted" in every cell, card
+// and panel, and explains itself instead of opening an editor. The values never reached the browser; this only says
+// so instead of showing an empty cell.
+const guarded = new Map<string, FieldTypeUI>();
+
+function guard(entry: FieldTypeUI): FieldTypeUI {
+  const { Cell, Editor } = entry;
+  const RestrictedCell: FieldTypeUI['Cell'] = (props) =>
+    hiddenFor(props.field, props.ctx) ? <RestrictedValue /> : <Cell {...props} />;
+  const RestrictedEditor: FieldTypeUI['Editor'] = (props) =>
+    hiddenFor(props.field, props.ctx) ? (
+      <ExplainEditor title={props.field.name} onCancel={props.onCancel}>
+        <p>
+          This field is restricted. Only the people it lists, and the workspace owners, can see it.
+        </p>
+      </ExplainEditor>
+    ) : (
+      <Editor {...props} />
+    );
+  return { ...entry, Cell: RestrictedCell, Editor: RestrictedEditor };
+}
+
+export function RestrictedValue() {
+  return (
+    <span className="text-muted-foreground text-label-12 flex items-center gap-1">
+      <Lock className="size-3.5" aria-hidden /> Restricted
+    </span>
+  );
+}
+
 export function fieldUI(type: string): FieldTypeUI {
+  const hit = guarded.get(type);
+  if (hit) return hit;
   const entry = (FIELD_UI as Record<string, FieldTypeUI>)[type];
   if (!entry) throw new Error(`No UI for field type ${type}`);
-  return entry;
+  const g = guard(entry);
+  guarded.set(type, g);
+  return g;
 }
 
 /** Every engine type has a UI entry (checked by registry.test.ts). */

@@ -1,5 +1,6 @@
 'use client';
 
+import { RestrictedFieldSection } from '@/components/access/restricted-field';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { OPERATORS } from '@/engine/conditions';
@@ -305,6 +306,12 @@ function FieldSettingsBody({
             </label>
           ) : null}
         </section>
+
+        {isAdmin || field.restrictedTo ? (
+          <Section title="Who sees its values">
+            <RestrictedFieldSection field={field} ctx={ctx} canManage={isAdmin && canEdit} />
+          </Section>
+        ) : null}
 
         <TypeSection
           field={field}
