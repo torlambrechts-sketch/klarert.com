@@ -198,7 +198,7 @@ Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, 
 - [x] SoA export; audit pack (PDF/zip: SoA, registers, evidence index, log extract with chain verification); management review inputs compiled from existing data (docs/11 Audit outputs; 0034)
 
 ### P6 · Pack upgrades  [Opus]
-- [ ] Three-way diff (shipped hash, client's current, new manifest): apply untouched, flag conflicts, archive removed, fields add-only, keep client options and automation on/off; dry run and rollback
+- [x] Three-way diff (shipped hash, client's current, new manifest): apply untouched, flag conflicts, archive removed, fields add-only, keep client options and automation on/off; dry run and rollback
 
 ### P7 · Apps  [Sonnet]
 - [ ] App manifest (navigation sections → screens: view / form / dashboard / workflow / item over sheet refs; role visibility); `/[org]/apps/[key]/[screen]`; first app: CAPA ("Report a problem", "My actions", "Needs my approval")
