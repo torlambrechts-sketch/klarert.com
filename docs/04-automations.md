@@ -129,7 +129,7 @@ Webhook payload (generic):
 - For each enabled automation with a scheduled trigger, load candidate items (not archived, not paused), compute the trigger moment:
   - `date_arrives`: `toDate(value) + offsetDays` (00:00 in the workspace time zone); occurrence = the date value.
   - `clock_warning`: deadline − hoursLeft; occurrence = deadline ISO.
-  - `evidence_expiring`: earliest `valid_until` − days; occurrence = that date.
+  - `evidence_expiring`: earliest `valid_until` − days; occurrence = that date. With `source: 'item_files'` (no field) it watches the files of the item's Files tab instead of an evidence field; the builder offers it as "Item files (Files tab)" on every sheet.
 - Fire when the moment has passed **and** is within the last 7 days (no flood of history when an automation is created), conditions are true, and `insert into scheduler_fired … on conflict do nothing` inserted a row (exactly once per occurrence).
 - Admins can press **Run date checks now** on the Automations page (same code, as the user, only for their workspace).
 

@@ -172,6 +172,8 @@ Form-allowed: all except `lookup, rollup, formula, progress, autoid, meta, workf
 Kanban-capable: `status, dropdown, severity, classification, finding, workflowstep, yesno, maturity, people (single)`.
 Calendar-capable: `date, datetime, timeline, recurrence, evidence (expiry), clock (deadline), retention`.
 
+Files can also belong to an item without a field (its Files tab, docs/02 §8); they are not a field value and never pass through the registry. Evidence expiry automations can watch them (`evidence_expiring` with `source: 'item_files'`, docs/04).
+
 ## 4. Filters and conditions (one operator set per kind)
 
 Filters (views) and automation conditions (docs/04 §4) use the same operators, implemented once in `src/engine/conditions/`.

@@ -3,23 +3,28 @@
 import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ActivityEntry } from '@/engine/activity';
-import type { FileRow, Item } from '@/engine/types';
+import { fileCategories, type FileVersionRow } from '@/engine/item-files';
+import type { Item } from '@/engine/types';
+import { itemDocumentsAction } from '@/app/[org]/s/panel-actions';
 import type { Database } from '@/lib/database.types';
 import { fetchItemsById } from '@/lib/sheet-query';
-import { FIELD_COLUMNS, toField, toFile } from '@/lib/sheet-rows';
+import { FIELD_COLUMNS, toField, toFileVersion } from '@/lib/sheet-rows';
 import { createClient } from '@/lib/supabase/client';
 
 // The item panel's own reads (docs/05 §3.4), under the person's RLS: updates (with realtime per open item, docs/02
 // §9), the activity log, incoming links and every file version. Writes go through the panel's server actions.
 
 export type UpdateRow = Database['public']['Tables']['item_updates']['Row'];
-export type FileVersion = FileRow & { createdAt: string; uploadedBy: string | null };
+export type FileVersion = FileVersionRow;
 
 export const panelKeys = {
   updates: (itemId: string) => ['item-updates', itemId] as const,
   activity: (itemId: string) => ['item-activity', itemId] as const,
   incoming: (itemId: string) => ['item-incoming', itemId] as const,
   files: (itemId: string) => ['item-files', itemId] as const,
+  documents: (itemId: string) => ['item-documents', itemId] as const,
+  downloads: (fileIds: string) => ['file-downloads', fileIds] as const,
+  categories: (org: string) => ['file-categories', org] as const,
 };
 
 function must<T>(r: { data: T | null; error: { message: string } | null }): T {
@@ -146,8 +151,62 @@ export function useFileVersions(itemId: string, version: string) {
           .select('*')
           .eq('item_id', itemId)
           .order('created_at', { ascending: false }),
-      ).map((r) => ({ ...toFile(r), createdAt: r.created_at, uploadedBy: r.uploaded_by })),
+      ).map(toFileVersion),
     staleTime: 0,
     placeholderData: (prev) => prev,
+  });
+}
+
+/** The documents the item links to (link fields pointing at a documents register), with their status. */
+export function useItemDocuments(org: string, itemId: string, version: string, enabled = true) {
+  return useQuery({
+    queryKey: [...panelKeys.documents(itemId), version],
+    enabled,
+    queryFn: async () => {
+      const r = await itemDocumentsAction({ org, itemId });
+      if (!r.ok) throw new Error(r.error.message);
+      return r.data;
+    },
+    staleTime: 0,
+    placeholderData: (prev) => prev,
+  });
+}
+
+export interface DownloadRow {
+  fileId: string;
+  userId: string | null;
+  at: string;
+}
+
+/** Who downloaded these file versions and when (file_access_log, newest first). */
+export function useDownloads(fileIds: string[], enabled: boolean) {
+  const db = useMemo(() => createClient(), []);
+  const key = fileIds.join(',');
+  return useQuery({
+    queryKey: panelKeys.downloads(key),
+    enabled: enabled && fileIds.length > 0,
+    queryFn: async (): Promise<DownloadRow[]> =>
+      must(
+        await db
+          .from('file_access_log')
+          .select('file_id, user_id, at')
+          .in('file_id', key.split(','))
+          .order('at', { ascending: false })
+          .limit(200),
+      ).map((r) => ({ fileId: r.file_id, userId: r.user_id, at: r.at })),
+    staleTime: 0,
+  });
+}
+
+/** The workspace's file categories (orgs.settings.fileCategories, else the defaults). */
+export function useFileCategories(org: string) {
+  const db = useMemo(() => createClient(), []);
+  return useQuery({
+    queryKey: panelKeys.categories(org),
+    queryFn: async () => {
+      const { data } = await db.from('orgs').select('settings').eq('slug', org).maybeSingle();
+      return fileCategories(data?.settings);
+    },
+    staleTime: 5 * 60_000,
   });
 }

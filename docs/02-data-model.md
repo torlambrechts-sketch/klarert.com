@@ -128,6 +128,20 @@ Bucket `files` (private). Path `org/<org_id>/item/<item_id>/<file_id>/<filename>
 2. Browser uploads.
 3. `confirmUpload` (command) downloads the object server-side, recomputes SHA-256, compares, inserts the `files` row (with `valid_until = collected_at + config.validDays` for evidence), logs `file.added` via `set_item_values`-equivalent note (`activity_log` entry `file.added` written by a small RPC you add in M5: `log_file_event(item, field, file, action)`).
 
+### Item files, downloads and controlled documents (0023)
+
+- **Item files.** `files.field_id` is null for a file of the item's Files tab (not tied to a column); `check (field_id is not null or source = 'upload')`. Same path and upload flow. Per version: `description`, `category` (an option id of `orgs.settings.fileCategories`, default Evidence, Contract, Photo, Report, Document, Policy, Procedure, Other; stored by id, shown by label), `version_no` (the replaced version's + 1), `version_note`, `classification` (public, internal, confidential, restricted), `personal_data`, `scan_status` (not_scanned, clean, blocked: downloads refused when blocked; the scanner comes later), `archived_at/by`, and for documents `approved_at/by`, `superseded_at`.
+- **Upload checks** (`confirmUpload`, `src/engine/item-files.ts`): 25 MB (also the bucket limit); an extension allow-list checked against the first bytes; programs, scripts, HTML, HTA, shortcuts, disk images, Java/Android packages, installers and macro-enabled Office files are refused, whatever the name (any dotted part) or content says. Refused uploads stay unreferenced objects.
+- **RPCs:** `add_file(item, field|null, file, path, name, mime, size, sha256, replaces, meta)`; `set_file_meta(file, meta)` → `file.updated`; `archive_file(file, note)` and `restore_file(file)`, owners and admins, the whole version chain → `file.archived` / `file.restored`; `download_file(file)` (members; refuses blocked, and archived for non-admins) writes `file_access_log (org_id, file_id, item_id, user_id, at)`, readable by members, written by nothing else. Files are otherwise immutable; nothing is deleted.
+- **Downloads and preview:** signed links of 60 s with `Content-Disposition: attachment`; PDF and images preview inline through `/[org]/files/<id>/preview`, with the content type forced from the extension and `nosniff`. SVG is download-only.
+- **Evidence library** lists item files too (field "Item file") and leaves archived files out.
+
+## 14. Controlled documents (0023)
+
+A sheet with `settings.register = 'documents'` is a documents register (set by the "Documents and policies" start; changed in Sheet settings by owners and admins only, enforced by a trigger). Its status field's done option is Approved. `set_item_values` enforces, in the same transaction: only a person approves (never an automation), never the author (field key `author`, else the item's creator); approving needs a comment (the version note) and a current item file (category `document` first); the approval writes `approver` (the person approving), `approved_on` (today) and `version` (the file's version number), marks that file approved and the previously approved file superseded, and logs `file.approved`. Leaving Approved needs a comment. People cannot set `approver` or `approved_on` by hand, and a new document cannot start Approved. Errors read `document: …` and are shown as written.
+
+Items link to documents through ordinary link fields whose target is a register; the Files tab shows each linked document's last approved version (never a draft) and "Draft in review" when a newer version exists.
+
 ## 9. Realtime
 
 Subscribe per open sheet to `items`, `item_links`, `fields`, `groups` (filter `sheet_id=eq.<id>`), per open item to `item_updates`, per user to `notifications`. On an event, patch the TanStack Query cache; ignore echoes of the user's own optimistic mutation (compare `updated_at` and `mutationId` stored in a local map).

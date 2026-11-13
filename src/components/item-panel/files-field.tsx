@@ -66,7 +66,7 @@ export function FilesField({
   const replacing = useRef<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [showOlder, setShowOlder] = useState(false);
-  const older = versions.filter((v) => v.fieldId === field.id && v.replacedBy);
+  const older = versions.filter((v) => v.fieldId === field.id && v.replacedBy && !v.archivedAt);
 
   const pick = (replaces: string | null) => {
     replacing.current = replaces;
@@ -75,7 +75,7 @@ export function FilesField({
 
   const upload = async (file: File, replaces: string | null) => {
     if (file.size === 0) return toast.error('The file is empty.');
-    if (file.size > MAX_FILE_BYTES) return toast.error('Files can be at most 50 MB.');
+    if (file.size > MAX_FILE_BYTES) return toast.error('Files can be at most 25 MB.');
     if (!acceptsFile(accept, file.name, file.type))
       return toast.error(`${field.name} accepts ${accept.join(', ')} only.`);
     setBusy(replaces ? `Replacing with ${file.name}…` : `Uploading ${file.name}…`);

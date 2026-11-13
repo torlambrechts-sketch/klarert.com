@@ -28,7 +28,18 @@ import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
 import { ActivityTab } from './activity-tab';
 import { DetailsTab } from './details-tab';
-import { panelKeys, useActivity, useFileVersions, useIncoming, useUpdates } from './queries';
+import { isDocumentsRegister } from '@/engine/documents';
+import { FilesTab } from './files-tab';
+import { onPanelTab, takePanelTab } from './open-tab';
+import {
+  panelKeys,
+  useActivity,
+  useFileCategories,
+  useFileVersions,
+  useIncoming,
+  useItemDocuments,
+  useUpdates,
+} from './queries';
 import { UpdatesTab } from './updates-tab';
 import { SubitemsTab } from '@/components/subitems/subitems-tab';
 import type { SubitemsHandle } from '@/components/subitems/use-subitems';
@@ -71,7 +82,8 @@ export function ItemPanel(props: ItemPanelProps) {
   const router = useRouter();
   const qc = useQueryClient();
   const [wide, setWide] = useState(false);
-  const [tab, setTab] = useState(props.initialTab ?? 'details');
+  const [tab, setTab] = useState(() => takePanelTab(item.id) ?? props.initialTab ?? 'details');
+  useEffect(() => onPanelTab(item.id, setTab), [item.id]);
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(item.name);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -110,6 +122,19 @@ export function ItemPanel(props: ItemPanelProps) {
   const version = `${item.updatedAt}|${item.groupId}|${item.locked}|${linksSig}|${filesSig}`;
   const activity = useActivity(item.id, item.sheetId, version);
   const versions = useFileVersions(item.id, filesSig);
+  // linked documents are read once the Files tab opens, or at once when the sheet links to a documents register
+  const linksToRegister = data.related.sheets.some((s) => isDocumentsRegister(s));
+  const [filesSeen, setFilesSeen] = useState(false);
+  useEffect(() => {
+    if (tab === 'files') setFilesSeen(true);
+  }, [tab]);
+  const documents = useItemDocuments(
+    org,
+    item.id,
+    `${linksSig}|${filesSig}`,
+    filesSeen || tab === 'files' || linksToRegister,
+  );
+  const categories = useFileCategories(org);
 
   // incoming links come from items the sheet may not have loaded: fetch them into the cache
   const { loadRelated } = actions;
@@ -162,6 +187,16 @@ export function ItemPanel(props: ItemPanelProps) {
   };
 
   const updatesCount = updates.data?.length ?? 0;
+  const knownField = new Set(data.fields.map((f) => f.id));
+  const filesCount =
+    (versions.data ?? []).filter(
+      (v) => !v.archivedAt && !v.replacedBy && (v.fieldId === null || knownField.has(v.fieldId)),
+    ).length + (documents.data?.documents.length ?? 0);
+  const filesChanged = () => {
+    void qc.invalidateQueries({ queryKey: panelKeys.files(item.id) });
+    void qc.invalidateQueries({ queryKey: panelKeys.documents(item.id) });
+    void qc.invalidateQueries({ queryKey: panelKeys.activity(item.id) });
+  };
   const subLabel = subitemLabel(ctx.sheet);
   const subCount = subitems ? subitemProgress(item, ctx).total : 0;
   const activityCount = (activity.data?.entries ?? []).length;
@@ -381,17 +416,21 @@ export function ItemPanel(props: ItemPanelProps) {
                   </span>
                 ) : null}
               </p>
-              <Tabs.List aria-label="Item sections" className="-mb-px flex gap-[22px] pt-2">
+              <Tabs.List
+                aria-label="Item sections"
+                className="-mb-px flex gap-[22px] overflow-x-auto pt-2 max-[759px]:gap-4"
+              >
                 {[
                   ['details', 'Details'],
                   ...(subitems ? [['subitems', `${subLabel} · ${subCount}`]] : []),
+                  ['files', `Files · ${filesCount}`],
                   ['updates', `Updates · ${updatesCount}`],
                   ['activity', `Activity log · ${activityCount}`],
                 ].map(([v, label]) => (
                   <Tabs.Trigger
                     key={v}
                     value={v!}
-                    className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-14 h-10 border-b-2 border-transparent px-px focus-visible:outline-2"
+                    className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-14 h-10 shrink-0 border-b-2 border-transparent px-px whitespace-nowrap focus-visible:outline-2"
                   >
                     {label}
                   </Tabs.Trigger>
@@ -439,6 +478,26 @@ export function ItemPanel(props: ItemPanelProps) {
                   />
                 </Tabs.Content>
               ) : null}
+              <Tabs.Content value="files" className="outline-none">
+                <FilesTab
+                  org={org}
+                  item={item}
+                  ctx={ctx}
+                  fields={data.fields}
+                  actions={actions}
+                  versions={versions.data ?? []}
+                  versionsState={stateOf(versions)}
+                  onRetryVersions={() => void versions.refetch()}
+                  documents={documents.data}
+                  documentsState={stateOf(documents)}
+                  onRetryDocuments={() => void documents.refetch()}
+                  categories={categories.data ?? []}
+                  canEditItem={canEditItem}
+                  canEdit={canEdit}
+                  isAdmin={isAdmin}
+                  onChanged={filesChanged}
+                />
+              </Tabs.Content>
               <Tabs.Content value="updates" className="outline-none">
                 <UpdatesTab
                   org={org}

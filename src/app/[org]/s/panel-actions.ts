@@ -1,5 +1,6 @@
 'use server';
 
+import * as documents from '@/server/commands/documents';
 import * as files from '@/server/commands/files';
 import * as panel from '@/server/commands/panel';
 import * as updates from '@/server/commands/updates';
@@ -15,3 +16,10 @@ export const confirmUploadAction = async (input: unknown) => files.confirmUpload
 export const downloadFileAction = async (input: unknown) => files.downloadFile(input);
 export const verifyActivityAction = async (input: unknown) => panel.verifyActivity(input);
 export const searchItemsAction = async (input: unknown) => panel.searchItems(input);
+export const setFileDetailsAction = async (input: unknown) => files.setFileDetails(input);
+export const archiveFileAction = async (input: unknown) => files.archiveFile(input);
+export const itemDocumentsAction = async (input: unknown) => documents.itemDocuments(input);
+export const searchDocumentsAction = async (input: unknown) => documents.searchDocuments(input);
+export const addDocumentsFieldAction = async (input: unknown) => documents.addDocumentsField(input);
+export const setDocumentsRegisterAction = async (input: unknown) =>
+  documents.setDocumentsRegister(input);

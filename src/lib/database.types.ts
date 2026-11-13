@@ -223,16 +223,28 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"files": {
+                },"file_access_log": {
                   Row: {
-                    "collected_at": string,"created_at": string,"field_id": string,"filename": string,"id": string,"item_id": string,"mime_type": string,"org_id": string,"replaced_by": string | null,"sha256": string,"size_bytes": number,"source": string,"storage_path": string,"uploaded_by": string | null,"valid_until": string | null
+                    "at": string,"file_id": string,"id": number,"item_id": string,"org_id": string,"user_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "collected_at"?: string,"created_at"?: string,"field_id": string,"filename": string,"id"?: string,"item_id": string,"mime_type": string,"org_id": string,"replaced_by"?: string | null,"sha256": string,"size_bytes": number,"source"?: string,"storage_path": string,"uploaded_by"?: string | null,"valid_until"?: string | null
+                    "at"?: string,"file_id": string,"id"?: never,"item_id": string,"org_id": string,"user_id"?: string | null
                   }
                   Update: {
-                    "collected_at"?: string,"created_at"?: string,"field_id"?: string,"filename"?: string,"id"?: string,"item_id"?: string,"mime_type"?: string,"org_id"?: string,"replaced_by"?: string | null,"sha256"?: string,"size_bytes"?: number,"source"?: string,"storage_path"?: string,"uploaded_by"?: string | null,"valid_until"?: string | null
+                    "at"?: string,"file_id"?: string,"id"?: never,"item_id"?: string,"org_id"?: string,"user_id"?: string | null
+                  }
+                  Relationships: []
+                },"files": {
+                  Row: {
+                    "approved_at": string | null,"approved_by": string | null,"archived_at": string | null,"archived_by": string | null,"category": string | null,"classification": string,"description": string | null,"personal_data": boolean,"scan_status": string,"superseded_at": string | null,"version_no": number,"version_note": string | null,"collected_at": string,"created_at": string,"field_id": string | null,"filename": string,"id": string,"item_id": string,"mime_type": string,"org_id": string,"replaced_by": string | null,"sha256": string,"size_bytes": number,"source": string,"storage_path": string,"uploaded_by": string | null,"valid_until": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_at"?: string | null,"approved_by"?: string | null,"archived_at"?: string | null,"archived_by"?: string | null,"category"?: string | null,"classification"?: string,"description"?: string | null,"personal_data"?: boolean,"scan_status"?: string,"superseded_at"?: string | null,"version_no"?: number,"version_note"?: string | null,"collected_at"?: string,"created_at"?: string,"field_id"?: string | null,"filename": string,"id"?: string,"item_id": string,"mime_type": string,"org_id": string,"replaced_by"?: string | null,"sha256": string,"size_bytes": number,"source"?: string,"storage_path": string,"uploaded_by"?: string | null,"valid_until"?: string | null
+                  }
+                  Update: {
+                    "approved_at"?: string | null,"approved_by"?: string | null,"archived_at"?: string | null,"archived_by"?: string | null,"category"?: string | null,"classification"?: string,"description"?: string | null,"personal_data"?: boolean,"scan_status"?: string,"superseded_at"?: string | null,"version_no"?: number,"version_note"?: string | null,"collected_at"?: string,"created_at"?: string,"field_id"?: string | null,"filename"?: string,"id"?: string,"item_id"?: string,"mime_type"?: string,"org_id"?: string,"replaced_by"?: string | null,"sha256"?: string,"size_bytes"?: number,"source"?: string,"storage_path"?: string,"uploaded_by"?: string | null,"valid_until"?: string | null
                   }
                   Relationships: [
                     {
@@ -963,29 +975,16 @@ isOneToOne: false
 { Args: { "p_automation": string }; Returns: string
                            },
 "add_file":
-{ Args: { "p_field": string,"p_file": string,"p_filename": string,"p_item": string,"p_mime": string,"p_path": string,"p_replaces"?: string,"p_sha256": string,"p_size": number }; Returns: {
-              "collected_at": string,
-"created_at": string,
-"field_id": string,
-"filename": string,
-"id": string,
-"item_id": string,
-"mime_type": string,
-"org_id": string,
-"replaced_by": string | null,
-"sha256": string,
-"size_bytes": number,
-"source": string,
-"storage_path": string,
-"uploaded_by": string | null,
-"valid_until": string | null
-            }
+{ Args: { "p_field": string | null,"p_file": string,"p_filename": string,"p_item": string,"p_meta"?: Json,"p_mime": string,"p_path": string,"p_replaces"?: string | null,"p_sha256": string,"p_size": number }; Returns: Database["public"]["Tables"]["files"]["Row"]
                           SetofOptions: {
         from: "*"
         to: "files"
         isOneToOne: true
         isSetofReturn: false
       } },
+"archive_file":
+{ Args: { "p_file": string,"p_note"?: string | null }; Returns: undefined
+                           },
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean
                            },
@@ -1119,6 +1118,14 @@ isOneToOne: false
 "delete_group":
 { Args: { "p_group": string,"p_positions"?: Json,"p_target"?: string }; Returns: number
                            },
+"download_file":
+{ Args: { "p_file": string }; Returns: Database["public"]["Tables"]["files"]["Row"]
+                          SetofOptions: {
+        from: "*"
+        to: "files"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "delete_update":
 { Args: { "p_update": string }; Returns: undefined
                            },
@@ -1318,9 +1325,20 @@ isOneToOne: false
 "release_item":
 { Args: { "p_item": string }; Returns: Json
                            },
+"restore_file":
+{ Args: { "p_file": string }; Returns: undefined
+                           },
 "set_automation_pause":
 { Args: { "p_automation": string,"p_item": string,"p_paused": boolean }; Returns: boolean
                            },
+"set_file_meta":
+{ Args: { "p_file": string,"p_meta": Json }; Returns: Database["public"]["Tables"]["files"]["Row"]
+                          SetofOptions: {
+        from: "*"
+        to: "files"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "set_folder_archived":
 { Args: { "p_archived": boolean,"p_folder": string }; Returns: number
                            },

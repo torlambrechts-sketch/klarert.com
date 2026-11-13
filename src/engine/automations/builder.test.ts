@@ -87,8 +87,36 @@ describe('compatibility filters', () => {
     expect(t).toContain('form_submitted');
     expect(t).toContain('button_clicked');
     expect(t).not.toContain('checklist_no');
-    expect(t).not.toContain('evidence_expiring');
+    // every item has a Files tab, so evidence expiry is offered even without an evidence field (source item_files)
+    expect(t).toContain('evidence_expiring');
     expect(availableTriggers(makeCtx({ fields: [f.notes] }))).not.toContain('field_becomes');
+  });
+
+  it("evidence_expiring can watch the item's Files tab instead of a field", () => {
+    const t = {
+      type: 'evidence_expiring' as const,
+      source: 'item_files',
+      fieldKey: null,
+      days: 14,
+    };
+    expect(describeAutomation({ trigger: t, conditions: [], actions: [] }, ctx)).toBe(
+      'When an item file expires within 14 days, then …',
+    );
+    expect(
+      draftProblems({ name: 'x', trigger: t, conditions: [], actions: [{ type: 'notify' }] }, ctx)
+        .trigger,
+    ).toBeUndefined();
+    expect(
+      draftProblems(
+        {
+          name: 'x',
+          trigger: { ...t, source: 'field' },
+          conditions: [],
+          actions: [{ type: 'notify' }],
+        },
+        ctx,
+      ).trigger,
+    ).toBe('Choose a field.');
   });
 
   it('set_field takes stored fields, assign people, raise_version version fields', () => {

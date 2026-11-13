@@ -4,8 +4,8 @@ import { EXPIRING_DAYS, earliestValidUntil, freshness, type Freshness } from './
 import { addDays, daysBetween, formatDate } from './fields/helpers';
 import type { FileRow } from './types';
 
-/** The bucket's limit (supabase/migrations/0002_storage_realtime.sql, docs/01 §7 placeholder). */
-export const MAX_FILE_BYTES = 50 * 1024 * 1024;
+/** The bucket's limit: 25 MB per file (0023_item_files.sql, decided with the product owner). */
+export const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
 /** Lower-case hex of a digest (crypto.subtle.digest in the browser, node:crypto on the server). */
 export function toHex(buffer: ArrayBuffer | Uint8Array): string {

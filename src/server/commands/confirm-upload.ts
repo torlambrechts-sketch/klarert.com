@@ -1,6 +1,7 @@
 // The heart of confirmUpload (docs/02 §8, FR-30): read the uploaded object back, hash it on the server, compare with
-// the browser's checksum and size, and only then record the file. Kept free of `server-only` and of Supabase so the
-// mismatch path is unit-tested; the command in ./files.ts supplies the real dependencies.
+// the browser's checksum and size, check what the bytes really are (allow-list, magic bytes, no programs), and only
+// then record the file. Kept free of `server-only` and of Supabase so the refusal paths are unit-tested; the command
+// in ./files.ts supplies the real dependencies.
 import type { FileRow } from '@/engine/types';
 import { fail, type Result } from '@/server/result';
 
@@ -10,6 +11,8 @@ export interface ConfirmDeps {
   /** The object's bytes, read with the person's own client (storage RLS), or null when it is not there. */
   download(path: string): Promise<Uint8Array | null>;
   sha256(bytes: Uint8Array): string;
+  /** What is wrong with the stored bytes (type, size, content), or null when they may be kept. */
+  inspect?(bytes: Uint8Array): string | null;
   /** Writes the files row and the activity entry in one transaction (add_file RPC). */
   addFile(): Promise<Result<FileRow>>;
   log(fields: Record<string, unknown>): void;
@@ -36,6 +39,12 @@ export async function confirmWith(
       size: bytes.byteLength,
     });
     return fail('conflict', CHANGED_DURING_UPLOAD);
+  }
+  const refused = deps.inspect?.(bytes) ?? null;
+  if (refused) {
+    // the object stays unreferenced: no files row ever points at it, so nobody can download it
+    deps.log({ outcome: 'refused', path: expected.path, reason: refused });
+    return fail('invalid', refused);
   }
   return deps.addFile();
 }

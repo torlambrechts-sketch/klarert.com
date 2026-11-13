@@ -121,6 +121,30 @@ describe('scheduledMoment', () => {
       ),
     ).toBeNull();
   });
+
+  it("evidence_expiring with source item_files: the item's Files tab, no field", () => {
+    const item = makeItem({}, { id: 'i-if' });
+    const ctx = makeCtx({
+      fields,
+      files: [
+        makeFile({ itemId: 'i-if', fieldId: null, validUntil: '2027-03-01' }),
+        makeFile({ itemId: 'i-if', fieldId: null, validUntil: '2026-12-11' }),
+        // a field's evidence does not count for the item files source
+        makeFile({ itemId: 'i-if', fieldId: 'f-ev', validUntil: '2026-11-20' }),
+      ],
+    });
+    const t = trig('evidence_expiring', { source: 'item_files', fieldKey: null, days: 30 });
+    expect(scheduledMoment(t, item, ctx)).toEqual({
+      at: Date.parse('2026-11-11T00:00:00Z'),
+      occurrence: '2026-12-11',
+    });
+    expect(scheduledMoment(t, makeItem({}, { id: 'none' }), ctx)).toBeNull();
+    // the field source ignores item files
+    expect(
+      scheduledMoment(trig('evidence_expiring', { fieldKey: 'evidence', days: 30 }), item, ctx)
+        ?.occurrence,
+    ).toBe('2026-11-20');
+  });
 });
 
 describe('isDue: passed and within the last 7 days', () => {

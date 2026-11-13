@@ -66,6 +66,7 @@ import type { SubitemsState } from '@/components/subitems/use-subitems';
 import { isSubitemDone, subitemLabel } from '@/engine/subitems';
 import { cn } from '@/lib/utils';
 import { CommentBubble } from './comment-bubble';
+import { FilesMarker } from './files-marker';
 import { CellEditor, cellId, explainOnly, Sticky, TableCell } from './table-cells';
 import {
   SubAddRow,
@@ -1982,6 +1983,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
             {p.sub && p.subTotal > 0 ? (
               <ProgressChip total={p.subTotal} done={p.subDone} label={p.sub.label} />
             ) : null}
+            <FilesMarker item={item} ctx={ctx} onOpen={p.onOpenItem} />
             {p.comments && p.comments.count > 0 ? (
               <CommentBubble summary={p.comments} ctx={ctx} className="min-w-[40px]" />
             ) : (

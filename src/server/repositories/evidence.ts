@@ -3,10 +3,12 @@ import type { EvidenceRow } from '@/engine/evidence-library';
 import { fetchDirectory, type Db } from '@/lib/sheet-query';
 
 // Reads for the evidence library and the evidence widgets (docs/05 §4). Run under the person's session and RLS:
-// the current file versions (replaced_by is null) of the workspace, on items and fields that are not archived, in
-// sheets that are not archived.
+// the current, live file versions (replaced_by and archived_at null) of the workspace, on items and fields that are
+// not archived, in sheets that are not archived. Files of an item's Files tab (no field) are listed as "Item file".
 
 const PAGE = 1000;
+/** Files of an item's Files tab are not in a field: the library names them like this. */
+const ITEM_FILE = { id: '', name: 'Item file' };
 const ID_CHUNK = 150;
 
 function must<T>(r: { data: T | null; error: { message: string } | null }): T {
@@ -24,7 +26,7 @@ async function chunked<T>(ids: string[], run: (ids: string[]) => PromiseLike<T[]
 type FileDb = {
   id: string;
   item_id: string;
-  field_id: string;
+  field_id: string | null;
   filename: string;
   source: string;
   collected_at: string;
@@ -41,6 +43,7 @@ async function currentFiles(db: Db, orgId: string): Promise<FileDb[]> {
         .select('id, item_id, field_id, filename, source, collected_at, valid_until, uploaded_by')
         .eq('org_id', orgId)
         .is('replaced_by', null)
+        .is('archived_at', null)
         .order('id')
         .range(from, from + PAGE - 1),
     );
@@ -54,7 +57,7 @@ export async function fetchEvidence(db: Db, orgId: string): Promise<EvidenceRow[
   const files = await currentFiles(db, orgId);
   if (files.length === 0) return [];
   const itemIds = [...new Set(files.map((f) => f.item_id))];
-  const fieldIds = [...new Set(files.map((f) => f.field_id))];
+  const fieldIds = [...new Set(files.flatMap((f) => (f.field_id ? [f.field_id] : [])))];
   const [items, fields, sheets, directory] = await Promise.all([
     chunked(itemIds, async (part) =>
       must(
@@ -78,7 +81,7 @@ export async function fetchEvidence(db: Db, orgId: string): Promise<EvidenceRow[
   const out: EvidenceRow[] = [];
   for (const f of files) {
     const item = itemById.get(f.item_id);
-    const field = fieldById.get(f.field_id);
+    const field = f.field_id ? fieldById.get(f.field_id) : ITEM_FILE;
     const sheet = item ? sheetById.get(item.sheet_id) : undefined;
     if (!item || !field || !sheet) continue;
     out.push({

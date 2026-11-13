@@ -80,6 +80,17 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   [/update not found/, 'not_found', 'This update was deleted.'],
   [/file already replaced|file not found/, 'conflict', 'That file was replaced in the meantime.'],
   [/file not uploaded/, 'not_found', 'The upload did not arrive. Try again.'],
+  [
+    /file blocked/,
+    'forbidden',
+    'This file was blocked by the malware check and cannot be downloaded.',
+  ],
+  [/file archived/, 'forbidden', 'This file was archived. Ask an owner or admin to restore it.'],
+  [
+    /only owners and admins change the documents register/,
+    'forbidden',
+    'Only owners and admins can change whether a sheet is a documents register.',
+  ],
   [/bad file field|bad file path/, 'invalid', 'This file cannot be added to this field.'],
   [/group not in sheet/, 'not_found', 'This group no longer exists.'],
   [/sub-items are off for this sheet/, 'conflict', 'Sub-items are off for this sheet.'],
@@ -105,6 +116,9 @@ export function fromDbError(error: { message: string; code?: string }): Result<n
   const gate = error.message.match(/subitems open: (.*)/);
   if (gate) return fail('blocked', gate[1]!.trim());
   // forms (0022) write their refusals for people, prefixed "form: "
+  // the documents register's workflow (0023) words its refusals for people, prefixed "document: "
+  const doc = error.message.match(/document: (.*)/);
+  if (doc) return fail('blocked', doc[1]!.trim());
   const form = error.message.match(/^form: (.*)/);
   if (form) return fail('invalid', form[1]!.trim());
   const parent = error.message.match(/restore the parent first: (\S+)/);

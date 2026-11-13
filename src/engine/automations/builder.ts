@@ -10,6 +10,8 @@ import { dateOf, defOf, keysOfValue, kindOf, valueOf } from '../values';
 import { NO_VALUE_OPS } from '../views/apply';
 import { isActionId, planActions, valueLabel, type PlanEnv } from './actions';
 import { matchTrigger } from './triggers';
+import { isItemFilesSource } from './schedule';
+import { earliestValidUntil } from '../fields/evidence';
 import { subitemRows } from './subitem-actions';
 import { subitemTriggerField } from './subitem-triggers';
 import { childSheetIdOf, subitemLabel, subitemsOf } from '../subitems';
@@ -53,6 +55,8 @@ export const TRIGGER_CATALOGUE: Record<
     field: boolean;
     param: TriggerParam;
     scheduled?: true;
+    /** The trigger can watch the item's Files tab instead of a field (source 'item_files', docs/04 §8). */
+    itemFiles?: true;
     /** Sub-item triggers: the sheet must have sub-items; the field is a field of the sub-items. */
     subitems?: true;
   }
@@ -70,6 +74,7 @@ export const TRIGGER_CATALOGUE: Record<
     field: true,
     param: 'days',
     scheduled: true,
+    itemFiles: true,
   },
   button_clicked: { label: 'a button is clicked', field: true, param: null },
   checklist_no: { label: 'a checklist answer is No', field: true, param: null },
@@ -152,7 +157,7 @@ export function availableTriggers(ctx: Ctx): TriggerId[] {
   return TRIGGER_IDS.filter((t) => {
     const spec = TRIGGER_CATALOGUE[t];
     if (spec.subitems && !childSheetIdOf(ctx)) return false;
-    return !spec.field || triggerFields(t, ctx).length > 0;
+    return !spec.field || !!spec.itemFiles || triggerFields(t, ctx).length > 0;
   });
 }
 
@@ -384,7 +389,9 @@ function dayWords(n: number) {
 /** "When Status becomes Done", "When Review date is 30 days away". */
 export function describeTrigger(trigger: Trigger, ctx: Ctx): string {
   const field = triggerFieldOf(trigger, ctx);
-  const name = field?.name ?? fieldName(trigger.fieldKey, ctx);
+  const name = isItemFilesSource(trigger)
+    ? 'an item file'
+    : (field?.name ?? fieldName(trigger.fieldKey, ctx));
   const sub = subitemLabel(ctx.sheet, 1).toLowerCase();
   switch (trigger.type) {
     case 'item_created': {
@@ -610,7 +617,7 @@ function triggerProblem(trigger: Trigger, ctx: Ctx): string | null {
   if (!isTriggerId(trigger.type)) return 'Choose a trigger.';
   const spec = TRIGGER_CATALOGUE[trigger.type];
   if (spec.subitems && !childSheetIdOf(ctx)) return 'Turn on sub-items for this sheet first.';
-  if (spec.field) {
+  if (spec.field && !(spec.itemFiles && isItemFilesSource(trigger))) {
     const key = str(trigger.fieldKey);
     const field = triggerFieldOf(trigger, ctx);
     if (!field) return key ? `The field "${key}" no longer exists.` : 'Choose a field.';
@@ -892,8 +899,18 @@ function checkTrigger(trigger: Trigger, item: Item, ctx: Ctx): TestResult['trigg
     case 'date_arrives':
     case 'clock_warning':
     case 'evidence_expiring': {
-      const date = field ? dateOf(item, field, ctx) : null;
-      if (!date) return { check: 'no_match', text: `${is}, so date checks skip this item.` };
+      const date = isItemFilesSource(trigger)
+        ? earliestValidUntil(ctx.files(item.id, null))
+        : field
+          ? dateOf(item, field, ctx)
+          : null;
+      if (!date)
+        return {
+          check: 'no_match',
+          text: isItemFilesSource(trigger)
+            ? 'No item file has a valid-until date, so date checks skip this item.'
+            : `${is}, so date checks skip this item.`,
+        };
       const offset =
         trigger.type === 'date_arrives'
           ? isNum(trigger.offsetDays)

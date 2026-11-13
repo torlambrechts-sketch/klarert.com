@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { resolveTemplateTabs } from '@/engine/views/tabs';
-import { COLUMN_STARTS, START_IDS, STARTS, startById } from './starts';
+import { COLUMN_STARTS, START_IDS, STARTS, startById, startFieldKeys } from './starts';
 
 describe('wizard starts', () => {
-  it('has the twelve starts of docs/05 §4 in order', () => {
+  it('has the thirteen starts of docs/05 §4 in order', () => {
     expect(STARTS.map((s) => s.id)).toEqual([...START_IDS]);
   });
 
@@ -19,6 +19,7 @@ describe('wizard starts', () => {
       'incident',
       'control',
       'treatment',
+      'documents',
     ]);
     for (const s of COLUMN_STARTS) {
       expect(s.itemLabel).toBeTruthy();
@@ -48,6 +49,39 @@ describe('wizard starts', () => {
       expect(s.subitems!.fields.map((f) => f.key)).toEqual(
         expect.arrayContaining(['owner', 'status', 'due_date', 'evidence']),
       );
+  });
+});
+
+describe('documents and policies', () => {
+  it('is a documents register whose fields the approval workflow reads by key', () => {
+    const s = startById('documents')!;
+    expect(s.register).toBe('documents');
+    expect(s.folder).toBe('Management system');
+    expect(s.groups).toEqual(['Draft', 'In review', 'Approved', 'Obsolete']);
+    expect(startFieldKeys(s.fields!)).toEqual([
+      'document_id',
+      'owner',
+      'version',
+      'status',
+      'author',
+      'approver',
+      'approved_on',
+      'effective_date',
+      'next_review',
+      'classification',
+      'retention',
+    ]);
+    const status = s.fields!.find((f) => f[0] === 'Status')!;
+    const options = (status[2] as { options: { id: string; label: string; done?: boolean }[] })
+      .options;
+    expect(options.map((o) => o.label)).toEqual(['Draft', 'In review', 'Approved', 'Obsolete']);
+    // the done option is Approved: the SQL workflow reads it as such
+    expect(options.filter((o) => o.done).map((o) => o.id)).toEqual(['opt_approved']);
+    // approving needs a version note; leaving Approved needs a comment
+    expect(s.rules!.map((r) => [r.whenValues, !!r.requireComment, !!r.fromDone])).toEqual([
+      [['opt_approved'], true, false],
+      [['opt_draft', 'opt_review', 'opt_obsolete'], true, true],
+    ]);
   });
 });
 
