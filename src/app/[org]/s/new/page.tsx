@@ -17,7 +17,7 @@ export default async function NewSheetPage({
   const { workspace, role } = await requireMember(org);
   if (!isEditorRole(role))
     return (
-      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-7 sm:pt-[26px]">
+      <main className="w-full px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
         <h1>New sheet</h1>
         <p className="text-muted-foreground mt-2">
           Viewers cannot create sheets. Ask an editor or admin to create one for you.
@@ -26,7 +26,7 @@ export default async function NewSheetPage({
     );
   const [nav, data] = await Promise.all([getNav(workspace.id), getWizardData(workspace.id)]);
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-6 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         className="border-line border-b pb-[18px]"
         crumb={workspace.name}

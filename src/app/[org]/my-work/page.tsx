@@ -58,7 +58,7 @@ export default async function MyWorkPage({
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         title="My work"
         description="Items assigned to you and requests to you, soonest first."

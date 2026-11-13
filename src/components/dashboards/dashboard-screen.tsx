@@ -123,7 +123,7 @@ export function DashboardScreen({
 
   return (
     <main
-      className="mx-auto flex w-full max-w-[1184px] flex-col gap-4 px-4 pt-6 pb-8 sm:px-7 sm:pt-[42px]"
+      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]"
       aria-busy={pending}
     >
       <ShellCrumb>

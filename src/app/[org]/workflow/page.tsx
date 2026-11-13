@@ -47,7 +47,7 @@ export default async function WorkflowPage({
     : 0;
   const lifecycles = data ? data.rows.filter((r) => r.lifecycle).length : 0;
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-0 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-0 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         className="pb-[18px]"
         crumb={
