@@ -23,6 +23,9 @@ import { listPacks, packSetups } from '@/server/commands/packs';
 import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
 import { AdoptFramework } from './frameworks';
+import { listAuditOutputs, reviewSheetsByInstall } from '@/server/commands/audit';
+import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
+import { addDays, addMonths } from '@/engine/fields/helpers';
 import { Check, ExternalLink } from 'lucide-react';
 
 export const metadata = { title: 'Settings · Compliance OS' };
@@ -384,7 +387,17 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
 
 /** Packs (docs/11): the catalogue, what is installed here and the pack entries of the activity log. */
 async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
-  const [r, setupsResult] = await Promise.all([listPacks({ org }), packSetups({ org })]);
+  const [r, setupsResult, reviewSheets] = await Promise.all([
+    listPacks({ org }),
+    packSetups({ org }),
+    reviewSheetsByInstall({ org }),
+  ]);
+  const reviewLinks = (installId: string): Record<string, { href: string; label: string }> => {
+    const sheetId = reviewSheets.ok ? reviewSheets.data[installId] : undefined;
+    return sheetId
+      ? { [sheetId]: { href: `/${org}/audit/review`, label: 'Compile the review inputs' } }
+      : {};
+  };
   if (!r.ok)
     return (
       <Card title="Packs">
@@ -536,7 +549,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
             >
               <div className="flex flex-col gap-2">
                 <SetupSummary progress={s.progress} />
-                <SetupSteps org={org} progress={s.progress} />
+                <SetupSteps org={org} progress={s.progress} extraLinks={reviewLinks(s.installId)} />
               </div>
             </Card>
           </div>
@@ -600,7 +613,7 @@ function CoverageBar({ percent, label }: { percent: number | null; label: string
 
 /** Frameworks (docs/12): adopted frameworks with coverage, and the catalogue to adopt from. */
 async function FrameworksTab({ org }: { org: string }) {
-  const r = await listFrameworks({ org });
+  const [r, outputs] = await Promise.all([listFrameworks({ org }), listAuditOutputs({ org })]);
   if (!r.ok)
     return (
       <Card title="Frameworks">
@@ -643,14 +656,53 @@ async function FrameworksTab({ org }: { org: string }) {
                     label={f.adopted!.coverageText}
                   />
                 </div>
-                <Button asChild variant="outline" size="sm" className="self-start sm:self-center">
-                  <Link href={`/${org}/s/${f.adopted!.sheetId}`} aria-label={`Open ${f.title}`}>
-                    Open
-                  </Link>
-                </Button>
+                <span className="flex flex-wrap gap-2 self-start sm:self-center">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/${org}/s/${f.adopted!.sheetId}`} aria-label={`Open ${f.title}`}>
+                      Open
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link
+                      href={`/${org}/audit/soa/${f.adopted!.sheetId}`}
+                      aria-label={`Export the statement of applicability of ${f.title}`}
+                    >
+                      Export SoA
+                    </Link>
+                  </Button>
+                </span>
               </li>
             ))}
           </ul>
+        )}
+      </Card>
+      <Card
+        title="Audit outputs"
+        description="An audit pack for a folder or a pack: the statement of applicability, the registers, an evidence index and the activity log of a period with its hash chains checked. Members and auditors find the same on Audit outputs."
+      >
+        {outputs.ok ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <AuditPackDialog
+              org={org}
+              folders={outputs.data.folders}
+              installs={outputs.data.installs}
+              defaultFrom={addDays(addMonths(outputs.data.today, -12), 1)}
+              defaultTo={outputs.data.today}
+            />
+            <Link
+              href={`/${org}/audit`}
+              className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
+            >
+              All audit outputs
+            </Link>
+          </div>
+        ) : (
+          <div role="alert" className="flex flex-col items-start gap-2">
+            <p className="m-0">{outputs.error.message}</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/${org}/settings?tab=frameworks`}>Retry</Link>
+            </Button>
+          </div>
         )}
       </Card>
       <Card

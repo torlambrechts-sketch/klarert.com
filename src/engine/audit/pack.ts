@@ -251,7 +251,15 @@ export function chainSummary(results: ChainResult[]): ChainSummary {
 
 export function chainTable(results: ChainResult[]): string[][] {
   return [
-    ['Chain', 'Item or sheet', 'Sheet', 'Result', 'Entries checked', 'First bad entry', 'Last hash'],
+    [
+      'Chain',
+      'Item or sheet',
+      'Sheet',
+      'Result',
+      'Entries checked',
+      'First bad entry',
+      'Last hash',
+    ],
     ...results.map((r) => [
       r.chainKey,
       r.label,

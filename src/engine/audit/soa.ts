@@ -124,7 +124,9 @@ export function buildSoa(input: SoaInput): Soa {
         implemented: !statusHidden && !!status && isDoneOf(it, status, ctx),
         owner: text(it, owner),
         evidence: evidenceHidden ? [{ name: RESTRICTED_TEXT }] : (input.evidence.get(it.id) ?? []),
-        linked: (input.linked.get(it.id) ?? []).map((l) => `${l.displayId} ${l.name} (${l.sheetName})`),
+        linked: (input.linked.get(it.id) ?? []).map(
+          (l) => `${l.displayId} ${l.name} (${l.sheetName})`,
+        ),
         lastReviewed: text(it, reviewed),
       };
     })
@@ -169,10 +171,9 @@ export function soaTable(soa: Soa): string[][] {
 
 /** The SoA as CSV: a short header block, an empty row, then the table. */
 export function soaCsv(soa: Soa, header: SoaHeader): string {
-  return toCsv(
-    [['Statement of applicability'], ...soaHeaderLines(header), [], ...soaTable(soa)],
-    { bom: true },
-  );
+  return toCsv([['Statement of applicability'], ...soaHeaderLines(header), [], ...soaTable(soa)], {
+    bom: true,
+  });
 }
 
 const escapeHtml = (s: string) =>

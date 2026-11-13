@@ -38,7 +38,12 @@ describe('csv', () => {
   });
 
   it('ends rows with CRLF and can start with a BOM', () => {
-    expect(toCsv([['a', 'b'], ['1', '2']])).toBe('a,b\r\n1,2\r\n');
+    expect(
+      toCsv([
+        ['a', 'b'],
+        ['1', '2'],
+      ]),
+    ).toBe('a,b\r\n1,2\r\n');
     expect(toCsv([['a']], { bom: true }).charCodeAt(0)).toBe(0xfeff);
   });
 });
@@ -108,7 +113,9 @@ describe('statement of applicability', () => {
       ctx,
       refFieldKey: 'ref',
       evidence: new Map([[lib.a510.id, [{ name: 'aup.pdf', href: '/x' }]]]),
-      linked: new Map([[lib.a510.id, [{ displayId: 'CTL-1', name: 'AUP', sheetName: 'Controls' }]]]),
+      linked: new Map([
+        [lib.a510.id, [{ displayId: 'CTL-1', name: 'AUP', sheetName: 'Controls' }]],
+      ]),
     });
     expect(soa.rows.map((r) => r.ref)).toEqual(['4.1', 'A.5.2', 'A.5.10']);
     const a510 = soa.rows[2]!;

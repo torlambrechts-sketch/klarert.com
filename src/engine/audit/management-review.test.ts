@@ -50,7 +50,12 @@ describe('management review inputs', () => {
         nonconformities: source([
           row({ status: 'Open' }),
           row({ status: 'Open', overdue: true, createdAt: before, updatedAt: before }),
-          row({ status: 'Closed', done: true, createdAt: before, updatedAt: '2026-02-01T09:00:00Z' }),
+          row({
+            status: 'Closed',
+            done: true,
+            createdAt: before,
+            updatedAt: '2026-02-01T09:00:00Z',
+          }),
           row({ status: 'Closed', done: true, createdAt: before, updatedAt: before }),
         ]),
       },

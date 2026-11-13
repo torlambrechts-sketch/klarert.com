@@ -149,7 +149,9 @@ export function compileManagementReview(input: ReviewInput): ManagementReview {
   const isParty = (r: ReviewRow) => !!r.groupRef && parties.has(r.groupRef);
 
   // 1. earlier reviews and the actions still open from before the period
-  const earlier = rows('reviews').filter((r) => (r.date ? r.date < from : dayOf(r.createdAt) < from));
+  const earlier = rows('reviews').filter((r) =>
+    r.date ? r.date < from : dayOf(r.createdAt) < from,
+  );
   const carried = [...rows('nonconformities'), ...rows('treatments')].filter(
     (r) => !r.done && dayOf(r.createdAt) < from,
   );
@@ -174,11 +176,11 @@ export function compileManagementReview(input: ReviewInput): ManagementReview {
   );
 
   // 2. and 3. the context sheet: issues and interested parties changed in the period
-  const contextFacts = (list: ReviewRow[], what: string) => {
+  const contextFacts = (list: ReviewRow[], what: string, whats?: string) => {
     const added = list.filter(created);
     const edited = list.filter((r) => !created(r) && changed(r));
     return [
-      `${plural(added.length, what)} added and ${edited.length} changed in the period, ${list.length} in all`,
+      `${plural(added.length, what, whats)} added and ${edited.length} changed in the period, ${list.length} in all`,
     ];
   };
   const contextRows = rows('context');
@@ -342,7 +344,8 @@ export function reviewSummary(periodLabel: string, sections: ReviewSection[], ma
     lines.push(`${i + 1}. ${s.title}`);
     if (!s.available) lines.push('- No sheet holds this yet.');
     for (const f of s.facts) lines.push(`- ${f}`);
-    for (const it of s.items.slice(0, 10)) lines.push(`  · ${it.displayId} ${it.name} (${it.note})`);
+    for (const it of s.items.slice(0, 10))
+      lines.push(`  · ${it.displayId} ${it.name} (${it.note})`);
     const left = s.items.length - Math.min(10, s.items.length) + s.more;
     if (left > 0) lines.push(`  · and ${left} more`);
     lines.push('');

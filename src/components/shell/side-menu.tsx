@@ -7,6 +7,7 @@ import {
   Check,
   ChevronsUpDown,
   FileCheck2,
+  ClipboardCheck,
   Home,
   Inbox,
   LayoutDashboard,
@@ -235,7 +236,7 @@ export function SideMenu({
         />
       </ul>
     ) : null;
-  const anyInsights = hit('Dashboards') || hit('Evidence library');
+  const anyInsights = hit('Dashboards') || hit('Evidence library') || hit('Audit outputs');
   const anyPlatform =
     hit('Workflow') || hit('Automations') || (canManage && hit('Workspace admin'));
 
@@ -322,6 +323,14 @@ export function SideMenu({
                 active={is('evidence')}
                 onNavigate={onNavigate}
                 hidden={!hit('Evidence library')}
+              />
+              <NavLink
+                href={`/${org}/audit`}
+                label="Audit outputs"
+                icon={<ClipboardCheck className={iconClass} aria-hidden />}
+                active={is('audit')}
+                onNavigate={onNavigate}
+                hidden={!hit('Audit outputs')}
               />
             </ul>
           </>
