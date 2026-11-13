@@ -19,6 +19,9 @@ import { CalendarView } from '@/components/views/calendar-view';
 import { FilterButton, SheetSearch, SortButton } from '@/components/views/filter-bar';
 import { FormView } from '@/components/views/form-view';
 import { KanbanView } from '@/components/views/kanban-view';
+import { InsightsView } from '@/components/insights/insights-view';
+import { ownerField } from '@/engine/item-panel';
+import { statusFilterField } from '@/engine/views/quick-filters';
 import { NewItemDialog, type NewItemRequest } from '@/components/views/new-item-dialog';
 import { useOnline } from '@/components/states/use-online';
 import { useViewItems } from '@/components/views/use-view-items';
@@ -38,6 +41,7 @@ import {
   StatusFilter,
   TableActions,
   useDensityPreference,
+  ValueFilterChip,
 } from '@/components/table/table-actions';
 import { createGridStore, GridStoreContext, useGrid, useGridStore } from './grid-store';
 import {
@@ -225,8 +229,8 @@ function SheetBody(props: SheetViewProps) {
     <main
       className={cn(
         'flex min-w-0 flex-col px-4 pt-5 sm:px-[28px] sm:pt-[26px]',
-        // the Table scrolls with the page; the other views fill the window and scroll inside
-        tabular
+        // the Table and Insights scroll with the page; the other views fill the window and scroll inside
+        tabular || active.type === 'insights'
           ? 'min-h-[calc(100dvh-48px)] pb-[24px]'
           : 'h-[calc(100dvh-48px)] pb-3 max-[759px]:h-[calc(100dvh-112px)]',
       )}
@@ -336,11 +340,14 @@ function SheetBody(props: SheetViewProps) {
           <>
             <StatusFilter items={inScope} ctx={ctx} />
             <OwnerFilter items={inScope} ctx={ctx} />
+            <ValueFilterChip />
           </>
         ) : null}
         {data && ctx && filterable ? (
           <>
-            <SortButton config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
+            {active.type !== 'insights' ? (
+              <SortButton config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
+            ) : null}
             <FilterButton
               config={config}
               setConfig={setConfig}
@@ -493,6 +500,28 @@ function ViewBody({
     [setItemParam],
   );
   const clearFilters = () => setConfig((c) => ({ ...c, filters: [] }));
+  const insightsEnv = useMemo(
+    () => ({ now: ctx.now, timeZone: ctx.timeZone, userId: ctx.userId, isAdmin }),
+    [ctx.now, ctx.timeZone, ctx.userId, isAdmin],
+  );
+  // a bar in the Insights view: the Table, filtered to that value (the status and owner filters where they apply)
+  const openView = views.open;
+  const tableId = views.tabs.table.id;
+  const filterTable = useCallback(
+    (fieldKey: string, key: string, label: string) => {
+      const field = data.fields.find((f) => f.key === fieldKey);
+      if (!field) return;
+      const s = store.getState();
+      s.clearPeople();
+      s.clearStatuses();
+      s.setValueFilter(null);
+      if (field.id === statusFilterField(ctx)?.id) s.toggleStatus(key);
+      else if (field.id === ownerField(ctx)?.id) s.togglePerson(key);
+      else s.setValueFilter({ fieldId: field.id, key, label: `${field.name}: ${label}` });
+      openView(tableId);
+    },
+    [ctx, data.fields, openView, store, tableId],
+  );
   const [localAddTick, setLocalAddTick] = useState(0);
 
   return (
@@ -525,6 +554,17 @@ function ViewBody({
           onNew={() => setLocalAddTick((t) => t + 1)}
           config={config}
           setConfig={setConfig}
+        />
+      ) : active.type === 'insights' ? (
+        <InsightsView
+          org={org}
+          data={data}
+          ctx={ctx}
+          items={view.items}
+          views={views}
+          env={insightsEnv}
+          onOpenItem={openItem}
+          onSlice={filterTable}
         />
       ) : active.type === 'kanban' ? (
         <KanbanView

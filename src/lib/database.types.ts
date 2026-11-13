@@ -1078,6 +1078,11 @@ isOneToOne: false
 "is_member":
 { Args: { "o": string }; Returns: boolean
                            },
+"item_update_summaries":
+{ Args: { "p_sheet": string }; Returns: {
+              "item_id": string,"last_at": string,"last_author": string,"last_body": string,"updates": number
+            }[]
+                           },
 "items_for_people":
 { Args: { "p_limit"?: number,"p_org": string,"p_people": (string)[] }; Returns: {
               "archived_at": string | null,

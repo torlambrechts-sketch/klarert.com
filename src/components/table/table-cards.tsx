@@ -13,6 +13,8 @@ import { Avatar, cellValue, colorVar } from '@/components/fields/shared';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
+import { CommentBubble } from './comment-bubble';
+import type { UpdateSummary } from './use-update-counts';
 import { GroupTitle } from './group-title';
 import { useDocumentTop } from './use-document-top';
 import { useTableGroups } from './use-table-groups';
@@ -42,6 +44,7 @@ export function TableCards({
   onOpenItem,
   visibleItems,
   viewCompare,
+  comments,
 }: {
   data: SheetData;
   ctx: Ctx;
@@ -52,6 +55,8 @@ export function TableCards({
   onOpenItem(item: Item): void;
   visibleItems: Item[];
   viewCompare: ((a: Item, b: Item) => number) | null;
+  /** Comments per item, for the marker on each card. */
+  comments: ReadonlyMap<string, UpdateSummary>;
 }) {
   const store = useGridStore();
   const collapsed = useGrid((s) => s.collapsed);
@@ -146,6 +151,7 @@ export function TableCards({
                     ctx={ctx}
                     owner={owner}
                     fields={shown}
+                    comments={comments.get(row.item.id)}
                     onOpen={() => onOpenItem(row.item)}
                   />
                 </div>
@@ -176,6 +182,7 @@ function ItemCard({
   ctx,
   owner,
   fields,
+  comments,
   onOpen,
 }: {
   item: Item;
@@ -183,6 +190,7 @@ function ItemCard({
   ctx: Ctx;
   owner: Field | null;
   fields: Field[];
+  comments: UpdateSummary | undefined;
   onOpen(): void;
 }) {
   const ownerId = owner ? ownerOf(item, owner, ctx) : null;
@@ -223,6 +231,7 @@ function ItemCard({
             <Lock className="size-3" aria-hidden /> Locked
           </span>
         ) : null}
+        <CommentBubble summary={comments} ctx={ctx} className="ml-auto" />
       </span>
       {filled.length ? (
         <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1">

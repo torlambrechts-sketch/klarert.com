@@ -52,6 +52,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { CommentBubble } from './comment-bubble';
+import type { UpdateSummary } from './use-update-counts';
 import { ColumnHeader, type ColumnMenuActions } from './column-header';
 import { GroupSummary } from './group-summary';
 import { GroupTitle } from './group-title';
@@ -116,8 +118,8 @@ export interface TableProps {
   /** The active view's config: sort and column summaries live there. */
   config: ViewConfig;
   setConfig(update: (c: ViewConfig) => ViewConfig): void;
-  /** Updates (comments) per item, for the bubble after the name. */
-  updateCounts: ReadonlyMap<string, number>;
+  /** Comments (updates people wrote) per item, for the marker after the name. */
+  updateCounts: ReadonlyMap<string, UpdateSummary>;
 }
 
 const storageOf = (f: Field) => resolveFieldType(f.type)?.storage;
@@ -811,7 +813,7 @@ export function Table({
                       onCancelEdit={cancelEditStable}
                       fieldProps={fieldPropsStable}
                       editingItem={editingItem}
-                      comments={row.kind === 'item' ? (updateCounts.get(row.item.id) ?? 0) : 0}
+                      comments={row.kind === 'item' ? updateCounts.get(row.item.id) : undefined}
                       menuOpen={row.kind === 'item' && rowMenu === row.item.id}
                       onRowAction={rowActionsStable}
                       allFields={data.fields}
@@ -902,8 +904,8 @@ interface RowProps {
   onCancelEdit(): void;
   /** "Add …" and "Edit options" for the open editor (people who may edit the field). */
   fieldProps(field: Field): Pick<EditorProps, 'onAddOption' | 'onEditField'>;
-  /** Updates (comments) on this row's item. */
-  comments: number;
+  /** Comments (updates people wrote) on this row's item. */
+  comments: UpdateSummary | undefined;
   /** The row actions menu is open (Shift+F10 or the "…" button). */
   menuOpen: boolean;
   onRowAction(item: Item, action: RowAction): void;
@@ -1249,17 +1251,11 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                 </span>
               )}
             </span>
-            {p.comments > 0 ? (
-              <span
-                className="text-ink bg-background-100 text-label-11-mono border-gray-alpha-500 inline-flex h-[22px] min-w-[28px] shrink-0 items-center justify-center rounded-full border px-1.5 font-semibold"
-                title={p.comments === 1 ? '1 update' : `${p.comments} updates`}
-              >
-                {p.comments}
-                <span className="sr-only">{p.comments === 1 ? ' update' : ' updates'}</span>
-              </span>
+            {p.comments && p.comments.count > 0 ? (
+              <CommentBubble summary={p.comments} ctx={ctx} className="min-w-[40px]" />
             ) : (
               // names line up whether or not a row has updates
-              <span aria-hidden className="w-[28px] shrink-0" />
+              <span aria-hidden className="w-[40px] shrink-0" />
             )}
             {isEditing('name') ? (
               <CellEditor

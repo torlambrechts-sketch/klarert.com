@@ -22,6 +22,7 @@ import { Avatar } from '@/components/fields/shared';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { panelKeys, type UpdateRow } from './queries';
+import { UPDATE_SUMMARIES } from '@/components/table/use-update-counts';
 
 // Updates (docs/05 §3.4, FR-28): a composer with @mention autocomplete for people and job roles, and the feed newest
 // first. Authors may edit or delete their own update for 15 minutes (the database enforces the window and logs both).
@@ -207,6 +208,8 @@ export function UpdatesTab({
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: panelKeys.updates(item.id) });
     void qc.invalidateQueries({ queryKey: panelKeys.activity(item.id) });
+    // the comment marker on the item's row and cards
+    void qc.invalidateQueries({ queryKey: [UPDATE_SUMMARIES] });
   };
 
   const post = async () => {

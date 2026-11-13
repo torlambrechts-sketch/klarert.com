@@ -55,6 +55,11 @@ describe('view tabs', () => {
     expect(tabs.table).toMatchObject({ id: 'table', saved: null, name: 'Table' });
     for (const id of ['table', 'list', 'grid']) expect(resolveActive(tabs, id)).toBe(tabs.table);
     expect(resolveActive(tabs, 'calendar')).toBe(tabs.more.calendar);
+    expect(resolveActive(tabs, 'insights')).toMatchObject({
+      id: 'insights',
+      name: 'Insights',
+      saved: null,
+    });
     expect(resolveActive(tabs, '8b1c2d3e-0000-4000-8000-000000000000')).toBeNull();
   });
 
@@ -76,5 +81,19 @@ describe('view tabs', () => {
       config: { ...emptyConfig(), hidden: ['x'] },
     };
     expect(buildTabs([v], 'u1', true).table.saved?.config.hidden).toEqual(['x']);
+  });
+
+  it('backs the Insights tab with the first shared insights view; personal ones get their own tab', () => {
+    const tabs = buildTabs(
+      [
+        row('v-mine', 'My insights', 'insights', 'a0', 'u1'),
+        row('v-ins', 'Insights', 'insights', 'a1'),
+      ],
+      'u1',
+      false,
+    );
+    expect(tabs.more.insights).toMatchObject({ id: 'v-ins', type: 'insights', canWrite: false });
+    expect(resolveActive(tabs, 'insights')?.id).toBe('v-ins');
+    expect(resolveActive(tabs, 'v-mine')).toMatchObject({ canWrite: true });
   });
 });

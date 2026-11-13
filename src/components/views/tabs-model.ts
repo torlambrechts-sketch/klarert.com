@@ -12,11 +12,15 @@ export interface ActiveView {
   canWrite: boolean;
 }
 
+/** The built-in tabs after the Table, in tab order. */
+export const BUILTIN_TABS = ['insights', 'kanban', 'calendar', 'form'] as const;
+export type BuiltinTab = (typeof BUILTIN_TABS)[number];
+
 export interface ViewTabs {
   /** The Table tab: the first shared table view, else the built-in one. */
   table: ActiveView;
-  /** Kanban, Calendar and Form under "More": the first shared view of that type, else the built-in one. */
-  more: Record<'kanban' | 'calendar' | 'form', ActiveView>;
+  /** Insights, Kanban, Calendar and Form: the first shared view of that type, else the built-in one. */
+  more: Record<BuiltinTab, ActiveView>;
   /** Other saved views, each its own tab. */
   others: ActiveView[];
   /** The former Grid tab's view when the List one backs the Table: no tab, opens by its id. */
@@ -51,13 +55,18 @@ export function buildTabs(views: SavedView[], userId: string, canEdit: boolean):
   const tableBase = base('table');
   const gridBase = sorted.find((v) => v.legacyType === 'grid' && v.ownerId === null);
   const merged = gridBase && gridBase.id !== tableBase?.id ? gridBase : null;
-  const firstOf = (type: 'kanban' | 'calendar' | 'form') => {
+  const firstOf = (type: BuiltinTab) => {
     const v = base(type);
     return v ? asActive(v) : builtin(type);
   };
   return {
     table: tableBase ? { ...asActive(tableBase), name: 'Table' } : builtin('table'),
-    more: { kanban: firstOf('kanban'), calendar: firstOf('calendar'), form: firstOf('form') },
+    more: {
+      insights: firstOf('insights'),
+      kanban: firstOf('kanban'),
+      calendar: firstOf('calendar'),
+      form: firstOf('form'),
+    },
     others: sorted.filter((v) => v.id !== tableBase?.id && v.id !== merged?.id).map(asActive),
     merged: merged ? [asActive(merged)] : [],
   };

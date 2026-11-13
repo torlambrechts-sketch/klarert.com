@@ -25,6 +25,8 @@ import { colorVar } from '@/components/fields/shared';
 import { useValueCommit } from '@/components/grid/use-commit';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
+import { CommentBubble } from '@/components/table/comment-bubble';
+import { useUpdateSummaries, type UpdateSummary } from '@/components/table/use-update-counts';
 import type { NewItemRequest } from './new-item-dialog';
 
 // Kanban (docs/05 §3.3, FR-23): lanes per option of the lane field (first status field by default; the choice is
@@ -58,6 +60,7 @@ export function KanbanView({
   const choices = laneFields(data.fields, ctx);
   const field = laneField(data.fields, config.labelFieldKey, ctx);
   const lanes = useMemo(() => (field ? kanbanLanes(field, items, ctx) : []), [field, items, ctx]);
+  const comments = useUpdateSummaries(data.sheet.id, data.sheet.orgId);
   const { commit, dialog } = useValueCommit(data, ctx, actions);
   const [over, setOver] = useState<string | null>(null);
   const sensors = useSensors(
@@ -142,6 +145,7 @@ export function KanbanView({
               ctx={ctx}
               canEdit={canEdit}
               canMove={canMove}
+              comments={comments}
               onOpenItem={onOpenItem}
               onAdd={() =>
                 onNew({
@@ -171,6 +175,7 @@ function LaneColumn({
   ctx,
   canEdit,
   canMove,
+  comments,
   onOpenItem,
   onAdd,
 }: {
@@ -180,6 +185,7 @@ function LaneColumn({
   ctx: Ctx;
   canEdit: boolean;
   canMove(item: Item): boolean;
+  comments: ReadonlyMap<string, UpdateSummary>;
   onOpenItem(item: Item): void;
   onAdd(): void;
 }) {
@@ -216,7 +222,13 @@ function LaneColumn({
       <ul className="flex min-h-16 flex-1 flex-col gap-2 overflow-y-auto p-2">
         {lane.items.map((item) => (
           <li key={item.id}>
-            <Card item={item} ctx={ctx} draggable={canMove(item)} onOpen={() => onOpenItem(item)} />
+            <Card
+              item={item}
+              ctx={ctx}
+              draggable={canMove(item)}
+              comments={comments.get(item.id)}
+              onOpen={() => onOpenItem(item)}
+            />
           </li>
         ))}
       </ul>
@@ -238,11 +250,13 @@ function Card({
   item,
   ctx,
   draggable,
+  comments,
   onOpen,
 }: {
   item: Item;
   ctx: Ctx;
   draggable: boolean;
+  comments: UpdateSummary | undefined;
   onOpen(): void;
 }) {
   const drag = useDraggable({ id: `card:${item.id}`, disabled: !draggable });
@@ -276,9 +290,12 @@ function Card({
       >
         {item.name}
       </button>
-      <span className="text-muted-foreground text-label-12">
-        <span className="font-mono">{item.displayId}</span>
-        {person ? ` · ${person}` : ''}
+      <span className="text-muted-foreground text-label-12 flex items-center gap-2">
+        <span className="min-w-0 flex-1 truncate">
+          <span className="font-mono">{item.displayId}</span>
+          {person ? ` · ${person}` : ''}
+        </span>
+        <CommentBubble summary={comments} ctx={ctx} />
       </span>
       <span className="text-label-12 flex items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-1.5">

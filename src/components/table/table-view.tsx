@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Item } from '@/engine/types';
 import type { ViewConfig } from '@/engine/views/config';
-import { quickFilter } from '@/engine/views/quick-filters';
+import { filterByKeys, quickFilter } from '@/engine/views/quick-filters';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import { Table } from './table';
 import { TableCards } from './table-cards';
-import { useUpdateCounts } from './use-update-counts';
+import { useUpdateSummaries } from './use-update-counts';
 
 // The Table view (docs/05 §3.1): the one view for working through a sheet's items as rows. Desktop and tablets get
 // the virtualised table of group cards; phones (< 640 px) get item cards grouped the same way. Above both: the
@@ -63,12 +63,14 @@ export function TableView(p: TableViewProps) {
   const total = inScope.length;
   const people = useGrid((s) => s.people);
   const statuses = useGrid((s) => s.statuses);
+  const valueFilter = useGrid((s) => s.valueFilter);
   const store = useGridStore();
-  const updateCounts = useUpdateCounts(p.data.sheet.id);
-  const items = useMemo(
-    () => quickFilter(p.items, people, statuses, p.ctx),
-    [p.items, people, statuses, p.ctx],
-  );
+  const updateCounts = useUpdateSummaries(p.data.sheet.id, p.data.sheet.orgId);
+  const items = useMemo(() => {
+    const quick = quickFilter(p.items, people, statuses, p.ctx);
+    const field = valueFilter && p.data.fields.find((f) => f.id === valueFilter.fieldId);
+    return field ? filterByKeys(quick, field, new Set([valueFilter.key]), p.ctx) : quick;
+  }, [p.items, people, statuses, valueFilter, p.data.fields, p.ctx]);
   const filtered = p.filtered || items.length !== p.items.length;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -92,6 +94,7 @@ export function TableView(p: TableViewProps) {
               p.onClearFilters();
               store.getState().clearPeople();
               store.getState().clearStatuses();
+              store.getState().setValueFilter(null);
             }}
           >
             Clear filters
@@ -109,6 +112,7 @@ export function TableView(p: TableViewProps) {
           onOpenItem={p.onOpenItem}
           visibleItems={items}
           viewCompare={p.compare}
+          comments={updateCounts}
         />
       ) : (
         <div className="flex min-h-[240px] flex-1 flex-col">

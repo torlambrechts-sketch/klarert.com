@@ -182,6 +182,26 @@ export function StatusFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
   );
 }
 
+/** The value filter set from the Insights view ("Severity: High"), with a button that removes it. */
+export function ValueFilterChip() {
+  const store = useGridStore();
+  const f = useGrid((s) => s.valueFilter);
+  if (!f) return null;
+  return (
+    <span className="border-faint bg-background-100 text-label-14 flex h-[38px] max-w-[280px] items-center gap-1 rounded-md border pr-1 pl-3">
+      <span className="min-w-0 flex-1 truncate">{f.label}</span>
+      <button
+        type="button"
+        className="text-muted-foreground hover:bg-soft hover:text-ink inline-flex size-7 shrink-0 items-center justify-center rounded-sm"
+        aria-label={`Remove filter ${f.label}`}
+        onClick={() => store.getState().setValueFilter(null)}
+      >
+        <X className="size-[15px]" aria-hidden />
+      </button>
+    </span>
+  );
+}
+
 export function OwnerFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
   const store = useGridStore();
   const chosen = useGrid((s) => s.people);
