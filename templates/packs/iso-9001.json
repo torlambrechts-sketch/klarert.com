@@ -1,0 +1,4152 @@
+{
+  "key": "iso-9001",
+  "version": "1.0.0",
+  "title": "ISO 9001:2015 QMS",
+  "description": "A quality management system on the ISO 9001:2015 requirement library: context, quality policy and objectives, processes, risks and opportunities, controlled documents, nonconformities with corrective actions and customer feedback; Full adds external providers, competence, measuring equipment, internal audits, management review, design and development and release records. Example items start with \"Example:\".",
+  "levels": [
+    {
+      "key": "starter",
+      "name": "Starter",
+      "description": "The core of a QMS: context and interested parties, quality policy and objectives, processes, risks and opportunities, quality documents, nonconformities and corrective action, customer feedback and complaints."
+    },
+    {
+      "key": "full",
+      "name": "Full",
+      "description": "Everything in Starter plus external providers, competence and training, measuring equipment, internal audits with findings, management review, design and development and release records."
+    }
+  ],
+  "frameworks": [
+    {
+      "key": "iso-9001",
+      "version": "2015"
+    }
+  ],
+  "folders": [
+    {
+      "ref": "qms",
+      "name": "Quality management"
+    }
+  ],
+  "sheets": [
+    {
+      "ref": "context",
+      "name": "Context and interested parties",
+      "itemLabel": "Entry",
+      "idPrefix": "QCX-",
+      "folder": "qms",
+      "description": "What shapes your quality management system: the internal and external issues that affect what you deliver, the interested parties and what they need from you, and the scope statement with any requirement you say does not apply and why. Link each entry to the clause it answers.",
+      "groups": [
+        {
+          "ref": "internal",
+          "name": "Internal issues",
+          "color": "blue"
+        },
+        {
+          "ref": "external",
+          "name": "External issues",
+          "color": "purple"
+        },
+        {
+          "ref": "parties",
+          "name": "Interested parties",
+          "color": "teal"
+        },
+        {
+          "ref": "scope",
+          "name": "Scope statement",
+          "color": "navy"
+        }
+      ],
+      "fields": [
+        {
+          "key": "kind",
+          "name": "Kind",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_internal",
+                "label": "Internal issue",
+                "color": "blue"
+              },
+              {
+                "id": "opt_external",
+                "label": "External issue",
+                "color": "purple"
+              },
+              {
+                "id": "opt_party",
+                "label": "Interested party",
+                "color": "teal"
+              },
+              {
+                "id": "opt_scope",
+                "label": "Scope statement",
+                "color": "navy"
+              }
+            ]
+          }
+        },
+        {
+          "key": "clause",
+          "name": "Clause",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The clause this entry answers: 4.1 for issues, 4.2 for interested parties, 4.3 for the scope."
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "details",
+          "name": "Details",
+          "type": "longtext"
+        },
+        {
+          "key": "needs",
+          "name": "Their requirements",
+          "type": "longtext",
+          "description": "What this party expects from you, and which of those expectations the quality system takes on.",
+          "visibility": {
+            "fieldKey": "kind",
+            "op": "is_any_of",
+            "value": [
+              "opt_party"
+            ]
+          }
+        },
+        {
+          "key": "response",
+          "name": "How the QMS responds",
+          "type": "longtext"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_agreed",
+                "label": "Agreed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        }
+      ],
+      "views": [
+        {
+          "name": "By kind",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "kind"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By kind"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_lead_times",
+          "group": "external",
+          "name": "Example: customers expect shorter lead times",
+          "values": {
+            "kind": "opt_external",
+            "details": "Two large customers moved to weekly call-offs. Late deliveries now cost us orders.",
+            "response": "On-time delivery is a quality objective and part of the order to delivery process.",
+            "status": "opt_draft",
+            "next_review": "$in:180"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#4.1"
+            ]
+          }
+        },
+        {
+          "ref": "ex_know_how",
+          "group": "internal",
+          "name": "Example: key know-how sits with a few experienced people",
+          "values": {
+            "kind": "opt_internal",
+            "details": "Three long-serving technicians do most of the set-ups. Two retire within three years.",
+            "status": "opt_draft",
+            "next_review": "$in:180"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#4.1",
+              "iso-9001@2015#7.1.6"
+            ]
+          }
+        },
+        {
+          "ref": "ex_customers",
+          "group": "parties",
+          "name": "Example: customers",
+          "values": {
+            "kind": "opt_party",
+            "needs": "Products that meet the agreed specification, delivered on the agreed date, and a quick answer when something goes wrong.",
+            "status": "opt_draft",
+            "next_review": "$in:180"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#4.2"
+            ]
+          }
+        },
+        {
+          "ref": "ex_scope",
+          "group": "scope",
+          "name": "Example: QMS scope statement",
+          "values": {
+            "kind": "opt_scope",
+            "details": "Write which products and services, sites and processes the quality system covers. Name any requirement that does not apply (often design and development) and why it does not affect conformity or customer satisfaction.",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#4.3"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "objective",
+      "name": "Quality policy and objectives",
+      "itemLabel": "Entry",
+      "idPrefix": "QOB-",
+      "folder": "qms",
+      "description": "The commitments of your quality policy and the measurable objectives that follow from them: how each is measured, the target, where you are now, who owns it and the plan to get there. Review each one on its date.",
+      "groups": [
+        {
+          "ref": "policy",
+          "name": "Quality policy",
+          "color": "navy"
+        },
+        {
+          "ref": "objectives",
+          "name": "Quality objectives",
+          "color": "blue"
+        },
+        {
+          "ref": "closed",
+          "name": "Achieved or retired",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "kind",
+          "name": "Kind",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_policy",
+                "label": "Policy commitment",
+                "color": "navy"
+              },
+              {
+                "id": "opt_objective",
+                "label": "Objective",
+                "color": "blue"
+              }
+            ]
+          }
+        },
+        {
+          "key": "clause",
+          "name": "Clause",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "measure",
+          "name": "How it is measured",
+          "type": "text",
+          "description": "The measure (KPI) and where the number comes from."
+        },
+        {
+          "key": "target",
+          "name": "Target",
+          "type": "number"
+        },
+        {
+          "key": "actual",
+          "name": "Latest result",
+          "type": "number"
+        },
+        {
+          "key": "lower_better",
+          "name": "Lower is better",
+          "type": "check",
+          "description": "Tick when a smaller number is the goal, for example complaints per month."
+        },
+        {
+          "key": "result",
+          "name": "Against target",
+          "type": "formula",
+          "config": {
+            "expr": "IF(OR(EMPTY({target}), EMPTY({actual})), \"\", IF({lower_better} = \"Yes\", IF({actual} <= {target}, \"Met\", \"Not met\"), IF({actual} >= {target}, \"Met\", \"Not met\")))",
+            "result": "text"
+          }
+        },
+        {
+          "key": "plan",
+          "name": "Plan to achieve it",
+          "type": "longtext",
+          "description": "What will be done, the resources it needs, who is responsible and by when."
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date"
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_on_track",
+                "label": "On track",
+                "color": "green"
+              },
+              {
+                "id": "opt_at_risk",
+                "label": "At risk",
+                "color": "orange"
+              },
+              {
+                "id": "opt_off_track",
+                "label": "Off track",
+                "color": "red"
+              },
+              {
+                "id": "opt_achieved",
+                "label": "Achieved",
+                "color": "teal",
+                "done": true
+              },
+              {
+                "id": "opt_retired",
+                "label": "Retired",
+                "color": "dark",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "retire_reason",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_retired"
+              ],
+              "requireComment": true,
+              "message": "Say why this objective is retired."
+            }
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_policy",
+          "group": "policy",
+          "name": "Example: we deliver what we promised, when we promised it",
+          "values": {
+            "kind": "opt_policy",
+            "plan": "Write each commitment of the quality policy as its own entry, so objectives can be traced back to it.",
+            "next_review": "$in:365",
+            "status": "opt_draft"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#5.2"
+            ]
+          }
+        },
+        {
+          "ref": "ex_otd",
+          "group": "objectives",
+          "name": "Example: on-time delivery of at least 95 %",
+          "values": {
+            "kind": "opt_objective",
+            "measure": "Orders shipped on or before the confirmed date, per month, from the order system",
+            "target": 95,
+            "actual": 91,
+            "plan": "Weekly capacity check in the planning meeting; confirm dates only after the check.",
+            "due_date": "$in:180",
+            "next_review": "$in:30",
+            "status": "opt_at_risk"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#6.2"
+            ]
+          }
+        },
+        {
+          "ref": "ex_complaints",
+          "group": "objectives",
+          "name": "Example: no more than 2 customer complaints a month",
+          "values": {
+            "kind": "opt_objective",
+            "measure": "Complaints logged in Customer feedback and complaints, per month",
+            "target": 2,
+            "actual": 1,
+            "lower_better": true,
+            "due_date": "$in:365",
+            "next_review": "$in:90",
+            "status": "opt_on_track"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#6.2",
+              "iso-9001@2015#9.1.2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "process",
+      "name": "Processes",
+      "itemLabel": "Process",
+      "idPrefix": "PRC-",
+      "folder": "qms",
+      "description": "The processes your quality system needs and how they work together: what goes in and comes out, who owns each one, how you know it works (its measures) and the risks that could stop it.",
+      "groups": [
+        {
+          "ref": "core",
+          "name": "Core processes",
+          "color": "blue"
+        },
+        {
+          "ref": "management",
+          "name": "Management processes",
+          "color": "purple"
+        },
+        {
+          "ref": "support",
+          "name": "Support processes",
+          "color": "teal"
+        }
+      ],
+      "fields": [
+        {
+          "key": "owner",
+          "name": "Process owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "inputs",
+          "name": "Inputs",
+          "type": "longtext",
+          "description": "What starts the process and what it needs, and where it comes from."
+        },
+        {
+          "key": "outputs",
+          "name": "Outputs",
+          "type": "longtext",
+          "description": "What the process delivers, and to whom."
+        },
+        {
+          "key": "kpis",
+          "name": "Measures (KPIs)",
+          "type": "longtext",
+          "description": "How you know the process works: the measures, their targets and how often you check them."
+        },
+        {
+          "key": "resources",
+          "name": "Resources",
+          "type": "longtext"
+        },
+        {
+          "key": "risks",
+          "name": "Risks and opportunities",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "risk",
+            "multiple": true,
+            "inverseKey": "processes"
+          }
+        },
+        {
+          "key": "objectives",
+          "name": "Objectives",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "objective",
+            "multiple": true
+          }
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_review",
+                "label": "Under review",
+                "color": "orange"
+              },
+              {
+                "id": "opt_defined",
+                "label": "Defined",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_order",
+          "group": "core",
+          "name": "Example: order to delivery",
+          "values": {
+            "inputs": "Customer orders and call-offs; confirmed specifications; stock and capacity.",
+            "outputs": "Products delivered to the agreed specification and date; invoices.",
+            "kpis": "On-time delivery (monthly, target 95 %); orders entered without error (monthly, target 99 %).",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "links": {
+            "risks": [
+              "ex_capacity"
+            ],
+            "objectives": [
+              "ex_otd"
+            ]
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#4.4",
+              "iso-9001@2015#8.2",
+              "iso-9001@2015#8.5"
+            ]
+          }
+        },
+        {
+          "ref": "ex_purchasing",
+          "group": "support",
+          "name": "Example: purchasing",
+          "values": {
+            "inputs": "Purchase requests; the approved supplier list.",
+            "outputs": "Purchase orders with clear requirements; goods checked at receipt.",
+            "kpis": "Supplier on-time delivery (monthly); goods rejected at receipt (monthly).",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "links": {
+            "risks": [
+              "ex_single_source"
+            ]
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#4.4",
+              "iso-9001@2015#8.4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "risk",
+      "name": "Risks and opportunities",
+      "itemLabel": "Entry",
+      "idPrefix": "QRO-",
+      "folder": "qms",
+      "description": "Risks that could stop you delivering conforming products and services or satisfied customers, and opportunities to do better: each with an owner, a score, the action you take and whether it worked.",
+      "groups": [
+        {
+          "ref": "risks",
+          "name": "Risks",
+          "color": "red"
+        },
+        {
+          "ref": "opportunities",
+          "name": "Opportunities",
+          "color": "green"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "dark"
+        }
+      ],
+      "fields": [
+        {
+          "key": "kind",
+          "name": "Kind",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_risk",
+                "label": "Risk",
+                "color": "red"
+              },
+              {
+                "id": "opt_opportunity",
+                "label": "Opportunity",
+                "color": "green"
+              }
+            ]
+          }
+        },
+        {
+          "key": "processes",
+          "name": "Processes",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "process",
+            "multiple": true,
+            "inverseKey": "risks"
+          }
+        },
+        {
+          "key": "details",
+          "name": "Details",
+          "type": "longtext",
+          "description": "What could happen, why, and what it would mean for customers or products."
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "likelihood",
+          "name": "Likelihood",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          },
+          "description": "1 rare, 5 almost certain."
+        },
+        {
+          "key": "impact",
+          "name": "Impact",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          },
+          "description": "1 hardly noticed, 5 lost customers or unsafe product. For an opportunity: the benefit."
+        },
+        {
+          "key": "score",
+          "name": "Score",
+          "type": "formula",
+          "config": {
+            "expr": "IF(OR(EMPTY({likelihood}), EMPTY({impact})), 0, {likelihood} * {impact})",
+            "result": "number"
+          }
+        },
+        {
+          "key": "level",
+          "name": "Level",
+          "type": "formula",
+          "config": {
+            "expr": "IF({score} >= 15, \"High\", IF({score} >= 8, \"Medium\", IF({score} > 0, \"Low\", \"\")))",
+            "result": "text"
+          }
+        },
+        {
+          "key": "action",
+          "name": "Action",
+          "type": "longtext",
+          "description": "What you do about it, built into the process where you can."
+        },
+        {
+          "key": "due_date",
+          "name": "Action due",
+          "type": "date"
+        },
+        {
+          "key": "effectiveness",
+          "name": "Did it work?",
+          "type": "longtext",
+          "description": "How you checked that the action had the effect you wanted."
+        },
+        {
+          "key": "review_date",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_open",
+                "label": "Open",
+                "color": "orange"
+              },
+              {
+                "id": "opt_planned",
+                "label": "Action planned",
+                "color": "blue"
+              },
+              {
+                "id": "opt_done",
+                "label": "Action done",
+                "color": "teal"
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "close_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_closed"
+              ],
+              "require": [
+                "action",
+                "effectiveness"
+              ],
+              "message": "Add the action and how you checked that it worked before closing."
+            }
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_capacity",
+          "group": "risks",
+          "name": "Example: orders confirmed beyond our capacity",
+          "values": {
+            "kind": "opt_risk",
+            "details": "Sales confirms dates without checking the plan; late deliveries follow in busy months.",
+            "likelihood": 4,
+            "impact": 3,
+            "action": "Confirm delivery dates only after the weekly capacity check.",
+            "due_date": "$in:30",
+            "review_date": "$in:90",
+            "status": "opt_planned"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#6.1"
+            ]
+          }
+        },
+        {
+          "ref": "ex_single_source",
+          "group": "risks",
+          "name": "Example: one supplier for a critical component",
+          "values": {
+            "kind": "opt_risk",
+            "details": "The control board comes from one supplier. A stoppage there stops our line within two weeks.",
+            "likelihood": 2,
+            "impact": 5,
+            "action": "Qualify a second source and hold four weeks of safety stock.",
+            "due_date": "$in:120",
+            "review_date": "$in:90",
+            "status": "opt_open"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#6.1",
+              "iso-9001@2015#8.4"
+            ]
+          }
+        },
+        {
+          "ref": "ex_portal",
+          "group": "opportunities",
+          "name": "Example: customers order through a web portal",
+          "values": {
+            "kind": "opt_opportunity",
+            "details": "Fewer order entry errors and faster confirmations.",
+            "likelihood": 3,
+            "impact": 3,
+            "review_date": "$in:180",
+            "status": "opt_open"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#6.1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "documents",
+      "name": "Quality documents",
+      "itemLabel": "Document",
+      "idPrefix": "QMD-",
+      "folder": "qms",
+      "register": "documents",
+      "description": "The documented information your quality system keeps: what you maintain (policy, scope, procedures, instructions) and what you retain as records. Controlled documents: approved by a second person, reviewed on a date. Attach the files on each document's Files tab.",
+      "groups": [
+        {
+          "ref": "draft",
+          "name": "Draft",
+          "color": "grey"
+        },
+        {
+          "ref": "in_review",
+          "name": "In review",
+          "color": "orange"
+        },
+        {
+          "ref": "approved",
+          "name": "Approved",
+          "color": "green"
+        },
+        {
+          "ref": "obsolete",
+          "name": "Obsolete",
+          "color": "dark"
+        }
+      ],
+      "fields": [
+        {
+          "key": "document_id",
+          "name": "Document ID",
+          "type": "text"
+        },
+        {
+          "key": "doc_type",
+          "name": "Type",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_policy",
+                "label": "Policy",
+                "color": "navy"
+              },
+              {
+                "id": "opt_scope",
+                "label": "Scope",
+                "color": "blue"
+              },
+              {
+                "id": "opt_procedure",
+                "label": "Procedure",
+                "color": "purple"
+              },
+              {
+                "id": "opt_instruction",
+                "label": "Work instruction",
+                "color": "teal"
+              },
+              {
+                "id": "opt_form",
+                "label": "Form or template",
+                "color": "orange"
+              },
+              {
+                "id": "opt_record",
+                "label": "Record",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "version",
+          "name": "Version",
+          "type": "number"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_review",
+                "label": "In review",
+                "color": "orange"
+              },
+              {
+                "id": "opt_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_obsolete",
+                "label": "Obsolete",
+                "color": "dark"
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "approve_note",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_approved"
+              ],
+              "requireComment": true,
+              "message": "Add a version note: what changed in this version."
+            },
+            {
+              "id": "leave_approved",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_draft",
+                "opt_review",
+                "opt_obsolete"
+              ],
+              "requireComment": true,
+              "fromDone": true,
+              "message": "Say why this approved document changes status."
+            }
+          ]
+        },
+        {
+          "key": "approver",
+          "name": "Approver",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "approved_on",
+          "name": "Approved on",
+          "type": "date"
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "meets",
+          "name": "Requirements it meets",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "policy",
+          "group": "draft",
+          "name": "Quality policy",
+          "values": {
+            "document_id": "QMS-POL-01",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#5.2"
+            ]
+          }
+        },
+        {
+          "ref": "scope_doc",
+          "group": "draft",
+          "name": "QMS scope",
+          "values": {
+            "document_id": "QMS-DOC-01",
+            "doc_type": "opt_scope",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#4.3"
+            ]
+          }
+        },
+        {
+          "ref": "processes_doc",
+          "group": "draft",
+          "name": "Process map and process descriptions",
+          "values": {
+            "document_id": "QMS-DOC-02",
+            "doc_type": "opt_procedure",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#4.4"
+            ]
+          }
+        },
+        {
+          "ref": "objectives_doc",
+          "group": "draft",
+          "name": "Quality objectives and plans",
+          "values": {
+            "document_id": "QMS-DOC-03",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#6.2"
+            ]
+          }
+        },
+        {
+          "ref": "doc_control",
+          "group": "draft",
+          "name": "Control of documents and records",
+          "values": {
+            "document_id": "QMS-PRO-01",
+            "doc_type": "opt_procedure",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#7.5.3"
+            ]
+          }
+        },
+        {
+          "ref": "competence_rec",
+          "group": "draft",
+          "name": "Competence records",
+          "values": {
+            "document_id": "QMS-REC-01",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#7.2"
+            ]
+          }
+        },
+        {
+          "ref": "calibration_rec",
+          "group": "draft",
+          "name": "Calibration and verification records",
+          "values": {
+            "document_id": "QMS-REC-02",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#7.1.5"
+            ]
+          }
+        },
+        {
+          "ref": "audit_rec",
+          "group": "draft",
+          "name": "Internal audit programme and results",
+          "values": {
+            "document_id": "QMS-REC-03",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#9.2"
+            ]
+          }
+        },
+        {
+          "ref": "mr_rec",
+          "group": "draft",
+          "name": "Management review results",
+          "values": {
+            "document_id": "QMS-REC-MR",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#9.3.3"
+            ]
+          }
+        },
+        {
+          "ref": "supplier_rec",
+          "group": "draft",
+          "name": "Approved external providers and their evaluations",
+          "values": {
+            "document_id": "QMS-REC-SUP",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#8.4"
+            ]
+          }
+        },
+        {
+          "ref": "nc_rec",
+          "group": "draft",
+          "name": "Nonconformity and corrective action records",
+          "values": {
+            "document_id": "QMS-REC-04",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#10.2",
+              "iso-9001@2015#8.7"
+            ]
+          }
+        },
+        {
+          "ref": "release_rec",
+          "group": "draft",
+          "name": "Release records",
+          "values": {
+            "document_id": "QMS-REC-05",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "meets": [
+              "iso-9001@2015#8.6"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "nc",
+      "name": "Nonconformities and corrective action",
+      "itemLabel": "Nonconformity",
+      "idPrefix": "QNC-",
+      "folder": "qms",
+      "description": "Anything that did not meet a requirement: a complaint, an audit finding, a supplier problem, a nonconforming product. Record what you did with the affected output, the correction, the root cause, the corrective actions (as sub-items) and the check that they worked. A nonconformity closes only when its actions are done.",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "Open",
+          "color": "orange"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "source",
+          "name": "Source",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_complaint",
+                "label": "Customer complaint",
+                "color": "red"
+              },
+              {
+                "id": "opt_audit",
+                "label": "Internal audit",
+                "color": "blue"
+              },
+              {
+                "id": "opt_supplier",
+                "label": "Supplier",
+                "color": "purple"
+              },
+              {
+                "id": "opt_process",
+                "label": "Process or product",
+                "color": "orange"
+              },
+              {
+                "id": "opt_review",
+                "label": "Management review",
+                "color": "navy"
+              },
+              {
+                "id": "opt_other",
+                "label": "Other",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "found_on",
+          "name": "Found on",
+          "type": "date",
+          "config": {
+            "relative": false,
+            "default": "$today"
+          }
+        },
+        {
+          "key": "severity",
+          "name": "Severity",
+          "type": "severity"
+        },
+        {
+          "key": "product",
+          "name": "Product, service or process affected",
+          "type": "text"
+        },
+        {
+          "key": "description",
+          "name": "What is wrong",
+          "type": "longtext"
+        },
+        {
+          "key": "disposition",
+          "name": "What happened to the output",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_corrected",
+                "label": "Corrected or reworked",
+                "color": "blue"
+              },
+              {
+                "id": "opt_segregated",
+                "label": "Held or segregated",
+                "color": "orange"
+              },
+              {
+                "id": "opt_returned",
+                "label": "Returned or recalled",
+                "color": "red"
+              },
+              {
+                "id": "opt_concession",
+                "label": "Accepted under concession",
+                "color": "purple"
+              },
+              {
+                "id": "opt_scrapped",
+                "label": "Scrapped",
+                "color": "dark"
+              },
+              {
+                "id": "opt_none",
+                "label": "No output affected",
+                "color": "grey"
+              }
+            ]
+          },
+          "description": "How the nonconforming product or service was dealt with, and who authorised it."
+        },
+        {
+          "key": "correction",
+          "name": "Correction",
+          "type": "longtext",
+          "description": "What was done straight away to contain it and limit the effect."
+        },
+        {
+          "key": "root_cause",
+          "name": "Root cause",
+          "type": "longtext"
+        },
+        {
+          "key": "corrective_action",
+          "name": "Corrective action",
+          "type": "longtext",
+          "description": "What removes the cause so it does not happen again. Track the steps as sub-items."
+        },
+        {
+          "key": "effectiveness",
+          "name": "Effectiveness check",
+          "type": "checklist",
+          "config": {
+            "lines": [
+              {
+                "id": "l1",
+                "text": "The corrective actions are done",
+                "noteOnNo": true
+              },
+              {
+                "id": "l2",
+                "text": "It has not happened again since",
+                "noteOnNo": true
+              },
+              {
+                "id": "l3",
+                "text": "Risks, processes and documents are updated where needed",
+                "noteOnNo": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date",
+          "config": {
+            "relative": true,
+            "default": "$in:60"
+          }
+        },
+        {
+          "key": "reporter_name",
+          "name": "Reported by",
+          "type": "text"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_open",
+                "label": "Open",
+                "color": "orange"
+              },
+              {
+                "id": "opt_analysis",
+                "label": "Root cause analysis",
+                "color": "blue"
+              },
+              {
+                "id": "opt_actions",
+                "label": "Actions under way",
+                "color": "purple"
+              },
+              {
+                "id": "opt_verify",
+                "label": "Checking effectiveness",
+                "color": "teal"
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "close_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_closed"
+              ],
+              "require": [
+                "root_cause",
+                "corrective_action",
+                "effectiveness"
+              ],
+              "message": "Add the root cause, the corrective action and the effectiveness check before closing."
+            },
+            {
+              "id": "reopen",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_open",
+                "opt_analysis",
+                "opt_actions",
+                "opt_verify"
+              ],
+              "requireComment": true,
+              "fromDone": true,
+              "message": "Say why this is reopened."
+            }
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        },
+        {
+          "ref": "form"
+        }
+      ],
+      "subitems": {
+        "label": "Actions",
+        "blockClose": true,
+        "fields": [
+          {
+            "key": "owner",
+            "name": "Owner",
+            "type": "people",
+            "config": {
+              "multiple": false
+            }
+          },
+          {
+            "key": "status",
+            "name": "Status",
+            "type": "status",
+            "config": {
+              "options": [
+                {
+                  "id": "opt_todo",
+                  "label": "To do",
+                  "color": "grey"
+                },
+                {
+                  "id": "opt_doing",
+                  "label": "Working on it",
+                  "color": "orange"
+                },
+                {
+                  "id": "opt_done",
+                  "label": "Done",
+                  "color": "green",
+                  "done": true
+                },
+                {
+                  "id": "opt_na",
+                  "label": "N/A",
+                  "color": "dark",
+                  "done": true
+                }
+              ]
+            },
+            "rules": [
+              {
+                "id": "na_reason",
+                "whenFieldKey": "status",
+                "whenValues": [
+                  "opt_na"
+                ],
+                "requireComment": true,
+                "message": "Say why this does not apply."
+              },
+              {
+                "id": "reopen",
+                "whenFieldKey": "status",
+                "whenValues": [
+                  "opt_todo",
+                  "opt_doing"
+                ],
+                "requireComment": true,
+                "fromDone": true,
+                "message": "Say why this is reopened."
+              }
+            ]
+          },
+          {
+            "key": "due_date",
+            "name": "Due date",
+            "type": "date",
+            "config": {
+              "relative": true
+            }
+          },
+          {
+            "key": "evidence",
+            "name": "Evidence",
+            "type": "evidence",
+            "config": {
+              "validDays": 365,
+              "multiple": true,
+              "accept": []
+            }
+          }
+        ],
+        "items": [
+          {
+            "name": "Contain and correct the problem",
+            "values": {
+              "due_date": "$in:7"
+            }
+          },
+          {
+            "name": "Remove the root cause",
+            "values": {
+              "due_date": "$in:30"
+            }
+          },
+          {
+            "name": "Check it worked",
+            "values": {
+              "due_date": "$in:90"
+            }
+          }
+        ]
+      },
+      "items": [
+        {
+          "ref": "ex_wrong_label",
+          "group": "open",
+          "name": "Example: wrong labels on a delivery to a customer",
+          "values": {
+            "source": "opt_complaint",
+            "severity": "$option:Medium",
+            "product": "Order 4711, 200 units",
+            "description": "Labels showed last year's part number. The customer held the goods at receipt.",
+            "disposition": "opt_corrected",
+            "correction": "Relabelled at the customer's site within two days.",
+            "due_date": "$in:45",
+            "status": "opt_analysis"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#10.2",
+              "iso-9001@2015#8.7"
+            ]
+          }
+        }
+      ],
+      "forms": [
+        {
+          "ref": "report",
+          "name": "Report a nonconformity",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report a nonconformity",
+            "description": "Tell us when something does not meet a requirement: a faulty product, a step in a process that was skipped, a supplier delivery that is wrong, a promise to a customer that was not kept. Report it even when you have already fixed it.",
+            "nameLabel": "What is wrong, in one line",
+            "fields": [
+              {
+                "key": "description",
+                "label": "What is wrong",
+                "help": "What you saw, where and when, and how you noticed it.",
+                "required": true
+              },
+              {
+                "key": "product",
+                "label": "Which product, service or process is affected?"
+              },
+              {
+                "key": "source",
+                "label": "Where did it come from?"
+              },
+              {
+                "key": "correction",
+                "label": "What have you done about it so far?",
+                "help": "For example: stopped the line, put the parts aside, told the customer. Write \"Nothing yet\" if so."
+              },
+              {
+                "key": "severity",
+                "label": "How serious do you think it is?",
+                "help": "Your best guess. The owner decides."
+              },
+              {
+                "key": "reporter_name",
+                "label": "Your name",
+                "help": "So the owner can ask you more."
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The quality team has your report and will contact you if they need more.",
+            "prefill": [
+              {
+                "key": "status",
+                "value": "opt_open"
+              }
+            ]
+          },
+          "notice": {
+            "purpose": "To record and correct nonconformities and stop them happening again.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who handle nonconformities and corrective action.",
+            "retention": "Kept for 3 years after the nonconformity is closed.",
+            "rights": "You can ask to see, correct or delete what you reported. Contact the person who shared this form."
+          }
+        }
+      ]
+    },
+    {
+      "ref": "complaint",
+      "name": "Customer feedback and complaints",
+      "itemLabel": "Feedback",
+      "idPrefix": "CFB-",
+      "folder": "qms",
+      "description": "What customers tell you: complaints, praise, suggestions and survey results. Log each complaint through the form \"Report a complaint\" (Forms tab), answer the customer and tick Needs corrective action when the cause must be fixed for good: that raises a nonconformity.",
+      "groups": [
+        {
+          "ref": "new",
+          "name": "New",
+          "color": "red"
+        },
+        {
+          "ref": "handling",
+          "name": "Being handled",
+          "color": "orange"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "kind",
+          "name": "Kind",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_complaint",
+                "label": "Complaint",
+                "color": "red"
+              },
+              {
+                "id": "opt_praise",
+                "label": "Praise",
+                "color": "green"
+              },
+              {
+                "id": "opt_suggestion",
+                "label": "Suggestion",
+                "color": "blue"
+              },
+              {
+                "id": "opt_survey",
+                "label": "Survey result",
+                "color": "purple"
+              }
+            ]
+          }
+        },
+        {
+          "key": "customer",
+          "name": "Customer",
+          "type": "text"
+        },
+        {
+          "key": "customer_email",
+          "name": "Customer contact",
+          "type": "email"
+        },
+        {
+          "key": "received_on",
+          "name": "Received on",
+          "type": "date",
+          "config": {
+            "relative": false,
+            "default": "$today"
+          }
+        },
+        {
+          "key": "channel",
+          "name": "Channel",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_email",
+                "label": "Email",
+                "color": "blue"
+              },
+              {
+                "id": "opt_phone",
+                "label": "Phone",
+                "color": "teal"
+              },
+              {
+                "id": "opt_visit",
+                "label": "Visit or meeting",
+                "color": "purple"
+              },
+              {
+                "id": "opt_survey",
+                "label": "Survey",
+                "color": "orange"
+              },
+              {
+                "id": "opt_other",
+                "label": "Other",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "product",
+          "name": "Product or service",
+          "type": "text"
+        },
+        {
+          "key": "description",
+          "name": "What the customer said",
+          "type": "longtext"
+        },
+        {
+          "key": "severity",
+          "name": "Severity",
+          "type": "severity"
+        },
+        {
+          "key": "owner",
+          "name": "Handled by",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "response",
+          "name": "Our answer to the customer",
+          "type": "longtext"
+        },
+        {
+          "key": "nc_needed",
+          "name": "Needs corrective action",
+          "type": "check",
+          "description": "Tick when the cause must be found and fixed for good: a nonconformity is raised and linked."
+        },
+        {
+          "key": "nonconformity",
+          "name": "Nonconformity",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "nc",
+            "multiple": false
+          }
+        },
+        {
+          "key": "reporter_name",
+          "name": "Logged by",
+          "type": "text"
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_new",
+                "label": "New",
+                "color": "red"
+              },
+              {
+                "id": "opt_investigating",
+                "label": "Investigating",
+                "color": "orange"
+              },
+              {
+                "id": "opt_answered",
+                "label": "Answered",
+                "color": "blue"
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "close_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_closed"
+              ],
+              "require": [
+                "response"
+              ],
+              "message": "Add the answer you gave the customer before closing."
+            }
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
+        {
+          "name": "By kind",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "kind"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "form"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_late",
+          "group": "handling",
+          "name": "Example: delivery arrived a week late",
+          "values": {
+            "kind": "opt_complaint",
+            "customer": "Example Trading Ltd",
+            "channel": "opt_email",
+            "product": "Order 4720",
+            "description": "The goods came seven days after the confirmed date and the customer's line stood still for a day.",
+            "severity": "$option:High",
+            "status": "opt_investigating"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#9.1.2",
+              "iso-9001@2015#8.7"
+            ]
+          }
+        },
+        {
+          "ref": "ex_labels",
+          "group": "closed",
+          "name": "Example: wrong labels on a delivery",
+          "values": {
+            "kind": "opt_complaint",
+            "customer": "Example Industries",
+            "channel": "opt_phone",
+            "product": "Order 4711",
+            "description": "Labels showed an old part number, so goods receipt held the delivery.",
+            "severity": "$option:Medium",
+            "response": "Apologised, relabelled on site within two days and raised a corrective action.",
+            "nc_needed": true,
+            "status": "opt_closed"
+          },
+          "links": {
+            "nonconformity": [
+              "ex_wrong_label"
+            ]
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#9.1.2",
+              "iso-9001@2015#8.7"
+            ]
+          }
+        },
+        {
+          "ref": "ex_survey",
+          "group": "closed",
+          "name": "Example: annual customer survey, 4.2 of 5",
+          "values": {
+            "kind": "opt_survey",
+            "channel": "opt_survey",
+            "description": "38 customers answered. Lowest marks for delivery reliability, highest for technical support.",
+            "response": "Delivery reliability is a quality objective for next year.",
+            "status": "opt_closed"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#9.1.2"
+            ]
+          }
+        }
+      ],
+      "forms": [
+        {
+          "ref": "report",
+          "name": "Report a complaint",
+          "groupRef": "new",
+          "access": "internal",
+          "layout": {
+            "title": "Report a complaint",
+            "description": "Log a complaint as soon as a customer raises it, however small, by email, on the phone or in person. Write down what the customer said, in their words where you can.",
+            "nameLabel": "The complaint, in one line",
+            "fields": [
+              {
+                "key": "customer",
+                "label": "Customer",
+                "required": true
+              },
+              {
+                "key": "customer_email",
+                "label": "Customer contact",
+                "help": "An email address so the handler can answer them."
+              },
+              {
+                "key": "description",
+                "label": "What did the customer say?",
+                "required": true
+              },
+              {
+                "key": "product",
+                "label": "Which product, order or service is it about?"
+              },
+              {
+                "key": "received_on",
+                "label": "When was it received?"
+              },
+              {
+                "key": "channel",
+                "label": "How did it come in?"
+              },
+              {
+                "key": "severity",
+                "label": "How serious is it for the customer?",
+                "help": "Your best guess. The handler decides."
+              },
+              {
+                "key": "reporter_name",
+                "label": "Your name"
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The complaint is logged and the handler will answer the customer.",
+            "prefill": [
+              {
+                "key": "status",
+                "value": "opt_new"
+              },
+              {
+                "key": "kind",
+                "value": "opt_complaint"
+              }
+            ]
+          },
+          "notice": {
+            "purpose": "To handle customer complaints, answer the customer and improve our products and services.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who handle customer complaints.",
+            "retention": "Kept for 3 years after the complaint is closed.",
+            "rights": "You and the customer can ask to see, correct or delete what was recorded. Contact the person who shared this form."
+          }
+        }
+      ]
+    },
+    {
+      "ref": "supplier",
+      "name": "External providers",
+      "itemLabel": "Provider",
+      "idPrefix": "EXP-",
+      "folder": "qms",
+      "level": "full",
+      "description": "The suppliers and subcontractors whose products, services or outsourced processes affect what you deliver: the criteria you choose them by, each evaluation and when they are evaluated again.",
+      "groups": [
+        {
+          "ref": "approved",
+          "name": "Approved",
+          "color": "green"
+        },
+        {
+          "ref": "evaluating",
+          "name": "Under evaluation",
+          "color": "orange"
+        },
+        {
+          "ref": "not_approved",
+          "name": "Not approved or ended",
+          "color": "dark"
+        }
+      ],
+      "fields": [
+        {
+          "key": "category",
+          "name": "Category",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_material",
+                "label": "Materials and components",
+                "color": "blue"
+              },
+              {
+                "id": "opt_outsourced",
+                "label": "Outsourced process",
+                "color": "purple"
+              },
+              {
+                "id": "opt_service",
+                "label": "Service",
+                "color": "teal"
+              },
+              {
+                "id": "opt_calibration",
+                "label": "Calibration or testing",
+                "color": "orange"
+              }
+            ]
+          }
+        },
+        {
+          "key": "provides",
+          "name": "What they provide",
+          "type": "longtext"
+        },
+        {
+          "key": "criticality",
+          "name": "Criticality",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_high",
+                "label": "High",
+                "color": "red"
+              },
+              {
+                "id": "opt_medium",
+                "label": "Medium",
+                "color": "orange"
+              },
+              {
+                "id": "opt_low",
+                "label": "Low",
+                "color": "green"
+              }
+            ]
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "contact_email",
+          "name": "Contact",
+          "type": "email"
+        },
+        {
+          "key": "criteria",
+          "name": "Evaluation criteria",
+          "type": "longtext",
+          "description": "What you judge them on: quality, delivery, price, certification, responsiveness."
+        },
+        {
+          "key": "score",
+          "name": "Last evaluation",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          }
+        },
+        {
+          "key": "last_evaluated",
+          "name": "Last evaluated",
+          "type": "date"
+        },
+        {
+          "key": "next_evaluation",
+          "name": "Next evaluation",
+          "type": "date"
+        },
+        {
+          "key": "certificate",
+          "name": "Certificates",
+          "type": "evidence",
+          "config": {
+            "validDays": 365,
+            "multiple": true,
+            "accept": []
+          }
+        },
+        {
+          "key": "nonconformities",
+          "name": "Nonconformities",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "nc",
+            "multiple": true
+          }
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_evaluating",
+                "label": "Under evaluation",
+                "color": "orange"
+              },
+              {
+                "id": "opt_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_conditional",
+                "label": "Approved with conditions",
+                "color": "teal",
+                "done": true
+              },
+              {
+                "id": "opt_not_approved",
+                "label": "Not approved",
+                "color": "red"
+              },
+              {
+                "id": "opt_ended",
+                "label": "Ended",
+                "color": "dark"
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "approve_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_approved",
+                "opt_conditional"
+              ],
+              "require": [
+                "criteria",
+                "last_evaluated",
+                "next_evaluation"
+              ],
+              "message": "Add the criteria, the evaluation date and the next evaluation before approving."
+            }
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_boards",
+          "group": "approved",
+          "name": "Example: control board supplier",
+          "values": {
+            "category": "opt_material",
+            "provides": "Assembled control boards to our drawing.",
+            "criticality": "opt_high",
+            "criteria": "Rejects at receipt under 0.5 %, on-time delivery over 95 %, ISO 9001 certificate valid.",
+            "score": 4,
+            "last_evaluated": "$in:-300",
+            "next_evaluation": "$in:65",
+            "status": "opt_approved"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#8.4"
+            ]
+          }
+        },
+        {
+          "ref": "ex_calibration_lab",
+          "group": "evaluating",
+          "name": "Example: calibration laboratory",
+          "values": {
+            "category": "opt_calibration",
+            "provides": "Calibration of our gauges and torque tools, traceable to national standards.",
+            "criticality": "opt_medium",
+            "status": "opt_evaluating"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#8.4",
+              "iso-9001@2015#7.1.5"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "competence",
+      "name": "Competence and training",
+      "itemLabel": "Record",
+      "idPrefix": "CMP-",
+      "folder": "qms",
+      "level": "full",
+      "description": "The competence each role needs for work that affects quality, what you do to close a gap (training, coaching, hiring), the record that it was done and whether it worked.",
+      "groups": [
+        {
+          "ref": "due",
+          "name": "Planned",
+          "color": "orange"
+        },
+        {
+          "ref": "done",
+          "name": "Completed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "person",
+          "name": "Person",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "role",
+          "name": "Role",
+          "type": "text"
+        },
+        {
+          "key": "competence",
+          "name": "Competence needed",
+          "type": "text"
+        },
+        {
+          "key": "method",
+          "name": "How",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_training",
+                "label": "Training",
+                "color": "blue"
+              },
+              {
+                "id": "opt_coaching",
+                "label": "Coaching on the job",
+                "color": "teal"
+              },
+              {
+                "id": "opt_awareness",
+                "label": "Awareness session",
+                "color": "purple"
+              },
+              {
+                "id": "opt_qualification",
+                "label": "Qualification or licence",
+                "color": "orange"
+              }
+            ]
+          }
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date"
+        },
+        {
+          "key": "completed_on",
+          "name": "Completed on",
+          "type": "date"
+        },
+        {
+          "key": "effective",
+          "name": "Was it effective?",
+          "type": "longtext",
+          "description": "How you checked that the person can now do the work."
+        },
+        {
+          "key": "evidence",
+          "name": "Evidence",
+          "type": "evidence",
+          "config": {
+            "validDays": 730,
+            "multiple": true
+          }
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_not_started",
+                "label": "Not started",
+                "color": "grey"
+              },
+              {
+                "id": "opt_in_progress",
+                "label": "In progress",
+                "color": "orange"
+              },
+              {
+                "id": "opt_completed",
+                "label": "Completed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_setup",
+          "group": "due",
+          "name": "Example: machine set-up for a new operator",
+          "values": {
+            "role": "Machine operator",
+            "competence": "Sets up the press for every product family without help",
+            "method": "opt_coaching",
+            "due_date": "$in:60",
+            "status": "opt_in_progress"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#7.2"
+            ]
+          }
+        },
+        {
+          "ref": "ex_awareness",
+          "group": "due",
+          "name": "Example: quality awareness for everyone",
+          "values": {
+            "role": "All staff",
+            "competence": "Knows the quality policy, their objectives and what happens when work does not conform",
+            "method": "opt_awareness",
+            "due_date": "$in:30",
+            "status": "opt_not_started"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#7.3"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "equipment",
+      "name": "Measuring equipment",
+      "itemLabel": "Equipment",
+      "idPrefix": "MME-",
+      "folder": "qms",
+      "level": "full",
+      "description": "The gauges, instruments and test equipment you rely on to show products conform: each with an ID, its calibration interval, the last result and the next due date. Equipment found out of calibration needs a check of what it measured since its last good calibration.",
+      "groups": [
+        {
+          "ref": "in_use",
+          "name": "In use",
+          "color": "green"
+        },
+        {
+          "ref": "out",
+          "name": "Out of use",
+          "color": "red"
+        },
+        {
+          "ref": "retired",
+          "name": "Retired",
+          "color": "dark"
+        }
+      ],
+      "fields": [
+        {
+          "key": "equipment_id",
+          "name": "Equipment ID",
+          "type": "text"
+        },
+        {
+          "key": "location",
+          "name": "Location",
+          "type": "text"
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "range",
+          "name": "Range and accuracy",
+          "type": "text"
+        },
+        {
+          "key": "interval",
+          "name": "Interval (months)",
+          "type": "number"
+        },
+        {
+          "key": "last_calibrated",
+          "name": "Last calibrated",
+          "type": "date"
+        },
+        {
+          "key": "next_calibration",
+          "name": "Next calibration",
+          "type": "date"
+        },
+        {
+          "key": "traceable",
+          "name": "Traceable to national standards",
+          "type": "check"
+        },
+        {
+          "key": "certificate",
+          "name": "Calibration certificates",
+          "type": "evidence",
+          "config": {
+            "validDays": 365,
+            "multiple": true,
+            "accept": []
+          }
+        },
+        {
+          "key": "out_of_tolerance",
+          "name": "If found out of tolerance",
+          "type": "longtext",
+          "description": "What was measured since the last good calibration, whether it was still valid, and what you did."
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_calibrated",
+                "label": "Calibrated",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_due",
+                "label": "Calibration due",
+                "color": "orange"
+              },
+              {
+                "id": "opt_out",
+                "label": "Out of tolerance",
+                "color": "red"
+              },
+              {
+                "id": "opt_retired",
+                "label": "Retired",
+                "color": "dark",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "calibrated_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_calibrated"
+              ],
+              "require": [
+                "last_calibrated",
+                "next_calibration"
+              ],
+              "message": "Add the calibration date and the next due date."
+            }
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_caliper",
+          "group": "in_use",
+          "name": "Example: digital caliper 0–150 mm",
+          "values": {
+            "equipment_id": "CAL-012",
+            "location": "Final inspection",
+            "range": "0–150 mm, ±0.02 mm",
+            "interval": 12,
+            "last_calibrated": "$in:-340",
+            "next_calibration": "$in:25",
+            "traceable": true,
+            "status": "opt_calibrated"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#7.1.5"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "audit",
+      "name": "Internal audit programme",
+      "itemLabel": "Audit",
+      "idPrefix": "QIA-",
+      "folder": "qms",
+      "level": "full",
+      "description": "The internal audits you plan and run over the cycle, weighted by how important and how risky each process is and by earlier results: the processes and clauses each covers, who leads it (never their own work) and what it found.",
+      "groups": [
+        {
+          "ref": "planned",
+          "name": "Planned",
+          "color": "blue"
+        },
+        {
+          "ref": "running",
+          "name": "In progress",
+          "color": "orange"
+        },
+        {
+          "ref": "done",
+          "name": "Done",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "lead",
+          "name": "Lead auditor",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "audit_date",
+          "name": "Audit date",
+          "type": "date"
+        },
+        {
+          "key": "processes",
+          "name": "Processes audited",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "process",
+            "multiple": true
+          }
+        },
+        {
+          "key": "in_scope",
+          "name": "Clauses in scope",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "scope",
+          "name": "Scope and criteria",
+          "type": "longtext"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_planned",
+                "label": "Planned",
+                "color": "blue"
+              },
+              {
+                "id": "opt_running",
+                "label": "In progress",
+                "color": "orange"
+              },
+              {
+                "id": "opt_done",
+                "label": "Done",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "findings",
+          "name": "Findings",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "finding",
+            "multiple": true,
+            "inverseKey": "audit"
+          }
+        },
+        {
+          "key": "report",
+          "name": "Report",
+          "type": "attachment"
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_audit",
+          "group": "planned",
+          "name": "Example: purchasing and order to delivery",
+          "values": {
+            "audit_date": "$in:60",
+            "status": "opt_planned",
+            "scope": "The purchasing and order to delivery processes against our procedures and the clauses in scope."
+          },
+          "links": {
+            "findings": [
+              "ex_finding"
+            ]
+          },
+          "requirements": {
+            "in_scope": [
+              "iso-9001@2015#8.2",
+              "iso-9001@2015#8.4",
+              "iso-9001@2015#8.5"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "finding",
+      "name": "Audit findings",
+      "itemLabel": "Finding",
+      "idPrefix": "QAF-",
+      "folder": "qms",
+      "level": "full",
+      "description": "What each internal audit found. A finding of type Nonconformity raises an item in Nonconformities and corrective action and links to it.",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "Open",
+          "color": "orange"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "audit",
+          "name": "Audit",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "audit",
+            "multiple": false,
+            "inverseKey": "findings"
+          }
+        },
+        {
+          "key": "finding_type",
+          "name": "Type",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_nc",
+                "label": "Nonconformity",
+                "color": "red"
+              },
+              {
+                "id": "opt_obs",
+                "label": "Observation",
+                "color": "orange"
+              },
+              {
+                "id": "opt_ofi",
+                "label": "Opportunity to improve",
+                "color": "blue"
+              }
+            ]
+          }
+        },
+        {
+          "key": "grade",
+          "name": "Grade",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_major",
+                "label": "Major",
+                "color": "red"
+              },
+              {
+                "id": "opt_minor",
+                "label": "Minor",
+                "color": "orange"
+              }
+            ]
+          },
+          "description": "Major: the requirement is not met at all, or the system cannot be relied on there. Minor: a single lapse.",
+          "visibility": {
+            "fieldKey": "finding_type",
+            "op": "is_any_of",
+            "value": [
+              "opt_nc"
+            ]
+          }
+        },
+        {
+          "key": "requirement",
+          "name": "Requirement",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "details",
+          "name": "What was found",
+          "type": "longtext",
+          "description": "The requirement, what you saw and the evidence for it."
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "nonconformity",
+          "name": "Nonconformity",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "nc",
+            "multiple": false
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_open",
+                "label": "Open",
+                "color": "orange"
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_finding",
+          "group": "open",
+          "name": "Example: supplier re-evaluations not done on time",
+          "values": {
+            "finding_type": "opt_obs",
+            "details": "Two of eight approved suppliers sampled were past their re-evaluation date.",
+            "status": "opt_open"
+          },
+          "requirements": {
+            "requirement": [
+              "iso-9001@2015#8.4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "review",
+      "name": "Management review",
+      "itemLabel": "Meeting",
+      "idPrefix": "QMR-",
+      "folder": "qms",
+      "level": "full",
+      "description": "Top management's reviews of the quality system at planned intervals: tick the inputs you covered and record the decisions on improvements, changes and resources.",
+      "groups": [
+        {
+          "ref": "planned",
+          "name": "Planned",
+          "color": "blue"
+        },
+        {
+          "ref": "held",
+          "name": "Held",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "meeting_date",
+          "name": "Meeting date",
+          "type": "date"
+        },
+        {
+          "key": "chair",
+          "name": "Chair",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "attendees",
+          "name": "Attendees",
+          "type": "people",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "in_actions",
+          "name": "Actions from earlier reviews",
+          "type": "check"
+        },
+        {
+          "key": "in_changes",
+          "name": "Changes in issues",
+          "type": "check"
+        },
+        {
+          "key": "in_feedback",
+          "name": "Customer satisfaction and feedback",
+          "type": "check"
+        },
+        {
+          "key": "in_objectives",
+          "name": "Quality objectives",
+          "type": "check"
+        },
+        {
+          "key": "in_processes",
+          "name": "Process performance and product conformity",
+          "type": "check"
+        },
+        {
+          "key": "in_nc",
+          "name": "Nonconformities and corrective action",
+          "type": "check"
+        },
+        {
+          "key": "in_monitoring",
+          "name": "Monitoring and measurement results",
+          "type": "check"
+        },
+        {
+          "key": "in_audits",
+          "name": "Audit results",
+          "type": "check"
+        },
+        {
+          "key": "in_suppliers",
+          "name": "External providers",
+          "type": "check"
+        },
+        {
+          "key": "in_resources",
+          "name": "Adequacy of resources",
+          "type": "check"
+        },
+        {
+          "key": "in_risks",
+          "name": "Actions on risks and opportunities",
+          "type": "check"
+        },
+        {
+          "key": "in_improve",
+          "name": "Chances to improve",
+          "type": "check"
+        },
+        {
+          "key": "decisions",
+          "name": "Decisions and outputs",
+          "type": "longtext",
+          "description": "Improvements, changes to the quality system and resources needed."
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_planned",
+                "label": "Planned",
+                "color": "blue"
+              },
+              {
+                "id": "opt_held",
+                "label": "Held",
+                "color": "green",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "held_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_held"
+              ],
+              "require": [
+                "meeting_date",
+                "decisions"
+              ],
+              "message": "Add the meeting date and the decisions."
+            }
+          ]
+        }
+      ],
+      "columnGroups": [
+        {
+          "name": "Inputs covered",
+          "fields": [
+            "in_actions",
+            "in_changes",
+            "in_feedback",
+            "in_objectives",
+            "in_processes",
+            "in_nc",
+            "in_monitoring",
+            "in_audits",
+            "in_suppliers",
+            "in_resources",
+            "in_risks",
+            "in_improve"
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_review",
+          "group": "planned",
+          "name": "Example: annual management review",
+          "values": {
+            "meeting_date": "$in:120",
+            "status": "opt_planned"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "design",
+      "name": "Design and development",
+      "itemLabel": "Project",
+      "idPrefix": "DEV-",
+      "folder": "qms",
+      "level": "full",
+      "description": "Only when you design products or services yourself. Each project from plan to release: the inputs, the reviews, verification and validation, and changes. If you do not design, leave this sheet empty or archive it, and say why in the scope statement.",
+      "groups": [
+        {
+          "ref": "active",
+          "name": "Active",
+          "color": "blue"
+        },
+        {
+          "ref": "released",
+          "name": "Released",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "owner",
+          "name": "Project lead",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "inputs",
+          "name": "Design inputs",
+          "type": "longtext",
+          "description": "Functional and performance needs, legal requirements, lessons from earlier designs."
+        },
+        {
+          "key": "outputs",
+          "name": "Design outputs",
+          "type": "longtext",
+          "description": "Drawings, specifications and acceptance criteria that production and release use."
+        },
+        {
+          "key": "review_date",
+          "name": "Next design review",
+          "type": "date"
+        },
+        {
+          "key": "verified",
+          "name": "Verified",
+          "type": "check",
+          "description": "The outputs meet the inputs."
+        },
+        {
+          "key": "validated",
+          "name": "Validated",
+          "type": "check",
+          "description": "The product or service works for its intended use."
+        },
+        {
+          "key": "changes",
+          "name": "Changes after release of the design",
+          "type": "longtext"
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_planning",
+                "label": "Planning",
+                "color": "grey"
+              },
+              {
+                "id": "opt_development",
+                "label": "In development",
+                "color": "blue"
+              },
+              {
+                "id": "opt_verification",
+                "label": "Verification and validation",
+                "color": "orange"
+              },
+              {
+                "id": "opt_released",
+                "label": "Released",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_stopped",
+                "label": "Stopped",
+                "color": "dark",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "release_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_released"
+              ],
+              "require": [
+                "inputs",
+                "outputs",
+                "verified",
+                "validated"
+              ],
+              "message": "Record the inputs and outputs and tick verified and validated before release."
+            }
+          ]
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_design",
+          "group": "active",
+          "name": "Example: next generation control unit",
+          "values": {
+            "review_date": "$in:45",
+            "status": "opt_development"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#8.3"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "release",
+      "name": "Release records",
+      "itemLabel": "Release",
+      "idPrefix": "REL-",
+      "folder": "qms",
+      "level": "full",
+      "description": "Evidence that each product batch or service was checked against its acceptance criteria before it went to the customer, and who released it. A failed check is a nonconformity.",
+      "groups": [
+        {
+          "ref": "pending",
+          "name": "Waiting for release",
+          "color": "orange"
+        },
+        {
+          "ref": "released",
+          "name": "Released",
+          "color": "green"
+        },
+        {
+          "ref": "held",
+          "name": "Held",
+          "color": "red"
+        }
+      ],
+      "fields": [
+        {
+          "key": "batch",
+          "name": "Batch, order or service",
+          "type": "text"
+        },
+        {
+          "key": "criteria",
+          "name": "Acceptance criteria and checks",
+          "type": "longtext"
+        },
+        {
+          "key": "released_by",
+          "name": "Released by",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "released_on",
+          "name": "Released on",
+          "type": "date"
+        },
+        {
+          "key": "records",
+          "name": "Check records",
+          "type": "attachment"
+        },
+        {
+          "key": "nonconformity",
+          "name": "Nonconformity",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "nc",
+            "multiple": false
+          }
+        },
+        {
+          "key": "clause",
+          "name": "Clauses",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_pending",
+                "label": "Waiting",
+                "color": "orange"
+              },
+              {
+                "id": "opt_released",
+                "label": "Released",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_held",
+                "label": "Held",
+                "color": "red"
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "release_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_released"
+              ],
+              "require": [
+                "criteria",
+                "released_by",
+                "released_on"
+              ],
+              "message": "Add the criteria, who released it and when."
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_release",
+          "group": "pending",
+          "name": "Example: batch 26-118, 400 housings",
+          "values": {
+            "batch": "Batch 26-118",
+            "criteria": "Dimensions to drawing rev C on 5 samples; visual check of all parts; certificate of conformity attached.",
+            "status": "opt_pending"
+          },
+          "requirements": {
+            "clause": [
+              "iso-9001@2015#8.6"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "ref": "objective_review_due",
+      "sheet": "objective",
+      "name": "Objective review in 14 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -14
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} is due for review on {next_review}. Update the latest result and the status."
+        }
+      ]
+    },
+    {
+      "ref": "document_review_due",
+      "sheet": "documents",
+      "name": "Document review in 30 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -30
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{document_id} {name} is due for review on {next_review}."
+        }
+      ]
+    },
+    {
+      "ref": "complaint_nc",
+      "sheet": "complaint",
+      "name": "Complaint needs corrective action → raise a nonconformity",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "nc_needed",
+        "value": "true"
+      },
+      "conditions": [
+        {
+          "fieldKey": "nonconformity",
+          "op": "has_none"
+        }
+      ],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "nc",
+          "groupRef": "open",
+          "name": "{name}",
+          "values": {
+            "source": "opt_complaint",
+            "product": "{product}",
+            "description": "{customer}: {description}"
+          },
+          "link": true
+        }
+      ]
+    },
+    {
+      "ref": "nc_overdue",
+      "sheet": "nc",
+      "name": "Nonconformity overdue → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "due_date",
+        "offsetDays": 1
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} was due on {due_date} and is not closed."
+        }
+      ]
+    },
+    {
+      "ref": "nc_action_overdue",
+      "sheet": "nc",
+      "subitems": true,
+      "name": "Corrective action overdue → tell the action owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "due_date",
+        "offsetDays": 1
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "The action \"{name}\" ({sheet}) was due on {due_date} and is not done."
+        }
+      ]
+    },
+    {
+      "ref": "calibration_due",
+      "sheet": "equipment",
+      "level": "full",
+      "name": "Calibration due in 30 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_calibration",
+        "offsetDays": -30
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_none_of",
+          "value": [
+            "opt_retired"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{equipment_id} {name} is due for calibration on {next_calibration}. Book it, or take it out of use."
+        }
+      ]
+    },
+    {
+      "ref": "supplier_reevaluation_due",
+      "sheet": "supplier",
+      "level": "full",
+      "name": "Supplier re-evaluation in 30 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_evaluation",
+        "offsetDays": -30
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_none_of",
+          "value": [
+            "opt_ended",
+            "opt_not_approved"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{name} is due for re-evaluation on {next_evaluation}."
+        }
+      ]
+    },
+    {
+      "ref": "finding_nc",
+      "sheet": "finding",
+      "level": "full",
+      "name": "Finding is a nonconformity → raise it in Nonconformities and corrective action",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "finding_type",
+        "value": "opt_nc"
+      },
+      "conditions": [
+        {
+          "fieldKey": "nonconformity",
+          "op": "has_none"
+        }
+      ],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "nc",
+          "groupRef": "open",
+          "name": "{name}",
+          "values": {
+            "source": "opt_audit",
+            "description": "{details}"
+          },
+          "link": true
+        }
+      ]
+    }
+  ],
+  "dashboards": [
+    {
+      "ref": "qms_overview",
+      "name": "QMS overview",
+      "widgets": [
+        {
+          "ref": "w_objectives",
+          "type": "by_option",
+          "title": "Quality objectives by status",
+          "sheetRef": "objective",
+          "fieldKey": "status",
+          "conditions": [
+            {
+              "fieldKey": "kind",
+              "op": "is_any_of",
+              "value": [
+                "opt_objective"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_complaints_open",
+          "type": "count",
+          "title": "Open complaints",
+          "sheetRef": "complaint",
+          "conditions": [
+            {
+              "fieldKey": "kind",
+              "op": "is_any_of",
+              "value": [
+                "opt_complaint"
+              ]
+            },
+            {
+              "fieldKey": "status",
+              "op": "is_not_done"
+            }
+          ]
+        },
+        {
+          "ref": "w_feedback",
+          "type": "by_option",
+          "title": "Customer feedback by kind",
+          "sheetRef": "complaint",
+          "fieldKey": "kind"
+        },
+        {
+          "ref": "w_nc_open",
+          "type": "count",
+          "title": "Open nonconformities",
+          "sheetRef": "nc",
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_not_done"
+            }
+          ]
+        },
+        {
+          "ref": "w_nc_source",
+          "type": "by_option",
+          "title": "Nonconformities by source",
+          "sheetRef": "nc",
+          "fieldKey": "source"
+        },
+        {
+          "ref": "w_nc_overdue",
+          "type": "overdue",
+          "title": "Nonconformities past their due date",
+          "sheetRef": "nc",
+          "fieldKey": "due_date"
+        },
+        {
+          "ref": "w_risks",
+          "type": "by_option",
+          "title": "Risks and opportunities by status",
+          "sheetRef": "risk",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_processes",
+          "type": "by_option",
+          "title": "Processes by status",
+          "sheetRef": "process",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_docs_due",
+          "type": "overdue",
+          "title": "Documents due for review",
+          "sheetRef": "documents",
+          "fieldKey": "next_review"
+        },
+        {
+          "ref": "w_clauses",
+          "type": "by_option",
+          "title": "ISO 9001 requirements by implementation",
+          "library": "iso-9001@2015",
+          "fieldKey": "status"
+        }
+      ]
+    }
+  ],
+  "setup": {
+    "title": "ISO 9001 setup",
+    "description": "Eight steps from an empty quality system to one you can audit. Each step's progress comes from your sheets.",
+    "steps": [
+      {
+        "ref": "context",
+        "title": "Define your context and scope",
+        "body": "Write down the issues that affect what you deliver, who expects what from you and what the quality system covers. Mark each ISO 9001 requirement applicable or not, with a reason.",
+        "target": {
+          "sheetRef": "context"
+        },
+        "rules": [
+          {
+            "sheetRef": "context",
+            "where": [
+              {
+                "fieldKey": "kind",
+                "op": "is_any_of",
+                "value": [
+                  "opt_scope"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ]
+          },
+          {
+            "sheetRef": "context",
+            "where": [
+              {
+                "fieldKey": "kind",
+                "op": "is_any_of",
+                "value": [
+                  "opt_internal",
+                  "opt_external",
+                  "opt_party"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ],
+            "min": 3
+          },
+          {
+            "library": "iso-9001@2015",
+            "all": [
+              {
+                "fieldKey": "applicable",
+                "op": "is_not_empty"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "objectives",
+        "title": "Set the quality policy and objectives",
+        "body": "Agree the commitments of your quality policy, then set at least three objectives, each with a measure, a target and an owner.",
+        "target": {
+          "sheetRef": "objective"
+        },
+        "rules": [
+          {
+            "sheetRef": "objective",
+            "where": [
+              {
+                "fieldKey": "kind",
+                "op": "is_any_of",
+                "value": [
+                  "opt_objective"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "measure",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "target",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "owner",
+                "op": "is_not_empty"
+              }
+            ],
+            "min": 3
+          }
+        ]
+      },
+      {
+        "ref": "processes",
+        "title": "Map your processes and their risks",
+        "body": "Name the processes you need, with an owner, their inputs and outputs and how you measure them. Note the risks and opportunities that matter and what you do about each.",
+        "target": {
+          "sheetRef": "process"
+        },
+        "rules": [
+          {
+            "sheetRef": "process",
+            "all": [
+              {
+                "fieldKey": "owner",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "inputs",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "outputs",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "kpis",
+                "op": "is_not_empty"
+              }
+            ],
+            "min": 5
+          },
+          {
+            "sheetRef": "risk",
+            "all": [
+              {
+                "fieldKey": "owner",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "action",
+                "op": "is_not_empty"
+              }
+            ],
+            "min": 3
+          }
+        ]
+      },
+      {
+        "ref": "documents",
+        "title": "Write and approve your documents",
+        "body": "Write the documents you need, attach each on the Files tab and have someone other than the author approve it. Approved documents get a review date.",
+        "target": {
+          "sheetRef": "documents"
+        },
+        "rules": [
+          {
+            "sheetRef": "documents",
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "complaints",
+        "title": "Make complaints easy to log",
+        "body": "Open the form \"Report a complaint\", check its questions and privacy notice, then open it and tell everyone who talks to customers where to find it. Answer and close your first complaint.",
+        "target": {
+          "sheetRef": "complaint",
+          "view": "Report a complaint"
+        },
+        "rules": [
+          {
+            "sheetRef": "complaint",
+            "where": [
+              {
+                "fieldKey": "kind",
+                "op": "is_any_of",
+                "value": [
+                  "opt_complaint"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "owner",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ],
+            "min": 1
+          }
+        ]
+      },
+      {
+        "ref": "suppliers",
+        "title": "Evaluate your external providers",
+        "body": "List the suppliers and subcontractors that affect what you deliver, evaluate each against your criteria and set the date of the next evaluation.",
+        "target": {
+          "sheetRef": "supplier"
+        },
+        "rules": [
+          {
+            "sheetRef": "supplier",
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              },
+              {
+                "fieldKey": "next_evaluation",
+                "op": "is_not_empty"
+              }
+            ],
+            "min": 3
+          }
+        ],
+        "levels": {
+          "starter": {
+            "body": "Starter has no supplier sheet: keep the list of approved external providers with their evaluations and approve it as a record in Quality documents.",
+            "target": {
+              "sheetRef": "documents"
+            },
+            "rules": [
+              {
+                "sheetRef": "documents",
+                "where": [
+                  {
+                    "fieldKey": "document_id",
+                    "op": "is",
+                    "value": "QMS-REC-SUP"
+                  }
+                ],
+                "all": [
+                  {
+                    "fieldKey": "status",
+                    "op": "is_done"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "ref": "audit",
+        "title": "Run an internal audit",
+        "body": "Plan audits that cover every process over the cycle, run them with someone independent of the work, record what they find and raise nonconformities for what falls short.",
+        "target": {
+          "sheetRef": "audit"
+        },
+        "rules": [
+          {
+            "sheetRef": "audit",
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ],
+            "min": 1
+          }
+        ],
+        "levels": {
+          "starter": {
+            "body": "Starter has no audit programme: run the audit, approve its report as the internal audit record in Quality documents and record each shortfall in Nonconformities and corrective action with the source Internal audit.",
+            "target": {
+              "sheetRef": "documents"
+            },
+            "rules": [
+              {
+                "sheetRef": "documents",
+                "where": [
+                  {
+                    "fieldKey": "document_id",
+                    "op": "is",
+                    "value": "QMS-REC-03"
+                  }
+                ],
+                "all": [
+                  {
+                    "fieldKey": "status",
+                    "op": "is_done"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "ref": "review",
+        "title": "Hold a management review",
+        "body": "Bring top management together to look at how the quality system performs, cover every input and record the decisions they take.",
+        "target": {
+          "sheetRef": "review"
+        },
+        "rules": [
+          {
+            "sheetRef": "review",
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ],
+            "min": 1
+          }
+        ],
+        "levels": {
+          "starter": {
+            "body": "Starter has no meeting sheet: hold the review, write the minutes and approve them as the management review record in Quality documents.",
+            "target": {
+              "sheetRef": "documents"
+            },
+            "rules": [
+              {
+                "sheetRef": "documents",
+                "where": [
+                  {
+                    "fieldKey": "document_id",
+                    "op": "is",
+                    "value": "QMS-REC-MR"
+                  }
+                ],
+                "all": [
+                  {
+                    "fieldKey": "status",
+                    "op": "is_done"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
