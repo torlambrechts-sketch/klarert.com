@@ -51,7 +51,17 @@ function templateSheet(
     return { ...f, config: { ...rest, targetSheetRef: own } };
   });
   // the pack's own keys (isLibrary, register) stay out of the template sheet
-  const { isLibrary: _lib, register: _reg, folder: _folder, items, ...rest } = s;
+  const {
+    isLibrary: _lib,
+    register: _reg,
+    folder: _folder,
+    framework: _framework,
+    restricted: _restricted,
+    items,
+    ...rest
+  } = s;
+  void _framework;
+  void _restricted;
   void _lib;
   void _reg;
   void _folder;
