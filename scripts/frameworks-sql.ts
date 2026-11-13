@@ -1,6 +1,6 @@
 // The requirement catalogue as SQL (docs/12): idempotent inserts for a hosted project, where the seed does not run.
 // Writes the framework library packs, the frameworks, their requirements and the cross-walks, in that order (each
-// refers to the one before), every statement `on conflict do nothing`. Run it after the migrations, as the database
+// refers to the one before), packs and cross-walks `on conflict do nothing`, frameworks and requirements updated (a new revision). Run it after the migrations, as the database
 // owner (the catalogue has no API write grants):
 //   pnpm exec tsx scripts/frameworks-sql.ts > frameworks-catalogue.sql
 import { frameworkPacks, repoCrosswalks, repoFrameworks } from '../src/lib/frameworks/catalogue';
@@ -14,13 +14,21 @@ const lit = (v: unknown): string => {
   return `'${String(v).replaceAll("'", "''")}'`;
 };
 
-function insert(table: string, rows: Record<string, unknown>[], conflict: string): string {
+/** Insert, or with `update` reword the rows already there (a new revision, as syncFrameworks does). */
+function insert(
+  table: string,
+  rows: Record<string, unknown>[],
+  conflict: string,
+  update = false,
+): string {
   if (rows.length === 0) return '';
   const cols = Object.keys(rows[0]!);
+  const keys = conflict.replace(/[()\s]/g, '').split(',');
+  const set = cols.filter((c) => !keys.includes(c)).map((c) => `${c} = excluded.${c}`);
   return (
     `insert into ${table} (${cols.join(', ')}) values\n` +
     rows.map((r) => `  (${cols.map((c) => lit(r[c])).join(', ')})`).join(',\n') +
-    `\non conflict ${conflict} do nothing;\n`
+    `\non conflict ${conflict} ${update ? `do update set ${set.join(', ')}` : 'do nothing'};\n`
   );
 }
 
@@ -40,10 +48,12 @@ for (const m of packs) {
   );
 }
 out.push('', '-- frameworks');
-out.push(insert('frameworks', frameworks.map(frameworkRow), '(key, version)'));
+out.push(insert('frameworks', frameworks.map(frameworkRow), '(key, version)', true));
 out.push('-- requirements (parents first)');
 for (const f of frameworks)
-  out.push(insert('requirements', requirementRows(f), '(framework_key, framework_version, ref)'));
+  out.push(
+    insert('requirements', requirementRows(f), '(framework_key, framework_version, ref)', true),
+  );
 out.push('-- cross-walks');
 out.push(
   insert(

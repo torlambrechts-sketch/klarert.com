@@ -30,7 +30,10 @@ const framework: Framework = {
       kind: 'theme',
       position: 0,
       title: 'Context',
+      purpose: null,
       guidance: null,
+      questions: [],
+      evidence: [],
       tags: [],
     },
     {
@@ -39,7 +42,10 @@ const framework: Framework = {
       kind: 'clause',
       position: 1,
       title: 'Issues',
+      purpose: null,
       guidance: null,
+      questions: [],
+      evidence: [],
       tags: [],
     },
     {
@@ -48,7 +54,10 @@ const framework: Framework = {
       kind: 'clause',
       position: 2,
       title: 'Internal',
+      purpose: 'Why.',
       guidance: 'Ours.',
+      questions: ['Who approved it?'],
+      evidence: ['Signed policy'],
       tags: [],
     },
     {
@@ -57,7 +66,10 @@ const framework: Framework = {
       kind: 'theme',
       position: 3,
       title: 'Controls',
+      purpose: null,
       guidance: null,
+      questions: [],
+      evidence: [],
       tags: [],
     },
     {
@@ -66,7 +78,10 @@ const framework: Framework = {
       kind: 'control',
       position: 4,
       title: 'Policy',
+      purpose: null,
       guidance: null,
+      questions: [],
+      evidence: [],
       tags: [],
     },
   ],
@@ -121,7 +136,10 @@ describe('frameworkToPack', () => {
     expect(sheet.items[1]!.values).toEqual({
       ref: '4.1.1',
       part_of: '4.1 Issues',
+      purpose: 'Why.',
       guidance: 'Ours.',
+      audit_questions: '• Who approved it?',
+      typical_evidence: '• Signed policy',
     });
     expect(sheet.items[2]!.values).toEqual({ ref: 'A.5.1', part_of: 'Controls' });
     expect(sheet.description).toContain(framework.licence);
@@ -131,7 +149,10 @@ describe('frameworkToPack', () => {
     expect(sheet.fields.map((f) => f.key)).toEqual([
       'ref',
       'part_of',
+      'purpose',
       'guidance',
+      'audit_questions',
+      'typical_evidence',
       'applicable',
       'justification',
       'status',

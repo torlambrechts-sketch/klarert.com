@@ -28,7 +28,10 @@ export const LIBRARY_KEYS = {
   owner: 'owner',
   evidence: 'evidence',
   lastReviewed: 'last_reviewed',
+  purpose: 'purpose',
   guidance: 'guidance',
+  questions: 'audit_questions',
+  typicalEvidence: 'typical_evidence',
   /** Added at adoption when a controls sheet is chosen (docs/12): links to its items, both ways. */
   controls: 'controls',
 } as const;
@@ -36,6 +39,9 @@ export const LIBRARY_KEYS = {
 /** A framework's library pack: adopted from Frameworks (adopt_framework), not installed from Packs. */
 export const isFrameworkPack = (m: Pick<PackManifest, 'sheets'>) =>
   m.sheets.some((s) => s.framework !== undefined);
+
+/** A list as one long-text value, one line per entry. */
+const bullets = (list: string[]) => list.map((x) => `• ${x}`).join('\n');
 
 /** The root theme of a requirement (the group it goes in). */
 function rootOf(r: Requirement, byRef: Map<string, Requirement>): Requirement {
@@ -72,7 +78,12 @@ export function frameworkToPack(f: Framework): PackManifest {
     groupRefs.set(t.ref, ref);
     return { ref, name: t.title.slice(0, 80), color: LABEL_COLORS[i % LABEL_COLORS.length]! };
   });
-  const hasGuidance = f.requirements.some((r) => r.guidance);
+  const has = {
+    purpose: f.requirements.some((r) => r.kind !== 'theme' && r.purpose),
+    guidance: f.requirements.some((r) => r.guidance),
+    questions: f.requirements.some((r) => r.questions.length > 0),
+    evidence: f.requirements.some((r) => r.evidence.length > 0),
+  };
   const takenItems = new Set<string>();
   const items: PackItem[] = f.requirements
     .filter((r) => r.kind !== 'theme')
@@ -82,7 +93,10 @@ export function frameworkToPack(f: Framework): PackManifest {
       const values: Record<string, Json> = { [LIBRARY_KEYS.ref]: r.ref };
       const part = partOf(r, byRef);
       if (part) values[LIBRARY_KEYS.partOf] = part;
+      if (r.purpose) values[LIBRARY_KEYS.purpose] = r.purpose;
       if (r.guidance) values[LIBRARY_KEYS.guidance] = r.guidance;
+      if (r.questions.length) values[LIBRARY_KEYS.questions] = bullets(r.questions);
+      if (r.evidence.length) values[LIBRARY_KEYS.typicalEvidence] = bullets(r.evidence);
       return {
         ref,
         group: groupRefs.get(rootOf(r, byRef).ref)!,
@@ -112,8 +126,24 @@ export function frameworkToPack(f: Framework): PackManifest {
         description: `The reference number in ${f.title}. It never changes.`,
       },
       { key: k.partOf, name: 'Part of', type: 'text' as const, locked: true },
-      ...(hasGuidance
+      ...(has.purpose
+        ? [{ key: k.purpose, name: 'Purpose', type: 'longtext' as const, locked: true }]
+        : []),
+      ...(has.guidance
         ? [{ key: k.guidance, name: 'Guidance', type: 'longtext' as const, locked: true }]
+        : []),
+      ...(has.questions
+        ? [{ key: k.questions, name: 'Audit questions', type: 'longtext' as const, locked: true }]
+        : []),
+      ...(has.evidence
+        ? [
+            {
+              key: k.typicalEvidence,
+              name: 'Typical evidence',
+              type: 'longtext' as const,
+              locked: true,
+            },
+          ]
         : []),
       {
         key: k.applicable,

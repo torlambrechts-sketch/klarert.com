@@ -1,15 +1,15 @@
 {
   "key": "iso-14001",
   "version": "2015",
-  "revision": 1,
+  "revision": 2,
   "title": "ISO 14001:2015",
   "shortTitle": "14001",
   "publisher": "ISO",
   "kind": "standard",
-  "source": "ISO 14001:2015, clauses 4 to 10 (reference numbers only)",
-  "licence": "Reference numbers only. Titles are paraphrased in our own words and are not the text of the standard. Buy the standard for the requirements.",
+  "source": "ISO 14001:2015, clauses 4 to 10 (reference numbers and official short titles)",
+  "licence": "Reference numbers with the official short titles only; not the text of the standard. Purpose, guidance, audit questions and typical evidence are our own words. Buy the standard for the requirements.",
   "url": "https://www.iso.org/standard/60857.html",
-  "titles": "own-words",
+  "titles": "official-short",
   "library": {
     "name": "ISO 14001:2015 requirements",
     "itemLabel": "Requirement",
@@ -17,56 +17,802 @@
     "folder": "Frameworks"
   },
   "requirements": [
-    { "ref": "4", "kind": "theme", "title": "Clause 4 · Organisation and its context" },
-    { "ref": "4.1", "parent": "4", "kind": "clause", "title": "Internal and external issues" },
-    { "ref": "4.2", "parent": "4", "kind": "clause", "title": "Interested parties and what they need" },
-    { "ref": "4.3", "parent": "4", "kind": "clause", "title": "Scope of the environmental system" },
-    { "ref": "4.4", "parent": "4", "kind": "clause", "title": "Setting up and running the environmental system" },
-
-    { "ref": "5", "kind": "theme", "title": "Clause 5 · Leadership" },
-    { "ref": "5.1", "parent": "5", "kind": "clause", "title": "Top management commitment" },
-    { "ref": "5.2", "parent": "5", "kind": "clause", "title": "Environmental policy" },
-    { "ref": "5.3", "parent": "5", "kind": "clause", "title": "Roles, responsibilities and authority" },
-
-    { "ref": "6", "kind": "theme", "title": "Clause 6 · Planning" },
-    { "ref": "6.1", "parent": "6", "kind": "clause", "title": "Dealing with risks and opportunities", "tags": ["risk"] },
-    { "ref": "6.1.1", "parent": "6.1", "kind": "clause", "title": "Planning for risks and opportunities", "tags": ["risk"] },
-    { "ref": "6.1.2", "parent": "6.1", "kind": "clause", "title": "Environmental aspects and their impacts" },
-    { "ref": "6.1.3", "parent": "6.1", "kind": "clause", "title": "Legal and other duties you must meet", "tags": ["legal"] },
-    { "ref": "6.1.4", "parent": "6.1", "kind": "clause", "title": "Planning what to do about them" },
-    { "ref": "6.2", "parent": "6", "kind": "clause", "title": "Environmental objectives" },
-    { "ref": "6.2.1", "parent": "6.2", "kind": "clause", "title": "Setting objectives" },
-    { "ref": "6.2.2", "parent": "6.2", "kind": "clause", "title": "Plans to reach the objectives" },
-
-    { "ref": "7", "kind": "theme", "title": "Clause 7 · Support" },
-    { "ref": "7.1", "parent": "7", "kind": "clause", "title": "Resources" },
-    { "ref": "7.2", "parent": "7", "kind": "clause", "title": "Competence" },
-    { "ref": "7.3", "parent": "7", "kind": "clause", "title": "Awareness" },
-    { "ref": "7.4", "parent": "7", "kind": "clause", "title": "Communication" },
-    { "ref": "7.4.1", "parent": "7.4", "kind": "clause", "title": "Planning communication" },
-    { "ref": "7.4.2", "parent": "7.4", "kind": "clause", "title": "Communicating inside the organisation" },
-    { "ref": "7.4.3", "parent": "7.4", "kind": "clause", "title": "Communicating with outside parties" },
-    { "ref": "7.5", "parent": "7", "kind": "clause", "title": "Documented information" },
-    { "ref": "7.5.1", "parent": "7.5", "kind": "clause", "title": "What must be documented" },
-    { "ref": "7.5.2", "parent": "7.5", "kind": "clause", "title": "Creating and updating documents" },
-    { "ref": "7.5.3", "parent": "7.5", "kind": "clause", "title": "Controlling documents and records" },
-
-    { "ref": "8", "kind": "theme", "title": "Clause 8 · Operation" },
-    { "ref": "8.1", "parent": "8", "kind": "clause", "title": "Planning and controlling operations" },
-    { "ref": "8.2", "parent": "8", "kind": "clause", "title": "Being ready for emergencies", "tags": ["emergency"] },
-
-    { "ref": "9", "kind": "theme", "title": "Clause 9 · Performance evaluation" },
-    { "ref": "9.1", "parent": "9", "kind": "clause", "title": "Measuring and evaluating performance" },
-    { "ref": "9.1.1", "parent": "9.1", "kind": "clause", "title": "What to monitor and measure" },
-    { "ref": "9.1.2", "parent": "9.1", "kind": "clause", "title": "Checking you meet legal and other duties", "tags": ["legal"] },
-    { "ref": "9.2", "parent": "9", "kind": "clause", "title": "Internal audit", "tags": ["audit"] },
-    { "ref": "9.2.1", "parent": "9.2", "kind": "clause", "title": "Audits at planned intervals", "tags": ["audit"] },
-    { "ref": "9.2.2", "parent": "9.2", "kind": "clause", "title": "The audit programme", "tags": ["audit"] },
-    { "ref": "9.3", "parent": "9", "kind": "clause", "title": "Management review" },
-
-    { "ref": "10", "kind": "theme", "title": "Clause 10 · Improvement" },
-    { "ref": "10.1", "parent": "10", "kind": "clause", "title": "Finding ways to improve" },
-    { "ref": "10.2", "parent": "10", "kind": "clause", "title": "Nonconformity and corrective action" },
-    { "ref": "10.3", "parent": "10", "kind": "clause", "title": "Continual improvement" }
+    {
+      "ref": "4",
+      "kind": "theme",
+      "title": "Clause 4 · Organisation and its context",
+      "purpose": "Establishes the foundation of the system by understanding context and scope."
+    },
+    {
+      "ref": "4.1",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Understanding the organisation and its context",
+      "purpose": "Makes you look at the outside and inside forces that can help or hurt your environmental results, so the system is built around real conditions.",
+      "guidance": "Keep a short, dated list of issues such as the law, markets, locality, technology, workforce, culture and finances, split into internal and external. A simple PESTLE or SWOT worksheet is enough for a small company. Record why each issue matters to environmental and who owns it. The usual finding is a list written once at setup and never revisited, or one that does not connect to risks and objectives. Review it at least yearly and whenever something big changes, such as a new site or service.",
+      "questions": [
+        "Which issues outside and inside the company affect your environmental performance?",
+        "When did you last review this list and what changed?",
+        "How did these issues feed into your risks and objectives?",
+        "Who is responsible for keeping the list current?"
+      ],
+      "evidence": [
+        "Context analysis (PESTLE, SWOT or similar) with date and owner",
+        "Management review minutes showing the issues were reviewed",
+        "Link from issues to the risk register or objectives"
+      ]
+    },
+    {
+      "ref": "4.2",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Understanding the needs and expectations of interested parties",
+      "purpose": "Identifies who cares about your environmental performance and which of their expectations become obligations.",
+      "guidance": "List regulators, customers, neighbours, owners, lenders, insurers, employees and community groups, with what each expects. Decide which expectations you must or choose to meet; these become compliance obligations. Review the list periodically and when circumstances change. A common finding is a list that names parties but not their needs, or that ignores neighbours and local authorities.",
+      "questions": [
+        "Who are your interested parties and what do they expect?",
+        "Which of these are binding on you?",
+        "How do you keep the list up to date?",
+        "How does it feed the legal register?"
+      ],
+      "evidence": [
+        "Interested parties register",
+        "Customer requirements or contract clauses",
+        "Correspondence with regulators or neighbours"
+      ]
+    },
+    {
+      "ref": "4.3",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Determining the scope of the environmental management system",
+      "purpose": "Draws a clear line around what the system covers so that everyone, including auditors, knows what is in and out.",
+      "guidance": "Write the scope as a short statement naming sites, activities, products or services, and any boundaries or exclusions. Base it on the context issues, the needs of interested parties and the legal duties you found. Anything that can affect your environmental performance and that you control or influence should be inside it. Common problems are scopes that omit a site or contractor activity, or that do not match the certificate or website wording. Keep the scope available as documented information.",
+      "questions": [
+        "What exactly does the system cover and what is excluded?",
+        "Why were any activities, sites or functions left out?",
+        "Does the scope match what actually happens day to day?",
+        "Where is the scope statement published and who approves it?"
+      ],
+      "evidence": [
+        "Approved scope statement with version and date",
+        "List of sites, activities and boundaries",
+        "Rationale for any exclusions"
+      ]
+    },
+    {
+      "ref": "4.4",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Environmental management system and its processes",
+      "purpose": "Requires you to actually run a management system, with defined processes that work together and are improved over time.",
+      "guidance": "Map the main processes, what goes in and out, who owns them and how they link, for example in a simple process map or table. Decide how each is checked and which resources it needs. You do not need a thick manual; you need processes that people follow and that you can show working. A frequent finding is a set of policies on paper that do not match daily practice, or processes with no owner. Revisit the map when the business changes.",
+      "questions": [
+        "Which processes make up the system and who owns each?",
+        "How do the processes connect to one another?",
+        "How do you know the processes are working as planned?",
+        "What did you change in the system after the last review?"
+      ],
+      "evidence": [
+        "Process map or process register with owners",
+        "Procedures or work instructions for key processes",
+        "Records showing processes are monitored and improved"
+      ]
+    },
+    {
+      "ref": "5",
+      "kind": "theme",
+      "title": "Clause 5 · Leadership",
+      "purpose": "Confirms leaders own the system and set direction."
+    },
+    {
+      "ref": "5.1",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Leadership and commitment",
+      "purpose": "Makes senior people visibly responsible for the system rather than delegating it entirely.",
+      "guidance": "Top management should be able to show what they personally do: set direction, make sure the system fits the business plan, provide resources, talk about its importance and back the people who run it. Good evidence is behaviour, not statements: attending reviews, approving budgets, asking for results. Auditors interview the leaders, so they should know the policy, the objectives and the main environmental risks. A common finding is a system run entirely by one coordinator with leadership absent. Hand-offs to a representative are fine as long as accountability stays with leaders.",
+      "questions": [
+        "What do you personally do to support the environmental management system?",
+        "How do you make sure it is part of the business plan?",
+        "How are resources decided and who approves them?",
+        "How do you encourage people to raise concerns and improvements?"
+      ],
+      "evidence": [
+        "Management review minutes with leader attendance",
+        "Budget approvals for system needs",
+        "Internal communications from leaders on the topic",
+        "Leaders' interview answers consistent with the policy"
+      ]
+    },
+    {
+      "ref": "5.2",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Environmental policy",
+      "purpose": "Gives the organisation a public, top-level statement of environmental intent that guides objectives.",
+      "guidance": "The policy should fit the business, commit to protecting the environment, including preventing pollution, meeting obligations and improving, and provide a frame for objectives. Top management approves it, it is communicated inside and available to interested parties. Keep it short and specific to your activities. Findings include generic text copied from templates and staff who cannot say what it means for them.",
+      "questions": [
+        "Who approved the policy and when?",
+        "Does it commit to preventing pollution, compliance and improvement?",
+        "How is it communicated and made available?",
+        "How is it reviewed?"
+      ],
+      "evidence": [
+        "Signed policy with date",
+        "Policy displayed or published",
+        "Evidence of communication to staff",
+        "Review record"
+      ]
+    },
+    {
+      "ref": "5.3",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Organisational roles, responsibilities and authorities",
+      "purpose": "Ensures every duty in the system has a named person with the authority to carry it out.",
+      "guidance": "Allocate responsibilities for the system's main tasks, including reporting performance to top management, and make sure people know theirs. Use job descriptions, an RACI table or an organisation chart, and keep them in line with who actually does the work. Cover deputies for absences. Typical findings are roles held by someone who has left, duties nobody knows about, or authority on paper that is not backed in practice.",
+      "questions": [
+        "Who is responsible for each part of the system?",
+        "Who reports system performance to top management and how often?",
+        "Do people know their responsibilities and can they show where these are written?",
+        "Who covers when the owner is away?"
+      ],
+      "evidence": [
+        "Role descriptions or RACI matrix with dates",
+        "Organisation chart",
+        "Appointment letters or minutes assigning system roles"
+      ]
+    },
+    {
+      "ref": "6",
+      "kind": "theme",
+      "title": "Clause 6 · Planning",
+      "purpose": "Sets how risks, legal duties and objectives drive the system."
+    },
+    {
+      "ref": "6.1",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Actions to address risks and opportunities",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Groups the planning work: risks and opportunities, aspects, legal duties and planning actions.",
+      "guidance": "Plan how to deal with risks, opportunities, legal duties and the actions that follow, in a way that feeds objectives and operations. Keep records and review them when things change. Auditors check the sub-clauses, and this parent is the overall view of whether planning is joined up.",
+      "questions": [
+        "How does planning feed objectives and operations?",
+        "Who reviews risks and opportunities?",
+        "How are legal duties built in?"
+      ],
+      "evidence": [
+        "Risk and opportunity register",
+        "Legal register",
+        "Action plan"
+      ]
+    },
+    {
+      "ref": "6.1.1",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Actions to address risks and opportunities: general",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Pulls context, needs, aspects and obligations together to find threats and opportunities, then plans what to do.",
+      "guidance": "Combine the outputs of context, interested parties, aspects and legal duties into a register of risks and opportunities, including emergency situations. Decide actions, how to integrate them into processes and how to check results. Keep it proportionate and tied to the scope. Findings include a register that is separate from the rest of the system and has no actions.",
+      "questions": [
+        "What risks and opportunities did you identify?",
+        "How do they link to aspects and obligations?",
+        "What actions did they trigger?",
+        "How do you evaluate action effectiveness?"
+      ],
+      "evidence": [
+        "Risk and opportunity register",
+        "Action plan",
+        "Review records"
+      ]
+    },
+    {
+      "ref": "6.1.2",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Environmental aspects",
+      "purpose": "Identifies the parts of your activities that can affect the environment and decides which matter most.",
+      "guidance": "List activities, products and services, the aspects they create (emissions, waste, energy, water, noise, resource use) and consider normal, abnormal and emergency conditions and a life-cycle view. Set clear criteria for deciding which are significant, apply them consistently and record the result. Update when processes or sites change. Common findings are lists that ignore contractors or emergencies, and significance criteria that are unclear.",
+      "questions": [
+        "How did you identify your aspects?",
+        "What criteria decide whether an aspect is significant?",
+        "Which aspects are significant and what do you do about them?",
+        "How often is the register reviewed and after what changes?"
+      ],
+      "evidence": [
+        "Aspects and impacts register with criteria",
+        "Process or site maps used as inputs",
+        "Review and change log"
+      ]
+    },
+    {
+      "ref": "6.1.3",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Compliance obligations",
+      "tags": [
+        "legal"
+      ],
+      "purpose": "Ensures you know which environmental laws, permits and commitments apply and how they affect you.",
+      "guidance": "Identify laws, permits, licences, contracts and voluntary commitments, with the source and how each applies. Keep a register, assign owners and update on a schedule using a trusted source. Use it to plan controls. Findings are legal registers that are out of date, generic or lack evidence of review.",
+      "questions": [
+        "How do you find and track changes to the law?",
+        "Which permits and licences apply?",
+        "Who owns each obligation?",
+        "How are obligations built into your controls?"
+      ],
+      "evidence": [
+        "Legal and other requirements register",
+        "Permits and licences with expiry",
+        "Review log"
+      ]
+    },
+    {
+      "ref": "6.1.4",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Planning action",
+      "purpose": "Turns significant aspects, obligations and risks into concrete actions built into how you work.",
+      "guidance": "Plan how to act on each item, how it will be integrated into the system's processes and how you will judge the result. Consider technology, finances and business needs. Findings are action lists unconnected to the processes and with no evaluation.",
+      "questions": [
+        "What actions come from significant aspects and obligations?",
+        "How are they embedded into processes?",
+        "How do you check effectiveness?",
+        "What options did you consider?"
+      ],
+      "evidence": [
+        "Action plan with owners and dates",
+        "Updated procedures",
+        "Effectiveness review"
+      ]
+    },
+    {
+      "ref": "6.2",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Environmental objectives and planning to achieve them",
+      "purpose": "Groups objective setting and action planning.",
+      "guidance": "Set measurable objectives that follow from the policy and plan who does what, with what resources, by when and how results are judged. Track progress and report to management. Auditors check the sub-clauses, and this parent is the overall view of whether objectives drive action.",
+      "questions": [
+        "What are your objectives and how are they tracked?",
+        "Who owns each?",
+        "How are resources committed?"
+      ],
+      "evidence": [
+        "Objectives register",
+        "Action plans",
+        "Progress reports"
+      ]
+    },
+    {
+      "ref": "6.2.1",
+      "parent": "6.2",
+      "kind": "clause",
+      "title": "Environmental objectives",
+      "purpose": "Gives you targets that are consistent with the policy, measured where possible and monitored.",
+      "guidance": "Set objectives that line up with the policy, significant aspects and obligations. Make them measurable where practical, monitored, communicated and updated. Examples are cutting waste to landfill or energy per unit. Findings include objectives that are vague, unowned or not tracked.",
+      "questions": [
+        "What are your objectives and how do they tie to the policy?",
+        "How are they measured?",
+        "Who is responsible?",
+        "How are they communicated?"
+      ],
+      "evidence": [
+        "Objectives register with metrics",
+        "Progress reports",
+        "Management review minutes"
+      ]
+    },
+    {
+      "ref": "6.2.2",
+      "parent": "6.2",
+      "kind": "clause",
+      "title": "Planning actions to achieve environmental objectives",
+      "purpose": "Defines who does what, with which resources, by when and how results are judged.",
+      "guidance": "For each objective, state the actions, owner, resources, deadline and how success is measured. Consider how it fits into regular business processes. Review progress regularly. Findings are plans without budgets or deadlines.",
+      "questions": [
+        "What will you do, who owns it and by when?",
+        "What resources are committed?",
+        "How do you evaluate results?",
+        "How is it built into business processes?"
+      ],
+      "evidence": [
+        "Action plans with owners and dates",
+        "Resource approvals",
+        "Progress and results"
+      ]
+    },
+    {
+      "ref": "7",
+      "kind": "theme",
+      "title": "Clause 7 · Support",
+      "purpose": "Covers resources, skills, awareness, communication and documents."
+    },
+    {
+      "ref": "7.1",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Resources",
+      "purpose": "Makes sure the system has the people, money, equipment and infrastructure it needs to work.",
+      "guidance": "Identify what is required to run, maintain and improve the system and how it is funded: staff time, tools, training budget, maintenance, monitoring equipment. Tie resource decisions to the plan, objectives and management review actions. Auditors look for objectives that were set with no one given the time or money to deliver them. Record the decisions, even briefly, in budgets or review minutes.",
+      "questions": [
+        "How do you decide what resources the system needs?",
+        "Were any actions delayed because of lack of resources?",
+        "Who approves the budget for it?",
+        "How do you check equipment and infrastructure remain suitable?"
+      ],
+      "evidence": [
+        "Budget lines or approved spend for system activities",
+        "Management review resource decisions",
+        "Maintenance and calibration plans",
+        "Resourcing in action plans"
+      ]
+    },
+    {
+      "ref": "7.2",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Competence",
+      "purpose": "Ensures the people whose work affects your results have the skills and knowledge to do it well.",
+      "guidance": "List the roles that can affect environmental performance or compliance and state the knowledge, training or experience each needs. Compare people to those needs, close the gaps through training, coaching or hiring, then check the training worked. Keep records proportionate: certificates, attendance, sign-offs. The usual findings are missing records for contractors, no check that training was effective, and legal-requirement training that has lapsed.",
+      "questions": [
+        "How do you decide what competence each role needs?",
+        "How do you close gaps and check it worked?",
+        "Where are the training and qualification records?",
+        "How do you manage competence of contractors or temporary staff?"
+      ],
+      "evidence": [
+        "Competence matrix or role requirements",
+        "Training records and certificates",
+        "Training effectiveness checks",
+        "Induction records"
+      ]
+    },
+    {
+      "ref": "7.3",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Awareness",
+      "purpose": "Makes sure people understand the policy, what they contribute and what happens if they do not follow the system.",
+      "guidance": "Everyone working under your control should know the environmental policy, the objectives relevant to their job, how their work affects results and what non-conformance could mean. Induction, toolbox talks, notice boards and short team briefings all work. Auditors ask staff directly, so test this yourself with a few quick conversations. A frequent finding is awareness covering the policy only, with staff unable to say what they personally contribute.",
+      "questions": [
+        "Can staff explain the policy in their own words?",
+        "How do people learn how their job affects results?",
+        "What do new starters and contractors receive?",
+        "How do you check awareness is effective?"
+      ],
+      "evidence": [
+        "Induction content and attendance records",
+        "Briefing or toolbox talk records",
+        "Posted policy and notices",
+        "Awareness survey or interview notes"
+      ]
+    },
+    {
+      "ref": "7.4",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Communication",
+      "purpose": "Groups the rules for what you communicate, to whom, when and how, inside and outside the company.",
+      "guidance": "Plan one simple communication approach covering what you share inside and outside the company, with whom, when, how and who is responsible. Use a one-page matrix and keep records of important messages. Make sure it also gives people a way to respond. Auditors check the sub-clauses, so this parent works as the overall view of whether communication is deliberate and works.",
+      "questions": [
+        "Do you have an overall approach to internal and external communication?",
+        "Who owns it?",
+        "How do you know it works?"
+      ],
+      "evidence": [
+        "Communication matrix or plan",
+        "Sample communications sent",
+        "Review notes on effectiveness"
+      ]
+    },
+    {
+      "ref": "7.4.1",
+      "parent": "7.4",
+      "kind": "clause",
+      "title": "Communication: general",
+      "purpose": "Sets up a deliberate approach to what you tell people, who you tell, when and how.",
+      "guidance": "Build a short communication matrix with the subject, audience, timing, method and owner. Include the topics you must share by law or by agreement, and the way you listen back. Keep it proportionate: a table on one page often does the job. Findings usually arise when the plan exists but nobody uses it or it ignores contractors and neighbours.",
+      "questions": [
+        "What do you communicate, to whom and when?",
+        "Who decides what is shared externally?",
+        "How do you make sure communication is consistent with the facts and the records?",
+        "How do you review whether the plan works?"
+      ],
+      "evidence": [
+        "Communication matrix or plan",
+        "Examples of notices, bulletins or emails sent",
+        "Records of external enquiries and responses"
+      ]
+    },
+    {
+      "ref": "7.4.2",
+      "parent": "7.4",
+      "kind": "clause",
+      "title": "Internal communication",
+      "purpose": "Ensures information flows across levels and functions and that people can feed ideas back.",
+      "guidance": "Show how environmental information gets to staff and back: meetings, noticeboards, intranet, team briefings, suggestion channels. Make sure the system's performance and changes are shared and that workers can contribute to improvement. A common weakness is one-way messaging with no sign that feedback was heard. Keep minutes or logs that show it happens.",
+      "questions": [
+        "How do staff hear about system performance and changes?",
+        "How can they raise suggestions or concerns?",
+        "Show a recent example of feedback leading to a change.",
+        "How does information move between sites or shifts?"
+      ],
+      "evidence": [
+        "Team meeting minutes",
+        "Intranet posts or newsletters",
+        "Suggestion log with responses"
+      ]
+    },
+    {
+      "ref": "7.4.3",
+      "parent": "7.4",
+      "kind": "clause",
+      "title": "External communication",
+      "purpose": "Makes sure what you tell customers, regulators, neighbours and others is deliberate, accurate and recorded.",
+      "guidance": "Decide who may speak for the company on these matters and how enquiries and complaints are logged and answered. Keep a record of significant communications with authorities and other outside parties and of the response. Auditors check that mandatory notifications were made on time and that claims on websites or tenders are supportable. Weak spots are informal handling of complaints and no named contact.",
+      "questions": [
+        "Who speaks to regulators, customers and the public?",
+        "How are enquiries and complaints logged and answered?",
+        "Show a recent notification to an authority.",
+        "How do you check public claims are accurate?"
+      ],
+      "evidence": [
+        "External communication log",
+        "Correspondence with authorities",
+        "Complaint register with outcomes",
+        "Approved public statements or reports"
+      ]
+    },
+    {
+      "ref": "7.5",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Documented information",
+      "purpose": "Groups the rules for the documents and records the system needs and how they are controlled.",
+      "guidance": "Decide which documents and records the system needs, keep them current, and control access, storage and retention. Aim for short, usable material that people actually follow, and keep an index. Auditors check the sub-clauses, and this parent is the overall view of whether documentation is proportionate and controlled.",
+      "questions": [
+        "Which documents and records does the system rely on?",
+        "How do you keep them controlled?",
+        "Can staff find the current version?"
+      ],
+      "evidence": [
+        "Document and record register",
+        "Document control procedure",
+        "Retention schedule"
+      ]
+    },
+    {
+      "ref": "7.5.1",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Documented information: general",
+      "purpose": "Defines the minimum written material the system needs plus whatever else you decide helps it work.",
+      "guidance": "List the documents and records you must have under the standard and any extra ones that make sense for your size, complexity and competence of staff. Aim for useful, short and in use rather than long and shelved. Keep an index or register so you can find the current versions. Auditors often find missing mandatory items or heavy documentation nobody follows.",
+      "questions": [
+        "Which documents and records does your system rely on?",
+        "How did you decide how much to document?",
+        "Can staff find the current version quickly?",
+        "Which items are mandatory and where are they?"
+      ],
+      "evidence": [
+        "Document and record register",
+        "Manual, policy and procedure set",
+        "Mapping of required items to documents"
+      ]
+    },
+    {
+      "ref": "7.5.2",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Creating and updating",
+      "purpose": "Keeps documents recognisable, suitable and approved before use.",
+      "guidance": "Give every document a title, date, version and owner, a common format and an approval step before release. Use a medium that suits users, whether paper or electronic. Agree who may edit and how reviews are triggered. Findings usually involve missing approval evidence or uncontrolled copies.",
+      "questions": [
+        "How are documents approved before use?",
+        "What identifies the version and author?",
+        "How do you review and update documents?",
+        "What formats do you use?"
+      ],
+      "evidence": [
+        "Approved documents with version, date and approver",
+        "Document template",
+        "Review log or change history"
+      ]
+    },
+    {
+      "ref": "7.5.3",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Control of documented information",
+      "purpose": "Ensures the right version is available where needed and that records are protected and retained.",
+      "guidance": "Control distribution, access, storage, legibility, change tracking, retention and disposal. Remove or mark obsolete copies and protect records from loss and unwanted changes. Define retention periods based on law and need. External documents such as permits or supplier instructions also need control. Typical findings are old copies on the shop floor, unlabelled files and records held longer or shorter than the stated period.",
+      "questions": [
+        "How do you make sure only current versions are in use?",
+        "Where are records stored and who can change them?",
+        "How long do you keep each record type?",
+        "How do you control documents from outside the company?"
+      ],
+      "evidence": [
+        "Document control procedure",
+        "Retention schedule",
+        "Access rights listing",
+        "Master document list with current versions"
+      ]
+    },
+    {
+      "ref": "8",
+      "kind": "theme",
+      "title": "Clause 8 · Operation",
+      "purpose": "Covers the controls applied to daily work and to emergencies."
+    },
+    {
+      "ref": "8.1",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Operational planning and control",
+      "purpose": "Establishes controls over the processes tied to significant aspects, risks and obligations, including outsourced ones.",
+      "guidance": "Define criteria and controls for processes that affect your significant aspects, such as waste handling, chemical storage, discharges and energy use. Include a life-cycle view: design, purchasing, contractors, delivery, use, end of life. Control planned changes and review unintended ones. Communicate requirements to suppliers and contractors. Findings include controls only on paper and uncontrolled outsourced activities.",
+      "questions": [
+        "Which operations relate to significant aspects and how are they controlled?",
+        "How do you control contractors and suppliers?",
+        "How do you manage changes?",
+        "What life-cycle considerations did you include?"
+      ],
+      "evidence": [
+        "Operating procedures and work instructions",
+        "Contractor and supplier requirements",
+        "Change records",
+        "Monitoring and inspection records"
+      ]
+    },
+    {
+      "ref": "8.2",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Emergency preparedness and response",
+      "tags": [
+        "emergency"
+      ],
+      "purpose": "Prepares you to respond to realistic emergencies and limit harm when they occur.",
+      "guidance": "Identify the emergencies your sites could realistically face, such as spills, fires, flooding, gas leaks and equipment failure, and the harm each could do outside the building. Prepare a response for each with named roles, spill kits and contact details, and plan to prevent or reduce the impact. Test the plans through drills, review them after drills or real events, and give relevant people training. Findings tend to be out-of-date contact lists, untested plans and spill equipment that is missing or empty.",
+      "questions": [
+        "What emergencies could affect the environment from your sites?",
+        "When did you last run a drill and what did you learn?",
+        "Where is spill and emergency equipment and who maintains it?",
+        "How have you updated plans after incidents or near misses?"
+      ],
+      "evidence": [
+        "Emergency response plan",
+        "Drill reports with actions",
+        "Spill kit inspection records",
+        "Emergency contact list and training records",
+        "Post-incident reviews"
+      ]
+    },
+    {
+      "ref": "9",
+      "kind": "theme",
+      "title": "Clause 9 · Performance evaluation",
+      "purpose": "Covers measuring, auditing and reviewing performance."
+    },
+    {
+      "ref": "9.1",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Monitoring, measurement, analysis and evaluation",
+      "purpose": "Groups the rules for what you measure, how you check compliance and how you evaluate results.",
+      "guidance": "Decide what to measure, how to check legal compliance and how to use the results to judge performance. Keep reliable records and report trends to management. Auditors check the sub-clauses, and this parent is the overall view of whether performance is measured and used.",
+      "questions": [
+        "What do you measure and why?",
+        "How do you check legal compliance?",
+        "How do results reach management?"
+      ],
+      "evidence": [
+        "Monitoring plan",
+        "Performance reports",
+        "Compliance evaluation records"
+      ]
+    },
+    {
+      "ref": "9.1.1",
+      "parent": "9.1",
+      "kind": "clause",
+      "title": "Monitoring, measurement, analysis and evaluation: general",
+      "purpose": "Makes sure you measure what matters and use the results to judge performance.",
+      "guidance": "Decide what to monitor, the method, the frequency, when to analyse the results and who does it. Link measures to objectives, significant risks and legal duties. Calibrate or verify instruments where results depend on them. Report trends to management. Auditors look for data collected but never analysed, or measures unrelated to objectives. Keep the results as records.",
+      "questions": [
+        "What do you monitor and why?",
+        "How do you make sure measurements are reliable?",
+        "Who analyses the results and when?",
+        "Show a decision taken because of the data."
+      ],
+      "evidence": [
+        "Monitoring plan or schedule",
+        "Measurement results (energy, waste, emissions, water)",
+        "Calibration records",
+        "Trend reports to management"
+      ]
+    },
+    {
+      "ref": "9.1.2",
+      "parent": "9.1",
+      "kind": "clause",
+      "title": "Evaluation of compliance",
+      "tags": [
+        "legal"
+      ],
+      "purpose": "Checks regularly that you are meeting your legal and other requirements and acts when you are not.",
+      "guidance": "Set a frequency for evaluating each obligation, through audits, inspections, permit checks or reviews by a competent person. Record the result, any gaps and the actions. Keep your knowledge of status current, including expiry dates. Common findings are a legal register with no evidence of review or evaluation that only happens at certification time.",
+      "questions": [
+        "How often do you evaluate compliance and how?",
+        "Who performs the evaluation?",
+        "Show the last evaluation and its actions.",
+        "How do you track permit and licence expiry?"
+      ],
+      "evidence": [
+        "Compliance evaluation records",
+        "Legal register with review dates",
+        "Inspection and permit tracking",
+        "Actions arising"
+      ]
+    },
+    {
+      "ref": "9.2",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Internal audit",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Groups the rules for checking by yourself that the system conforms and is effective.",
+      "guidance": "Plan and run audits of the system on a regular cycle with competent, impartial auditors, report the findings and close the actions. Auditors check the sub-clauses, and this parent is the overall view of whether your own checks are credible.",
+      "questions": [
+        "How does the audit cycle work?",
+        "Who audits and are they impartial?",
+        "How are findings closed out?"
+      ],
+      "evidence": [
+        "Audit programme",
+        "Audit reports",
+        "Corrective action records"
+      ]
+    },
+    {
+      "ref": "9.2.1",
+      "parent": "9.2",
+      "kind": "clause",
+      "title": "Internal audit: general",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Verifies at planned intervals that the system meets your own and the standard's requirements and is implemented.",
+      "guidance": "Audit every part of the system within a cycle, such as 12 months, using criteria from the standard, your procedures and legal duties. Auditors need to be competent and impartial, so they should not audit their own work. Report findings to relevant managers and track actions to closure. Common findings are audits that tick boxes, repeated issues and late closure.",
+      "questions": [
+        "What criteria and scope did the last audit use?",
+        "How do you ensure auditors are impartial?",
+        "Where are the findings reported and by when are they fixed?",
+        "How did the audits affect improvement?"
+      ],
+      "evidence": [
+        "Audit reports",
+        "Auditor competence or training records",
+        "Corrective action records from audits"
+      ]
+    },
+    {
+      "ref": "9.2.2",
+      "parent": "9.2",
+      "kind": "clause",
+      "title": "Internal audit programme",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Sets out a plan for when, how often and by whom audits are done, based on importance and past results.",
+      "guidance": "Plan the frequency, methods, responsibilities, reporting and scope for the cycle. Give higher-risk areas and those with past problems more attention. Keep the plan as documented information and update it when circumstances change. Frequent findings include a programme with missed audits and no link to risk.",
+      "questions": [
+        "How do you decide audit frequency and focus?",
+        "Were all planned audits completed?",
+        "Who is accountable for the programme?",
+        "How did past results shape the plan?"
+      ],
+      "evidence": [
+        "Annual audit schedule",
+        "Audit plans",
+        "Programme review notes",
+        "Completed audit checklists"
+      ]
+    },
+    {
+      "ref": "9.3",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Management review",
+      "purpose": "Has top management step back at planned intervals to judge whether the system is suitable, adequate and effective.",
+      "guidance": "Hold reviews at planned intervals with inputs covering previous actions, changes in issues and needs, performance and trends, compliance status, audit results, resources, communications from outside parties and improvement opportunities. Record decisions on suitability, objectives, resources and improvements, and track the actions. Leaders must take part. Typical findings are reviews that skip required inputs, or that produce no decisions.",
+      "questions": [
+        "What inputs did you review at the last meeting?",
+        "What decisions or actions came out?",
+        "Who attended from top management?",
+        "How were actions followed up?"
+      ],
+      "evidence": [
+        "Management review agenda and minutes",
+        "Performance reports used as inputs",
+        "Action list with owners and closure"
+      ]
+    },
+    {
+      "ref": "10",
+      "kind": "theme",
+      "title": "Clause 10 · Improvement",
+      "purpose": "Covers fixing problems and improving over time."
+    },
+    {
+      "ref": "10.1",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Improvement: general",
+      "purpose": "Makes you actively look for opportunities to improve and act on them to reach intended results.",
+      "guidance": "Use audit results, performance data, incidents, feedback and review decisions to identify improvements, then plan and carry them out. This can include changes to processes, new technology or better training. Track them as actions with owners. Findings occur when improvement is purely reactive or when no improvements are recorded.",
+      "questions": [
+        "Where do improvement ideas come from?",
+        "Show examples of improvements made recently.",
+        "How do you prioritise them?",
+        "How do you check they worked?"
+      ],
+      "evidence": [
+        "Improvement log",
+        "Management review actions",
+        "Project or action tracker"
+      ]
+    },
+    {
+      "ref": "10.2",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Nonconformity and corrective action",
+      "purpose": "Makes sure problems are contained, understood at root cause and fixed so they do not come back.",
+      "guidance": "When something fails, such as a breach of a limit, a spill or a missed duty, react, control and correct it, deal with the consequences, then find the cause and decide if similar issues could exist. Implement actions, check they worked and update risks or the system if needed. Keep records. Findings are quick fixes without root cause and actions never verified.",
+      "questions": [
+        "Show a recent nonconformity and how you handled it.",
+        "How do you find root cause?",
+        "How do you check corrective actions work?",
+        "How do you spot repeat issues?"
+      ],
+      "evidence": [
+        "Corrective action log",
+        "Root cause analysis records",
+        "Effectiveness verification",
+        "Trend review"
+      ]
+    },
+    {
+      "ref": "10.3",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Continual improvement",
+      "purpose": "Ensures the system gets better over time in suitability, adequacy and effectiveness.",
+      "guidance": "Show a trend of improved environmental performance, supported by results, closed actions and review decisions. It does not require constant dramatic change; small steady gains count. Involve workers in suggesting them. Auditors look for evidence over several periods and are less convinced by one-off projects.",
+      "questions": [
+        "How has performance changed over the last few years?",
+        "Which management decisions led to improvements?",
+        "How do people contribute ideas?",
+        "What is planned for the next period?"
+      ],
+      "evidence": [
+        "Trend charts of key measures",
+        "Closed improvement actions",
+        "Management review outputs",
+        "Objectives achievement history"
+      ]
+    }
   ]
 }

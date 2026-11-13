@@ -52,7 +52,10 @@ export function requirementRows(f: Framework) {
     kind: r.kind,
     position: r.position,
     title: r.title,
+    purpose: r.purpose,
     guidance: r.guidance,
+    questions: r.questions,
+    evidence: r.evidence,
     tags: r.tags,
   }));
 }
@@ -241,7 +244,7 @@ export async function readRequirements(
 ): Promise<(Requirement & { key: string })[]> {
   const { data, error } = await db
     .from('requirements')
-    .select('ref, parent_ref, kind, position, title, guidance, tags')
+    .select('ref, parent_ref, kind, position, title, purpose, guidance, questions, evidence, tags')
     .eq('framework_key', key)
     .eq('framework_version', version)
     .order('position');
@@ -253,7 +256,10 @@ export async function readRequirements(
     kind: r.kind as RequirementKind,
     position: r.position,
     title: r.title,
+    purpose: r.purpose,
     guidance: r.guidance,
+    questions: r.questions ?? [],
+    evidence: r.evidence ?? [],
     tags: r.tags ?? [],
   }));
 }

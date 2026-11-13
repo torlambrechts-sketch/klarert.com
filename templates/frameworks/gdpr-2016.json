@@ -1,15 +1,15 @@
 {
   "key": "gdpr",
   "version": "2016",
-  "revision": 1,
+  "revision": 2,
   "title": "GDPR (Regulation (EU) 2016/679)",
   "shortTitle": "GDPR",
   "publisher": "European Union",
   "kind": "law",
   "source": "Regulation (EU) 2016/679, as published on EUR-Lex",
-  "licence": "EU law. Titles are short summaries in our own words with the article numbers; read the official text on EUR-Lex.",
+  "licence": "EU law. Titles are the official article headings; purpose, guidance, audit questions and typical evidence are our own words. Read the official text on EUR-Lex.",
   "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
-  "titles": "own-words",
+  "titles": "official-short",
   "library": {
     "name": "GDPR requirements",
     "itemLabel": "Article",
@@ -17,44 +17,776 @@
     "folder": "Frameworks"
   },
   "requirements": [
-    { "ref": "Ch. II", "kind": "theme", "title": "Chapter II · Principles" },
-    { "ref": "Art. 5", "parent": "Ch. II", "kind": "article", "title": "Principles for handling personal data" },
-    { "ref": "Art. 6", "parent": "Ch. II", "kind": "article", "title": "A lawful basis for each use of data" },
-    { "ref": "Art. 7", "parent": "Ch. II", "kind": "article", "title": "Getting and proving valid consent" },
-    { "ref": "Art. 9", "parent": "Ch. II", "kind": "article", "title": "Special category data" },
-
-    { "ref": "Ch. III", "kind": "theme", "title": "Chapter III · Rights of the data subject" },
-    { "ref": "Art. 12", "parent": "Ch. III", "kind": "article", "title": "Clear information and how requests are handled", "tags": ["rights"] },
-    { "ref": "Art. 13", "parent": "Ch. III", "kind": "article", "title": "Privacy notice when data is collected from the person", "tags": ["rights"] },
-    { "ref": "Art. 14", "parent": "Ch. III", "kind": "article", "title": "Privacy notice when data comes from elsewhere", "tags": ["rights"] },
-    { "ref": "Art. 15", "parent": "Ch. III", "kind": "article", "title": "Right to see one's data", "tags": ["rights"] },
-    { "ref": "Art. 16", "parent": "Ch. III", "kind": "article", "title": "Right to have data corrected", "tags": ["rights"] },
-    { "ref": "Art. 17", "parent": "Ch. III", "kind": "article", "title": "Right to have data deleted", "tags": ["rights"] },
-    { "ref": "Art. 18", "parent": "Ch. III", "kind": "article", "title": "Right to limit how data is used", "tags": ["rights"] },
-    { "ref": "Art. 19", "parent": "Ch. III", "kind": "article", "title": "Telling recipients about corrections and deletions", "tags": ["rights"] },
-    { "ref": "Art. 20", "parent": "Ch. III", "kind": "article", "title": "Right to take data elsewhere", "tags": ["rights"] },
-    { "ref": "Art. 21", "parent": "Ch. III", "kind": "article", "title": "Right to object", "tags": ["rights"] },
-    { "ref": "Art. 22", "parent": "Ch. III", "kind": "article", "title": "Decisions made only by automated means", "tags": ["rights"] },
-
-    { "ref": "Ch. IV", "kind": "theme", "title": "Chapter IV · Controller and processor" },
-    { "ref": "Art. 24", "parent": "Ch. IV", "kind": "article", "title": "Controller is responsible and can show it" },
-    { "ref": "Art. 25", "parent": "Ch. IV", "kind": "article", "title": "Privacy built in and set by default" },
-    { "ref": "Art. 28", "parent": "Ch. IV", "kind": "article", "title": "Using processors and their contracts", "tags": ["suppliers"] },
-    { "ref": "Art. 30", "parent": "Ch. IV", "kind": "article", "title": "Record of processing activities" },
-    { "ref": "Art. 32", "parent": "Ch. IV", "kind": "article", "title": "Keeping personal data secure", "tags": ["security"] },
-    { "ref": "Art. 33", "parent": "Ch. IV", "kind": "article", "title": "Telling the authority about a breach within 72 hours", "tags": ["incidents"] },
-    { "ref": "Art. 34", "parent": "Ch. IV", "kind": "article", "title": "Telling affected people about a high-risk breach", "tags": ["incidents"] },
-    { "ref": "Art. 35", "parent": "Ch. IV", "kind": "article", "title": "Impact assessment for high-risk processing", "tags": ["risk"] },
-    { "ref": "Art. 37", "parent": "Ch. IV", "kind": "article", "title": "When to appoint a data protection officer", "tags": ["dpo"] },
-    { "ref": "Art. 38", "parent": "Ch. IV", "kind": "article", "title": "The data protection officer's position", "tags": ["dpo"] },
-    { "ref": "Art. 39", "parent": "Ch. IV", "kind": "article", "title": "What the data protection officer does", "tags": ["dpo"] },
-
-    { "ref": "Ch. V", "kind": "theme", "title": "Chapter V · Transfers outside the EEA" },
-    { "ref": "Art. 44", "parent": "Ch. V", "kind": "article", "title": "Transfers only under the chapter's conditions", "tags": ["transfers"] },
-    { "ref": "Art. 45", "parent": "Ch. V", "kind": "article", "title": "Transfers to countries with an adequacy decision", "tags": ["transfers"] },
-    { "ref": "Art. 46", "parent": "Ch. V", "kind": "article", "title": "Transfers with safeguards such as standard clauses", "tags": ["transfers"] },
-    { "ref": "Art. 47", "parent": "Ch. V", "kind": "article", "title": "Binding corporate rules", "tags": ["transfers"] },
-    { "ref": "Art. 48", "parent": "Ch. V", "kind": "article", "title": "Foreign court or authority orders", "tags": ["transfers"] },
-    { "ref": "Art. 49", "parent": "Ch. V", "kind": "article", "title": "Exceptions for specific situations", "tags": ["transfers"] }
+    {
+      "ref": "Ch. II",
+      "kind": "theme",
+      "title": "Chapter II · Principles",
+      "purpose": "Sets the ground rules every use of personal data must meet: fairness, a valid reason, and extra care for sensitive data."
+    },
+    {
+      "ref": "Art. 5",
+      "parent": "Ch. II",
+      "kind": "article",
+      "title": "Principles relating to processing of personal data",
+      "purpose": "Sets the core rules for all personal data use: be fair and open, collect only what you need, keep it accurate, secure and no longer than necessary.",
+      "guidance": "Turn each principle into a working habit. State a purpose before collecting any data, drop fields nobody uses, and set retention periods per data category with a named owner. Review them at least yearly. Auditors commonly find forms that ask for more than needed, retention schedules that exist on paper but are never run, and no evidence that anyone checks accuracy. Keep a short principles checklist inside your project and supplier onboarding steps so it is applied before data starts flowing.",
+      "questions": [
+        "How do you decide which personal data a new process may collect?",
+        "Where are retention periods defined and who deletes data when they expire?",
+        "How do you keep personal data accurate over time?",
+        "How would you show that you can demonstrate compliance with these principles?"
+      ],
+      "evidence": [
+        "Data protection policy approved by management",
+        "Retention schedule with owners and review dates",
+        "Records of deletion or anonymisation runs",
+        "Data minimisation review of forms and systems",
+        "Training records for staff handling personal data"
+      ]
+    },
+    {
+      "ref": "Art. 6",
+      "parent": "Ch. II",
+      "kind": "article",
+      "title": "Lawfulness of processing",
+      "purpose": "Requires every use of personal data to rest on one valid legal basis, so you can explain why you are allowed to do it.",
+      "guidance": "Map each processing activity to one basis such as contract, legal duty, legitimate interests or consent, and write the reasoning down. Where you rely on legitimate interests, keep a short balancing test showing whose interests were weighed. Do not default to consent, since it can be withdrawn and then forces you to stop. Auditors often find bases that were never chosen deliberately, or a basis that was changed after the fact. Reflect the chosen basis in your privacy notices and your record of processing.",
+      "questions": [
+        "What legal basis applies to each of your main processing activities?",
+        "Where you rely on legitimate interests, where is the balancing test?",
+        "How do you handle a change of purpose for existing data?",
+        "Does your privacy notice match the bases you actually use?"
+      ],
+      "evidence": [
+        "Register of processing with a legal basis per activity",
+        "Legitimate interests assessments",
+        "Privacy notices stating bases used",
+        "Records of purpose-change reviews",
+        "Approved procedure for choosing a legal basis"
+      ]
+    },
+    {
+      "ref": "Art. 7",
+      "parent": "Ch. II",
+      "kind": "article",
+      "title": "Conditions for consent",
+      "purpose": "Makes sure that where you rely on consent, it is freely given, specific and can be proven and withdrawn as easily as it was given.",
+      "guidance": "Use clear, separate opt-in wording with no pre-ticked boxes and no bundling with unrelated terms. Store who consented, when, to what text and through which channel. Provide a simple withdrawal route, such as a link or setting, and act on it promptly. Typical findings are consent logs without the wording shown at the time, consent tied to using a service, and withdrawal that needs an email to a mailbox nobody reads. Re-check consent when purposes change.",
+      "questions": [
+        "How do you record that a person consented and to which wording?",
+        "How can someone withdraw consent, and how quickly is it applied?",
+        "Is consent ever a condition of receiving a service it is not needed for?",
+        "How do you keep consent records for older sign-ups?"
+      ],
+      "evidence": [
+        "Consent log with timestamp, version of text and channel",
+        "Screenshots or copies of consent forms by version",
+        "Withdrawal procedure and sample completed withdrawals",
+        "Marketing preference centre configuration",
+        "Review notes on consent wording"
+      ]
+    },
+    {
+      "ref": "Art. 9",
+      "parent": "Ch. II",
+      "kind": "article",
+      "title": "Processing of special categories of personal data",
+      "purpose": "Adds stricter conditions for sensitive data such as health, beliefs, biometrics or union membership, because misuse causes greater harm.",
+      "guidance": "First identify whether you hold any sensitive data at all, including indirectly such as sickness absence reasons or dietary needs that reveal health. For each case record the extra condition relied on, in addition to the ordinary legal basis. Restrict access tightly and consider stronger security and shorter retention. Auditors often find sensitive data in free-text fields, shared drives or HR spreadsheets that nobody classified. Include these cases in your impact assessment screening.",
+      "questions": [
+        "Which sensitive categories of data do you process, and where are they stored?",
+        "What condition do you rely on for each?",
+        "Who has access to this data and why?",
+        "How do you stop sensitive details appearing in free-text notes?"
+      ],
+      "evidence": [
+        "Inventory of sensitive data locations",
+        "Documented condition per activity",
+        "Access control lists for sensitive data stores",
+        "Impact assessment screening records",
+        "Staff guidance on handling sensitive data"
+      ]
+    },
+    {
+      "ref": "Ch. III",
+      "kind": "theme",
+      "title": "Chapter III · Rights of the data subject",
+      "purpose": "Gives people control over their data and obliges you to be open about what you do with it and to respond to their requests."
+    },
+    {
+      "ref": "Art. 12",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Transparent information and modalities for data subject rights",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Requires you to communicate in plain language and to handle requests from individuals promptly, free of charge in most cases and after checking identity.",
+      "guidance": "Set up one route for rights requests, such as a web form and mailbox, and log every request with received date, due date and outcome. Agree who triages, who gathers data and who signs off. Verify identity proportionately without asking for excessive documents. The usual deadline is one month, extendable only in genuine complex cases with notice to the person. Auditors find missing logs, late replies and requests lost in general inboxes. Test the process with a dummy request each year.",
+      "questions": [
+        "How does someone submit a rights request and who receives it?",
+        "How do you track deadlines and extensions?",
+        "How do you verify the requester without collecting too much?",
+        "What happens when a request is refused, and what is the person told?"
+      ],
+      "evidence": [
+        "Rights request procedure",
+        "Request log with dates and outcomes",
+        "Template response letters",
+        "Identity verification guidance",
+        "Training records for those handling requests"
+      ]
+    },
+    {
+      "ref": "Art. 13",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Information where data are collected from the data subject",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Ensures people are told who you are, why you use their data, how long you keep it and what rights they have at the moment you collect it.",
+      "guidance": "Provide a layered privacy notice at each collection point, such as sign-up forms, applications and cameras. Cover identity and contact details, purposes with legal bases, recipients, international transfers, retention, rights and the right to complain. Keep it in plain language and keep versions. Pitfalls include notices copied from other organisations, missing retention information, and staff or candidate data that has no notice at all. Update the notice whenever a process changes.",
+      "questions": [
+        "Where do people see your notice when you collect their data?",
+        "Does the notice list purposes, legal bases, retention and recipients accurately?",
+        "Is there a separate notice for employees and job applicants?",
+        "How do you update the notice when processing changes?"
+      ],
+      "evidence": [
+        "Current privacy notices with version history",
+        "Screenshots of notices at collection points",
+        "Employee and applicant privacy notices",
+        "Change log linking process changes to notice updates",
+        "Review sign-off by the privacy owner"
+      ]
+    },
+    {
+      "ref": "Art. 14",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Information where personal data have not been obtained from the data subject",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Ensures people are informed when you receive their data from someone else, such as a partner, a broker or a public source.",
+      "guidance": "Identify flows where data arrives from third parties, such as purchased leads, referrals, customer-supplied contacts or public registers. Tell the individuals within a reasonable time, normally within a month, and say where the data came from. Limited exceptions exist, for example where informing is impossible or disproportionate, and these should be recorded with reasons. Auditors often find that organisations have notices only for direct collection and nothing for indirect sources.",
+      "questions": [
+        "Which processes receive personal data from third parties?",
+        "How and when are those individuals informed?",
+        "Where you rely on an exception, where is the reasoning recorded?",
+        "Do you tell people the source of their data?"
+      ],
+      "evidence": [
+        "List of indirect data sources",
+        "Indirect collection notice templates",
+        "Records of notices sent with dates",
+        "Documented exception assessments",
+        "Supplier and partner contracts covering notification duties"
+      ]
+    },
+    {
+      "ref": "Art. 15",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Right of access by the data subject",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Lets people ask for confirmation of whether you hold their data, a copy of it and details about how it is used.",
+      "guidance": "Know where personal data lives, including email, backups, chat tools and paper files, so a search can be completed within the deadline. Prepare a standard response pack listing purposes, recipients, retention and rights, plus the copy itself. Check whether the data contains information about other people and redact where needed. Pitfalls are incomplete searches, missing systems and sending data without confirming identity. Keep a record of what was supplied.",
+      "questions": [
+        "How do you search all systems for one person's data?",
+        "How do you protect other people's information in the response?",
+        "What is included in your response beyond a copy of the data?",
+        "How long does a typical request take you?"
+      ],
+      "evidence": [
+        "Subject access procedure",
+        "Data location map used for searches",
+        "Completed request files with redaction notes",
+        "Response template",
+        "Request log showing times to respond"
+      ]
+    },
+    {
+      "ref": "Art. 16",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Right to rectification",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Lets people have inaccurate or incomplete data corrected without delay.",
+      "guidance": "Provide an easy route for corrections, ideally a self-service account page plus a contact for other cases. Update every system holding the data, not just the first one you notice, and tell the person when done. Where you cannot confirm the new details, note that clearly. Auditors find corrections made in the main system but not in exports, spreadsheets or marketing tools. Link this process to the process for notifying recipients.",
+      "questions": [
+        "How can people ask you to correct their data?",
+        "How do you ensure the correction reaches all systems?",
+        "How do you handle disputed accuracy?",
+        "Who do you tell about the correction?"
+      ],
+      "evidence": [
+        "Rectification procedure",
+        "Log of correction requests and outcomes",
+        "System list showing where corrections are propagated",
+        "Template confirmations to individuals",
+        "Records of notifications to recipients"
+      ]
+    },
+    {
+      "ref": "Art. 17",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Right to erasure",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Lets people have their data deleted in defined situations, for example when it is no longer needed or consent is withdrawn.",
+      "guidance": "Define when erasure applies and when you must keep data, such as for tax or legal claims, and record the reason for any refusal. Build deletion into systems so that it covers databases, backups on their normal cycle, logs and processors. Where data was made public, take reasonable steps to inform others using it. Typical gaps are copies in spreadsheets, supplier systems and backups with no documented expiry. Test deletion end to end occasionally.",
+      "questions": [
+        "How do you decide whether an erasure request must be granted?",
+        "Which systems and suppliers hold copies, and how are they cleared?",
+        "How are backups dealt with?",
+        "What do you tell the person if you must keep some data?"
+      ],
+      "evidence": [
+        "Erasure procedure with exceptions list",
+        "Completed erasure records",
+        "Supplier deletion confirmations",
+        "Backup retention statement",
+        "Test results of deletion in key systems"
+      ]
+    },
+    {
+      "ref": "Art. 18",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Right to restriction of processing",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Lets people pause certain uses of their data, for example while accuracy or an objection is being checked.",
+      "guidance": "Decide how a restriction is technically applied, such as a flag that blocks use except for storage, and who can set and lift it. Make sure restricted records are excluded from mailings, reports and automated decisions. Tell the person before lifting a restriction. This right is rarely used, so organisations often have no mechanism at all, which an auditor will notice. A simple flag and a one-page procedure is usually enough for a small company.",
+      "questions": [
+        "How would you mark a record as restricted?",
+        "How do you stop restricted data being used in other processes?",
+        "Who may lift a restriction and what notice is given?",
+        "Has the process been tested?"
+      ],
+      "evidence": [
+        "Restriction procedure",
+        "Screenshot or description of the restriction flag",
+        "Request log entries",
+        "Test record of a restricted item",
+        "Template notice before lifting"
+      ]
+    },
+    {
+      "ref": "Art. 19",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Notification regarding rectification, erasure or restriction",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Requires you to pass on corrections, deletions and restrictions to those you disclosed the data to, and to tell the person who they are if asked.",
+      "guidance": "Keep a record of recipients for each data set so you can find who needs to be told. Add a notification step to the correction, erasure and restriction procedures, with a contact at each recipient. Where notifying is impossible or disproportionate, record why. Common failings are no recipient list and processors never informed. Contracts with suppliers should oblige them to act on such notices.",
+      "questions": [
+        "How do you know who received a person's data?",
+        "Who sends notifications to recipients and when?",
+        "How do you handle recipients who do not respond?",
+        "Can you tell a person who the recipients were if they ask?"
+      ],
+      "evidence": [
+        "Recipient list per data category",
+        "Notification emails or tickets sent to recipients",
+        "Procedure steps showing notification",
+        "Supplier contract clauses on assistance",
+        "Records of exceptions with reasons"
+      ]
+    },
+    {
+      "ref": "Art. 20",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Right to data portability",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Lets people receive data they gave you in a usable format and have it sent to another provider where feasible.",
+      "guidance": "Check whether it applies: it covers data provided by the person where you rely on consent or contract and process by automated means. Prepare an export in a common machine-readable format such as CSV or JSON and test it. Offer direct transfer where technically feasible. Pitfalls are exports that include data supplied by others, or formats nobody can read. Document why a request was out of scope when you refuse.",
+      "questions": [
+        "Which of your processes fall within portability?",
+        "In what format do you provide the data?",
+        "Can you send it directly to another provider if asked?",
+        "How do you exclude other people's data from the export?"
+      ],
+      "evidence": [
+        "Portability procedure and scope assessment",
+        "Sample export file",
+        "Request log entries",
+        "Test results of the export",
+        "Template cover letter"
+      ]
+    },
+    {
+      "ref": "Art. 21",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Right to object",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Lets people object to uses based on legitimate interests or public tasks, and to stop direct marketing at any time.",
+      "guidance": "Make the objection route visible in notices and marketing messages, with a one-click unsubscribe. For other objections, assess whether you have compelling grounds that override and record the decision. Apply marketing suppressions across every tool and keep a suppression list that survives list imports. Auditors often find unsubscribes that do not reach all systems and re-imports that reverse them.",
+      "questions": [
+        "How do people object, and where is that explained?",
+        "How do you evaluate objections to legitimate interests processing?",
+        "How are marketing opt-outs enforced across systems?",
+        "How do you prevent re-importing suppressed contacts?"
+      ],
+      "evidence": [
+        "Objection procedure",
+        "Suppression list and sync description",
+        "Decision records for objections",
+        "Marketing email footers and unsubscribe test",
+        "Privacy notice sections on objection"
+      ]
+    },
+    {
+      "ref": "Art. 22",
+      "parent": "Ch. III",
+      "kind": "article",
+      "title": "Automated individual decision-making, including profiling",
+      "tags": [
+        "rights"
+      ],
+      "purpose": "Protects people from significant decisions made only by machine, by requiring safeguards such as human review.",
+      "guidance": "List any automated decisions that materially affect people, for example credit checks, recruitment screening or account blocking. For each, check whether a person is genuinely involved or merely rubber-stamps. Where the rule applies, rely on an allowed ground, give meaningful information about the logic and offer a route to human review and to challenge. Auditors find scoring tools adopted without anyone asking whether this applies. Record the assessment.",
+      "questions": [
+        "Which decisions about people are made automatically?",
+        "Is a human involved in a meaningful way?",
+        "How do you explain the logic to affected people?",
+        "How can someone contest an automated decision?"
+      ],
+      "evidence": [
+        "Inventory of automated decisions",
+        "Assessment of whether Art. 22 applies",
+        "Human review procedure",
+        "Privacy notice text on logic and consequences",
+        "Appeal or challenge logs"
+      ]
+    },
+    {
+      "ref": "Ch. IV",
+      "kind": "theme",
+      "title": "Chapter IV · Controller and processor",
+      "purpose": "Covers the organisational duties of anyone handling personal data: accountability, design, contracts, records, security, breaches and oversight roles."
+    },
+    {
+      "ref": "Art. 24",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Responsibility of the controller",
+      "purpose": "Makes the organisation responsible for putting in place measures that ensure and can show that its processing complies.",
+      "guidance": "Accountability means being able to prove compliance, not merely claim it. Keep a lightweight privacy programme: policies, a named owner, a risk-based plan, training and regular reviews with management. Scale measures to the risk of the data you handle. Auditors typically find policies with no owner, no review cycle and no evidence they are followed. Report privacy metrics, such as open requests and incidents, to management at set intervals.",
+      "questions": [
+        "Who is accountable for data protection in your organisation?",
+        "How do you show management reviews the programme?",
+        "How do you decide that measures are appropriate to risk?",
+        "How do you check that policies are followed?"
+      ],
+      "evidence": [
+        "Data protection policy and programme plan",
+        "Management review minutes",
+        "Role description for the privacy owner",
+        "Internal audit or check results",
+        "Training attendance records"
+      ]
+    },
+    {
+      "ref": "Art. 25",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Data protection by design and by default",
+      "purpose": "Requires privacy to be built into products and processes from the start, with the most protective settings as the default.",
+      "guidance": "Add a privacy step to project and change management: ask what data is needed, who sees it, how long it is kept and whether settings default to the least data. Use techniques such as pseudonymisation, access limits and short retention. Keep a short design record per project. Auditors find privacy considered only after launch, or default settings that share data widely. A simple checklist at design review catches most of this.",
+      "questions": [
+        "How is privacy considered when new systems or features are designed?",
+        "What are the default settings for new users?",
+        "Which technical measures limit data exposure?",
+        "Where are design decisions recorded?"
+      ],
+      "evidence": [
+        "Privacy design checklist",
+        "Project records showing privacy review",
+        "Default configuration documentation",
+        "Pseudonymisation or minimisation descriptions",
+        "Change management tickets with privacy sign-off"
+      ]
+    },
+    {
+      "ref": "Art. 28",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Processor",
+      "tags": [
+        "suppliers"
+      ],
+      "purpose": "Requires you to use only processors who give sufficient guarantees and to bind them with a written contract.",
+      "guidance": "Keep a list of every supplier that handles personal data on your behalf and check each has a signed data processing agreement covering instructions, confidentiality, security, sub-processors, assistance, return or deletion and audits. Do due diligence before onboarding and revisit periodically. Common findings are missing agreements with smaller tools, unapproved sub-processors and no exit plan for data. Align this with supplier management.",
+      "questions": [
+        "How do you identify and list processors?",
+        "Does every processor have a compliant contract?",
+        "How do you assess a supplier's security before use?",
+        "How do you control sub-processors and data return at exit?"
+      ],
+      "evidence": [
+        "Processor register",
+        "Signed data processing agreements",
+        "Supplier due diligence records",
+        "Sub-processor approvals",
+        "Supplier review or audit reports"
+      ]
+    },
+    {
+      "ref": "Art. 30",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Records of processing activities",
+      "purpose": "Requires a written record of what personal data you process and why, so you and regulators can see the whole picture.",
+      "guidance": "Maintain a register listing for each activity the purpose, categories of people and data, recipients, transfers, retention and security measures. Assign an owner per activity and review at least yearly or on any change. Use it as the base for notices, impact assessments and breach response. Auditors find registers that are out of date, stop at the IT team's view, or lack retention and transfer details. A small company may be partly exempt in theory, but sensitive or regular processing usually brings it back in.",
+      "questions": [
+        "Who maintains the record and how often is it reviewed?",
+        "Does it cover every department, including HR and marketing?",
+        "Does it list retention periods and international transfers?",
+        "How do changes in business processes reach the record?"
+      ],
+      "evidence": [
+        "Record of processing activities with version",
+        "Review log with dates",
+        "Owner assignments per activity",
+        "Link between register and privacy notices",
+        "Change management evidence updating the register"
+      ]
+    },
+    {
+      "ref": "Art. 32",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Security of processing",
+      "tags": [
+        "security"
+      ],
+      "purpose": "Requires technical and organisational security that fits the risk, covering confidentiality, integrity, availability and resilience.",
+      "guidance": "Base measures on a documented risk assessment and cover access control, encryption where sensible, backups, patching, logging, staff awareness and supplier security. Test that controls work, for example restore tests and phishing exercises. Keep it proportionate to the data and the harm if lost. Auditors often find shared accounts, untested backups and no evidence of reviews. If you already run an information security management system, map it here.",
+      "questions": [
+        "How did you decide which security measures are appropriate?",
+        "How do you ensure only authorised people access personal data?",
+        "How often do you test backups and recovery?",
+        "How do you review security after changes or incidents?"
+      ],
+      "evidence": [
+        "Information security policy",
+        "Risk assessment covering personal data",
+        "Access review records",
+        "Backup and restore test results",
+        "Penetration test or vulnerability scan reports"
+      ]
+    },
+    {
+      "ref": "Art. 33",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Notification of a personal data breach to the supervisory authority",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Requires you to report breaches likely to cause risk to the regulator without undue delay and within 72 hours where feasible.",
+      "guidance": "Have an incident procedure that lets anyone report a suspected breach quickly, with a named person to assess risk and decide on notification. Keep a log of all breaches, including those not reported, and the reasoning. The clock starts when you become aware, so detection and escalation speed matter. Pitfalls are staff not knowing to report, delays waiting for full facts and no template. Processors must tell you without delay, so check contracts.",
+      "questions": [
+        "How do staff report a suspected breach and to whom?",
+        "Who decides whether the authority must be told?",
+        "How do you meet the 72-hour window out of hours?",
+        "Where do you record breaches that were not reported?"
+      ],
+      "evidence": [
+        "Breach response procedure",
+        "Breach register with risk assessments",
+        "Notification template to the authority",
+        "Past breach reports and outcomes",
+        "Breach drill or tabletop exercise records"
+      ]
+    },
+    {
+      "ref": "Art. 34",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Communication of a personal data breach to the data subject",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Requires you to tell affected people promptly when a breach is likely to put them at high risk, so they can protect themselves.",
+      "guidance": "Add a high-risk decision step to the breach procedure with criteria such as sensitivity, volume and ease of misuse. Prepare plain-language notice templates saying what happened, likely effects, what you are doing and what people can do. Choose a channel that actually reaches them. Auditors find that decisions are not documented or the notice is vague. Encryption that makes data unreadable can reduce the need, but record that reasoning.",
+      "questions": [
+        "How do you decide whether a breach is high risk to individuals?",
+        "How quickly can you contact all affected people?",
+        "What advice do you give them?",
+        "Where is the decision documented?"
+      ],
+      "evidence": [
+        "High-risk assessment records",
+        "Communication templates",
+        "Copies of notices sent",
+        "Contact channel test",
+        "Breach register entries"
+      ]
+    },
+    {
+      "ref": "Art. 35",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Data protection impact assessment",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Requires a structured risk assessment before starting processing likely to be high risk, such as large-scale profiling or sensitive data.",
+      "guidance": "Create a short screening questionnaire used at project start and a template for full assessments covering the description, necessity, risks to people and mitigations. Involve the DPO or privacy owner and, where relevant, affected groups. Consult the authority if high risk remains. Auditors find assessments done after launch, or screening that never triggers. Keep completed assessments live and revisit when processing changes.",
+      "questions": [
+        "How do you decide whether an assessment is required?",
+        "Who completes and approves them?",
+        "How are residual high risks handled?",
+        "How do you revisit assessments after changes?"
+      ],
+      "evidence": [
+        "Screening checklist",
+        "Completed impact assessments",
+        "Approval records",
+        "Risk treatment action plans",
+        "Review dates and change records"
+      ]
+    },
+    {
+      "ref": "Art. 37",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Designation of the data protection officer",
+      "tags": [
+        "dpo"
+      ],
+      "purpose": "Requires some organisations, such as public bodies or those with large-scale monitoring or sensitive data, to appoint a DPO.",
+      "guidance": "Document your assessment of whether appointment is mandatory, and keep it even when the answer is no. If you appoint voluntarily, treat the role under the same rules. The officer needs expert knowledge, can be internal or external, and their contact details must be published and given to the authority. Auditors find reasoning missing and contact details not registered. Do not give the title to someone whose other duties conflict.",
+      "questions": [
+        "Have you assessed whether you must appoint a DPO?",
+        "Where is the decision and its reasoning recorded?",
+        "Are the DPO's contact details published and notified to the authority?",
+        "What qualifications does the DPO have?"
+      ],
+      "evidence": [
+        "DPO necessity assessment",
+        "Appointment letter or contract",
+        "Published contact details",
+        "Notification to the supervisory authority",
+        "Qualification or training records"
+      ]
+    },
+    {
+      "ref": "Art. 38",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Position of the data protection officer",
+      "tags": [
+        "dpo"
+      ],
+      "purpose": "Makes sure the DPO is involved in relevant matters, has resources and independence, and reports to top management.",
+      "guidance": "Give the DPO access to management, time, budget and information. They should not be told how to reach conclusions or be penalised for advice. Avoid conflicts of interest, for example a head of IT or marketing acting as DPO. Provide a route for individuals to contact them. Auditors find DPOs consulted late or without enough hours. Document how and when the DPO is brought into projects and incidents.",
+      "questions": [
+        "How is the DPO involved in new projects and incidents?",
+        "What resources and time are allocated?",
+        "Who does the DPO report to?",
+        "How do you avoid conflicts of interest?"
+      ],
+      "evidence": [
+        "DPO job description with reporting line",
+        "Budget or time allocation",
+        "Meeting minutes with DPO attendance",
+        "Conflict of interest assessment",
+        "Records of DPO advice and responses"
+      ]
+    },
+    {
+      "ref": "Art. 39",
+      "parent": "Ch. IV",
+      "kind": "article",
+      "title": "Tasks of the data protection officer",
+      "tags": [
+        "dpo"
+      ],
+      "purpose": "Defines the DPO's work: advising, monitoring compliance, supporting assessments and acting as contact for the authority.",
+      "guidance": "Agree a yearly plan covering training, monitoring checks, advice on assessments and liaison with the regulator. Keep records of advice given and follow-up. Report to management at least yearly. Auditors find DPO roles that exist only on paper, with no monitoring activity or reports. Remember the DPO advises and monitors; the organisation stays responsible for compliance.",
+      "questions": [
+        "What does the DPO's annual plan include?",
+        "How does the DPO monitor compliance?",
+        "How is advice recorded and followed up?",
+        "How does the DPO report to management?"
+      ],
+      "evidence": [
+        "DPO annual plan",
+        "Monitoring reports",
+        "Advice log",
+        "Management reports",
+        "Training delivered by the DPO"
+      ]
+    },
+    {
+      "ref": "Ch. V",
+      "kind": "theme",
+      "title": "Chapter V · Transfers of personal data to third countries",
+      "purpose": "Controls sending personal data outside the EEA so that people's protection travels with their data."
+    },
+    {
+      "ref": "Art. 44",
+      "parent": "Ch. V",
+      "kind": "article",
+      "title": "General principle for transfers",
+      "tags": [
+        "transfers"
+      ],
+      "purpose": "Sets the rule that data may leave the EEA only if the chapter's conditions are met, so protection is not lost along the way.",
+      "guidance": "Identify every flow outside the EEA, including cloud hosting, support access, group companies and software that phones home. For each, record the destination and the mechanism you rely on. Include onward transfers by suppliers. Auditors often find unnoticed transfers through SaaS tools and remote support staff. Keep the transfer map linked to the processing register and revisit when suppliers change.",
+      "questions": [
+        "Which suppliers and systems send data outside the EEA?",
+        "What mechanism covers each transfer?",
+        "How do you find out about changes in supplier locations?",
+        "How do you cover remote access from other countries?"
+      ],
+      "evidence": [
+        "Transfer map",
+        "Register of mechanisms per transfer",
+        "Supplier location declarations",
+        "Processing register entries for transfers",
+        "Review records after supplier changes"
+      ]
+    },
+    {
+      "ref": "Art. 45",
+      "parent": "Ch. V",
+      "kind": "article",
+      "title": "Transfers on the basis of an adequacy decision",
+      "tags": [
+        "transfers"
+      ],
+      "purpose": "Allows data to flow to countries or frameworks the European Commission has found to offer adequate protection.",
+      "guidance": "Check the current list of adequacy decisions before relying on one, and note any conditions such as certification schemes for certain recipients. Record the date checked and monitor for changes or withdrawal. Keep a fallback mechanism in mind. Auditors find reliance on a decision that does not cover the recipient or that has since changed. Note the basis in your register and contracts.",
+      "questions": [
+        "Which transfers rely on adequacy?",
+        "How do you confirm that the recipient is covered?",
+        "How do you monitor for changes to adequacy decisions?",
+        "What is your fallback if the decision lapses?"
+      ],
+      "evidence": [
+        "Record of adequacy checks with dates",
+        "Recipient certification evidence",
+        "Transfer register entries",
+        "Monitoring log of regulatory updates",
+        "Fallback plan notes"
+      ]
+    },
+    {
+      "ref": "Art. 46",
+      "parent": "Ch. V",
+      "kind": "article",
+      "title": "Transfers subject to appropriate safeguards",
+      "tags": [
+        "transfers"
+      ],
+      "purpose": "Allows transfers without adequacy if safeguards such as standard contractual clauses give people enforceable protection.",
+      "guidance": "Sign the correct standard clauses module for the parties' roles and complete the annexes with real details. Carry out and keep a transfer risk assessment covering the destination's laws and your supplemental measures such as encryption. Review when circumstances change. Auditors find unsigned or incomplete clauses and no assessment. Make sure sub-processor transfers are also covered.",
+      "questions": [
+        "Which transfers use standard clauses or other safeguards?",
+        "Are the annexes completed accurately?",
+        "Where is the transfer risk assessment?",
+        "What supplementary measures do you apply?"
+      ],
+      "evidence": [
+        "Signed standard contractual clauses",
+        "Transfer risk assessments",
+        "Supplementary measures documentation",
+        "Sub-processor transfer list",
+        "Review log of transfer arrangements"
+      ]
+    },
+    {
+      "ref": "Art. 47",
+      "parent": "Ch. V",
+      "kind": "article",
+      "title": "Binding corporate rules",
+      "tags": [
+        "transfers"
+      ],
+      "purpose": "Allows transfers within a corporate group under internal rules approved by the regulator.",
+      "guidance": "Most small and mid-sized companies will not use this route because approval takes considerable time. If your group has approved rules, verify that they cover the entities and processing in question and that staff are trained on them. Keep a copy of the approval and track changes. If you do not use them, record that and rely on another mechanism.",
+      "questions": [
+        "Does your group have approved binding corporate rules?",
+        "Do they cover the transfers you make?",
+        "How are staff trained on them?",
+        "How do you handle changes to group membership?"
+      ],
+      "evidence": [
+        "Copy of approved rules",
+        "Approval decision from the authority",
+        "Group entity coverage list",
+        "Training records",
+        "Not applicable statement if unused"
+      ]
+    },
+    {
+      "ref": "Art. 48",
+      "parent": "Ch. V",
+      "kind": "article",
+      "title": "Transfers or disclosures not authorised by Union law",
+      "tags": [
+        "transfers"
+      ],
+      "purpose": "States that a foreign court or authority order does not by itself justify sending data abroad unless an international agreement supports it.",
+      "guidance": "Create a short procedure for handling requests from non-EU authorities: who receives them, who involves legal advice and how the decision is recorded. Do not hand over data on the basis of the request alone. Challenge or narrow requests where appropriate. Auditors find no procedure and staff unsure what to do. Make sure processors must notify you of such requests.",
+      "questions": [
+        "Who handles requests from foreign courts or authorities?",
+        "How do you check the legal basis before disclosing?",
+        "How do processors tell you about such requests?",
+        "Have you received any, and how were they handled?"
+      ],
+      "evidence": [
+        "Foreign authority request procedure",
+        "Request register",
+        "Legal advice records",
+        "Processor contract clauses on notifications",
+        "Examples of decisions with reasoning"
+      ]
+    },
+    {
+      "ref": "Art. 49",
+      "parent": "Ch. V",
+      "kind": "article",
+      "title": "Derogations for specific situations",
+      "tags": [
+        "transfers"
+      ],
+      "purpose": "Provides narrow exceptions, such as explicit consent or contract necessity, for transfers where no other mechanism exists.",
+      "guidance": "Treat these as a last resort for occasional transfers, not a routine route. Record which exception applies and why the stronger mechanisms were not available. For consent, make sure people are told of the risks. Auditors challenge organisations that use exceptions for regular large-scale transfers. Review any reliance annually and move to standard clauses where possible.",
+      "questions": [
+        "Do you rely on any exceptions, and for what transfers?",
+        "Why could another mechanism not be used?",
+        "How do you inform people about the risks where consent is used?",
+        "How often do you review this reliance?"
+      ],
+      "evidence": [
+        "Register of derogations used",
+        "Reasoning for each case",
+        "Consent records with risk information",
+        "Annual review notes",
+        "Plan to move to a stronger mechanism"
+      ]
+    }
   ]
 }

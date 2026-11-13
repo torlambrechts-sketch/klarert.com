@@ -1,170 +1,2756 @@
 {
   "key": "iso-27001",
   "version": "2022",
-  "revision": 1,
+  "revision": 2,
   "title": "ISO/IEC 27001:2022",
   "shortTitle": "27001",
   "publisher": "ISO/IEC",
   "kind": "standard",
-  "source": "ISO/IEC 27001:2022, clauses 4 to 10 and Annex A (reference numbers only)",
-  "licence": "Reference numbers only. Titles are paraphrased in our own words and are not the text of the standard. Buy the standard for the requirements.",
+  "source": "ISO/IEC 27001:2022, clauses 4 to 10 and Annex A (reference numbers and official short titles)",
+  "licence": "Reference numbers with the official short titles only; not the text of the standard. Purpose, guidance, audit questions and typical evidence are our own words. Buy the standard for the requirements.",
   "url": "https://www.iso.org/standard/27001",
-  "titles": "own-words",
+  "titles": "official-short",
   "library": {
     "name": "ISO/IEC 27001:2022 requirements",
     "itemLabel": "Requirement",
     "idPrefix": "27K-",
     "folder": "Frameworks",
-    "soa": { "name": "Statement of applicability", "refStartsWith": "A." }
+    "soa": {
+      "name": "Statement of applicability",
+      "refStartsWith": "A."
+    }
   },
   "requirements": [
-    { "ref": "4", "kind": "theme", "title": "Clause 4 · Organisation and its context" },
-    { "ref": "4.1", "parent": "4", "kind": "clause", "title": "Internal and external issues" },
-    { "ref": "4.2", "parent": "4", "kind": "clause", "title": "Interested parties and what they need" },
-    { "ref": "4.3", "parent": "4", "kind": "clause", "title": "Scope of the management system" },
-    { "ref": "4.4", "parent": "4", "kind": "clause", "title": "Setting up and running the management system" },
-
-    { "ref": "5", "kind": "theme", "title": "Clause 5 · Leadership" },
-    { "ref": "5.1", "parent": "5", "kind": "clause", "title": "Top management commitment" },
-    { "ref": "5.2", "parent": "5", "kind": "clause", "title": "Security policy" },
-    { "ref": "5.3", "parent": "5", "kind": "clause", "title": "Roles, responsibilities and authority" },
-
-    { "ref": "6", "kind": "theme", "title": "Clause 6 · Planning" },
-    { "ref": "6.1", "parent": "6", "kind": "clause", "title": "Dealing with risks and opportunities" },
-    { "ref": "6.1.1", "parent": "6.1", "kind": "clause", "title": "Planning for risks and opportunities" },
-    { "ref": "6.1.2", "parent": "6.1", "kind": "clause", "title": "Risk assessment method", "tags": ["risk"] },
-    { "ref": "6.1.3", "parent": "6.1", "kind": "clause", "title": "Risk treatment and the statement of applicability", "tags": ["risk"] },
-    { "ref": "6.2", "parent": "6", "kind": "clause", "title": "Security objectives and plans to reach them" },
-    { "ref": "6.3", "parent": "6", "kind": "clause", "title": "Planning changes to the management system" },
-
-    { "ref": "7", "kind": "theme", "title": "Clause 7 · Support" },
-    { "ref": "7.1", "parent": "7", "kind": "clause", "title": "Resources" },
-    { "ref": "7.2", "parent": "7", "kind": "clause", "title": "Competence" },
-    { "ref": "7.3", "parent": "7", "kind": "clause", "title": "Awareness" },
-    { "ref": "7.4", "parent": "7", "kind": "clause", "title": "Communication" },
-    { "ref": "7.5", "parent": "7", "kind": "clause", "title": "Documented information" },
-    { "ref": "7.5.1", "parent": "7.5", "kind": "clause", "title": "What must be documented" },
-    { "ref": "7.5.2", "parent": "7.5", "kind": "clause", "title": "Creating and updating documents" },
-    { "ref": "7.5.3", "parent": "7.5", "kind": "clause", "title": "Controlling documents and records" },
-
-    { "ref": "8", "kind": "theme", "title": "Clause 8 · Operation" },
-    { "ref": "8.1", "parent": "8", "kind": "clause", "title": "Planning and controlling operations" },
-    { "ref": "8.2", "parent": "8", "kind": "clause", "title": "Carrying out risk assessments", "tags": ["risk"] },
-    { "ref": "8.3", "parent": "8", "kind": "clause", "title": "Carrying out risk treatment", "tags": ["risk"] },
-
-    { "ref": "9", "kind": "theme", "title": "Clause 9 · Performance evaluation" },
-    { "ref": "9.1", "parent": "9", "kind": "clause", "title": "Measuring and evaluating performance" },
-    { "ref": "9.2", "parent": "9", "kind": "clause", "title": "Internal audit", "tags": ["audit"] },
-    { "ref": "9.2.1", "parent": "9.2", "kind": "clause", "title": "Audits at planned intervals", "tags": ["audit"] },
-    { "ref": "9.2.2", "parent": "9.2", "kind": "clause", "title": "The audit programme", "tags": ["audit"] },
-    { "ref": "9.3", "parent": "9", "kind": "clause", "title": "Management review" },
-    { "ref": "9.3.1", "parent": "9.3", "kind": "clause", "title": "Reviews at planned intervals" },
-    { "ref": "9.3.2", "parent": "9.3", "kind": "clause", "title": "What the review considers" },
-    { "ref": "9.3.3", "parent": "9.3", "kind": "clause", "title": "What the review decides" },
-
-    { "ref": "10", "kind": "theme", "title": "Clause 10 · Improvement" },
-    { "ref": "10.1", "parent": "10", "kind": "clause", "title": "Continual improvement" },
-    { "ref": "10.2", "parent": "10", "kind": "clause", "title": "Nonconformity and corrective action" },
-
-    { "ref": "A.5", "kind": "theme", "title": "Annex A 5 · Organisational controls" },
-    { "ref": "A.5.1", "parent": "A.5", "kind": "control", "title": "Security policies approved and shared" },
-    { "ref": "A.5.2", "parent": "A.5", "kind": "control", "title": "Security roles and who holds them" },
-    { "ref": "A.5.3", "parent": "A.5", "kind": "control", "title": "Separating conflicting duties" },
-    { "ref": "A.5.4", "parent": "A.5", "kind": "control", "title": "Managers make staff apply security rules" },
-    { "ref": "A.5.5", "parent": "A.5", "kind": "control", "title": "Keeping in touch with authorities" },
-    { "ref": "A.5.6", "parent": "A.5", "kind": "control", "title": "Links with security forums and groups" },
-    { "ref": "A.5.7", "parent": "A.5", "kind": "control", "title": "Gathering and using threat information", "tags": ["new-2022"] },
-    { "ref": "A.5.8", "parent": "A.5", "kind": "control", "title": "Security built into projects" },
-    { "ref": "A.5.9", "parent": "A.5", "kind": "control", "title": "Register of information and related assets" },
-    { "ref": "A.5.10", "parent": "A.5", "kind": "control", "title": "Rules for using information and assets" },
-    { "ref": "A.5.11", "parent": "A.5", "kind": "control", "title": "Handing back assets when leaving" },
-    { "ref": "A.5.12", "parent": "A.5", "kind": "control", "title": "Classifying information by its needs" },
-    { "ref": "A.5.13", "parent": "A.5", "kind": "control", "title": "Marking information with its class" },
-    { "ref": "A.5.14", "parent": "A.5", "kind": "control", "title": "Rules for sending and sharing information" },
-    { "ref": "A.5.15", "parent": "A.5", "kind": "control", "title": "Rules for granting access" },
-    { "ref": "A.5.16", "parent": "A.5", "kind": "control", "title": "Managing identities from start to end" },
-    { "ref": "A.5.17", "parent": "A.5", "kind": "control", "title": "Handling passwords and other secrets" },
-    { "ref": "A.5.18", "parent": "A.5", "kind": "control", "title": "Giving, reviewing and removing access" },
-    { "ref": "A.5.19", "parent": "A.5", "kind": "control", "title": "Managing security risk from suppliers", "tags": ["suppliers"] },
-    { "ref": "A.5.20", "parent": "A.5", "kind": "control", "title": "Security terms in supplier contracts", "tags": ["suppliers"] },
-    { "ref": "A.5.21", "parent": "A.5", "kind": "control", "title": "Security across the ICT supply chain", "tags": ["suppliers"] },
-    { "ref": "A.5.22", "parent": "A.5", "kind": "control", "title": "Watching and reviewing supplier services", "tags": ["suppliers"] },
-    { "ref": "A.5.23", "parent": "A.5", "kind": "control", "title": "Security when using cloud services", "tags": ["new-2022", "suppliers"] },
-    { "ref": "A.5.24", "parent": "A.5", "kind": "control", "title": "Planning how incidents are handled", "tags": ["incidents"] },
-    { "ref": "A.5.25", "parent": "A.5", "kind": "control", "title": "Deciding whether an event is an incident", "tags": ["incidents"] },
-    { "ref": "A.5.26", "parent": "A.5", "kind": "control", "title": "Responding to incidents", "tags": ["incidents"] },
-    { "ref": "A.5.27", "parent": "A.5", "kind": "control", "title": "Learning lessons from incidents", "tags": ["incidents"] },
-    { "ref": "A.5.28", "parent": "A.5", "kind": "control", "title": "Collecting and keeping evidence", "tags": ["incidents"] },
-    { "ref": "A.5.29", "parent": "A.5", "kind": "control", "title": "Staying secure during a disruption", "tags": ["continuity"] },
-    { "ref": "A.5.30", "parent": "A.5", "kind": "control", "title": "ICT ready for business continuity", "tags": ["new-2022", "continuity"] },
-    { "ref": "A.5.31", "parent": "A.5", "kind": "control", "title": "Knowing legal, regulatory and contract duties" },
-    { "ref": "A.5.32", "parent": "A.5", "kind": "control", "title": "Respecting intellectual property" },
-    { "ref": "A.5.33", "parent": "A.5", "kind": "control", "title": "Keeping records safe" },
-    { "ref": "A.5.34", "parent": "A.5", "kind": "control", "title": "Privacy and personal data protection", "tags": ["privacy"] },
-    { "ref": "A.5.35", "parent": "A.5", "kind": "control", "title": "Independent review of the security approach" },
-    { "ref": "A.5.36", "parent": "A.5", "kind": "control", "title": "Checking that security rules are followed" },
-    { "ref": "A.5.37", "parent": "A.5", "kind": "control", "title": "Written operating procedures" },
-
-    { "ref": "A.6", "kind": "theme", "title": "Annex A 6 · People controls" },
-    { "ref": "A.6.1", "parent": "A.6", "kind": "control", "title": "Background checks before joining" },
-    { "ref": "A.6.2", "parent": "A.6", "kind": "control", "title": "Security duties in employment terms" },
-    { "ref": "A.6.3", "parent": "A.6", "kind": "control", "title": "Security awareness and training" },
-    { "ref": "A.6.4", "parent": "A.6", "kind": "control", "title": "Disciplinary process for breaches" },
-    { "ref": "A.6.5", "parent": "A.6", "kind": "control", "title": "Duties that continue after leaving or changing role" },
-    { "ref": "A.6.6", "parent": "A.6", "kind": "control", "title": "Confidentiality agreements" },
-    { "ref": "A.6.7", "parent": "A.6", "kind": "control", "title": "Working away from the office" },
-    { "ref": "A.6.8", "parent": "A.6", "kind": "control", "title": "Reporting security events", "tags": ["incidents"] },
-
-    { "ref": "A.7", "kind": "theme", "title": "Annex A 7 · Physical controls" },
-    { "ref": "A.7.1", "parent": "A.7", "kind": "control", "title": "Secure site boundaries" },
-    { "ref": "A.7.2", "parent": "A.7", "kind": "control", "title": "Controlling who comes in" },
-    { "ref": "A.7.3", "parent": "A.7", "kind": "control", "title": "Securing offices and rooms" },
-    { "ref": "A.7.4", "parent": "A.7", "kind": "control", "title": "Watching the premises", "tags": ["new-2022"] },
-    { "ref": "A.7.5", "parent": "A.7", "kind": "control", "title": "Protection from physical and environmental hazards" },
-    { "ref": "A.7.6", "parent": "A.7", "kind": "control", "title": "Rules inside secure areas" },
-    { "ref": "A.7.7", "parent": "A.7", "kind": "control", "title": "Clear desks and locked screens" },
-    { "ref": "A.7.8", "parent": "A.7", "kind": "control", "title": "Placing and protecting equipment" },
-    { "ref": "A.7.9", "parent": "A.7", "kind": "control", "title": "Assets taken off site" },
-    { "ref": "A.7.10", "parent": "A.7", "kind": "control", "title": "Handling storage media" },
-    { "ref": "A.7.11", "parent": "A.7", "kind": "control", "title": "Power and other utilities" },
-    { "ref": "A.7.12", "parent": "A.7", "kind": "control", "title": "Protecting cables" },
-    { "ref": "A.7.13", "parent": "A.7", "kind": "control", "title": "Looking after equipment" },
-    { "ref": "A.7.14", "parent": "A.7", "kind": "control", "title": "Wiping equipment before disposal or reuse" },
-
-    { "ref": "A.8", "kind": "theme", "title": "Annex A 8 · Technological controls" },
-    { "ref": "A.8.1", "parent": "A.8", "kind": "control", "title": "Laptops, phones and other user devices" },
-    { "ref": "A.8.2", "parent": "A.8", "kind": "control", "title": "Admin and other high-level access" },
-    { "ref": "A.8.3", "parent": "A.8", "kind": "control", "title": "Limiting who can reach information" },
-    { "ref": "A.8.4", "parent": "A.8", "kind": "control", "title": "Who can reach source code" },
-    { "ref": "A.8.5", "parent": "A.8", "kind": "control", "title": "Strong sign-in" },
-    { "ref": "A.8.6", "parent": "A.8", "kind": "control", "title": "Planning for capacity" },
-    { "ref": "A.8.7", "parent": "A.8", "kind": "control", "title": "Defending against malware" },
-    { "ref": "A.8.8", "parent": "A.8", "kind": "control", "title": "Finding and fixing technical weaknesses" },
-    { "ref": "A.8.9", "parent": "A.8", "kind": "control", "title": "Keeping configurations secure", "tags": ["new-2022"] },
-    { "ref": "A.8.10", "parent": "A.8", "kind": "control", "title": "Deleting information no longer needed", "tags": ["new-2022"] },
-    { "ref": "A.8.11", "parent": "A.8", "kind": "control", "title": "Hiding sensitive data values", "tags": ["new-2022"] },
-    { "ref": "A.8.12", "parent": "A.8", "kind": "control", "title": "Stopping data from leaking out", "tags": ["new-2022"] },
-    { "ref": "A.8.13", "parent": "A.8", "kind": "control", "title": "Taking and testing backups", "tags": ["continuity"] },
-    { "ref": "A.8.14", "parent": "A.8", "kind": "control", "title": "Spare capacity for processing facilities", "tags": ["continuity"] },
-    { "ref": "A.8.15", "parent": "A.8", "kind": "control", "title": "Recording events in logs" },
-    { "ref": "A.8.16", "parent": "A.8", "kind": "control", "title": "Watching for unusual activity", "tags": ["new-2022"] },
-    { "ref": "A.8.17", "parent": "A.8", "kind": "control", "title": "Keeping clocks in step" },
-    { "ref": "A.8.18", "parent": "A.8", "kind": "control", "title": "Powerful system tools" },
-    { "ref": "A.8.19", "parent": "A.8", "kind": "control", "title": "Installing software on live systems" },
-    { "ref": "A.8.20", "parent": "A.8", "kind": "control", "title": "Protecting networks" },
-    { "ref": "A.8.21", "parent": "A.8", "kind": "control", "title": "Security of the network services you use" },
-    { "ref": "A.8.22", "parent": "A.8", "kind": "control", "title": "Splitting networks into zones" },
-    { "ref": "A.8.23", "parent": "A.8", "kind": "control", "title": "Filtering web access", "tags": ["new-2022"] },
-    { "ref": "A.8.24", "parent": "A.8", "kind": "control", "title": "Encryption and key handling" },
-    { "ref": "A.8.25", "parent": "A.8", "kind": "control", "title": "Security throughout development", "tags": ["development"] },
-    { "ref": "A.8.26", "parent": "A.8", "kind": "control", "title": "Security needs of applications", "tags": ["development"] },
-    { "ref": "A.8.27", "parent": "A.8", "kind": "control", "title": "Secure design principles for systems", "tags": ["development"] },
-    { "ref": "A.8.28", "parent": "A.8", "kind": "control", "title": "Writing code securely", "tags": ["new-2022", "development"] },
-    { "ref": "A.8.29", "parent": "A.8", "kind": "control", "title": "Security testing before release", "tags": ["development"] },
-    { "ref": "A.8.30", "parent": "A.8", "kind": "control", "title": "Development done by others", "tags": ["development", "suppliers"] },
-    { "ref": "A.8.31", "parent": "A.8", "kind": "control", "title": "Keeping development, test and live apart", "tags": ["development"] },
-    { "ref": "A.8.32", "parent": "A.8", "kind": "control", "title": "Controlling changes" },
-    { "ref": "A.8.33", "parent": "A.8", "kind": "control", "title": "Data used for testing", "tags": ["development"] },
-    { "ref": "A.8.34", "parent": "A.8", "kind": "control", "title": "Protecting systems during audit tests", "tags": ["audit"] }
+    {
+      "ref": "4",
+      "kind": "theme",
+      "title": "Clause 4 · Context of the organization",
+      "purpose": "Sets the ground for the whole system: what the organisation does, who cares about its information, and what the management system covers."
+    },
+    {
+      "ref": "4.1",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Understanding the organization and its context",
+      "purpose": "Makes sure the security programme is shaped by the real situation of the business rather than a generic template.",
+      "guidance": "List the internal and external factors that could help or hurt your ability to protect information: market, regulation, technology, ownership, culture, staffing, key suppliers. A one or two page analysis that someone senior has read is enough for a small company. Auditors look for evidence that the list is reviewed at least yearly and that it actually feeds risk assessment and objectives. A common pitfall is a copied SWOT that never mentions security.",
+      "questions": [
+        "How did you decide which external and internal issues matter to your security programme?",
+        "When did you last review this list and what changed?",
+        "Show me where an issue on this list influenced a risk or an objective.",
+        "Who owns keeping the context analysis current?"
+      ],
+      "evidence": [
+        "Context analysis or issues register with date and owner",
+        "Meeting minutes where the issues were discussed",
+        "Links from the issues to risks or objectives",
+        "Review history showing periodic updates"
+      ]
+    },
+    {
+      "ref": "4.2",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Understanding the needs and expectations of interested parties",
+      "purpose": "Identifies who has a stake in your information security and which of their requirements you have chosen to meet.",
+      "guidance": "Build a short table of interested parties such as customers, regulators, employees, owners, insurers and key suppliers, with what each expects and which of those expectations are legal or contractual. Mark which ones the management system will address. Keep customer contract clauses and regulatory duties traceable to this list. Auditors often find parties listed without any requirements, or requirements never reviewed after a new big customer signed.",
+      "questions": [
+        "Who are your interested parties and what do they require from you?",
+        "Which of these requirements are legal or contractual obligations?",
+        "How do you learn about new customer security demands?",
+        "Where are these requirements reflected in your controls?"
+      ],
+      "evidence": [
+        "Interested parties register with requirements and owner",
+        "Extracts of customer contracts or questionnaires mapped to requirements",
+        "Regulatory obligations list",
+        "Review record with date"
+      ]
+    },
+    {
+      "ref": "4.3",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Determining the scope of the ISMS",
+      "purpose": "Draws a clear boundary around what the management system covers so that effort and certification claims are accurate.",
+      "guidance": "Write a scope statement naming the services, sites, teams, systems and data included, and be explicit about what is outside and why. Take into account the issues and stakeholder needs already identified, and the interfaces with outsourced activities. Keep the wording identical on the certificate application, the website and the internal document. Typical findings are scopes that exclude a cloud platform the product depends on, or that do not match the real organisation chart.",
+      "questions": [
+        "What exactly is in scope and what is excluded?",
+        "Why is each exclusion justified, and who approved the scope?",
+        "How do dependencies on suppliers and other sites fit in the boundary?",
+        "Does the scope statement match what you tell customers?"
+      ],
+      "evidence": [
+        "Approved scope statement with version and date",
+        "Diagram of sites, systems and data flows in scope",
+        "List of exclusions with rationale",
+        "Management approval record"
+      ]
+    },
+    {
+      "ref": "4.4",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Information security management system",
+      "purpose": "Requires the organisation to actually run a management system, with processes that fit together and are improved over time.",
+      "guidance": "Document how the main processes interact: risk management, control operation, incident handling, audit, review and improvement. A simple process map and a named owner per process are normally enough. The system must be maintained, not built once for the audit. Auditors check that records show the cycle running in practice, for example risk reviews, audits and management reviews happening on schedule.",
+      "questions": [
+        "Which processes make up your management system and how do they connect?",
+        "Who owns each process and how do you know it is working?",
+        "Show me evidence of the system running over the last twelve months.",
+        "How do you decide when the system needs to change?"
+      ],
+      "evidence": [
+        "Process map or system overview",
+        "Process owner list",
+        "Calendar of recurring ISMS activities",
+        "Records from the most recent cycle of each activity"
+      ]
+    },
+    {
+      "ref": "5",
+      "kind": "theme",
+      "title": "Clause 5 · Leadership",
+      "purpose": "Makes senior management visibly responsible for the security programme, its direction and its resources."
+    },
+    {
+      "ref": "5.1",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Leadership and commitment",
+      "purpose": "Ensures senior leaders drive security, back it with resources and tie it to business goals.",
+      "guidance": "Leaders should be able to explain, in their own words, why security matters to the business and what they have decided. Show it through approved budgets, attendance at management reviews, policy sign-off and removal of blockers. Avoid the pattern where the security lead does everything and management only signs at audit time. Interviews with directors are a standard audit step, so brief them on what they have actually approved.",
+      "questions": [
+        "What has top management personally decided or approved about security this year?",
+        "How are security objectives linked to business strategy?",
+        "How do you make sure resources are available?",
+        "How is the importance of security communicated to staff?"
+      ],
+      "evidence": [
+        "Management review minutes with attendees and decisions",
+        "Approved security budget or resource plan",
+        "Leadership communications on security",
+        "Signed policy and objectives"
+      ]
+    },
+    {
+      "ref": "5.2",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Policy",
+      "purpose": "Gives the organisation a top-level statement of direction that everyone can follow and be held to.",
+      "guidance": "Publish a short policy, approved by top management, that states intent, commits to meeting requirements and to continual improvement, and gives a framework for setting objectives. Make it available to staff and relevant outside parties, and review it at planned intervals. Keep it readable rather than a copy of the standard. Common findings are an unsigned or outdated policy, or one that staff have never seen.",
+      "questions": [
+        "Who approved the policy and when was it last reviewed?",
+        "How is it communicated to staff and to outsiders who need it?",
+        "Where does the policy commit to objectives and improvement?",
+        "Can a random employee tell me what it says?"
+      ],
+      "evidence": [
+        "Approved policy with version, owner and date",
+        "Distribution or intranet publication record",
+        "Staff acknowledgement log",
+        "Review record"
+      ]
+    },
+    {
+      "ref": "5.3",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Organizational roles, responsibilities and authorities",
+      "purpose": "Makes sure each security duty has a named owner with the authority to act on it.",
+      "guidance": "Define who is accountable for the management system, who reports on its performance to management, and who owns key processes. Record this in a role description or RACI and include deputies for absence. In small companies one person often holds several roles, which is acceptable if documented and realistic. Auditors test whether the named people know about their duties.",
+      "questions": [
+        "Who is responsible for the overall system and for reporting to management?",
+        "How do people learn what is expected of them?",
+        "What happens when the security lead is absent?",
+        "Show me where authority to enforce a security rule is written down."
+      ],
+      "evidence": [
+        "Roles and responsibilities document or RACI",
+        "Job descriptions mentioning security duties",
+        "Appointment letters or management approval",
+        "Organisation chart"
+      ]
+    },
+    {
+      "ref": "6",
+      "kind": "theme",
+      "title": "Clause 6 · Planning",
+      "purpose": "Covers how risks, opportunities, objectives and changes are planned so that the system achieves its aims."
+    },
+    {
+      "ref": "6.1",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Actions to address risks and opportunities",
+      "purpose": "Frames the planning of risk work so that the system can reach its aims and prevent unwanted outcomes.",
+      "guidance": "This is the umbrella for risk assessment and treatment. Use it to show that the issues from clause 4 and the needs of interested parties were turned into planned actions. Keep a simple link between context, risks and the actions you take. Auditors like to follow one thread from a context issue to a risk to a treatment to a control.",
+      "questions": [
+        "How do context issues and stakeholder needs feed into your risk work?",
+        "Which opportunities, not only threats, have you considered?",
+        "Show me one risk traced to the action taken.",
+        "How do you evaluate that actions were effective?"
+      ],
+      "evidence": [
+        "Risk and opportunity register",
+        "Traceability from issues to risks to actions",
+        "Action plans with owners and dates",
+        "Effectiveness review notes"
+      ]
+    },
+    {
+      "ref": "6.1.1",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Planning for risks and opportunities",
+      "purpose": "Ensures planning identifies what could stop the system working and what actions are needed to address it.",
+      "guidance": "Document the planning approach: how risks and opportunities are identified, who decides, and how actions are folded into normal processes. For a small company this can be a section of the risk procedure. Keep the output tied to the scope and to the requirements you identified earlier. A frequent finding is a plan that exists on paper with no actions or owners.",
+      "questions": [
+        "How did you identify the risks and opportunities to plan for?",
+        "Where are the resulting actions tracked?",
+        "How are actions integrated into day-to-day processes?",
+        "How do you check the actions worked?"
+      ],
+      "evidence": [
+        "Planning procedure or section in the risk method",
+        "Register of actions with owners",
+        "Evidence of actions integrated into projects or processes",
+        "Review minutes"
+      ]
+    },
+    {
+      "ref": "6.1.2",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Information security risk assessment",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Defines a repeatable way to find, analyse and rank information security risks.",
+      "guidance": "Write a method that sets risk criteria, scales for likelihood and impact, the threshold of acceptable risk and how risks get owners. It must give comparable results when repeated. Run it against assets, threats and vulnerabilities in scope and keep the results in a register. Pitfalls are scoring that depends on who did it, no risk owner sign-off, and assessments not repeated when something big changes.",
+      "questions": [
+        "What criteria do you use to rate risk and who approved them?",
+        "How do you make sure two assessors reach similar results?",
+        "Who are risk owners and how did they confirm the ratings?",
+        "When and why do you repeat the assessment?"
+      ],
+      "evidence": [
+        "Risk assessment methodology with scales and acceptance criteria",
+        "Completed risk register with owners",
+        "Records of assessment sessions",
+        "Re-assessment triggers and dates"
+      ]
+    },
+    {
+      "ref": "6.1.3",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Information security risk treatment",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Turns assessed risks into decisions, chosen controls and a Statement of Applicability.",
+      "guidance": "Choose for each unacceptable risk whether to reduce, avoid, share or accept it, and select controls to match. Compare your chosen controls against the Annex A list so nothing necessary is missed, then record every control as included or excluded with a reason in the Statement of Applicability. Risk owners must approve the treatment plan and accept leftover risk. Auditors check consistency between the register, the plan and the Statement of Applicability.",
+      "questions": [
+        "How did you pick controls for each risk?",
+        "Show me the Statement of Applicability and the reason for one exclusion.",
+        "Who approved the treatment plan and residual risk?",
+        "How do you track treatment actions to completion?"
+      ],
+      "evidence": [
+        "Risk treatment plan with owners and dates",
+        "Statement of Applicability with versions",
+        "Risk owner approval of residual risk",
+        "Mapping of risks to controls"
+      ]
+    },
+    {
+      "ref": "6.2",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Information security objectives and planning to achieve them",
+      "purpose": "Sets measurable goals for security and a plan for reaching them.",
+      "guidance": "Choose a small number of objectives that can be measured, are consistent with the policy and take account of risk results. For each, state what will be done, who is responsible, what resources are needed, when it will finish and how success is judged. Typical examples are patching speed, training completion or incident response time. Auditors find objectives that are vague ('improve security') or never reviewed.",
+      "questions": [
+        "What are your security objectives and how are they measured?",
+        "Who owns each and by when?",
+        "How do they relate to the policy and the risk results?",
+        "Show me the latest progress against one."
+      ],
+      "evidence": [
+        "Objectives register with metrics, owners and dates",
+        "Progress reports or dashboard",
+        "Management review minutes covering objectives",
+        "Action plans for off-track items"
+      ]
+    },
+    {
+      "ref": "6.3",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Planning of changes",
+      "purpose": "Ensures changes to the management system itself are made in a planned and controlled way.",
+      "guidance": "When you restructure processes, change scope, adopt new tools or reorganise teams, consider why, what the effect will be, who is involved and what resources are needed. A lightweight change record for the management system is sufficient. Distinguish this from technical change management, which is a control. Auditors look for evidence of one real change handled this way.",
+      "questions": [
+        "Give an example of a recent change to the management system and how it was planned.",
+        "Who approves such changes?",
+        "How do you assess the effect on existing controls?",
+        "How do you record them?"
+      ],
+      "evidence": [
+        "Change record for an ISMS change",
+        "Updated documents showing revision history",
+        "Meeting minutes approving the change",
+        "Communication to affected people"
+      ]
+    },
+    {
+      "ref": "7",
+      "kind": "theme",
+      "title": "Clause 7 · Support",
+      "purpose": "Covers the people, skills, communication and documents the system depends on."
+    },
+    {
+      "ref": "7.1",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Resources",
+      "purpose": "Makes sure the system is given the people, time, tools and money it needs.",
+      "guidance": "Show that resource needs are identified and met: budget lines, headcount or contractor time, tooling licences and training budget. Linking requests to risks and objectives makes the case persuasive. Auditors look at whether the person running the system has realistic time allocated and whether approved items were delivered.",
+      "questions": [
+        "How do you decide what resources the system needs?",
+        "Who approves budget and what was approved last year?",
+        "Is the security lead's time formally allocated?",
+        "Show an example of a resource request that was granted or declined."
+      ],
+      "evidence": [
+        "Budget or resource plan",
+        "Approved resource requests",
+        "Time allocation for security roles",
+        "Management review resource decisions"
+      ]
+    },
+    {
+      "ref": "7.2",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Competence",
+      "purpose": "Ensures the people who affect security performance have the skills to do the job.",
+      "guidance": "Define the skills needed for security roles such as the system owner, administrators and incident handlers, and compare them with what people have. Close gaps with training, mentoring or hiring, then keep records. For small teams a skills matrix plus training certificates works well. Auditors sample staff records and ask how you judged that training was effective.",
+      "questions": [
+        "Which roles influence security and what skills do they need?",
+        "How do you verify people have them?",
+        "What did you do about a gap you found?",
+        "Where are the records kept?"
+      ],
+      "evidence": [
+        "Skills or competence matrix",
+        "Training records and certificates",
+        "Job descriptions with required skills",
+        "Evidence of effectiveness checks"
+      ]
+    },
+    {
+      "ref": "7.3",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Awareness",
+      "purpose": "Makes everyone in scope understand the policy, their part and the effect of not following the rules.",
+      "guidance": "Run onboarding and regular awareness sessions covering the policy, how to report incidents, and why the rules matter. Keep attendance and content versions. Short, role-specific topics usually stick better than a yearly slide deck. Auditors interview staff, so poor recall of the policy or the incident reporting route is a common finding.",
+      "questions": [
+        "How do new joiners learn the policy and their duties?",
+        "How do staff report an incident or concern?",
+        "What happens to someone who does not complete awareness training?",
+        "How do you measure that awareness is improving?"
+      ],
+      "evidence": [
+        "Awareness programme and calendar",
+        "Attendance and completion records",
+        "Training content with version",
+        "Phishing test or quiz results"
+      ]
+    },
+    {
+      "ref": "7.4",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Communication",
+      "purpose": "Plans what security information is shared, with whom, when and how, inside and outside the organisation.",
+      "guidance": "Create a simple communication matrix: topic, audience, owner, method and frequency. Include internal updates, customer notifications, regulator contacts, supplier notices and incident communications. Make sure there is a defined route for outside enquiries. Auditors check that the matrix is used, for example by showing a sent notice that matches it.",
+      "questions": [
+        "Who decides what is communicated about security and to whom?",
+        "How do you handle a customer asking about an incident?",
+        "Show me the communication plan and an example of it being followed.",
+        "Who speaks for the organisation externally?"
+      ],
+      "evidence": [
+        "Communication matrix",
+        "Sample internal and external communications",
+        "Contact lists and escalation routes",
+        "Meeting schedule"
+      ]
+    },
+    {
+      "ref": "7.5",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Documented information",
+      "purpose": "Sets the expectation that the system keeps the documents and records it needs, and keeps them under control.",
+      "guidance": "This clause groups the rules for what to write down, how to create and update it, and how to control it. Keep only what is useful: policies, procedures and records proving the system works. Over-documenting makes the system brittle. Auditors verify that documents referenced in the system actually exist and are current.",
+      "questions": [
+        "What documented information have you decided you need and why?",
+        "How do you keep it current and available?",
+        "How do you stop obsolete versions being used?",
+        "Who owns the document set?"
+      ],
+      "evidence": [
+        "Document register",
+        "Document control procedure",
+        "Sample documents with versions",
+        "Access permissions on the repository"
+      ]
+    },
+    {
+      "ref": "7.5.1",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "What must be documented",
+      "purpose": "Requires the system to include the documents the standard asks for plus those the organisation decides it needs.",
+      "guidance": "Start from the mandatory list: scope, policy, risk method, risk results, Statement of Applicability, objectives, competence, monitoring results, audit and review outputs, nonconformities and corrective actions. Then add what your size and complexity demand. Do not create documents just to look thorough. Auditors check each mandatory item exists and is findable.",
+      "questions": [
+        "Show me where each required document is.",
+        "How did you decide which extra documents were needed?",
+        "Who confirms the list is complete?",
+        "How do you deal with documents from suppliers?"
+      ],
+      "evidence": [
+        "Document register mapped to required items",
+        "Mandatory documents with current versions",
+        "Rationale for additional documents",
+        "Index or table of contents of the system"
+      ]
+    },
+    {
+      "ref": "7.5.2",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Creating and updating",
+      "purpose": "Ensures documents are identifiable, in a suitable format and approved before use.",
+      "guidance": "Give every document a title, owner, version, date and approval. Use a standard template and a consistent location. Review at planned intervals and record the review even if nothing changes. Common findings are documents without owners, missing approval, or approval by the author alone.",
+      "questions": [
+        "How are documents identified and approved?",
+        "Who reviews and how often?",
+        "Show me the history of one document.",
+        "What format and tools do you use?"
+      ],
+      "evidence": [
+        "Document template with metadata",
+        "Approval records",
+        "Version history or change log",
+        "Review schedule"
+      ]
+    },
+    {
+      "ref": "7.5.3",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Control of documented information",
+      "purpose": "Keeps documents and records available when needed, protected, and under version control.",
+      "guidance": "Store them in a controlled repository with defined access rights, backups and retention periods. Control distribution, changes and disposal. Handle documents from outside sources, such as supplier reports, in the same way. Auditors test whether staff can easily find the current version and whether records are protected against alteration.",
+      "questions": [
+        "Where are documents stored and who can edit them?",
+        "How do you prevent use of old versions?",
+        "How long are records kept and how are they disposed of?",
+        "How is access to confidential documents restricted?"
+      ],
+      "evidence": [
+        "Repository access list",
+        "Retention schedule",
+        "Backup or restore evidence for documents",
+        "Change history logs"
+      ]
+    },
+    {
+      "ref": "8",
+      "kind": "theme",
+      "title": "Clause 8 · Operation",
+      "purpose": "Covers running the planned processes, assessing risk on schedule and carrying out treatment."
+    },
+    {
+      "ref": "8.1",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Operational planning and control",
+      "purpose": "Ensures the planned security processes are carried out as designed and outsourced activities are kept under control.",
+      "guidance": "Define criteria for each key process, run them to those criteria, and keep enough records to show they were followed. Review unplanned changes and reduce harm from them. Identify outsourced processes and apply control over them. Auditors pick a process, such as access reviews, and ask for the last few records.",
+      "questions": [
+        "Which processes keep the controls operating and what are their criteria?",
+        "How do you control outsourced processes?",
+        "How do you handle unplanned changes?",
+        "Show me records from a recent run of a key process."
+      ],
+      "evidence": [
+        "Process descriptions with criteria",
+        "Records showing processes were performed",
+        "Outsourced process register",
+        "Change review records"
+      ]
+    },
+    {
+      "ref": "8.2",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Information security risk assessment",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Requires risk assessments to actually be carried out at planned intervals and when significant change occurs.",
+      "guidance": "Keep a calendar for reassessment, normally at least annually, and define what counts as a trigger such as a new product, a major supplier or an incident. Retain the results each time. An assessment done once at certification and never repeated is a classic nonconformity.",
+      "questions": [
+        "When was the last assessment and what triggered it?",
+        "What changed in the results compared with the previous one?",
+        "Who took part and who approved?",
+        "How do you handle a significant change between scheduled runs?"
+      ],
+      "evidence": [
+        "Dated risk assessment reports",
+        "Updated risk register with revision history",
+        "Trigger log of significant changes",
+        "Approval by risk owners"
+      ]
+    },
+    {
+      "ref": "8.3",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Information security risk treatment",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Requires the treatment plan to be put into practice and its results recorded.",
+      "guidance": "Track each treatment action to completion with owner, date and proof, and update the register and Statement of Applicability as controls go live. Re-assess residual risk after treatment. Auditors compare the plan with the real state of controls and flag items that are long overdue.",
+      "questions": [
+        "What is the status of the treatment plan?",
+        "Show me evidence that a planned control was implemented.",
+        "How do you handle overdue actions?",
+        "How is residual risk re-evaluated?"
+      ],
+      "evidence": [
+        "Treatment plan with status",
+        "Implementation evidence such as configuration screenshots or approvals",
+        "Updated residual risk ratings",
+        "Treatment results report"
+      ]
+    },
+    {
+      "ref": "9",
+      "kind": "theme",
+      "title": "Clause 9 · Performance evaluation",
+      "purpose": "Covers measuring how well the system works, auditing it and reviewing it at management level."
+    },
+    {
+      "ref": "9.1",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Monitoring, measurement, analysis and evaluation",
+      "purpose": "Provides evidence about whether the controls and processes are performing as intended.",
+      "guidance": "Decide what to measure, how, how often, who analyses it and who sees the result. Pick a few useful metrics, for example patch age, access review completion, incident counts and training completion. Keep results and act on trends. Auditors reject metrics that are collected but never discussed.",
+      "questions": [
+        "What do you measure and why?",
+        "Who reviews the results and how often?",
+        "Show me a case where a metric led to action.",
+        "How do you know the methods give valid results?"
+      ],
+      "evidence": [
+        "Metrics definitions",
+        "Dashboards or periodic reports",
+        "Review notes with decisions",
+        "Raw data or extracts"
+      ]
+    },
+    {
+      "ref": "9.2",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Internal audit",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Checks, independently, whether the system meets requirements and is working in practice.",
+      "guidance": "Establish an audit programme, use auditors who are not marking their own work and report results to management. Cover the whole system within the certification cycle, and focus more on higher risk areas. Auditors expect findings to be real; an audit with no findings invites suspicion.",
+      "questions": [
+        "Who performs internal audits and how is independence assured?",
+        "Show me the latest audit report and follow-up.",
+        "How do you decide what to audit?",
+        "How are findings reported to management?"
+      ],
+      "evidence": [
+        "Audit programme",
+        "Audit reports with findings",
+        "Auditor competence records",
+        "Follow-up of corrective actions"
+      ]
+    },
+    {
+      "ref": "9.2.1",
+      "parent": "9.2",
+      "kind": "clause",
+      "title": "Audits at planned intervals",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Ensures audits are held at planned intervals against both the standard and the organisation's own requirements.",
+      "guidance": "Audit against the standard, your own documents and the policy, at least once per year or per your plan. Record criteria and scope for each audit. Small companies often use an external consultant to keep independence. Auditors check the schedule was met.",
+      "questions": [
+        "How often are audits conducted?",
+        "What criteria are used?",
+        "Were all planned audits completed?",
+        "How is the system tested against your own rules, not only the standard?"
+      ],
+      "evidence": [
+        "Audit schedule",
+        "Audit plans with criteria and scope",
+        "Completed audit reports",
+        "Evidence audits met the schedule"
+      ]
+    },
+    {
+      "ref": "9.2.2",
+      "parent": "9.2",
+      "kind": "clause",
+      "title": "Internal audit programme",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Defines how audits are planned, run and reported so results are consistent and objective.",
+      "guidance": "The programme sets frequency, methods, responsibilities and reporting lines, taking into account process importance and past results. Choose objective auditors, share results with the relevant managers and keep the evidence. Reports should name the evidence reviewed. A common gap is missing evidence of how scope or sampling was chosen.",
+      "questions": [
+        "How is the programme prepared and who approves it?",
+        "How do past results influence what you audit next?",
+        "How do you ensure objectivity?",
+        "Where are audit records kept?"
+      ],
+      "evidence": [
+        "Programme document",
+        "Auditor appointment or independence statement",
+        "Sampling notes",
+        "Reports distributed to managers"
+      ]
+    },
+    {
+      "ref": "9.3",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Management review",
+      "purpose": "Gives top management a regular, structured moment to judge whether the system is suitable and effective.",
+      "guidance": "Hold reviews at planned intervals, at least yearly and often twice, with a standard agenda and recorded decisions. Decisions on improvements, resources and changes should result in tracked actions. Leaders attending in person matters. Auditors read the minutes for decisions rather than just a list of topics.",
+      "questions": [
+        "When was the last review and who attended?",
+        "What decisions were made?",
+        "How are review actions tracked?",
+        "How do you prepare the input?"
+      ],
+      "evidence": [
+        "Minutes with attendees and decisions",
+        "Review agenda and input pack",
+        "Action log from the review",
+        "Calendar of planned reviews"
+      ]
+    },
+    {
+      "ref": "9.3.1",
+      "parent": "9.3",
+      "kind": "clause",
+      "title": "Reviews at planned intervals",
+      "purpose": "Sets the rule that management reviews are held on a planned schedule.",
+      "guidance": "Fix dates in advance and include the review in the annual calendar of the system. Keep invitations and attendance. Skipped or delayed reviews are noted by auditors, so plan for them to fit with board cycles.",
+      "questions": [
+        "How often do reviews take place?",
+        "Were all planned reviews held?",
+        "Who must attend?",
+        "Where are minutes stored?"
+      ],
+      "evidence": [
+        "Review schedule",
+        "Meeting invitations",
+        "Attendance records",
+        "Minutes"
+      ]
+    },
+    {
+      "ref": "9.3.2",
+      "parent": "9.3",
+      "kind": "clause",
+      "title": "Management review inputs",
+      "purpose": "Specifies the information leaders must be given so the review is informed.",
+      "guidance": "Prepare a pack covering the status of earlier actions, changes in context, feedback from interested parties, performance results, audit findings, nonconformities, risk status and opportunities for improvement. Standard headings make sure none are skipped. A pack that omits audit results or incidents is a typical weakness.",
+      "questions": [
+        "What information do you prepare for the review?",
+        "Where do audit and incident results appear?",
+        "Do you include feedback from customers?",
+        "Who compiles the pack?"
+      ],
+      "evidence": [
+        "Review input pack or slides",
+        "Metric and audit summaries",
+        "Customer feedback summary",
+        "Risk status report"
+      ]
+    },
+    {
+      "ref": "9.3.3",
+      "parent": "9.3",
+      "kind": "clause",
+      "title": "Management review results",
+      "purpose": "Ensures the review ends with decisions about improvement and changes to the system.",
+      "guidance": "Record decisions on opportunities for improvement, changes needed to the system, resource needs and objectives. Convert each into an action with an owner and a date, and follow up at the next review. Keep the minutes as retained evidence. Reviews that finish with 'noted' for everything raise questions.",
+      "questions": [
+        "What did the last review decide?",
+        "How were decisions turned into actions?",
+        "Were resource requests approved?",
+        "How do you track completion?"
+      ],
+      "evidence": [
+        "Minutes recording decisions",
+        "Action tracker",
+        "Resource approvals",
+        "Updated objectives or policy after review"
+      ]
+    },
+    {
+      "ref": "10",
+      "kind": "theme",
+      "title": "Clause 10 · Improvement",
+      "purpose": "Covers fixing problems properly and steadily making the system better."
+    },
+    {
+      "ref": "10.1",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Continual improvement",
+      "purpose": "Requires the organisation to keep making the system more suitable, adequate and effective.",
+      "guidance": "Collect improvement ideas from audits, incidents, metrics, staff and customers, then record, prioritise and deliver them. A simple improvement log reviewed in management review is fine. Auditors want to see real changes made, not only a statement.",
+      "questions": [
+        "Give examples of improvements you have made recently.",
+        "Where do ideas come from and how are they tracked?",
+        "How do you measure their effect?",
+        "Who prioritises?"
+      ],
+      "evidence": [
+        "Improvement log",
+        "Before and after metrics",
+        "Management review decisions",
+        "Updated procedures from improvements"
+      ]
+    },
+    {
+      "ref": "10.2",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Nonconformity and corrective action",
+      "purpose": "Ensures problems are contained, their causes found and fixed so they do not come back.",
+      "guidance": "When something fails or an audit finds a gap, react immediately to contain it, find the root cause, decide whether similar issues exist elsewhere, implement a fix and check it worked. Record everything in a log with owners and dates. Weak root cause analysis and actions that only address the symptom are the usual findings.",
+      "questions": [
+        "How are nonconformities recorded and who manages them?",
+        "Show me one with root cause and the fix.",
+        "How do you check that corrective actions are effective?",
+        "Do you look for similar problems elsewhere?"
+      ],
+      "evidence": [
+        "Nonconformity and corrective action log",
+        "Root cause analysis records",
+        "Effectiveness checks",
+        "Closure approvals"
+      ]
+    },
+    {
+      "ref": "A.5",
+      "kind": "theme",
+      "title": "A.5 · Organisational controls",
+      "purpose": "Policies, roles, asset and access rules, suppliers, incidents, continuity and compliance: the management-level controls of Annex A."
+    },
+    {
+      "ref": "A.5.1",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Policies for information security",
+      "purpose": "Gives staff and partners clear, approved rules for how information is protected.",
+      "guidance": "Keep a short top-level policy plus topic policies such as access, acceptable use, backup and supplier security. Management approves them, owners review them at planned intervals and staff acknowledge them. Write in plain language and avoid rules nobody follows. Auditors find policies that are unsigned, out of date or not communicated.",
+      "questions": [
+        "Which policies exist and who approved them?",
+        "When were they last reviewed?",
+        "How do staff and relevant outsiders receive them?",
+        "How do you know people have read them?"
+      ],
+      "evidence": [
+        "Policy set with owners, versions and approval",
+        "Review log",
+        "Staff acknowledgement records",
+        "Publication location on intranet"
+      ]
+    },
+    {
+      "ref": "A.5.2",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Information security roles and responsibilities",
+      "purpose": "Makes sure every security task has a named owner who knows they hold it.",
+      "guidance": "Define the roles needed, such as system owner, asset owners, risk owners, incident lead and data protection contact, and assign people with deputies. Record this in role descriptions or a RACI. Small teams can combine roles when documented. Auditors interview the named people to see if they know their duties.",
+      "questions": [
+        "Who is accountable for each key security area?",
+        "How were responsibilities communicated?",
+        "Who covers when someone is away?",
+        "Show me where asset and risk owners are recorded."
+      ],
+      "evidence": [
+        "RACI or roles document",
+        "Job descriptions",
+        "Appointment records",
+        "Owner fields in registers"
+      ]
+    },
+    {
+      "ref": "A.5.3",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Segregation of duties",
+      "purpose": "Reduces the chance of fraud or serious error by splitting tasks that should not be done by one person.",
+      "guidance": "Identify high-risk combinations, for example requesting and approving access, writing and deploying code to production, or creating and approving payments. Split them between people or add independent review. Where the team is too small, use compensating measures such as logging and managerial review. Auditors look for admins who approve their own access.",
+      "questions": [
+        "Which duties have you decided must be separated?",
+        "What do you do where a small team cannot separate them?",
+        "How is it enforced in tools?",
+        "Show me an example of an approval by a second person."
+      ],
+      "evidence": [
+        "Conflicting duties matrix",
+        "Workflow approvals in ticketing or code platform",
+        "Compensating control records",
+        "Access reviews showing role splits"
+      ]
+    },
+    {
+      "ref": "A.5.4",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Management responsibilities",
+      "purpose": "Ensures managers actively require their teams to follow the security rules.",
+      "guidance": "Managers should brief new team members, check compliance in day-to-day work, and deal with breaches fairly. Build it into onboarding, performance conversations and team meetings. Auditors ask line managers what they do, not only the security lead.",
+      "questions": [
+        "How do managers make sure their team follows the policies?",
+        "What happens when someone breaks a rule?",
+        "How are managers trained on their security duties?",
+        "Show me an example of a manager follow-up."
+      ],
+      "evidence": [
+        "Manager briefing or checklist",
+        "Team meeting notes covering security",
+        "Disciplinary process",
+        "Onboarding sign-offs"
+      ]
+    },
+    {
+      "ref": "A.5.5",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Contact with authorities",
+      "purpose": "Makes sure you can quickly reach the right authorities when security or legal matters arise.",
+      "guidance": "Keep a list of the regulators, police, data protection authority, national CERT and emergency services relevant to you, with who is allowed to contact them and when. Include the reporting deadlines you know apply. Test that the contacts are current. A list nobody has looked at in two years is the usual weakness.",
+      "questions": [
+        "Which authorities might you need to contact and who decides?",
+        "Where are contact details kept?",
+        "When was the list last checked?",
+        "How does this link to your incident process?"
+      ],
+      "evidence": [
+        "Authority contact list with dates",
+        "Reporting procedure",
+        "Records of past contact",
+        "Review log"
+      ]
+    },
+    {
+      "ref": "A.5.6",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Contact with special interest groups",
+      "purpose": "Keeps the organisation informed through professional communities and security forums.",
+      "guidance": "Join relevant groups, mailing lists, vendor advisories or industry bodies, and make someone responsible for reading and passing on important items. Record what you learn and what you changed. It does not need to be costly; free advisories and local meetups count if used.",
+      "questions": [
+        "Which groups or forums do you follow?",
+        "Who monitors them?",
+        "Give an example of something learned that changed your practice.",
+        "How is the membership reviewed?"
+      ],
+      "evidence": [
+        "List of memberships and subscriptions",
+        "Examples of advisories circulated",
+        "Meeting or event notes",
+        "Resulting actions"
+      ]
+    },
+    {
+      "ref": "A.5.7",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Threat intelligence",
+      "tags": [
+        "new-2022"
+      ],
+      "purpose": "Turns information about current threats into decisions about your defences.",
+      "guidance": "Collect threat information from sources fitting your sector, such as vendor bulletins, national CERT alerts and industry sharing groups. Analyse what is relevant and feed it into risk assessment, patching priorities and detection. Keep it proportionate; a monthly review of a few trusted feeds is acceptable for a small company.",
+      "questions": [
+        "Where do you get threat information?",
+        "Who analyses it and how often?",
+        "Show a case where it changed a priority or control.",
+        "How is it shared internally?"
+      ],
+      "evidence": [
+        "Source list",
+        "Periodic threat review notes",
+        "Actions arising",
+        "Risk register updates referencing threats"
+      ]
+    },
+    {
+      "ref": "A.5.8",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Information security in project management",
+      "purpose": "Builds security into projects from the start rather than adding it at the end.",
+      "guidance": "Add a simple security step to the project template: identify information involved, assess risk, set requirements and check before go-live. Apply it to internal changes and customer deliveries. Auditors sample projects and look for evidence the step was done.",
+      "questions": [
+        "How is security considered when a project begins?",
+        "Show me a recent project's security assessment.",
+        "Who signs off before go-live?",
+        "How are risks tracked during the project?"
+      ],
+      "evidence": [
+        "Project template with security checkpoints",
+        "Project risk assessments",
+        "Security requirements lists",
+        "Go-live sign-offs"
+      ]
+    },
+    {
+      "ref": "A.5.9",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Inventory of information and other associated assets",
+      "purpose": "Gives you a complete picture of what needs protecting and who is responsible.",
+      "guidance": "Maintain a register of information assets, systems, services, devices and key data stores, each with an owner and a classification. Pull from tooling where possible to keep it current, and review it regularly. Common failings are shadow IT missing from the list and assets without owners.",
+      "questions": [
+        "Where is your asset inventory and how is it kept current?",
+        "Who are the owners?",
+        "How do you discover unknown assets?",
+        "Does the inventory cover cloud services and data?"
+      ],
+      "evidence": [
+        "Asset register with owners and classification",
+        "Review records",
+        "Discovery tool exports",
+        "Onboarding and decommissioning updates"
+      ]
+    },
+    {
+      "ref": "A.5.10",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Acceptable use of information and other associated assets",
+      "purpose": "Sets clear rules for how staff may handle information and equipment.",
+      "guidance": "Write an acceptable use rule covering devices, email, internet, personal use, removable media, software and handling of customer data. Staff should acknowledge it on joining and when it changes. Keep it brief enough to be read. Auditors ask staff what they may and may not do.",
+      "questions": [
+        "Where are the rules for acceptable use?",
+        "How do new starters accept them?",
+        "How do you handle breaches?",
+        "Does it cover personal devices and remote work?"
+      ],
+      "evidence": [
+        "Acceptable use policy",
+        "Signed acknowledgements",
+        "Training content",
+        "Breach handling records"
+      ]
+    },
+    {
+      "ref": "A.5.11",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Return of assets",
+      "purpose": "Makes sure equipment and information come back when people leave or change role.",
+      "guidance": "Use a leaver checklist covering laptops, phones, tokens, keys, documents and data, and tie it to HR so no leaver slips through. Collect, wipe and record. Auditors compare the leaver list from HR with returns records.",
+      "questions": [
+        "How do you recover assets from leavers?",
+        "How do you know nothing was missed?",
+        "What happens to data on personal devices?",
+        "Show me a recent leaver's record."
+      ],
+      "evidence": [
+        "Leaver checklist completed",
+        "Asset return log",
+        "Device wipe records",
+        "HR leaver list matched to returns"
+      ]
+    },
+    {
+      "ref": "A.5.12",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Classification of information",
+      "purpose": "Lets you apply the right level of protection by grouping information according to its sensitivity.",
+      "guidance": "Define a small number of classes, typically three or four, with criteria and examples, and an owner who assigns them. Base the scheme on confidentiality, integrity and availability needs plus legal duties. Simple beats elaborate. Auditors find schemes nobody applies.",
+      "questions": [
+        "What classes do you use and how are they defined?",
+        "Who decides the class of a dataset?",
+        "Show examples of classified items.",
+        "How is the scheme reviewed?"
+      ],
+      "evidence": [
+        "Classification scheme",
+        "Classified asset register",
+        "Examples by class",
+        "Review record"
+      ]
+    },
+    {
+      "ref": "A.5.13",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Labelling of information",
+      "purpose": "Helps people recognise how sensitive an item is so they handle it correctly.",
+      "guidance": "Decide how each class is marked in documents, emails, systems and storage, and what handling rules follow. Use templates, headers and tool features to make labelling automatic where possible. Give staff short guidance. Check labels in sampled documents.",
+      "questions": [
+        "How do you label information?",
+        "What handling follows each label?",
+        "Is labelling automated?",
+        "Show me examples."
+      ],
+      "evidence": [
+        "Labelling procedure",
+        "Document templates with markings",
+        "Tool configuration for labels",
+        "Sample labelled items"
+      ]
+    },
+    {
+      "ref": "A.5.14",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Information transfer",
+      "purpose": "Protects information when it is sent, shared or moved between parties.",
+      "guidance": "Set rules per channel, such as email, file sharing, courier, messaging and APIs, covering approved tools, encryption and who may send what. For external parties include agreements on handling. Check what actually happens, for instance whether staff use personal webmail.",
+      "questions": [
+        "Which channels are approved for which classes?",
+        "How is encryption applied?",
+        "What agreements cover transfers to third parties?",
+        "Show me an example of a secure transfer."
+      ],
+      "evidence": [
+        "Information transfer policy",
+        "Tool configurations for encryption",
+        "Transfer agreements or NDAs",
+        "Logs of transfers"
+      ]
+    },
+    {
+      "ref": "A.5.15",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Access control",
+      "purpose": "Ensures access to information and systems is granted on the basis of need and policy.",
+      "guidance": "Document an access rule built on need to know and least privilege, covering business and security requirements for each system. Apply it consistently across applications, networks and physical areas. Auditors test whether real access matches the rule.",
+      "questions": [
+        "What is your access control rule?",
+        "How is it applied across systems?",
+        "Who owns approval for each system?",
+        "Show me how you tested it."
+      ],
+      "evidence": [
+        "Access control policy",
+        "Role and permission matrices",
+        "Approval workflow records",
+        "Sample access comparisons"
+      ]
+    },
+    {
+      "ref": "A.5.16",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Identity management",
+      "purpose": "Controls the full lifecycle of user and system identities.",
+      "guidance": "Give every person and service account a unique identity, approve creation, record the owner, and remove it when no longer needed. Avoid shared accounts or document the exceptions. Link it to HR joiner, mover and leaver steps. Common gaps are orphaned accounts of former staff.",
+      "questions": [
+        "How are identities created and removed?",
+        "How do you handle shared or service accounts?",
+        "How do you find orphaned accounts?",
+        "Who is responsible?"
+      ],
+      "evidence": [
+        "Account lifecycle procedure",
+        "Account lists reconciled with HR",
+        "Service account register",
+        "Deprovisioning records"
+      ]
+    },
+    {
+      "ref": "A.5.17",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Authentication information",
+      "purpose": "Protects passwords, keys and other secrets throughout their life.",
+      "guidance": "Require strong, unique credentials with multi-factor authentication for important systems, use a password manager, forbid sharing, and allocate initial secrets securely. Apply to people and machines, with rotation for keys. Auditors check MFA coverage and where secrets are stored in code or documents.",
+      "questions": [
+        "What is your credential standard and MFA coverage?",
+        "How are initial passwords issued?",
+        "How are API keys and secrets stored and rotated?",
+        "How do you handle compromised credentials?"
+      ],
+      "evidence": [
+        "Authentication standard",
+        "MFA configuration reports",
+        "Password manager rollout records",
+        "Secret scanning or vault reports"
+      ]
+    },
+    {
+      "ref": "A.5.18",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Access rights",
+      "purpose": "Ensures permissions are properly granted, reviewed and removed.",
+      "guidance": "Use a request and approval flow for access, give roles that match jobs, and run periodic reviews of who can reach critical systems, with action on exceptions. Remove rights on role changes and leaving. Auditors pick users and verify the approval trail.",
+      "questions": [
+        "How are access rights requested and approved?",
+        "How often are they reviewed?",
+        "Show me the last review and what was removed.",
+        "How quickly are leavers removed?"
+      ],
+      "evidence": [
+        "Access request tickets with approvals",
+        "Periodic access review results",
+        "Leaver account removal records",
+        "Privileged access list"
+      ]
+    },
+    {
+      "ref": "A.5.19",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Information security in supplier relationships",
+      "tags": [
+        "suppliers"
+      ],
+      "purpose": "Manages the risk that comes with suppliers who touch your information or services.",
+      "guidance": "Keep a supplier register, rate each by the data and criticality involved, and set security expectations by tier. Do a proportionate check before onboarding: questionnaire, certificate or report review. Auditors look for critical suppliers with no assessment.",
+      "questions": [
+        "Which suppliers are most critical to you?",
+        "How do you assess them before engagement?",
+        "How are risks tracked?",
+        "Who owns the relationship?"
+      ],
+      "evidence": [
+        "Supplier register with risk tier",
+        "Due diligence records",
+        "Supplier security policy",
+        "Risk register entries"
+      ]
+    },
+    {
+      "ref": "A.5.20",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Addressing information security within supplier agreements",
+      "tags": [
+        "suppliers"
+      ],
+      "purpose": "Puts security expectations into contracts so they are enforceable.",
+      "guidance": "Include clauses on confidentiality, data handling, incident notification, audit or evidence rights, subcontractors and exit. Use a standard addendum for common cases. Check that signed contracts exist for key suppliers. Missing breach notification terms are a typical gap.",
+      "questions": [
+        "What security terms do your supplier contracts include?",
+        "Do you have them for all critical suppliers?",
+        "How do you handle subcontractors?",
+        "What happens at exit?"
+      ],
+      "evidence": [
+        "Contract template or addendum",
+        "Signed contracts for key suppliers",
+        "Data processing agreements",
+        "Exit terms"
+      ]
+    },
+    {
+      "ref": "A.5.21",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Managing information security in the ICT supply chain",
+      "tags": [
+        "suppliers"
+      ],
+      "purpose": "Addresses risk from the chain of technology products and services your own suppliers depend on.",
+      "guidance": "Ask key ICT suppliers how they manage their own suppliers, ask for provenance and update commitments, and avoid single points of failure. Capture requirements for software components and cloud services. Keep it proportionate to your reliance.",
+      "questions": [
+        "How do you understand your suppliers' suppliers?",
+        "What do you require of ICT providers?",
+        "How do you manage open-source components?",
+        "Which dependencies are single points of failure?"
+      ],
+      "evidence": [
+        "Supply chain requirements",
+        "Supplier responses",
+        "Software dependency inventory",
+        "Risk assessment of dependencies"
+      ]
+    },
+    {
+      "ref": "A.5.22",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Monitoring, review and change management of supplier services",
+      "tags": [
+        "suppliers"
+      ],
+      "purpose": "Keeps supplier performance and security under review through the life of the relationship.",
+      "guidance": "Review critical suppliers at least yearly: service reports, incidents, certificates, financial or security changes. Record outcomes and actions, and handle supplier changes through a controlled process. Auditors expect records of reviews, not only the initial check.",
+      "questions": [
+        "How often do you review suppliers?",
+        "What do you do when a supplier's circumstances change?",
+        "Show me a review record.",
+        "How are supplier incidents tracked?"
+      ],
+      "evidence": [
+        "Supplier review records",
+        "Service reports",
+        "Updated certificates",
+        "Change notices and decisions"
+      ]
+    },
+    {
+      "ref": "A.5.23",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Information security for use of cloud services",
+      "tags": [
+        "new-2022",
+        "suppliers"
+      ],
+      "purpose": "Sets how cloud services are chosen, configured, used and exited.",
+      "guidance": "Define criteria for selecting providers, the shared responsibility split, configuration baselines and exit plans. Keep a list of all cloud services and their owners. Review settings regularly. Auditors find unapproved services and default configurations.",
+      "questions": [
+        "How are cloud services approved?",
+        "Who is responsible for configuration?",
+        "How is data protected there?",
+        "What is your exit plan?"
+      ],
+      "evidence": [
+        "Cloud service register",
+        "Selection assessments",
+        "Configuration baselines",
+        "Exit or portability plans"
+      ]
+    },
+    {
+      "ref": "A.5.24",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Information security incident management planning and preparation",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Prepares roles, processes and tools so incidents are handled quickly and consistently.",
+      "guidance": "Write an incident procedure naming roles, severity levels, contact paths and decision rights, and make sure people know how to report. Prepare tooling and templates in advance. Test it with an exercise. Plans that live only in the security lead's head are a common finding.",
+      "questions": [
+        "Who is in the incident team and what are their roles?",
+        "How do staff report incidents?",
+        "When did you last test the process?",
+        "Where are contacts and templates?"
+      ],
+      "evidence": [
+        "Incident management procedure",
+        "Roles and contact list",
+        "Reporting channel evidence",
+        "Exercise records"
+      ]
+    },
+    {
+      "ref": "A.5.25",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Assessment and decision on information security events",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Makes sure reported events are triaged and classified consistently.",
+      "guidance": "Use defined criteria to decide if an event is an incident and how severe, and record the decision. Keep a log of all reported events, even those dismissed. Auditors compare log entries with the criteria.",
+      "questions": [
+        "How do you decide if an event is an incident?",
+        "Who makes the call?",
+        "Show me a dismissed event and why.",
+        "How do you rate severity?"
+      ],
+      "evidence": [
+        "Triage criteria",
+        "Event log",
+        "Classification records",
+        "Severity matrix"
+      ]
+    },
+    {
+      "ref": "A.5.26",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Response to information security incidents",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Ensures incidents are contained, resolved and communicated in an orderly way.",
+      "guidance": "Follow documented steps: contain, investigate, eradicate, recover, and notify those entitled to know, including regulators and customers within legal timelines. Keep timestamps and decisions. Auditors review a real incident file.",
+      "questions": [
+        "Walk me through your last incident.",
+        "How did you decide who to notify?",
+        "How quickly did you respond?",
+        "What records were kept?"
+      ],
+      "evidence": [
+        "Incident tickets with timeline",
+        "Notification records",
+        "Response playbooks",
+        "Post-incident reports"
+      ]
+    },
+    {
+      "ref": "A.5.27",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Learning from information security incidents",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Uses incidents to improve controls and prevent repeats.",
+      "guidance": "After each significant incident or near miss, hold a short review, record root cause and agree actions that are tracked to close. Share lessons with staff. Review trends of incidents periodically.",
+      "questions": [
+        "What did you learn from your last incident?",
+        "Which controls changed as a result?",
+        "How are actions tracked?",
+        "Do you look at trends?"
+      ],
+      "evidence": [
+        "Post-incident review notes",
+        "Action tracker",
+        "Updated procedures",
+        "Incident trend reports"
+      ]
+    },
+    {
+      "ref": "A.5.28",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Collection of evidence",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Preserves information that may be needed for investigation, legal or disciplinary action.",
+      "guidance": "Define how logs, devices and other evidence are collected and kept so integrity is maintained, with a chain of custody. Know when to call forensic help. Keep it simple for small organisations but make sure logs are retained long enough.",
+      "questions": [
+        "How do you preserve evidence in an incident?",
+        "Who is authorised to collect it?",
+        "How do you protect its integrity?",
+        "How long are logs kept?"
+      ],
+      "evidence": [
+        "Evidence handling procedure",
+        "Chain of custody forms",
+        "Log retention settings",
+        "Forensic provider contact"
+      ]
+    },
+    {
+      "ref": "A.5.29",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Information security during disruption",
+      "tags": [
+        "continuity"
+      ],
+      "purpose": "Keeps security in place when normal operations are interrupted.",
+      "guidance": "Identify which controls must continue during a disaster or crisis, and plan for alternative measures such as manual access approval or secure remote working. Include these in continuity plans. Test them. Auditors want to see security considered in continuity exercises.",
+      "questions": [
+        "Which security controls must continue in a disruption?",
+        "What alternatives have you planned?",
+        "Have you tested them?",
+        "Who decides on temporary exceptions?"
+      ],
+      "evidence": [
+        "Continuity plans with security sections",
+        "Exercise reports",
+        "Exception approvals",
+        "Recovery procedures"
+      ]
+    },
+    {
+      "ref": "A.5.30",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "ICT readiness for business continuity",
+      "tags": [
+        "new-2022",
+        "continuity"
+      ],
+      "purpose": "Makes sure technology can be recovered to meet business needs.",
+      "guidance": "Set recovery time and recovery point targets from a business impact analysis, design backups and redundancy to meet them, and test restores. Document recovery steps. Common findings are backups never restored and targets nobody agreed.",
+      "questions": [
+        "What are your recovery targets and who agreed them?",
+        "When did you last test a restore?",
+        "What were the results?",
+        "How are dependencies handled?"
+      ],
+      "evidence": [
+        "Business impact analysis",
+        "Recovery targets",
+        "Restore test records",
+        "Recovery runbooks"
+      ]
+    },
+    {
+      "ref": "A.5.31",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Legal, statutory, regulatory and contractual requirements",
+      "purpose": "Ensures you know and meet the laws and contracts that affect information security.",
+      "guidance": "Keep a register of applicable laws, regulations and key customer obligations, with an owner and how each is met. Review it at least yearly or when you enter a new market. Seek legal advice where unsure. Auditors check that data protection and customer terms are in it.",
+      "questions": [
+        "Which laws and contracts affect you?",
+        "Who maintains the register?",
+        "How do you learn about changes?",
+        "How do you show compliance?"
+      ],
+      "evidence": [
+        "Legal and contractual requirements register",
+        "Review records",
+        "Legal advice notes",
+        "Compliance mapping to controls"
+      ]
+    },
+    {
+      "ref": "A.5.32",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Intellectual property rights",
+      "purpose": "Prevents infringement of licences and protects your own IP.",
+      "guidance": "Keep track of software licences, use approved sources, restrict unauthorised installation and check use against what was bought. Record ownership of what you create and use. Auditors sample devices for unlicensed software.",
+      "questions": [
+        "How do you track licences?",
+        "How do you prevent unlicensed software?",
+        "How do you protect your own IP?",
+        "How is open-source use controlled?"
+      ],
+      "evidence": [
+        "Licence register",
+        "Software inventory comparison",
+        "IP policy",
+        "Open-source review records"
+      ]
+    },
+    {
+      "ref": "A.5.33",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Protection of records",
+      "purpose": "Keeps important records safe from loss, damage, falsification and unauthorised access.",
+      "guidance": "Identify record types, assign retention periods based on law and business need, store them securely and dispose of them properly at the end. Protect integrity, for example with access limits and backups. Auditors ask about retention and deletion in practice.",
+      "questions": [
+        "What records do you keep and for how long?",
+        "How are they protected from change?",
+        "How are they destroyed?",
+        "Who owns the retention schedule?"
+      ],
+      "evidence": [
+        "Records retention schedule",
+        "Storage and access configuration",
+        "Disposal records",
+        "Backup evidence"
+      ]
+    },
+    {
+      "ref": "A.5.34",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Privacy and protection of PII",
+      "tags": [
+        "privacy"
+      ],
+      "purpose": "Makes sure personal data is handled in line with privacy law and obligations.",
+      "guidance": "Know what personal data you hold, why, where and for how long, assign privacy responsibilities, and have processes for individual requests and breaches. Align with GDPR or your applicable law. Keep records of processing and supplier agreements.",
+      "questions": [
+        "What personal data do you process and where?",
+        "Who is responsible for privacy?",
+        "How do you handle subject requests?",
+        "What is your breach notification process?"
+      ],
+      "evidence": [
+        "Record of processing activities",
+        "Privacy notices",
+        "Data subject request log",
+        "Data processing agreements"
+      ]
+    },
+    {
+      "ref": "A.5.35",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Independent review of information security",
+      "purpose": "Provides an outside view of whether your approach is working.",
+      "guidance": "Arrange independent reviews at planned intervals or after significant change, by internal staff outside the area reviewed or an external party. Report to management and track resulting actions. Certification audits do not replace this.",
+      "questions": [
+        "Who performs independent reviews?",
+        "How often?",
+        "What did the last one find?",
+        "How are results acted on?"
+      ],
+      "evidence": [
+        "Independent review plan",
+        "Review reports",
+        "Management response",
+        "Action tracking"
+      ]
+    },
+    {
+      "ref": "A.5.36",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Compliance with policies, rules and standards for information security",
+      "purpose": "Checks that people and systems follow the rules you set.",
+      "guidance": "Managers and system owners should periodically verify their areas, using automated checks where possible, such as configuration compliance. Record deviations and fix them. Report results to the system owner.",
+      "questions": [
+        "How do you check compliance with policies?",
+        "Who performs the checks?",
+        "What do you do with deviations?",
+        "Show me results from the last check."
+      ],
+      "evidence": [
+        "Compliance check records",
+        "Configuration scan reports",
+        "Deviation log",
+        "Management reports"
+      ]
+    },
+    {
+      "ref": "A.5.37",
+      "parent": "A.5",
+      "kind": "control",
+      "title": "Documented operating procedures",
+      "purpose": "Ensures routine operations are done consistently and can be performed by others.",
+      "guidance": "Write short procedures for tasks such as backup, onboarding, deployment and monitoring, make them available to those who need them, and update them when processes change. Keep them practical. Auditors ask operators whether the procedure matches what they do.",
+      "questions": [
+        "Which operating procedures exist?",
+        "Who maintains them?",
+        "Are they accessible to operators?",
+        "How are changes reflected?"
+      ],
+      "evidence": [
+        "Procedure documents with versions",
+        "Access to procedures",
+        "Review records",
+        "Operator feedback"
+      ]
+    },
+    {
+      "ref": "A.6",
+      "kind": "theme",
+      "title": "A.6 · People controls",
+      "purpose": "Covers how the organisation manages security across the working life of its people, from hiring to leaving, including awareness, remote work and reporting problems."
+    },
+    {
+      "ref": "A.6.1",
+      "parent": "A.6",
+      "kind": "control",
+      "title": "Screening",
+      "purpose": "Reduce the risk of hiring or engaging someone unsuitable by checking people before they get access to your information.",
+      "guidance": "Decide which roles need which checks, based on the access and sensitivity involved, and write it down so it is applied consistently. Typical checks are identity, right to work, references and qualifications, with criminal record checks only where local law allows and the role justifies it. Apply the same rules to contractors and agency staff, not just employees. Auditors often find checks done for some hires but not others, or no record that they were completed before the start date.",
+      "questions": [
+        "How do you decide which checks apply to which roles?",
+        "Can you show the checks completed for the last few joiners before their first day?",
+        "How are contractors and temporary staff screened?",
+        "What happens if a check returns a concern?"
+      ],
+      "evidence": [
+        "Screening procedure listing checks by role",
+        "Completed check records or HR checklist for recent joiners",
+        "Signed consent forms for checks where required",
+        "Contractor onboarding checklist showing screening status"
+      ]
+    },
+    {
+      "ref": "A.6.2",
+      "parent": "A.6",
+      "kind": "control",
+      "title": "Terms and conditions of employment",
+      "purpose": "Make sure people know from the start what security responsibilities they carry and agree to them in writing.",
+      "guidance": "Include a short security clause in employment contracts and contractor agreements that points to the key policies and states that people must follow them. Make clear that responsibilities apply to information handled for the organisation and to company property. Keep signed copies and make sure changes to the policies are communicated rather than silently updated. A common gap is contractors or interns who started without signing anything.",
+      "questions": [
+        "Where in the contract are security responsibilities set out?",
+        "How do new joiners confirm they have read the policies?",
+        "Do contractors and temporary staff sign equivalent terms?",
+        "How are people told when the terms or policies change?"
+      ],
+      "evidence": [
+        "Contract template with information security clause",
+        "Signed contracts or acknowledgements for a sample of staff",
+        "Contractor agreement template with security terms",
+        "Policy acceptance log"
+      ]
+    },
+    {
+      "ref": "A.6.3",
+      "parent": "A.6",
+      "kind": "control",
+      "title": "Information security awareness, education and training",
+      "purpose": "Give people the knowledge to behave securely in their daily work and to know what is expected of them.",
+      "guidance": "Run an induction session for every joiner and a refresher at least yearly, covering the policies, phishing, safe handling of data and how to report a problem. Add role-specific training for people with extra risk, such as administrators, developers or finance staff. Track attendance and test understanding with a short quiz or simulated phishing exercise. Auditors look for evidence that everyone was trained, including late joiners and part-timers, and that content reflects real incidents.",
+      "questions": [
+        "How are new joiners trained and how soon after they start?",
+        "How do you know everyone completed the latest refresher?",
+        "What extra training do privileged or high-risk roles get?",
+        "How do you measure whether awareness is working?"
+      ],
+      "evidence": [
+        "Training plan and content for the year",
+        "Attendance or completion records for all staff",
+        "Phishing simulation results and follow-up actions",
+        "Role-specific training records for administrators and developers"
+      ]
+    },
+    {
+      "ref": "A.6.4",
+      "parent": "A.6",
+      "kind": "control",
+      "title": "Disciplinary process",
+      "purpose": "Have a fair, known way to respond when someone breaks security rules, so the rules carry weight.",
+      "guidance": "Use your existing HR disciplinary procedure and make sure it explicitly covers breaches of information security policy. Staff should know the process exists, for example through the handbook or induction. The response should be proportionate and consider whether the breach was deliberate, a mistake or a first offence. Auditors usually ask whether the process has been used and whether lessons from cases feed back into training.",
+      "questions": [
+        "Does the disciplinary procedure cover security breaches explicitly?",
+        "How are staff made aware of the consequences?",
+        "Has the process been used, and how was proportionality decided?",
+        "How are lessons from cases fed back into training or controls?"
+      ],
+      "evidence": [
+        "Disciplinary policy referencing security breaches",
+        "Staff handbook section or induction slide on consequences",
+        "Anonymised example of a case handled under the process",
+        "Acknowledgement of the policy by staff"
+      ]
+    },
+    {
+      "ref": "A.6.5",
+      "parent": "A.6",
+      "kind": "control",
+      "title": "Responsibilities after termination or change of employment",
+      "purpose": "Make sure leaving or changing role does not leave unwanted access or unresolved duties behind.",
+      "guidance": "Keep a leaver and mover checklist that covers returning devices and badges, removing accounts and access, handing over data and reminding people of continuing duties such as confidentiality. Trigger it from HR events so it does not rely on memory. Moves between roles need access reviewed too, otherwise people accumulate permissions over time. Typical findings are leaver accounts still active weeks later and shared passwords not changed.",
+      "questions": [
+        "What happens, step by step, when someone leaves?",
+        "How quickly is access removed and how is that checked?",
+        "How do you handle access when someone changes role?",
+        "Which duties continue after employment and how are people reminded?"
+      ],
+      "evidence": [
+        "Leaver and mover checklist templates",
+        "Completed checklists for recent leavers",
+        "Account deactivation log with dates against leave dates",
+        "Asset return records",
+        "Exit reminder letter or signed acknowledgement"
+      ]
+    },
+    {
+      "ref": "A.6.6",
+      "parent": "A.6",
+      "kind": "control",
+      "title": "Confidentiality or non-disclosure agreements",
+      "purpose": "Protect sensitive information by getting a clear, signed commitment to confidentiality from anyone who may see it.",
+      "guidance": "Use standard agreements for staff, contractors, suppliers and visitors with access to sensitive material, and have them reviewed by legal advice. State what counts as confidential, how long the duty lasts and what to do with information at the end. Review the template periodically so it still fits how you work. Auditors check that agreements are signed before access is granted and that you can find them easily.",
+      "questions": [
+        "Who is asked to sign confidentiality agreements and when?",
+        "When was the template last reviewed?",
+        "How do you confirm agreements are signed before access starts?",
+        "How are agreements stored and tracked?"
+      ],
+      "evidence": [
+        "Current agreement templates with review date",
+        "Signed agreements for a sample of staff and suppliers",
+        "Register of agreements with expiry or review dates",
+        "Supplier onboarding checklist showing agreement step"
+      ]
+    },
+    {
+      "ref": "A.6.7",
+      "parent": "A.6",
+      "kind": "control",
+      "title": "Remote working",
+      "purpose": "Keep information safe when people work from home, on the move or at client sites.",
+      "guidance": "Set simple rules for remote work: approved devices, a protected connection such as a VPN or zero-trust access, screen locking, private space and no use of public Wi-Fi for sensitive work without protection. Cover paper, printing and calls that can be overheard. Make sure remote staff get the same training and support as office staff. Auditors often find policy and practice differ, such as personal devices used with no controls.",
+      "questions": [
+        "What is your policy for working from home or while travelling?",
+        "How are remote devices protected and managed?",
+        "How do staff connect to company systems from outside?",
+        "How do you handle printing or paper at home?"
+      ],
+      "evidence": [
+        "Remote working policy",
+        "VPN or secure access configuration evidence",
+        "Device management enrolment report",
+        "Awareness material on remote working risks"
+      ]
+    },
+    {
+      "ref": "A.6.8",
+      "parent": "A.6",
+      "kind": "control",
+      "title": "Information security event reporting",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Make sure problems are spotted and reported quickly so they can be handled before they grow.",
+      "guidance": "Give people one clear, easy way to report anything suspicious, such as a dedicated mailbox, chat channel or form, and make it known in induction and training. Explain what to report, including near misses, lost devices and odd emails, and make clear nobody is punished for good-faith reports. Log every report and triage it. Auditors look for evidence that staff actually use the channel and that reports are followed up.",
+      "questions": [
+        "How do staff report a suspected security problem?",
+        "How do you encourage reporting of near misses?",
+        "Can you show reports received and what happened to them?",
+        "How quickly are reports acknowledged and triaged?"
+      ],
+      "evidence": [
+        "Reporting procedure and contact channel",
+        "Log of reported events with outcomes",
+        "Awareness material explaining how to report",
+        "Triage records or ticket history"
+      ]
+    },
+    {
+      "ref": "A.7",
+      "kind": "theme",
+      "title": "A.7 · Physical controls",
+      "purpose": "Covers protecting buildings, rooms, equipment and media from unauthorised entry, damage and loss."
+    },
+    {
+      "ref": "A.7.1",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Physical security perimeters",
+      "purpose": "Define and protect the boundaries around areas that hold information or systems.",
+      "guidance": "Identify which areas need protection, such as offices, server rooms and storage, and mark their boundaries with real barriers like locked doors, walls and entry control. Match the strength of protection to the sensitivity of what is inside. Check boundaries have no weak points such as propped doors or unlocked windows. For shared buildings, agree with the landlord who controls what.",
+      "questions": [
+        "Which areas hold sensitive information or equipment?",
+        "How are the boundaries of these areas protected?",
+        "How do you check doors and windows are secure?",
+        "What is your arrangement with the landlord for shared buildings?"
+      ],
+      "evidence": [
+        "Site plan showing secure areas",
+        "Photos or inspection record of doors and locks",
+        "Landlord or building management agreement",
+        "Periodic physical security check log"
+      ]
+    },
+    {
+      "ref": "A.7.2",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Physical entry",
+      "purpose": "Make sure only authorised people can enter your premises and secure areas.",
+      "guidance": "Use badges, keys, codes or reception checks to control entry, and keep records of who holds access. Sign in visitors, issue visitor passes, and escort them in sensitive areas. Remove access promptly when people leave and review who has access to critical rooms regularly. Auditors typically find old badges still active, shared door codes and visitor logs that are incomplete.",
+      "questions": [
+        "How do you control who enters the building and sensitive rooms?",
+        "How are visitors recorded and escorted?",
+        "How often is access to secure areas reviewed?",
+        "What happens to badges and keys when someone leaves?"
+      ],
+      "evidence": [
+        "Access control system list of badge holders",
+        "Visitor log or sign-in records",
+        "Access review record for secure areas",
+        "Badge issue and return records"
+      ]
+    },
+    {
+      "ref": "A.7.3",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Securing offices, rooms and facilities",
+      "purpose": "Prevent unauthorised people from seeing or reaching information through the way rooms and buildings are set up.",
+      "guidance": "Choose locations for sensitive work and equipment that are not visible or easily reached from public areas. Keep server and comms rooms locked and unmarked, and avoid signs that advertise where valuable assets are kept. Position screens, printers and meeting rooms so confidential material cannot be seen or overheard. Review the layout when you move or refit.",
+      "questions": [
+        "Which rooms hold sensitive equipment or discussions?",
+        "How are they protected from view and access?",
+        "Can visitors see screens or documents from public areas?",
+        "Is there signage that reveals where valuable assets are?"
+      ],
+      "evidence": [
+        "Floor plan with secure rooms marked",
+        "Photos of locked comms or server rooms",
+        "Office layout review record",
+        "Key or access list for sensitive rooms"
+      ]
+    },
+    {
+      "ref": "A.7.4",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Physical security monitoring",
+      "tags": [
+        "new-2022"
+      ],
+      "purpose": "Detect unauthorised physical access or suspicious activity so it can be acted on.",
+      "guidance": "Use means proportionate to your site, such as alarms, CCTV, security staff or building management services, and make sure someone responds to alerts. Test alarms regularly and keep recordings only as long as needed, respecting privacy rules and telling people they are filmed. Check the monitoring covers entrances and sensitive rooms. Typical gaps are cameras not recording and nobody reviewing alerts.",
+      "questions": [
+        "How do you detect unauthorised entry outside working hours?",
+        "Who responds when an alarm goes off?",
+        "How long are recordings kept and who can view them?",
+        "When were alarms and cameras last tested?"
+      ],
+      "evidence": [
+        "Alarm and CCTV installation details",
+        "Alarm test records",
+        "CCTV retention and privacy notice",
+        "Incident log of physical alerts and responses"
+      ]
+    },
+    {
+      "ref": "A.7.5",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Protecting against physical and environmental threats",
+      "purpose": "Reduce damage from fire, flood, heat, theft and other physical hazards.",
+      "guidance": "Assess the hazards that apply to your location, such as flooding, fire, extreme weather or neighbouring risks, and put sensible protections in place. Typical measures are smoke detection, extinguishers, water sensors, safe storage of backups and keeping critical equipment out of risky spots. Link this to business continuity so you know what happens if a site is lost. Auditors want to see the assessment and proof of tested equipment.",
+      "questions": [
+        "Which physical and environmental hazards apply to your sites?",
+        "What protections are in place for key equipment?",
+        "When were fire and other safety systems last tested?",
+        "How does this link to your continuity plans?"
+      ],
+      "evidence": [
+        "Site hazard assessment",
+        "Fire safety inspection and extinguisher servicing records",
+        "Environmental sensor or detector test logs",
+        "Continuity plan covering loss of site"
+      ]
+    },
+    {
+      "ref": "A.7.6",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Working in secure areas",
+      "purpose": "Set behaviour rules for people who work inside areas that need extra protection.",
+      "guidance": "Define rules for secure areas such as no unaccompanied visitors, no photography, no unrecorded entry of devices and locking up when empty. Tell only the people who need to know what is inside and how it is protected. Inspect empty secure areas periodically. Make the rules visible at the entrance and include them in induction for people with access.",
+      "questions": [
+        "What rules apply inside your secure areas?",
+        "How are staff and contractors told about these rules?",
+        "How are empty secure rooms checked and locked?",
+        "Are cameras and personal devices restricted?"
+      ],
+      "evidence": [
+        "Secure area working rules",
+        "Induction record for people with access",
+        "Lock-up or inspection checklist",
+        "Contractor escort records"
+      ]
+    },
+    {
+      "ref": "A.7.7",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Clear desk and clear screen",
+      "purpose": "Stop information being seen or taken because it was left on desks, printers or open screens.",
+      "guidance": "Set a simple rule that papers and removable media are put away and screens are locked when you leave your seat, enforced by an automatic screen lock after a short idle time. Provide lockable storage and secure shredding. Check printers and meeting rooms for forgotten documents. Auditors often do a walk-around and note unlocked screens or papers left out, so spot checks pay off.",
+      "questions": [
+        "What is your rule for desks and screens?",
+        "Is automatic screen lock enforced and how?",
+        "How do you check compliance in the office?",
+        "How is confidential paper stored and destroyed?"
+      ],
+      "evidence": [
+        "Clear desk and screen policy",
+        "Screen lock configuration settings",
+        "Results of office walk-around checks",
+        "Shredding bins or secure disposal records"
+      ]
+    },
+    {
+      "ref": "A.7.8",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Equipment siting and protection",
+      "purpose": "Place and protect equipment so it is safe from damage, theft and prying eyes.",
+      "guidance": "Put servers, network gear and sensitive displays in locations that reduce risk from water, power surges, theft and unauthorised viewing. Use racks, cabinets and cable locks where appropriate, and keep food and drink away from critical kit. For cloud-based businesses this mostly concerns office networking, printers and staff devices. Review where equipment sits whenever the office layout changes.",
+      "questions": [
+        "Where is critical equipment kept and why there?",
+        "How is it protected from theft, damage and being seen?",
+        "Are any devices in public or shared areas?",
+        "How do you keep an equipment location record?"
+      ],
+      "evidence": [
+        "Equipment location list or asset register entries",
+        "Photos of comms cabinets and racks",
+        "Environmental protection details",
+        "Office layout review notes"
+      ]
+    },
+    {
+      "ref": "A.7.9",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Security of assets off-premises",
+      "purpose": "Keep equipment and information safe when it leaves your building.",
+      "guidance": "Set rules for taking laptops, phones and papers away, such as never leaving them unattended in vehicles, using encryption and screen privacy filters when travelling. Record who holds which asset and require reporting of loss straight away. Provide guidance for travel to higher-risk countries. Auditors check that off-site devices are encrypted and tracked.",
+      "questions": [
+        "What rules apply to taking equipment off site?",
+        "How are devices protected when travelling?",
+        "How do staff report lost or stolen equipment?",
+        "How do you track which assets are off site?"
+      ],
+      "evidence": [
+        "Off-site equipment policy",
+        "Asset register showing assigned devices",
+        "Disk encryption status report",
+        "Lost or stolen equipment reports"
+      ]
+    },
+    {
+      "ref": "A.7.10",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Storage media",
+      "purpose": "Control USB drives, disks and paper so information on them is not lost or exposed.",
+      "guidance": "Decide whether removable media is allowed at all, and if so restrict it to approved encrypted devices. Keep an inventory of media in use, store it securely and track movement when it is sent elsewhere. Define how media is wiped or destroyed when no longer needed. Many small firms reduce risk by blocking USB storage on laptops.",
+      "questions": [
+        "Is removable media allowed and under what conditions?",
+        "How is media protected and tracked in transit?",
+        "How do you stop unapproved USB use?",
+        "How is media wiped or destroyed at the end of life?"
+      ],
+      "evidence": [
+        "Removable media policy",
+        "Endpoint configuration blocking or controlling USB",
+        "Media inventory and movement log",
+        "Destruction or wipe certificates"
+      ]
+    },
+    {
+      "ref": "A.7.11",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Supporting utilities",
+      "purpose": "Keep power, cooling, connectivity and similar services reliable so systems are not lost to utility failures.",
+      "guidance": "Identify the utilities your critical systems depend on and consider the impact of an outage. Provide protection that fits the risk, such as battery backup for key equipment, surge protection and a second internet connection. Test backup power where installed and agree support terms with providers. If services are in the cloud, rely on provider assurance but cover your own office dependencies.",
+      "questions": [
+        "Which utilities do your critical services depend on?",
+        "What happens if power or internet fails?",
+        "When was backup power last tested?",
+        "How do you rely on the provider for hosted services?"
+      ],
+      "evidence": [
+        "Utility dependency list",
+        "UPS or generator test records",
+        "Internet or connectivity provider agreements",
+        "Continuity plan section for utility failure"
+      ]
+    },
+    {
+      "ref": "A.7.12",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Cabling security",
+      "purpose": "Protect network and power cables from interception, interference and damage.",
+      "guidance": "Keep network and power cabling tidy, labelled and out of public reach, with comms cupboards locked. Separate power and data cabling where interference is a risk. Consider conduit or locked trunking where cables pass through shared spaces. Check sockets in meeting rooms and reception are disabled or controlled so visitors cannot plug in.",
+      "questions": [
+        "How are network cables protected from tampering?",
+        "Can a visitor plug into your network from a public area?",
+        "Are comms cabinets locked?",
+        "How is cabling documented?"
+      ],
+      "evidence": [
+        "Photos of cabling and comms cabinets",
+        "Network port management settings",
+        "Cabling diagram or labelling records",
+        "Inspection record"
+      ]
+    },
+    {
+      "ref": "A.7.13",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Equipment maintenance",
+      "purpose": "Keep equipment working and safe through regular, controlled maintenance.",
+      "guidance": "Follow supplier recommendations for servicing and keep records of repairs and faults. Make sure only authorised people carry out maintenance, and remove or protect data before equipment goes for repair. Supervise third-party engineers on site. Include firmware and hardware updates in the schedule so devices are not left unsupported.",
+      "questions": [
+        "How do you schedule maintenance for key equipment?",
+        "Who is allowed to repair or service it?",
+        "How is data protected when equipment is sent for repair?",
+        "How do you track warranties and support ends?"
+      ],
+      "evidence": [
+        "Maintenance schedule and service records",
+        "Supplier support contracts",
+        "Repair log",
+        "Equipment lifecycle or end-of-support list"
+      ]
+    },
+    {
+      "ref": "A.7.14",
+      "parent": "A.7",
+      "kind": "control",
+      "title": "Secure disposal or re-use of equipment",
+      "purpose": "Make sure no information remains on equipment you throw away, sell or hand to someone else.",
+      "guidance": "Before disposal or reuse, wipe storage using a proper method or physically destroy it, and keep a record of what was done. Check devices holding sensitive data, including printers, phones and old servers. Use a trustworthy disposal provider and get certificates. Auditors often find retired laptops in cupboards with data still on them.",
+      "questions": [
+        "How do you remove data from equipment before disposal or reuse?",
+        "Who does the wiping and how is it verified?",
+        "Do you use a disposal provider and get certificates?",
+        "How do you account for retired devices?"
+      ],
+      "evidence": [
+        "Disposal and re-use procedure",
+        "Data wipe or destruction certificates",
+        "Asset register showing disposal dates",
+        "Disposal provider contract"
+      ]
+    },
+    {
+      "ref": "A.8",
+      "kind": "theme",
+      "title": "A.8 · Technological controls",
+      "purpose": "Covers the technical safeguards for devices, access, data, networks, software and development that keep information secure in day-to-day operations."
+    },
+    {
+      "ref": "A.8.1",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "User endpoint devices",
+      "purpose": "Keep laptops, phones and other devices used for work secure wherever they are.",
+      "guidance": "Set a baseline for all devices that connect to company data, including encryption, passcodes, automatic locking, up-to-date software and the ability to wipe remotely. Use device management tools where possible to enforce this. Decide what is allowed on personal devices and apply the same standards. Auditors typically sample devices and find missing encryption or out-of-date operating systems.",
+      "questions": [
+        "What security settings are required on every device?",
+        "How do you check that devices comply?",
+        "What is the rule for personal devices?",
+        "How do you wipe a lost device?"
+      ],
+      "evidence": [
+        "Endpoint security policy or standard",
+        "Device management compliance report",
+        "Encryption status report",
+        "Lost device wipe records"
+      ]
+    },
+    {
+      "ref": "A.8.2",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Privileged access rights",
+      "purpose": "Limit and control powerful accounts because misuse of them causes the greatest damage.",
+      "guidance": "Keep a list of who has admin or elevated rights, give them only where there is a real need and use separate admin accounts from everyday ones. Require stronger sign-in for these accounts and review them regularly, at least quarterly in a smaller team. Log what privileged users do. Typical findings are shared admin accounts, former staff keeping rights and no review.",
+      "questions": [
+        "Who has administrative access and why?",
+        "How are privileged accounts requested and approved?",
+        "How often are they reviewed?",
+        "Are admin actions logged and checked?"
+      ],
+      "evidence": [
+        "List of privileged accounts with owners",
+        "Approval records for elevated access",
+        "Access review records",
+        "Admin activity logs sample"
+      ]
+    },
+    {
+      "ref": "A.8.3",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Information access restriction",
+      "purpose": "Make sure people can only see and change information their job needs.",
+      "guidance": "Define access by role, apply least privilege and set it up in each system, including shared drives and cloud apps. Review who can reach sensitive folders and customer data at planned intervals. Restrict external sharing links and guest access. Auditors check that the rules in policy match what systems actually allow.",
+      "questions": [
+        "How is access to systems and data decided?",
+        "How do you stop people reaching information they do not need?",
+        "How often is access reviewed?",
+        "How is external sharing controlled?"
+      ],
+      "evidence": [
+        "Access control policy and role matrix",
+        "System permission exports for key systems",
+        "Access review records",
+        "External sharing settings"
+      ]
+    },
+    {
+      "ref": "A.8.4",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Access to source code",
+      "purpose": "Protect code and the tools around it from unauthorised viewing and changes.",
+      "guidance": "Restrict repository access by team and need, and give write access only to those who must change code. Require reviews before merging and protect main branches. Use strong sign-in and log activity. Keep code, build secrets and libraries in controlled places, not on personal drives.",
+      "questions": [
+        "Who can read and who can change your repositories?",
+        "How are changes reviewed before merging?",
+        "How are secrets kept out of code?",
+        "How is access removed when developers leave?"
+      ],
+      "evidence": [
+        "Repository permission list",
+        "Branch protection settings",
+        "Code review records",
+        "Secret scanning results"
+      ]
+    },
+    {
+      "ref": "A.8.5",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Secure authentication",
+      "purpose": "Make sure people prove who they are in a way that is hard to fake.",
+      "guidance": "Use unique accounts, strong or passwordless sign-in and multi-factor authentication for remote access, admin accounts and anything holding sensitive data. Block weak and reused passwords and lock out repeated failures. Use single sign-on where possible to reduce password sprawl. Auditors look for exceptions such as shared logins and services without multi-factor authentication.",
+      "questions": [
+        "How do users authenticate to key systems?",
+        "Where is multi-factor authentication required?",
+        "How do you prevent weak passwords?",
+        "How are shared or service accounts handled?"
+      ],
+      "evidence": [
+        "Authentication standard or password policy",
+        "Multi-factor authentication enforcement settings",
+        "Single sign-on configuration",
+        "Exceptions list with approvals"
+      ]
+    },
+    {
+      "ref": "A.8.6",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Capacity management",
+      "purpose": "Make sure systems have enough resources for current and future demand.",
+      "guidance": "Monitor key resources like storage, memory, processing and bandwidth, and set alerts before they run out. Review trends and plan upgrades or scaling ahead of need. Consider seasonal peaks and growth, including cloud service limits and costs. Record decisions so capacity does not become a surprise outage.",
+      "questions": [
+        "How do you monitor the capacity of critical systems?",
+        "What alerts warn you before limits are reached?",
+        "How do you forecast future needs?",
+        "Has a capacity shortfall caused an incident?"
+      ],
+      "evidence": [
+        "Capacity monitoring dashboards",
+        "Alert configuration",
+        "Capacity review or forecast notes",
+        "Scaling or upgrade change records"
+      ]
+    },
+    {
+      "ref": "A.8.7",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Protection against malware",
+      "purpose": "Prevent, detect and clean up malicious software on your systems.",
+      "guidance": "Install and update endpoint protection on all devices and servers, and scan email and downloads. Limit who can install software and block known bad sources. Teach people to spot suspicious links and attachments. Make sure detections are reviewed and someone acts on them. Auditors look for devices missing the agent or with outdated definitions.",
+      "questions": [
+        "What malware protection is on devices and servers?",
+        "How are updates and coverage checked?",
+        "How are detections handled?",
+        "How are staff trained to avoid malware?"
+      ],
+      "evidence": [
+        "Endpoint protection deployment report",
+        "Policy settings and update status",
+        "Alert and response records",
+        "Awareness training material"
+      ]
+    },
+    {
+      "ref": "A.8.8",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Management of technical vulnerabilities",
+      "purpose": "Find and fix weaknesses in systems before attackers use them.",
+      "guidance": "Keep an inventory of what you run, scan regularly and apply patches within times based on severity, for example critical fixes within days. Track exceptions with an approved reason and compensating measures. Subscribe to supplier and security advisories. Test patches where practical. Typical findings are unpatched servers and no record of how fast fixes are applied.",
+      "questions": [
+        "How do you learn about vulnerabilities in your systems?",
+        "What are your patching timelines?",
+        "How do you track and close findings?",
+        "How are exceptions approved?"
+      ],
+      "evidence": [
+        "Vulnerability scan reports",
+        "Patch management procedure with timelines",
+        "Remediation tracker",
+        "Penetration test reports and follow-up"
+      ]
+    },
+    {
+      "ref": "A.8.9",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Configuration management",
+      "tags": [
+        "new-2022"
+      ],
+      "purpose": "Keep systems set up securely and stop settings drifting unnoticed.",
+      "guidance": "Define secure baseline settings for servers, devices, cloud services and network equipment, and apply them consistently, ideally through templates or infrastructure as code. Review configurations regularly and track changes. Remove default accounts and unneeded services. Auditors compare actual settings to the baseline and ask how drift is found.",
+      "questions": [
+        "What baselines do you use for key systems?",
+        "How do you apply and check them?",
+        "How are changes to configurations tracked?",
+        "How do you handle default accounts and services?"
+      ],
+      "evidence": [
+        "Configuration standards or hardening guides",
+        "Infrastructure as code repository",
+        "Configuration compliance scan results",
+        "Change records for configuration updates"
+      ]
+    },
+    {
+      "ref": "A.8.10",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Information deletion",
+      "tags": [
+        "new-2022"
+      ],
+      "purpose": "Remove information when it is no longer needed so it cannot leak or be misused.",
+      "guidance": "Set retention periods by type of data, based on legal, contract and business needs, and delete systematically when time is up, including from backups and cloud services where practical. Cover customer data after contract end and data held by suppliers. Keep evidence of what was deleted. Auditors frequently find data kept forever by default.",
+      "questions": [
+        "How long do you keep each type of information?",
+        "How is deletion carried out and verified?",
+        "How do you handle customer data at contract end?",
+        "What about copies in backups and suppliers?"
+      ],
+      "evidence": [
+        "Retention schedule",
+        "Deletion logs or automated deletion rules",
+        "Customer offboarding data deletion record",
+        "Supplier deletion confirmations"
+      ]
+    },
+    {
+      "ref": "A.8.11",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Data masking",
+      "tags": [
+        "new-2022"
+      ],
+      "purpose": "Hide or replace sensitive values so people see only what they need.",
+      "guidance": "Decide where real values are not needed, for example in support screens, reports, logs and non-production copies, and mask, truncate or tokenise them there. Apply rules consistently and test that masking cannot be easily reversed. Tie it to your data classification and privacy obligations. Check logs for accidental capture of personal data.",
+      "questions": [
+        "Where do you mask or hide sensitive data?",
+        "How do you decide which fields are masked?",
+        "Do logs or test data contain real personal data?",
+        "How do you verify masking works?"
+      ],
+      "evidence": [
+        "Data masking standard or rules",
+        "Screenshots of masked fields",
+        "Test data generation approach",
+        "Log review showing no sensitive values"
+      ]
+    },
+    {
+      "ref": "A.8.12",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Data leakage prevention",
+      "tags": [
+        "new-2022"
+      ],
+      "purpose": "Detect and stop sensitive information leaving the organisation without authority.",
+      "guidance": "Identify where sensitive data lives and the routes it could leak by, such as email, uploads, cloud sharing and removable media. Use tools or settings like sharing restrictions, email rules and blocking of personal storage to reduce those routes. Monitor alerts and follow up. Pair with training, since most leaks are by mistake.",
+      "questions": [
+        "Which data is most sensitive and where does it sit?",
+        "What routes could it leave by?",
+        "What controls detect or block unauthorised transfer?",
+        "How are alerts followed up?"
+      ],
+      "evidence": [
+        "Data leakage prevention rules or settings",
+        "Cloud sharing restrictions",
+        "Alert and investigation records",
+        "Data classification inventory"
+      ]
+    },
+    {
+      "ref": "A.8.13",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Information backup",
+      "tags": [
+        "continuity"
+      ],
+      "purpose": "Be able to restore information and systems after loss, corruption or attack.",
+      "guidance": "Define what is backed up, how often and how long it is kept, based on how much data loss the business can accept. Keep copies separate from the main environment and protected from tampering, such as immutable or offline copies. Most important, test restores regularly and record results. Auditors commonly find backups running but never tested.",
+      "questions": [
+        "What is backed up and how often?",
+        "Where are backups stored and who can change them?",
+        "When did you last test a restore?",
+        "How do backups meet your recovery targets?"
+      ],
+      "evidence": [
+        "Backup policy and schedule",
+        "Backup job success reports",
+        "Restore test records",
+        "Backup storage access settings"
+      ]
+    },
+    {
+      "ref": "A.8.14",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Redundancy of information processing facilities",
+      "tags": [
+        "continuity"
+      ],
+      "purpose": "Keep critical services running when a component or site fails.",
+      "guidance": "Identify services that must stay available and design in spare capacity, such as multiple availability zones, failover databases or a second internet line. Test failover so you know it works. Match the investment to the importance of the service and agreed recovery targets. For cloud hosts, review the provider options and your own configuration.",
+      "questions": [
+        "Which services need redundancy and why?",
+        "What failover is in place?",
+        "When was failover last tested?",
+        "How does redundancy support recovery targets?"
+      ],
+      "evidence": [
+        "Architecture diagrams showing redundancy",
+        "Failover test records",
+        "Availability targets",
+        "Provider resilience documentation"
+      ]
+    },
+    {
+      "ref": "A.8.15",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Logging",
+      "purpose": "Record what happens on systems so activity can be investigated and proven.",
+      "guidance": "Decide which events to log, such as sign-ins, admin actions, access to sensitive data and security tool alerts, and send them to a central place. Protect logs from change or deletion and keep them for a set period. Make sure people can actually search them. Auditors look for logging gaps on key systems and unrestricted access to logs.",
+      "questions": [
+        "Which events are logged on key systems?",
+        "Where are logs stored and who can alter them?",
+        "How long are logs kept?",
+        "Can you reconstruct an event from logs?"
+      ],
+      "evidence": [
+        "Logging standard",
+        "Central log platform configuration",
+        "Log retention settings",
+        "Sample logs for key systems"
+      ]
+    },
+    {
+      "ref": "A.8.16",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Monitoring activities",
+      "tags": [
+        "new-2022"
+      ],
+      "purpose": "Notice unusual behaviour on systems and networks so you can respond early.",
+      "guidance": "Define what normal looks like and set alerts for signs of trouble such as repeated failed sign-ins, unusual data transfers or new admin accounts. Assign someone to review alerts and record what they do. Use provider tools in the cloud. Review the rules as your systems change.",
+      "questions": [
+        "What do you monitor and why?",
+        "Who reviews alerts and how fast?",
+        "How do you tune alerts to reduce noise?",
+        "Can you show a monitored event that led to action?"
+      ],
+      "evidence": [
+        "Monitoring and alert rules",
+        "Alert review log or tickets",
+        "Dashboards or reports",
+        "Incident records started from alerts"
+      ]
+    },
+    {
+      "ref": "A.8.17",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Clock synchronisation",
+      "purpose": "Keep system times consistent so logs can be trusted and compared.",
+      "guidance": "Configure all servers, devices and cloud services to use the same reliable time sources. Check for drift on key systems and fix it. Consistent time is essential when piecing together events across systems. This is usually a one-off setup, then a periodic check.",
+      "questions": [
+        "Which time source do your systems use?",
+        "How do you check devices stay in sync?",
+        "Do logs from different systems line up?",
+        "Who owns this configuration?"
+      ],
+      "evidence": [
+        "Time synchronisation configuration",
+        "Evidence of source settings on servers",
+        "Periodic check record",
+        "Network time policy"
+      ]
+    },
+    {
+      "ref": "A.8.18",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Use of privileged utility programs",
+      "purpose": "Control tools that can bypass normal security checks.",
+      "guidance": "Identify utilities that can override controls, such as disk editors, database admin tools and remote administration software. Restrict them to named authorised people, require sign-in and log use. Remove ones not needed. Review the list when systems change.",
+      "questions": [
+        "Which tools could bypass security controls?",
+        "Who is authorised to use them?",
+        "How is their use logged and reviewed?",
+        "How do you stop unauthorised installation?"
+      ],
+      "evidence": [
+        "List of privileged utilities and owners",
+        "Access restrictions settings",
+        "Usage logs",
+        "Review records"
+      ]
+    },
+    {
+      "ref": "A.8.19",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Installation of software on operational systems",
+      "purpose": "Prevent unapproved or untested software from reaching live systems.",
+      "guidance": "Allow only approved software on production, installed by authorised people through a controlled process. Test updates first, keep a rollback plan and record versions. Block users from installing their own applications on managed devices. Keep an inventory so you can find unsupported items.",
+      "questions": [
+        "Who can install software on live systems?",
+        "How is software approved and tested?",
+        "How do you track versions and licences?",
+        "What is the rollback plan?"
+      ],
+      "evidence": [
+        "Software installation procedure",
+        "Approved software list",
+        "Change records for deployments",
+        "Device settings restricting installs"
+      ]
+    },
+    {
+      "ref": "A.8.20",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Networks security",
+      "purpose": "Protect the network and devices on it from attack and misuse.",
+      "guidance": "Document your network, use firewalls with deny-by-default rules and keep device firmware updated. Secure wireless with strong encryption and separate guests. Restrict administrative access to network equipment and review rules regularly. Auditors ask for diagrams and firewall rule reviews.",
+      "questions": [
+        "How is your network protected from outside threats?",
+        "How are firewall rules approved and reviewed?",
+        "How is wireless secured?",
+        "Is there a current network diagram?"
+      ],
+      "evidence": [
+        "Network diagram",
+        "Firewall rule review records",
+        "Wireless configuration",
+        "Network device admin access list"
+      ]
+    },
+    {
+      "ref": "A.8.21",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Security of network services",
+      "purpose": "Make sure the services your network depends on, from ISPs to cloud connectivity, meet your security needs.",
+      "guidance": "Identify network services you rely on, whether provided in-house or by suppliers, and define the security and availability you need from them. Put these into contracts or service agreements and monitor performance. Check the supplier security features such as encryption and filtering. Revisit when you change providers.",
+      "questions": [
+        "Which network services do you rely on?",
+        "What security requirements have you set?",
+        "Are they in contracts or agreements?",
+        "How do you monitor service performance?"
+      ],
+      "evidence": [
+        "Network service provider contracts",
+        "Service level agreements",
+        "Supplier security review",
+        "Service monitoring reports"
+      ]
+    },
+    {
+      "ref": "A.8.22",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Segregation of networks",
+      "purpose": "Split the network into zones so a problem in one place does not spread.",
+      "guidance": "Separate areas such as staff, guests, servers, development and sensitive systems using VLANs, subnets or cloud security groups, with rules controlling traffic between them. Keep guest and personal device Wi-Fi apart from internal systems. Review rules and test that segregation works.",
+      "questions": [
+        "How is your network divided into zones?",
+        "What controls traffic between zones?",
+        "Are guests and personal devices kept separate?",
+        "How do you test the separation?"
+      ],
+      "evidence": [
+        "Network zone diagram",
+        "Firewall or security group rules",
+        "Wi-Fi configuration showing guest separation",
+        "Segmentation test results"
+      ]
+    },
+    {
+      "ref": "A.8.23",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Web filtering",
+      "tags": [
+        "new-2022"
+      ],
+      "purpose": "Reduce exposure to harmful or inappropriate websites.",
+      "guidance": "Use a filtering service or DNS protection to block known malicious and unwanted categories, and apply it to remote devices as well as the office. Define what is blocked, how exceptions are requested and how people are told. Review reports for patterns. Balance protection against legitimate work needs.",
+      "questions": [
+        "How do you block malicious websites?",
+        "Does filtering apply to remote devices?",
+        "How are exceptions handled?",
+        "Do you review filtering reports?"
+      ],
+      "evidence": [
+        "Web filtering policy",
+        "Filtering tool configuration",
+        "Blocked-site reports",
+        "Exception request records"
+      ]
+    },
+    {
+      "ref": "A.8.24",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Use of cryptography",
+      "purpose": "Use encryption and key protection properly so data stays confidential and intact.",
+      "guidance": "Set rules for where encryption is required, covering data in transit and at rest, and choose recognised, current algorithms. Manage keys carefully, covering generation, storage, rotation and retirement, ideally with a managed key service. Do not store keys alongside the data. Auditors look for expired certificates and unencrypted laptops or databases.",
+      "questions": [
+        "Where do you require encryption and why?",
+        "How are encryption keys created, stored and rotated?",
+        "How do you manage certificates and their expiry?",
+        "Who has access to keys?"
+      ],
+      "evidence": [
+        "Cryptography policy",
+        "Key management procedure",
+        "Certificate inventory with expiry dates",
+        "Encryption settings evidence"
+      ]
+    },
+    {
+      "ref": "A.8.25",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Secure development life cycle",
+      "tags": [
+        "development"
+      ],
+      "purpose": "Build security into how software is made from the start.",
+      "guidance": "Define a development process that includes security at each stage: requirements, design, coding, review, testing and release. Keep rules for secure working in the development environment and train developers. Record the approach so it can be shown to customers and auditors. Keep it light enough that teams actually follow it.",
+      "questions": [
+        "How is security built into your development process?",
+        "Where in the pipeline are security checks performed?",
+        "How are developers trained?",
+        "How do you show the process is followed?"
+      ],
+      "evidence": [
+        "Secure development policy",
+        "Development process documentation",
+        "Pipeline checks configuration",
+        "Developer security training records"
+      ]
+    },
+    {
+      "ref": "A.8.26",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Application security requirements",
+      "tags": [
+        "development"
+      ],
+      "purpose": "Decide up front what security an application must have.",
+      "guidance": "For each new or changed application, capture security needs early, covering sign-in, access rules, data protection, logging and resilience, plus legal duties. Base them on risk and data sensitivity. Include requirements when buying software, not just when building it. Check them at acceptance.",
+      "questions": [
+        "How do you define security requirements for applications?",
+        "Who approves them?",
+        "How do they cover purchased software?",
+        "How do you verify they were met?"
+      ],
+      "evidence": [
+        "Security requirements template",
+        "Requirements documents for recent projects",
+        "Acceptance checklist",
+        "Supplier security questionnaires"
+      ]
+    },
+    {
+      "ref": "A.8.27",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Secure system architecture and engineering principles",
+      "tags": [
+        "development"
+      ],
+      "purpose": "Design systems on sound security principles rather than adding security as an afterthought.",
+      "guidance": "Adopt principles such as least privilege, defence in depth, secure defaults and fail safe, and apply them in design reviews. Document reference architectures and review them when technology changes. Apply them to cloud and third-party integrations. Show how a recent design decision used them.",
+      "questions": [
+        "Which security design principles do you follow?",
+        "How are they applied in design reviews?",
+        "Can you show a design that reflects them?",
+        "How do you update the principles?"
+      ],
+      "evidence": [
+        "Architecture principles document",
+        "Design review records",
+        "Reference architecture diagrams",
+        "Threat modelling outputs"
+      ]
+    },
+    {
+      "ref": "A.8.28",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Secure coding",
+      "tags": [
+        "new-2022",
+        "development"
+      ],
+      "purpose": "Write code that avoids common weaknesses.",
+      "guidance": "Set coding standards that address common flaws, use peer review, static analysis and dependency checks, and avoid exposing secrets. Keep libraries updated and vetted. Train developers on common attack types. Track findings to closure. Auditors sample pull requests and scan results.",
+      "questions": [
+        "What secure coding standards do you use?",
+        "How is code reviewed and scanned?",
+        "How do you manage third-party libraries?",
+        "How do you keep secrets out of code?"
+      ],
+      "evidence": [
+        "Secure coding standard",
+        "Pull request review records",
+        "Static analysis and dependency scan results",
+        "Secret scanning configuration"
+      ]
+    },
+    {
+      "ref": "A.8.29",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Security testing in development and acceptance",
+      "tags": [
+        "development"
+      ],
+      "purpose": "Check security works before software goes live.",
+      "guidance": "Plan security tests as part of development, such as automated scans, code review and periodic penetration testing, and set acceptance criteria. Test in an environment close to production. Fix or formally accept findings before release. Keep results.",
+      "questions": [
+        "What security testing do you perform before release?",
+        "Who decides if findings block a release?",
+        "How do you test in realistic conditions?",
+        "How are results tracked?"
+      ],
+      "evidence": [
+        "Test plans and acceptance criteria",
+        "Scan and penetration test reports",
+        "Release approval records",
+        "Finding tracker"
+      ]
+    },
+    {
+      "ref": "A.8.30",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Outsourced development",
+      "tags": [
+        "development",
+        "suppliers"
+      ],
+      "purpose": "Keep control of security when others build software for you.",
+      "guidance": "Set security requirements in contracts, including coding standards, testing, confidentiality and ownership of the code. Review the supplier practices and check deliverables for flaws. Control their access to your systems and remove it afterwards. Keep rights to the source code or escrow arrangements where needed.",
+      "questions": [
+        "How do you set security requirements for outsourced developers?",
+        "How do you check the quality and security of delivered code?",
+        "What access do suppliers have to your systems?",
+        "Who owns the code?"
+      ],
+      "evidence": [
+        "Development contracts with security terms",
+        "Supplier assessment",
+        "Code review or test records for deliveries",
+        "Supplier access records"
+      ]
+    },
+    {
+      "ref": "A.8.31",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Separation of development, test and production environments",
+      "tags": [
+        "development"
+      ],
+      "purpose": "Keep experimental work away from live systems and data.",
+      "guidance": "Use separate environments for development, testing and production, with different access rights and no direct path from development to live. Do not use real personal data in non-production unless protected. Promote changes through a controlled pipeline. Check developers do not hold standing production access.",
+      "questions": [
+        "How are your environments separated?",
+        "Who has access to each environment?",
+        "How do changes move to production?",
+        "Is real data used in test?"
+      ],
+      "evidence": [
+        "Environment architecture diagram",
+        "Access lists by environment",
+        "Deployment pipeline configuration",
+        "Test data approach"
+      ]
+    },
+    {
+      "ref": "A.8.32",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Change management",
+      "purpose": "Make changes to systems in a controlled way so they do not cause outages or weaken security.",
+      "guidance": "Require changes to be requested, assessed, approved, tested and recorded, with a rollback plan. Use lighter paths for low-risk routine changes and faster emergency routes that are reviewed afterwards. Keep a change log and check it against reality. Auditors sample changes and look for approvals and testing.",
+      "questions": [
+        "How are changes requested and approved?",
+        "How do you handle urgent changes?",
+        "How do you test and roll back?",
+        "Can you show records for recent changes?"
+      ],
+      "evidence": [
+        "Change management procedure",
+        "Change tickets with approvals",
+        "Test evidence",
+        "Post-implementation reviews"
+      ]
+    },
+    {
+      "ref": "A.8.33",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Test information",
+      "tags": [
+        "development"
+      ],
+      "purpose": "Protect the data used for testing.",
+      "guidance": "Avoid using live personal or confidential data in testing. Prefer synthetic or anonymised data, and if real data is unavoidable, protect it as in production, limit access and delete it after use. Record approvals. Check that test copies are not left lying around.",
+      "questions": [
+        "What data do you use for testing?",
+        "How is real data approved and protected if used?",
+        "How is test data removed afterwards?",
+        "Who can access test data?"
+      ],
+      "evidence": [
+        "Test data policy",
+        "Data anonymisation or generation method",
+        "Approvals for use of live data",
+        "Deletion records"
+      ]
+    },
+    {
+      "ref": "A.8.34",
+      "parent": "A.8",
+      "kind": "control",
+      "title": "Protection of information systems during audit testing",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Make sure audits and technical checks do not disrupt or expose live systems.",
+      "guidance": "Plan and agree the scope, timing and method of any testing with the owner of the system beforehand. Give auditors read-only access where possible, remove it afterwards and avoid tests that could damage live data. Back up first for intrusive checks. Record what was accessed.",
+      "questions": [
+        "How are audit tests on live systems agreed?",
+        "What access do auditors get and how is it removed?",
+        "How do you avoid disruption?",
+        "How is audit access logged?"
+      ],
+      "evidence": [
+        "Audit test plan and approval",
+        "Auditor access records",
+        "Backup before testing evidence",
+        "Access removal records"
+      ]
+    }
   ]
 }

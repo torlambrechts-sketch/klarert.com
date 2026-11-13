@@ -591,7 +591,7 @@ async function FrameworksTab({ org }: { org: string }) {
       </Card>
       <Card
         title="Framework catalogue"
-        description="Reference numbers with short titles in our own words. The text of standards is not included: buy the standard for it. EU laws link to EUR-Lex."
+        description="Reference numbers with official short titles, plus our own purpose, guidance, audit questions and typical evidence for each. The text of standards is not included: buy the standard for it. EU laws link to EUR-Lex."
       >
         {frameworks.length === 0 ? (
           <p className="text-muted-foreground text-copy-13">No frameworks are available yet.</p>

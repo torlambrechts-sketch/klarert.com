@@ -1,5 +1,6 @@
 // The framework files (templates/frameworks/*.json, docs/12) and the cross-walk file, checked with Zod at load. A
-// framework is reference data: reference numbers, our own short titles and guidance, never the framework's text.
+// framework is reference data: reference numbers, short titles, and our own purpose, guidance, questions and
+// evidence; never the framework's text.
 import { z } from 'zod';
 import type { CrosswalkFile } from '@/engine/frameworks/crosswalks';
 import { isRequirementKey } from '@/engine/frameworks/refs';
@@ -7,11 +8,12 @@ import {
   FRAMEWORK_KINDS,
   RELATIONS,
   REQUIREMENT_KINDS,
+  TITLES_POLICIES,
   type Framework,
 } from '@/engine/frameworks/types';
 import { ID_PREFIX } from '@/engine/labels';
 
-/** Longest title we ship: a short phrase in our own words, not a sentence copied from a standard. */
+/** Longest title we ship: a short heading, never a sentence of the standard. */
 export const MAX_TITLE = 80;
 
 const requirementSchema = z.object({
@@ -24,7 +26,10 @@ const requirementSchema = z.object({
   parent: z.string().min(1).max(40).nullable().default(null),
   kind: z.enum(REQUIREMENT_KINDS),
   title: z.string().trim().min(1).max(MAX_TITLE),
+  purpose: z.string().trim().min(1).max(300).nullable().default(null),
   guidance: z.string().trim().min(1).max(2000).nullable().default(null),
+  questions: z.array(z.string().trim().min(1).max(200)).max(8).default([]),
+  evidence: z.array(z.string().trim().min(1).max(160)).max(10).default([]),
   tags: z
     .array(z.string().regex(/^[a-z0-9][a-z0-9-]{0,39}$/))
     .max(10)
@@ -43,7 +48,7 @@ export const frameworkSchema = z
     source: z.string().trim().min(1).max(500),
     licence: z.string().trim().min(1).max(500),
     url: z.url(),
-    titles: z.literal('own-words'),
+    titles: z.enum(TITLES_POLICIES),
     library: z.object({
       name: z.string().trim().min(1).max(120),
       itemLabel: z.string().trim().min(1).max(60),

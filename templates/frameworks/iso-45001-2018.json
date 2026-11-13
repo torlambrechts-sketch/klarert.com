@@ -1,15 +1,15 @@
 {
   "key": "iso-45001",
   "version": "2018",
-  "revision": 1,
+  "revision": 2,
   "title": "ISO 45001:2018",
   "shortTitle": "45001",
   "publisher": "ISO",
   "kind": "standard",
-  "source": "ISO 45001:2018, clauses 4 to 10 (reference numbers only)",
-  "licence": "Reference numbers only. Titles are paraphrased in our own words and are not the text of the standard. Buy the standard for the requirements.",
+  "source": "ISO 45001:2018, clauses 4 to 10 (reference numbers and official short titles)",
+  "licence": "Reference numbers with the official short titles only; not the text of the standard. Purpose, guidance, audit questions and typical evidence are our own words. Buy the standard for the requirements.",
   "url": "https://www.iso.org/standard/63787.html",
-  "titles": "own-words",
+  "titles": "official-short",
   "library": {
     "name": "ISO 45001:2018 requirements",
     "itemLabel": "Requirement",
@@ -17,61 +17,915 @@
     "folder": "Frameworks"
   },
   "requirements": [
-    { "ref": "4", "kind": "theme", "title": "Clause 4 · Organisation and its context" },
-    { "ref": "4.1", "parent": "4", "kind": "clause", "title": "Internal and external issues" },
-    { "ref": "4.2", "parent": "4", "kind": "clause", "title": "Workers, other interested parties and what they need" },
-    { "ref": "4.3", "parent": "4", "kind": "clause", "title": "Scope of the health and safety system" },
-    { "ref": "4.4", "parent": "4", "kind": "clause", "title": "Setting up and running the health and safety system" },
-
-    { "ref": "5", "kind": "theme", "title": "Clause 5 · Leadership and worker participation" },
-    { "ref": "5.1", "parent": "5", "kind": "clause", "title": "Top management commitment" },
-    { "ref": "5.2", "parent": "5", "kind": "clause", "title": "Health and safety policy" },
-    { "ref": "5.3", "parent": "5", "kind": "clause", "title": "Roles, responsibilities and authority" },
-    { "ref": "5.4", "parent": "5", "kind": "clause", "title": "Consulting workers and involving them" },
-
-    { "ref": "6", "kind": "theme", "title": "Clause 6 · Planning" },
-    { "ref": "6.1", "parent": "6", "kind": "clause", "title": "Dealing with risks and opportunities", "tags": ["risk"] },
-    { "ref": "6.1.1", "parent": "6.1", "kind": "clause", "title": "Planning for risks and opportunities", "tags": ["risk"] },
-    { "ref": "6.1.2", "parent": "6.1", "kind": "clause", "title": "Finding hazards and assessing risks and opportunities", "tags": ["risk"] },
-    { "ref": "6.1.3", "parent": "6.1", "kind": "clause", "title": "Legal and other duties you must meet", "tags": ["legal"] },
-    { "ref": "6.1.4", "parent": "6.1", "kind": "clause", "title": "Planning what to do about them" },
-    { "ref": "6.2", "parent": "6", "kind": "clause", "title": "Health and safety objectives" },
-    { "ref": "6.2.1", "parent": "6.2", "kind": "clause", "title": "Setting objectives" },
-    { "ref": "6.2.2", "parent": "6.2", "kind": "clause", "title": "Plans to reach the objectives" },
-
-    { "ref": "7", "kind": "theme", "title": "Clause 7 · Support" },
-    { "ref": "7.1", "parent": "7", "kind": "clause", "title": "Resources" },
-    { "ref": "7.2", "parent": "7", "kind": "clause", "title": "Competence" },
-    { "ref": "7.3", "parent": "7", "kind": "clause", "title": "Awareness" },
-    { "ref": "7.4", "parent": "7", "kind": "clause", "title": "Communication" },
-    { "ref": "7.4.1", "parent": "7.4", "kind": "clause", "title": "Planning communication" },
-    { "ref": "7.4.2", "parent": "7.4", "kind": "clause", "title": "Communicating inside the organisation" },
-    { "ref": "7.4.3", "parent": "7.4", "kind": "clause", "title": "Communicating with outside parties" },
-    { "ref": "7.5", "parent": "7", "kind": "clause", "title": "Documented information" },
-    { "ref": "7.5.1", "parent": "7.5", "kind": "clause", "title": "What must be documented" },
-    { "ref": "7.5.2", "parent": "7.5", "kind": "clause", "title": "Creating and updating documents" },
-    { "ref": "7.5.3", "parent": "7.5", "kind": "clause", "title": "Controlling documents and records" },
-
-    { "ref": "8", "kind": "theme", "title": "Clause 8 · Operation" },
-    { "ref": "8.1", "parent": "8", "kind": "clause", "title": "Planning and controlling operations" },
-    { "ref": "8.1.1", "parent": "8.1", "kind": "clause", "title": "Setting up operational controls" },
-    { "ref": "8.1.2", "parent": "8.1", "kind": "clause", "title": "Removing hazards and lowering risk in order of preference", "tags": ["risk"] },
-    { "ref": "8.1.3", "parent": "8.1", "kind": "clause", "title": "Managing changes" },
-    { "ref": "8.1.4", "parent": "8.1", "kind": "clause", "title": "Buying goods and services, contractors and outsourcing", "tags": ["suppliers"] },
-    { "ref": "8.2", "parent": "8", "kind": "clause", "title": "Being ready for emergencies", "tags": ["emergency"] },
-
-    { "ref": "9", "kind": "theme", "title": "Clause 9 · Performance evaluation" },
-    { "ref": "9.1", "parent": "9", "kind": "clause", "title": "Measuring and evaluating performance" },
-    { "ref": "9.1.1", "parent": "9.1", "kind": "clause", "title": "What to monitor and measure" },
-    { "ref": "9.1.2", "parent": "9.1", "kind": "clause", "title": "Checking you meet legal and other duties", "tags": ["legal"] },
-    { "ref": "9.2", "parent": "9", "kind": "clause", "title": "Internal audit", "tags": ["audit"] },
-    { "ref": "9.2.1", "parent": "9.2", "kind": "clause", "title": "Audits at planned intervals", "tags": ["audit"] },
-    { "ref": "9.2.2", "parent": "9.2", "kind": "clause", "title": "The audit programme", "tags": ["audit"] },
-    { "ref": "9.3", "parent": "9", "kind": "clause", "title": "Management review" },
-
-    { "ref": "10", "kind": "theme", "title": "Clause 10 · Improvement" },
-    { "ref": "10.1", "parent": "10", "kind": "clause", "title": "Finding ways to improve" },
-    { "ref": "10.2", "parent": "10", "kind": "clause", "title": "Incidents, nonconformity and corrective action", "tags": ["incidents"] },
-    { "ref": "10.3", "parent": "10", "kind": "clause", "title": "Continual improvement" }
+    {
+      "ref": "4",
+      "kind": "theme",
+      "title": "Clause 4 · Organisation and its context",
+      "purpose": "Establishes the foundation of the system by understanding context and scope."
+    },
+    {
+      "ref": "4.1",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Understanding the organisation and its context",
+      "purpose": "Makes you look at the outside and inside forces that can help or hurt your health and safety results, so the system is built around real conditions.",
+      "guidance": "Keep a short, dated list of issues such as the law, markets, locality, technology, workforce, culture and finances, split into internal and external. A simple PESTLE or SWOT worksheet is enough for a small company. Record why each issue matters to health and safety and who owns it. The usual finding is a list written once at setup and never revisited, or one that does not connect to risks and objectives. Review it at least yearly and whenever something big changes, such as a new site or service.",
+      "questions": [
+        "Which issues outside and inside the company affect your health and safety performance?",
+        "When did you last review this list and what changed?",
+        "How did these issues feed into your risks and objectives?",
+        "Who is responsible for keeping the list current?"
+      ],
+      "evidence": [
+        "Context analysis (PESTLE, SWOT or similar) with date and owner",
+        "Management review minutes showing the issues were reviewed",
+        "Link from issues to the risk register or objectives"
+      ]
+    },
+    {
+      "ref": "4.2",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Understanding the needs and expectations of workers and other interested parties",
+      "purpose": "Identifies who has a stake in your health and safety and which of their needs become requirements.",
+      "guidance": "List workers, contractors, regulators, customers, insurers, emergency services and neighbours, and write what each needs. Decide which become legal or other requirements. Review it regularly and after changes. A common finding is a list that leaves out agency workers or contractors, or that does not feed the legal register.",
+      "questions": [
+        "Who are your interested parties and what do they need?",
+        "Which needs have you taken on as requirements?",
+        "How are workers' needs identified?",
+        "When was the list last reviewed?"
+      ],
+      "evidence": [
+        "Interested parties register",
+        "Insurer, client or regulator requirements",
+        "Worker consultation outputs"
+      ]
+    },
+    {
+      "ref": "4.3",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Determining the scope of the health and safety management system",
+      "purpose": "Draws a clear line around what the system covers so that everyone, including auditors, knows what is in and out.",
+      "guidance": "Write the scope as a short statement naming sites, activities, products or services, and any boundaries or exclusions. Base it on the context issues, the needs of interested parties and the legal duties you found. Anything that can affect your health and safety performance and that you control or influence should be inside it. Common problems are scopes that omit a site or contractor activity, or that do not match the certificate or website wording. Keep the scope available as documented information.",
+      "questions": [
+        "What exactly does the system cover and what is excluded?",
+        "Why were any activities, sites or functions left out?",
+        "Does the scope match what actually happens day to day?",
+        "Where is the scope statement published and who approves it?"
+      ],
+      "evidence": [
+        "Approved scope statement with version and date",
+        "List of sites, activities and boundaries",
+        "Rationale for any exclusions"
+      ]
+    },
+    {
+      "ref": "4.4",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Health and safety management system and its processes",
+      "purpose": "Requires you to actually run a management system, with defined processes that work together and are improved over time.",
+      "guidance": "Map the main processes, what goes in and out, who owns them and how they link, for example in a simple process map or table. Decide how each is checked and which resources it needs. You do not need a thick manual; you need processes that people follow and that you can show working. A frequent finding is a set of policies on paper that do not match daily practice, or processes with no owner. Revisit the map when the business changes.",
+      "questions": [
+        "Which processes make up the system and who owns each?",
+        "How do the processes connect to one another?",
+        "How do you know the processes are working as planned?",
+        "What did you change in the system after the last review?"
+      ],
+      "evidence": [
+        "Process map or process register with owners",
+        "Procedures or work instructions for key processes",
+        "Records showing processes are monitored and improved"
+      ]
+    },
+    {
+      "ref": "5",
+      "kind": "theme",
+      "title": "Clause 5 · Leadership and worker participation",
+      "purpose": "Confirms leaders own the system, set direction and give people a voice."
+    },
+    {
+      "ref": "5.1",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Leadership and commitment",
+      "purpose": "Makes senior people visibly responsible for the system rather than delegating it entirely.",
+      "guidance": "Top management should be able to show what they personally do: set direction, make sure the system fits the business plan, provide resources, talk about its importance and back the people who run it. Good evidence is behaviour, not statements: attending reviews, approving budgets, asking for results. Auditors interview the leaders, so they should know the policy, the objectives and the main health and safety risks. A common finding is a system run entirely by one coordinator with leadership absent. Hand-offs to a representative are fine as long as accountability stays with leaders.",
+      "questions": [
+        "What do you personally do to support the health and safety management system?",
+        "How do you make sure it is part of the business plan?",
+        "How are resources decided and who approves them?",
+        "How do you encourage people to raise concerns and improvements?"
+      ],
+      "evidence": [
+        "Management review minutes with leader attendance",
+        "Budget approvals for system needs",
+        "Internal communications from leaders on the topic",
+        "Leaders' interview answers consistent with the policy"
+      ]
+    },
+    {
+      "ref": "5.2",
+      "parent": "5",
+      "kind": "clause",
+      "title": "OH&S policy",
+      "purpose": "Gives the organisation a top-level commitment to safe and healthy work that guides objectives.",
+      "guidance": "The policy should suit the business, commit to safe and healthy workplaces, eliminating hazards and reducing risk, meeting legal duties, improving continually and consulting workers. Top management approves it, it is communicated and available to interested parties. Findings include generic text, no mention of worker consultation and staff who do not know it.",
+      "questions": [
+        "Who approved the policy and when?",
+        "Does it commit to eliminating hazards and consultation?",
+        "How is it communicated and made available?",
+        "How often is it reviewed?"
+      ],
+      "evidence": [
+        "Signed policy with date",
+        "Policy displayed or published",
+        "Communication records",
+        "Review record"
+      ]
+    },
+    {
+      "ref": "5.3",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Organisational roles, responsibilities and authorities",
+      "purpose": "Ensures every duty in the system has a named person with the authority to carry it out.",
+      "guidance": "Allocate responsibilities for the system's main tasks, including reporting performance to top management, and make sure people know theirs. Use job descriptions, an RACI table or an organisation chart, and keep them in line with who actually does the work. Cover deputies for absences. Typical findings are roles held by someone who has left, duties nobody knows about, or authority on paper that is not backed in practice.",
+      "questions": [
+        "Who is responsible for each part of the system?",
+        "Who reports system performance to top management and how often?",
+        "Do people know their responsibilities and can they show where these are written?",
+        "Who covers when the owner is away?"
+      ],
+      "evidence": [
+        "Role descriptions or RACI matrix with dates",
+        "Organisation chart",
+        "Appointment letters or minutes assigning system roles"
+      ]
+    },
+    {
+      "ref": "5.4",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Consultation and participation of workers",
+      "purpose": "Ensures workers, including non-managerial ones, have a real voice in decisions that affect their safety.",
+      "guidance": "Set up ways to consult and involve workers: safety committee, representatives, toolbox talks, surveys. Give time, training and information so participation is meaningful. Specifically involve them in hazard identification, controls, training needs, incident investigation and policy. Remove barriers such as language, fear of reprisal. Findings include committees without worker members and consultation limited to managers.",
+      "questions": [
+        "How do non-managerial workers take part in decisions?",
+        "How do you consult on risk assessment and incident investigation?",
+        "What obstacles to participation did you find and remove?",
+        "Show a change that came from worker input."
+      ],
+      "evidence": [
+        "Committee terms of reference and minutes",
+        "Representative appointment records",
+        "Survey results and responses",
+        "Consultation records for changes"
+      ]
+    },
+    {
+      "ref": "6",
+      "kind": "theme",
+      "title": "Clause 6 · Planning",
+      "purpose": "Sets how risks, legal duties and objectives drive the system."
+    },
+    {
+      "ref": "6.1",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Actions to address risks and opportunities",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Groups the planning work: hazards, risks, legal duties and planning actions.",
+      "guidance": "Plan how to deal with risks, opportunities, legal duties and the actions that follow, in a way that feeds objectives and operations. Keep records and review them when things change. Auditors check the sub-clauses, and this parent is the overall view of whether planning is joined up.",
+      "questions": [
+        "How does planning feed objectives and operations?",
+        "Who reviews risks and opportunities?",
+        "How are legal duties built in?"
+      ],
+      "evidence": [
+        "Risk and opportunity register",
+        "Legal register",
+        "Action plan"
+      ]
+    },
+    {
+      "ref": "6.1.1",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Actions to address risks and opportunities: general",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Combines context, needs, hazards and legal duties to find OH&S risks and opportunities and plan responses.",
+      "guidance": "Pull together the outputs of context, interested parties, hazard identification and legal duties, plus emergencies. Plan actions, how to build them into processes and how to check their effectiveness. Keep documented information about them. Findings are risk registers kept separate from the system and no action plans.",
+      "questions": [
+        "What risks and opportunities did you find?",
+        "How do they link to hazards and legal duties?",
+        "What actions followed?",
+        "How do you evaluate them?"
+      ],
+      "evidence": [
+        "Risk and opportunity register",
+        "Action plan",
+        "Review records"
+      ]
+    },
+    {
+      "ref": "6.1.2",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Hazard identification and assessment of risks and opportunities",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Finds the ways people can be hurt or made ill and judges how serious they are.",
+      "guidance": "Run a continuing process that looks at how work is organised, routine and non-routine activities, people, equipment, past incidents, emergency situations and changes. Include contractors and visitors. Use clear risk criteria, consult workers and prioritise controls. Reassess after change or incident. Common findings are generic assessments, non-routine work missed and assessments no one has reviewed.",
+      "questions": [
+        "How do you identify hazards?",
+        "What criteria rate risk?",
+        "How were workers involved?",
+        "When do you reassess?"
+      ],
+      "evidence": [
+        "Hazard register and risk assessments",
+        "Risk assessment method",
+        "Worker consultation records",
+        "Review dates"
+      ]
+    },
+    {
+      "ref": "6.1.3",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Determination of legal requirements and other requirements",
+      "tags": [
+        "legal"
+      ],
+      "purpose": "Ensures you know which health and safety laws and agreed requirements apply and keep up to date.",
+      "guidance": "Identify laws, regulations, codes, client demands and agreements. Record how they apply, who owns them and when each was last checked. Update on a schedule and after change. Findings include registers with no review date and obligations without owners.",
+      "questions": [
+        "How do you track changes to the law?",
+        "Who owns each requirement?",
+        "How are they used in risk planning?",
+        "When was the register last reviewed?"
+      ],
+      "evidence": [
+        "Legal requirements register",
+        "Permits, certificates and inspections list",
+        "Review log"
+      ]
+    },
+    {
+      "ref": "6.1.4",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Planning action",
+      "purpose": "Converts risks, requirements and opportunities into actions built into how you work.",
+      "guidance": "Plan actions for hazards, risks, legal duties and emergencies. State how they fit into processes and how you will evaluate them. Consider the hierarchy of control, technology and financial needs, and the views of workers. Findings are actions not integrated and no effectiveness checks.",
+      "questions": [
+        "What actions come from risks and legal duties?",
+        "How are they built into processes?",
+        "How do you check effectiveness?",
+        "How did workers contribute?"
+      ],
+      "evidence": [
+        "Action plan with owners and dates",
+        "Updated procedures",
+        "Effectiveness review"
+      ]
+    },
+    {
+      "ref": "6.2",
+      "parent": "6",
+      "kind": "clause",
+      "title": "OH&S objectives and planning to achieve them",
+      "purpose": "Groups objective setting and planning.",
+      "guidance": "Set measurable objectives that follow from the policy and plan who does what, with what resources, by when and how results are judged. Track progress and report to management. Auditors check the sub-clauses, and this parent is the overall view of whether objectives drive action.",
+      "questions": [
+        "What are your objectives and how are they tracked?",
+        "Who owns each?",
+        "How are resources committed?"
+      ],
+      "evidence": [
+        "Objectives register",
+        "Action plans",
+        "Progress reports"
+      ]
+    },
+    {
+      "ref": "6.2.1",
+      "parent": "6.2",
+      "kind": "clause",
+      "title": "OH&S objectives",
+      "purpose": "Sets measurable targets that support the policy and improve safety and health.",
+      "guidance": "Set objectives consistent with the policy, taking into account risks, legal duties and the views of workers. Make them measurable where practical, monitored and communicated. Examples include reducing manual handling injuries or completing inspections. Findings include vague objectives, no owner and no tracking.",
+      "questions": [
+        "What are your objectives and why?",
+        "How are they measured?",
+        "How did workers take part?",
+        "Who owns each?"
+      ],
+      "evidence": [
+        "Objectives register with measures",
+        "Progress reports",
+        "Consultation records",
+        "Management review minutes"
+      ]
+    },
+    {
+      "ref": "6.2.2",
+      "parent": "6.2",
+      "kind": "clause",
+      "title": "Planning to achieve OH&S objectives",
+      "purpose": "Defines who does what, with what resources, by when and how results are judged.",
+      "guidance": "For each objective state the actions, responsible person, resources, deadline and how results are evaluated, including indicators. Consider how it fits into business processes. Review progress regularly. Findings are plans without budgets or deadlines.",
+      "questions": [
+        "What will be done, by whom and when?",
+        "Which resources are committed?",
+        "How do you evaluate results?",
+        "How is it built into business processes?"
+      ],
+      "evidence": [
+        "Action plans with owners and dates",
+        "Resource approvals",
+        "Progress records"
+      ]
+    },
+    {
+      "ref": "7",
+      "kind": "theme",
+      "title": "Clause 7 · Support",
+      "purpose": "Covers resources, skills, awareness, communication and documents."
+    },
+    {
+      "ref": "7.1",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Resources",
+      "purpose": "Makes sure the system has the people, money, equipment and infrastructure it needs to work.",
+      "guidance": "Identify what is required to run, maintain and improve the system and how it is funded: staff time, tools, training budget, maintenance, monitoring equipment. Tie resource decisions to the plan, objectives and management review actions. Auditors look for objectives that were set with no one given the time or money to deliver them. Record the decisions, even briefly, in budgets or review minutes.",
+      "questions": [
+        "How do you decide what resources the system needs?",
+        "Were any actions delayed because of lack of resources?",
+        "Who approves the budget for it?",
+        "How do you check equipment and infrastructure remain suitable?"
+      ],
+      "evidence": [
+        "Budget lines or approved spend for system activities",
+        "Management review resource decisions",
+        "Maintenance and calibration plans",
+        "Resourcing in action plans"
+      ]
+    },
+    {
+      "ref": "7.2",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Competence",
+      "purpose": "Ensures the people whose work affects your results have the skills and knowledge to do it well.",
+      "guidance": "List the roles that can affect health and safety performance or compliance and state the knowledge, training or experience each needs. Compare people to those needs, close the gaps through training, coaching or hiring, then check the training worked. Keep records proportionate: certificates, attendance, sign-offs. The usual findings are missing records for contractors, no check that training was effective, and legal-requirement training that has lapsed.",
+      "questions": [
+        "How do you decide what competence each role needs?",
+        "How do you close gaps and check it worked?",
+        "Where are the training and qualification records?",
+        "How do you manage competence of contractors or temporary staff?"
+      ],
+      "evidence": [
+        "Competence matrix or role requirements",
+        "Training records and certificates",
+        "Training effectiveness checks",
+        "Induction records"
+      ]
+    },
+    {
+      "ref": "7.3",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Awareness",
+      "purpose": "Makes sure people understand the policy, what they contribute and what happens if they do not follow the system.",
+      "guidance": "Everyone working under your control should know the health and safety policy, the objectives relevant to their job, how their work affects results and what non-conformance could mean. Induction, toolbox talks, notice boards and short team briefings all work. Auditors ask staff directly, so test this yourself with a few quick conversations. A frequent finding is awareness covering the policy only, with staff unable to say what they personally contribute.",
+      "questions": [
+        "Can staff explain the policy in their own words?",
+        "How do people learn how their job affects results?",
+        "What do new starters and contractors receive?",
+        "How do you check awareness is effective?"
+      ],
+      "evidence": [
+        "Induction content and attendance records",
+        "Briefing or toolbox talk records",
+        "Posted policy and notices",
+        "Awareness survey or interview notes"
+      ]
+    },
+    {
+      "ref": "7.4",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Communication",
+      "purpose": "Groups the rules for what you communicate, to whom, when and how, inside and outside the company.",
+      "guidance": "Plan one simple communication approach covering what you share inside and outside the company, with whom, when, how and who is responsible. Use a one-page matrix and keep records of important messages. Make sure it also gives people a way to respond. Auditors check the sub-clauses, so this parent works as the overall view of whether communication is deliberate and works.",
+      "questions": [
+        "Do you have an overall approach to internal and external communication?",
+        "Who owns it?",
+        "How do you know it works?"
+      ],
+      "evidence": [
+        "Communication matrix or plan",
+        "Sample communications sent",
+        "Review notes on effectiveness"
+      ]
+    },
+    {
+      "ref": "7.4.1",
+      "parent": "7.4",
+      "kind": "clause",
+      "title": "Communication: general",
+      "purpose": "Sets up a deliberate approach to what you tell people, who you tell, when and how.",
+      "guidance": "Build a short communication matrix with the subject, audience, timing, method and owner. Include the topics you must share by law or by agreement, and the way you listen back. Keep it proportionate: a table on one page often does the job. Findings usually arise when the plan exists but nobody uses it or it ignores contractors and neighbours.",
+      "questions": [
+        "What do you communicate, to whom and when?",
+        "Who decides what is shared externally?",
+        "How do you make sure communication is consistent with the facts and the records?",
+        "How do you review whether the plan works?"
+      ],
+      "evidence": [
+        "Communication matrix or plan",
+        "Examples of notices, bulletins or emails sent",
+        "Records of external enquiries and responses"
+      ]
+    },
+    {
+      "ref": "7.4.2",
+      "parent": "7.4",
+      "kind": "clause",
+      "title": "Internal communication",
+      "purpose": "Ensures information flows across levels and functions and that people can feed ideas back.",
+      "guidance": "Show how health and safety information gets to staff and back: meetings, noticeboards, intranet, team briefings, suggestion channels. Make sure the system's performance and changes are shared and that workers can contribute to improvement. A common weakness is one-way messaging with no sign that feedback was heard. Keep minutes or logs that show it happens.",
+      "questions": [
+        "How do staff hear about system performance and changes?",
+        "How can they raise suggestions or concerns?",
+        "Show a recent example of feedback leading to a change.",
+        "How does information move between sites or shifts?"
+      ],
+      "evidence": [
+        "Team meeting minutes",
+        "Intranet posts or newsletters",
+        "Suggestion log with responses"
+      ]
+    },
+    {
+      "ref": "7.4.3",
+      "parent": "7.4",
+      "kind": "clause",
+      "title": "External communication",
+      "purpose": "Makes sure what you tell customers, regulators, neighbours and others is deliberate, accurate and recorded.",
+      "guidance": "Decide who may speak for the company on these matters and how enquiries and complaints are logged and answered. Keep a record of significant communications with authorities and other outside parties and of the response. Auditors check that mandatory notifications were made on time and that claims on websites or tenders are supportable. Weak spots are informal handling of complaints and no named contact.",
+      "questions": [
+        "Who speaks to regulators, customers and the public?",
+        "How are enquiries and complaints logged and answered?",
+        "Show a recent notification to an authority.",
+        "How do you check public claims are accurate?"
+      ],
+      "evidence": [
+        "External communication log",
+        "Correspondence with authorities",
+        "Complaint register with outcomes",
+        "Approved public statements or reports"
+      ]
+    },
+    {
+      "ref": "7.5",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Documented information",
+      "purpose": "Groups the rules for the documents and records the system needs and how they are controlled.",
+      "guidance": "Decide which documents and records the system needs, keep them current, and control access, storage and retention. Aim for short, usable material that people actually follow, and keep an index. Auditors check the sub-clauses, and this parent is the overall view of whether documentation is proportionate and controlled.",
+      "questions": [
+        "Which documents and records does the system rely on?",
+        "How do you keep them controlled?",
+        "Can staff find the current version?"
+      ],
+      "evidence": [
+        "Document and record register",
+        "Document control procedure",
+        "Retention schedule"
+      ]
+    },
+    {
+      "ref": "7.5.1",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Documented information: general",
+      "purpose": "Defines the minimum written material the system needs plus whatever else you decide helps it work.",
+      "guidance": "List the documents and records you must have under the standard and any extra ones that make sense for your size, complexity and competence of staff. Aim for useful, short and in use rather than long and shelved. Keep an index or register so you can find the current versions. Auditors often find missing mandatory items or heavy documentation nobody follows.",
+      "questions": [
+        "Which documents and records does your system rely on?",
+        "How did you decide how much to document?",
+        "Can staff find the current version quickly?",
+        "Which items are mandatory and where are they?"
+      ],
+      "evidence": [
+        "Document and record register",
+        "Manual, policy and procedure set",
+        "Mapping of required items to documents"
+      ]
+    },
+    {
+      "ref": "7.5.2",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Creating and updating",
+      "purpose": "Keeps documents recognisable, suitable and approved before use.",
+      "guidance": "Give every document a title, date, version and owner, a common format and an approval step before release. Use a medium that suits users, whether paper or electronic. Agree who may edit and how reviews are triggered. Findings usually involve missing approval evidence or uncontrolled copies.",
+      "questions": [
+        "How are documents approved before use?",
+        "What identifies the version and author?",
+        "How do you review and update documents?",
+        "What formats do you use?"
+      ],
+      "evidence": [
+        "Approved documents with version, date and approver",
+        "Document template",
+        "Review log or change history"
+      ]
+    },
+    {
+      "ref": "7.5.3",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Control of documented information",
+      "purpose": "Ensures the right version is available where needed and that records are protected and retained.",
+      "guidance": "Control distribution, access, storage, legibility, change tracking, retention and disposal. Remove or mark obsolete copies and protect records from loss and unwanted changes. Define retention periods based on law and need. External documents such as permits or supplier instructions also need control. Typical findings are old copies on the shop floor, unlabelled files and records held longer or shorter than the stated period.",
+      "questions": [
+        "How do you make sure only current versions are in use?",
+        "Where are records stored and who can change them?",
+        "How long do you keep each record type?",
+        "How do you control documents from outside the company?"
+      ],
+      "evidence": [
+        "Document control procedure",
+        "Retention schedule",
+        "Access rights listing",
+        "Master document list with current versions"
+      ]
+    },
+    {
+      "ref": "8",
+      "kind": "theme",
+      "title": "Clause 8 · Operation",
+      "purpose": "Covers the controls applied to daily work and to emergencies."
+    },
+    {
+      "ref": "8.1",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Operational planning and control",
+      "purpose": "Groups the controls over everyday work: eliminating hazards, change, procurement.",
+      "guidance": "Control the day-to-day processes tied to your main risks and legal duties, including change, purchasing and outsourced work, and keep evidence that controls are followed. Auditors check how this works on the ground.",
+      "questions": [
+        "Which operations need controls?",
+        "How do you check they are followed?",
+        "How are contractors and changes managed?"
+      ],
+      "evidence": [
+        "Operating procedures",
+        "Inspection records",
+        "Change and contractor records"
+      ]
+    },
+    {
+      "ref": "8.1.1",
+      "parent": "8.1",
+      "kind": "clause",
+      "title": "Setting up operational controls",
+      "purpose": "Establishes controls for the processes needed to reach safe and healthy work and to meet legal duties.",
+      "guidance": "Set up, run and maintain processes using criteria, controls and work methods suited to your hazards. Adapt work to workers, for example ergonomics. Keep documented information to the extent needed to be confident the process is done as planned. Findings include procedures not followed on the floor and controls missing for non-routine work.",
+      "questions": [
+        "Which processes need operational controls?",
+        "How do you check they are followed?",
+        "How do you adapt work to the worker?",
+        "Where are the work methods documented?"
+      ],
+      "evidence": [
+        "Safe systems of work and permits",
+        "Inspection records",
+        "Training on procedures",
+        "Supervision records"
+      ]
+    },
+    {
+      "ref": "8.1.2",
+      "parent": "8.1",
+      "kind": "clause",
+      "title": "Eliminating hazards and reducing OH&S risks",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Requires you to prefer removing hazards over relying on protective equipment or behaviour.",
+      "guidance": "Work down the preferred order: eliminate, substitute, engineering controls, administrative controls, then protective equipment. Record why a higher-level control was not practicable. Review controls after incidents. Findings are risk assessments that jump straight to PPE and training.",
+      "questions": [
+        "Which hazards have you eliminated or substituted?",
+        "Why was a higher control not used?",
+        "How do you check controls work?",
+        "How do workers contribute ideas?"
+      ],
+      "evidence": [
+        "Risk assessments showing control hierarchy",
+        "Engineering change records",
+        "PPE assessment",
+        "Control effectiveness checks"
+      ]
+    },
+    {
+      "ref": "8.1.3",
+      "parent": "8.1",
+      "kind": "clause",
+      "title": "Management of change",
+      "purpose": "Ensures changes to work, equipment or people do not introduce uncontrolled hazards.",
+      "guidance": "Define which changes need review, such as new equipment, materials, layouts, staffing, legal updates and knowledge, then assess risk before they go ahead. Record approvals and communicate. Review the consequences of unplanned changes. Findings are changes made without risk review and no record.",
+      "questions": [
+        "How do you decide what counts as a change?",
+        "Show a recent change and its risk review.",
+        "How are workers told?",
+        "How are unintended changes reviewed?"
+      ],
+      "evidence": [
+        "Change request forms",
+        "Pre-change risk assessments",
+        "Approval records",
+        "Post-change reviews"
+      ]
+    },
+    {
+      "ref": "8.1.4",
+      "parent": "8.1",
+      "kind": "clause",
+      "title": "Procurement",
+      "tags": [
+        "suppliers"
+      ],
+      "purpose": "Controls the risks that come with buying products, services and using contractors or outsourcing.",
+      "guidance": "Set requirements for suppliers and contractors, including competence checks, induction and coordination on shared sites. Assess hazards from their work and your work on them. Specify requirements in purchases and check equipment before use. Findings are contractors working without induction or insurance checks.",
+      "questions": [
+        "How do you vet contractors?",
+        "How do you coordinate with others on shared sites?",
+        "What do you check on new equipment?",
+        "How is outsourced work controlled?"
+      ],
+      "evidence": [
+        "Contractor selection and induction records",
+        "Permits to work",
+        "Supplier requirements",
+        "Equipment acceptance checks"
+      ]
+    },
+    {
+      "ref": "8.2",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Emergency preparedness and response",
+      "tags": [
+        "emergency"
+      ],
+      "purpose": "Prepares you to respond to realistic emergencies and limit harm when they occur.",
+      "guidance": "Work out which emergencies are credible, such as fire, serious injury, chemical release, structural failure or violence, and prepare a response for each with first aid, evacuation, escalation and external services. Train people, run drills at suitable intervals and include contractors and visitors. Review plans after drills and real events. Typical findings are drills that do not involve all shifts, out-of-date first aid cover and plans that ignore visitors and contractors.",
+      "questions": [
+        "Which emergencies have you planned for?",
+        "When did you last run a drill and with whom?",
+        "How do first aiders and fire wardens get trained and replaced?",
+        "How are visitors and contractors included?"
+      ],
+      "evidence": [
+        "Emergency plans and evacuation maps",
+        "Drill records with lessons learned",
+        "First aid provision and training records",
+        "Equipment inspection records (alarms, extinguishers)",
+        "Post-incident reviews"
+      ]
+    },
+    {
+      "ref": "9",
+      "kind": "theme",
+      "title": "Clause 9 · Performance evaluation",
+      "purpose": "Covers measuring, auditing and reviewing performance."
+    },
+    {
+      "ref": "9.1",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Monitoring, measurement, analysis and evaluation",
+      "purpose": "Groups the rules for what you measure, how you check compliance and how you evaluate results.",
+      "guidance": "Decide what to measure, how to check legal compliance and how to use the results to judge performance. Keep reliable records and report trends to management. Auditors check the sub-clauses, and this parent is the overall view of whether performance is measured and used.",
+      "questions": [
+        "What do you measure and why?",
+        "How do you check legal compliance?",
+        "How do results reach management?"
+      ],
+      "evidence": [
+        "Monitoring plan",
+        "Performance reports",
+        "Compliance evaluation records"
+      ]
+    },
+    {
+      "ref": "9.1.1",
+      "parent": "9.1",
+      "kind": "clause",
+      "title": "Monitoring, measurement, analysis and evaluation: general",
+      "purpose": "Makes sure you measure what matters and use the results to judge performance.",
+      "guidance": "Decide what to monitor, the method, the frequency, when to analyse the results and who does it. Link measures to objectives, significant risks and legal duties. Calibrate or verify instruments where results depend on them. Report trends to management. Auditors look for data collected but never analysed, or measures unrelated to objectives. Keep the results as records.",
+      "questions": [
+        "What do you monitor and why?",
+        "How do you make sure measurements are reliable?",
+        "Who analyses the results and when?",
+        "Show a decision taken because of the data."
+      ],
+      "evidence": [
+        "Monitoring schedule (inspections, exposure, injury rates)",
+        "Lead and lag indicator reports",
+        "Calibration records for measuring equipment",
+        "Trend reports to management"
+      ]
+    },
+    {
+      "ref": "9.1.2",
+      "parent": "9.1",
+      "kind": "clause",
+      "title": "Evaluation of compliance",
+      "tags": [
+        "legal"
+      ],
+      "purpose": "Checks regularly that you are meeting your legal and other requirements and acts when you are not.",
+      "guidance": "Set a frequency for evaluating each obligation, through audits, inspections, permit checks or reviews by a competent person. Record the result, any gaps and the actions. Keep your knowledge of status current, including expiry dates. Common findings are a legal register with no evidence of review or evaluation that only happens at certification time.",
+      "questions": [
+        "How often do you evaluate compliance and how?",
+        "Who performs the evaluation?",
+        "Show the last evaluation and its actions.",
+        "How do you track permit and licence expiry?"
+      ],
+      "evidence": [
+        "Compliance evaluation records",
+        "Legal register with review dates",
+        "Inspection and permit tracking",
+        "Actions arising"
+      ]
+    },
+    {
+      "ref": "9.2",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Internal audit",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Groups the rules for checking by yourself that the system conforms and is effective.",
+      "guidance": "Plan and run audits of the system on a regular cycle with competent, impartial auditors, report the findings and close the actions. Auditors check the sub-clauses, and this parent is the overall view of whether your own checks are credible.",
+      "questions": [
+        "How does the audit cycle work?",
+        "Who audits and are they impartial?",
+        "How are findings closed out?"
+      ],
+      "evidence": [
+        "Audit programme",
+        "Audit reports",
+        "Corrective action records"
+      ]
+    },
+    {
+      "ref": "9.2.1",
+      "parent": "9.2",
+      "kind": "clause",
+      "title": "Internal audit: general",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Verifies at planned intervals that the system meets your own and the standard's requirements and is implemented.",
+      "guidance": "Audit every part of the system within a cycle, such as 12 months, using criteria from the standard, your procedures and legal duties. Auditors need to be competent and impartial, so they should not audit their own work. Report findings to relevant managers and track actions to closure. Common findings are audits that tick boxes, repeated issues and late closure.",
+      "questions": [
+        "What criteria and scope did the last audit use?",
+        "How do you ensure auditors are impartial?",
+        "Where are the findings reported and by when are they fixed?",
+        "How did the audits affect improvement?"
+      ],
+      "evidence": [
+        "Audit reports",
+        "Auditor competence or training records",
+        "Corrective action records from audits"
+      ]
+    },
+    {
+      "ref": "9.2.2",
+      "parent": "9.2",
+      "kind": "clause",
+      "title": "Internal audit programme",
+      "tags": [
+        "audit"
+      ],
+      "purpose": "Sets out a plan for when, how often and by whom audits are done, based on importance and past results.",
+      "guidance": "Plan the frequency, methods, responsibilities, reporting and scope for the cycle. Give higher-risk areas and those with past problems more attention. Keep the plan as documented information and update it when circumstances change. Frequent findings include a programme with missed audits and no link to risk.",
+      "questions": [
+        "How do you decide audit frequency and focus?",
+        "Were all planned audits completed?",
+        "Who is accountable for the programme?",
+        "How did past results shape the plan?"
+      ],
+      "evidence": [
+        "Annual audit schedule",
+        "Audit plans",
+        "Programme review notes",
+        "Completed audit checklists"
+      ]
+    },
+    {
+      "ref": "9.3",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Management review",
+      "purpose": "Has top management step back at planned intervals to judge whether the system is suitable, adequate and effective.",
+      "guidance": "Hold reviews at planned intervals using inputs that include previous actions, changes in context, performance and trends, incidents, compliance status, audit results, worker consultation outcomes, risks and opportunities and improvement chances. Record decisions on suitability, objectives, resources and improvement, and share outcomes with workers. Leaders must take part. Findings include reviews missing inputs and no decisions recorded.",
+      "questions": [
+        "What inputs did you review at the last meeting?",
+        "What decisions or actions came out?",
+        "How did you share outcomes with workers?",
+        "Who from top management attended?"
+      ],
+      "evidence": [
+        "Management review agenda and minutes",
+        "Performance and incident reports used as inputs",
+        "Action list with owners and closure",
+        "Communication of outcomes to workers"
+      ]
+    },
+    {
+      "ref": "10",
+      "kind": "theme",
+      "title": "Clause 10 · Improvement",
+      "purpose": "Covers fixing problems and improving over time."
+    },
+    {
+      "ref": "10.1",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Improvement: general",
+      "purpose": "Makes you actively look for opportunities to improve and act on them to reach intended results.",
+      "guidance": "Use audit results, performance data, incidents, feedback and review decisions to identify improvements, then plan and carry them out. This can include changes to processes, new technology or better training. Track them as actions with owners. Findings occur when improvement is purely reactive or when no improvements are recorded.",
+      "questions": [
+        "Where do improvement ideas come from?",
+        "Show examples of improvements made recently.",
+        "How do you prioritise them?",
+        "How do you check they worked?"
+      ],
+      "evidence": [
+        "Improvement log",
+        "Management review actions",
+        "Project or action tracker"
+      ]
+    },
+    {
+      "ref": "10.2",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Incident, nonconformity and corrective action",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Makes sure incidents and failures are contained, investigated with workers and fixed at root cause.",
+      "guidance": "React quickly to incidents and near misses: control, correct, treat injuries and look at consequences. Investigate with worker involvement to find the root cause, check for similar situations, review risk assessments, then act and verify. Report to authorities where the law requires. Retain records. Findings include blame-focused investigations, near misses ignored and actions not verified.",
+      "questions": [
+        "Show a recent incident investigation.",
+        "How are workers involved in it?",
+        "How do you find root causes?",
+        "How do you check actions worked?"
+      ],
+      "evidence": [
+        "Incident and near-miss register",
+        "Investigation reports",
+        "Corrective action log",
+        "Regulator notifications where applicable"
+      ]
+    },
+    {
+      "ref": "10.3",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Continual improvement",
+      "purpose": "Ensures the system gets better over time in suitability, adequacy and effectiveness.",
+      "guidance": "Show a trend of improved health and safety performance, supported by results, closed actions and review decisions. It does not require constant dramatic change; small steady gains count. Involve workers in suggesting them. Auditors look for evidence over several periods and are less convinced by one-off projects.",
+      "questions": [
+        "How has performance changed over the last few years?",
+        "Which management decisions led to improvements?",
+        "How do people contribute ideas?",
+        "What is planned for the next period?"
+      ],
+      "evidence": [
+        "Trend charts of key measures",
+        "Closed improvement actions",
+        "Management review outputs",
+        "Objectives achievement history"
+      ]
+    }
   ]
 }

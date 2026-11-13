@@ -96,13 +96,24 @@ describe('the shipped catalogue', () => {
       expect(refs).toContain(`Art. ${n}`);
   });
 
-  it('every framework says what may be shipped and that its titles are our own words', () => {
+  it('every framework says what may be shipped: short titles only, everything else our own words', () => {
     for (const f of frameworks) {
       expect(f.licence.length).toBeGreaterThan(20);
-      expect(f.titles).toBe('own-words');
+      expect(['own-words', 'official-short']).toContain(f.titles);
       expect(f.source).not.toBe('');
-      if (f.kind === 'standard') expect(f.licence).toMatch(/reference numbers only/i);
+      if (f.kind === 'standard') expect(f.licence).toMatch(/not the text of the standard/i);
     }
+  });
+
+  it('every requirement carries our own purpose, guidance, audit questions and typical evidence', () => {
+    for (const f of frameworks)
+      for (const r of f.requirements) {
+        expect(r.purpose, `${f.key} ${r.ref}`).toBeTruthy();
+        if (r.kind === 'theme') continue;
+        expect(r.guidance, `${f.key} ${r.ref}`).toBeTruthy();
+        expect(r.questions.length, `${f.key} ${r.ref}`).toBeGreaterThanOrEqual(3);
+        expect(r.evidence.length, `${f.key} ${r.ref}`).toBeGreaterThanOrEqual(3);
+      }
   });
 
   it('has no duplicate refs, short non-empty titles, and parents listed first', () => {
@@ -208,12 +219,12 @@ describe('framework libraries as packs', () => {
 
   it('one pack per framework, with one library item per requirement that is not a theme', () => {
     expect(packs.map((p) => `${p.key} ${p.version}`)).toEqual([
-      'framework-iso-27001 2022.1.0',
-      'framework-iso-9001 2015.1.0',
-      'framework-iso-14001 2015.1.0',
-      'framework-iso-45001 2018.1.0',
-      'framework-gdpr 2016.1.0',
-      'framework-nis2 2022.1.0',
+      'framework-iso-27001 2022.2.0',
+      'framework-iso-9001 2015.2.0',
+      'framework-iso-14001 2015.2.0',
+      'framework-iso-45001 2018.2.0',
+      'framework-gdpr 2016.2.0',
+      'framework-nis2 2022.2.0',
     ]);
     for (const [i, f] of frameworks.entries()) {
       const sheet = packs[i]!.sheets[0]!;

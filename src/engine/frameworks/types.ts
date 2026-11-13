@@ -18,6 +18,10 @@ export const RELATION_LABEL: Record<Relation, string> = {
   related: 'Related',
 };
 
+/** Where the short titles come from: our own words, or the official short headings (never more, docs/12). */
+export const TITLES_POLICIES = ['own-words', 'official-short'] as const;
+export type TitlesPolicy = (typeof TITLES_POLICIES)[number];
+
 export interface Requirement {
   /** The reference number as the framework prints it: "A.5.1", "6.1.2", "Art. 33", "Art. 21(2)(a)". */
   ref: string;
@@ -26,10 +30,16 @@ export interface Requirement {
   kind: RequirementKind;
   /** Order within the framework (0 based, as listed). */
   position: number;
-  /** Our own short words, never the framework's text (docs/12 Licensing). */
+  /** The short title: the official clause, control or article heading, or our own words (docs/12 Licensing). */
   title: string;
-  /** Our own guidance, optional. */
+  /** Why it exists, one sentence in our own words. */
+  purpose: string | null;
+  /** What good looks like in practice, our own words. */
   guidance: string | null;
+  /** Questions an auditor would ask, our own words. */
+  questions: string[];
+  /** Typical evidence records, our own words. */
+  evidence: string[];
   tags: string[];
 }
 
@@ -62,7 +72,7 @@ export interface Framework {
   licence: string;
   url: string;
   /** Titles are always our own words; the files say so explicitly. */
-  titles: 'own-words';
+  titles: TitlesPolicy;
   library: FrameworkLibrary;
   requirements: Requirement[];
 }
