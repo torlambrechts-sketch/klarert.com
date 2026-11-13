@@ -31,3 +31,21 @@ create trigger form_links_access_guard before insert or update or delete on form
   for each row execute function structure_access_guard();
 create trigger automations_access_guard before insert or update or delete on automations
   for each row execute function structure_access_guard();
+
+-- Storage (0026): an object is readable when its files row is. Between the upload and the files row (confirmUpload
+-- downloads the object to check its SHA-256), editors of the item's sheet read objects that have no files row yet.
+create or replace function file_object_pending(p_path text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select not exists (select 1 from files where storage_path = p_path)
+$$;
+revoke all on function file_object_pending(text) from public, anon;
+grant execute on function file_object_pending(text) to authenticated;
+
+drop policy files_read on storage.objects;
+create policy files_read on storage.objects for select using (
+  bucket_id = 'files' and (storage.foldername(name))[1] = 'org'
+  and public.is_member(((storage.foldername(name))[2])::uuid)
+  and (exists (select 1 from public.files f where f.storage_path = name)
+       or ((storage.foldername(name))[3] = 'item' and public.file_object_pending(name)
+           and exists (select 1 from public.items i where i.id::text = (storage.foldername(name))[4]
+                         and i.sheet_id in (select public.editable_sheet_ids())))));
