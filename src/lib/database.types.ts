@@ -513,14 +513,14 @@ isOneToOne: false
                   ]
                 },"items": {
                   Row: {
-                    "archived_at": string | null,"archived_with": string | null,"created_at": string,"created_by": string | null,"held_at": string | null,"held_by": string | null,"held_created": boolean,"held_snapshot": Json | null,"display_id": string,"group_id": string,"id": string,"lock_reason": string | null,"locked": boolean,"name": string,"next_sub_seq": number,"org_id": string,"parent_id": string | null,"position": string,"seq": number,"sheet_id": string,"source_channel": string | null,"source_form_id": string | null,"form_version": number | null,"sub_seq": number | null,"updated_at": string,"updated_by": string | null,"values": NonNullable<Json>,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
+                    "archived_at": string | null,"archived_with": string | null,"created_at": string,"created_by": string | null,"held_at": string | null,"held_by": string | null,"held_created": boolean,"held_snapshot": Json | null,"display_id": string,"group_id": string,"id": string,"lock_reason": string | null,"locked": boolean,"name": string,"next_sub_seq": number,"org_id": string,"parent_id": string | null,"position": string,"seq": number,"sheet_id": string,"source_channel": string | null,"source_form_id": string | null,"form_version": number | null,"sub_seq": number | null,"updated_at": string,"updated_by": string | null,"values": NonNullable<Json>,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"requirement_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id": string,"group_id": string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id": string,"group_id": string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"requirement_ref"?: string | null
                   }
                   Update: {
-                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id"?: string,"group_id"?: string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"seq"?: number,"sheet_id"?: string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id"?: string,"group_id"?: string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"seq"?: number,"sheet_id"?: string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"requirement_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -739,6 +739,48 @@ isOneToOne: false
                   }
                   Update: {
                     "created_at"?: string,"description"?: string,"hash"?: string,"key"?: string,"manifest"?: NonNullable<Json>,"title"?: string,"version"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"frameworks": {
+                  Row: {
+                    "created_at": string,"hash": string,"key": string,"kind": string,"licence": string,"pack_key": string,"pack_version": string,"publisher": string,"revision": number,"short_title": string,"source": string,"title": string,"titles": string,"url": string,"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"hash": string,"key": string,"kind": string,"licence": string,"pack_key": string,"pack_version": string,"publisher": string,"revision"?: number,"short_title": string,"source": string,"title": string,"titles"?: string,"url": string,"version": string
+                  }
+                  Update: {
+                    "created_at"?: string,"hash"?: string,"key"?: string,"kind"?: string,"licence"?: string,"pack_key"?: string,"pack_version"?: string,"publisher"?: string,"revision"?: number,"short_title"?: string,"source"?: string,"title"?: string,"titles"?: string,"url"?: string,"version"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"requirements": {
+                  Row: {
+                    "framework_key": string,"framework_version": string,"guidance": string | null,"kind": string,"parent_ref": string | null,"position": number,"ref": string,"tags": string[],"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "framework_key": string,"framework_version": string,"guidance"?: string | null,"kind": string,"parent_ref"?: string | null,"position": number,"ref": string,"tags"?: string[],"title": string
+                  }
+                  Update: {
+                    "framework_key"?: string,"framework_version"?: string,"guidance"?: string | null,"kind"?: string,"parent_ref"?: string | null,"position"?: number,"ref"?: string,"tags"?: string[],"title"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"crosswalks": {
+                  Row: {
+                    "created_at": string,"from_framework": string,"from_ref": string,"from_version": string,"id": number,"note": string,"relation": string,"source": string,"to_framework": string,"to_ref": string,"to_version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"from_framework": string,"from_ref": string,"from_version": string,"id"?: number,"note"?: string,"relation": string,"source": string,"to_framework": string,"to_ref": string,"to_version": string
+                  }
+                  Update: {
+                    "created_at"?: string,"from_framework"?: string,"from_ref"?: string,"from_version"?: string,"id"?: number,"note"?: string,"relation"?: string,"source"?: string,"to_framework"?: string,"to_ref"?: string,"to_version"?: string
                   }
                   Relationships: [
                     
@@ -1327,6 +1369,9 @@ isOneToOne: false
                            },
 "has_role":
 { Args: { "o": string,"roles": (Database["public"]['Enums']["member_role"])[] }; Returns: boolean
+                           },
+"adopt_framework":
+{ Args: { "p_framework": string,"p_org": string,"p_plan": Json,"p_version": string }; Returns: Json
                            },
 "install_pack":
 { Args: { "p_org": string,"p_plan": Json }; Returns: Json

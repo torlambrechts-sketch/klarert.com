@@ -63,6 +63,8 @@ export interface Sheet {
   columnGroups?: ColumnGroup[];
   /** sheets.settings.register: 'documents' makes the sheet a documents register (docs/02 §14). */
   register?: 'documents' | null;
+  /** sheets.settings.framework: the framework a library sheet holds (docs/12). */
+  framework?: { key: string; version: string; refFieldKey: string } | null;
 }
 
 /** sheets.settings.subitems (docs/02 §12). */
@@ -148,6 +150,8 @@ export interface Item {
   subSeq?: number | null;
   /** The form the item came from (docs/02 §8): null formId when that form was deleted since. */
   source?: ItemSource;
+  /** A library item of an adopted framework (docs/12): `<framework>@<version>#<ref>`, never changes. */
+  requirementRef?: string;
 }
 
 export interface ItemSource {

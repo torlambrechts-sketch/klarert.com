@@ -1,5 +1,6 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
+import { isFrameworkPack } from '@/engine/frameworks/pack';
 import { packLogText, PACK_ACTIONS } from '@/engine/packs/audit';
 import {
   countsText,
@@ -125,7 +126,8 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
         );
         return ok({
           canInstall: isAdminRole(role),
-          available: catalogue.map((c) => {
+          // a framework's library is adopted from Frameworks (docs/12), not listed here
+          available: catalogue.filter((c) => !isFrameworkPack(c.manifest)).map((c) => {
             const counts = manifestCounts(c.manifest);
             return {
               key: c.key,
@@ -185,6 +187,8 @@ export async function previewPack(input: unknown): Promise<Result<PackPreviewRes
     async ({ supabase, orgId, user }) => {
       const pack = await readPack(supabase, p.data.key);
       if (!pack) return fail('not_found', 'This pack is no longer available.');
+      if (isFrameworkPack(pack.manifest))
+        return fail('invalid', 'Adopt this framework from Workspace admin, Frameworks.');
       try {
         const plan = await planInstall(supabase, orgId, pack, {
           userId: user.id,
@@ -228,6 +232,8 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
     async ({ supabase, orgId, user }) => {
       const pack = await readPack(supabase, p.data.key);
       if (!pack) return fail('not_found', 'This pack is no longer available.');
+      if (isFrameworkPack(pack.manifest))
+        return fail('invalid', 'Adopt this framework from Workspace admin, Frameworks.');
       if (pack.hash !== p.data.hash)
         return fail('conflict', 'This pack changed since you previewed it. Preview it again.');
       const plan = await planInstall(supabase, orgId, pack, {

@@ -10,6 +10,8 @@ import { z } from 'zod';
 import type { Database } from '../src/lib/database.types';
 import { parseTemplate } from '../src/lib/templates/schema';
 import { repoPacks } from '../src/lib/packs/catalogue';
+import { frameworkPacks, repoCrosswalks, repoFrameworks } from '../src/lib/frameworks/catalogue';
+import { syncFrameworks } from '../src/server/frameworks/catalogue';
 import { syncCatalogue } from '../src/server/packs/install';
 import { importTemplate } from '../src/server/templates/importer';
 
@@ -80,7 +82,10 @@ async function userId(email: string): Promise<string> {
 
 async function main() {
   // the pack catalogue (docs/11): the repository's packs, each version written once
-  const catalogue = await syncCatalogue(db, repoPacks());
+  // and each framework's library pack, then the requirement catalogue (docs/12)
+  const frameworks = repoFrameworks();
+  const catalogue = await syncCatalogue(db, [...repoPacks(), ...frameworkPacks(frameworks)]);
+  const library = await syncFrameworks(db, frameworks, repoCrosswalks());
   const people = [];
   for (const [i, p] of template.people.entries()) {
     const id = await userId(p.email);
@@ -203,7 +208,9 @@ async function main() {
     `Seeded ${WORKSPACE.name} (/${WORKSPACE.slug}): ${people.length} people, ${teams.length} teams, ` +
       `${roleNames.length} job roles, 1 entity, ${ENTITY.sites.length} sites, folder "${template.folder}", ` +
       `${sheetsLine}. Packs in the catalogue: ${[...catalogue.added, ...catalogue.unchanged].length}` +
-      `${catalogue.added.length ? ` (${catalogue.added.length} new)` : ''}.`,
+      `${catalogue.added.length ? ` (${catalogue.added.length} new)` : ''}. Frameworks: ` +
+      `${library.added.length + library.revised.length + library.unchanged.length}` +
+      `${library.added.length ? ` (${library.added.length} new)` : ''}, ${library.crosswalks} cross-walks.`,
   );
   console.log(
     `Sign in as ${people.map((p) => `${p.email} (${p.role})`).join(', ')} — magic links arrive in Mailpit.`,

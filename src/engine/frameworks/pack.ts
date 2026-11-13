@@ -33,6 +33,10 @@ export const LIBRARY_KEYS = {
   controls: 'controls',
 } as const;
 
+/** A framework's library pack: adopted from Frameworks (adopt_framework), not installed from Packs. */
+export const isFrameworkPack = (m: Pick<PackManifest, 'sheets'>) =>
+  m.sheets.some((s) => s.framework !== undefined);
+
 /** The root theme of a requirement (the group it goes in). */
 function rootOf(r: Requirement, byRef: Map<string, Requirement>): Requirement {
   let cur = r;
