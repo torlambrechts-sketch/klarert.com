@@ -186,6 +186,25 @@ export function Table({
   const rowMenu = useGrid((s) => s.rowMenu);
   const expanded = useGrid((s) => s.expanded);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // a click outside the table clears the active cell, the range and the selected rows; the toolbar (bulk actions),
+  // menus, dialogs, the item panel and toasts keep them
+  useEffect(() => {
+    const keep =
+      '[data-keep-selection], [data-radix-popper-content-wrapper], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [data-sonner-toaster]';
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Element | null;
+      if (!t || !t.isConnected) return;
+      if (scrollRef.current?.contains(t) || t.closest(keep)) return;
+      const s = store.getState();
+      if (!s.active && !s.anchor && s.selected.size === 0) return;
+      if (s.editing) return;
+      store.setState({ active: null, anchor: null });
+      if (s.selected.size) s.setSelected([]);
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [store]);
   const [lockFor, setLockFor] = useState<Item[] | null>(null);
   // the width the columns stretch to fill
   const [viewW, setViewW] = useState(0);
