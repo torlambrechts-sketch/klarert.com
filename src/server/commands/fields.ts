@@ -444,6 +444,8 @@ export type TypeChangePreview = {
   failed?: number;
   /** The field that holds the values afterwards (the new one for a copy). */
   field?: Field;
+  /** A copy replaced the old field (deleted, restorable for 30 days). */
+  replaced?: boolean;
 };
 
 /**
@@ -503,12 +505,29 @@ export async function changeFieldType(input: unknown): Promise<Result<TypeChange
         target = toField(data);
       } else {
         const all = await sheetFields(supabase, row.sheet_id);
-        const live = all.filter((f) => !f.archived_at);
+        let live = all.filter((f) => !f.archived_at);
         const at = live.findIndex((f) => f.id === row.id);
-        const name = freshName(
-          `${row.name} (${fieldType(v.to)!.label})`.slice(0, 80),
-          live.map((f) => f.name),
-        );
+        if (v.replace) {
+          // replace: the old field steps aside (deleted, restorable for 30 days) and the new one takes its name and
+          // place; its key is new, so formulas and automations that used the old key need updating
+          if (row.locked)
+            return fail('forbidden', 'This field is kept by the app. Keep both instead.');
+          const { error: archiveError } = await supabase
+            .from('fields')
+            .update({ archived_at: new Date().toISOString() })
+            .eq('id', row.id);
+          if (archiveError) return fromDbError(archiveError);
+          live = live.filter((f) => f.id !== row.id);
+        }
+        const name = v.replace
+          ? freshName(
+              row.name,
+              live.map((f) => f.name),
+            )
+          : freshName(
+              `${row.name} (${fieldType(v.to)!.label})`.slice(0, 80),
+              live.map((f) => f.name),
+            );
         const { data, error } = await supabase
           .from('fields')
           .insert({
@@ -521,13 +540,22 @@ export async function changeFieldType(input: unknown): Promise<Result<TypeChange
             ),
             name,
             type: v.to,
-            position: keyBetween(row.position, live[at + 1]?.position ?? null),
+            position: v.replace
+              ? row.position
+              : keyBetween(
+                  row.position,
+                  all.filter((f) => !f.archived_at)[at + 1]?.position ?? null,
+                ),
             width: clampWidth(fieldType(v.to)!.defaultWidth),
             config: plan.config as DbJson,
           })
           .select(FIELD_COLUMNS)
           .single();
-        if (error) return fromDbError(error);
+        if (error) {
+          if (v.replace)
+            await supabase.from('fields').update({ archived_at: null }).eq('id', row.id);
+          return fromDbError(error);
+        }
         target = toField(data);
       }
       // write converted values, logged per value; locked items fail for editors and are counted
@@ -545,7 +573,12 @@ export async function changeFieldType(input: unknown): Promise<Result<TypeChange
         );
         failed += results.filter((r) => r.error).length;
       }
-      return ok({ ...preview, failed, field: target });
+      return ok({
+        ...preview,
+        failed,
+        field: target,
+        replaced: !!v.replace && plan.mode === 'copy',
+      });
     },
     v.apply ? 'changeFieldType' : 'previewFieldType',
   );

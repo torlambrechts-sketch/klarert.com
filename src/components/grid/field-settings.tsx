@@ -483,19 +483,58 @@ function TypeSection({
                   <p role="status" className="text-copy-13">
                     {preview.summary}
                   </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={busy}
-                    onClick={async () => {
-                      setBusy(true);
-                      const r = await actions.changeType(field, to, true);
-                      setBusy(false);
-                      if (r) onChanged();
-                    }}
-                  >
-                    {preview.mode === 'copy' ? 'Create the new field' : 'Change type'}
-                  </Button>
+                  {preview.mode === 'copy' ? (
+                    <>
+                      <p className="text-muted-foreground text-copy-13 basis-full">
+                        This type can&apos;t be converted in place. Replace this field with a new
+                        one (the old field can be restored for 30 days; formulas and automations
+                        that use it need updating), or keep both.
+                      </p>
+                      {field.locked ? null : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={busy}
+                          onClick={async () => {
+                            setBusy(true);
+                            const r = await actions.changeType(field, to, true, true);
+                            setBusy(false);
+                            if (r) onChanged();
+                          }}
+                        >
+                          Replace this field
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={async () => {
+                          setBusy(true);
+                          const r = await actions.changeType(field, to, true, false);
+                          setBusy(false);
+                          if (r) onChanged();
+                        }}
+                      >
+                        Keep both
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={busy}
+                      onClick={async () => {
+                        setBusy(true);
+                        const r = await actions.changeType(field, to, true);
+                        setBusy(false);
+                        if (r) onChanged();
+                      }}
+                    >
+                      Change type
+                    </Button>
+                  )}
                 </>
               ) : null}
             </div>
