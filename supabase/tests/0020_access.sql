@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(105);
+select plan(106);
 
 -- ───────────────────────── people ─────────────────────────
 insert into auth.users (id, email) values
@@ -302,6 +302,8 @@ select is(pg_temp.try_comment(), 'denied', 'admin not listed cannot comment');
 select throws_ok($$ select set_access_grant('sheet', 'ac000001-0000-0000-0000-000000000001',
                                             '00000000-0000-0000-0000-00000000a002', 'editor') $$,
   'not allowed: only owners and admins with access manage access', 'admin not listed cannot add themselves');
+select throws_ok($$ select form_link_create('ac000008-0000-0000-0000-000000000002') $$,
+  '42501', null, 'admin not listed cannot publish a link to the restricted sheet''s form (definer functions are held too)');
 select pg_temp.as_user('a003');
 select is(pg_temp.try_edit(), 'ok', 'admin listed edits');
 select lives_ok($$ select set_access_grant('sheet', 'ac000001-0000-0000-0000-000000000001',
