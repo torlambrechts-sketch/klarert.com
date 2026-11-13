@@ -586,7 +586,8 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
     const found = draftProblems({ name: a.name, trigger, conditions, actions }, ctx, {
       sheetIds: [...sheetIds.values()],
     });
-    const off = degraded.has(where);
+    // lenient plans: an automation that lost someone it names stays on unless the builder would now refuse it
+    const off = degraded.has(where) && Object.keys(found).length > 0;
     for (const [at, message] of Object.entries(found))
       (off ? warnings : problems).push(`${where} › ${at}: ${message}`);
     if (off && a.enabled) warnings.push(`${where} is installed off. Turn it on once it has someone to tell.`);

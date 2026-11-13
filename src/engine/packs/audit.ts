@@ -1,0 +1,48 @@
+// Pack entries of the activity log (pack.installed, pack.archived on the workspace chain) as sentences. Pure.
+import type { Json } from '../types';
+import { countsText, type PackCounts } from './plan';
+
+export const PACK_ACTIONS = ['pack.installed', 'pack.archived'] as const;
+
+type Obj = Record<string, Json>;
+const obj = (v: Json | null | undefined): Obj =>
+  v && typeof v === 'object' && !Array.isArray(v) ? (v as Obj) : {};
+const num = (v: Json | undefined) => (typeof v === 'number' ? v : 0);
+
+/** "Installed Supplier management 1.0.0: 3 sheets, …" / "Archived Supplier management 1.0.0: …". */
+export function packLogText(action: string, newValue: Json | null): string {
+  const v = obj(newValue);
+  const name =
+    `${typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack')} ${String(v.version ?? '')}`.trim();
+  const c = obj(v.counts);
+  if (action === 'pack.installed') {
+    const counts: PackCounts = {
+      folders: num(c.folders),
+      sheets: num(c.sheets),
+      fields: num(c.fields),
+      views: num(c.views),
+      forms: num(c.forms),
+      items: num(c.items),
+      documents: 0,
+      libraryItems: 0,
+      links: num(c.links),
+      automations: num(c.automations),
+      dashboards: num(c.dashboards),
+    };
+    return `Installed ${name}: ${countsText(counts)}.`;
+  }
+  if (action === 'pack.archived') {
+    const parts = [
+      `${num(c.sheets)} ${num(c.sheets) === 1 ? 'sheet' : 'sheets'} archived`,
+      num(c.folders)
+        ? `${num(c.folders)} ${num(c.folders) === 1 ? 'folder' : 'folders'} archived`
+        : '',
+      `${num(c.automations)} ${num(c.automations) === 1 ? 'automation' : 'automations'} turned off`,
+      num(c.dashboards)
+        ? `${num(c.dashboards)} ${num(c.dashboards) === 1 ? 'dashboard' : 'dashboards'} archived`
+        : '',
+    ].filter(Boolean);
+    return `Archived ${name}: ${parts.join(', ')}. Items and the activity log are kept.`;
+  }
+  return action;
+}
