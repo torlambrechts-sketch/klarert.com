@@ -96,13 +96,24 @@ describe('the shipped catalogue', () => {
       expect(refs).toContain(`Art. ${n}`);
   });
 
-  it('every framework says what may be shipped and that its titles are our own words', () => {
+  it('every framework says what may be shipped: short titles only, everything else our own words', () => {
     for (const f of frameworks) {
       expect(f.licence.length).toBeGreaterThan(20);
-      expect(f.titles).toBe('own-words');
+      expect(['own-words', 'official-short']).toContain(f.titles);
       expect(f.source).not.toBe('');
-      if (f.kind === 'standard') expect(f.licence).toMatch(/reference numbers only/i);
+      if (f.kind === 'standard') expect(f.licence).toMatch(/not the text of the standard/i);
     }
+  });
+
+  it('every requirement carries our own purpose, guidance, audit questions and typical evidence', () => {
+    for (const f of frameworks)
+      for (const r of f.requirements) {
+        expect(r.purpose, `${f.key} ${r.ref}`).toBeTruthy();
+        if (r.kind === 'theme') continue;
+        expect(r.guidance, `${f.key} ${r.ref}`).toBeTruthy();
+        expect(r.questions.length, `${f.key} ${r.ref}`).toBeGreaterThanOrEqual(3);
+        expect(r.evidence.length, `${f.key} ${r.ref}`).toBeGreaterThanOrEqual(3);
+      }
   });
 
   it('has no duplicate refs, short non-empty titles, and parents listed first', () => {

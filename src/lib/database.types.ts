@@ -759,14 +759,14 @@ isOneToOne: false
                   ]
                 },"requirements": {
                   Row: {
-                    "framework_key": string,"framework_version": string,"guidance": string | null,"kind": string,"parent_ref": string | null,"position": number,"ref": string,"tags": string[],"title": string
+                    "evidence": string[],"framework_key": string,"framework_version": string,"guidance": string | null,"kind": string,"purpose": string | null,"questions": string[],"parent_ref": string | null,"position": number,"ref": string,"tags": string[],"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "framework_key": string,"framework_version": string,"guidance"?: string | null,"kind": string,"parent_ref"?: string | null,"position": number,"ref": string,"tags"?: string[],"title": string
+                    "evidence"?: string[],"framework_key": string,"framework_version": string,"guidance"?: string | null,"kind": string,"purpose"?: string | null,"questions"?: string[],"parent_ref"?: string | null,"position": number,"ref": string,"tags"?: string[],"title": string
                   }
                   Update: {
-                    "framework_key"?: string,"framework_version"?: string,"guidance"?: string | null,"kind"?: string,"parent_ref"?: string | null,"position"?: number,"ref"?: string,"tags"?: string[],"title"?: string
+                    "evidence"?: string[],"framework_key"?: string,"framework_version"?: string,"guidance"?: string | null,"kind"?: string,"purpose"?: string | null,"questions"?: string[],"parent_ref"?: string | null,"position"?: number,"ref"?: string,"tags"?: string[],"title"?: string
                   }
                   Relationships: [
                     

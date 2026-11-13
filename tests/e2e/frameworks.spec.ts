@@ -31,7 +31,7 @@ async function adopt(page: Page, title: string, requirements: number) {
     timeout: 45_000,
   });
   await expect(created).toContainText('→ Controls through Controls, both ways');
-  await expect(dialog).toContainText('Reference numbers only');
+  await expect(dialog).toContainText('official short titles');
   await dialog.getByRole('button', { name: 'Adopt', exact: true }).click();
   await expect(dialog.getByRole('status')).toContainText(
     `Adopted ${title}: ${requirements} requirements in the library.`,
@@ -91,7 +91,7 @@ test.describe('desktop', () => {
     // ── the catalogue: own-words titles, a licence note on every framework
     const row = catalogueRow(page, ISO27001);
     await expect(row).toContainText('127 requirements');
-    await expect(row).toContainText('Reference numbers only');
+    await expect(row).toContainText('official short titles');
     await expect(catalogueRow(page, 'NIS2 (Directive (EU) 2022/2555)')).toContainText('EUR-Lex');
 
     await adopt(page, ISO27001, 127);
