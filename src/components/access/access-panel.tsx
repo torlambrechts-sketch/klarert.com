@@ -84,6 +84,8 @@ export function AccessPanel({
   const [info, setInfo] = useState<AccessInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // the choice shows at once; the panel reloads once the database has saved (or rolls back on a refusal)
+  const [pending, setPending] = useState<string | null>(null);
   const modeName = useId();
 
   const load = useCallback(async () => {
@@ -103,10 +105,15 @@ export function AccessPanel({
   const run = async <T,>(p: Promise<Result<T>>, done: string) => {
     setBusy(true);
     const r = await p;
-    setBusy(false);
-    if (!r.ok) return toast.error(r.error.message);
+    if (!r.ok) {
+      setBusy(false);
+      setPending(null);
+      return toast.error(r.error.message);
+    }
     toast(done);
     await load();
+    setBusy(false);
+    setPending(null);
     router.refresh();
   };
 
@@ -132,10 +139,12 @@ export function AccessPanel({
   const owners = info.people.filter((p) => p.role === 'owner').length;
   // the list that decides: the sheet's own, or (a sheet following a restricted folder) the folder's
   const ownList = info.kind === 'folder' || info.source === 'sheet';
-  const mode = info.mode;
+  const mode = (pending as SheetAccessMode | null) ?? info.mode;
+  const folderRestricted = pending === null ? info.restricted : pending === 'restricted';
 
-  const setMode = (next: SheetAccessMode) =>
-    run(
+  const setMode = (next: SheetAccessMode) => {
+    setPending(next);
+    return run(
       setSheetAccessAction({ org, sheetId: info.id, mode: next }),
       next === 'restricted'
         ? 'Sheet restricted. Choose who can see it.'
@@ -143,11 +152,14 @@ export function AccessPanel({
           ? 'Everyone in the workspace can see this sheet.'
           : 'This sheet follows its folder.',
     );
-  const setFolder = (restricted: boolean) =>
-    run(
+  };
+  const setFolder = (restricted: boolean) => {
+    setPending(restricted ? 'restricted' : 'open');
+    return run(
       setFolderAccessAction({ org, folderId: info.id, restricted }),
       restricted ? 'Folder restricted. Choose who can see it.' : 'Everyone can see this folder.',
     );
+  };
   const setLevel = (p: AccessPerson, level: GrantLevel | null) =>
     run(
       setAccessGrantAction({
@@ -227,7 +239,7 @@ export function AccessPanel({
               <input
                 type="radio"
                 name={modeName}
-                checked={info.restricted === m.v}
+                checked={folderRestricted === m.v}
                 onChange={() => void setFolder(m.v)}
                 className="mt-1"
               />

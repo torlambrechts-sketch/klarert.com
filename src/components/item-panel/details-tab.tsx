@@ -1,5 +1,7 @@
 'use client';
 
+import { hiddenFor } from '@/engine/values';
+import { RestrictedValue } from '@/components/fields/registry';
 import { useMemo } from 'react';
 import { formatDate } from '@/engine/fields/helpers';
 import { linkEdges, itemSummary, statusFieldOf, type LinkEdge } from '@/engine/item-panel';
@@ -42,7 +44,9 @@ function Summary({ item, ctx }: { item: Item; ctx: Ctx }) {
           (() => {
             const ui = fieldUI(s.status.type);
             const v = cellValue(item, s.status, ctx);
-            return resolveFieldType(s.status.type)?.isEmpty(v) ? (
+            return hiddenFor(s.status, ctx) ? (
+              <RestrictedValue />
+            ) : resolveFieldType(s.status.type)?.isEmpty(v) ? (
               <span className="text-muted-foreground font-semibold">Not set</span>
             ) : (
               <ui.Cell value={v as never} field={s.status} item={item} ctx={ctx} density="list" />
@@ -53,7 +57,9 @@ function Summary({ item, ctx }: { item: Item; ctx: Ctx }) {
         )}
       </SummaryCard>
       <SummaryCard label={s.person?.field.name ?? 'Person'}>
-        {person ? (
+        {s.person && hiddenFor(s.person.field, ctx) ? (
+          <RestrictedValue />
+        ) : person ? (
           <span className="flex min-w-0 items-center gap-1.5">
             <Avatar id={person.id} ctx={ctx} size={20} />
             <span className="truncate">{person.name}</span>

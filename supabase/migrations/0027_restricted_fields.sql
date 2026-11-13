@@ -630,6 +630,23 @@ begin
                       order by position collate "C" desc limit 1));
 end $$;
 
+
+-- items_for_people (0012, My work and search by person) also finds items through restricted people fields, for the
+-- people who may see them (SECURITY INVOKER: restricted_values RLS decides).
+create or replace function items_for_people(p_org uuid, p_people uuid[], p_limit integer default 500)
+returns setof items language sql stable security invoker set search_path = public as $$
+  select i.* from items i
+   where i.org_id = p_org and i.archived_at is null
+     and (exists (select 1 from fields f, unnest(p_people) p(id)
+                   where f.sheet_id = i.sheet_id and f.type = 'people' and f.archived_at is null
+                     and i."values" -> (f.id::text) @> jsonb_build_array(p.id::text))
+          or exists (select 1 from restricted_values rv join fields f on f.id = rv.field_id, unnest(p_people) p(id)
+                      where rv.item_id = i.id and f.type = 'people' and f.archived_at is null
+                        and rv.value @> jsonb_build_array(p.id::text)))
+   order by i.updated_at desc, i.id
+   limit least(greatest(coalesce(p_limit, 500), 1), 2000)
+$$;
+
 -- ───────────────────────── grants ─────────────────────────
 revoke all on function _field_visible_for(uuid, uuid, jsonb), _full_values(uuid, jsonb), _mask_value(text, text, jsonb)
   from public, anon, authenticated;
