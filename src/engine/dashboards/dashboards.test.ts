@@ -14,6 +14,7 @@ import {
   type WidgetConfig,
 } from '.';
 import { monthPoints } from './history';
+import { plural } from './shared';
 
 beforeAll(() => installFieldTypes(Object.values(FIELD_TYPES)));
 
@@ -278,5 +279,16 @@ describe('default dashboard', () => {
       (p) => p + Math.random(),
     );
     expect(bare.map((x) => x.type)).toEqual(['key_figures', 'follow_up']);
+  });
+});
+
+describe('plural', () => {
+  it('says entries, nonconformities, processes, days and runs', () => {
+    expect(plural(2, 'entry')).toBe('2 entries');
+    expect(plural(3, 'nonconformity')).toBe('3 nonconformities');
+    expect(plural(1, 'nonconformity')).toBe('1 nonconformity');
+    expect(plural(5, 'day')).toBe('5 days');
+    expect(plural(2, 'process')).toBe('2 processes');
+    expect(plural(0, 'run')).toBe('0 runs');
   });
 });
