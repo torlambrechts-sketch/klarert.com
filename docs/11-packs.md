@@ -8,7 +8,8 @@ A **pack** is an installable bundle of the core as data (CLAUDE.md: data, not co
 |---|---|
 | `templates/packs/*.json` | Native pack files (the manifest below), e.g. `supplier-management.json` |
 | `templates/first-sheet.json` | Wrapped by `templateToPack` (`src/lib/packs/wrap.ts`): key = the template id, refs made from names |
-| Wizard starts (`templates/starts.json`) listed in `START_PACKS` | Wrapped by `startToPack`: one sheet, key `start-<id>` (CAPA, Documents and policies) |
+| Wizard starts (`templates/starts.json`) listed in `START_PACKS` | Wrapped by `startToPack`: one sheet, key `start-<id>` (CAPA, Documents and policies). A start's `pack` adds the pack's version, automations and dashboards (the wizard ignores it) |
+| `templates/apps/*.json` | An app for the pack it `requires` (docs/13), added to that pack's `apps` by `withApps` |
 
 `repoPacks()` (`src/lib/packs/catalogue.ts`) parses all of them. The seed (`pnpm seed`, `scripts/seed.ts`) writes them into the global `packs` table; the app reads only that table. A version is written once: change a pack, raise its version. In a hosted environment run the seed's catalogue step (or an equivalent service-role job) after a deploy that adds a pack version.
 
@@ -39,6 +40,7 @@ Validated by `packManifestSchema` (`src/lib/packs/manifest.ts`), which extends t
 | `level` on folders, sheets, forms, automations, dashboards | The lowest level that installs the object; none = every level |
 | `frameworks` | `[{ key, version }]`: framework libraries the pack builds on, adopted at install when missing (Frameworks below) |
 | `setup` | `{ title, description, steps }`: the guided setup checklist (Setup below) |
+| `apps` | Apps over the pack's sheets, forms and dashboards (docs/13), checked against the pack's refs |
 
 ID prefixes are unique inside a pack. When the workspace already uses one, the planner renames it with a number (`SUP-` → `SUP2-`, cutting the stem to stay within 6 characters) and the preview says so.
 
@@ -117,6 +119,7 @@ Progress is computed from data by the pure `setupProgress` (`src/engine/packs/se
 - **Annex A links.** The example risks link to Annex A controls of the adopted library (phishing → A.6.3, A.8.7; lost laptop → A.8.1, A.7.9; supplier outage → A.5.19, A.5.30) and the example treatments to the control they put in place (multi-factor sign-in → A.8.5, disk encryption → A.8.24), so the requirements show linked risks straight after install.
 - **Report a security incident** (Full, on Security incidents): what happened (one line and the detail), when it was noticed, systems and data affected, a severity guess and the reporter's name and email; answers go to Open with the status New. It installs as an **internal** draft (signed-in members of the workspace), with a privacy notice to review. To take reports from people without an account (staff without a seat, contractors), an owner or admin switches it to public in the form's settings and opens it: the reporter's name and email are then the only way to reach them, and the notice must be reviewed first (docs/05 §3.3). The sheet shows its Forms tab and the setup step "Make incidents easy to report" opens the form (Starter: "Record incidents" as nonconformities with the source Incident).
 - **1.0.0 → 1.1.0.** A workspace on 1.0.0 keeps it (upgrades are P6); new installs get 1.1.0. Hosted catalogues need the new version loaded (`scripts/packs-sql.ts`) after migration 0033.
+- **1.2.0 (P7).** Adds the internal form "Report a problem" on Nonconformities and CAPA (Starter), the "Nonconformities overview" dashboard and the ISMS CAPA app (docs/13).
 
 ## Audit outputs (P5)
 
@@ -140,4 +143,4 @@ A framework's requirement library is a generated pack (docs/12): `frameworkToPac
 
 ## Later
 
-Upgrades with a three-way diff from `pack_hash` and `ref_map` (P6), resolving `pack:sheet` links across installs, recipes in manifests, installing requirements for you, apps (P7).
+Upgrades with a three-way diff from `pack_hash` and `ref_map` (P6), resolving `pack:sheet` links across installs, recipes in manifests, installing requirements for you.

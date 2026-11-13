@@ -28,11 +28,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { Nav } from '@/server/repositories/sheets';
+import { AppIcon, type MenuApp } from '@/components/apps/app-icon';
 import { iconClass, itemClass } from './menu-bits';
 import { MenuSheets } from './menu-sheets';
 
 // The side menu (docs/05 §2.1): workspace switcher, "Find" to filter the menu, Home and My work, Insights (Dashboards,
-// Evidence library), one collapsible section per folder with its sheets (menu-sheets.tsx: "+", "…" menus, rename,
+// Evidence library, Audit outputs), Apps (the installed packs' apps, docs/13), one collapsible section per folder with its sheets (menu-sheets.tsx: "+", "…" menus, rename,
 // drag and drop), then Workflow, Automations and Workspace admin. 256 px on desktop; on phones the same
 // menu opens as a sheet from the bottom bar. Closed folders are remembered per browser.
 
@@ -46,6 +47,8 @@ export type SideMenuProps = {
   canEdit: boolean;
   canManage: boolean;
   myWorkCount: number;
+  /** Apps of the installed packs the person's role may see (docs/13). */
+  apps?: MenuApp[];
   onNavigate?: () => void;
 };
 
@@ -192,6 +195,7 @@ export function SideMenu({
   canEdit,
   canManage,
   myWorkCount,
+  apps = [],
   onNavigate,
 }: SideMenuProps) {
   const path = usePathname();
@@ -237,6 +241,7 @@ export function SideMenu({
       </ul>
     ) : null;
   const anyInsights = hit('Dashboards') || hit('Evidence library') || hit('Audit outputs');
+  const shownApps = apps.filter((a) => hit(a.title));
   const anyPlatform =
     hit('Workflow') || hit('Automations') || (canManage && hit('Workspace admin'));
 
@@ -336,6 +341,29 @@ export function SideMenu({
           </>
         ) : null}
 
+        {shownApps.length ? (
+          <>
+            <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
+            {q ? null : (
+              <h2 className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
+                Apps
+              </h2>
+            )}
+            <ul className="flex flex-col gap-px" aria-label="Apps">
+              {shownApps.map((a) => (
+                <NavLink
+                  key={a.key}
+                  href={`/${org}/apps/${a.key}/${a.screen}`}
+                  label={a.title}
+                  icon={<AppIcon icon={a.icon} className={iconClass} />}
+                  active={is(`apps/${a.key}`)}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </ul>
+          </>
+        ) : null}
+
         <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
         <MenuSheets
           org={org}
@@ -393,6 +421,7 @@ export function SideMenu({
         {q &&
         !anyPlatform &&
         !anyInsights &&
+        shownApps.length === 0 &&
         !hit('Home') &&
         !hit('My work') &&
         [...nav.folders, { name: 'Other sheets', sheets: nav.unfiled }].every(

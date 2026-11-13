@@ -4,6 +4,7 @@
 // library items with refs (links name items by ref, never by name), automations and dashboards with refs. The sheet-
 // level checks are the template's (sheetTemplateSchema runs on the manifest turned into a template).
 import { z } from 'zod';
+import { appManifestSchema, appProblems } from '@/lib/apps/manifest';
 import { widgetType } from '@/engine/dashboards/registry';
 import { MAX_WIDGETS } from '@/engine/dashboards/types';
 import { isRequirementKey, parseRequirementKey } from '@/engine/frameworks/refs';
@@ -202,6 +203,8 @@ export const packManifestSchema = z
           .max(12),
       })
       .optional(),
+    /** Apps (docs/13): navigation over the pack's sheets, forms and dashboards. */
+    apps: z.array(appManifestSchema).max(5).optional(),
   })
   .superRefine((m, ctx) => {
     const problem = (path: (string | number)[], message: string) =>
@@ -335,6 +338,16 @@ export const packManifestSchema = z
           problem(at, `"${w.fieldKey}" needs a sheetRef or a library.`);
       }
     }
+
+    // apps: keys once each, every ref one of the pack's
+    unique(
+      (m.apps ?? []).map((a) => a.key),
+      ['apps'],
+      'app key',
+    );
+    for (const [ai, app] of (m.apps ?? []).entries())
+      for (const p of appProblems(app, m as PackManifest))
+        problem(['apps', ai, ...p.path], p.message);
 
     // levels, required frameworks and the setup checklist: every reference resolves, nothing needs a higher level
     for (const p of levelProblems(m as PackManifest)) problem(p.path, p.message);

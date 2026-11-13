@@ -1,0 +1,79 @@
+{
+  "requires": { "pack": "start-capa", "range": "^1.1.0" },
+  "app": {
+    "key": "capa",
+    "title": "CAPA",
+    "description": "Report problems, work on your corrective actions and verify that they worked.",
+    "icon": "wrench",
+    "sections": [
+      {
+        "title": "Work",
+        "screens": [
+          {
+            "key": "report",
+            "kind": "form",
+            "title": "Report a problem",
+            "description": "Say what is wrong. The CAPA steps are added for you, and you own the containment.",
+            "sheet": "capa",
+            "form": "nonconformity",
+            "roles": ["owner", "admin", "member"]
+          },
+          {
+            "key": "my-actions",
+            "kind": "item",
+            "title": "My actions",
+            "description": "Corrective actions assigned to you that are not done, soonest first.",
+            "sheet": "capa",
+            "subitems": true,
+            "filters": [
+              { "fieldKey": "owner", "op": "includes_any_of", "value": ["{me}"] },
+              { "fieldKey": "status", "op": "is_not_done" }
+            ],
+            "sort": [{ "fieldKey": "due_date", "direction": "asc" }],
+            "show": ["status", "due_date"],
+            "empty": "No open actions are assigned to you."
+          },
+          {
+            "key": "approvals",
+            "kind": "item",
+            "title": "Needs my approval",
+            "description": "Nonconformities you own that wait for you to verify the actions worked.",
+            "sheet": "capa",
+            "filters": [
+              { "fieldKey": "owner", "op": "includes_any_of", "value": ["{me}"] },
+              { "fieldKey": "status", "op": "is_any_of", "value": ["opt_verify"] }
+            ],
+            "sort": [{ "fieldKey": "due_date", "direction": "asc" }],
+            "show": ["severity", "due_date"],
+            "empty": "Nothing waits for your verification."
+          }
+        ]
+      },
+      {
+        "title": "Overview",
+        "screens": [
+          {
+            "key": "all",
+            "kind": "view",
+            "title": "All nonconformities",
+            "sheet": "capa"
+          },
+          {
+            "key": "overview",
+            "kind": "dashboard",
+            "title": "Overview",
+            "dashboard": "capa_overview"
+          },
+          {
+            "key": "workflow",
+            "kind": "workflow",
+            "title": "Workflow",
+            "sheet": "capa",
+            "fieldKey": "status",
+            "roles": ["owner", "admin"]
+          }
+        ]
+      }
+    ]
+  }
+}

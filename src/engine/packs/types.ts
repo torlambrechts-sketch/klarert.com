@@ -1,5 +1,6 @@
 // Packs (docs/11): installable bundles of the core as data. These are the manifest's types as the engine reads them;
 // the Zod schema that checks a manifest file is src/lib/packs/manifest.ts (it produces exactly these types). Pure.
+import type { AppManifest } from '../apps/types';
 import type { Json } from '../types';
 import type { SheetTemplate, TemplateAutomation, TemplateSheet } from '../templates/schema';
 
@@ -151,6 +152,8 @@ export interface PackManifest {
   frameworks?: PackFramework[];
   /** A guided setup checklist shown after install (docs/11 Setup). */
   setup?: PackSetup;
+  /** Apps over the pack's sheets, forms and dashboards (docs/13), shown once the pack is installed. */
+  apps?: AppManifest[];
 }
 
 /** `<pack key>:<sheet ref>` or `<sheet ref>`. */

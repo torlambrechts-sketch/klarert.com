@@ -1,6 +1,6 @@
 {
   "key": "iso-27001",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "title": "ISO/IEC 27001:2022 ISMS",
   "description": "A working information security management system on top of the ISO/IEC 27001:2022 requirement library: scope and context, a scored risk register with treatment, the documents an ISMS keeps, nonconformities with corrective actions, automations, an ISMS overview dashboard and a seven-step setup checklist. Choose Starter or Full; you can add Full later. Reference numbers and short titles only, never the text of the standard.",
   "requires": [],
@@ -1358,6 +1358,39 @@
             "status": "opt_analysis"
           }
         }
+      ],
+      "forms": [
+        {
+          "ref": "report",
+          "name": "Report a problem",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report a problem",
+            "description": "Something that does not meet a requirement of the ISMS: a control not working, a procedure not followed, an audit or review finding.",
+            "nameLabel": "What is wrong, in one line",
+            "fields": [
+              {
+                "key": "description",
+                "label": "What did you find?",
+                "required": true
+              },
+              {
+                "key": "source",
+                "label": "Where did it come from?"
+              },
+              {
+                "key": "found_on",
+                "label": "When did you find it?",
+                "required": true
+              },
+              {
+                "key": "severity",
+                "label": "How serious is it?"
+              }
+            ]
+          }
+        }
       ]
     },
     {
@@ -2502,6 +2535,60 @@
           "fieldKey": "next_review"
         }
       ]
+    },
+    {
+      "ref": "nc_overview",
+      "name": "Nonconformities overview",
+      "widgets": [
+        {
+          "ref": "w_open",
+          "type": "count",
+          "title": "Open nonconformities",
+          "sheetRef": "nc",
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_not_done"
+            }
+          ]
+        },
+        {
+          "ref": "w_verify",
+          "type": "count",
+          "title": "Checking effectiveness",
+          "sheetRef": "nc",
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_any_of",
+              "value": [
+                "opt_verify"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_status",
+          "type": "by_option",
+          "title": "Nonconformities by status",
+          "sheetRef": "nc",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_source",
+          "type": "by_option",
+          "title": "By source",
+          "sheetRef": "nc",
+          "fieldKey": "source"
+        },
+        {
+          "ref": "w_overdue",
+          "type": "overdue",
+          "title": "Overdue nonconformities",
+          "sheetRef": "nc",
+          "fieldKey": "due_date"
+        }
+      ]
     }
   ],
   "setup": {
@@ -2829,5 +2916,127 @@
         }
       }
     ]
-  }
+  },
+  "apps": [
+    {
+      "key": "isms-capa",
+      "title": "ISMS CAPA",
+      "description": "Report nonconformities, work on your corrective actions and check that they worked.",
+      "icon": "shield-alert",
+      "sections": [
+        {
+          "title": "Work",
+          "screens": [
+            {
+              "key": "report",
+              "kind": "form",
+              "title": "Report a problem",
+              "description": "Say what does not meet a requirement. It goes to Open nonconformities.",
+              "sheet": "nc",
+              "form": "report",
+              "roles": [
+                "owner",
+                "admin",
+                "member"
+              ]
+            },
+            {
+              "key": "my-actions",
+              "kind": "item",
+              "title": "My actions",
+              "description": "Corrective actions assigned to you that are not done, soonest first.",
+              "sheet": "nc",
+              "subitems": true,
+              "filters": [
+                {
+                  "fieldKey": "owner",
+                  "op": "includes_any_of",
+                  "value": [
+                    "{me}"
+                  ]
+                },
+                {
+                  "fieldKey": "status",
+                  "op": "is_not_done"
+                }
+              ],
+              "sort": [
+                {
+                  "fieldKey": "due_date",
+                  "direction": "asc"
+                }
+              ],
+              "show": [
+                "status",
+                "due_date"
+              ],
+              "empty": "No open actions are assigned to you."
+            },
+            {
+              "key": "approvals",
+              "kind": "item",
+              "title": "Needs my approval",
+              "description": "Nonconformities you own whose actions are done and wait for your effectiveness check.",
+              "sheet": "nc",
+              "filters": [
+                {
+                  "fieldKey": "owner",
+                  "op": "includes_any_of",
+                  "value": [
+                    "{me}"
+                  ]
+                },
+                {
+                  "fieldKey": "status",
+                  "op": "is_any_of",
+                  "value": [
+                    "opt_verify"
+                  ]
+                }
+              ],
+              "sort": [
+                {
+                  "fieldKey": "due_date",
+                  "direction": "asc"
+                }
+              ],
+              "show": [
+                "severity",
+                "due_date"
+              ],
+              "empty": "Nothing waits for your effectiveness check."
+            }
+          ]
+        },
+        {
+          "title": "Overview",
+          "screens": [
+            {
+              "key": "all",
+              "kind": "view",
+              "title": "All nonconformities",
+              "sheet": "nc"
+            },
+            {
+              "key": "overview",
+              "kind": "dashboard",
+              "title": "Overview",
+              "dashboard": "nc_overview"
+            },
+            {
+              "key": "workflow",
+              "kind": "workflow",
+              "title": "Workflow",
+              "sheet": "nc",
+              "fieldKey": "status",
+              "roles": [
+                "owner",
+                "admin"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
