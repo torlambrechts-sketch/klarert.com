@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { ShellCrumb } from './shell-crumb';
 
-// Page header and underline tabs shared by every page (docs/05 §2): an optional crumb, the h1 (heading-26), one line
+// Page header and underline tabs shared by every page (docs/05 §2): an optional crumb (shown in the top strip), the h1 (heading-26), one line
 // of description, actions on the right; tabs under it with a 2 px ink underline on the current one.
 
 export function PageHeader({
@@ -20,7 +21,14 @@ export function PageHeader({
   return (
     <div className={cn('flex flex-wrap items-start justify-between gap-x-5 gap-y-3', className)}>
       <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-1.5">
-        {crumb ? <div className="text-muted-foreground text-label-13">{crumb}</div> : null}
+        {/* the crumb sits in the top strip on every page, as on a sheet, so titles line up across pages */}
+        {crumb ? (
+          <ShellCrumb>
+            <div className="text-muted-foreground text-label-14 flex min-w-0 items-center gap-2.5">
+              {crumb}
+            </div>
+          </ShellCrumb>
+        ) : null}
         <h1 className="m-0 break-words">{title}</h1>
         {description ? (
           <p className="text-muted-foreground text-copy-14 m-0 max-w-[780px] leading-[21px] text-pretty">

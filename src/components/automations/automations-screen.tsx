@@ -200,7 +200,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
   const filtered = !!(sheetFilter || needle || state !== 'all');
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         className="pb-0.5"
         crumb={
@@ -369,7 +369,7 @@ function RecipeGallery(props: ScreenProps & { perms: ListPermissions }) {
   const sheetSelect = useId();
   if (!props.perms.canEdit) return <ReadOnly org={props.org} />;
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         className="pb-0.5"
         crumb={<ListCrumb section="Build" page="Automations" badge={`${RECIPES.length} recipes`} />}
@@ -530,7 +530,7 @@ function RoleMappingStep({
 
 function ReadOnly({ org }: { org: string }) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <h1>Automations</h1>
       <p className="text-muted-foreground m-0">
         Viewers cannot change automations. Ask an editor or admin.

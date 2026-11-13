@@ -56,7 +56,7 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
   const filtered = !!(filters.sheetId || filters.automationId || filters.outcome);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-7 sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         className="pb-0.5"
         crumb={
