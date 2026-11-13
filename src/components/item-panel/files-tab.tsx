@@ -698,7 +698,7 @@ export function FilesTab(p: FilesTabProps) {
           ctx={ctx}
           canRestore={p.canEditItem && history.current.fieldId === null}
           onClose={() => setHistory(null)}
-          onDownload={(v) => void startDownload(org, v.id)}
+          onDownload={(v) => startDownload(org, v.id)}
           onRestore={(v) => void restore(v, history)}
         />
       ) : null}

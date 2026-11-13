@@ -28,6 +28,7 @@ import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
 import { ActivityTab } from './activity-tab';
 import { DetailsTab } from './details-tab';
+import { isDocumentsRegister } from '@/engine/documents';
 import { FilesTab } from './files-tab';
 import { onPanelTab, takePanelTab } from './open-tab';
 import {
@@ -121,7 +122,18 @@ export function ItemPanel(props: ItemPanelProps) {
   const version = `${item.updatedAt}|${item.groupId}|${item.locked}|${linksSig}|${filesSig}`;
   const activity = useActivity(item.id, item.sheetId, version);
   const versions = useFileVersions(item.id, filesSig);
-  const documents = useItemDocuments(org, item.id, `${linksSig}|${filesSig}`);
+  // linked documents are read once the Files tab opens, or at once when the sheet links to a documents register
+  const linksToRegister = data.related.sheets.some((s) => isDocumentsRegister(s));
+  const [filesSeen, setFilesSeen] = useState(false);
+  useEffect(() => {
+    if (tab === 'files') setFilesSeen(true);
+  }, [tab]);
+  const documents = useItemDocuments(
+    org,
+    item.id,
+    `${linksSig}|${filesSig}`,
+    filesSeen || tab === 'files' || linksToRegister,
+  );
   const categories = useFileCategories(org);
 
   // incoming links come from items the sheet may not have loaded: fetch them into the cache
@@ -418,7 +430,7 @@ export function ItemPanel(props: ItemPanelProps) {
                   <Tabs.Trigger
                     key={v}
                     value={v!}
-                    className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-14 h-10 shrink-0 border-b-2 border-transparent px-px whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2"
+                    className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-14 h-10 shrink-0 border-b-2 border-transparent px-px whitespace-nowrap focus-visible:outline-2"
                   >
                     {label}
                   </Tabs.Trigger>

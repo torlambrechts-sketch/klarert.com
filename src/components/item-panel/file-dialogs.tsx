@@ -264,7 +264,7 @@ export function HistorySheet({
   ctx: Ctx;
   canRestore: boolean;
   onClose(): void;
-  onDownload(file: FileVersionRow): void;
+  onDownload(file: FileVersionRow): Promise<unknown>;
   onRestore(file: FileVersionRow): void;
 }) {
   const downloads = useDownloads(
@@ -334,7 +334,10 @@ export function HistorySheet({
                       variant="ghost"
                       className="min-h-11 sm:min-h-8"
                       aria-label={`Download ${versionLabel(v.versionNo)} of ${v.filename}`}
-                      onClick={() => onDownload(v)}
+                      onClick={async () => {
+                        await onDownload(v);
+                        void downloads.refetch();
+                      }}
                     >
                       <Download aria-hidden /> Download
                     </Button>

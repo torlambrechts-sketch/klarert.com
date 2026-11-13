@@ -158,9 +158,10 @@ export function useFileVersions(itemId: string, version: string) {
 }
 
 /** The documents the item links to (link fields pointing at a documents register), with their status. */
-export function useItemDocuments(org: string, itemId: string, version: string) {
+export function useItemDocuments(org: string, itemId: string, version: string, enabled = true) {
   return useQuery({
     queryKey: [...panelKeys.documents(itemId), version],
+    enabled,
     queryFn: async () => {
       const r = await itemDocumentsAction({ org, itemId });
       if (!r.ok) throw new Error(r.error.message);
