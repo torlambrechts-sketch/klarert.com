@@ -938,9 +938,12 @@ export function Table({
 
   const subOpen = useStableEvent((item: Item) => onOpenSubitem?.(item));
   const subCommitStable = useStableEvent(commitSub);
-  const subFieldProps = useStableEvent((field: Field) =>
-    subCommit.fieldProps(field, { canEdit, isAdmin }, () => store.getState().edit(null)),
-  );
+  // "Add …" works on the sub-items' options; their field settings live in the sheet settings (Sub-items)
+  const subFieldProps = useStableEvent((field: Field) => ({
+    onAddOption: subCommit.fieldProps(field, { canEdit, isAdmin }, () =>
+      store.getState().edit(null),
+    ).onAddOption,
+  }));
   const subAdd = useStableEvent(async (parent: Item, name: string) => {
     if (!sub) return;
     const list = childrenOf(parent.id);
