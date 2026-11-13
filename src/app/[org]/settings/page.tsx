@@ -1,4 +1,9 @@
+import { formatDateTime } from '@/engine/fields/helpers';
+import { ORGANISE_ACTIONS, organiseText } from '@/engine/organise';
+import Link from 'next/link';
 import { env } from '@/lib/env';
+import { Button } from '@/components/ui/button';
+import type { Json } from '@/engine/types';
 import type { ServerClient } from '@/lib/supabase/server';
 import { PageHeader, PageTabs } from '@/components/shell/page-header';
 import { ROLE_LABELS } from '@/lib/schemas/workspace';
@@ -10,6 +15,7 @@ import {
   type InviteRow,
   type MemberRow,
 } from './members';
+import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
 
 export const metadata = { title: 'Settings · Compliance OS' };
@@ -18,6 +24,7 @@ const TABS = [
   { id: 'members', label: 'Members' },
   { id: 'teams', label: 'Teams and roles' },
   { id: 'entities', label: 'Entities and sites' },
+  { id: 'archived', label: 'Archived' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 
@@ -64,6 +71,7 @@ export default async function SettingsPage({
   const { tab: rawTab } = await searchParams;
   const tab: Tab = TABS.some((t) => t.id === rawTab) ? (rawTab as Tab) : 'members';
   const { supabase, workspace, role, user } = await requireMember(org);
+  const timeZone = workspace.time_zone;
 
   if (!isAdminRole(role)) {
     return (
@@ -97,7 +105,7 @@ export default async function SettingsPage({
       <PageHeader
         crumb={workspace.name}
         title="Workspace admin"
-        description="Members and roles, teams and job roles, entities and sites."
+        description="Members and roles, teams and job roles, entities and sites, archived folders and sheets."
       />
       <PageTabs
         label="Settings sections"
@@ -112,6 +120,15 @@ export default async function SettingsPage({
         <TeamsTab db={supabase} org={org} orgId={workspace.id} people={people} nameOf={nameOf} />
       ) : null}
       {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
+      {tab === 'archived' ? (
+        <ArchivedTab
+          db={supabase}
+          org={org}
+          orgId={workspace.id}
+          nameOf={nameOf}
+          timeZone={timeZone}
+        />
+      ) : null}
     </main>
   );
 }
@@ -327,5 +344,167 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
         </ul>
       )}
     </Card>
+  );
+}
+
+/** Archived folders (restored with their sheets), archived sheets, and the latest folder and sheet changes. */
+async function ArchivedTab({
+  db,
+  org,
+  orgId,
+  nameOf,
+  timeZone,
+}: {
+  db: ServerClient;
+  org: string;
+  orgId: string;
+  nameOf: Map<string, string>;
+  timeZone: string;
+}) {
+  const [folders, sheets, log] = await Promise.all([
+    db.from('folders').select('id, name, archived_at').eq('org_id', orgId),
+    db
+      .from('sheets')
+      .select('id, name, folder_id, archived_at')
+      .eq('org_id', orgId)
+      .is('parent_sheet_id', null)
+      .not('archived_at', 'is', null)
+      .order('archived_at', { ascending: false }),
+    db
+      .from('activity_log')
+      .select('id, at, actor_kind, actor_id, action, old_value, new_value')
+      .eq('org_id', orgId)
+      .in('action', [...ORGANISE_ACTIONS])
+      .order('id', { ascending: false })
+      .limit(20),
+  ]);
+  if (folders.error || sheets.error || log.error)
+    return (
+      <Card title="Archived">
+        <div role="alert" className="flex flex-col items-start gap-2">
+          <p className="m-0">Archived folders and sheets could not be loaded.</p>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/${org}/settings?tab=archived`}>Retry</Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  const folderName = new Map((folders.data ?? []).map((f) => [f.id, f.name]));
+  const archivedFolders = (folders.data ?? [])
+    .filter((f) => f.archived_at)
+    .sort((a, b) => (a.archived_at! < b.archived_at! ? 1 : -1));
+  const sheetsOf = (f: { id: string; archived_at: string | null }) =>
+    (sheets.data ?? []).filter((s) => s.folder_id === f.id && s.archived_at === f.archived_at);
+  const withFolder = new Set(archivedFolders.flatMap((f) => sheetsOf(f).map((s) => s.id)));
+  const loose = (sheets.data ?? []).filter((s) => !withFolder.has(s.id));
+  return (
+    <>
+      <Card
+        title="Archived folders"
+        description="A folder is restored together with the sheets that were archived with it."
+      >
+        {archivedFolders.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13">No archived folders.</p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Archived folders">
+            {archivedFolders.map((f) => {
+              const list = sheetsOf(f);
+              return (
+                <li
+                  key={f.id}
+                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex min-w-0 flex-col">
+                    <span className="font-medium">{f.name}</span>
+                    <span className="text-muted-foreground text-label-13">
+                      Archived {formatDateTime(f.archived_at!, timeZone)} ·{' '}
+                      {list.length === 0
+                        ? 'no sheets'
+                        : list.length === 1
+                          ? '1 sheet'
+                          : `${list.length} sheets`}
+                      {list.length > 0 ? `: ${list.map((s) => s.name).join(', ')}` : ''}
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <RestoreFolder org={org} folderId={f.id} name={f.name} />
+                    {list.length === 0 ? (
+                      <DeleteFolder org={org} folderId={f.id} name={f.name} />
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Card>
+      <Card
+        title="Archived sheets"
+        description="Sheets archived on their own. A sheet whose folder is archived comes back under Other sheets."
+      >
+        {loose.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13">No archived sheets.</p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Archived sheets">
+            {loose.map((s) => (
+              <li
+                key={s.id}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 flex-col">
+                  <span className="font-medium">{s.name}</span>
+                  <span className="text-muted-foreground text-label-13">
+                    Archived {formatDateTime(s.archived_at!, timeZone)}
+                    {s.folder_id
+                      ? ` · from ${folderName.get(s.folder_id) ?? 'a deleted folder'}`
+                      : ''}
+                  </span>
+                </div>
+                <RestoreSheet org={org} sheetId={s.id} name={s.name} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card
+        title="Folder and sheet changes"
+        description="The latest 20 entries of the activity log."
+      >
+        {(log.data ?? []).length === 0 ? (
+          <p className="text-muted-foreground text-copy-13">No changes yet.</p>
+        ) : (
+          <ol
+            className="divide-line m-0 flex list-none flex-col divide-y p-0"
+            aria-label="Folder and sheet changes"
+          >
+            {(log.data ?? []).map((e) => (
+              <li key={e.id} className="flex flex-col gap-0.5 py-2">
+                <span>
+                  <span className="font-medium">
+                    {e.actor_kind === 'user'
+                      ? (e.actor_id && nameOf.get(e.actor_id)) || 'Former member'
+                      : e.actor_kind === 'automation'
+                        ? 'Automation'
+                        : 'System'}
+                  </span>{' '}
+                  ·{' '}
+                  {organiseText(
+                    {
+                      action: e.action,
+                      oldValue: e.old_value as Json | null,
+                      newValue: e.new_value as Json | null,
+                    },
+                    (id) => folderName.get(id),
+                  )}
+                </span>
+                <span className="text-muted-foreground text-label-12-mono">
+                  {formatDateTime(e.at, timeZone)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Card>
+    </>
   );
 }

@@ -1,14 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Check,
-  ChevronRight,
   ChevronsUpDown,
   FileCheck2,
-  Folder,
   Home,
   Inbox,
   LayoutDashboard,
@@ -28,11 +26,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import type { Nav, NavSheet } from '@/server/repositories/sheets';
+import type { Nav } from '@/server/repositories/sheets';
+import { iconClass, itemClass } from './menu-bits';
+import { MenuSheets } from './menu-sheets';
 
 // The side menu (docs/05 §2.1): workspace switcher, "Find" to filter the menu, Home and My work, Insights (Dashboards,
-// Evidence library), one collapsible section per folder with its sheets, then Workflow, Automations and Workspace
-// admin. 256 px on desktop; on phones the same
+// Evidence library), one collapsible section per folder with its sheets (menu-sheets.tsx: "+", "…" menus, rename,
+// drag and drop), then Workflow, Automations and Workspace admin. 256 px on desktop; on phones the same
 // menu opens as a sheet from the bottom bar. Closed folders are remembered per browser.
 
 export type Ws = { id: string; name: string; slug: string };
@@ -79,9 +79,6 @@ function writeClosed(ids: Set<string>) {
   }
 }
 
-const itemClass =
-  'flex h-[34px] w-full items-center gap-2.5 rounded-md px-2.5 text-left text-label-14 text-ink outline-offset-[-2px] hover:bg-nav-hover hover:text-ink aria-[current=page]:bg-nav-active aria-[current=page]:font-medium aria-[current=page]:text-ink';
-
 function NavLink({
   href,
   label,
@@ -121,20 +118,6 @@ function NavLink({
         {trailing ? <span data-side-trailing>{trailing}</span> : null}
       </Link>
     </li>
-  );
-}
-
-const iconClass =
-  'text-muted-foreground group-hover/item:text-ink group-aria-[current=page]/item:text-ink size-4 shrink-0';
-
-function SheetCode({ code }: { code: string }) {
-  return (
-    <span
-      aria-hidden
-      className="border-line text-ink bg-background-100 text-label-12-mono flex h-5 min-w-6 shrink-0 items-center justify-center rounded-[5px] border px-1 font-medium tracking-tight"
-    >
-      {code}
-    </span>
   );
 }
 
@@ -222,15 +205,6 @@ export function SideMenu({
   const q = find.trim().toLowerCase();
   const hit = (label: string) => !q || label.toLowerCase().includes(q);
 
-  const sections = useMemo(
-    () => [
-      ...nav.folders.map((f) => ({ id: f.id, name: f.name, sheets: f.sheets })),
-      ...(nav.unfiled.length > 0
-        ? [{ id: 'unfiled', name: 'Other sheets', sheets: nav.unfiled }]
-        : []),
-    ],
-    [nav],
-  );
   const toggle = (id: string) =>
     setClosed((was) => {
       const next = new Set(was);
@@ -239,31 +213,28 @@ export function SideMenu({
       writeClosed(next);
       return next;
     });
-
-  const sheetLink = (s: NavSheet) => (
-    <NavLink
-      key={s.id}
-      href={`/${org}/s/${s.id}`}
-      label={s.name}
-      icon={<SheetCode code={s.code} />}
-      active={s.id === activeSheet}
-      onNavigate={onNavigate}
-      testId={`rail-sheet-${s.code}`}
-      className="text-label-13.5 h-8 gap-[9px] px-2"
-    />
-  );
+  const setOpen = (id: string) =>
+    setClosed((was) => {
+      if (!was.has(id)) return was;
+      const next = new Set(was);
+      next.delete(id);
+      writeClosed(next);
+      return next;
+    });
+  const empty = nav.folders.length === 0 && nav.unfiled.length === 0;
   const newSheet =
-    canEdit && hit('New sheet') ? (
-      <NavLink
-        href={`/${org}/s/new`}
-        label="New sheet"
-        icon={<Plus className={iconClass} aria-hidden />}
-        active={path === `/${org}/s/new`}
-        onNavigate={onNavigate}
-        className="text-muted-foreground text-label-14 h-8 px-2"
-      />
+    canEdit && !empty && hit('New sheet') ? (
+      <ul className="flex flex-col gap-px">
+        <NavLink
+          href={`/${org}/s/new`}
+          label="New sheet"
+          icon={<Plus className={iconClass} aria-hidden />}
+          active={path === `/${org}/s/new`}
+          onNavigate={onNavigate}
+          className="text-muted-foreground text-label-14 h-8 px-2"
+        />
+      </ul>
     ) : null;
-  const lastIndex = sections.length - 1;
   const anyInsights = hit('Dashboards') || hit('Evidence library');
   const anyPlatform =
     hit('Workflow') || hit('Automations') || (canManage && hit('Workspace admin'));
@@ -357,54 +328,20 @@ export function SideMenu({
         ) : null}
 
         <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
-        {q ? null : (
-          <h2 className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
-            Sheets
-          </h2>
-        )}
-        {sections.length === 0 ? <ul className="flex flex-col gap-px">{newSheet}</ul> : null}
-        {sections.map((s, i) => {
-          const sheets = s.sheets.filter((x) => hit(x.name) || hit(s.name));
-          const extra = i === lastIndex ? newSheet : null;
-          if (q && sheets.length === 0 && !extra) return null;
-          const open = !!q || !closed.has(s.id) || sheets.some((x) => x.id === activeSheet);
-          const listId = `menu-folder-${s.id}`;
-          return (
-            <section key={s.id} aria-labelledby={`${listId}-h`} className="flex flex-col">
-              <h3 id={`${listId}-h`} className="m-0">
-                <button
-                  type="button"
-                  aria-expanded={open}
-                  aria-controls={listId}
-                  onClick={() => toggle(s.id)}
-                  className={cn(itemClass, 'group/item')}
-                >
-                  <Folder className={iconClass} aria-hidden />
-                  <span data-side-text className="min-w-0 flex-1 truncate">
-                    {s.name}
-                  </span>
-                  <ChevronRight
-                    data-side-text
-                    className={cn(
-                      'text-muted-foreground size-3.5 shrink-0 transition-transform motion-reduce:transition-none',
-                      open && 'rotate-90',
-                    )}
-                    aria-hidden
-                  />
-                </button>
-              </h3>
-              <ul
-                id={listId}
-                hidden={!open}
-                data-side-list
-                className="border-line my-px mb-1 ml-[18px] flex flex-col gap-px border-l pl-2"
-              >
-                {sheets.map(sheetLink)}
-                {extra}
-              </ul>
-            </section>
-          );
-        })}
+        <MenuSheets
+          org={org}
+          nav={nav}
+          activeSheet={activeSheet}
+          q={q}
+          hit={hit}
+          isClosed={(id) => closed.has(id)}
+          toggle={toggle}
+          setOpen={setOpen}
+          canEdit={canEdit}
+          canManage={canManage}
+          onNavigate={onNavigate}
+        />
+        {newSheet}
 
         {anyPlatform ? (
           <>
@@ -449,7 +386,9 @@ export function SideMenu({
         !anyInsights &&
         !hit('Home') &&
         !hit('My work') &&
-        sections.every((s) => !s.sheets.some((x) => hit(x.name)) && !hit(s.name)) ? (
+        [...nav.folders, { name: 'Other sheets', sheets: nav.unfiled }].every(
+          (s) => !s.sheets.some((x) => hit(x.name)) && !hit(s.name),
+        ) ? (
           <p className="text-muted-foreground text-copy-13 px-2.5 py-2">Nothing matches.</p>
         ) : null}
       </div>
