@@ -91,6 +91,9 @@
     { "from": "iso-27001@2022#A.5.26", "to": "nis2@2022#Art. 23(4)(a)", "relation": "related", "note": "Incident response supports the early warning" },
     { "from": "iso-27001@2022#A.5.26", "to": "nis2@2022#Art. 23(4)(b)", "relation": "related", "note": "Incident response supports the notification" },
     { "from": "iso-27001@2022#A.5.27", "to": "nis2@2022#Art. 23(4)(d)", "relation": "related", "note": "Lessons learned feed the final report" },
+    { "from": "iso-27001@2022#A.5.31", "to": "nis2@2022#Art. 2(1)", "relation": "related", "note": "Identifying applicable laws includes working out whether NIS2 applies" },
+    { "from": "iso-27001@2022#A.5.5", "to": "nis2@2022#Art. 3(3)", "relation": "related", "note": "Contact with authorities includes keeping registered details current" },
+    { "from": "iso-27001@2022#A.5.5", "to": "nis2@2022#Art. 27(2)", "relation": "related", "note": "Contact with authorities includes keeping registered details current" },
 
     { "from": "gdpr@2016#Art. 32", "to": "iso-27001@2022#A.5.34", "relation": "related", "note": "Security of personal data" },
     { "from": "gdpr@2016#Art. 32", "to": "iso-27001@2022#A.8.24", "relation": "related", "note": "Encryption is named in the article" },

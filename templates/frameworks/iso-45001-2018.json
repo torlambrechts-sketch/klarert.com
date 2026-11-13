@@ -1,7 +1,7 @@
 {
   "key": "iso-45001",
   "version": "2018",
-  "revision": 3,
+  "revision": 4,
   "title": "ISO 45001:2018",
   "shortTitle": "45001",
   "publisher": "ISO",
@@ -20,14 +20,14 @@
     {
       "ref": "4",
       "kind": "theme",
-      "title": "Clause 4 · Context of the organisation",
+      "title": "Clause 4 · Context of the organization",
       "purpose": "Grounds the OH&S system in the real conditions people work in, the needs of workers and others, and a clear scope."
     },
     {
       "ref": "4.1",
       "parent": "4",
       "kind": "clause",
-      "title": "Understanding the organisation and its context",
+      "title": "Understanding the organization and its context",
       "purpose": "Builds the OH&S system around the real conditions in which your people work and the outside forces that shape their health and safety.",
       "guidance": "Record the internal and external issues that bear on OH&S results: legislation and enforcement, the labour market and use of agency workers, contractors and subcontracting, shift patterns, home and lone working, an ageing workforce, new technology, financial pressure and workplace culture. Include how workers are represented, for example through trade unions or safety representatives. A short dated PESTLE or SWOT with an owner is enough for a small company. Say how each issue is handled, for example in the risk register or an objective. Typical findings are a context list copied from the quality system with nothing about the workforce, and one never revisited after a restructuring or a new site. Since the 2024 amendment, also decide and record whether climate change is a relevant issue for you, and keep the reasoning even when the answer is no.",
       "questions": [
@@ -153,7 +153,7 @@
       "ref": "5.3",
       "parent": "5",
       "kind": "clause",
-      "title": "Organisational roles, responsibilities and authorities",
+      "title": "Organizational roles, responsibilities and authorities",
       "purpose": "Makes sure OH&S duties have named owners with authority at every level, including someone who reports OH&S performance to top management.",
       "guidance": "Assign responsibilities for the OH&S system and for key duties: risk assessment, permits to work, first aid, fire wardens, contractor control, inspections and statutory examinations. Make clear that managers and supervisors own safety in their areas and that every worker takes responsibility for the parts of the system they control. One role must be responsible for conformity of the system and for reporting OH&S performance to top management. Record this in job descriptions or a RACI table and keep it current. Typical findings are supervisors unaware of their safety duties, appointed first aiders who have left and authority to stop work that exists only on paper.",
       "questions": [

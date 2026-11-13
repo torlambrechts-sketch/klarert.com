@@ -1,7 +1,7 @@
 {
   "key": "gdpr",
   "version": "2016",
-  "revision": 3,
+  "revision": 4,
   "title": "GDPR (Regulation (EU) 2016/679)",
   "shortTitle": "GDPR",
   "publisher": "European Union",
@@ -29,7 +29,7 @@
       "kind": "article",
       "title": "Principles relating to processing of personal data",
       "purpose": "Sets the core rules for all personal data use: lawful, fair and open handling, fixed purposes, only the data needed, accuracy, limited retention and security, with the controller able to prove it follows them.",
-      "guidance": "Turn each principle into a working habit. State a purpose before collecting any data, drop fields nobody uses, and set retention periods per data category with a named owner. Review them at least yearly. Auditors commonly find forms that ask for more than needed, retention schedules that exist on paper but are never run, and no evidence that anyone checks accuracy. Keep a short principles checklist inside your project and supplier onboarding steps so it is applied before data starts flowing.",
+      "guidance": "Turn each principle into a working habit. State a purpose before collecting any data, drop fields nobody uses, and set retention periods per data category with a named owner. Review them at intervals you set; many organisations review yearly. Auditors commonly find forms that ask for more than needed, retention schedules that exist on paper but are never run, and no evidence that anyone checks accuracy. Keep a short principles checklist inside your project and supplier onboarding steps so it is applied before data starts flowing.",
       "questions": [
         "How do you decide which personal data a new process may collect, and for what purpose?",
         "How do you check that data collected for one purpose is not reused for an unrelated one?",
@@ -626,15 +626,15 @@
         "dpo"
       ],
       "purpose": "Defines the DPO's work: advising, monitoring compliance, supporting assessments and acting as contact for the authority.",
-      "guidance": "Agree a yearly plan covering training, monitoring checks, advice on assessments and liaison with the regulator. Keep records of advice given and follow-up. Report to management at least yearly. Auditors find DPO roles that exist only on paper, with no monitoring activity or reports. Remember the DPO advises and monitors; the organisation stays responsible for compliance.",
+      "guidance": "Agree a work plan for a period you set, often a year, covering training, monitoring checks, advice on assessments and liaison with the regulator. Keep records of advice given and follow-up. Report to management at intervals you set; many DPOs report at least yearly. Auditors find DPO roles that exist only on paper, with no monitoring activity or reports. Remember the DPO advises and monitors; the organisation stays responsible for compliance.",
       "questions": [
-        "What does the DPO's annual plan include?",
+        "What does the DPO's work plan include, and what period does it cover?",
         "How does the DPO monitor compliance?",
         "How is advice recorded and followed up?",
         "How does the DPO report to management?"
       ],
       "evidence": [
-        "DPO annual plan",
+        "DPO work plan for the period you set",
         "Monitoring reports",
         "Advice log",
         "Management reports",

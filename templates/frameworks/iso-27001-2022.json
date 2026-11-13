@@ -1,7 +1,7 @@
 {
   "key": "iso-27001",
   "version": "2022",
-  "revision": 3,
+  "revision": 4,
   "title": "ISO/IEC 27001:2022",
   "shortTitle": "27001",
   "publisher": "ISO/IEC",
@@ -33,7 +33,7 @@
       "kind": "clause",
       "title": "Understanding the organization and its context",
       "purpose": "Makes sure the security programme is shaped by the real situation of the business rather than a generic template.",
-      "guidance": "List the internal and external factors that could help or hurt your ability to protect information: market, regulation, technology, ownership, culture, staffing, key suppliers. Since Amendment 1 of 2024 you must also decide whether climate change matters to your management system, for example flood risk to a data centre or energy costs for hosting; a reasoned conclusion that it does not is acceptable. A one or two page analysis that someone senior has read is enough for a small company. Review it at planned intervals, most organisations do so at least yearly, and show that it feeds risk assessment and objectives. A common pitfall is a copied SWOT that never mentions security.",
+      "guidance": "List the internal and external factors that could help or hurt your ability to protect information: market, regulation, technology, ownership, culture, staffing, key suppliers. Since Amendment 1 of 2024 you must also decide whether climate change matters to your management system, for example flood risk to a data centre or energy costs for hosting; a reasoned conclusion that it does not is acceptable. A one or two page analysis that someone senior has read is enough for a small company. Review it at intervals you set; many organisations review yearly, and show that it feeds risk assessment and objectives. A common pitfall is a copied SWOT that never mentions security.",
       "questions": [
         "How did you decide which external and internal issues matter to your security programme?",
         "When did you last review this list and what changed?",
@@ -510,7 +510,7 @@
         "risk"
       ],
       "purpose": "Requires risk assessments to actually be carried out at planned intervals and when significant change occurs.",
-      "guidance": "Keep a calendar for reassessment, normally at least annually, and define what counts as a trigger such as a new product, a major supplier or an incident. Retain the results each time. An assessment done once at certification and never repeated is a classic nonconformity.",
+      "guidance": "Keep a calendar for reassessment at planned intervals you set (many organisations reassess yearly), and define what counts as a trigger such as a new product, a major supplier or an incident. Retain the results each time. An assessment done once at certification and never repeated is a classic nonconformity.",
       "questions": [
         "When was the last assessment and what triggered it?",
         "What changed in the results compared with the previous one?",
@@ -605,7 +605,7 @@
         "audit"
       ],
       "purpose": "Ensures internal audits test both whether the system meets your own rules and the standard, and whether it actually works in practice.",
-      "guidance": "An internal audit has two jobs. The first is conformity: does the system meet ISO/IEC 27001 and what your own policies and procedures say. The second is effectiveness: are the controls and processes really operating and kept up, judged on records and observation rather than documents alone. Hold audits at planned intervals that suit your risks; most certified organisations cover the whole scope at least once in each three-year certification cycle and audit higher-risk areas every year. A frequent finding is an audit that only checks documents exist and never samples records.",
+      "guidance": "An internal audit has two jobs. The first is conformity: does the system meet ISO/IEC 27001 and what your own policies and procedures say. The second is effectiveness: are the controls and processes really operating and kept up, judged on records and observation rather than documents alone. Hold audits at planned intervals you set to suit your risks; many certified organisations cover the whole scope within each three-year certification cycle and audit higher-risk areas yearly. A frequent finding is an audit that only checks documents exist and never samples records.",
       "questions": [
         "How do your audits check your own policies and procedures as well as the standard?",
         "Show me where an audit tested that a control actually operates, not just that it is documented.",
@@ -648,7 +648,7 @@
       "kind": "clause",
       "title": "Management review",
       "purpose": "Gives top management a regular, structured moment to judge whether the system is suitable and effective.",
-      "guidance": "Hold reviews at planned intervals with a standard agenda and recorded decisions; most organisations meet at least yearly and many twice a year. Decisions on improvements, resources and changes should result in tracked actions. Leaders attending in person matters. Auditors read the minutes for decisions rather than just a list of topics.",
+      "guidance": "Hold reviews at planned intervals you set, with a standard agenda and recorded decisions; many organisations meet yearly and some twice a year. Decisions on improvements, resources and changes should result in tracked actions. Leaders attending in person matters. Auditors read the minutes for decisions rather than just a list of topics.",
       "questions": [
         "How does the review run, from preparing the pack to closing the actions?",
         "What decisions were made?",
@@ -774,7 +774,7 @@
     {
       "ref": "A.5",
       "kind": "theme",
-      "title": "A.5 · Organisational controls",
+      "title": "A.5 · Organizational controls",
       "purpose": "Policies, roles, asset and access rules, suppliers, incidents, continuity and compliance: the management-level controls of Annex A."
     },
     {
@@ -907,7 +907,7 @@
         "new-2022"
       ],
       "purpose": "Turns information about current threats into decisions about your defences.",
-      "guidance": "Collect threat information from sources fitting your sector, such as vendor bulletins, national CERT alerts and industry sharing groups. Analyse what is relevant and feed it into risk assessment, patching priorities and detection. Keep it proportionate; a monthly review of a few trusted feeds is acceptable for a small company.",
+      "guidance": "Collect threat information from sources fitting your sector, such as vendor bulletins, national CERT alerts and industry sharing groups. Analyse what is relevant and feed it into risk assessment, patching priorities and detection. Keep it proportionate: for a small company, reviewing a few trusted feeds at an interval you set, often monthly, is acceptable.",
       "questions": [
         "Where do you get threat information?",
         "Who analyses it and how often?",
@@ -1220,7 +1220,7 @@
         "suppliers"
       ],
       "purpose": "Keeps supplier performance and security under review through the life of the relationship.",
-      "guidance": "Review critical suppliers at least yearly: service reports, incidents, certificates, financial or security changes. Record outcomes and actions, and handle supplier changes through a controlled process. Auditors expect records of reviews, not only the initial check.",
+      "guidance": "Review critical suppliers at intervals you set (many organisations do so yearly): service reports, incidents, certificates, financial or security changes. Record outcomes and actions, and handle supplier changes through a controlled process. Auditors expect records of reviews, not only the initial check.",
       "questions": [
         "How often do you review suppliers?",
         "What do you do when a supplier's circumstances change?",
@@ -1426,7 +1426,7 @@
       "kind": "control",
       "title": "Legal, statutory, regulatory and contractual requirements",
       "purpose": "Ensures you know and meet the laws and contracts that affect information security.",
-      "guidance": "Keep a register of applicable laws, regulations and key customer obligations, with an owner and how each is met. Review it at least yearly or when you enter a new market. Seek legal advice where unsure. Auditors check that data protection and customer terms are in it.",
+      "guidance": "Keep a register of applicable laws, regulations and key customer obligations, with an owner and how each is met. Review it at intervals you set; many organisations review yearly, and when you enter a new market. Seek legal advice where unsure. Auditors check that data protection and customer terms are in it.",
       "questions": [
         "Which laws and contracts affect you?",
         "Who maintains the register?",
@@ -2391,7 +2391,7 @@
       "ref": "A.8.17",
       "parent": "A.8",
       "kind": "control",
-      "title": "Clock synchronisation",
+      "title": "Clock synchronization",
       "purpose": "Keep system times consistent so logs can be trusted and compared.",
       "guidance": "Configure all servers, devices and cloud services to use the same reliable time sources. Check for drift on key systems and fix it. Consistent time is essential when piecing together events across systems. This is usually a one-off setup, then a periodic check.",
       "questions": [
