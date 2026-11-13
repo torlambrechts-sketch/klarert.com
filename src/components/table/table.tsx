@@ -1361,13 +1361,6 @@ export function Table({
           >
             <div style={{ width: totalW, height: 1 }} />
           </div>
-          {/* the right edge while more columns remain: a 1 px line and a soft shadow (the left one is on the name column) */}
-          <div
-            aria-hidden
-            data-edge="right"
-            hidden={!more}
-            className="pointer-events-none absolute top-0 right-0 bottom-0 z-[5] w-[14px] rounded-r-lg bg-[linear-gradient(270deg,var(--gray-alpha-200),transparent)] shadow-[inset_-1px_0_0_var(--line)]"
-          />
         </div>
         <DragOverlay dropAnimation={null}>
           {dragging?.startsWith('row:') ? (
