@@ -39,7 +39,9 @@ describe('coverage', () => {
       implemented: 1,
       percent: 66,
     });
-    expect(coverageText(c)).toBe('66% covered (2 of 3) · 2 applicable · 1 not applicable · 1 to decide');
+    expect(coverageText(c)).toBe(
+      '66% covered (2 of 3) · 2 applicable · 1 not applicable · 1 to decide',
+    );
   });
 
   it('says so when nothing is in scope or there is nothing at all', () => {

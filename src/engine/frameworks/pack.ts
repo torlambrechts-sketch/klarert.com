@@ -143,7 +143,9 @@ export function frameworkToPack(f: Framework): PackManifest {
       },
       { key: k.lastReviewed, name: 'Last reviewed', type: 'date' as const },
     ],
+    // the first table view backs the Table tab (src/components/views/tabs-model.ts): every column, all requirements
     views: [
+      { name: 'All requirements', type: 'table' as const, config: {} },
       ...(f.library.soa
         ? [
             {
@@ -206,6 +208,13 @@ export function frameworkToPack(f: Framework): PackManifest {
         } as unknown as Record<string, Json>,
       },
     ],
+    // the Table opens first; the statement of applicability and the Insights layout are tabs next to it
+    tabs: [
+      { ref: 'table' },
+      ...(f.library.soa ? [{ ref: f.library.soa.name }] : []),
+      { ref: 'Applicability' },
+    ],
+    defaultView: 'table',
     forms: [],
     columnGroups: [],
     items,

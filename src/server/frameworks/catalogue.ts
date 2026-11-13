@@ -201,7 +201,7 @@ export async function readFrameworks(db: Db): Promise<CatalogueFramework[]> {
     .sort(
       (a, b) =>
         order.indexOf(a.kind) - order.indexOf(b.kind) ||
-        a.title.localeCompare(b.title, 'en', { numeric: true }),
+        a.shortTitle.localeCompare(b.shortTitle, 'en', { numeric: true }),
     );
 }
 

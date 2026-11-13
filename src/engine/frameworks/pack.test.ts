@@ -150,17 +150,21 @@ describe('frameworkToPack', () => {
 
   it('a statement of applicability view and an Insights layout, from the data', () => {
     expect(sheet.views.map((v) => [v.name, v.type])).toEqual([
+      ['All requirements', 'table'],
       ['Statement of applicability', 'table'],
       ['Applicability', 'insights'],
     ]);
-    expect(sheet.views[0]!.config.filters).toEqual([
+    expect(sheet.views[1]!.config.filters).toEqual([
       { fieldKey: 'ref', op: 'starts_with', value: 'A.' },
     ]);
     const plain = frameworkToPack({
       ...framework,
       library: { ...framework.library, soa: undefined },
     });
-    expect(plain.sheets[0]!.views.map((v) => v.name)).toEqual(['Applicability']);
+    expect(plain.sheets[0]!.views.map((v) => v.name)).toEqual([
+      'All requirements',
+      'Applicability',
+    ]);
   });
 
   it('plans like any pack: the sheet keeps its framework, items their requirement', () => {
@@ -174,7 +178,11 @@ describe('frameworkToPack', () => {
       'iso-x@2024#4.1.1',
       'iso-x@2024#A.5.1',
     ]);
-    expect(p.views.map((v) => v.name)).toEqual(['Statement of applicability', 'Applicability']);
+    expect(p.views.map((v) => v.name)).toEqual([
+      'All requirements',
+      'Statement of applicability',
+      'Applicability',
+    ]);
   });
 });
 
