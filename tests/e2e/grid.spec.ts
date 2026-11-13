@@ -68,7 +68,11 @@ test('editor adds items with Enter to continue and edits cells with the keyboard
   const people = page.getByRole('listbox', { name: 'Owner' });
   await expect(people).toBeVisible();
   await page.keyboard.press('Enter'); // first person is me (James)
-  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  // the editor's Done (a new row being edited has its own "Done" that finishes the row)
+  await page
+    .getByRole('group', { name: 'Owner' })
+    .getByRole('button', { name: 'Done', exact: true })
+    .click();
   await expect(cell(page, 'Fix guard rail', 'Owner')).toContainText('James');
 
   // Status: Enter, arrows, Enter
@@ -253,8 +257,24 @@ test('add a field from the picker, change its settings and change its type with 
   await expect(page.getByText('Field settings saved.')).toBeVisible();
   await expect(grid(page).getByRole('button', { name: 'Score column menu' }).first()).toBeVisible();
 
+  // columns are virtualised: find the cell by item and field id and scroll the grid sideways until it is drawn
+  const sheetId = sheetIdOf(page.url());
+  const [score] = await rest<{ id: string }[]>(
+    page,
+    `fields?sheet_id=eq.${sheetId}&name=eq.Score&select=id`,
+  );
+  const itemIds = Object.fromEntries(
+    (
+      await rest<{ id: string; name: string }[]>(
+        page,
+        `items?sheet_id=eq.${sheetId}&select=id,name`,
+      )
+    ).map((i) => [i.name, i.id]),
+  );
   const scoreCell = (item: string) =>
-    grid(page).getByRole('row').filter({ hasText: item }).getByRole('gridcell').nth(6);
+    grid(page).locator(`[data-cell="${itemIds[item]}|${score!.id}"]`);
+  await grid(page).evaluate((el) => (el.scrollLeft = el.scrollWidth));
+  await expect(scoreCell('One')).toBeVisible();
   await scoreCell('One').click();
   await page.keyboard.press('Enter');
   await page.getByRole('textbox', { name: 'Score' }).fill('3');
@@ -297,6 +317,9 @@ test('bulk archive with Undo, and dragging a row to another group', async ({ pag
   // drag "Keep me" into Done
   const handle = page.getByRole('button', { name: 'Drag Keep me to move it' });
   const target = page.getByRole('textbox', { name: 'Add task to Done' });
+  await target.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await expect(handle).toBeInViewport();
+  await expect(target).toBeInViewport();
   const from = (await handle.boundingBox())!;
   const to = (await target.boundingBox())!;
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
@@ -454,8 +477,19 @@ test('a sheet of 10 000 items and 30 fields scrolls without errors', async ({ pa
   }
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect(g.getByText('Row 10000', { exact: true })).toBeVisible();
+  const [last] = await rest<{ id: string }[]>(
+    page,
+    `items?sheet_id=eq.${sheetId}&name=eq.Row%2010000&select=id`,
+  );
+  const extra25 = fields.find((f) => f.key === 'extra_25')!;
+  const lastCell = g.locator(`[data-cell="${last!.id}|${extra25.id}"]`);
+  await expect(lastCell).toHaveCount(0); // the far right column is not drawn yet
   await g.evaluate((el) => (el.scrollLeft = el.scrollWidth));
+  await expect(lastCell).toBeVisible();
+  // the column header sits at the top of the card (its row is virtualised with the others)
+  await page.evaluate(() => window.scrollTo(0, 0));
   await expect(g.getByRole('button', { name: 'Extra 25 column menu' }).first()).toBeVisible();
+  expect(await g.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
   expect(errors).toEqual([]);
   test.info().annotations.push({ type: 'load', description: `${loadMs} ms to show 10 000 items` });
 });

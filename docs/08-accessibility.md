@@ -36,11 +36,12 @@ seeded Corrective actions sheet:
 
 1. **Tab** to "+ New corrective action", **Enter**: the focus moves to the "+ Add corrective action" row of Open. Type
    the name, **Enter** creates CA-006. **Esc** leaves the row.
-2. **Shift+Tab** into the grid, **↓** to the new item, **→ →** to Status, **Enter** opens the status list, **↓**
-   chooses Investigating, **Enter** saves.
+2. **Shift+Tab** into the grid (no cell is active until the first arrow), **↓** to the new item, **→** opens its
+   steps (sub-items, docs/05 §3.2), **→ →** to Status, **Enter** opens the status list, **↓** chooses Investigating,
+   **Enter** saves.
 3. **← ←** back to the name, **Space** opens the item panel.
-4. **Tab** to the Details tab, **→** selects Updates (tabs move with the arrows), **Tab** to "Write an update", type,
-   **Tab** to "Post update", **Enter** posts.
+4. **Tab** to the Details tab, **→ →** past Steps selects Updates (tabs move with the arrows), **Tab** to "Write an
+   update", type, **Tab** to "Post update", **Enter** posts.
 5. **Esc** closes the panel; the focus is back in the grid on the item it was opened from.
 
 How the keys work in the grid (docs/05 §3.2): arrows move between cells, **Tab/Shift+Tab** move cell by cell like a
