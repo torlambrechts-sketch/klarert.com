@@ -343,6 +343,21 @@ const FOLDERS: { name: string; sheets: [name: string, prefix: string][] }[] = [
   { name: 'Suppliers', sheets: [['Supplier register', 'SUP-']] },
   { name: 'Your sheets', sheets: [['Permit-to-work', 'PTW-']] },
 ];
+// The starting tabs per sheet (sheets.settings.tabs): the other built-in views stay hidden in More. All open on Table.
+const tabsOf = (...refs: string[]) => refs.map((ref) => ({ ref }));
+const TABS: Record<string, { ref: string }[]> = {
+  'Risk register': tabsOf('table', 'kanban', 'insights'),
+  Controls: tabsOf('table', 'insights'),
+  'Statement of Applicability': tabsOf('table', 'insights'),
+  'Nonconformities and CAPA': tabsOf('table', 'kanban', 'calendar'),
+  Incidents: tabsOf('table', 'form', 'kanban'),
+  'Internal audits': tabsOf('table', 'calendar'),
+  'Supplier register': tabsOf('table', 'calendar'),
+  'Competence and training': tabsOf('table', 'calendar'),
+  'Documents and policies': tabsOf('table', 'calendar'),
+  'Legal register': tabsOf('table', 'calendar'),
+};
+
 const RISK_SIBLINGS: [string, string][] = [
   ['Controls', 'CTL-'],
   ['Statement of Applicability', 'SOA-'],
@@ -476,6 +491,7 @@ async function main() {
       groups: [{ ref: 'g', name: 'Group', color: 'blue' }],
       fields: [],
       views: [{ name: 'Table', type: 'table', config: {} }],
+      ...(TABS[name] ? { tabs: TABS[name] } : {}),
       items: [],
     });
     const sheets =
@@ -574,6 +590,7 @@ async function main() {
                   },
                 },
               ],
+              tabs: TABS['Risk register'],
               items: [],
             },
             ...RISK_SIBLINGS.map(([n, p], i) => plain(n, p, i)),

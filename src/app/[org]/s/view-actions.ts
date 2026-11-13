@@ -24,6 +24,7 @@ export const updateViewAction = bind(views.updateView);
 export const duplicateViewAction = bind(views.duplicateView);
 export const deleteViewAction = bind(views.deleteView);
 export const setDefaultViewAction = bind(views.setDefaultView, true);
+export const setSheetTabsAction = bind(views.setSheetTabs, true);
 export const filterItemIdsAction = bind(views.filterItemIds);
 export const createFormLinkAction = bind(views.createFormLink);
 export const disableFormLinkAction = bind(views.disableFormLink);

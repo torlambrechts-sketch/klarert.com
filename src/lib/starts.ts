@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import raw from '../../templates/starts.json';
 import { isFieldTypeId } from '@/engine/fields/registry';
-import { subitemSetSchema } from '@/lib/templates/schema';
+import { subitemSetSchema, templateTab } from '@/lib/templates/schema';
 
 const startSchema = z.object({
   id: z.string(),
@@ -22,6 +22,8 @@ const startSchema = z.object({
   folder: z.string().trim().min(1).max(80).optional(),
   /** Starts that come with sub-items (CAPA, audit, incident, control, treatment): the set the wizard turns on. */
   subitems: subitemSetSchema.optional(),
+  /** The sheet's starting tabs (built-in view types; the ones left out are hidden in More). */
+  tabs: z.array(templateTab).min(1).optional(),
 });
 
 const startsFile = z.object({

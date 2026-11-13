@@ -9,6 +9,7 @@ import {
   type ViewType,
 } from '@/engine/views/config';
 import { formLayoutProblems } from '@/engine/views/form';
+import { dropTab, readTabSettings } from '@/engine/views/tabs';
 import { fetchSheetMeta, type Db } from '@/lib/sheet-query';
 import { toView } from '@/lib/sheet-rows';
 import {
@@ -19,6 +20,7 @@ import {
   filterItemsInput,
   formLinkInput,
   setDefaultViewInput,
+  setSheetTabsInput,
   updateViewInput,
 } from '@/lib/schemas/views';
 import { isEditorRole } from '@/server/auth';
@@ -26,6 +28,7 @@ import { buildFilterSql } from '@/server/query/filters';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { loadWriteContext } from '@/server/sheet-context';
 import { withOrg } from './context';
+import { setSheetTabsWith, type SheetTabsResult } from './sheet-tabs-core';
 
 // Saved views (docs/01 FR-26) and form links (FR-25). Views are structure: written with the user's client under RLS
 // (personal views: their owner; shared views: editors). Form links are created and disabled by editors.
@@ -216,7 +219,7 @@ export async function deleteView(input: unknown): Promise<Result<null>> {
         .select('id');
       if (error) return fromDbError(error);
       if (!deleted.length) return fail('forbidden', 'You do not have permission to do that.');
-      // a deleted default view falls back to List
+      // a deleted view leaves the sheet's tabs, and a deleted default view falls back to the Table
       if (isEditorRole(role)) {
         const { data: sheet } = await supabase
           .from('sheets')
@@ -224,11 +227,9 @@ export async function deleteView(input: unknown): Promise<Result<null>> {
           .eq('id', row.sheet_id)
           .maybeSingle();
         const settings = (sheet?.settings ?? {}) as Record<string, Json>;
-        if (settings.defaultViewId === row.id) {
-          const { defaultViewId: _gone, ...rest } = settings;
-          void _gone;
-          await supabase.from('sheets').update({ settings: rest }).eq('id', row.sheet_id);
-        }
+        const next = dropTab(settings, row.id);
+        if (next !== settings)
+          await supabase.from('sheets').update({ settings: next }).eq('id', row.sheet_id);
       }
       return ok(null);
     },
@@ -262,6 +263,9 @@ export async function setDefaultView(input: unknown): Promise<Result<{ viewId: s
         if (view.owner_id !== null)
           return fail('invalid', 'Only a shared view can be the default. Share it first.');
       }
+      // a hidden tab cannot open first (sheets.settings.tabs)
+      if (readTabSettings(sheet.settings).tabs?.some((t) => t.id === v.viewId && t.hidden))
+        return fail('invalid', 'This tab is hidden. Show it in Customise tabs first.');
       const settings = {
         ...((sheet.settings ?? {}) as Record<string, Json>),
         defaultViewId: v.viewId,
@@ -270,6 +274,63 @@ export async function setDefaultView(input: unknown): Promise<Result<{ viewId: s
       return error ? fromDbError(error) : ok({ viewId: v.viewId });
     },
     'setDefaultView',
+  );
+}
+
+/**
+ * The sheet's tab set (docs/02 sheets.settings.tabs): order, hidden tabs, labels and the view that opens first. Owners
+ * and admins only. Every view tab must be a shared view of this sheet; a default that the new set hides falls back to
+ * the Table (and the result says so). Logged by the sheets audit trigger as sheets.update on the sheet's chain.
+ */
+export async function setSheetTabs(input: unknown): Promise<Result<SheetTabsResult>> {
+  const p = setSheetTabsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'admin',
+    async ({ supabase, orgId, role }) =>
+      setSheetTabsWith(
+        {
+          role,
+          loadSettings: async () => {
+            const { data } = await supabase
+              .from('sheets')
+              .select('settings')
+              .eq('id', v.sheetId)
+              .eq('org_id', orgId)
+              .maybeSingle();
+            return data ? ((data.settings ?? {}) as Record<string, Json>) : null;
+          },
+          views: async () => {
+            const { data } = await supabase
+              .from('views')
+              .select('id, name, type, owner_id, position')
+              .eq('sheet_id', v.sheetId)
+              .eq('org_id', orgId);
+            return (data ?? []).map((r) => ({
+              id: r.id,
+              name: r.name,
+              type: r.type,
+              ownerId: r.owner_id,
+              position: r.position,
+            }));
+          },
+          saveSettings: async (settings) => {
+            const { error } = await supabase
+              .from('sheets')
+              .update({
+                settings: settings as NonNullable<Json>,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', v.sheetId)
+              .eq('org_id', orgId);
+            return error ? fromDbError(error) : ok(null);
+          },
+        },
+        { tabs: v.tabs, defaultViewId: v.defaultViewId },
+      ),
+    'setSheetTabs',
   );
 }
 

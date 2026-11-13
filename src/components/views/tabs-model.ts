@@ -1,6 +1,7 @@
 // The sheet's view tabs (docs/01 FR-26): which saved or built-in view backs the Table tab and each "More" entry,
 // which saved views get tabs of their own, and the view a URL id opens. Pure, so it is unit-tested.
 import { toViewType, VIEW_TYPE_LABEL, type SavedView, type ViewType } from '@/engine/views/config';
+import { BUILTIN_TAB_ORDER, isBuiltinTab, type SheetTab } from '@/engine/views/tabs';
 
 export interface ActiveView {
   /** The id in the URL: a saved view's uuid or a built-in type. */
@@ -80,3 +81,125 @@ export function resolveActive(tabs: ViewTabs, id: string): ActiveView | null {
     if (v.id === id) return v;
   return null;
 }
+
+// ───────────────────────── the sheet's tab set (settings.tabs) ─────────────────────────
+
+/** One tab as the bar shows it. */
+export interface LaidTab {
+  /** The id in settings.tabs: a built-in type or a shared view's uuid. Personal views: their uuid. */
+  entryId: string;
+  view: ActiveView;
+  /** The tab's words: its label, else its own name. */
+  label: string;
+  /** The name without a label ("Board", a saved view's name). */
+  name: string;
+  hidden: boolean;
+  personal: boolean;
+}
+
+export interface TabLayout {
+  /** Every shared tab in order, shown and hidden: what the editor lists. */
+  all: LaidTab[];
+  /** Shown tabs in order: the configured ones, built-ins and shared views not in the set appended. */
+  shown: LaidTab[];
+  /** Hidden tabs (the More menu's "Hidden tabs"); they still open by URL. */
+  hidden: LaidTab[];
+  /** My personal views, always after the configured tabs, in view order. */
+  personal: LaidTab[];
+}
+
+/** A tab's own name: "Table" for the Table, "Board" for a built-in Kanban, else the view's name. */
+export function tabName(tabs: ViewTabs, v: ActiveView): string {
+  if (v.id === tabs.table.id) return 'Table';
+  return v.saved ? v.name : v.type === 'kanban' ? 'Board' : v.name;
+}
+
+/**
+ * The bar for a tab set (docs/05 §3): absent → today's order (Table, Insights, Board, Calendar, Form, shared views);
+ * else the configured order, hidden ones aside, entries that no longer resolve skipped, and the built-ins and shared
+ * views the set does not list appended. My personal views always come last.
+ */
+export function applyTabLayout(tabs: ViewTabs, config: readonly SheetTab[] | null): TabLayout {
+  const builtin = (t: ViewType) => (t === 'table' ? tabs.table : tabs.more[t]);
+  const builtins = BUILTIN_TAB_ORDER.map(builtin);
+  const isBacking = (v: ActiveView) => builtins.some((b) => b.id === v.id);
+  const shared = tabs.others.filter((v) => v.saved?.ownerId === null && !isBacking(v));
+  const mine = tabs.others.filter((v) => v.saved && v.saved.ownerId !== null && v.canWrite);
+  const lay = (entryId: string, view: ActiveView, entry?: SheetTab): LaidTab => {
+    const name = tabName(tabs, view);
+    return {
+      entryId,
+      view,
+      name,
+      label: entry?.label ?? name,
+      // the Table is always shown
+      hidden: view.id !== tabs.table.id && !!entry?.hidden,
+      personal: !!view.saved && view.saved.ownerId !== null,
+    };
+  };
+  const resolve = (id: string): ActiveView | null =>
+    isBuiltinTab(id)
+      ? builtin(id)
+      : (builtins.find((b) => b.id === id) ?? shared.find((v) => v.id === id) ?? null);
+
+  const laid: LaidTab[] = [];
+  const used = new Set<string>();
+  for (const entry of config ?? []) {
+    const view = resolve(entry.id);
+    if (!view || used.has(view.id)) continue;
+    used.add(view.id);
+    laid.push(lay(entry.id, view, entry));
+  }
+  if (!used.has(tabs.table.id)) {
+    laid.unshift(lay('table', tabs.table));
+    used.add(tabs.table.id);
+  }
+  for (const [i, view] of builtins.entries())
+    if (!used.has(view.id)) {
+      used.add(view.id);
+      laid.push(lay(BUILTIN_TAB_ORDER[i]!, view));
+    }
+  for (const view of shared)
+    if (!used.has(view.id)) {
+      used.add(view.id);
+      laid.push(lay(view.id, view));
+    }
+  return {
+    all: laid,
+    shown: laid.filter((t) => !t.hidden),
+    hidden: laid.filter((t) => t.hidden),
+    personal: mine.map((v) => lay(v.id, v)),
+  };
+}
+
+/** The tab set for laid tabs (what the editor saves): ids, hidden, and labels that differ from the name. */
+export function layoutEntries(
+  laid: readonly Pick<LaidTab, 'entryId' | 'hidden' | 'label' | 'name'>[],
+): SheetTab[] {
+  return laid.map((t) => ({
+    id: t.entryId,
+    ...(t.hidden ? { hidden: true } : {}),
+    ...(t.label !== t.name ? { label: t.label } : {}),
+  }));
+}
+
+/** A tab as the editor needs it (serialisable: the settings page builds it on the server). */
+export interface TabRow {
+  entryId: string;
+  /** The view behind the tab (a saved view's uuid or the built-in id). */
+  viewId: string;
+  type: ViewType;
+  name: string;
+  label: string;
+  hidden: boolean;
+}
+
+export const toTabRows = (laid: readonly LaidTab[]): TabRow[] =>
+  laid.map((t) => ({
+    entryId: t.entryId,
+    viewId: t.view.id,
+    type: t.view.type,
+    name: t.name,
+    label: t.label,
+    hidden: t.hidden,
+  }));

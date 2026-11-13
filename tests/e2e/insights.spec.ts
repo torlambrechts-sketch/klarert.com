@@ -209,8 +209,9 @@ test('Insights: default layout, customise every widget type, save, reload, filte
     page.getByRole('button', { name: 'Burrs on bracket 44-210', exact: true }),
   ).toHaveCount(0);
 
-  // a bar of another field: a removable filter chip
-  await views(page).getByRole('link', { name: 'Insights' }).click();
+  // a bar of another field: a removable filter chip (Corrective actions starts with Insights hidden: it is in More)
+  await views(page).getByRole('button', { name: 'More' }).click();
+  await page.getByRole('menu').getByRole('menuitem', { name: 'Insights' }).click();
   await card(page, 'By severity').getByRole('button').filter({ hasText: /\d$/ }).first().click();
   await expect(views(page).getByRole('link', { name: 'Table' })).toHaveAttribute(
     'aria-current',

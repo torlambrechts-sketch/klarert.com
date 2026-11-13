@@ -167,4 +167,42 @@ describe('first-sheet template', () => {
     expect(messages).toContain('Unknown linked item "$item:ca:No such item".');
     expect(messages).toContain('Unknown group "nowhere".');
   });
+
+  it('stores the starting tabs on the sheet, as the tab set and the template default', () => {
+    const settings = sheet('ca').row.settings;
+    expect(settings.tabs).toEqual([
+      { id: 'table' },
+      { id: 'kanban' },
+      { id: 'calendar' },
+      { id: 'insights', hidden: true },
+      { id: 'form', hidden: true },
+    ]);
+    expect(settings.tabsDefault).toEqual(settings.tabs);
+    expect(settings.defaultViewId).toBeUndefined();
+    // a sheet without starting tabs keeps today's order
+    expect(sheet('act').row.settings.tabs).toBeUndefined();
+  });
+
+  it('resolves a tab named after a view to that view and opens the default tab first', () => {
+    const t = structuredClone(raw);
+    t.sheets[0].tabs = [{ ref: 'table' }, { ref: 'Due dates', label: 'Deadlines' }];
+    t.sheets[0].defaultView = 'Due dates';
+    const p = planTemplateImport(parseTemplate(t), env());
+    const ca = p.sheets[0]!;
+    const due = ca.views.find((v) => v.name === 'Due dates')!;
+    expect(p.problems).toEqual([]);
+    expect(ca.row.settings.tabs?.[1]).toEqual({ id: due.id, label: 'Deadlines' });
+    expect(ca.row.settings.defaultViewId).toBe(due.id);
+  });
+
+  it('refuses unknown tab refs and a hidden view that opens first', () => {
+    const broken = structuredClone(raw);
+    broken.sheets[0].tabs = [{ ref: 'table' }, { ref: 'Nowhere' }, { ref: 'form', hidden: true }];
+    broken.sheets[0].defaultView = 'form';
+    const r = sheetTemplateSchema.safeParse(broken);
+    expect(r.success).toBe(false);
+    const messages = r.error!.issues.map((i) => i.message);
+    expect(messages).toContain('Unknown view "Nowhere".');
+    expect(messages).toContain('The view that opens first cannot be hidden.');
+  });
 });

@@ -6,8 +6,12 @@ import { GroupsManager } from '@/components/sheets/groups-manager';
 import { ArchiveSheet, SheetSettingsForm } from '@/components/sheets/sheet-settings';
 import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
+import { SheetTabsSettings } from '@/components/sheets/sheet-tabs-settings';
 import { SubitemSettingsSection } from '@/components/subitems/subitem-settings';
+import { applyTabLayout, buildTabs, toTabRows } from '@/components/views/tabs-model';
 import { readSubitemSettings } from '@/engine/subitems';
+import { normaliseViewId, readTabSettings } from '@/engine/views/tabs';
+import { toView } from '@/lib/sheet-rows';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import {
   getArchivedItems,
@@ -15,6 +19,7 @@ import {
   getNav,
   getSheet,
   getSubitemSheet,
+  getViews,
 } from '@/server/repositories/sheets';
 
 export const metadata = { title: 'Sheet settings · Compliance OS' };
@@ -50,15 +55,21 @@ export default async function SheetSettingsPage({
   if (!sheet) notFound();
   // a sub-item sheet is set up in its parent's settings (Sub-items)
   if (sheet.parent_sheet_id) redirect(`/${org}/s/${sheet.parent_sheet_id}/settings`);
-  const [nav, fields, archivedItems, child] = await Promise.all([
+  const [nav, fields, archivedItems, child, viewRows] = await Promise.all([
     getNav(workspace.id),
     getFields(sheet.id),
     getArchivedItems(sheet.id),
     getSubitemSheet(sheet.id),
+    getViews(sheet.id),
   ]);
   const subSettings = (sheet.settings as { subitems?: unknown } | null)?.subitems;
   const archivedSubitems = child ? await getArchivedItems(child.id) : [];
   const canEdit = isEditorRole(role);
+  const tabSettings = readTabSettings(sheet.settings);
+  const tabLayout = applyTabLayout(
+    buildTabs(viewRows.map(toView), user.id, canEdit),
+    tabSettings.tabs,
+  );
 
   return (
     <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
@@ -135,6 +146,20 @@ export default async function SheetSettingsPage({
             ))}
           </ul>
         )}
+      </Card>
+
+      <Card
+        title="Tabs"
+        description="The views everyone sees as tabs, their order and names. Hidden tabs stay in More and still open from links."
+      >
+        <SheetTabsSettings
+          org={org}
+          sheetId={sheet.id}
+          rows={toTabRows(tabLayout.all)}
+          defaultViewId={normaliseViewId(tabSettings.defaultViewId ?? 'table')}
+          templateDefault={tabSettings.tabsDefault}
+          canEdit={isAdminRole(role) && !sheet.archived_at}
+        />
       </Card>
 
       <Card

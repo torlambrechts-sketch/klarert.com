@@ -116,6 +116,18 @@ export async function getFields(sheetId: string) {
 }
 
 /** Archived items of a sheet, newest first (FR-13: they can be restored from the sheet settings). */
+/** The sheet's views the person can see (shared ones and their own), in view order. */
+export async function getViews(sheetId: string) {
+  const session = await getSession();
+  if (!session) return [];
+  const { data } = await session.supabase
+    .from('views')
+    .select('*')
+    .eq('sheet_id', sheetId)
+    .order('position');
+  return data ?? [];
+}
+
 export async function getArchivedItems(sheetId: string) {
   const session = await getSession();
   if (!session) return [];

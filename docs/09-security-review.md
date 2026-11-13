@@ -87,12 +87,13 @@ the body (admin-only branches, item and field locks, own rows).
 | `duplicateView` | `views.ts` | `duplicateViewInput` | member | own rows |
 | `deleteView` | `views.ts` | `deleteViewInput` | member | own rows |
 | `setDefaultView` | `views.ts` | `setDefaultViewInput` | editor | own rows |
+| `setSheetTabs` | `views.ts` | `setSheetTabsInput` | admin | own rows |
 | `filterItemIds` | `views.ts` | `filterItemsInput` | member |  |
 | `createFormLink` | `views.ts` | `formLinkInput` | editor | own rows |
 | `disableFormLink` | `views.ts` | `disableFormLinkInput` | editor |  |
 
 72 commands, 72 with a Zod schema parsed first, 72 with a role check. Helpers in the same folder that are not commands
-(`withOrg`, `createInverseField`, `detachInverse`, `confirmWith`, `loadPublicForm`) are called only by commands.
+(`withOrg`, `createInverseField`, `detachInverse`, `confirmWith`, `setSheetTabsWith`, `loadPublicForm`) are called only by commands.
 
 Server Actions (`'use server'` files in `src/app`) only bind these commands; the two that do more are the login action
 (Zod, then Supabase Auth's magic link) and the public form action (hashes the IP, see §4).
