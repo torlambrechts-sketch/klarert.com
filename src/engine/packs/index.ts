@@ -5,3 +5,4 @@ export * from './plan';
 export * from './audit';
 export * from './levels';
 export * from './setup';
+export * from './upgrade';

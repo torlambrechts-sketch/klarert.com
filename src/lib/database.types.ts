@@ -1421,6 +1421,9 @@ isOneToOne: false
 "log_audit_export":
 { Args: { "p_kind": string,"p_org": string,"p_scope": Json }; Returns: number
                            },
+"upgrade_pack":
+{ Args: { "p_install": string,"p_plan": Json }; Returns: Json
+                           },
 "log_file_event":
 { Args: { "p_action": string,"p_field": string,"p_file": string,"p_item": string }; Returns: undefined
                            },
