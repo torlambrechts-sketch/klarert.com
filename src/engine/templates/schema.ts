@@ -229,6 +229,11 @@ export const templateSheet = z.object({
 
 export const templateAutomation = z.object({
   sheet: ref,
+  /**
+   * On the sheet's sub-items (docs/02 §12): the automation belongs to the hidden child sheet, and its trigger,
+   * conditions and actions name the sub-items' field keys. The sheet must have sub-items.
+   */
+  subitems: z.boolean().optional(),
   name: z.string().min(1).max(200),
   enabled: z.boolean().default(true),
   trigger: z.object({ type: z.enum(TRIGGER_IDS as [string, ...string[]]) }).catchall(json),
@@ -389,6 +394,24 @@ export const sheetTemplateSchema = z
       if (!s) {
         problem(['automations', ai], `Unknown sheet "${a.sheet}".`);
         continue;
+      }
+      if (a.subitems) {
+        if (!s.subitems) {
+          problem(['automations', ai], `"${a.sheet}" has no sub-items.`);
+          continue;
+        }
+        // the trigger and conditions name the sub-items' own field keys (actions are checked by the planner:
+        // set_parent_field names the parent's); forms belong to the parent sheet
+        const keys = new Set(s.subitems.fields.map((f) => f.key));
+        for (const x of [a.trigger, ...a.conditions]) {
+          const k = (x as Record<string, unknown>).fieldKey;
+          if (typeof k === 'string' && !keys.has(k))
+            problem(['automations', ai], `Unknown sub-item field "${k}".`);
+        }
+        if (a.trigger.type === 'form_submitted') {
+          problem(['automations', ai], 'Sub-items have no forms.');
+          continue;
+        }
       }
       for (const action of a.actions) {
         const target = typeof action.sheetRef === 'string' ? sheets.get(action.sheetRef) : s;

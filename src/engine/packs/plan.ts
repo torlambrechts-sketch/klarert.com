@@ -30,6 +30,7 @@ import {
   manifestAtLevel,
   type LevelSummary,
 } from './levels';
+import { parseRequirementKey } from '../frameworks/refs';
 import { satisfies } from './semver';
 import { foreignLinks, packToTemplate } from './template';
 import type { PackManifest } from './types';
@@ -51,6 +52,11 @@ export interface PackSnapshot {
   }[];
   /** Framework libraries adopted here (`<framework>@<version>` → library sheet id), docs/12. */
   libraries?: { library: string; sheetId: string }[];
+  /**
+   * The adopted libraries' items the manifest's example links name (`requirements`), by requirement key
+   * (`iso-27001@2022#A.6.3` → item id). Only live items of live library sheets.
+   */
+  requirementItems?: Record<string, string>;
   members: (Person & { email: string })[];
   jobRoles: { id: string; name: string }[];
   teams: { id: string; name: string }[];
@@ -188,7 +194,15 @@ export function manifestCounts(m: PackManifest): PackCounts {
     documents: items('documents'),
     libraryItems: items('library'),
     links: m.sheets.reduce(
-      (n, s) => n + s.items.reduce((k, i) => k + Object.values(i.links ?? {}).flat().length, 0),
+      (n, s) =>
+        n +
+        s.items.reduce(
+          (k, i) =>
+            k +
+            Object.values(i.links ?? {}).flat().length +
+            Object.values(i.requirements ?? {}).flat().length,
+          0,
+        ),
       0,
     ),
     automations: m.automations.length,
@@ -516,6 +530,37 @@ export function planPackInstall(
     if (ps.subitems) {
       const sub = ps.subitems;
       const childRef = `${ms.ref}.subitems`;
+      // automations on sub-items (`subitems: true`) name the child sheet: sentences and checks read its fields
+      sheetIdOf.set(childRef, sub.sheet.id);
+      sheetName.set(sub.sheet.id, `${ms.name} › ${sub.label}`);
+      engineFields.set(
+        sub.sheet.id,
+        sub.fields.map((f) => ({
+          id: f.id,
+          sheetId: sub.sheet.id,
+          key: f.key,
+          name: f.name,
+          type: f.type,
+          position: f.position,
+          width: f.width,
+          required: false,
+          locked: false,
+          description: null,
+          config: f.config,
+          validation: {},
+          rules: f.rules as unknown as Field['rules'],
+          visibility: null,
+        })),
+      );
+      engineGroups.set(sub.sheet.id, [
+        {
+          id: sub.group.id,
+          sheetId: sub.sheet.id,
+          name: sub.group.name,
+          color: sub.group.color as LabelColor,
+          position: sub.group.position,
+        },
+      ]);
       sheetRows.push({
         ...(sub.sheet as unknown as Row),
         ref: childRef,
@@ -624,6 +669,30 @@ export function planPackInstall(
     }
     linkRows.push({ field_id: l.fieldId, from_item: from, to_item: to });
   }
+  // example links into a required framework's library (`requirements`), by requirement key: resolved against the
+  // adopted library's items. Before the library is adopted (the preview) they are left for the install, which adopts
+  // it first and plans again; a key the library does not have is left out and said.
+  const libraryLinkWarnings: string[] = [];
+  const reqItems = snap.requirementItems ?? {};
+  for (const ms of m.sheets)
+    for (const i of ms.items)
+      for (const [key, keys] of Object.entries(i.requirements ?? {})) {
+        const fieldId = fieldRows.find((f) => f.ref === `${ms.ref}.${key}`)?.id;
+        const from = itemIds.get(`${ms.ref}.${i.ref}`);
+        if (typeof fieldId !== 'string' || !from) continue;
+        for (const k of keys) {
+          const id = parseRequirementKey(k);
+          if (!id || !libraries.has(`${id.framework}@${id.version}`)) continue;
+          const to = reqItems[k];
+          if (!to) {
+            libraryLinkWarnings.push(
+              `${ms.name} › ${i.name}: the library has no requirement ${id.ref}, so it is not linked.`,
+            );
+            continue;
+          }
+          linkRows.push({ field_id: fieldId, from_item: from, to_item: to });
+        }
+      }
   if (linkRows.length)
     operations.push({
       kind: 'link',
@@ -828,7 +897,7 @@ export function planPackInstall(
     counts: { ...base.counts, folders: folderRows.length, links: rows.links.length },
     state,
     conflicts: [...new Set(conflicts)],
-    warnings: [...new Set(tp.warnings)],
+    warnings: [...new Set([...tp.warnings, ...libraryLinkWarnings])],
   };
   if (state === 'blocked')
     for (const c of preview.conflicts)

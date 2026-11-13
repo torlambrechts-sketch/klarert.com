@@ -146,6 +146,45 @@ describe('pack manifest', () => {
     );
   });
 
+  it('puts an automation on sub-items only of a sheet that has them, naming their fields', () => {
+    const raw = supplier();
+    raw.automations.push({ ...raw.automations[0], ref: 'on_actions', subitems: true });
+    expect(problems(raw)).toEqual(['automations.2: "supplier" has no sub-items.']);
+    raw.sheets[0].subitems = {
+      label: 'Actions',
+      fields: [{ key: 'due_date', name: 'Due date', type: 'date' }],
+    };
+    raw.automations[2].trigger = { type: 'date_arrives', fieldKey: 'due_date', offsetDays: 1 };
+    raw.automations[2].conditions = [{ fieldKey: 'status', op: 'is_not_done' }];
+    expect(problems(raw)).toEqual(['automations.2: Unknown sub-item field "status".']);
+    raw.automations[2].conditions = [];
+    expect(problems(raw)).toEqual([]);
+  });
+
+  it('links example items to requirements of a framework the pack builds on', () => {
+    const raw = supplier();
+    raw.sheets[0].fields.push({
+      key: 'controls',
+      name: 'Controls',
+      type: 'requirement',
+      config: { multiple: true },
+    });
+    raw.sheets[0].items[0].requirements = { controls: ['iso-27001@2022#A.5.19'], owner: [] };
+    expect(problems(raw)).toEqual(
+      expect.arrayContaining([
+        'sheets.0.items.0: "iso-27001@2022#A.5.19" is not in a framework the pack builds on (frameworks).',
+        'sheets.0.items.0: "owner" is not a requirement field.',
+      ]),
+    );
+    raw.frameworks = [{ key: 'iso-27001', version: '2022' }];
+    delete raw.sheets[0].items[0].requirements.owner;
+    expect(problems(raw)).toEqual([]);
+    raw.sheets[0].items[0].requirements.controls = ['A.5.19'];
+    expect(problems(raw)).toContain(
+      'sheets.0.items.0.requirements.controls.0: Use <framework>@<version>#<ref>.',
+    );
+  });
+
   it('throws with every problem listed', () => {
     expect(() => parsePack({ ...supplier(), sheets: [] })).toThrow(
       /Pack is not valid:\n {2}sheets: /,

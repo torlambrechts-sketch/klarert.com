@@ -377,8 +377,54 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
 
   for (const p of planned) if (p.subitems) p.row.settings.subitems = p.subitems.settings;
 
-  const ctxFor = (sheetRef: string): Ctx => {
-    const sheetId = sheetIds.get(sheetRef)!;
+  // sub-item sheets as the engine sees them: automations on sub-items (`subitems: true`) are checked against them
+  const subSheetIds = new Map<string, string>(); // parent sheet ref → child sheet id
+  for (const p of planned) {
+    const sub = p.subitems;
+    if (!sub) continue;
+    const childId = sub.sheet.id;
+    subSheetIds.set(p.ref, childId);
+    engineSheets.set(childId, {
+      id: childId,
+      orgId: env.orgId,
+      name: sub.sheet.name,
+      itemLabel: sub.sheet.item_label,
+      idPrefix: '',
+      isLibrary: false,
+      parentSheetId: p.row.id,
+    } as Sheet);
+    engineFields.set(
+      childId,
+      sub.fields.map((f) => ({
+        id: f.id,
+        sheetId: childId,
+        key: f.key,
+        name: f.name,
+        type: f.type,
+        position: f.position,
+        width: f.width,
+        required: false,
+        locked: false,
+        description: null,
+        config: f.config,
+        validation: {},
+        rules: f.rules as unknown as StatusRule[],
+        visibility: null,
+      })),
+    );
+    engineGroups.set(childId, [
+      {
+        id: sub.group.id,
+        sheetId: childId,
+        name: sub.group.name,
+        color: sub.group.color as LabelColor,
+        position: sub.group.position,
+      },
+    ]);
+  }
+
+  const ctxFor = (sheetRef: string): Ctx => ctxForId(sheetIds.get(sheetRef)!);
+  const ctxForId = (sheetId: string): Ctx => {
     const ctx = basicCtx({
       today: env.today,
       now: env.now,
@@ -545,11 +591,15 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
   // then the builder's own checks. Lenient plans leave out who is missing and install that automation off.
   const degraded = new Set<string>();
   const automations = t.automations.map((a) => {
-    const ctx = ctxFor(a.sheet);
     const where = `Automation "${a.name}"`;
-    const sheetId = sheetIds.get(a.sheet)!;
-    const resolve = (o: Obj, fieldSheet: string): Obj => {
-      const fctx = fieldSheet === a.sheet ? ctx : ctxFor(fieldSheet);
+    // on sub-items: the hidden child sheet of `sheet` (docs/02 §12); a sheet without sub-items is the schema's problem
+    const sheetId = a.subitems
+      ? (subSheetIds.get(a.sheet) ?? sheetIds.get(a.sheet)!)
+      : sheetIds.get(a.sheet)!;
+    if (a.subitems && !subSheetIds.has(a.sheet)) problems.push(`${where}: "${a.sheet}" has no sub-items.`);
+    const ctx = ctxForId(sheetId);
+    const resolve = (o: Obj): Obj => {
+      const fctx = ctx;
       const field =
         typeof o.fieldKey === 'string' ? fctx.fieldsByKey.get(o.fieldKey) : undefined;
       const out: Obj = {};
@@ -580,9 +630,9 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
       }
       return out;
     };
-    const trigger = resolve(a.trigger as Obj, a.sheet) as Automation['trigger'];
-    const conditions = a.conditions.map((c) => resolve(c as Obj, a.sheet)) as unknown as Condition[];
-    const actions = a.actions.map((x) => resolve(x as Obj, a.sheet)) as Automation['actions'];
+    const trigger = resolve(a.trigger as Obj) as Automation['trigger'];
+    const conditions = a.conditions.map((c) => resolve(c as Obj)) as unknown as Condition[];
+    const actions = a.actions.map((x) => resolve(x as Obj)) as Automation['actions'];
     const found = draftProblems({ name: a.name, trigger, conditions, actions }, ctx, {
       sheetIds: [...sheetIds.values()],
     });

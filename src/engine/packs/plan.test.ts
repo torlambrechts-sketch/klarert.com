@@ -406,6 +406,106 @@ describe('planPackInstall', () => {
   });
 });
 
+describe('planPackInstall: sub-items and library links', () => {
+  /** The register with corrective actions as sub-items, an automation on them and Annex A links on Acme. */
+  const withActions = (): PackManifest => {
+    const m = manifest({ frameworks: [{ key: 'iso-27001', version: '2022' }] });
+    const reg = m.sheets[0]!;
+    reg.fields.push({
+      key: 'controls',
+      name: 'Controls',
+      type: 'requirement',
+      config: { multiple: true },
+    });
+    reg.subitems = {
+      label: 'Actions',
+      blockClose: true,
+      lockCascade: false,
+      fields: [
+        { key: 'owner', name: 'Owner', type: 'people', config: { multiple: false } },
+        { key: 'status', name: 'Status', type: 'status' },
+        { key: 'due_date', name: 'Due date', type: 'date' },
+      ],
+      items: [],
+    };
+    reg.items[0]!.requirements = {
+      controls: ['iso-27001@2022#A.5.19', 'iso-27001@2022#A.5.30', 'iso-27001@2022#A.99'],
+    };
+    m.automations.push({
+      ref: 'action_overdue',
+      sheet: 'supplier',
+      subitems: true,
+      name: 'Action overdue → tell the action owner',
+      enabled: true,
+      trigger: { type: 'date_arrives', fieldKey: 'due_date', offsetDays: 1 },
+      conditions: [{ fieldKey: 'status', op: 'is_not_done' }],
+      actions: [{ type: 'notify', to: ['field:owner'], message: '{name} is overdue.' }],
+    });
+    return m;
+  };
+  const LIB = 'lib-27001';
+  const REQS = {
+    'iso-27001@2022#A.5.19': 'req-a519',
+    'iso-27001@2022#A.5.30': 'req-a530',
+  };
+
+  it("puts an automation on the sheet's sub-items: the child sheet, its fields", () => {
+    const plan = planPackInstall(withActions(), snapshot(), env());
+    expect(plan.preview.conflicts).toEqual([]);
+    const child = plan.payload!.sheets.find((s) => s.ref === 'supplier.subitems')!;
+    const parent = plan.payload!.sheets.find((s) => s.ref === 'supplier')!;
+    expect(child.parent_sheet_id).toBe(parent.id);
+    const a = plan.payload!.automations.find((x) => x.ref === 'action_overdue')!;
+    expect(a.sheet_id).toBe(child.id);
+    expect(a.enabled).toBe(true);
+    // the condition names the sub-items' Status, read from the child sheet
+    expect(a.conditions).toEqual([{ fieldKey: 'status', op: 'is_not_done' }]);
+    const sentence = plan.preview.automations.find((x) => x.name === a.name)!;
+    expect(sentence.sheet).toBe('Supplier register › Actions');
+    expect(sentence.sentence).toMatch(/Due date/);
+  });
+
+  it('refuses an automation on sub-items of a sheet without them, or naming a parent field', () => {
+    const m = withActions();
+    m.sheets[0]!.subitems = undefined;
+    expect(planPackInstall(m, snapshot(), env()).preview.conflicts.join(' ')).toMatch(
+      /has no sub-items/,
+    );
+    const p = withActions();
+    p.automations.at(-1)!.trigger = { type: 'date_arrives', fieldKey: 'reviews', offsetDays: 1 };
+    expect(planPackInstall(p, snapshot(), env()).state).toBe('blocked');
+  });
+
+  it('links example items to library items by requirement key, and says what the library lacks', () => {
+    const plan = planPackInstall(
+      withActions(),
+      snapshot({
+        libraries: [{ library: 'iso-27001@2022', sheetId: LIB }],
+        requirementItems: REQS,
+      }),
+      env(),
+    );
+    expect(plan.state).toBe('ready');
+    const field = plan.payload!.fields.find((f) => f.ref === 'supplier.controls')!;
+    const acme = plan.payload!.items.find((i) => i.ref === 'supplier.acme')!;
+    expect(plan.payload!.links.filter((l) => l.field_id === field.id)).toEqual([
+      { field_id: field.id, from_item: acme.id, to_item: 'req-a519' },
+      { field_id: field.id, from_item: acme.id, to_item: 'req-a530' },
+    ]);
+    expect(plan.preview.warnings).toContain(
+      'Supplier register › Acme: the library has no requirement A.99, so it is not linked.',
+    );
+  });
+
+  it('leaves library links for the install when the library is not adopted yet', () => {
+    const plan = planPackInstall(withActions(), snapshot(), env());
+    expect(plan.state).toBe('ready');
+    const field = plan.payload!.fields.find((f) => f.ref === 'supplier.controls')!;
+    expect(plan.payload!.links.some((l) => l.field_id === field.id)).toBe(false);
+    expect(plan.preview.warnings.join(' ')).not.toMatch(/no requirement/);
+  });
+});
+
 describe('semver', () => {
   it('compares and matches ranges', () => {
     expect(compareVersions('1.10.0', '1.9.9')).toBe(1);

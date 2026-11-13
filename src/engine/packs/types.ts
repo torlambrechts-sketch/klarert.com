@@ -15,6 +15,12 @@ export type PackItem = Omit<TemplateItem, 'ref' | 'links'> & {
    * `<framework>@<version>#<ref>`. Written once by install_pack into items.requirement_ref and never changed.
    */
   requirementRef?: string;
+  /**
+   * Example links into a required framework's library (docs/11 Frameworks): requirement or control link field key →
+   * requirement keys (`iso-27001@2022#A.6.3`). Resolved at install against the adopted library's items by
+   * requirement_ref; a key the library does not have is left out with a warning.
+   */
+  requirements?: Record<string, string[]>;
 };
 
 /**
