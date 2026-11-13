@@ -65,7 +65,7 @@ describe('first-sheet template', () => {
     expect(plan.sheets[0]!.row.settings.subitems?.blockClose).toBe(true);
     expect(plan.sheets[1]!.subitems).toBeUndefined();
     expect(plan.sheets.map((s) => s.groups.length)).toEqual([2, 2]);
-    expect(plan.sheets.map((s) => s.views.length)).toEqual([3, 2]);
+    expect(plan.sheets.map((s) => s.views.length)).toEqual([4, 2]);
     expect(plan.sheets.map((s) => s.items.reduce((a, g) => a + g.rows.length, 0))).toEqual([5, 2]);
     // two links in the template, each mirrored on the inverse field
     expect(plan.links).toHaveLength(4);
@@ -73,6 +73,46 @@ describe('first-sheet template', () => {
     expect(plan.automations.every((a) => a.enabled && a.source === templateSource(template.id))).toBe(
       true,
     );
+  });
+
+  it('stores the column groups and places each group’s fields together; Essentials is a hidden Table view', () => {
+    const ca = sheet('ca');
+    const groups = ca.row.settings.columnGroups!;
+    expect(groups.map((g) => g.name)).toEqual(['Identify', 'Action', 'Evidence']);
+    expect(groups[1]!.fieldKeys).toEqual(['due_date', 'actions', 'actions_done', 'raise_action']);
+    const order = [...ca.fields].sort((a, b) => (a.position < b.position ? -1 : 1)).map((f) => f.key);
+    // due date moves to its group (after Identify); raise action joins Action before Evidence
+    expect(order.indexOf('due_date')).toBe(order.indexOf('root_cause') + 1);
+    expect(order.slice(order.indexOf('due_date'), order.indexOf('due_date') + 6)).toEqual([
+      'due_date',
+      'actions',
+      'actions_done',
+      'raise_action',
+      'effectiveness',
+      'evidence',
+    ]);
+    const essentials = ca.views.find((v) => v.name === 'Essentials')!;
+    expect(essentials.type).toBe('list');
+    const hidden = (essentials.config as { hidden: string[] }).hidden;
+    expect(ca.fields.map((f) => f.key).filter((k) => !hidden.includes(k))).toEqual([
+      'owner',
+      'status',
+      'source',
+      'due_date',
+      // the sub-items' progress column the planner adds
+      'steps',
+    ]);
+    expect(ca.row.settings.tabs?.find((t) => t.id === essentials.id)).toMatchObject({ hidden: true });
+    expect(sheet('act').row.settings.columnGroups).toBeUndefined();
+  });
+
+  it('refuses column groups that name unknown fields or share a field', () => {
+    const bad = structuredClone(raw);
+    bad.sheets[0].columnGroups = [
+      { name: 'A', fields: ['owner', 'nope'] },
+      { name: 'B', fields: ['owner'] },
+    ];
+    expect(() => parseTemplate(bad)).toThrow(/Unknown field "nope"[\s\S]*more than one column group/);
   });
 
   it('keeps field keys and wires the two-way link fields to each other', () => {
@@ -174,6 +214,7 @@ describe('first-sheet template', () => {
       { id: 'table' },
       { id: 'kanban' },
       { id: 'calendar' },
+      { id: sheet('ca').views.find((v) => v.name === 'Essentials')!.id, hidden: true },
       { id: 'insights', hidden: true },
       { id: 'form', hidden: true },
     ]);
