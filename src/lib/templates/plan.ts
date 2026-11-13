@@ -9,6 +9,7 @@ import { addDays } from '@/engine/fields/helpers';
 import { fieldType } from '@/engine/fields/registry';
 import { keysBetween } from '@/engine/ordering';
 import { STORED_VIEW_TYPE } from '@/engine/views/config';
+import { resolveTemplateTabs, type SheetTab } from '@/engine/views/tabs';
 import type {
   Automation,
   Condition,
@@ -58,6 +59,10 @@ export interface PlannedSheet {
     settings: {
       template: { id: string; version: number; ref: string };
       subitems?: SubitemRows['settings'];
+      /** The template's starting tabs (docs/02 sheets.settings.tabs) and a copy for "Reset to template default". */
+      tabs?: SheetTab[];
+      tabsDefault?: SheetTab[];
+      defaultViewId?: string;
     };
   };
   /** The sheet's sub-items (docs/02 §12): its child sheet, written after the parents. */
@@ -233,6 +238,28 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
       })),
     );
 
+    const views = s.views.map((v, vi) => ({
+      id: env.newId(),
+      org_id: env.orgId,
+      sheet_id: sheetId,
+      name: v.name,
+      type: STORED_VIEW_TYPE[v.type],
+      config: v.config as Json,
+      position: viewPositions[vi]!,
+      owner_id: null,
+    }));
+    const settings: PlannedSheet['row']['settings'] = {
+      template: { id: t.id, version: t.version, ref: s.ref },
+    };
+    if (s.tabs) {
+      // view names → the new views' ids (docs/02 sheets.settings.tabs)
+      const tabs = resolveTemplateTabs(s.tabs, s.defaultView, views);
+      problems.push(...tabs.problems.map((m) => `${s.name} › tabs: ${m}`));
+      settings.tabs = tabs.tabs;
+      settings.tabsDefault = tabs.tabs;
+      if (tabs.defaultViewId) settings.defaultViewId = tabs.defaultViewId;
+    }
+
     return {
       ref: s.ref,
       row: {
@@ -244,20 +271,11 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
         item_label: s.itemLabel,
         id_prefix: s.idPrefix,
         position: sheetPositions[si]!,
-        settings: { template: { id: t.id, version: t.version, ref: s.ref } } as PlannedSheet['row']['settings'],
+        settings,
       },
       groups,
       fields,
-      views: s.views.map((v, vi) => ({
-        id: env.newId(),
-        org_id: env.orgId,
-        sheet_id: sheetId,
-        name: v.name,
-        type: STORED_VIEW_TYPE[v.type],
-        config: v.config as Json,
-        position: viewPositions[vi]!,
-        owner_id: null,
-      })),
+      views,
       items: [],
       ...(s.subitems
         ? (() => {

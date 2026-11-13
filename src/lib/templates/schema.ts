@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { ACTION_IDS, TRIGGER_IDS } from '@/engine/automations';
 import { isFieldTypeId } from '@/engine/fields/registry';
 import type { Json } from '@/engine/types';
-import { viewTypeInput } from '@/engine/views/config';
+import { toViewType, viewTypeInput } from '@/engine/views/config';
+import { MAX_TABS, tabLabelSchema } from '@/engine/views/tabs';
 import { ID_PREFIX, LABEL_COLORS } from '@/lib/schemas/sheets';
 
 // Sheet templates (templates/*.json, docs/07 Part B): people, a folder, sheets with fields, groups, views and items,
@@ -97,6 +98,13 @@ export const subitemSetSchema = z
   });
 export type SubitemSet = z.infer<typeof subitemSetSchema>;
 
+/** A starting tab of a template sheet or a wizard start (resolved by resolveTemplateTabs). */
+export const templateTab = z.object({
+  ref: z.string().min(1).max(80),
+  hidden: z.boolean().optional(),
+  label: tabLabelSchema.optional(),
+});
+
 export const templateSheet = z.object({
   ref,
   name: z.string().min(1).max(120),
@@ -115,6 +123,13 @@ export const templateSheet = z.object({
     )
     .default([]),
   items: z.array(templateItem).default([]),
+  /**
+   * The sheet's starting tabs (sheets.settings.tabs): `ref` is a built-in view type or the name of a view above. The
+   * built-in views left out are added hidden (they stay in More). Stored as the sheet's template default too.
+   */
+  tabs: z.array(templateTab).min(1).max(MAX_TABS).optional(),
+  /** The tab that opens first (a `ref` as in `tabs`); default the Table. */
+  defaultView: z.string().min(1).max(80).optional(),
   /** Sub-items for this sheet: a hidden child sheet with these fields (docs/02 §12). */
   subitems: subitemSetSchema.optional(),
 });
@@ -225,6 +240,15 @@ export const sheetTemplateSchema = z
           if (typeof key === 'string' && !keys.has(key))
             problem(at('views', vi), `Unknown field "${key}".`);
         }
+      const viewNames = new Set(s.views.map((v) => v.name));
+      const tabRef = (r: string) => toViewType(r) !== null || viewNames.has(r);
+      for (const [ti, tab] of (s.tabs ?? []).entries())
+        if (!tabRef(tab.ref)) problem(at('tabs', ti), `Unknown view "${tab.ref}".`);
+      if (s.defaultView !== undefined) {
+        const tab = s.tabs?.find((x) => x.ref === s.defaultView);
+        if (!tabRef(s.defaultView)) problem(at('defaultView'), `Unknown view "${s.defaultView}".`);
+        else if (tab?.hidden) problem(at('defaultView'), 'The view that opens first cannot be hidden.');
+      }
       for (const [ii, item] of s.items.entries()) {
         if (!groups.has(item.group)) problem(at('items', ii), `Unknown group "${item.group}".`);
         for (const k of Object.keys(item.values))
