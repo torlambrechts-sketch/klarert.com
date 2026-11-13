@@ -23,6 +23,7 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 | `docs/07-first-sheet.md` | Milestone M10 and the end-to-end acceptance test |
 | `docs/10-advisory-board.md` | A design decision the docs don't cover |
 | `docs/11-packs.md` | Packs: the manifest format, the catalogue, install and archive (milestones P1–P7) |
+| `docs/12-frameworks.md` | Frameworks: the requirement library, cross-walks, adoption, coverage, the SoA and the licensing rule (never ship ISO/IEC text) (P3) |
 | `supabase/migrations/0001_core.sql` | The schema. Change it only through new numbered migrations. `node scripts/test-migration.mjs` smoke-tests it without Docker |
 | `templates/*.json` | Sheet templates used by the wizard and the seed |
 | `reference/sheets-mvp.html` | Working prototype of 57 of the field types (not `subitems`) and the automation engine. Open it in a browser and read its source when behaviour in the docs is unclear. The docs win if they disagree |

@@ -26,7 +26,10 @@ async function adopt(page: Page, title: string, requirements: number) {
   await expect(dialog.getByRole('heading', { name: `Adopt ${title}` })).toBeVisible();
   await expect(dialog.getByLabel('Controls sheet')).toHaveValue(/.+/);
   const created = dialog.getByRole('list', { name: 'What adopting creates' });
-  await expect(created).toContainText(`a library of ${requirements} requirements`);
+  // the preview plans the whole library on the server (and compiles on first use in dev)
+  await expect(created).toContainText(`a library of ${requirements} requirements`, {
+    timeout: 45_000,
+  });
   await expect(created).toContainText('→ Controls through Controls, both ways');
   await expect(dialog).toContainText('Reference numbers only');
   await dialog.getByRole('button', { name: 'Adopt', exact: true }).click();

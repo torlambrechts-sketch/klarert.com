@@ -254,6 +254,7 @@ triggers apply to people, `role = authenticated`; automations run as the service
 | `items_for_people`, `filter_item_ids`, `form_stats`, `item_update_summaries` | SECURITY INVOKER: RLS on items, restricted_values, item_updates |
 | `claim_schedule_occurrence`, `record_automation_run`, `claim_outbound_webhooks` | service role (admins for date checks now); no content returned |
 | `install_pack` | admins and owners; restricted folders and sheets created restricted with the installer listed; structure guard |
+| `adopt_framework` (0030, P3) | admins and owners; calls `install_pack` (same guards) and stamps `items.requirement_ref` under `items_requirement_guard`; library sheets are ordinary sheets for RLS and sheet access |
 | access functions (`set_sheet_access`, `set_folder_access`, `set_access_grant`, `set_field_restriction`, `note_sheet_opened`, `sheet_access_info`, `folder_access_info`, `my_sheet_access`, `sheet_levels`) | owners, and admins with access; every change logged on the sheet's or the workspace's chain |
 
 Grants: every new function is executable by `authenticated` only (and `service_role` where the runner needs it);
