@@ -1,5 +1,6 @@
 // The Insights widget types, keyed by string id (CLAUDE.md rule 1): a new widget type is one file in widgets/ plus one
 // line here. `computeWidget` resolves the widget's sheet and hands it to its type.
+import { hiddenFor } from '../values';
 import type { InsightWidget, InsightWidgetType } from './config';
 import type { InsightsData, InsightSource } from './source';
 import type { InsightModel, InsightWidgetDef } from './types';
@@ -38,6 +39,10 @@ export function computeWidget(w: InsightWidget, data: InsightsData): InsightMode
   const s = widgetSource(w, data);
   if (s === 'loading') return { kind: 'loading' };
   if (!s) return { kind: 'unavailable' };
+  // a widget over a restricted field the person may not see (docs/02 §16): no figure from values they never got
+  const named = [w.num, w.by, w.date, ...(w.columns ?? [])];
+  if (s.fields.some((f) => named.includes(f.key) && hiddenFor(f, s.ctx)))
+    return { kind: 'message', message: 'Restricted: this widget reads a field you cannot see.' };
   return def.compute(w, s);
 }
 

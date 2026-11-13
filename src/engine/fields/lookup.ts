@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Ctx, Field, Json } from '../types';
 import { base, cmpText, emptyLast, isBlank, splitList } from './helpers';
-import { fieldByKey, linkedItems, readValue } from './link';
+import { fieldByKey, linkedItems, readValue, throughHidden } from './link';
 import { resolveFieldType } from './resolve';
 import type { AnyFieldType, FieldTypeDef, ValueKind } from './types';
 
@@ -97,6 +97,7 @@ export const lookup: FieldTypeDef<Json[], LookupConfig> = base<Json[], LookupCon
   toNumber: (v, cfg, ctx) => first(v, cfg, ctx, (d, f) => d.toNumber(v![0], f.config, ctx)),
   toDate: (v, cfg, ctx) => first(v, cfg, ctx, (d, f) => d.toDate(v![0], f.config, ctx)),
   effectiveKind: (field, ctx) => lookupKind(field, ctx),
+  readsHidden: (field, ctx) => throughHidden(field.sheetId, field.config, ctx),
   compare: (a, b, cfg, ctx) =>
     emptyLast(a, b, isBlank, (x, y) => cmpText(text(x, cfg, ctx), text(y, cfg, ctx))),
 });

@@ -80,6 +80,8 @@ export interface DashboardData {
   /** The period trends show, in months. */
   months: number;
   sheet(id: string): SheetSource | undefined;
+  /** A sheet that exists but the person cannot read (docs/02 §16): its widgets say "No access". */
+  noAccess?(id: string): boolean;
   /** Every sheet of the workspace in menu order (fetched when a widget needs `allSheets`). */
   sheets(): SheetSource[];
   /**

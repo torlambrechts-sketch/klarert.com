@@ -24,7 +24,12 @@ export const evidenceStatusWidget: WidgetTypeDef = {
   defaultTitle: ({ sheet }) => (sheet ? `${sheet}: evidence status` : 'Evidence status'),
   compute(w, data) {
     if (w.sheetId && !data.sheet(w.sheetId))
-      return { kind: 'problem', message: 'The sheet of this widget no longer exists.' };
+      return {
+        kind: 'problem',
+        message: data.noAccess?.(w.sheetId)
+          ? 'No access: this widget reads a sheet you cannot see.'
+          : 'The sheet of this widget no longer exists.',
+      };
     const files = w.sheetId ? data.evidence.filter((f) => f.sheetId === w.sheetId) : data.evidence;
     const counts = new Map<EvidenceStatus, number>(EVIDENCE_STATUSES.map((s) => [s, 0]));
     for (const f of files) {

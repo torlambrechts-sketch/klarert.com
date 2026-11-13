@@ -1,7 +1,7 @@
 // Outbound webhook payloads (docs/04 §5): generic JSON, or the same content as a Teams or Slack message. Pure.
 import type { Automation, Ctx, Item, Json } from '../types';
 import { defOf, textOf } from '../values';
-import { itemLink } from './template';
+import { itemLink, restrictedInMessages } from './template';
 import { triggerField } from './triggers';
 
 export type WebhookPreset = 'generic' | 'teams' | 'slack';
@@ -14,7 +14,7 @@ export interface WebhookEnv {
   workspace: string;
 }
 
-/** The generic payload. Protected fields are never included. */
+/** The generic payload. Protected fields are never included; restricted ones say "Restricted" (docs/02 §16). */
 export function genericPayload(
   automation: Pick<Automation, 'id' | 'name' | 'trigger'>,
   item: Item,
@@ -25,13 +25,13 @@ export function genericPayload(
   for (const field of ctx.fieldsOf(item.sheetId)) {
     const def = defOf(field);
     if (def.storage === 'protected' || def.storage === 'none') continue;
-    values[field.key] = textOf(item, field, ctx);
+    values[field.key] = restrictedInMessages(field, ctx) ? 'Restricted' : textOf(item, field, ctx);
   }
   const field = triggerField(automation.trigger, ctx);
   const trigger: { [key: string]: Json } = { type: automation.trigger.type };
   if (field) {
     trigger.field = field.name;
-    if (automation.trigger.type === 'field_becomes' && defOf(field).storage !== 'protected') {
+    if (automation.trigger.type === 'field_becomes' && !restrictedInMessages(field, ctx)) {
       trigger.value = textOf(item, field, ctx);
     }
   }

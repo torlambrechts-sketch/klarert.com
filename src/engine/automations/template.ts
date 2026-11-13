@@ -1,6 +1,6 @@
 // Templates in automation messages and names (docs/04 §6). Pure.
-import type { Ctx, Item } from '../types';
-import { defOf, textOf } from '../values';
+import type { Ctx, Field, Item } from '../types';
+import { defOf, hiddenFor, textOf } from '../values';
 import type { Actor } from './types';
 
 export interface TemplateEnv {
@@ -24,11 +24,27 @@ export function actorName(actor: Actor, ctx: Ctx): string {
   return 'The system';
 }
 
+/**
+ * Whether a field's value stays out of automation messages, posts and webhooks (docs/02 §16): protected and restricted
+ * fields, and computed fields reading one or reading a restricted sheet. A message is written once for everyone who
+ * can read the item (a post) or by a system that sees everything, so it never carries a value someone reading it may
+ * not see; it says "Restricted".
+ */
+export function restrictedInMessages(field: Field, ctx: Ctx): boolean {
+  const def = defOf(field);
+  if (def.storage === 'protected' || field.restrictedTo || field.hidden) return true;
+  const strict: Ctx = {
+    ...ctx,
+    canSee: (f) => !f.restrictedTo && !f.hidden && defOf(f).storage !== 'protected',
+  };
+  return hiddenFor(field, strict);
+}
+
 const TOKEN = /\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
 
 /**
  * `{name}`, `{id}`, `{sheet}`, `{group}`, `{link}`, `{actor}` and `{<field_key>}` (the value as text). Unknown keys
- * stay as written. Protected fields render as "Restricted", whoever may read them.
+ * stay as written. Protected and restricted fields render as "Restricted", whoever may read them.
  */
 export function renderTemplate(text: string, item: Item, ctx: Ctx, env: TemplateEnv): string {
   return text.replace(TOKEN, (whole, key: string) => {
@@ -48,7 +64,7 @@ export function renderTemplate(text: string, item: Item, ctx: Ctx, env: Template
     }
     const field = ctx.fieldsByKey.get(key);
     if (!field) return whole;
-    if (defOf(field).storage === 'protected') return 'Restricted';
+    if (restrictedInMessages(field, ctx)) return 'Restricted';
     return textOf(item, field, ctx);
   });
 }

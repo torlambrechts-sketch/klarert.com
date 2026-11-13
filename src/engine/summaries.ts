@@ -3,7 +3,18 @@
 import { addDays } from './fields/helpers';
 import type { ValueKind } from './fields/types';
 import type { Ctx, Field, Item } from './types';
-import { dateOf, defOf, isEmptyOf, isItemDone, keysOf, kindOf, numberOf, valueOf } from './values';
+import {
+  dateOf,
+  defOf,
+  isEmptyOf,
+  isItemDone,
+  keysOf,
+  kindOf,
+  numberOf,
+  valueOf,
+  hiddenFor,
+  RESTRICTED_TEXT,
+} from './values';
 
 export type SummaryFn =
   | 'sum'
@@ -178,6 +189,8 @@ const plural = (n: number, one: string, many = `${one}s`) => `${fmt(n)} ${n === 
 /** The summary of one field over the items of a group. */
 export function summarise(field: Field, items: Item[], ctx: Ctx, fn?: SummaryFn): Summary {
   const use = fn && summaryOptions(field, ctx).includes(fn) ? fn : defaultSummary(field, ctx);
+  // a restricted field the person may not see (docs/02 §16): no figure made from values they never received
+  if (hiddenFor(field, ctx)) return { kind: 'value', fn: use, value: null, text: RESTRICTED_TEXT };
   const def = defOf(field);
   const filled = items.filter((it) => !isEmptyOf(it, field, ctx));
 

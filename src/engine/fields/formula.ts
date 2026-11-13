@@ -100,6 +100,22 @@ function evalField(
   return coerceResult(raw, field.config.result ?? 'auto');
 }
 
+const REF = /\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
+
+/** A formula reading a field the caller may not see is hidden too (docs/02 §16); nested formulas are followed. */
+function readsHidden(field: Field<FormulaConfig>, ctx: Ctx, stack: string[] = []): boolean {
+  if (stack.includes(field.key) || stack.length > MAX_DEPTH) return false;
+  for (const m of (field.config.expr ?? '').matchAll(REF)) {
+    const target = ctx.fieldsByKey.get(m[1]!);
+    if (!target) continue;
+    if (ctx.canSee && !ctx.canSee(target)) return true;
+    if (target.type === 'formula') {
+      if (readsHidden(target as Field<FormulaConfig>, ctx, [...stack, field.key])) return true;
+    } else if (resolveFieldType(target.type)?.readsHidden?.(target, ctx)) return true;
+  }
+  return false;
+}
+
 const isEmpty = (v: FormulaFieldValue | null) => v === null || v === undefined || v === '';
 const isError = (v: unknown) => typeof v === 'string' && /^#(REF|LOOP|ERR|DIV0)$/.test(v);
 
@@ -137,6 +153,7 @@ export const formula = base<FormulaFieldValue, FormulaConfig>({
   triggers: ['number_above', 'number_below'],
   normalize,
   parseText,
+  readsHidden: (field, ctx) => readsHidden(field, ctx),
   compute: (item, field, ctx) => {
     const v = resultToValue(evalField(item, field, ctx, []));
     return v === '' ? null : v;

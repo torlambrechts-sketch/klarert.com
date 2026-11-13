@@ -110,7 +110,7 @@ export interface PackPreview {
   description: string;
   state: 'ready' | 'installed' | 'blocked';
   counts: PackCounts;
-  folders: { name: string; action: 'create' | 'reuse' }[];
+  folders: { name: string; action: 'create' | 'reuse'; restricted?: boolean }[];
   sheets: {
     ref: string;
     name: string;
@@ -121,6 +121,8 @@ export interface PackPreview {
     kind: 'sheet' | 'library' | 'documents';
     folder: string | null;
     subitems?: string;
+    /** Restricted at install: the installer (and owners) see it until people are given access. */
+    restricted?: boolean;
   }[];
   links: { from: string; field: string; to: string; twoWay: boolean }[];
   automations: { name: string; sheet: string; sentence: string; enabled: boolean }[];
@@ -197,10 +199,14 @@ export function previewLines(p: PackPreview): string[] {
     out.push(`${p.title} ${p.version} cannot be installed.`, ...p.conflicts);
   else out.push(`Installs ${countsText(p.counts)}.`);
   for (const f of p.folders)
-    out.push(f.action === 'create' ? `New folder ${f.name}.` : `Uses the folder ${f.name}.`);
+    out.push(
+      f.action === 'create'
+        ? `New folder ${f.name}${f.restricted ? ' (restricted: only you and the owners see it until you share it)' : ''}.`
+        : `Uses the folder ${f.name}.`,
+    );
   for (const s of p.sheets)
     out.push(
-      `${s.name} (${s.prefix}): ${plural(s.fields, 'field')}${s.items ? `, ${plural(s.items, s.kind === 'documents' ? 'document' : s.kind === 'library' ? 'library item' : 'example item')}` : ''}${s.subitems ? `, sub-items "${s.subitems}"` : ''}.`,
+      `${s.name} (${s.prefix}): ${plural(s.fields, 'field')}${s.items ? `, ${plural(s.items, s.kind === 'documents' ? 'document' : s.kind === 'library' ? 'library item' : 'example item')}` : ''}${s.subitems ? `, sub-items "${s.subitems}"` : ''}${s.restricted ? ', restricted' : ''}.`,
     );
   for (const l of p.links)
     out.push(`${l.from} links to ${l.to} through ${l.field}${l.twoWay ? ', both ways' : ''}.`);
@@ -305,8 +311,18 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
     }
     const id = env.newId();
     folderIds.set(f.ref, id);
-    folderRows.push({ id, ref: f.ref, name: f.name, position: folderKeys[i]! });
-    base.folders.push({ name: f.name, action: 'create' });
+    folderRows.push({
+      id,
+      ref: f.ref,
+      name: f.name,
+      position: folderKeys[i]!,
+      ...(f.restricted ? { restricted: true } : {}),
+    });
+    base.folders.push({
+      name: f.name,
+      action: 'create',
+      ...(f.restricted ? { restricted: true } : {}),
+    });
     operations.push({ kind: 'folder', ref: f.ref, name: f.name, action: 'create' });
   });
 
@@ -360,6 +376,7 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
       is_library: ms.isLibrary,
       settings,
       parent_sheet_id: null,
+      ...(ms.restricted ? { restricted: true } : {}),
     });
     operations.push({ kind: 'sheet', ref: ms.ref, name: ms.name, action: 'create' });
     for (const f of ps.fields) {
@@ -472,6 +489,7 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
       kind: sheetKind(ms),
       folder: ms.folder ? (m.folders.find((f) => f.ref === ms.folder)?.name ?? null) : null,
       ...(ps.subitems ? { subitems: ps.subitems.label } : {}),
+      ...(ms.restricted ? { restricted: true } : {}),
     });
   });
 

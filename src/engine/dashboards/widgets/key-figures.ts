@@ -79,7 +79,12 @@ export const keyFigures: WidgetTypeDef = {
   compute(w, data) {
     const one = w.sheetId ? data.sheet(w.sheetId) : undefined;
     if (w.sheetId && !one)
-      return { kind: 'problem', message: 'The sheet of this widget no longer exists.' };
+      return {
+        kind: 'problem',
+        message: data.noAccess?.(w.sheetId)
+          ? 'No access: this widget reads a sheet you cannot see.'
+          : 'The sheet of this widget no longer exists.',
+      };
     const points = monthPoints(data.today, data.months);
     const period = periodLabel(points);
     const start = points[0] ? `${points[0].date.slice(0, 8)}01` : data.today;

@@ -21,6 +21,23 @@ export function valueOf(item: Item, field: Field, ctx: Ctx): unknown {
   return def.compute ? (def.compute(item, field, ctx) ?? null) : null;
 }
 
+/**
+ * The caller may not see this field's values (docs/02 §16): a restricted field they are not listed on, or a computed
+ * field reading one, or reading a sheet they have no access to. Its value is then "Restricted", never a value made
+ * from what is missing.
+ */
+export function hiddenFor(field: Field, ctx: Ctx): boolean {
+  if (ctx.canSee && !ctx.canSee(field)) return true;
+  return defOf(field).readsHidden?.(field, ctx) ?? false;
+}
+
+export const RESTRICTED_TEXT = 'Restricted';
+
+/** textOf for what people read (exports, copies, search): "Restricted" for a hidden field. */
+export function visibleTextOf(item: Item, field: Field, ctx: Ctx): string {
+  return hiddenFor(field, ctx) ? RESTRICTED_TEXT : textOf(item, field, ctx);
+}
+
 export function kindOf(field: Field, ctx: Ctx): ValueKind {
   const def = defOf(field);
   return def.effectiveKind ? def.effectiveKind(field, ctx) : def.kind;

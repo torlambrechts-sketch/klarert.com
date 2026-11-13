@@ -1,5 +1,6 @@
 // Activity log lines (docs/05 §3.4, FR-28/FR-39): one readable sentence per entry of an item's chain. Pure: the
 // lookups for fields, groups, items and people are passed in; values are shown with the field type's toText.
+import { isMaskedValue } from './access';
 import { resolveFieldType } from './fields/resolve';
 import type { Ctx, Field, Json } from './types';
 
@@ -35,9 +36,12 @@ export interface ActivityLine {
 }
 
 const EMPTY = 'empty';
+const RESTRICTED = 'Restricted';
 
 function valueText(field: Field | undefined, v: Json | null, look: ActivityLookup): string {
   if (v === null || v === undefined) return EMPTY;
+  // a restricted value (docs/02 §16): the log keeps a marker; people who may see it read it from its own store
+  if (isMaskedValue(v)) return RESTRICTED;
   const def = field ? resolveFieldType(field.type) : undefined;
   if (!field || !def) return typeof v === 'string' ? v : JSON.stringify(v);
   try {
@@ -96,6 +100,9 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
   // files of the item's Files tab have no field
   const files = e.fieldId ? fieldName(field) : 'Files';
   const comment = e.note && e.action === 'value.changed' ? ` · Comment: ${quote(e.note)}` : '';
+  // links and files of a restricted field: what changed is not shown to everyone
+  if (e.action !== 'value.changed' && (isMaskedValue(e.oldValue) || isMaskedValue(e.newValue)))
+    return `${e.fieldId ? fieldName(field) : files}: changed (restricted)`;
   switch (e.action) {
     case 'item.created': {
       const o =
@@ -207,9 +214,81 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
         ? `Resumed the automation ${quote(e.note)} for this item`
         : 'Resumed an automation';
     default:
-      return e.action;
+      return accessText(e, look) ?? e.action;
   }
 }
+
+const LEVEL_WORDS: Record<string, string> = {
+  editor: 'can edit',
+  commenter: 'can comment',
+  viewer: 'can view',
+};
+const objOf = (v: Json | null) =>
+  v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, Json>) : null;
+
+/**
+ * Access control entries (docs/02 §16) on a sheet's or the workspace's chain: restricting and opening, people listed
+ * and taken off, restricted fields, an owner opening a restricted sheet. Null for other actions.
+ */
+export function accessText(
+  e: Pick<ActivityEntry, 'action' | 'oldValue' | 'newValue' | 'note'>,
+  look: Pick<ActivityLookup, 'personName'>,
+): string | null {
+  const o = objOf(e.oldValue);
+  const n = objOf(e.newValue);
+  const person = (v: Record<string, Json> | null) =>
+    (typeof v?.user_id === 'string' && look.personName(v.user_id)) || 'A former member';
+  const level = (v: Record<string, Json> | null) =>
+    LEVEL_WORDS[String(v?.level ?? '')] ?? 'has access';
+  const where = (v: Record<string, Json> | null) => (v?.folder_id ? ' on the folder' : '');
+  switch (e.action) {
+    case 'access.changed':
+      return n?.mode === 'restricted'
+        ? 'Restricted the sheet to the people listed'
+        : n?.mode === 'open'
+          ? 'Opened the sheet to everyone in the workspace'
+          : 'The sheet now follows its folder';
+    case 'access.granted':
+    case 'folder.access.granted':
+      return `${person(n)} ${level(n)}${where(n)}`;
+    case 'access.level_changed':
+    case 'folder.access.level_changed':
+      return `${person(n)}: ${level(o)} → ${level(n)}${where(n)}`;
+    case 'access.revoked':
+    case 'folder.access.revoked':
+      return `${person(o)} no longer has access${where(o)}`;
+    case 'folder.access_changed':
+      return n?.restricted ? (e.note ?? 'Restricted a folder') : (e.note ?? 'Opened a folder');
+    case 'restricted.accessed':
+      return 'Opened this restricted sheet as an owner who is not on the list';
+    case 'field.restricted':
+      return `Restricted the field ${quote(e.note ?? '')}`;
+    case 'field.restriction_changed':
+      return `Changed who sees the field ${quote(e.note ?? '')}`;
+    case 'field.unrestricted':
+      return `Lifted the restriction on the field ${quote(e.note ?? '')}`;
+    case 'member.added':
+      return `Added an auditor${n?.expires_at ? ` until ${String(n.expires_at).slice(0, 10)}` : ''}`;
+    case 'member.changed':
+      return `Changed a member's role to ${String(n?.role ?? '')}`;
+    case 'member.removed':
+      return 'Removed a member';
+    default:
+      return null;
+  }
+}
+
+/** The access entries a sheet's Access panel lists (newest first). */
+export const ACCESS_ACTIONS = [
+  'access.changed',
+  'access.granted',
+  'access.level_changed',
+  'access.revoked',
+  'restricted.accessed',
+  'field.restricted',
+  'field.restriction_changed',
+  'field.unrestricted',
+] as const;
 
 export function activityLine(e: ActivityEntry, look: ActivityLookup): ActivityLine {
   return { who: who(e, look), text: activityText(e, look), shortHash: e.hash.slice(0, 8) };

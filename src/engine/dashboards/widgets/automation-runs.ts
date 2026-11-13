@@ -21,7 +21,12 @@ export const automationRuns: WidgetTypeDef = {
   defaultTitle: ({ days }) => `Automation runs, last ${plural(days ?? DEFAULT_DAYS, 'day')}`,
   compute(w, data) {
     if (w.sheetId && !data.sheet(w.sheetId))
-      return { kind: 'problem', message: 'The sheet of this widget no longer exists.' };
+      return {
+        kind: 'problem',
+        message: data.noAccess?.(w.sheetId)
+          ? 'No access: this widget reads a sheet you cannot see.'
+          : 'The sheet of this widget no longer exists.',
+      };
     const days = w.days ?? DEFAULT_DAYS;
     const since = sinceDay(data.today, days);
     const runs = data.runs.filter(

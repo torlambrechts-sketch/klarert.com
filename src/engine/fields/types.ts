@@ -117,6 +117,11 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
    */
   relatedIds?(item: Item, field: Field<C>, ctx: Ctx): string[];
   /**
+   * Computed types: whether the value is derived from something the caller may not see (a restricted field, a sheet
+   * without access, docs/02 §16). The app then shows "Restricted" instead of a value computed from what is missing.
+   */
+  readsHidden?(field: Field<C>, ctx: Ctx): boolean;
+  /**
    * Server-side stamping of a value about to be written: who, when, hashes (signature). `values` are the item's
    * values after the rest of the change; `hash` is SHA-256 of a string, injected.
    */
