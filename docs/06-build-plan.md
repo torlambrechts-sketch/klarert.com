@@ -160,13 +160,13 @@ One level of sub-items per item on a hidden child sheet (docs/02 §12): own fiel
 Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, fields by key, links, sub-items, views, forms, tab sets, column groups, automations and recipes, dashboards, documents and library items. Apps are packs with a front door (navigation + screens over existing views), never custom code. Board decisions: never ship ISO/IEC clause text (IDs + own paraphrased titles only; EU law text is fine; counsel to confirm); decide retention before the GDPR pack.
 
 ### P1 · Pack framework  [Opus]
-- [ ] Migration: `packs` (key, version, manifest, hash) and `pack_installs` (org, pack key, version, status, installed by, manifest hash); provenance `pack_install_id` + `pack_ref` + `pack_hash` on folders, sheets, fields, groups, views, automations, dashboards (and items seeded by a pack); unique `(org_id, pack_install_id, pack_ref)`
-- [ ] Manifest schema (Zod, `src/lib/packs/manifest.ts`) extending the sheet template schema: key, semver version, `requires`, folders by ref, sheets, link fields by `sheetRef`, dashboards with `sheetRef`/`fieldKey`, documents, library items with stable refs (not names), id prefixes with collision renaming
-- [ ] Pure install planner (`src/engine/packs/plan.ts`): manifest + workspace snapshot → operations (create / skip / conflict), reusing the template planner; preview text
-- [ ] One transactional RPC `install_pack` (owners/admins; grant to authenticated) writing every row and a `pack.installed` log entry; commands `previewPack`, `installPack`, `archivePack` (uninstall archives, never deletes items or the log)
-- [ ] The template importer moved onto the pack path; the first-sheet template and one start shipped as packs
-- [ ] Workspace admin → Packs: available packs, preview (what will be created), install with progress, installed packs with version and Archive; audit entries readable
-- [ ] Tests: planner and manifest units; pgTAP for the RPC (atomic, admin-only, provenance, grants); e2e install → preview → install → archive
+- [x] Migration: `packs` (key, version, manifest, hash) and `pack_installs` (org, pack key, version, status, installed by, manifest hash); provenance `pack_install_id` + `pack_ref` + `pack_hash` on folders, sheets, fields, groups, views, automations, dashboards (and items seeded by a pack); unique `(org_id, pack_install_id, pack_ref)`
+- [x] Manifest schema (Zod, `src/lib/packs/manifest.ts`) extending the sheet template schema: key, semver version, `requires`, folders by ref, sheets, link fields by `sheetRef`, dashboards with `sheetRef`/`fieldKey`, documents, library items with stable refs (not names), id prefixes with collision renaming
+- [x] Pure install planner (`src/engine/packs/plan.ts`): manifest + workspace snapshot → operations (create / skip / conflict), reusing the template planner; preview text
+- [x] One transactional RPC `install_pack` (owners/admins; grant to authenticated) writing every row and a `pack.installed` log entry; commands `previewPack`, `installPack`, `archivePack` (uninstall archives, never deletes items or the log)
+- [x] The template importer moved onto the pack path; the first-sheet template and one start shipped as packs
+- [x] Workspace admin → Packs: available packs, preview (what will be created), install with progress, installed packs with version and Archive; audit entries readable
+- [x] Tests: planner and manifest units; pgTAP for the RPC (atomic, admin-only, provenance, grants); e2e install → preview → install → archive
 
 ### P2 · Access control  [Opus]
 - [ ] Per-folder and per-sheet roles (owner / editor / commenter / viewer / no access) enforced in RLS, covering links, roll-ups, lookups, search, dashboards, Insights, exports and notifications; field-level hide for sensitive columns; a `restricted` flag packs can set; an auditor read-only role
