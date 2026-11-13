@@ -174,20 +174,27 @@ export const SubItemRow = memo(function SubItemRow(
               {item.displayId}
             </span>
             {sub.actions.held.has(item.id) ? (
-              <button
-                type="button"
-                tabIndex={-1}
-                className="border-line text-ink text-label-12 shrink-0 rounded-full border px-1.5 leading-4 font-semibold"
+              <span
+                className="text-label-12 flex shrink-0 items-center gap-1"
                 title="Actions run when you finish this row"
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void sub.actions.finishItem(item.id);
-                }}
               >
-                Done
-                <span className="sr-only">: actions run when you finish this row</span>
-              </button>
+                <span className="border-line text-ink rounded-full border px-1.5 leading-4">
+                  Editing
+                </span>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="text-ink font-semibold underline-offset-2 hover:underline"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void sub.actions.finishItem(item.id);
+                  }}
+                >
+                  Done
+                  <span className="sr-only">: actions run when you finish this row</span>
+                </button>
+              </span>
             ) : null}
             {isEditing('name') ? <NameEditor item={item} sub={sub} seed={p.seed} /> : null}
           </span>

@@ -149,7 +149,9 @@ test.describe('desktop', () => {
       .getByRole('tab', { name: /^Activity log/ })
       .click();
     await expect(page.getByRole('dialog').getByText(`Created under ${pid}`)).toBeVisible();
-    await expect(page.getByRole('dialog').getByText(/Status (set to Done|: .* → Done)/)).toBeVisible();
+    await expect(
+      page.getByRole('dialog').getByText(/Status (set to Done|: .* → Done)/),
+    ).toBeVisible();
     await page
       .getByRole('dialog')
       .getByRole('button', { name: `Back to ${pid}` })

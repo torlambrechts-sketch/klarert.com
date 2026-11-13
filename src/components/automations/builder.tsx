@@ -833,7 +833,7 @@ function ActionRow({
           }
         />
       ) : null}
-            {type === 'lock_item' ? (
+      {type === 'lock_item' ? (
         <input
           type="text"
           aria-label={label('reason')}
