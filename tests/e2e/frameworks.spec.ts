@@ -179,9 +179,10 @@ test.describe('desktop', () => {
     await page.getByRole('tab', { name: 'Statement of applicability' }).click();
     const grid = page.getByRole('grid');
     await expect(grid).toContainText('Clause 4');
-    await expect(grid).not.toContainText('Internal and external issues');
+    // the official short titles (catalogue revision 2 on): clause 4.1 is not in the SoA, A.7.4 is
+    await expect(grid).not.toContainText('Understanding the organization and its context');
     // Annex A comes after the clauses' (empty) groups: scroll the virtual rows into view
-    const a74 = grid.getByRole('row').filter({ hasText: 'Watching the premises' });
+    const a74 = grid.getByRole('row').filter({ hasText: 'Physical security monitoring' });
     await grid.hover();
     await expect(async () => {
       if (!(await a74.count())) await page.mouse.wheel(0, 1200);
