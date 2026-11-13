@@ -287,7 +287,7 @@ export function FormBuilder({
 
       {/* desktop: three columns */}
       {wide ? (
-        <div className="grid min-h-0 flex-1 grid-cols-[260px_minmax(0,1fr)_340px] gap-4 overflow-auto py-4">
+        <div className="grid flex-1 grid-cols-[260px_minmax(0,1fr)_340px] items-start gap-4 py-4">
           <section aria-label="Fields" className="min-w-0">
             {panels.fields}
           </section>
