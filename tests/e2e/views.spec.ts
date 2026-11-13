@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
 import { generateNKeysBetween } from 'fractional-indexing';
-import { rest, signIn } from './helpers';
+import { MIN_FILL_MS, rest, signIn } from './helpers';
 
 // M6: the Table view (default), phone cards, Kanban, Calendar, the Form view with its public link, filters, sort,
 // search and saved views. Uses the seed (pnpm seed): maria@example.com owner, james@example.com editor of
@@ -307,14 +307,20 @@ test('Form view: builder, internal form and a public link that works signed out 
   await signIn(page, 'maria@example.com');
   const sheet = await trackerSheet(page);
   await page.goto(`${sheet.url}?view=form`);
-  await page.getByRole('button', { name: 'Create a form' }).click();
-  await expect(page.getByRole('heading', { name: 'Form builder' })).toBeVisible();
+  await expect(
+    page.getByText('No forms yet. Collect items from people without sheet access.'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'New form' }).first().click();
+  const create = page.getByRole('dialog', { name: 'New form' });
+  await create.getByLabel('Name').fill('Report');
+  await create.getByRole('button', { name: 'Create form' }).click();
+  await expect(page.getByRole('textbox', { name: 'Form name' })).toHaveValue('Report');
 
-  // builder: Owner off, Status asked as "How urgent is it?" and required
-  await page.getByRole('checkbox', { name: 'Owner' }).uncheck();
+  // builder: Owner (a person) is never asked on a public form; Status asked as "How urgent is it?" and required
+  await expect(page.getByRole('switch', { name: 'Ask Owner' })).toHaveCount(0);
   await page.getByLabel('Status label').fill('How urgent is it?');
   const preview = page.getByRole('region', { name: 'Preview' });
-  await expect(preview.getByText('How urgent is it?')).toBeVisible();
+  await expect(preview.getByLabel('Status label')).toHaveValue('How urgent is it?');
   await expect(preview.getByText('Owner')).toHaveCount(0);
   await expect
     .poll(async () => {
@@ -325,26 +331,44 @@ test('Form view: builder, internal form and a public link that works signed out 
     })
     .toBe('How urgent is it?,priority,due_date,progress');
 
-  // internal form: the preview adds an item as Maria
-  await preview.getByLabel('Task').fill('Signed-in report');
-  await preview.getByRole('button', { name: 'Send' }).click();
+  // a public form opens only with a reviewed privacy notice
+  const settings = page.getByRole('region', { name: 'Settings' });
+  await settings.getByLabel('Purpose').fill('To track the tasks people report.');
+  await settings.getByLabel('Legal basis').selectOption('legitimate_interests');
+  await settings.getByLabel('Who receives the answers').fill('The team.');
+  await settings.getByLabel('How long answers are kept').fill('One year.');
+  await settings.getByLabel('Rights and contact').fill('Ask the owner.');
+  await settings.getByRole('button', { name: 'Mark as reviewed' }).click();
+  await expect(settings.getByText(/^Reviewed by Maria/)).toBeVisible();
+  await page.getByRole('radio', { name: 'Open' }).click();
+  await expect(page.getByRole('radio', { name: 'Open' })).toHaveAttribute('aria-checked', 'true');
+
+  // internal use: the preview adds an item as Maria
+  await page.getByRole('button', { name: 'Preview' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Preview' });
+  await dialog.getByLabel('Task').fill('Signed-in report');
+  await dialog.getByRole('button', { name: 'Send' }).click();
   await expect(page.getByText(/^Sent\. .+-001 was added\.$/)).toBeVisible();
+  await page.keyboard.press('Escape');
 
   // public link
-  await page.getByRole('button', { name: 'Create public link' }).click();
-  const link = await page.getByLabel('Public link').inputValue();
+  await page.getByRole('button', { name: 'Share form' }).click();
+  const share = page.getByRole('dialog', { name: /^Share/ });
+  await share.getByRole('button', { name: 'Create public link' }).click();
+  const link = await share.getByLabel('Public link').inputValue();
   expect(link).toMatch(/\/f\/[0-9a-f]{64}$/);
-  await expect(page.getByRole('img', { name: 'QR code of the public link' })).toBeVisible();
+  await expect(share.getByRole('img', { name: /^QR code of the link to/ })).toBeVisible();
 
   const visitor = await signedOut(browser);
   await visitor.page.goto(link);
-  await expect(visitor.page.getByRole('heading', { name: sheet.name })).toBeVisible();
+  await expect(visitor.page.getByRole('heading', { name: 'Report' })).toBeVisible();
   await expect(visitor.page.getByRole('navigation')).toHaveCount(0);
   await visitor.page.getByRole('button', { name: 'Send' }).click();
   await expect(visitor.page.getByText('Task is required.')).toBeVisible();
   await visitor.page.getByLabel('Task').fill('Oil on the stairs');
   await visitor.page.getByRole('button', { name: /How urgent is it/ }).click();
   await visitor.page.getByRole('option', { name: 'Stuck' }).click();
+  await visitor.page.waitForTimeout(MIN_FILL_MS);
   await visitor.page.getByRole('button', { name: 'Send' }).click();
   await expect(visitor.page.getByText('Thank you. Your answers were sent.')).toBeVisible();
   await expect(visitor.page.getByText(/-002$/)).toBeVisible();
@@ -361,8 +385,9 @@ test('Form view: builder, internal form and a public link that works signed out 
   expect(log!.actor_kind).toBe('form');
 
   // disable: the link stops working
-  await page.getByRole('button', { name: 'Disable link' }).click();
-  await expect(page.getByRole('button', { name: 'Create public link' })).toBeVisible();
+  await share.getByRole('button', { name: 'Disable link' }).click();
+  await share.getByRole('alert').getByRole('button', { name: 'Disable link' }).click();
+  await expect(share.getByRole('button', { name: 'Create public link' })).toBeVisible();
   await visitor.page.goto(link);
   await expect(
     visitor.page.getByRole('heading', { name: 'This form is not available' }),

@@ -67,7 +67,7 @@ Generic validation (not per type) runs first: `required`, `validation.min/max` (
 |---|---|---|
 | name, key | `name`, `key` | key generated once from the name |
 | description | `description` | help text in panel and form |
-| required | `required` | blocks save of a new item from a form; in grid shows a red corner on empty cells and the item is listed under "Missing required" |
+| required | `required` | blocks save of a new item from a form (a form may override it per question); public forms never ask file fields (`evidence`, `attachment`) or directory fields (`people`, `team`, `role`, `entity`): `publicFormEligible` in `src/engine/fields/view-support.ts`; in grid shows a red corner on empty cells and the item is listed under "Missing required" |
 | default value | `config.default` | applied on create (any value type); `today`, `me`, `in N days` tokens allowed |
 | validation | `validation` | `{ min?, max?, pattern?, unique?, maxLength? }` |
 | status rules | `rules` | §6 |

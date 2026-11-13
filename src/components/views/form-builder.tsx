@@ -110,6 +110,7 @@ export function FormBuilder({
   );
   const [draft, setDraft] = useState<Draft>(saved);
   const [panel, setPanel] = useState<Panel>('preview');
+  const wide = useWide();
   const [state, setState] = useState<'saved' | 'saving' | 'error'>('saved');
   const [problems, setProblems] = useState<string[]>([]);
   const [share, setShare] = useState(false);
@@ -133,19 +134,23 @@ export function FormBuilder({
     onSaved(r.data.view);
     // the database keeps the notice's version and review stamp: take them back
     const stored = r.data.view.config.form;
-    if (stored)
-      setDraft((d) => (d === next ? { ...d, form: { ...d.form, notice: stored.notice } } : d));
+    if (stored && draftRef.current === next) {
+      const merged = { ...next, form: { ...next.form, notice: stored.notice } };
+      draftRef.current = merged;
+      setDraft(merged);
+    }
     return true;
   };
 
+  // the current draft outside React's state updates (updaters may run twice in development)
+  const draftRef = useRef(draft);
   const change = (update: (d: Draft) => Draft, now = false) => {
-    setDraft((d) => {
-      const next = update(d);
-      if (timer.current) clearTimeout(timer.current);
-      if (now) void save(next);
-      else timer.current = setTimeout(() => void save(next), 800);
-      return next;
-    });
+    const next = update(draftRef.current);
+    draftRef.current = next;
+    setDraft(next);
+    if (timer.current) clearTimeout(timer.current);
+    if (now) void save(next);
+    else timer.current = setTimeout(() => void save(next), 800);
   };
   useEffect(
     () => () => {
@@ -195,7 +200,7 @@ export function FormBuilder({
         on={on}
         fields={data.fields}
         itemLabel={data.sheet.itemLabel}
-        sheetName={data.sheet.name}
+        formName={draft.name}
         onChange={setForm}
       />
     ),
@@ -267,7 +272,7 @@ export function FormBuilder({
           <Button type="button" size="sm" variant="outline" onClick={() => setPreview(true)}>
             <Eye aria-hidden /> Preview
           </Button>
-          <Button type="button" size="sm" onClick={() => setShare(true)}>
+          <Button type="button" size="sm" aria-label="Share form" onClick={() => setShare(true)}>
             <Share2 aria-hidden /> Share
           </Button>
         </div>
@@ -281,51 +286,57 @@ export function FormBuilder({
       </header>
 
       {/* desktop: three columns */}
-      <div className="hidden min-h-0 flex-1 gap-4 overflow-auto py-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)_340px]">
-        <section aria-label="Fields" className="min-w-0">
-          {panels.fields}
-        </section>
-        <section aria-label="Preview" className="min-w-0">
-          {panels.preview}
-        </section>
-        <section aria-label="Settings" className="min-w-0">
-          {panels.settings}
-        </section>
-      </div>
-      {/* phone and tablet: one column, the panel chosen at the bottom */}
-      <div className="flex min-h-0 flex-1 flex-col pb-16 lg:hidden">
-        <section
-          id="form-panel"
-          role="tabpanel"
-          aria-label={panel === 'fields' ? 'Fields' : panel === 'preview' ? 'Preview' : 'Settings'}
-          className="min-w-0 py-4"
-        >
-          {panels[panel]}
-        </section>
-        <div
-          role="tablist"
-          aria-label="Builder panels"
-          className="border-line bg-background-100 fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 gap-1 border-t p-2"
-        >
-          {(['fields', 'preview', 'settings'] as const).map((p) => (
-            <button
-              key={p}
-              type="button"
-              role="tab"
-              aria-selected={panel === p}
-              aria-controls="form-panel"
-              onClick={() => setPanel(p)}
-              className={cn(
-                'text-label-13 focus-visible:outline-focus h-9 rounded-md focus-visible:outline-2',
-                panel === p ? 'bg-ink text-background-100' : 'text-muted-foreground hover:bg-soft',
-              )}
-            >
-              {p === 'fields' ? 'Fields' : p === 'preview' ? 'Preview' : 'Settings'}
-            </button>
-          ))}
+      {wide ? (
+        <div className="grid min-h-0 flex-1 grid-cols-[260px_minmax(0,1fr)_340px] gap-4 overflow-auto py-4">
+          <section aria-label="Fields" className="min-w-0">
+            {panels.fields}
+          </section>
+          <section aria-label="Preview" className="min-w-0">
+            {panels.preview}
+          </section>
+          <section aria-label="Settings" className="min-w-0">
+            {panels.settings}
+          </section>
         </div>
-      </div>
-
+      ) : (
+        /* phone and tablet: one column, the panel chosen at the bottom */
+        <div className="flex min-h-0 flex-1 flex-col">
+          <section
+            id="form-panel"
+            role="tabpanel"
+            aria-label={
+              panel === 'fields' ? 'Fields' : panel === 'preview' ? 'Preview' : 'Settings'
+            }
+            className="min-w-0 py-4"
+          >
+            {panels[panel]}
+          </section>
+          <div
+            role="tablist"
+            aria-label="Builder panels"
+            className="border-line bg-background-100 sticky bottom-16 z-20 mt-auto grid grid-cols-3 gap-1 border-t p-2 min-[760px]:bottom-0"
+          >
+            {(['fields', 'preview', 'settings'] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                role="tab"
+                aria-selected={panel === p}
+                aria-controls="form-panel"
+                onClick={() => setPanel(p)}
+                className={cn(
+                  'text-label-13 focus-visible:outline-focus h-9 rounded-md focus-visible:outline-2',
+                  panel === p
+                    ? 'bg-ink text-background-100'
+                    : 'text-muted-foreground hover:bg-soft',
+                )}
+              >
+                {p === 'fields' ? 'Fields' : p === 'preview' ? 'Preview' : 'Settings'}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <FormShareDialog
         open={share}
         onClose={() => setShare(false)}
@@ -360,6 +371,19 @@ export function FormBuilder({
       </Dialog>
     </div>
   );
+}
+
+/** Three columns from 1024 px; one column below (a single layout in the page, so labels stay unique). */
+function useWide() {
+  const [wide, setWide] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const set = () => setWide(mq.matches);
+    set();
+    mq.addEventListener('change', set);
+    return () => mq.removeEventListener('change', set);
+  }, []);
+  return wide;
 }
 
 export function StatusChip({
@@ -457,14 +481,14 @@ function PreviewPanel({
   on,
   fields,
   itemLabel,
-  sheetName,
+  formName,
   onChange,
 }: {
   form: FormLayout;
   on: FormFieldLayout[];
   fields: Field[];
   itemLabel: string;
-  sheetName: string;
+  formName: string;
   onChange(patch: Partial<FormLayout>): void;
 }) {
   const byKey = new Map(fields.map((f) => [f.key, f]));
@@ -493,7 +517,7 @@ function PreviewPanel({
       <input
         aria-label="Form title"
         className={cn(field, 'text-heading-20 h-10 border-transparent px-1')}
-        placeholder={sheetName}
+        placeholder={formName}
         value={form.title ?? ''}
         maxLength={200}
         onChange={(e) => onChange({ title: e.target.value })}
