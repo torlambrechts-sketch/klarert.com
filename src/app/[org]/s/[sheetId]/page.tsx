@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { SheetView } from '@/components/grid/sheet-view';
+import { readTabSettings } from '@/engine/views/tabs';
 import { requireMember } from '@/server/auth';
 import { getSheet } from '@/server/repositories/sheets';
 
@@ -62,6 +63,7 @@ export default async function SheetPage({
         role={role}
         onlyGroup={group ?? null}
         defaultViewId={defaultViewOf(sheet.settings)}
+        tabSet={readTabSettings(sheet.settings)}
       />
     </>
   );

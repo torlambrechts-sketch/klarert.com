@@ -20,7 +20,7 @@ const VIEWS: TabView[] = [
 ];
 
 function deps(role: string, settings: Record<string, Json> | null = { holdAutomations: true }) {
-  const saveSettings = vi.fn(async (_s: Record<string, Json>) => ok(null));
+  const saveSettings = vi.fn<SheetTabsDeps['saveSettings']>(async () => ok(null));
   const d: SheetTabsDeps = {
     role,
     loadSettings: vi.fn(async () => settings),

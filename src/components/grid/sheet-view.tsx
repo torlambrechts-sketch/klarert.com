@@ -29,6 +29,7 @@ import { useOnline } from '@/components/states/use-online';
 import { useViewItems } from '@/components/views/use-view-items';
 import { useViews, type ViewsState } from '@/components/views/use-views';
 import { ViewMenu, ViewTabs } from '@/components/views/view-tabs';
+import type { SheetTab } from '@/engine/views/tabs';
 import { PageHeader } from '@/components/shell/page-header';
 import { ShellCrumb } from '@/components/shell/shell-crumb';
 import { cn } from '@/lib/utils';
@@ -78,6 +79,8 @@ export interface SheetViewProps {
   onlyGroup: string | null;
   /** sheets.settings.defaultViewId: a saved view's id or a built-in view; null = Table. */
   defaultViewId: string | null;
+  /** sheets.settings.tabs and tabsDefault (docs/02); null tabs = today's order. */
+  tabSet?: { tabs: SheetTab[] | null; tabsDefault: SheetTab[] | null };
 }
 
 export function SheetView(props: SheetViewProps) {
@@ -174,7 +177,14 @@ function SheetBody(props: SheetViewProps) {
   );
   const sheets = useSheetsList(data?.sheet.orgId);
   const store = useGridStore();
-  const views = useViews({ org, sheetId, userId, canEdit, defaultViewId: props.defaultViewId });
+  const views = useViews({
+    org,
+    sheetId,
+    userId,
+    canEdit,
+    defaultViewId: props.defaultViewId,
+    tabSet: props.tabSet,
+  });
   const { active, config, setConfig } = views;
   const [q, setQ] = useSearchParam();
   const [addTick, setAddTick] = useState(0);
@@ -310,6 +320,7 @@ function SheetBody(props: SheetViewProps) {
         className="-mx-4 px-4 sm:-mx-[28px] sm:px-[28px]"
         views={views}
         fields={data?.fields ?? []}
+        canCustomise={isAdmin}
         end={
           <>
             <ViewMenu views={views} canEdit={canEdit} />

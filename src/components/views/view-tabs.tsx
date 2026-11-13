@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import {
   Calendar,
   ChartColumn,
   ChevronDown,
   FileText,
+  Lock,
   MoreHorizontal,
   Plus,
+  SlidersHorizontal,
   SquareKanban,
   Table,
   User,
@@ -27,17 +29,21 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { BUILTIN_TABS } from './tabs-model';
+import { TabsEditor } from './tabs-editor';
+import { toTabRows } from './tabs-model';
 import type { ActiveView, ViewsState } from './use-views';
 
-// The view tab bar (docs/05 §3, FR-26): icon and label tabs with an ink underline on the active one: Table, Board
-// (Kanban), Calendar, Form, the other saved views, then "More ▾" with "+ New view"; the page's view options sit at the
-// right end. And the active view's menu (rename, duplicate, delete, save as a view, make default).
+// The view tab bar (docs/05 §3, FR-26): icon and label tabs with an ink underline on the active one, in the sheet's tab
+// order (settings.tabs; default Table, Insights, Board, Calendar, Form, shared views), my personal views last, then
+// "More ▾" with "+ New view", the hidden tabs and "Customise tabs"; the page's view options sit at the right end. And the active view's menu (rename, duplicate, delete, save as a view, make default).
 
 const ICONS: Record<ViewType, typeof Table> = {
   table: Table,
@@ -92,86 +98,193 @@ function TabLink({
   );
 }
 
-/** The tab label of a built-in view type ("Board" for Kanban); saved views keep their name. */
-const tabLabel = (v: ActiveView) => (v.saved ? v.name : v.type === 'kanban' ? 'Board' : v.name);
+/** Esc in a tab's name field cancels the rename (tabs-editor), not the whole editor. */
+const keepWhileRenaming = (e: KeyboardEvent) => {
+  if (e.target instanceof HTMLElement && e.target.closest('[data-tab-rename]')) e.preventDefault();
+};
+
+function useNarrow() {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 759px)');
+    const set = () => setNarrow(mq.matches);
+    set();
+    mq.addEventListener('change', set);
+    return () => mq.removeEventListener('change', set);
+  }, []);
+  return narrow;
+}
 
 export function ViewTabs({
   views,
   fields,
+  canCustomise,
   end,
   className,
 }: {
   views: ViewsState;
   fields: Field[];
+  /** Owners and admins change the sheet's tab set. */
+  canCustomise: boolean;
   className?: string;
   /** Controls at the right end of the tab bar (view options, settings). */
   end?: React.ReactNode;
 }) {
-  const { tabs, active, open, defaultViewId } = views;
+  const { tabs, layout, active, open, defaultViewId } = views;
   const [newOpen, setNewOpen] = useState(false);
-  const builtins = [tabs.table, ...BUILTIN_TABS.map((t) => tabs.more[t])];
-  const others = tabs.others.filter((v) => !builtins.some((b) => b.id === v.id));
-  const shown = [...builtins, ...others];
-  const extra = shown.some((v) => v.id === active.id) ? null : active;
+  const [customise, setCustomise] = useState(false);
+  const customiseFocus = useRef(false);
+  const moreRef = useRef<HTMLButtonElement>(null);
+  const narrow = useNarrow();
+  const tipId = useId();
+  const bar = [...layout.shown, ...layout.personal];
+  const extra = bar.some((t) => t.view.id === active.id) ? null : active;
   const isDefault = (v: ActiveView) =>
-    v.id === defaultViewId || (v === tabs.table && defaultViewId === 'table');
+    v.id === defaultViewId ||
+    (v === tabs.table && defaultViewId === 'table') ||
+    layout.all.some((t) => t.view.id === v.id && t.entryId === defaultViewId);
+  const editor = (
+    <TabsEditor
+      rows={toTabRows(layout.all)}
+      defaultViewId={defaultViewId}
+      templateDefault={views.tabsDefault}
+      canEdit={canCustomise}
+      onSave={views.saveTabs}
+      onCancel={() => setCustomise(false)}
+    />
+  );
   return (
     <div
       className={cn('border-line mt-[18px] flex min-w-0 items-center gap-2 border-b', className)}
     >
       <nav aria-label="Views" className="flex min-w-0 flex-1">
         <ul className="m-0 flex min-w-0 flex-1 [scrollbar-width:none] list-none items-center gap-[22px] overflow-x-auto p-0">
-          <li>
-            <TabLink
-              view={tabs.table}
-              label="Table"
-              active={active.id === tabs.table.id}
-              isDefault={isDefault(tabs.table)}
-              open={open}
-            />
-          </li>
-          {BUILTIN_TABS.map((t) => tabs.more[t]).map((v) => (
-            <li key={v.id}>
+          {bar.map((t) => (
+            <li key={t.view.id}>
               <TabLink
-                view={v}
-                label={tabLabel(v)}
-                active={active.id === v.id}
-                isDefault={isDefault(v)}
+                view={t.view}
+                label={t.label}
+                active={active.id === t.view.id}
+                isDefault={isDefault(t.view)}
                 open={open}
               />
             </li>
           ))}
-          {others.map((v) => (
-            <li key={v.id}>
-              <TabLink view={v} active={active.id === v.id} isDefault={isDefault(v)} open={open} />
-            </li>
-          ))}
           {extra ? (
             <li>
-              <TabLink view={extra} active isDefault={isDefault(extra)} open={open} />
+              <TabLink
+                view={extra}
+                label={layout.hidden.find((t) => t.view.id === extra.id)?.label}
+                active
+                isDefault={isDefault(extra)}
+                open={open}
+              />
             </li>
           ) : null}
           <li>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-ink text-label-14 h-8 px-2 font-normal"
+            <Popover open={customise && !narrow} onOpenChange={setCustomise}>
+              <DropdownMenu>
+                <PopoverAnchor asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      ref={moreRef}
+                      type="button"
+                      variant="ghost"
+                      className="text-muted-foreground hover:text-ink text-label-14 h-8 px-2 font-normal"
+                    >
+                      More <ChevronDown aria-hidden />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </PopoverAnchor>
+                <DropdownMenuContent
+                  align="start"
+                  className="min-w-56"
+                  // opening Customise tabs: focus goes into the editor, not back to More
+                  onCloseAutoFocus={(e) => {
+                    if (customiseFocus.current) e.preventDefault();
+                    customiseFocus.current = false;
+                  }}
                 >
-                  More <ChevronDown aria-hidden />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onSelect={() => setNewOpen(true)}>
-                  <Plus aria-hidden /> New view
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem onSelect={() => setNewOpen(true)}>
+                    <Plus aria-hidden /> New view
+                  </DropdownMenuItem>
+                  {layout.hidden.length ? (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup aria-label="Hidden tabs">
+                        <DropdownMenuLabel>Hidden tabs</DropdownMenuLabel>
+                        {layout.hidden.map((t) => {
+                          const Icon = ICONS[t.view.type];
+                          return (
+                            <DropdownMenuItem key={t.view.id} onSelect={() => open(t.view.id)}>
+                              <Icon aria-hidden /> {t.label}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuGroup>
+                    </>
+                  ) : null}
+                  <DropdownMenuSeparator />
+                  {canCustomise ? (
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        customiseFocus.current = true;
+                        setCustomise(true);
+                      }}
+                    >
+                      <SlidersHorizontal aria-hidden /> Customise tabs
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      aria-disabled="true"
+                      aria-describedby={tipId}
+                      className="group/tip text-muted-foreground"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <Lock aria-hidden /> Customise tabs
+                      <span
+                        id={tipId}
+                        role="tooltip"
+                        className="bg-ink text-label-12 pointer-events-none absolute top-full left-2 z-20 mt-1 hidden w-48 rounded px-2 py-1 text-white group-hover/tip:block group-data-[highlighted]/tip:block"
+                      >
+                        Only owners and admins can change tabs
+                      </span>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <PopoverContent
+                align="start"
+                className="max-h-[min(640px,calc(100dvh-120px))] w-[min(440px,calc(100vw-32px))] overflow-y-auto"
+                aria-label="Customise tabs"
+                onEscapeKeyDown={keepWhileRenaming}
+                // rows move under the keyboard: focus passing through the page does not close the editor
+                onFocusOutside={(e) => e.preventDefault()}
+                onCloseAutoFocus={(e) => {
+                  e.preventDefault();
+                  moreRef.current?.focus();
+                }}
+              >
+                <h2 className="text-heading-16 mb-3">Customise tabs</h2>
+                {editor}
+              </PopoverContent>
+            </Popover>
           </li>
         </ul>
       </nav>
       {end ? <div className="flex shrink-0 items-center gap-1.5">{end}</div> : null}
+      <Dialog open={customise && narrow} onOpenChange={setCustomise}>
+        <DialogContent
+          onEscapeKeyDown={keepWhileRenaming}
+          className="top-auto bottom-0 left-0 max-h-[88dvh] w-full max-w-none translate-x-0 translate-y-0 overflow-y-auto rounded-t-xl rounded-b-none p-4"
+        >
+          <DialogTitle className="text-heading-16">Customise tabs</DialogTitle>
+          <DialogDescription className="sr-only">
+            Choose which tabs everyone sees, their order and names.
+          </DialogDescription>
+          {editor}
+        </DialogContent>
+      </Dialog>
       <ViewDialog
         open={newOpen}
         onClose={() => setNewOpen(false)}
@@ -222,7 +335,9 @@ export function ViewMenu({ views, canEdit }: { views: ViewsState; canEdit: boole
               Duplicate view
             </DropdownMenuItem>
           ) : null}
-          {canEdit && (!saved || saved.ownerId === null) ? (
+          {canEdit &&
+          (!saved || saved.ownerId === null) &&
+          !views.layout.hidden.some((t) => t.view.id === active.id) ? (
             <DropdownMenuItem
               disabled={isDefault}
               onSelect={() => void views.makeDefault(active.id)}

@@ -173,10 +173,33 @@ export function applyTabLayout(tabs: ViewTabs, config: readonly SheetTab[] | nul
 }
 
 /** The tab set for laid tabs (what the editor saves): ids, hidden, and labels that differ from the name. */
-export function layoutEntries(laid: readonly LaidTab[]): SheetTab[] {
+export function layoutEntries(
+  laid: readonly Pick<LaidTab, 'entryId' | 'hidden' | 'label' | 'name'>[],
+): SheetTab[] {
   return laid.map((t) => ({
     id: t.entryId,
     ...(t.hidden ? { hidden: true } : {}),
     ...(t.label !== t.name ? { label: t.label } : {}),
   }));
 }
+
+/** A tab as the editor needs it (serialisable: the settings page builds it on the server). */
+export interface TabRow {
+  entryId: string;
+  /** The view behind the tab (a saved view's uuid or the built-in id). */
+  viewId: string;
+  type: ViewType;
+  name: string;
+  label: string;
+  hidden: boolean;
+}
+
+export const toTabRows = (laid: readonly LaidTab[]): TabRow[] =>
+  laid.map((t) => ({
+    entryId: t.entryId,
+    viewId: t.view.id,
+    type: t.view.type,
+    name: t.name,
+    label: t.label,
+    hidden: t.hidden,
+  }));
