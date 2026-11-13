@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { ArchivedItems } from '@/components/sheets/archived-items';
 import { GroupsManager } from '@/components/sheets/groups-manager';
 import { ArchiveSheet, SheetSettingsForm } from '@/components/sheets/sheet-settings';
+import { DocumentsRegisterSetting } from '@/components/sheets/documents-register-setting';
 import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
 import { SheetTabsSettings } from '@/components/sheets/sheet-tabs-settings';
@@ -122,6 +123,15 @@ export default async function SheetSettingsPage({
           </dl>
         </Card>
       )}
+
+      <Card title="Controlled documents">
+        <DocumentsRegisterSetting
+          org={org}
+          sheetId={sheet.id}
+          on={(sheet.settings as { register?: string } | null)?.register === 'documents'}
+          canChange={isAdminRole(role) && !sheet.archived_at}
+        />
+      </Card>
 
       <Card
         title="Groups"

@@ -66,7 +66,7 @@ export function FilesField({
   const replacing = useRef<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [showOlder, setShowOlder] = useState(false);
-  const older = versions.filter((v) => v.fieldId === field.id && v.replacedBy);
+  const older = versions.filter((v) => v.fieldId === field.id && v.replacedBy && !v.archivedAt);
 
   const pick = (replaces: string | null) => {
     replacing.current = replaces;

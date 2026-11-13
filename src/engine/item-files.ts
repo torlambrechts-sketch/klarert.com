@@ -3,6 +3,7 @@
 // share these checks (the server repeats them on the stored bytes).
 import { EXPIRING_DAYS } from './fields/evidence';
 import { daysBetween, formatDate } from './fields/helpers';
+import { resolveFieldType } from './fields/resolve';
 import type { Ctx, Field, FileRow, Item } from './types';
 
 /** The most a single file may be (decision of the product owner; the bucket enforces the same limit). */
@@ -331,21 +332,20 @@ export interface FilesMarker {
 
 /**
  * The paperclip on a row: current files of the item (the Files tab and file fields) and the documents it links to
- * through link fields pointing at a documents register.
+ * (linked items whose sheet is a documents register). `fields` are the sheet's fields.
  */
-export function filesMarker(
-  item: Item,
-  fileFields: Field[],
-  documentLinkFields: Field[],
-  ctx: Ctx,
-): FilesMarker {
+export function filesMarker(item: Item, fields: Field[], ctx: Ctx): FilesMarker {
+  const storage = (f: Field) => resolveFieldType(f.type)?.storage;
   const files = [
     ...ctx.files(item.id, null),
-    ...fileFields.flatMap((f) => ctx.files(item.id, f.id)),
+    ...fields.filter((f) => storage(f) === 'files').flatMap((f) => ctx.files(item.id, f.id)),
   ].filter((f) => !f.replacedBy);
-  const docs = documentLinkFields.reduce((n, f) => n + ctx.links(item.id, f.id).length, 0);
+  const docs = fields
+    .filter((f) => storage(f) === 'links')
+    .flatMap((f) => ctx.links(item.id, f.id))
+    .filter((id) => ctx.sheetOf(id)?.register === 'documents').length;
   const count = files.length + docs;
   const expired = files.some((f) => !!f.validUntil && daysBetween(f.validUntil, ctx.today) < 0);
-  const label = `${count} ${count === 1 ? 'file or document' : 'files and documents'}${expired ? ', expired' : ''}`;
+  const label = `${count} ${count === 1 ? 'file or document' : 'files and documents'}${expired ? ', one or more expired' : ''}`;
   return { count, expired, label };
 }

@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { FIELD_TYPES } from './fields/registry';
+import { installFieldTypes } from './fields/resolve';
 import {
   categoryLabel,
   checkUpload,
@@ -214,29 +216,45 @@ describe('versions', () => {
 });
 
 describe('filesMarker', () => {
+  beforeAll(() => installFieldTypes(Object.values(FIELD_TYPES)));
   it('counts files, file field files and linked documents, and flags expired files', () => {
     const ev = makeField('evidence', {}, { id: 'f-ev', key: 'evidence' });
     const docs = makeField('link', {}, { id: 'f-docs', key: 'documents' });
     const item = makeItem({}, { id: 'i1' });
+    const doc = makeItem({}, { id: 'd1', sheetId: 's-docs' });
+    const other = makeItem({}, { id: 'x1', sheetId: 's-other' });
     const ctx = makeCtx({
       fields: [ev, docs],
-      items: [item],
+      items: [item, doc, other],
+      sheets: {
+        's-docs': { ...sheetLike('s-docs'), register: 'documents' },
+        's-other': sheetLike('s-other'),
+      },
       files: [
         makeFile({ itemId: 'i1', fieldId: null, validUntil: '2026-11-01' }),
         makeFile({ itemId: 'i1', fieldId: null, replacedBy: 'x' }),
         makeFile({ itemId: 'i1', fieldId: 'f-ev' }),
       ],
-      links: { 'i1:f-docs': ['d1'] },
+      links: { 'i1:f-docs': ['d1', 'x1'] },
     });
-    expect(filesMarker(item, [ev], [docs], ctx)).toEqual({
+    expect(filesMarker(item, [ev, docs], ctx)).toEqual({
       count: 3,
       expired: true,
-      label: '3 files and documents, expired',
+      label: '3 files and documents, one or more expired',
     });
-    expect(filesMarker(makeItem({}, { id: 'none' }), [ev], [docs], ctx)).toEqual({
+    expect(filesMarker(makeItem({}, { id: 'none' }), [ev, docs], ctx)).toEqual({
       count: 0,
       expired: false,
       label: '0 files and documents',
     });
   });
+});
+
+const sheetLike = (id: string) => ({
+  id,
+  orgId: 'o',
+  name: id,
+  itemLabel: 'Item',
+  idPrefix: 'X-',
+  isLibrary: false,
 });
