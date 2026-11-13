@@ -188,10 +188,11 @@ Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, 
 - [x] Tests: pgTAP 0021 (catalogue read-only and append-only, adopt admin-only, atomic, provenance, requirement and Ref locked, links to libraries, sheet access); e2e `tests/e2e/frameworks.spec.ts` (adopt 27001 and 9001, applicability and justification, a linked control, coverage, Also satisfies, the SoA view, a suggested equivalent mirrored both ways, editors refused, 390 px)
 
 ### P4 · First pack: ISO 27001:2022  [Opus + Sonnet]
-- [x] Scope, risk register and treatment, Annex A library (93 controls, IDs + own titles), SoA, document set, evidence, internal audit, CAPA, management review; Starter and Full levels; guided setup and a 7-step checklist
+- [x] Scope, risk register and treatment, Annex A library (93 controls, IDs + own titles), SoA, document set, evidence, internal audit, CAPA, management review; Starter and Full levels; guided setup and an 8-step checklist (1.1.0)
 - [x] Manifest `levels` (lowest level per folder, sheet, form, automation, dashboard), `frameworks` (adopted at install when missing), `setup` and widgets on a required library (`library`); migration 0032 `pack_installs.level` and `install_pack` adding a higher level to the live install (`pack.extended`); `scripts/packs-sql.ts` for hosted catalogues
 - [x] Install dialog with the level choice and what each level creates; "Add Full" on an installed pack; the setup checklist on Workspace admin › Packs and a dismissible card on Home, progress from `setupProgress`
 - [x] Tests: manifest levels and the pack (`src/lib/packs/iso-27001.test.ts`), `setupProgress` (`src/engine/packs/setup.test.ts`), pgTAP 0022 (levels, extending an install), e2e `tests/e2e/iso-27001.spec.ts` (Starter with adoption, checklist, Home card, Full on top)
+- [x] 1.1.0: pack automations on sub-items (`subitems: true`, the CAPA actions' overdue reminder); the internal form "Report a security incident" (Full) opened from the setup checklist; example risks and treatments linked to Annex A by requirement key (`requirements`), resolved at install; migration 0033 (`install_pack` links into a library); pgTAP 0023
 
 ### P5 · Audit outputs  [Opus]
 - [ ] SoA export; audit pack (PDF/zip: SoA, registers, evidence index, log extract with chain verification); management review inputs compiled from existing data

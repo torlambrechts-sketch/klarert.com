@@ -222,8 +222,15 @@ export function levelProblems(m: PackManifest): LevelProblem[] {
           }
           if (sheetRank.get(sheet.ref)! > r)
             problem(at, `"${step.ref}" uses "${sheet.ref}"${where}, which is not installed there.`);
-          if (t.view && !sheet.views.some((v) => v.name === t.view))
+          // a saved view, or a form (a form opens in the sheet's Forms tab), installed at this level
+          const form = t.view ? sheet.forms.find((f) => f.name === t.view) : undefined;
+          if (t.view && !form && !sheet.views.some((v) => v.name === t.view))
             problem(at, `Unknown view "${t.view}" on "${sheet.ref}".`);
+          if (form && rank(form.level, at) > r)
+            problem(
+              at,
+              `"${step.ref}" opens the form "${form.ref}"${where}, which is not installed there.`,
+            );
           const conds = [...(t.where ?? []), ...(t.all ?? [])];
           for (const c of conds)
             if (!sheet.fields.some((f) => f.key === c.fieldKey))

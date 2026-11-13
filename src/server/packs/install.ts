@@ -140,6 +140,41 @@ export async function loadSnapshot(
   };
 }
 
+/** The requirement keys a manifest's example items link to (`requirements`, docs/11 Frameworks). */
+export function manifestRequirementKeys(m: CataloguePack['manifest']): string[] {
+  return [
+    ...new Set(
+      m.sheets.flatMap((s) => s.items.flatMap((i) => Object.values(i.requirements ?? {}).flat())),
+    ),
+  ];
+}
+
+/** The adopted libraries' live items for these requirement keys (key → item id). */
+async function loadRequirementItems(
+  db: Db,
+  orgId: string,
+  libraries: { library: string; sheetId: string }[],
+  keys: string[],
+): Promise<Record<string, string>> {
+  if (!keys.length || !libraries.length) return {};
+  const rows = must(
+    await db
+      .from('items')
+      .select('id, requirement_ref')
+      .eq('org_id', orgId)
+      .in(
+        'sheet_id',
+        libraries.map((l) => l.sheetId),
+      )
+      .in('requirement_ref', keys)
+      .is('archived_at', null),
+    'library items',
+  );
+  return Object.fromEntries(
+    (rows ?? []).flatMap((r) => (r.requirement_ref ? [[r.requirement_ref, r.id] as const] : [])),
+  );
+}
+
 /** Plan a catalogue pack into a workspace as it is now. */
 export async function planInstall(
   db: Db,
@@ -148,6 +183,12 @@ export async function planInstall(
   env: { userId: string; now: Date; newId: () => string; level?: string | null },
 ): Promise<PackPlan> {
   const { snapshot, timeZone } = await loadSnapshot(db, orgId);
+  snapshot.requirementItems = await loadRequirementItems(
+    db,
+    orgId,
+    snapshot.libraries ?? [],
+    manifestRequirementKeys(pack.manifest),
+  );
   return planPackInstall(
     pack.manifest,
     snapshot,

@@ -6,7 +6,7 @@
 import { z } from 'zod';
 import { widgetType } from '@/engine/dashboards/registry';
 import { MAX_WIDGETS } from '@/engine/dashboards/types';
-import { isRequirementKey } from '@/engine/frameworks/refs';
+import { isRequirementKey, parseRequirementKey } from '@/engine/frameworks/refs';
 import { SEMVER, SEMVER_RANGE } from '@/engine/packs/semver';
 import { packToTemplate } from '@/engine/packs/template';
 import { SHEET_REF, splitSheetRef, type PackManifest } from '@/engine/packs/types';
@@ -45,6 +45,13 @@ export const packItem = templateItem.extend({
   requirementRef: z
     .string()
     .refine(isRequirementKey, 'Use <framework>@<version>#<ref>.')
+    .optional(),
+  /** requirement field key → requirement keys of a required framework's library (resolved at install). */
+  requirements: z
+    .record(
+      fieldKey,
+      z.array(z.string().refine(isRequirementKey, 'Use <framework>@<version>#<ref>.')).max(50),
+    )
     .optional(),
 });
 
@@ -224,6 +231,7 @@ export const packManifestSchema = z
     const folders = new Set(m.folders.map((f) => f.ref));
     const sheets = new Map(m.sheets.map((s) => [s.ref, s]));
     const required = new Set(m.requires.map((r) => r.pack));
+    const libraries = new Set((m.frameworks ?? []).map((f) => `${f.key}@${f.version}`));
     for (const r of m.requires)
       if (r.pack === m.key) problem(['requires'], 'A pack cannot require itself.');
 
@@ -272,6 +280,22 @@ export const packManifestSchema = z
           );
         targets.set(f.key, split.pack ? null : split.ref);
       }
+      for (const [ii, item] of s.items.entries())
+        for (const [key, keys] of Object.entries(item.requirements ?? {})) {
+          const f = s.fields.find((x) => x.key === key);
+          if (!f || (f.type !== 'requirement' && f.type !== 'controllink')) {
+            problem(at('items', ii), `"${key}" is not a requirement field.`);
+            continue;
+          }
+          for (const k of keys) {
+            const id = parseRequirementKey(k);
+            if (!id || !libraries.has(`${id.framework}@${id.version}`))
+              problem(
+                at('items', ii),
+                `"${k}" is not in a framework the pack builds on (frameworks).`,
+              );
+          }
+        }
       for (const [ii, item] of s.items.entries())
         for (const [key, refs] of Object.entries(item.links ?? {})) {
           if (!targets.has(key)) {

@@ -1,6 +1,6 @@
 {
   "key": "iso-27001",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "ISO/IEC 27001:2022 ISMS",
   "description": "A working information security management system on top of the ISO/IEC 27001:2022 requirement library: scope and context, a scored risk register with treatment, the documents an ISMS keeps, nonconformities with corrective actions, automations, an ISMS overview dashboard and a seven-step setup checklist. Choose Starter or Full; you can add Full later. Reference numbers and short titles only, never the text of the standard.",
   "requires": [],
@@ -497,6 +497,12 @@
             "treatments": [
               "ex_encrypt"
             ]
+          },
+          "requirements": {
+            "controls": [
+              "iso-27001@2022#A.8.1",
+              "iso-27001@2022#A.7.9"
+            ]
           }
         },
         {
@@ -517,6 +523,12 @@
             "treatments": [
               "ex_mfa"
             ]
+          },
+          "requirements": {
+            "controls": [
+              "iso-27001@2022#A.6.3",
+              "iso-27001@2022#A.8.7"
+            ]
           }
         },
         {
@@ -534,6 +546,12 @@
             "residual_impact": 3,
             "review_date": "$in:180",
             "status": "opt_open"
+          },
+          "requirements": {
+            "controls": [
+              "iso-27001@2022#A.5.19",
+              "iso-27001@2022#A.5.30"
+            ]
           }
         }
       ]
@@ -681,6 +699,11 @@
             "risk": [
               "ex_laptop"
             ]
+          },
+          "requirements": {
+            "control": [
+              "iso-27001@2022#A.8.24"
+            ]
           }
         },
         {
@@ -694,6 +717,11 @@
           "links": {
             "risk": [
               "ex_phishing"
+            ]
+          },
+          "requirements": {
+            "control": [
+              "iso-27001@2022#A.8.5"
             ]
           }
         }
@@ -1841,7 +1869,7 @@
       "idPrefix": "SIN-",
       "folder": "isms",
       "level": "full",
-      "description": "Information security incidents from detection to close. Closing one that needs a root cause raises a nonconformity.",
+      "description": "Information security incidents from detection to close. Anyone in the workspace reports one through the form \"Report a security incident\" (Forms tab). Closing one that needs a root cause raises a nonconformity.",
       "groups": [
         {
           "ref": "open",
@@ -1895,6 +1923,21 @@
           "key": "description",
           "name": "What happened",
           "type": "longtext"
+        },
+        {
+          "key": "affected",
+          "name": "Systems and data affected",
+          "type": "longtext"
+        },
+        {
+          "key": "reporter_name",
+          "name": "Reporter's name",
+          "type": "text"
+        },
+        {
+          "key": "reporter_email",
+          "name": "Reporter's email",
+          "type": "email"
         },
         {
           "key": "root_cause_needed",
@@ -1952,6 +1995,9 @@
         },
         {
           "ref": "By status"
+        },
+        {
+          "ref": "form"
         }
       ],
       "items": [
@@ -1963,6 +2009,68 @@
             "severity": "$option:Medium",
             "status": "opt_contained",
             "root_cause_needed": true
+          }
+        }
+      ],
+      "forms": [
+        {
+          "ref": "report",
+          "name": "Report a security incident",
+          "level": "full",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report a security incident",
+            "description": "Tell us as soon as you notice something that could put information at risk: a phishing email you clicked, a lost or stolen device, data sent to the wrong person, a system behaving strangely. You do not need to be sure it is an incident.",
+            "nameLabel": "What happened, in one line",
+            "fields": [
+              {
+                "key": "description",
+                "label": "What happened",
+                "help": "What you saw, when and where, and anything you have already done about it.",
+                "required": true
+              },
+              {
+                "key": "detected",
+                "label": "When did you notice it?",
+                "required": true
+              },
+              {
+                "key": "affected",
+                "label": "Which systems or data are affected?",
+                "help": "For example a laptop, an email account or a customer list. Write \"Not sure\" if you do not know."
+              },
+              {
+                "key": "severity",
+                "label": "How serious do you think it is?",
+                "help": "Your best guess. The incident handler decides."
+              },
+              {
+                "key": "reporter_name",
+                "label": "Your name",
+                "help": "So the incident handler can reach you."
+              },
+              {
+                "key": "reporter_email",
+                "label": "Your email"
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The incident handler has your report and will contact you if they need more.",
+            "prefill": [
+              {
+                "key": "status",
+                "value": "opt_new"
+              }
+            ]
+          },
+          "notice": {
+            "purpose": "To handle information security incidents and learn from them.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who handle security incidents.",
+            "retention": "Kept for 3 years after the incident is closed.",
+            "rights": "You can ask to see, correct or delete what you reported. Contact the person who shared this form."
           }
         }
       ]
@@ -2131,6 +2239,32 @@
             "field:owner"
           ],
           "message": "{id} {name} was due on {due_date} and is not closed."
+        }
+      ]
+    },
+    {
+      "ref": "capa_action_overdue",
+      "sheet": "nc",
+      "subitems": true,
+      "name": "Corrective action overdue → tell the action owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "due_date",
+        "offsetDays": 1
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "The action \"{name}\" ({sheet}) was due on {due_date} and is not done."
         }
       ]
     },
@@ -2372,7 +2506,7 @@
   ],
   "setup": {
     "title": "ISO 27001 setup",
-    "description": "Seven steps from an empty ISMS to one you can audit. Each step's progress comes from your sheets.",
+    "description": "Eight steps from an empty ISMS to one you can audit. Each step's progress comes from your sheets.",
     "steps": [
       {
         "ref": "scope",
@@ -2550,6 +2684,57 @@
             ]
           }
         ]
+      },
+      {
+        "ref": "incidents",
+        "title": "Make incidents easy to report",
+        "body": "Open the form \"Report a security incident\", check its questions and privacy notice, then open it and tell everyone in scope where to find it. Record your first real or test incident through it.",
+        "target": {
+          "sheetRef": "incident",
+          "view": "Report a security incident"
+        },
+        "rules": [
+          {
+            "sheetRef": "incident",
+            "all": [
+              {
+                "fieldKey": "description",
+                "op": "is_not_empty"
+              }
+            ],
+            "min": 1
+          }
+        ],
+        "levels": {
+          "starter": {
+            "title": "Record incidents",
+            "body": "Starter has no incident sheet: record each security incident that needs fixing in Nonconformities and CAPA with the source Incident, and give it an owner.",
+            "target": {
+              "sheetRef": "nc"
+            },
+            "rules": [
+              {
+                "sheetRef": "nc",
+                "where": [
+                  {
+                    "fieldKey": "source",
+                    "op": "is_any_of",
+                    "value": [
+                      "opt_incident"
+                    ]
+                  }
+                ],
+                "all": [
+                  {
+                    "fieldKey": "owner",
+                    "op": "is_not_empty"
+                  }
+                ],
+                "min": 1
+              }
+            ]
+          }
+        }
       },
       {
         "ref": "audit",
