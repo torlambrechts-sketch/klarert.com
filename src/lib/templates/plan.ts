@@ -8,7 +8,7 @@ import { basicCtx } from '@/engine/context';
 import { addDays } from '@/engine/fields/helpers';
 import { fieldType } from '@/engine/fields/registry';
 import { keysBetween } from '@/engine/ordering';
-import { STORED_VIEW_TYPE } from '@/engine/views/config';
+import { STORED_VIEW_TYPE, type FormLayout } from '@/engine/views/config';
 import { resolveTemplateTabs, type SheetTab } from '@/engine/views/tabs';
 import type {
   Automation,
@@ -22,7 +22,7 @@ import type {
   Sheet,
   StatusRule,
 } from '@/engine/types';
-import type { SheetTemplate, TemplateField } from './schema';
+import { isFormRef, type SheetTemplate, type TemplateField, type TemplateForm } from './schema';
 
 export interface PlanPerson extends Person {
   ref: string;
@@ -153,6 +153,7 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
   const fieldIds = new Map<string, string>(); // `${sheetRef}.${key}` → id
   for (const s of t.sheets) for (const f of s.fields) fieldIds.set(`${s.ref}.${f.key}`, env.newId());
   const groupIds = new Map<string, string>(); // `${sheetRef}.${groupRef}` → id
+  const formIds = new Map<string, string>(); // `${sheetRef}.${formRef}` → view id
   for (const s of t.sheets) for (const g of s.groups) groupIds.set(`${s.ref}.${g.ref}`, env.newId());
 
   const sheetPositions = keysBetween(env.lastSheetPosition, null, t.sheets.length);
@@ -166,7 +167,7 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
     const sheetId = sheetIds.get(s.ref)!;
     const fieldPositions = keysBetween(null, null, s.fields.length);
     const groupPositions = keysBetween(null, null, s.groups.length);
-    const viewPositions = keysBetween(null, null, s.views.length);
+    const viewPositions = keysBetween(null, null, s.views.length + s.forms.length);
     engineSheets.set(sheetId, {
       id: sheetId,
       orgId: env.orgId,
@@ -248,6 +249,26 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
       position: viewPositions[vi]!,
       owner_id: null,
     }));
+    // ready-made forms: drafts whose privacy notice still needs a review (docs/05 §3.3)
+    for (const [fi, f] of s.forms.entries()) {
+      const id = env.newId();
+      formIds.set(`${s.ref}.${f.ref}`, id);
+      views.push({
+        id,
+        org_id: env.orgId,
+        sheet_id: sheetId,
+        name: f.name,
+        type: STORED_VIEW_TYPE.form,
+        config: {
+          filters: [],
+          sort: [],
+          hidden: [],
+          form: templateFormLayout(f, f.groupRef ? (groupIds.get(`${s.ref}.${f.groupRef}`) ?? null) : null),
+        } as unknown as Json,
+        position: viewPositions[s.views.length + fi]!,
+        owner_id: null,
+      });
+    }
     const settings: PlannedSheet['row']['settings'] = {
       template: { id: t.id, version: t.version, ref: s.ref },
     };
@@ -472,6 +493,7 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
       const out: Obj = {};
       for (const [k, v] of Object.entries(o)) {
         if (k === 'sheetRef' && typeof v === 'string') out.sheetId = sheetIds.get(v) ?? null;
+        else if (k === 'formId' && isFormRef(v)) out.formId = formIds.get(`${a.sheet}.${v}`) ?? null;
         else if (k === 'groupRef' && typeof v === 'string') {
           const groupSheet = typeof o.sheetRef === 'string' ? o.sheetRef : a.sheet;
           out.groupId = groupIds.get(`${groupSheet}.${v}`) ?? null;
@@ -534,4 +556,18 @@ function fieldConfig(
   }
   if ('default' in out) out.default = defaultToken(out.default!, people);
   return out;
+}
+
+/** A template's form as stored in views.config.form: a draft, the notice at version 1 and not reviewed. */
+export function templateFormLayout(f: TemplateForm, groupId: string | null): FormLayout {
+  return {
+    ...f.layout,
+    status: 'draft',
+    access: f.access,
+    ...(groupId ? { groupId } : {}),
+    ...(f.settings?.confirmation ? { confirmation: f.settings.confirmation } : {}),
+    ...(f.settings?.maxResponses ? { maxResponses: f.settings.maxResponses } : {}),
+    ...(f.settings?.prefill?.length ? { prefill: f.settings.prefill } : {}),
+    ...(f.notice ? { notice: { ...f.notice, version: 1 } } : {}),
+  };
 }

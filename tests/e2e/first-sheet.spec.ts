@@ -10,7 +10,7 @@ import {
   shortDate,
   ukDate,
 } from './first-sheet-helpers';
-import { rest, signIn } from './helpers';
+import { MIN_FILL_MS, OPEN_PUBLIC_FORM, rest, signIn } from './helpers';
 
 // docs/07 · the first spreadsheet, end to end. Part A builds "Corrective actions" by hand in an empty workspace;
 // Part B loads templates/first-sheet.json (the seed's importer) into a fresh workspace and walks rows B1–B12.
@@ -1070,7 +1070,7 @@ test.describe('Part B · automations on the reference template', () => {
         sheet_id: ca,
         name: 'Report a problem',
         type: 'form',
-        config: { form: { fields: [{ key: 'description' }] } },
+        config: { form: { fields: [{ key: 'description' }], ...OPEN_PUBLIC_FORM } },
         position: 'b0',
       },
     });
@@ -1095,6 +1095,7 @@ test.describe('Part B · automations on the reference template', () => {
     await visitor.goto(`/f/${link!.token}`);
     await visitor.getByLabel('Corrective action').fill('Oil on the floor near press 2');
     await visitor.getByLabel('What happened').fill('Seen by the night shift.');
+    await visitor.waitForTimeout(MIN_FILL_MS);
     await visitor.getByRole('button', { name: 'Send' }).click();
     await expect(visitor.getByText('Thank you. Your answers were sent.')).toBeVisible();
     await visitorContext.close();

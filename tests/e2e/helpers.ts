@@ -123,3 +123,24 @@ export async function rest<T = unknown>(
   if (!res.ok) throw new Error(`${res.status} ${text}`);
   return (text ? JSON.parse(text) : null) as T;
 }
+
+/**
+ * A public form's settings that may be open (0022): open, public and a complete privacy notice marked reviewed (the
+ * database stamps who and when). Spread into `config.form` when a test creates a form through the API.
+ */
+export const OPEN_PUBLIC_FORM = {
+  status: 'open',
+  access: 'public',
+  notice: {
+    purpose: 'To handle the reports people send.',
+    legalBasis: 'legitimate_interests',
+    recipients: 'The people in this workspace.',
+    retention: 'One year.',
+    rights: 'Ask the workspace owner.',
+    version: 1,
+    reviewedVersion: 1,
+  },
+} as const;
+
+/** Public forms refuse answers sent sooner than 2 s after the page was served (minimum fill time). */
+export const MIN_FILL_MS = 2100;

@@ -12,7 +12,7 @@ import {
   STATUS,
   typeInto,
 } from './automation-helpers';
-import { rest, signIn } from './helpers';
+import { MIN_FILL_MS, OPEN_PUBLIC_FORM, rest, signIn } from './helpers';
 
 // M7: the automation runner (docs/04 §12, the tests that need neither the scheduler nor webhooks). Uses the seed
 // (pnpm seed): maria@example.com owner, james@example.com editor of /meridian. The builder arrives in M8, so sheets
@@ -387,7 +387,7 @@ test('a public form submission runs form_submitted automations', async ({ page, 
       sheet_id: sheet.id,
       name: 'Report a hazard',
       type: 'form',
-      config: { form: { fields: [{ key: 'where_seen' }] } },
+      config: { form: { fields: [{ key: 'where_seen' }], ...OPEN_PUBLIC_FORM } },
       position: 'a5',
     },
   });
@@ -411,6 +411,7 @@ test('a public form submission runs form_submitted automations', async ({ page, 
   await visitor.goto(`/f/${link!.token}`);
   await visitor.getByLabel('Report').fill('Oil on the stairs');
   await visitor.getByLabel('Where seen').fill('Line 2');
+  await visitor.waitForTimeout(MIN_FILL_MS);
   await visitor.getByRole('button', { name: 'Send' }).click();
   await expect(visitor.getByText('Thank you. Your answers were sent.')).toBeVisible();
   await ctx.close();

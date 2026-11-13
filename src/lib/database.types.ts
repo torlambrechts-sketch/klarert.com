@@ -289,14 +289,14 @@ isOneToOne: false
                   ]
                 },"form_links": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"enabled": boolean,"group_id": string | null,"id": string,"org_id": string,"sheet_id": string,"token": string,"view_id": string | null
+                    "created_at": string,"created_by": string | null,"disabled_at": string | null,"enabled": boolean,"group_id": string | null,"id": string,"org_id": string,"sheet_id": string,"token": string,"view_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"group_id"?: string | null,"id"?: string,"org_id": string,"sheet_id": string,"token"?: string,"view_id"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"disabled_at"?: string | null,"enabled"?: boolean,"group_id"?: string | null,"id"?: string,"org_id": string,"sheet_id": string,"token"?: string,"view_id"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"group_id"?: string | null,"id"?: string,"org_id"?: string,"sheet_id"?: string,"token"?: string,"view_id"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"disabled_at"?: string | null,"enabled"?: boolean,"group_id"?: string | null,"id"?: string,"org_id"?: string,"sheet_id"?: string,"token"?: string,"view_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -328,6 +328,26 @@ isOneToOne: false
       columns: ["view_id"]
 isOneToOne: false
       referencedRelation: "views"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"form_link_hits": {
+                  Row: {
+                    "hits": number,"link_id": string,"window_start": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "hits"?: number,"link_id": string,"window_start": string
+                  }
+                  Update: {
+                    "hits"?: number,"link_id"?: string,"window_start"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "form_link_hits_link_id_fkey"
+      columns: ["link_id"]
+isOneToOne: false
+      referencedRelation: "form_links"
       referencedColumns: ["id"]
     }
                   ]
@@ -469,14 +489,14 @@ isOneToOne: false
                   ]
                 },"items": {
                   Row: {
-                    "archived_at": string | null,"archived_with": string | null,"created_at": string,"created_by": string | null,"held_at": string | null,"held_by": string | null,"held_created": boolean,"held_snapshot": Json | null,"display_id": string,"group_id": string,"id": string,"lock_reason": string | null,"locked": boolean,"name": string,"next_sub_seq": number,"org_id": string,"parent_id": string | null,"position": string,"seq": number,"sheet_id": string,"sub_seq": number | null,"updated_at": string,"updated_by": string | null,"values": NonNullable<Json>
+                    "archived_at": string | null,"archived_with": string | null,"created_at": string,"created_by": string | null,"held_at": string | null,"held_by": string | null,"held_created": boolean,"held_snapshot": Json | null,"display_id": string,"group_id": string,"id": string,"lock_reason": string | null,"locked": boolean,"name": string,"next_sub_seq": number,"org_id": string,"parent_id": string | null,"position": string,"seq": number,"sheet_id": string,"source_channel": string | null,"source_form_id": string | null,"form_version": number | null,"sub_seq": number | null,"updated_at": string,"updated_by": string | null,"values": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id": string,"group_id": string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
+                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id": string,"group_id": string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
                   }
                   Update: {
-                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id"?: string,"group_id"?: string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"seq"?: number,"sheet_id"?: string,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
+                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id"?: string,"group_id"?: string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"seq"?: number,"sheet_id"?: string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
                   }
                   Relationships: [
                     {
@@ -843,14 +863,14 @@ isOneToOne: false
                   ]
                 },"views": {
                   Row: {
-                    "config": NonNullable<Json>,"created_at": string,"id": string,"name": string,"org_id": string,"owner_id": string | null,"position": string,"sheet_id": string,"type": string
+                    "config": NonNullable<Json>,"created_at": string,"form_version": number,"id": string,"name": string,"org_id": string,"owner_id": string | null,"position": string,"sheet_id": string,"type": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "config"?: NonNullable<Json>,"created_at"?: string,"id"?: string,"name": string,"org_id": string,"owner_id"?: string | null,"position": string,"sheet_id": string,"type": string
+                    "config"?: NonNullable<Json>,"created_at"?: string,"form_version"?: number,"id"?: string,"name": string,"org_id": string,"owner_id"?: string | null,"position": string,"sheet_id": string,"type": string
                   }
                   Update: {
-                    "config"?: NonNullable<Json>,"created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"owner_id"?: string | null,"position"?: string,"sheet_id"?: string,"type"?: string
+                    "config"?: NonNullable<Json>,"created_at"?: string,"form_version"?: number,"id"?: string,"name"?: string,"org_id"?: string,"owner_id"?: string | null,"position"?: string,"sheet_id"?: string,"type"?: string
                   }
                   Relationships: [
                     {
@@ -1125,6 +1145,34 @@ isOneToOne: false
 "filter_item_ids":
 { Args: { "p_params": Json,"p_sheet": string,"p_where": string }; Returns: (string)[]
                            },
+"form_link_create":
+{ Args: { "p_view": string }; Returns: {
+              "created_at": string,"created_by": string | null,"disabled_at": string | null,"enabled": boolean,"group_id": string | null,"id": string,"org_id": string,"sheet_id": string,"token": string,"view_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "form_links"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"form_link_disable":
+{ Args: { "p_view": string }; Returns: number
+                           },
+"form_link_regenerate":
+{ Args: { "p_view": string }; Returns: {
+              "created_at": string,"created_by": string | null,"disabled_at": string | null,"enabled": boolean,"group_id": string | null,"id": string,"org_id": string,"sheet_id": string,"token": string,"view_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "form_links"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"form_stats":
+{ Args: { "p_sheet": string }; Returns: {
+              "last_at": string,"responses": number,"view_id": string
+            }[]
+                           },
 "get_invite":
 { Args: { "p_token": string }; Returns: {
               "accepted": boolean,"email": string,"invited_by_name": string,"org_name": string,"org_slug": string,"role": Database["public"]['Enums']["member_role"]
@@ -1373,33 +1421,11 @@ isOneToOne: false
 "sheet_in_org":
 { Args: { "p_org": string,"p_sheet": string }; Returns: boolean
                            },
-"submit_form":
-{ Args: { "p_name": string,"p_position": string,"p_token": string,"p_values": Json }; Returns: {
-              "archived_at": string | null,
-"created_at": string,
-"created_by": string | null,
-"display_id": string,
-"group_id": string,
-"id": string,
-"lock_reason": string | null,
-"locked": boolean,
-"name": string,
-"org_id": string,
-"position": string,
-"seq": number,
-"sheet_id": string,
-"updated_at": string,
-"updated_by": string | null,
-"values": NonNullable<Json>
-            }
-                          SetofOptions: {
-        from: "*"
-        to: "items"
-        isOneToOne: true
-        isSetofReturn: false
-      } },
+"submit_internal_form":
+{ Args: { "p_name": string,"p_position": string,"p_values": Json,"p_view": string }; Returns: Json
+                           },
 "submit_public_form":
-{ Args: { "p_honeypot": string,"p_ip_hash": string,"p_name": string,"p_position": string,"p_token": string,"p_values": Json }; Returns: Json
+{ Args: { "p_consent"?: boolean,"p_honeypot": string,"p_ip_hash": string,"p_name": string,"p_position": string,"p_token": string,"p_values": Json }; Returns: Json
                            },
 "verify_activity_chain":
 { Args: { "p_chain_key": string }; Returns: Json

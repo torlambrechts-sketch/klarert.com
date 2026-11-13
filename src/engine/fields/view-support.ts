@@ -131,3 +131,12 @@ const SHAPES: Record<string, SqlShape> = {
 export function sqlShape(field: Field): SqlShape | null {
   return SHAPES[field.type] ?? null;
 }
+
+/**
+ * Fields a public form may show: form fields that are not files and not the workspace directory (people, teams,
+ * roles, entities), which a signed-out visitor must not see. Mirrors _public_form_hidden_types (0022).
+ */
+const PUBLIC_HIDDEN = new Set(['people', 'team', 'role', 'entity', 'evidence', 'attachment']);
+export function publicFormEligible(field: Field): boolean {
+  return formEligible(field) && !PUBLIC_HIDDEN.has(field.type);
+}

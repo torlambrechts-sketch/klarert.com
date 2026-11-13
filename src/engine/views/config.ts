@@ -83,6 +83,62 @@ export const formFieldSchema = z.object({
 });
 export type FormFieldLayout = z.infer<typeof formFieldSchema>;
 
+/** A form's state as set by its owners: a draft takes nothing, open takes answers, closed stops them. */
+export const FORM_STATUSES = ['draft', 'open', 'closed'] as const;
+export type FormStatus = (typeof FORM_STATUSES)[number];
+/** Who may fill a form in: anyone with the link (public) or signed-in editors (internal). */
+export const FORM_ACCESS = ['public', 'internal'] as const;
+export type FormAccess = (typeof FORM_ACCESS)[number];
+/** The six lawful bases (GDPR Art. 6); consent adds a consent checkbox to the public form. */
+export const LEGAL_BASES = [
+  'consent',
+  'contract',
+  'legal_obligation',
+  'vital_interests',
+  'public_task',
+  'legitimate_interests',
+] as const;
+export type LegalBasis = (typeof LEGAL_BASES)[number];
+export const LEGAL_BASIS_LABEL: Record<LegalBasis, string> = {
+  consent: 'Consent',
+  contract: 'Contract',
+  legal_obligation: 'Legal obligation',
+  vital_interests: 'Vital interests',
+  public_task: 'Public task',
+  legitimate_interests: 'Legitimate interests',
+};
+
+const noticeText = z.string().trim().max(2000);
+/**
+ * The privacy notice a public form shows (the controller is the workspace). `version` moves when its words change
+ * and `reviewed*` is stamped by the database when an owner or admin marks it reviewed (0022_forms_v1.sql): a public
+ * form opens only with reviewedVersion = version.
+ */
+export const privacyNoticeSchema = z.object({
+  purpose: noticeText.optional(),
+  legalBasis: z.enum(LEGAL_BASES).optional(),
+  recipients: noticeText.optional(),
+  retention: noticeText.optional(),
+  rights: noticeText.optional(),
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .refine(
+      (u) => u === '' || /^https?:\/\/\S+$/.test(u),
+      'Enter a web address starting with https://',
+    )
+    .optional(),
+  version: z.number().int().min(1).optional(),
+  reviewedVersion: z.number().int().min(1).optional(),
+  reviewedAt: z.string().max(60).optional(),
+  reviewedBy: z.string().max(60).nullable().optional(),
+});
+export type PrivacyNotice = z.infer<typeof privacyNoticeSchema>;
+
+export const formPrefillSchema = z.object({ key, value: json });
+export type FormPrefill = z.infer<typeof formPrefillSchema>;
+
 export const formLayoutSchema = z.object({
   title: z.string().trim().max(200).optional(),
   description: z.string().trim().max(2000).optional(),
@@ -91,6 +147,21 @@ export const formLayoutSchema = z.object({
   /** Label of the name question; default the sheet's item label. */
   nameLabel: z.string().trim().max(200).optional(),
   fields: z.array(formFieldSchema).max(100),
+  /** Absent: draft. */
+  status: z.enum(FORM_STATUSES).optional(),
+  /** Absent: public (the stricter one: it needs a reviewed notice to open). */
+  access: z.enum(FORM_ACCESS).optional(),
+  /** ISO date-times; outside them the form takes no answers. Checked by the database too. */
+  opensAt: z.string().max(40).nullable().optional(),
+  closesAt: z.string().max(40).nullable().optional(),
+  maxResponses: z.number().int().min(1).max(1_000_000).nullable().optional(),
+  /** Shown after sending (never the answers). */
+  confirmation: z.string().trim().max(1000).optional(),
+  /** People told about each new answer (user ids). */
+  notify: z.array(z.guid()).max(50).optional(),
+  /** Hidden values set on every answer by the database, never sent by the person filling it in. */
+  prefill: z.array(formPrefillSchema).max(50).optional(),
+  notice: privacyNoticeSchema.optional(),
 });
 export type FormLayout = z.infer<typeof formLayoutSchema>;
 
@@ -224,4 +295,6 @@ export interface SavedView {
   position: string;
   /** The type the row was stored with when it is a former one ('list', 'grid'). */
   legacyType?: string;
+  /** Forms: the version the database keeps (bumped by every saved change, 0022). */
+  formVersion?: number;
 }

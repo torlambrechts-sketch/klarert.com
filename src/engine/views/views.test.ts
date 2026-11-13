@@ -228,7 +228,7 @@ describe('form layout', () => {
   const ctx = makeCtx({ fields });
 
   it('offers only fields people can fill in', () => {
-    const layout = defaultFormLayout(fields);
+    const layout = defaultFormLayout(fields, 'internal');
     expect(layout.fields.map((q) => q.key)).toEqual([
       'title',
       'status',

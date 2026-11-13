@@ -216,16 +216,6 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       if (!w) return sheetNotFound();
       if (!w.data.groups.some((g) => g.id === v.groupId))
         return fail('not_found', 'This group no longer exists.');
-      if (v.formViewId) {
-        const { data: form } = await supabase
-          .from('views')
-          .select('id')
-          .eq('id', v.formViewId)
-          .eq('sheet_id', v.sheetId)
-          .eq('type', 'form')
-          .maybeSingle();
-        if (!form) return fail('not_found', 'This form no longer exists.');
-      }
       const now = w.ctx.now.toISOString();
       const blank: Item = {
         id: '00000000-0000-0000-0000-000000000000',
@@ -265,7 +255,7 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       if (error) return fromDbError(error);
       const item = toItem(data);
       const actor = userActor(user.id);
-      if (v.hold && !v.formViewId && (await sheetHolds(supabase, v.sheetId))) {
+      if (v.hold && (await sheetHolds(supabase, v.sheetId))) {
         // the person is still filling the row: automations run when they finish it (finishItem)
         const { error: holdError } = await supabase.rpc('hold_item', {
           p_item: item.id,
@@ -274,17 +264,7 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
         if (!holdError) return ok({ item, messages: [], held: true, mutationId: v.mutationId });
       }
       const messages = await automations(
-        [
-          v.formViewId
-            ? {
-                type: 'form.submitted',
-                sheetId: v.sheetId,
-                itemId: item.id,
-                formId: v.formViewId,
-                actor,
-              }
-            : { type: 'item.created', sheetId: v.sheetId, itemId: item.id, actor },
-        ],
+        [{ type: 'item.created', sheetId: v.sheetId, itemId: item.id, actor }],
         { orgId, userId: user.id, workspace: v.org },
       );
       const [after] = await settled(supabase, [item], messages);

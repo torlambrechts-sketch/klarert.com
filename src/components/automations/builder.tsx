@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -35,6 +35,7 @@ import { inputClass } from '@/components/fields/shared';
 import { Button } from '@/components/ui/button';
 import { ConditionRow, filterable, newCondition } from '@/components/views/filter-bar';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import { createAutomationAction, updateAutomationAction } from '@/app/[org]/automations/actions';
 import { OutcomeChip } from './outcome';
 import type { SheetRef } from './queries';
@@ -237,6 +238,13 @@ export function AutomationBuilder(props: BuilderProps) {
                     onChange={(v) => setTrigger({ ...draft.trigger, value: v })}
                   />
                 </>
+              ) : null}
+              {draft.trigger.type === 'form_submitted' ? (
+                <FormPicker
+                  sheetId={ctx.sheet.id}
+                  value={str(draft.trigger.formId)}
+                  onChange={(id) => setTrigger({ ...draft.trigger, formId: id || null })}
+                />
               ) : null}
               {spec?.param === 'threshold' ? (
                 <input
@@ -481,6 +489,52 @@ export function AutomationBuilder(props: BuilderProps) {
         </Button>
       </div>
     </div>
+  );
+}
+
+/** Which form of the sheet the trigger listens to (docs/04 form_submitted.formId); empty = any form. */
+function FormPicker({
+  sheetId,
+  value,
+  onChange,
+}: {
+  sheetId: string;
+  value: string;
+  onChange(id: string): void;
+}) {
+  const [forms, setForms] = useState<{ id: string; name: string }[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void createClient()
+      .from('views')
+      .select('id, name')
+      .eq('sheet_id', sheetId)
+      .eq('type', 'form')
+      .is('owner_id', null)
+      .order('position')
+      .then(({ data }) => alive && setForms(data ?? []));
+    return () => {
+      alive = false;
+    };
+  }, [sheetId]);
+  return (
+    <select
+      aria-label="Form"
+      className={selectClass}
+      value={value}
+      disabled={forms === null}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="">Any form</option>
+      {value && forms && !forms.some((f) => f.id === value) ? (
+        <option value={value}>A deleted form</option>
+      ) : null}
+      {(forms ?? []).map((f) => (
+        <option key={f.id} value={f.id}>
+          {f.name}
+        </option>
+      ))}
+    </select>
   );
 }
 

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { rest, signIn } from './helpers';
+import { OPEN_PUBLIC_FORM, rest, signIn } from './helpers';
 
 // Per-sheet tabs (docs/02 sheets.settings.tabs, docs/05 §3): owners and admins order, hide and rename a sheet's tabs;
 // editors and viewers see the result and cannot change it. Uses the seed (pnpm seed): maria@example.com owner,
@@ -51,7 +51,7 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
       sheet_id: sheet.sheetId,
       name: 'Report a problem',
       type: 'form',
-      config: { form: { fields: [] } },
+      config: { form: { fields: [], ...OPEN_PUBLIC_FORM } },
       position: 'b0',
     },
   });
@@ -60,13 +60,7 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
     body: { org_id: org!.id, sheet_id: sheet.sheetId, view_id: form!.id },
   });
   await page.reload();
-  await expect(tabLinks(page)).toHaveText([
-    /Table/,
-    /Insights/,
-    /Board/,
-    /Calendar/,
-    /Report a problem/,
-  ]);
+  await expect(tabLinks(page)).toHaveText([/Table/, /Insights/, /Board/, /Calendar/, /Forms/]);
 
   await openCustomise(page);
   const editor = page.getByRole('dialog', { name: 'Customise tabs' });
@@ -83,7 +77,7 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
   await expect(editor.getByText('Board moved to position 2 of 5.')).toBeAttached();
   // hide Calendar and the form
   await rows.getByRole('checkbox', { name: 'Show Calendar' }).uncheck();
-  await rows.getByRole('checkbox', { name: 'Show Report a problem' }).uncheck();
+  await rows.getByRole('checkbox', { name: 'Show Forms' }).uncheck();
   await expect(rows.getByText('Public form link stays active')).toBeVisible();
   // rename Insights inline: Esc cancels, Enter saves
   await rows.getByRole('button', { name: 'Rename Insights' }).click();
@@ -104,7 +98,7 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
   await expect(page.getByText('Tabs saved.')).toBeVisible();
   await expect(
     page.getByText(
-      'Tabs changed: renamed Insights to Dashboard, hid Calendar, hid Report a problem, changed the order',
+      'Tabs changed: renamed Insights to Dashboard, hid Calendar, hid Forms, changed the order',
     ),
   ).toBeVisible();
   await expect(editor).toBeHidden();

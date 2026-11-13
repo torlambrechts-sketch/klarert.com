@@ -662,12 +662,9 @@ function ViewBody({
           org={org}
           data={data}
           ctx={ctx}
-          actions={actions}
-          view={active}
-          config={config}
-          setConfig={setConfig}
           views={views}
           canEdit={canEdit}
+          isAdmin={isAdmin}
         />
       )}
       <NewItemDialog

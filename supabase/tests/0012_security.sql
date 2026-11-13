@@ -16,19 +16,19 @@ select is(
   (select coalesce(array_agg(c.relname::text order by c.relname), '{}')
      from pg_class c
     where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p')
-      and c.relname not in ('orgs', 'profiles', 'form_rate_limits')
+      and c.relname not in ('orgs', 'profiles', 'form_rate_limits', 'form_link_hits')
       and not exists (select 1 from pg_attribute a where a.attrelid = c.oid and a.attname = 'org_id' and not a.attisdropped)),
   '{}'::text[],
-  'every workspace table has org_id (orgs, profiles and the per-IP rate limit are not workspace data)');
+  'every workspace table has org_id (orgs, profiles and the form rate limits are not workspace data)');
 
 select is(
   (select coalesce(array_agg(c.relname::text order by c.relname), '{}')
      from pg_class c
     where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p') and c.relrowsecurity
       and not exists (select 1 from pg_policy p where p.polrelid = c.oid)
-      and c.relname not in ('scheduler_fired', 'outbound_webhooks', 'form_rate_limits')),
+      and c.relname not in ('scheduler_fired', 'outbound_webhooks', 'form_rate_limits', 'form_link_hits')),
   '{}'::text[],
-  'tables without policies are only the service-role ones (scheduler, webhook queue, form rate limit)');
+  'tables without policies are only the service-role ones (scheduler, webhook queue, form rate limits)');
 
 select ok(exists (select 1 from pg_trigger where tgname = 'activity_no_change' and tgrelid = 'activity_log'::regclass
                   and tgenabled <> 'D'),

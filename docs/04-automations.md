@@ -44,7 +44,7 @@ A sub-item's `item.created` and `value.changed` are also **projected** onto its 
 | id | Prototype id | JSON | Fires when | Field types allowed |
 |---|---|---|---|---|
 | `item_created` | `created` | `{ "type": "item_created" }` | an item is created on this sheet (any source except form) | — |
-| `form_submitted` | `form` | `{ "type": "form_submitted", "formId": null }` | a form on this sheet creates an item (`null` = any form) | — |
+| `form_submitted` | `form` | `{ "type": "form_submitted", "formId": null }` | a form on this sheet creates an item (`null` = any form; a form view id = that form only, chosen in the builder; templates may name a form by its `ref`) | — |
 | `field_changed` | `changed` | `{ "type": "field_changed", "fieldKey": "owner" }` | the field's stored value changes (any → any, incl. cleared) | every stored type |
 | `field_becomes` | `becomes` | `{ "type": "field_becomes", "fieldKey": "status", "value": "opt_done" }` | the new value matches and the old did not (transition). multi/people: the value was **added**. check: `true`/`false`. yesno: `yes/no/na`. applicability: `applicable/not_applicable` | label types, multiselect, people, check, yesno, applicability, finding, maturity, severity, classification |
 | `number_above` | `above` | `{ "type": "number_above", "fieldKey": "residual", "threshold": 12 }` | `toNumber` crosses from ≤ threshold (or empty) to > threshold | number kinds incl. computed (formula, rollup, riskmatrix, progress, measurement, ack, checklist) |

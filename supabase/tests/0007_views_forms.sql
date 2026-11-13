@@ -34,7 +34,9 @@ insert into fields (id, org_id, sheet_id, key, name, type, position, config) val
    'score', 'Score', 'number', 'a2', '{}');
 insert into views (id, org_id, sheet_id, name, type, config, position) values
   ('a9a9a9a9-4444-0000-0000-000000000001', 'a9a9a9a9-0000-0000-0000-000000000000', 'a9a9a9a9-1111-0000-0000-000000000000',
-   'Report', 'form', '{"form":{"fields":[{"key":"where_seen","required":true}]}}', 'a0');
+   'Report', 'form', '{"form":{"fields":[{"key":"where_seen","required":true}],"status":"open","access":"public",
+     "notice":{"purpose":"Safety reports","legalBasis":"legal_obligation","recipients":"HSE team","retention":"5 years",
+               "rights":"Ask privacy@views.test","version":1,"reviewedVersion":1}}}', 'a0');
 insert into form_links (id, org_id, sheet_id, view_id, token) values
   ('a9a9a9a9-5555-0000-0000-000000000001', 'a9a9a9a9-0000-0000-0000-000000000000', 'a9a9a9a9-1111-0000-0000-000000000000',
    'a9a9a9a9-4444-0000-0000-000000000001', repeat('ab', 32)),
@@ -78,8 +80,8 @@ select is((select count(*)::int from views where name = 'Team board'), 1, 'a vie
 reset role;
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
-select ok(not has_function_privilege('anon', 'submit_form(text, text, jsonb, text)', 'execute'),
-  'signed-out visitors cannot skip the rate limit by calling submit_form');
+select hasnt_function('submit_form', array['text', 'text', 'jsonb', 'text'],
+  'signed-out visitors cannot skip the rate limit: the old submit_form is gone (0022)');
 select is((get_public_form(repeat('ab', 32))->'fields'->0->>'key'), 'where_seen', 'the public form shows its fields');
 select is(jsonb_array_length(get_public_form(repeat('ab', 32))->'fields'), 1, 'and only the fields on the form');
 select is(get_public_form(repeat('cd', 32)), null, 'a disabled link shows no form');

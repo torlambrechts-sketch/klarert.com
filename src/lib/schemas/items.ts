@@ -23,8 +23,6 @@ export const createItemInput = z.object({
   name: itemName,
   position,
   values: values.optional(),
-  /** Set when the item comes from a form view (internal form): automations see form_submitted. */
-  formViewId: uuid.optional(),
   /** Added inline: automations wait until the person finishes the row (finishItem). */
   hold: z.boolean().optional(),
 });

@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { conditionSchema, viewConfigSchema, viewTypeInput } from '@/engine/views/config';
+import {
+  conditionSchema,
+  FORM_ACCESS,
+  formLayoutSchema,
+  viewConfigSchema,
+  viewTypeInput,
+} from '@/engine/views/config';
 import { MAX_TABS, sheetTabSchema } from '@/engine/views/tabs';
 import { slugInput } from './workspace';
 
@@ -57,8 +63,51 @@ export const filterItemsInput = z.object({
   conditions: z.array(conditionSchema).max(30),
 });
 
-export const formLinkInput = z.object({ org: slugInput, viewId: uuid });
-export const disableFormLinkInput = z.object({ org: slugInput, linkId: uuid });
+// ───────────────────────── forms (docs/05 §3.3) ─────────────────────────
+
+const formName = z
+  .string()
+  .trim()
+  .min(1, 'A form name is required.')
+  .max(60, 'A form name can be at most 60 characters.');
+
+export const createFormInput = z.object({
+  org: slugInput,
+  sheetId: uuid,
+  name: formName,
+  access: z.enum(FORM_ACCESS),
+});
+
+export const saveFormInput = z.object({
+  org: slugInput,
+  viewId: uuid,
+  name: formName.optional(),
+  form: formLayoutSchema,
+});
+
+export const duplicateFormInput = z.object({ org: slugInput, viewId: uuid, name: formName });
+
+export const copyFormInput = z.object({
+  org: slugInput,
+  viewId: uuid,
+  targetSheetId: uuid,
+  name: formName,
+});
+
+export const deleteFormInput = z.object({ org: slugInput, viewId: uuid });
+
+export const formLinkInput = z.object({
+  org: slugInput,
+  viewId: uuid,
+  op: z.enum(['create', 'regenerate', 'disable']),
+});
+
+export const internalSubmitInput = z.object({
+  org: slugInput,
+  viewId: uuid,
+  name: z.string().max(500, 'Keep it under 500 characters.'),
+  answers: z.record(z.uuid(), z.unknown()),
+});
 
 export const publicSubmitInput = z.object({
   token: z.string().regex(/^[0-9a-f]{64}$/, 'This form link is not valid.'),
@@ -66,4 +115,8 @@ export const publicSubmitInput = z.object({
   answers: z.record(z.uuid(), z.unknown()),
   /** Honeypot: people never see or fill it. */
   website: z.string().max(500).optional(),
+  /** The consent box (legal basis consent). */
+  consent: z.boolean().optional(),
+  /** When the page was served, signed by the server: answers sent too soon after are refused. */
+  started: z.string().max(200),
 });
