@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyConfig, type SavedView } from '@/engine/views/config';
 import { toView } from '@/lib/sheet-rows';
-import { buildTabs, resolveActive } from './tabs-model';
+import { applyTabLayout, buildTabs, layoutEntries, resolveActive } from './tabs-model';
 
 // Rows as the database stores them: a Table view is stored as 'list', the former Grid as 'grid'.
 const row = (
@@ -95,5 +95,91 @@ describe('view tabs', () => {
     expect(tabs.more.insights).toMatchObject({ id: 'v-ins', type: 'insights', canWrite: false });
     expect(resolveActive(tabs, 'insights')?.id).toBe('v-ins');
     expect(resolveActive(tabs, 'v-mine')).toMatchObject({ canWrite: true });
+  });
+});
+
+describe('tab layout (settings.tabs)', () => {
+  const views: SavedView[] = [
+    row('v-list', 'List', 'list', 'a0'),
+    row('v-board', 'By status', 'kanban', 'a1'),
+    row('v-overdue', 'Overdue', 'list', 'a2'),
+    row('v-mine', 'My open', 'list', 'a3', 'u1'),
+    row('v-audit', 'Audit table', 'list', 'a4'),
+    row('v-theirs', 'Their view', 'list', 'a5', 'u2'),
+  ];
+  const tabs = buildTabs(views, 'u1', true);
+  const words = (l: { label: string }[]) => l.map((t) => t.label);
+
+  it("shows today's order without a tab set: built-ins, shared views, then my personal views", () => {
+    const layout = applyTabLayout(tabs, null);
+    expect(words(layout.shown)).toEqual([
+      'Table',
+      'Insights',
+      'By status',
+      'Calendar',
+      'Form',
+      'Overdue',
+      'Audit table',
+    ]);
+    expect(layout.hidden).toEqual([]);
+    // only my own personal views
+    expect(words(layout.personal)).toEqual(['My open']);
+    expect(applyTabLayout(buildTabs([], 'u1', false), null).shown.map((t) => t.label)).toEqual([
+      'Table',
+      'Insights',
+      'Board',
+      'Calendar',
+      'Form',
+    ]);
+  });
+
+  it('follows the configured order, labels and hidden tabs', () => {
+    const layout = applyTabLayout(tabs, [
+      { id: 'kanban' },
+      { id: 'table' },
+      { id: 'insights', label: 'Dashboard' },
+      { id: 'calendar', hidden: true },
+      { id: 'v-overdue', label: 'Late' },
+      { id: 'form', hidden: true },
+      { id: 'v-audit' },
+    ]);
+    expect(words(layout.shown)).toEqual(['By status', 'Table', 'Dashboard', 'Late', 'Audit table']);
+    expect(words(layout.hidden)).toEqual(['Calendar', 'Form']);
+    // a hidden tab still resolves by its id (?view=calendar)
+    expect(resolveActive(tabs, 'calendar')?.id).toBe('calendar');
+    expect(layout.shown[0]).toMatchObject({ entryId: 'kanban', view: { id: 'v-board' } });
+  });
+
+  it('appends shared views and built-ins the set does not list, skips gone views, keeps personal last', () => {
+    const layout = applyTabLayout(tabs, [
+      { id: 'table' },
+      { id: '8b1c2d3e-0000-4000-8000-000000000000' },
+      { id: 'v-mine' },
+      { id: 'v-audit', hidden: true },
+    ]);
+    expect(words(layout.shown)).toEqual([
+      'Table',
+      'Insights',
+      'By status',
+      'Calendar',
+      'Form',
+      'Overdue',
+    ]);
+    expect(words(layout.hidden)).toEqual(['Audit table']);
+    expect(words(layout.personal)).toEqual(['My open']);
+  });
+
+  it('never hides the Table, shows a view backing a built-in tab once, and round-trips the set', () => {
+    const layout = applyTabLayout(tabs, [
+      { id: 'table', hidden: true },
+      { id: 'v-board', label: 'Board' },
+      { id: 'kanban' },
+    ]);
+    expect(layout.shown.filter((t) => t.view.id === 'v-board')).toHaveLength(1);
+    expect(layout.shown[0]).toMatchObject({ entryId: 'table', hidden: false });
+    expect(layoutEntries(layout.all).slice(0, 2)).toEqual([
+      { id: 'table' },
+      { id: 'v-board', label: 'Board' },
+    ]);
   });
 });
