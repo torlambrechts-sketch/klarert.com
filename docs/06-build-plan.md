@@ -203,7 +203,11 @@ Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, 
 ### P7 · Apps  [Sonnet]
 - [ ] App manifest (navigation sections → screens: view / form / dashboard / workflow / item over sheet refs; role visibility); `/[org]/apps/[key]/[screen]`; first app: CAPA ("Report a problem", "My actions", "Needs my approval")
 
-Later: GDPR pack (after retention), ISO 9001, NIS2, consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
+### ISO 9001 pack  [Opus]
+- [x] `iso-9001` 1.0.0 on the 9001:2015 library: Starter (context, policy and objectives, processes, risks and opportunities, quality documents, nonconformities with sub-item actions, customer feedback and complaints) and Full (external providers, competence, measuring equipment, internal audits and findings, management review, design and development, release); 8 automations, internal forms "Report a complaint" and "Report a nonconformity", "QMS overview" dashboard, 8-step setup, example items linked to clauses; management review inputs mapped (docs/11)
+- [x] Tests: `src/lib/packs/iso-9001.test.ts`; e2e `tests/e2e/iso-9001.spec.ts` (Starter with adoption, a complaint raising a linked nonconformity, the form from the checklist, the dashboard, Full on top)
+
+Later: GDPR pack (after retention), NIS2, consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
 
 ---
 
