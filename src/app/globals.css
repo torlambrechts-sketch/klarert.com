@@ -165,42 +165,54 @@
   --label-pink: #c24e88;
   --label-purple: #7e52c6;
   --label-dark: #55606b;
-  /* the Table's option boxes and chips (docs/05 Design system): the option's soft tint, a border in the same hue and
-     its dark step for the words (all ≥ 4.5:1 on their tint). Geist has no orange, navy or neutral label hue: those
-     are the nearest steps or, for orange, a tint of the label colour. */
-  --tint-grey-bg: var(--gray-100);
-  --tint-grey-line: var(--gray-alpha-300);
-  --tint-grey-ink: var(--gray-1000);
-  --tint-dark-bg: var(--gray-200);
-  --tint-dark-line: var(--gray-alpha-500);
-  --tint-dark-ink: var(--gray-1000);
-  --tint-blue-bg: var(--blue-100);
-  --tint-blue-line: var(--blue-400);
-  --tint-blue-ink: var(--blue-900);
-  --tint-navy-bg: var(--blue-200);
-  --tint-navy-line: var(--blue-500);
-  --tint-navy-ink: var(--blue-1000);
-  --tint-teal-bg: var(--teal-100);
-  --tint-teal-line: var(--teal-400);
-  --tint-teal-ink: var(--teal-900);
-  --tint-green-bg: var(--green-100);
-  --tint-green-line: var(--green-400);
-  --tint-green-ink: var(--green-900);
-  --tint-yellow-bg: var(--amber-100);
-  --tint-yellow-line: var(--amber-400);
-  --tint-yellow-ink: var(--amber-900);
-  --tint-orange-bg: #fff2e8;
-  --tint-orange-line: #fcd3b0;
-  --tint-orange-ink: #8a3d0a;
-  --tint-red-bg: var(--red-100);
-  --tint-red-line: var(--red-400);
-  --tint-red-ink: var(--red-900);
-  --tint-pink-bg: var(--pink-100);
-  --tint-pink-line: var(--pink-400);
-  --tint-pink-ink: var(--pink-900);
-  --tint-purple-bg: var(--purple-100);
-  --tint-purple-line: var(--purple-400);
-  --tint-purple-ink: var(--purple-900);
+  /* --badge-orange: the design darkens orange for badges only */
+  --badge-orange: #c2410c;
+  /* option badges (the design's soft badge): the label colour at 13 % on white, a 22 % ring and the colour
+     darkened to 72 % for the words; yellow and grey use fixed dark words for 4.5:1 */
+  --tint-green-bg: color-mix(in oklch, var(--label-green) 13%, #fff);
+  --tint-green-hover: color-mix(in oklch, var(--label-green) 20%, #fff);
+  --tint-green-line: color-mix(in oklch, var(--label-green) 22%, #fff);
+  --tint-green-ink: color-mix(in oklch, var(--label-green) 72%, #000);
+  --tint-orange-bg: color-mix(in oklch, var(--badge-orange) 13%, #fff);
+  --tint-orange-hover: color-mix(in oklch, var(--badge-orange) 20%, #fff);
+  --tint-orange-line: color-mix(in oklch, var(--badge-orange) 22%, #fff);
+  --tint-orange-ink: color-mix(in oklch, var(--badge-orange) 72%, #000);
+  --tint-red-bg: color-mix(in oklch, var(--label-red) 13%, #fff);
+  --tint-red-hover: color-mix(in oklch, var(--label-red) 20%, #fff);
+  --tint-red-line: color-mix(in oklch, var(--label-red) 22%, #fff);
+  --tint-red-ink: color-mix(in oklch, var(--label-red) 72%, #000);
+  --tint-blue-bg: color-mix(in oklch, var(--label-blue) 13%, #fff);
+  --tint-blue-hover: color-mix(in oklch, var(--label-blue) 20%, #fff);
+  --tint-blue-line: color-mix(in oklch, var(--label-blue) 22%, #fff);
+  --tint-blue-ink: color-mix(in oklch, var(--label-blue) 72%, #000);
+  --tint-purple-bg: color-mix(in oklch, var(--label-purple) 13%, #fff);
+  --tint-purple-hover: color-mix(in oklch, var(--label-purple) 20%, #fff);
+  --tint-purple-line: color-mix(in oklch, var(--label-purple) 22%, #fff);
+  --tint-purple-ink: color-mix(in oklch, var(--label-purple) 72%, #000);
+  --tint-teal-bg: color-mix(in oklch, var(--label-teal) 13%, #fff);
+  --tint-teal-hover: color-mix(in oklch, var(--label-teal) 20%, #fff);
+  --tint-teal-line: color-mix(in oklch, var(--label-teal) 22%, #fff);
+  --tint-teal-ink: color-mix(in oklch, var(--label-teal) 72%, #000);
+  --tint-navy-bg: color-mix(in oklch, var(--label-navy) 13%, #fff);
+  --tint-navy-hover: color-mix(in oklch, var(--label-navy) 20%, #fff);
+  --tint-navy-line: color-mix(in oklch, var(--label-navy) 22%, #fff);
+  --tint-navy-ink: color-mix(in oklch, var(--label-navy) 72%, #000);
+  --tint-yellow-bg: color-mix(in oklch, var(--label-yellow) 13%, #fff);
+  --tint-yellow-hover: color-mix(in oklch, var(--label-yellow) 20%, #fff);
+  --tint-yellow-line: color-mix(in oklch, var(--label-yellow) 22%, #fff);
+  --tint-yellow-ink: #854d0e;
+  --tint-grey-bg: color-mix(in oklch, var(--label-grey) 13%, #fff);
+  --tint-grey-hover: color-mix(in oklch, var(--label-grey) 20%, #fff);
+  --tint-grey-line: color-mix(in oklch, var(--label-grey) 22%, #fff);
+  --tint-grey-ink: #3f3f46;
+  --tint-pink-bg: color-mix(in oklch, var(--label-pink) 13%, #fff);
+  --tint-pink-hover: color-mix(in oklch, var(--label-pink) 20%, #fff);
+  --tint-pink-line: color-mix(in oklch, var(--label-pink) 22%, #fff);
+  --tint-pink-ink: color-mix(in oklch, var(--label-pink) 72%, #000);
+  --tint-dark-bg: color-mix(in oklch, var(--label-dark) 13%, #fff);
+  --tint-dark-hover: color-mix(in oklch, var(--label-dark) 20%, #fff);
+  --tint-dark-line: color-mix(in oklch, var(--label-dark) 22%, #fff);
+  --tint-dark-ink: color-mix(in oklch, var(--label-dark) 72%, #000);
 
   /* the four steps of a value meter (number and risk cells): low → critical, beside the number they describe */
   --meter-1: var(--green-700);
@@ -584,6 +596,30 @@
 
 .bottom-bar {
   display: none;
+}
+
+/* collapsed side menu (Ctrl+B): icons only, names as tooltips */
+:root[data-side='collapsed'] .app-shell {
+  grid-template-columns: 60px minmax(0, 1fr);
+}
+:root[data-side='collapsed'] .side-col [data-side-text],
+:root[data-side='collapsed'] .side-col h2,
+:root[data-side='collapsed'] .side-col kbd,
+:root[data-side='collapsed'] .side-col input[type='search'],
+:root[data-side='collapsed'] .side-col [data-side-trailing] {
+  display: none;
+}
+:root[data-side='collapsed'] .side-col [data-side-list] {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+:root[data-side='collapsed'] .side-col a,
+:root[data-side='collapsed'] .side-col button,
+:root[data-side='collapsed'] .side-col label {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 @media (max-width: 759.98px) {

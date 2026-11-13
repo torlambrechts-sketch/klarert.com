@@ -97,17 +97,23 @@ export function Block({
   density: 'grid' | 'list' | 'table';
 }) {
   if (density === 'table')
+    // the design's soft badge: inset 9 px top and bottom, 6 px at the sides, so it spans the column
     return (
-      <span className="flex w-full min-w-0 items-center justify-center">
-        <span
-          data-box
-          className="text-label-13.5 inline-flex h-[28px] max-w-full min-w-0 items-center justify-center gap-1 rounded-md border px-[10px] py-1 font-medium"
-          style={tintStyle(option.color)}
-        >
-          <OptionMarks option={option}>
-            <span className="truncate">{option.label}</span>
-          </OptionMarks>
-        </span>
+      <span
+        data-box
+        className="text-label-13 group/box absolute inset-x-[6px] inset-y-[9px] flex min-w-0 items-center justify-center gap-1 rounded-md px-2 font-medium transition-colors hover:[background:var(--box-hover)]"
+        style={
+          {
+            ...tintStyle(option.color),
+            borderColor: undefined,
+            boxShadow: `inset 0 0 0 1px var(--tint-${option.color}-line, var(--tint-grey-line))`,
+            '--box-hover': `var(--tint-${option.color}-hover, var(--tint-grey-hover))`,
+          } as React.CSSProperties
+        }
+      >
+        <OptionMarks option={option}>
+          <span className="truncate">{option.label}</span>
+        </OptionMarks>
       </span>
     );
   return (
