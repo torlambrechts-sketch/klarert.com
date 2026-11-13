@@ -587,7 +587,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
       )}
       <Card
         title="Pack activity"
-        description="Installs and archives from the activity log, newest first."
+        description="Installs, updates and archives from the activity log, newest first."
       >
         {log.length === 0 ? (
           <p className="text-muted-foreground text-copy-13">No pack activity yet.</p>
