@@ -2,6 +2,7 @@
 import { parseColumnGroups } from '@/engine/views/column-groups';
 import { parseDashboardConfig, type WidgetConfig } from '@/engine/dashboards/types';
 import type { LinkRow } from '@/engine/sheet-data';
+import type { FileVersionRow } from '@/engine/item-files';
 import type {
   Condition,
   Field,
@@ -132,6 +133,25 @@ export function toFile(r: FileDbRow): FileRow {
   };
 }
 
+/** A file version with its details, for the Files tab, the version history and documents (docs/02 §8). */
+export function toFileVersion(r: FileDbRow): FileVersionRow {
+  return {
+    ...toFile(r),
+    createdAt: r.created_at,
+    uploadedBy: r.uploaded_by,
+    description: r.description,
+    category: r.category,
+    versionNo: r.version_no,
+    versionNote: r.version_note,
+    classification: r.classification,
+    personalData: r.personal_data,
+    archivedAt: r.archived_at,
+    scanStatus: r.scan_status,
+    approvedAt: r.approved_at,
+    supersededAt: r.superseded_at,
+  };
+}
+
 export function toSheet(r: {
   id: string;
   org_id: string;
@@ -142,7 +162,7 @@ export function toSheet(r: {
   parent_sheet_id?: string | null;
   settings?: unknown;
 }): Sheet {
-  const settings = (r.settings ?? {}) as { subitems?: unknown; columnGroups?: unknown };
+  const settings = (r.settings ?? {}) as { subitems?: unknown; columnGroups?: unknown; register?: unknown };
   const columnGroups = parseColumnGroups(settings.columnGroups);
   return {
     id: r.id,
@@ -154,6 +174,7 @@ export function toSheet(r: {
     ...(r.parent_sheet_id ? { parentSheetId: r.parent_sheet_id } : {}),
     ...(settings.subitems ? { subitems: readSubitemSettings(settings.subitems) } : {}),
     ...(columnGroups.length ? { columnGroups } : {}),
+    ...(settings.register === 'documents' ? { register: 'documents' as const } : {}),
   };
 }
 

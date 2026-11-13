@@ -24,6 +24,10 @@ export const SCHEDULED_TRIGGERS: TriggerId[] = [
 export const isScheduledTrigger = (type: string): boolean =>
   (SCHEDULED_TRIGGERS as string[]).includes(type);
 
+/** evidence_expiring on the item's Files tab rather than a file field (docs/04 §8). */
+export const isItemFilesSource = (trigger: Trigger) =>
+  trigger.type === 'evidence_expiring' && trigger.source === 'item_files';
+
 export interface Moment {
   /** When the trigger fires, epoch ms. */
   at: number;
@@ -38,9 +42,18 @@ const num = (v: unknown, fallback: number) =>
  * The trigger's moment for this item (docs/04 §8), or null when the item has nothing to fire on.
  * - date_arrives: the date + offsetDays at 00:00 in the workspace time zone; occurrence = the date.
  * - clock_warning: the deadline − hoursLeft; occurrence = the deadline (ISO). Stopped clocks never warn.
- * - evidence_expiring: the earliest valid_until − days at 00:00; occurrence = that valid_until.
+ * - evidence_expiring: the earliest valid_until − days at 00:00; occurrence = that valid_until. The files are the
+ *   field's (source 'field', the default) or those of the item's Files tab (source 'item_files', no field).
  */
 export function scheduledMoment(trigger: Trigger, item: Item, ctx: Ctx): Moment | null {
+  if (isItemFilesSource(trigger)) {
+    const until = earliestValidUntil(ctx.files(item.id, null));
+    if (!until) return null;
+    return {
+      at: zonedMidnight(addDays(until, -Math.trunc(num(trigger.days, 0))), ctx.timeZone),
+      occurrence: until,
+    };
+  }
   const key = typeof trigger.fieldKey === 'string' ? trigger.fieldKey : null;
   const field = key ? ctx.fieldsByKey.get(key) : undefined;
   if (!field) return null;

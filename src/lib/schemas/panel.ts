@@ -26,7 +26,7 @@ const fileMeta = {
     .number()
     .int()
     .min(1, 'The file is empty.')
-    .max(MAX_FILE_BYTES, 'Files can be at most 50 MB.'),
+    .max(MAX_FILE_BYTES, 'Files can be at most 25 MB.'),
   /** SHA-256 of the file, computed in the browser (docs/02 §8). */
   sha256: z.string().regex(/^[0-9a-f]{64}$/, 'Bad checksum.'),
   /** The current version this upload replaces. */

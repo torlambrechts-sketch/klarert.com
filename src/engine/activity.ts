@@ -55,6 +55,21 @@ function ids(v: Json | null): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
 }
 
+/** "v2" of a file event's value, when it names one. */
+function fileVersion(v: Json | null): string {
+  return v && typeof v === 'object' && !Array.isArray(v) && typeof v.version_no === 'number'
+    ? ` (v${v.version_no})`
+    : '';
+}
+
+const FILE_DETAIL: Record<string, string> = {
+  description: 'description',
+  category: 'category',
+  valid_until: 'valid until',
+  classification: 'classification',
+  personal_data: 'personal data',
+};
+
 function fileName(v: Json | null): string {
   return v && typeof v === 'object' && !Array.isArray(v) && typeof v.filename === 'string'
     ? v.filename
@@ -78,6 +93,8 @@ export function who(e: Pick<ActivityEntry, 'actorKind' | 'actorId'>, look: Activ
 /** The sentence for one entry: "Status: Working on it → Done", "Moved from Open to Done", … */
 export function activityText(e: ActivityEntry, look: ActivityLookup): string {
   const field = e.fieldId ? look.field(e.fieldId) : undefined;
+  // files of the item's Files tab have no field
+  const files = e.fieldId ? fieldName(field) : 'Files';
   const comment = e.note && e.action === 'value.changed' ? ` · Comment: ${quote(e.note)}` : '';
   switch (e.action) {
     case 'item.created': {
@@ -152,9 +169,27 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
       return `${fieldName(field)}: ${parts.join('; ') || 'links reordered'}`;
     }
     case 'file.added':
-      return `${fieldName(field)}: added ${fileName(e.newValue)}`;
+      return `${files}: added ${fileName(e.newValue)}${fileVersion(e.newValue)}`;
     case 'file.replaced':
-      return `${fieldName(field)}: replaced ${fileName(e.oldValue)} with ${fileName(e.newValue)}`;
+      return `${files}: replaced ${fileName(e.oldValue)} with ${fileName(e.newValue)}${fileVersion(e.newValue)}${e.note ? ` · Note: ${quote(e.note)}` : ''}`;
+    case 'file.updated': {
+      const v =
+        e.newValue && typeof e.newValue === 'object' && !Array.isArray(e.newValue)
+          ? e.newValue
+          : {};
+      const changed = Object.keys(FILE_DETAIL)
+        .filter((k) => k in v)
+        .map((k) => FILE_DETAIL[k]);
+      return `${files}: changed the ${changed.join(', ') || 'details'} of ${fileName(e.newValue)}`;
+    }
+    case 'file.archived':
+      return `${files}: archived ${fileName(e.oldValue)} and its versions${e.note ? ` (${e.note})` : ''}`;
+    case 'file.restored':
+      return `${files}: restored ${fileName(e.newValue)} and its versions`;
+    case 'file.approved':
+      return `Approved ${fileName(e.newValue)}${fileVersion(e.newValue)}${
+        e.oldValue ? `; ${fileName(e.oldValue)}${fileVersion(e.oldValue)} is now obsolete` : ''
+      }${e.note ? ` · Note: ${quote(e.note)}` : ''}`;
     case 'protected.changed':
       return `${fieldName(field)} changed (value hidden)`;
     case 'protected.cleared':

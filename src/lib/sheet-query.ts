@@ -160,7 +160,8 @@ export async function fetchAttached(db: Db, fields: Field[], itemIds?: string[])
       if (rows.length < PAGE) return out;
     }
   };
-  const [links, files, protectedValues] = await Promise.all([
+  const sheetIds = [...new Set(fields.map((f) => f.sheetId))];
+  const [links, files, itemFiles, protectedValues] = await Promise.all([
     linkFields.length
       ? all((a, b) =>
           byItems(
@@ -177,9 +178,28 @@ export async function fetchAttached(db: Db, fields: Field[], itemIds?: string[])
     fileFields.length
       ? all((a, b) =>
           byItems(
-            db.from('files').select('*').in('field_id', fileFields).is('replaced_by', null),
+            db
+              .from('files')
+              .select('*')
+              .in('field_id', fileFields)
+              .is('replaced_by', null)
+              .is('archived_at', null),
             'item_id',
           )
+            .order('id')
+            .range(a, b),
+        )
+      : [],
+    // the items' Files tabs (field_id null): by item, or by the sheets of the fields when every item is loaded
+    itemIds || sheetIds.length
+      ? all((a, b) =>
+          (itemIds
+            ? db.from('files').select('*').in('item_id', itemIds)
+            : db.from('files').select('*, items!inner(sheet_id)').in('items.sheet_id', sheetIds)
+          )
+            .is('field_id', null)
+            .is('replaced_by', null)
+            .is('archived_at', null)
             .order('id')
             .range(a, b),
         )
@@ -200,7 +220,7 @@ export async function fetchAttached(db: Db, fields: Field[], itemIds?: string[])
   ]);
   return {
     links: links.map(toLink),
-    files: files.map(toFile),
+    files: [...files, ...itemFiles].map(toFile),
     protectedValues: protectedValues.map((p) => ({
       itemId: p.item_id,
       fieldId: p.field_id,

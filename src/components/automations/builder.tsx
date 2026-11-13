@@ -36,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import { ConditionRow, filterable, newCondition } from '@/components/views/filter-bar';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { isItemFilesSource } from '@/engine/automations/schedule';
 import { createAutomationAction, updateAutomationAction } from '@/app/[org]/automations/actions';
 import { OutcomeChip } from './outcome';
 import type { SheetRef } from './queries';
@@ -53,6 +54,8 @@ const selectClass = cn(
 );
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 const num = (v: unknown, d = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+/** The trigger field choice that means the item's Files tab (evidence_expiring source 'item_files'). */
+const ITEM_FILES = '__files';
 
 export interface BuilderProps {
   org: string;
@@ -205,18 +208,26 @@ export function AutomationBuilder(props: BuilderProps) {
                 <select
                   aria-label="Trigger field"
                   className={selectClass}
-                  value={str(draft.trigger.fieldKey)}
+                  value={
+                    isItemFilesSource(draft.trigger) ? ITEM_FILES : str(draft.trigger.fieldKey)
+                  }
                   onChange={(e) => {
+                    // evidence_expiring may watch the item's Files tab instead of a field (docs/04 §8)
+                    const itemFiles = e.target.value === ITEM_FILES;
                     const next: AutomationDraft['trigger'] = {
                       ...draft.trigger,
-                      fieldKey: e.target.value,
+                      fieldKey: itemFiles ? null : e.target.value,
+                      ...(spec.itemFiles ? { source: itemFiles ? 'item_files' : 'field' } : {}),
                     };
                     if (spec.param === 'value') next.value = null;
                     setTrigger(next);
                   }}
                 >
-                  {!tField ? (
+                  {!tField && !isItemFilesSource(draft.trigger) ? (
                     <option value={str(draft.trigger.fieldKey)}>Choose a field</option>
+                  ) : null}
+                  {spec.itemFiles ? (
+                    <option value={ITEM_FILES}>Item files (Files tab)</option>
                   ) : null}
                   {tFields.map((f) => (
                     <option key={f.id} value={f.key}>

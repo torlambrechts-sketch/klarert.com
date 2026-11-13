@@ -140,4 +140,4 @@ IDs are referenced from the build plan. "Must" = MVP.
 2. Sign-in methods beyond magic link (Microsoft / Google) for the MVP.
 3. Max items per sheet we promise (spec targets 10,000).
 4. Whether editors may create automations or only admins (spec: editors may; admins can lock).
-5. File size limit (spec placeholder: 50 MB per file).
+5. File size limit: 25 MB per file (decided; enforced by the bucket and the upload commands).

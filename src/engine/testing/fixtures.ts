@@ -145,7 +145,9 @@ export function makeCtx(world: CtxWorld = {}, over: Partial<Ctx> = {}): Ctx {
   };
 }
 
-export function makeFile(over: Partial<FileRow> & { itemId: string; fieldId: string }): FileRow {
+export function makeFile(
+  over: Partial<FileRow> & { itemId: string; fieldId: string | null },
+): FileRow {
   return {
     id: `file-${Math.random().toString(36).slice(2, 8)}`,
     filename: 'policy.pdf',

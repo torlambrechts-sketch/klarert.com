@@ -61,6 +61,8 @@ export interface Sheet {
   subitems?: SubitemSettings | null;
   /** Column groups (sheets.settings.columnGroups), read leniently; absent = none. */
   columnGroups?: ColumnGroup[];
+  /** sheets.settings.register: 'documents' makes the sheet a documents register (docs/02 §14). */
+  register?: 'documents' | null;
 }
 
 /** sheets.settings.subitems (docs/02 §12). */
@@ -153,7 +155,8 @@ export interface ItemSource {
 export interface FileRow {
   id: string;
   itemId: string;
-  fieldId: string;
+  /** null: a file of the item's Files tab, not of a file field (docs/02 §8). */
+  fieldId: string | null;
   filename: string;
   mimeType: string;
   sizeBytes: number;
@@ -187,7 +190,8 @@ export interface Ctx {
   children(itemId: string): string[];
   item(id: string): Item | undefined;
   /** Current file versions (replaced_by is null). */
-  files(itemId: string, fieldId: string): FileRow[];
+  /** Current files of a file field, or (fieldId null) of the item's Files tab. */
+  files(itemId: string, fieldId: string | null): FileRow[];
   sheetOf(itemId: string): Sheet | undefined;
   /** Protected value, if the caller may see it. */
   protectedValue(itemId: string, fieldId: string): string | null | undefined;

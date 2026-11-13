@@ -75,7 +75,7 @@ export function FilesField({
 
   const upload = async (file: File, replaces: string | null) => {
     if (file.size === 0) return toast.error('The file is empty.');
-    if (file.size > MAX_FILE_BYTES) return toast.error('Files can be at most 50 MB.');
+    if (file.size > MAX_FILE_BYTES) return toast.error('Files can be at most 25 MB.');
     if (!acceptsFile(accept, file.name, file.type))
       return toast.error(`${field.name} accepts ${accept.join(', ')} only.`);
     setBusy(replaces ? `Replacing with ${file.name}…` : `Uploading ${file.name}…`);
