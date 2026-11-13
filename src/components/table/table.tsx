@@ -751,7 +751,7 @@ export function Table({
                 store.getState().focus({ itemId: layout.flat[0].id, col: 'name' });
             }}
             // rows scroll with the page; only wide tables scroll sideways here
-            className="grid-scroll relative overflow-x-auto overflow-y-hidden rounded-lg outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus)]"
+            className="grid-scroll relative overflow-x-auto overflow-y-hidden rounded-lg outline-none"
           >
             <div style={{ height: rowV.getTotalSize(), width: totalW, position: 'relative' }}>
               {vRows.map((vr) => {

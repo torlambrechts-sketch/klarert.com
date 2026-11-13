@@ -109,7 +109,19 @@ export function OptionCell({ value, field, ctx, density }: CellProps) {
   const opts = optionsOf(field, ctx);
   const keys = selectedKeys(field, value);
   const chosen = keys.map((k) => opts.find((o) => o.id === k)).filter((o): o is LabelOption => !!o);
-  if (chosen.length === 0) return <Empty />;
+  if (chosen.length === 0)
+    return density === 'table' && !Array.isArray(value) ? (
+      // the design's empty badge: a faint outline where the value will go
+      <>
+        <Empty />
+        <span
+          aria-hidden
+          className="absolute inset-x-[6px] inset-y-[9px] rounded-md shadow-[inset_0_0_0_1px_var(--line)]"
+        />
+      </>
+    ) : (
+      <Empty />
+    );
   if (!Array.isArray(value)) return <Block option={chosen[0]!} density={density} />;
   const shown = chosen.slice(0, 3);
   return (

@@ -15,6 +15,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  PanelLeft,
   Workflow,
   Zap,
 } from 'lucide-react';
@@ -111,10 +112,13 @@ function NavLink({
         onClick={onNavigate}
         data-testid={testId}
         className={cn(itemClass, 'group/item', className)}
+        title={label}
       >
         {icon}
-        <span className="min-w-0 flex-1 truncate">{label}</span>
-        {trailing}
+        <span data-side-text className="min-w-0 flex-1 truncate">
+          {label}
+        </span>
+        {trailing ? <span data-side-trailing>{trailing}</span> : null}
       </Link>
     </li>
   );
@@ -144,7 +148,9 @@ function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: W
         >
           {initialsOf(current.name)}
         </span>
-        <span className="text-label-14 min-w-0 flex-1 truncate font-medium">{current.name}</span>
+        <span data-side-text className="text-label-14 min-w-0 flex-1 truncate font-medium">
+          {current.name}
+        </span>
         <ChevronsUpDown className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
         <span className="sr-only">Switch workspace</span>
       </DropdownMenuTrigger>
@@ -374,8 +380,11 @@ export function SideMenu({
                   className={cn(itemClass, 'group/item')}
                 >
                   <Folder className={iconClass} aria-hidden />
-                  <span className="min-w-0 flex-1 truncate">{s.name}</span>
+                  <span data-side-text className="min-w-0 flex-1 truncate">
+                    {s.name}
+                  </span>
                   <ChevronRight
+                    data-side-text
                     className={cn(
                       'text-muted-foreground size-3.5 shrink-0 transition-transform motion-reduce:transition-none',
                       open && 'rotate-90',
@@ -387,6 +396,7 @@ export function SideMenu({
               <ul
                 id={listId}
                 hidden={!open}
+                data-side-list
                 className="border-line my-px mb-1 ml-[18px] flex flex-col gap-px border-l pl-2"
               >
                 {sheets.map(sheetLink)}
@@ -443,6 +453,51 @@ export function SideMenu({
           <p className="text-muted-foreground text-copy-13 px-2.5 py-2">Nothing matches.</p>
         ) : null}
       </div>
+      {onNavigate ? null : <CollapseToggle />}
     </nav>
+  );
+}
+
+/** "Collapse" at the foot of the side menu (Ctrl+B or Cmd+B): icons only, remembered in this browser. */
+function CollapseToggle() {
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    let saved = false;
+    try {
+      saved = localStorage.getItem('side-collapsed') === '1';
+    } catch {}
+    setCollapsed(saved);
+  }, []);
+  useEffect(() => {
+    document.documentElement.dataset.side = collapsed ? 'collapsed' : 'open';
+    try {
+      localStorage.setItem('side-collapsed', collapsed ? '1' : '0');
+    } catch {}
+  }, [collapsed]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'b') {
+        const t = e.target as HTMLElement | null;
+        if (t?.isContentEditable) return;
+        e.preventDefault();
+        setCollapsed((c) => !c);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+  const label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+  return (
+    <button
+      type="button"
+      onClick={() => setCollapsed((c) => !c)}
+      aria-expanded={!collapsed}
+      aria-label={label}
+      title={`${collapsed ? 'Expand' : 'Collapse'} sidebar (Ctrl+B)`}
+      className={cn(itemClass, 'text-muted-foreground mt-2 shrink-0')}
+    >
+      <PanelLeft className="size-4 shrink-0" aria-hidden />
+      <span data-side-text>Collapse</span>
+    </button>
   );
 }
