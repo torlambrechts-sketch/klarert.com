@@ -73,7 +73,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   // ── 1. Rail → + New sheet → Tracker
   await page
     .getByRole('navigation', { name: 'Side menu' })
-    .getByRole('link', { name: 'New sheet' })
+    .getByRole('link', { name: 'New sheet', exact: true })
     .click();
   await page
     .getByRole('main')
@@ -199,7 +199,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
     await expect(fieldList.getByText(`{${key}}`)).toBeVisible();
 
   // ── 4. Blank sheet "Actions", then a two-way Link to items from Corrective actions
-  await rail.getByRole('link', { name: 'New sheet' }).click();
+  await rail.getByRole('link', { name: 'New sheet', exact: true }).click();
   await page
     .getByRole('main')
     .getByRole('link', { name: /^Blank/ })

@@ -8,7 +8,7 @@ import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
 import { SubitemSettingsSection } from '@/components/subitems/subitem-settings';
 import { readSubitemSettings } from '@/engine/subitems';
-import { isEditorRole, requireMember } from '@/server/auth';
+import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import {
   getArchivedItems,
   getFields,
@@ -186,7 +186,7 @@ export default async function SheetSettingsPage({
         </Card>
       ) : null}
 
-      {canEdit ? (
+      {isAdminRole(role) ? (
         <Card
           title={sheet.archived_at ? 'Archived' : 'Archive'}
           description={

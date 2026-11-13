@@ -150,10 +150,42 @@ beforeEach(() => {
       { id: OTHER, org_id: 'o2', name: 'Elsewhere', position: 'a0', archived_at: null },
     ],
     sheets: [
-      { id: S1, org_id: ORG, name: 'Permits', folder_id: F1, position: 'a0', archived_at: null, parent_sheet_id: null },
-      { id: S2, org_id: ORG, name: 'Checks', folder_id: F1, position: 'a1', archived_at: null, parent_sheet_id: null },
-      { id: S3, org_id: ORG, name: 'Risk register', folder_id: null, position: 'a2', archived_at: null, parent_sheet_id: null },
-      { id: CHILD, org_id: ORG, name: 'Actions', folder_id: null, position: 'a3', archived_at: null, parent_sheet_id: S2 },
+      {
+        id: S1,
+        org_id: ORG,
+        name: 'Permits',
+        folder_id: F1,
+        position: 'a0',
+        archived_at: null,
+        parent_sheet_id: null,
+      },
+      {
+        id: S2,
+        org_id: ORG,
+        name: 'Checks',
+        folder_id: F1,
+        position: 'a1',
+        archived_at: null,
+        parent_sheet_id: null,
+      },
+      {
+        id: S3,
+        org_id: ORG,
+        name: 'Risk register',
+        folder_id: null,
+        position: 'a2',
+        archived_at: null,
+        parent_sheet_id: null,
+      },
+      {
+        id: CHILD,
+        org_id: ORG,
+        name: 'Actions',
+        folder_id: null,
+        position: 'a3',
+        archived_at: null,
+        parent_sheet_id: S2,
+      },
     ],
   };
 });
@@ -173,7 +205,8 @@ describe('folder commands are for owners and admins', () => {
 
   it.each(['viewer', 'editor'])('refuses a %s', async (role) => {
     db.role = role;
-    for (const op of ops) expect(await op()).toMatchObject({ ok: false, error: { code: 'forbidden' } });
+    for (const op of ops)
+      expect(await op()).toMatchObject({ ok: false, error: { code: 'forbidden' } });
     expect(db.writes).toEqual([]);
     expect(db.rpcs).toEqual([]);
   });
@@ -215,13 +248,21 @@ describe('folder commands are for owners and admins', () => {
   });
 
   it('sorts a folder A–Z', async () => {
-    expect(await sortFolderAZ({ org: 'acme', folderId: F1 })).toEqual({ ok: true, data: { sorted: 2 } });
+    expect(await sortFolderAZ({ org: 'acme', folderId: F1 })).toEqual({
+      ok: true,
+      data: { sorted: 2 },
+    });
     expect(position('sheets', S2) < position('sheets', S1)).toBe(true);
   });
 
   it('archives through the RPC that archives the sheets with it', async () => {
-    expect(await archiveFolder({ org: 'acme', folderId: F1 })).toEqual({ ok: true, data: { sheets: 2 } });
-    expect(db.rpcs).toEqual([{ name: 'set_folder_archived', args: { p_folder: F1, p_archived: true } }]);
+    expect(await archiveFolder({ org: 'acme', folderId: F1 })).toEqual({
+      ok: true,
+      data: { sheets: 2 },
+    });
+    expect(db.rpcs).toEqual([
+      { name: 'set_folder_archived', args: { p_folder: F1, p_archived: true } },
+    ]);
   });
 
   it('rejects bad input before anything else', async () => {
@@ -325,7 +366,9 @@ describe('the folder of a sheet from a template', () => {
     db.tables.folders = db.tables.folders!.filter((f) => f.id !== F2);
     const r = await run({ folderId: null, folderName: 'Audit and CAPA', startId: 'capa' });
     expect(r.ok).toBe(true);
-    expect(db.writes).toMatchObject([{ table: 'folders', op: 'insert', patch: { name: 'Audit and CAPA' } }]);
+    expect(db.writes).toMatchObject([
+      { table: 'folders', op: 'insert', patch: { name: 'Audit and CAPA' } },
+    ]);
   });
 
   it('only creates the start’s own folder', async () => {
@@ -333,15 +376,26 @@ describe('the folder of a sheet from a template', () => {
       ok: false,
       error: { code: 'invalid' },
     });
-    expect(await run({ folderId: null, folderName: 'Anything', startId: 'tracker' })).toMatchObject({
-      ok: false,
-    });
+    expect(await run({ folderId: null, folderName: 'Anything', startId: 'tracker' })).toMatchObject(
+      {
+        ok: false,
+      },
+    );
     expect(db.writes).toEqual([]);
   });
 
   it('lets the person pick another folder or no folder', async () => {
-    expect(await run({ folderId: F3, folderName: null, startId: 'capa' })).toEqual({ ok: true, data: F3 });
-    expect(await run({ folderId: null, folderName: null, startId: 'capa' })).toEqual({ ok: true, data: null });
-    expect(await run({ folderId: OTHER, startId: 'capa' })).toMatchObject({ ok: false, error: { code: 'invalid' } });
+    expect(await run({ folderId: F3, folderName: null, startId: 'capa' })).toEqual({
+      ok: true,
+      data: F3,
+    });
+    expect(await run({ folderId: null, folderName: null, startId: 'capa' })).toEqual({
+      ok: true,
+      data: null,
+    });
+    expect(await run({ folderId: OTHER, startId: 'capa' })).toMatchObject({
+      ok: false,
+      error: { code: 'invalid' },
+    });
   });
 });

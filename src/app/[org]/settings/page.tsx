@@ -394,7 +394,9 @@ async function ArchivedTab({
     .filter((f) => f.archived_at)
     .sort((a, b) => (a.archived_at! < b.archived_at! ? 1 : -1));
   const sheetsOf = (f: { id: string; archived_at: string | null }) =>
-    (sheets.data ?? []).filter((s) => s.folder_id === f.id && s.archived_at === f.archived_at);
+    (sheets.data ?? [])
+      .filter((s) => s.folder_id === f.id && s.archived_at === f.archived_at)
+      .sort((a, b) => a.name.localeCompare(b.name));
   const withFolder = new Set(archivedFolders.flatMap((f) => sheetsOf(f).map((s) => s.id)));
   const loose = (sheets.data ?? []).filter((s) => !withFolder.has(s.id));
   return (

@@ -90,6 +90,9 @@ const UNFILED = 'unfiled';
 const OPEN_DELAY = 600;
 const NEW_FOLDER_NOTE = 'Folders organise sheets. They do not restrict who can see them.';
 
+/** A folder shown before the server has answered: no menu actions on it yet. */
+const isTemp = (id: string) => id.startsWith('new-');
+
 function toTree(nav: Nav): Tree {
   return { folders: nav.folders, unfiled: nav.unfiled };
 }
@@ -199,6 +202,7 @@ export function MenuSheets(props: MenuSheetsProps) {
   }
 
   function moveSheet(sheetId: string, folderId: string | null, index: number, focus = false) {
+    if (folderId && isTemp(folderId)) return;
     const m: TreeMove<NavSheet> | null = moveSheetInTree(treeRef.current, sheetId, folderId, index);
     if (!m) return;
     const name = locateSheet(treeRef.current, sheetId)?.sheet.name ?? 'Sheet';
@@ -214,6 +218,7 @@ export function MenuSheets(props: MenuSheetsProps) {
   }
 
   function moveFolder(folderId: string, index: number, focus = false) {
+    if (isTemp(folderId)) return;
     const m = moveFolderInTree(treeRef.current, folderId, index);
     if (!m) return;
     const name = folderName(folderId);
@@ -239,13 +244,20 @@ export function MenuSheets(props: MenuSheetsProps) {
         () => createFolderAction({ org, name: value, at: 'first' }),
         `Could not create ${value}.`,
         () => rename(target, value),
-        () => toast('Folder created.'),
+        (d) => {
+          // the folder gets its real id at once, so it can be renamed or moved before the menu refreshes
+          setTree((was) => ({
+            ...was,
+            folders: was.folders.map((f) => (f.id === temp.id ? { ...f, id: d.id } : f)),
+          }));
+          toast('Folder created.');
+        },
       );
       return;
     }
     if (target.kind === 'folder') {
       const f = t.folders.find((x) => x.id === target.id);
-      if (!f || !value || value === f.name) return;
+      if (!f || isTemp(f.id) || !value || value === f.name) return;
       commit(
         { ...t, folders: t.folders.map((x) => (x.id === f.id ? { ...x, name: value } : x)) },
         () => renameFolderAction({ org, folderId: f.id, name: value }),
@@ -619,7 +631,7 @@ export function MenuSheets(props: MenuSheetsProps) {
               onToggle={() => props.toggle(s.id)}
               onKey={(e) => onFolderKey(e, s.id)}
               menu={
-                s.folder ? (
+                s.folder && canEdit ? (
                   <FolderMenu
                     {...shared}
                     folderId={s.id}
@@ -743,6 +755,15 @@ function RenameInput({
   describedBy?: string;
 }) {
   const done = useRef(false);
+  const input = useRef<HTMLInputElement>(null);
+  // focus once an open menu has closed and given the focus back (it would take it from an autofocused field)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      input.current?.focus();
+      input.current?.select();
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
   const finish = (v: string | null) => {
     if (done.current) return;
     done.current = true;
@@ -752,7 +773,7 @@ function RenameInput({
     <div className="border-focus bg-background-100 flex h-8 items-center gap-2 rounded-md border px-2">
       {icon}
       <input
-        autoFocus
+        ref={input}
         defaultValue={initial}
         placeholder={placeholder}
         aria-label={label}

@@ -256,7 +256,6 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
             </ol>
           )}
         </Card>
-
       </div>
     </main>
   );
