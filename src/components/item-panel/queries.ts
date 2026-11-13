@@ -1,10 +1,11 @@
 'use client';
 
+import { isMaskedValue } from '@/engine/access';
 import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ActivityEntry } from '@/engine/activity';
 import { fileCategories, type FileVersionRow } from '@/engine/item-files';
-import type { Item } from '@/engine/types';
+import type { Item, Json } from '@/engine/types';
 import { itemDocumentsAction } from '@/app/[org]/s/panel-actions';
 import type { Database } from '@/lib/database.types';
 import { fetchItemsById } from '@/lib/sheet-query';
@@ -108,6 +109,31 @@ export function useActivity(itemId: string, sheetId: string, version: string) {
         note: r.note,
         hash: r.hash,
       }));
+      // restricted values (docs/02 §16): the log keeps markers; people who may see the field read the values
+      const masked = entries.filter(
+        (e) => isMaskedValue(e.oldValue) || isMaskedValue(e.newValue) || hasMaskedValues(e),
+      );
+      if (masked.length) {
+        const { data: real } = await db
+          .from('restricted_activity')
+          .select('activity_id, field_id, old_value, new_value')
+          .in(
+            'activity_id',
+            masked.map((e) => e.id),
+          );
+        for (const r of real ?? []) {
+          const e = entries.find((x) => x.id === r.activity_id);
+          if (!e) continue;
+          if (e.fieldId) {
+            e.oldValue = (r.old_value ?? null) as ActivityEntry['oldValue'];
+            e.newValue = (r.new_value ?? null) as ActivityEntry['newValue'];
+          } else if (e.newValue && typeof e.newValue === 'object' && !Array.isArray(e.newValue)) {
+            const values = { ...((e.newValue.values ?? {}) as Record<string, Json>) };
+            values[r.field_id] = (r.new_value ?? null) as Json;
+            e.newValue = { ...e.newValue, values };
+          }
+        }
+      }
       const linkIds = new Set<string>();
       for (const e of entries)
         if (e.action === 'link.changed')
@@ -209,4 +235,17 @@ export function useFileCategories(org: string) {
     },
     staleTime: 5 * 60_000,
   });
+}
+
+/** An item.created entry whose values hold a restricted value's marker. */
+function hasMaskedValues(e: ActivityEntry): boolean {
+  const v = e.newValue;
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+  const values = v.values;
+  return (
+    !!values &&
+    typeof values === 'object' &&
+    !Array.isArray(values) &&
+    Object.values(values).some((x) => isMaskedValue(x))
+  );
 }
