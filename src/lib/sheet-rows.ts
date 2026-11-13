@@ -162,7 +162,11 @@ export function toSheet(r: {
   parent_sheet_id?: string | null;
   settings?: unknown;
 }): Sheet {
-  const settings = (r.settings ?? {}) as { subitems?: unknown; columnGroups?: unknown; register?: unknown };
+  const settings = (r.settings ?? {}) as {
+    subitems?: unknown;
+    columnGroups?: unknown;
+    register?: unknown;
+  };
   const columnGroups = parseColumnGroups(settings.columnGroups);
   return {
     id: r.id,
