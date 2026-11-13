@@ -1,0 +1,205 @@
+{
+  "key": "supplier-management",
+  "version": "1.0.0",
+  "title": "Supplier management",
+  "description": "A supplier register with reviews, the supplier requirements you hold them to and the supplier documents you control. Comes with two automations, a self-assessment form and a dashboard.",
+  "requires": [],
+  "folders": [{ "ref": "suppliers", "name": "Suppliers" }],
+  "sheets": [
+    {
+      "ref": "supplier",
+      "name": "Supplier register",
+      "description": "Suppliers you depend on, how critical they are and when they are next reviewed.",
+      "itemLabel": "Supplier",
+      "idPrefix": "SUP-",
+      "folder": "suppliers",
+      "groups": [
+        { "ref": "active", "name": "Active", "color": "green" },
+        { "ref": "onboarding", "name": "Onboarding", "color": "blue" },
+        { "ref": "exited", "name": "Exited", "color": "grey" }
+      ],
+      "fields": [
+        { "key": "owner", "name": "Owner", "type": "people", "config": { "multiple": false } },
+        { "key": "status", "name": "Status", "type": "status", "config": { "options": [
+          { "id": "opt_approved", "label": "Approved", "color": "green", "done": true },
+          { "id": "opt_review", "label": "Under review", "color": "orange" },
+          { "id": "opt_blocked", "label": "Blocked", "color": "red" }
+        ] } },
+        { "key": "category", "name": "Category", "type": "dropdown", "config": { "options": [
+          { "id": "opt_it", "label": "IT and cloud", "color": "blue" },
+          { "id": "opt_parts", "label": "Parts and materials", "color": "teal" },
+          { "id": "opt_services", "label": "Services", "color": "purple" }
+        ] } },
+        { "key": "criticality", "name": "Criticality", "type": "severity" },
+        { "key": "next_review", "name": "Next review", "type": "date" },
+        { "key": "reviews", "name": "Reviews", "type": "link", "config": { "targetSheetRef": "review", "multiple": true, "inverseKey": "supplier" } },
+        { "key": "requirements", "name": "Requirements", "type": "requirement", "config": { "targetSheetRef": "requirement", "multiple": true } },
+        { "key": "documents", "name": "Documents", "type": "link", "config": { "targetSheetRef": "document", "multiple": true } },
+        { "key": "notes", "name": "Notes", "type": "longtext" }
+      ],
+      "views": [{ "name": "By status", "type": "kanban", "config": { "labelFieldKey": "status" } }],
+      "tabs": [{ "ref": "table" }, { "ref": "By status" }, { "ref": "calendar" }],
+      "forms": [
+        {
+          "ref": "self_assessment",
+          "name": "Supplier self-assessment",
+          "groupRef": "onboarding",
+          "access": "public",
+          "layout": {
+            "title": "Supplier self-assessment",
+            "description": "Tell us about your organisation and how you meet our requirements.",
+            "nameLabel": "Organisation name",
+            "fields": [
+              { "key": "category", "label": "What do you supply?" },
+              { "key": "notes", "label": "How do you meet our requirements?", "required": true }
+            ]
+          },
+          "notice": {
+            "purpose": "To assess suppliers before and during our work with them.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who manage suppliers.",
+            "retention": "Kept while you are a supplier and for 3 years after.",
+            "rights": "You can ask to see, correct or delete your answers. Contact the person who shared this form."
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "cloudhost",
+          "group": "active",
+          "name": "Northwind Cloud Hosting",
+          "values": { "status": "opt_approved", "category": "opt_it", "criticality": "$option:High", "next_review": "$in:45" },
+          "links": { "reviews": ["cloudhost_2026"], "requirements": ["security_clause", "breach_notice"], "documents": ["code_of_conduct"] }
+        },
+        {
+          "ref": "fasteners",
+          "group": "onboarding",
+          "name": "Leeds Fasteners Ltd",
+          "values": { "status": "opt_review", "category": "opt_parts", "criticality": "$option:Medium", "next_review": "$in:10" },
+          "links": { "requirements": ["quality_certificate"] }
+        }
+      ]
+    },
+    {
+      "ref": "review",
+      "name": "Supplier reviews",
+      "description": "Periodic reviews of a supplier with the result and what to follow up.",
+      "itemLabel": "Review",
+      "idPrefix": "SRV-",
+      "folder": "suppliers",
+      "groups": [
+        { "ref": "planned", "name": "Planned", "color": "blue" },
+        { "ref": "done", "name": "Done", "color": "green" }
+      ],
+      "fields": [
+        { "key": "supplier", "name": "Supplier", "type": "link", "config": { "targetSheetRef": "supplier", "multiple": false, "inverseKey": "reviews" } },
+        { "key": "reviewer", "name": "Reviewer", "type": "people", "config": { "multiple": false } },
+        { "key": "review_date", "name": "Review date", "type": "date" },
+        { "key": "result", "name": "Result", "type": "dropdown", "config": { "options": [
+          { "id": "opt_pass", "label": "Pass", "color": "green" },
+          { "id": "opt_conditions", "label": "Pass with conditions", "color": "orange" },
+          { "id": "opt_fail", "label": "Fail", "color": "red" }
+        ] } },
+        { "key": "supplier_owner", "name": "Supplier owner", "type": "lookup", "config": { "linkFieldKey": "supplier", "targetFieldKey": "owner" } },
+        { "key": "findings", "name": "Findings", "type": "longtext" }
+      ],
+      "items": [
+        {
+          "ref": "cloudhost_2026",
+          "group": "done",
+          "name": "Annual review 2026",
+          "values": { "review_date": "$in:-20", "result": "opt_pass" },
+          "links": { "supplier": ["cloudhost"] }
+        }
+      ]
+    },
+    {
+      "ref": "requirement",
+      "name": "Supplier requirements",
+      "description": "What every supplier is held to. Link suppliers to the requirements that apply to them.",
+      "itemLabel": "Requirement",
+      "idPrefix": "SRQ-",
+      "folder": "suppliers",
+      "isLibrary": true,
+      "groups": [{ "ref": "all", "name": "Requirements", "color": "navy" }],
+      "fields": [
+        { "key": "guidance", "name": "Guidance", "type": "longtext" }
+      ],
+      "items": [
+        { "ref": "security_clause", "group": "all", "name": "Information security clause in the contract", "values": { "guidance": "The contract says how the supplier protects our information and lets us check it." } },
+        { "ref": "breach_notice", "group": "all", "name": "Breach notice within 24 hours", "values": { "guidance": "The supplier tells us about a security incident that affects us within 24 hours." } },
+        { "ref": "quality_certificate", "group": "all", "name": "Current quality certificate", "values": { "guidance": "The supplier sends a current certificate of its quality management system each year." } }
+      ]
+    },
+    {
+      "ref": "document",
+      "name": "Supplier documents",
+      "description": "Controlled documents for supplier management: approved by a second person, reviewed on a date.",
+      "itemLabel": "Document",
+      "idPrefix": "SDOC-",
+      "folder": "suppliers",
+      "register": "documents",
+      "groups": [
+        { "ref": "draft", "name": "Draft", "color": "grey" },
+        { "ref": "in_review", "name": "In review", "color": "orange" },
+        { "ref": "approved", "name": "Approved", "color": "green" },
+        { "ref": "obsolete", "name": "Obsolete", "color": "dark" }
+      ],
+      "fields": [
+        { "key": "document_id", "name": "Document ID", "type": "text" },
+        { "key": "owner", "name": "Owner", "type": "people", "config": { "multiple": false } },
+        { "key": "version", "name": "Version", "type": "number" },
+        { "key": "status", "name": "Status", "type": "status", "config": { "options": [
+          { "id": "opt_draft", "label": "Draft", "color": "grey" },
+          { "id": "opt_review", "label": "In review", "color": "orange" },
+          { "id": "opt_approved", "label": "Approved", "color": "green", "done": true },
+          { "id": "opt_obsolete", "label": "Obsolete", "color": "dark" }
+        ] }, "rules": [
+          { "id": "approve_note", "whenFieldKey": "status", "whenValues": ["opt_approved"], "requireComment": true, "message": "Add a version note: what changed in this version." },
+          { "id": "leave_approved", "whenFieldKey": "status", "whenValues": ["opt_draft", "opt_review", "opt_obsolete"], "requireComment": true, "fromDone": true, "message": "Say why this approved document changes status." }
+        ] },
+        { "key": "author", "name": "Author", "type": "people", "config": { "multiple": false } },
+        { "key": "approver", "name": "Approver", "type": "people", "config": { "multiple": false } },
+        { "key": "approved_on", "name": "Approved on", "type": "date" },
+        { "key": "next_review", "name": "Next review", "type": "date" }
+      ],
+      "items": [
+        { "ref": "code_of_conduct", "group": "draft", "name": "Supplier code of conduct", "values": { "document_id": "SUP-POL-01", "status": "opt_draft", "next_review": "$in:365" } },
+        { "ref": "onboarding_procedure", "group": "draft", "name": "Supplier onboarding procedure", "values": { "document_id": "SUP-PRO-01", "status": "opt_draft", "next_review": "$in:365" } }
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "ref": "review_due",
+      "sheet": "supplier",
+      "name": "Review due in 14 days → ask the owner for an update",
+      "trigger": { "type": "date_arrives", "fieldKey": "next_review", "offsetDays": -14 },
+      "conditions": [],
+      "actions": [
+        { "type": "request_update", "fieldKey": "owner", "message": "{id} {name} is due for review on {next_review}. Please plan it." }
+      ]
+    },
+    {
+      "ref": "review_failed",
+      "sheet": "review",
+      "name": "Review failed → tell the supplier owner",
+      "trigger": { "type": "field_becomes", "fieldKey": "result", "value": "opt_fail" },
+      "conditions": [],
+      "actions": [
+        { "type": "notify", "to": ["field:supplier_owner"], "message": "{name} of {supplier} failed. Decide what happens next." }
+      ]
+    }
+  ],
+  "dashboards": [
+    {
+      "ref": "overview",
+      "name": "Supplier overview",
+      "widgets": [
+        { "ref": "w_status", "type": "by_option", "title": "Suppliers by status", "sheetRef": "supplier", "fieldKey": "status" },
+        { "ref": "w_criticality", "type": "by_option", "title": "Suppliers by criticality", "sheetRef": "supplier", "fieldKey": "criticality" },
+        { "ref": "w_overdue", "type": "overdue", "title": "Overdue reviews", "sheetRef": "supplier", "fieldKey": "next_review" }
+      ]
+    }
+  ]
+}

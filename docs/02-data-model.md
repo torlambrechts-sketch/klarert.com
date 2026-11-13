@@ -19,6 +19,7 @@ orgs ─┬─ memberships ── profiles (auth.users)
       │                                     └─ outbound_webhooks (queue)
       ├─ notifications (per user)
       ├─ dashboards (config: { widgets: [...] })
+      ├─ pack_installs (ref_map) ── packs (global catalogue); provenance on every row a pack makes (§15)
       └─ activity_log (append-only, hash chain per item / per sheet for schema)
 ```
 
@@ -189,3 +190,21 @@ Folders organise sheets in the side menu (docs/05 §2.1). They do not restrict w
 ## 11. Seed (M1)
 
 `scripts/seed.ts` (run with the service role against local Supabase): creates users `maria@example.com` (owner), `james@example.com` (editor), `vic@example.com` (viewer), workspace "Meridian Components Ltd" (`meridian`), teams (Quality, IT, HSE), job roles (Compliance manager, Head of IT, HSE manager), entity "Meridian Components Ltd" (GB) with sites Leeds and Bradford, folder "Your sheets", and the two sheets from `templates/first-sheet.json` with the sample items listed there.
+
+## 15. Packs (0024)
+
+Packs are installable bundles of the core as data (docs/11): folders, sheets, fields, groups, views and forms, example items (also documents of a register and library items), links, automations and dashboards, each named by a stable **ref**.
+
+- **`packs`** (`key`, `version` semver, `title`, `description`, `manifest` jsonb, `hash` = sha-256 of the manifest's canonical JSON, primary key `(key, version)`): the global catalogue, no `org_id`. Every signed-in person reads it; nobody writes it through the API. The seed path writes it from the repository (`syncCatalogue`, service role, run by `scripts/seed.ts`); a version never changes once written (a different manifest under the same version is an error: bump the version).
+- **`pack_installs`** (`org_id`, `pack_key`, `version`, `status` installed | archived, `installed_by/at`, `archived_by/at`, `manifest_hash`, `ref_map`): one row per install; at most one `installed` row per pack and workspace (an archived install may be installed again). `ref_map` = `{ "sheet:ca": uuid, "field:ca.owner": uuid, "group:ca.open": uuid, "view:ca.form.report": uuid, "item:ca.burrs": uuid, "automation:stuck": uuid, "dashboard:overview": uuid, "folder:audit": uuid }`, kept so upgrades (P6) can map refs back to rows. Members read; written only by the RPCs below.
+- **Provenance** on folders, sheets, fields, groups, views, automations, dashboards and items: `pack_install_id` (FK), `pack_ref`, `pack_hash` (sha-256 of the row as the plan shipped it), unique `(org_id, pack_install_id, pack_ref)`. Refs: sheets `ca` (sub-item child sheet `ca.subitems`), fields `<sheet>.<key>`, groups `<sheet>.<group ref>`, views `<sheet>.view.<n>`, forms `<sheet>.form.<form ref>`, items `<sheet>.<item ref>`, automations and dashboards their own ref. `pack_provenance_guard` (trigger) lets only `install_pack` write them (it sets `app.pack_op` for its transaction) and nobody change them.
+- **`dashboards.archived_at`**: a pack's dashboards are archived with it; the dashboard pages list live ones.
+- `automations.source` = `pack:<key>` for a pack's automations.
+
+| RPC | Who | Does |
+|---|---|---|
+| `install_pack(org, plan)` (SECURITY DEFINER) | owners and admins of `org` (the seed's service role too) | Checks the catalogue row and its hash, that the pack is not installed, that every ref is present and unique and every reference stays inside the plan or the workspace (link targets, automation and widget sheets); writes the install row, folders, sheets (parents first), groups, fields, views, items (numbered like `create_items`, `item.created` note "Pack install"), links (`link.changed` per field and item), automations (as the installer) and dashboards, all with provenance, and `pack.installed` on the workspace chain (`sheet:<org_id>`) with the manifest hash and counts. One transaction: any failure leaves nothing behind. Returns `{ install_id, ref_map, counts }` |
+| `archive_pack(install)` (SECURITY DEFINER) | owners and admins of the install's workspace | Turns the install's automations off, archives its sheets (one timestamp, restorable from Workspace admin › Archived), its folders that have nothing else left in them and its dashboards, marks the install archived and logs `pack.archived`. Items, links and the log stay |
+| `pack_member_emails(org)` | owners and admins (service role) | The members' emails, so a pack's example people (`people` by email) can be matched |
+
+The plan (`p_plan`) is built by the pure planner `src/engine/packs/plan.ts` on the server from the catalogue manifest and a snapshot of the workspace (`src/server/packs/install.ts`); the browser never sends rows. Grants: the three functions to `authenticated` (`install_pack` and `pack_member_emails` also to `service_role`), `_pack_hash` and the guard to nobody.

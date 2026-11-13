@@ -1,18 +1,21 @@
-// Writes a sheet template into a workspace (docs/07 Part B; the template's `importer` notes). The plan comes from the
-// pure planner (src/lib/templates/plan.ts); this file only writes it, in the documented order:
-// sheets → fields without links → link fields with inverses → groups → views → items → links → automations.
+// Writes a sheet template into a workspace (docs/07 Part B) on the pack path (docs/11): the template is wrapped as a
+// pack (or found in the repository's catalogue), written to the `packs` catalogue if it is not there yet, planned by
+// the pure pack planner and written by install_pack in one transaction, with provenance on every row and a
+// `pack.installed` entry in the workspace's log.
 //
 // It is given a Supabase client and does not import 'server-only' so that `scripts/seed.ts` (tsx, service role) can
-// run it. With the service role, auth.uid() is null, so every activity entry (item.created, link.changed and the
-// schema entries) is written with actor `system`; items go through create_items and links through set_item_links,
-// the same RPCs the commands use, and no automation runs and no status rule is checked while the sample data loads.
-// The automations are inserted last, enabled as the template says. Re-running finds the sheets by their template
-// marker (sheets.settings.template) and changes nothing.
+// run it. With the service role, auth.uid() is null, so every activity entry is written with actor `system`; nothing
+// runs automations or checks status rules while the sample data loads. Re-running changes nothing: the workspace
+// already has the pack installed (or, for workspaces seeded before packs, the sheets carry the template marker).
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Json } from '@/engine/types';
+import { randomUUID } from 'node:crypto';
 import type { Database } from '@/lib/database.types';
-import { planTemplateImport, type ImportPlan, type PlanEnv } from '@/lib/templates/plan';
+import { repoPacks } from '@/lib/packs/catalogue';
+import { packHash } from '@/lib/packs/hash';
+import { parsePack } from '@/lib/packs/manifest';
+import { templateToPack } from '@/lib/packs/wrap';
 import type { SheetTemplate } from '@/lib/templates/schema';
+import { planInstall, syncCatalogue, writeInstall } from '@/server/packs/install';
 
 type Db = SupabaseClient<Database>;
 
@@ -27,26 +30,20 @@ export interface ImportCounts {
 }
 
 export type ImportOutcome =
-  | { status: 'imported'; counts: ImportCounts; sheetIds: Record<string, string> }
+  | { status: 'imported'; counts: ImportCounts; sheetIds: Record<string, string>; installId: string }
   | { status: 'exists'; sheetIds: Record<string, string> };
 
-function must<T>(r: { data: T; error: { message: string } | null }, what: string): T {
-  if (r.error) throw new Error(`${what}: ${r.error.message}`);
-  return r.data;
-}
-
-/** Sheets of this workspace already made from this template: ref → sheet id. */
+/** Sheets of this workspace made from this template before packs (sheets.settings.template): ref → sheet id. */
 async function existing(db: Db, orgId: string, templateId: string) {
-  const rows = must(
-    await db
-      .from('sheets')
-      .select('id, settings')
-      .eq('org_id', orgId)
-      .eq('settings->template->>id', templateId),
-    'existing sheets',
-  );
+  const { data, error } = await db
+    .from('sheets')
+    .select('id, settings')
+    .eq('org_id', orgId)
+    .is('parent_sheet_id', null)
+    .eq('settings->template->>id', templateId);
+  if (error) throw new Error(`existing sheets: ${error.message}`);
   const out: Record<string, string> = {};
-  for (const r of rows ?? []) {
+  for (const r of data ?? []) {
     const ref = (r.settings as { template?: { ref?: string } } | null)?.template?.ref;
     if (ref) out[ref] = r.id;
   }
@@ -56,7 +53,8 @@ async function existing(db: Db, orgId: string, templateId: string) {
 export async function importTemplate(
   db: Db,
   template: SheetTemplate,
-  env: Omit<PlanEnv, 'lastSheetPosition'>,
+  env: { orgId: string; now: Date; newId?: () => string },
+  meta?: { title: string; version: string },
 ): Promise<ImportOutcome> {
   const found = await existing(db, env.orgId, template.id);
   const refs = template.sheets.map((s) => s.ref);
@@ -67,120 +65,46 @@ export async function importTemplate(
         'Archive or delete those sheets, then import again.',
     );
 
-  const last = must(
-    await db
-      .from('sheets')
-      .select('position')
-      .eq('org_id', env.orgId)
-      .order('position', { ascending: false })
-      .limit(1),
-    'last sheet',
-  );
-  const plan = planTemplateImport(template, { ...env, lastSheetPosition: last?.[0]?.position ?? null });
-  if (plan.problems.length)
-    throw new Error(`Template ${template.id} does not fit:\n  ${plan.problems.join('\n  ')}`);
-  return { status: 'imported', ...(await write(db, plan)) };
-}
-
-async function write(db: Db, plan: ImportPlan) {
-  const counts: ImportCounts = {
-    sheets: 0,
-    fields: 0,
-    groups: 0,
-    views: 0,
-    items: 0,
-    links: 0,
-    automations: 0,
-  };
-  const sheets = plan.sheets;
-  must(await db.from('sheets').insert(sheets.map((s) => s.row as never)), 'sheets');
-  counts.sheets = sheets.length;
-
-  const allFields = sheets.flatMap((s) => s.fields);
-  const isLink = (f: (typeof allFields)[number]) =>
-    !!f.config && typeof f.config === 'object' && 'targetSheetId' in f.config;
-  for (const batch of [allFields.filter((f) => !isLink(f)), allFields.filter(isLink)]) {
-    if (batch.length) must(await db.from('fields').insert(batch as never), 'fields');
-    counts.fields += batch.length;
-  }
-
-  const groups = sheets.flatMap((s) => s.groups);
-  must(await db.from('groups').insert(groups), 'groups');
-  counts.groups = groups.length;
-
-  // sub-items: the child sheets after their parents (docs/02 §12)
-  for (const s of sheets) {
-    const sub = s.subitems;
-    if (!sub) continue;
-    const orgId = s.row.org_id;
-    must(await db.from('sheets').insert(sub.sheet as never), 'sub-item sheet');
-    must(
-      await db.from('groups').insert({ ...sub.group, org_id: orgId, sheet_id: sub.sheet.id }),
-      'sub-item group',
-    );
-    must(
-      await db
-        .from('fields')
-        .insert(sub.fields.map((f) => ({ ...f, org_id: orgId, sheet_id: sub.sheet.id })) as never),
-      'sub-item fields',
-    );
-    counts.sheets += 1;
-    counts.groups += 1;
-    counts.fields += sub.fields.length;
-  }
-
-  const views = sheets.flatMap((s) => s.views);
-  if (views.length) must(await db.from('views').insert(views as never), 'views');
-  counts.views = views.length;
-
-  const itemIds = new Map<string, string>(); // `${sheetRef}|${name}` → id
-  for (const s of sheets) {
-    for (const g of s.items) {
-      const n = must(
-        await db.rpc('create_items', {
-          p_sheet: s.row.id,
-          p_group: g.groupId,
-          p_rows: g.rows as unknown as Json,
-          p_note: 'Template import',
-        }),
-        `items of ${s.row.name}`,
-      );
-      counts.items += n ?? 0;
-    }
-    const rows = must(
-      await db.from('items').select('id, name').eq('sheet_id', s.row.id),
-      `items of ${s.row.name}`,
-    );
-    for (const r of rows ?? []) itemIds.set(`${s.ref}|${r.name}`, r.id);
-  }
-
-  // one set_item_links call per (field, from item), each direction written on its own side
-  const calls = new Map<string, { field: string; from: string; to: string[] }>();
-  for (const l of plan.links) {
-    const from = itemIds.get(`${l.from.sheetRef}|${l.from.name}`);
-    const to = itemIds.get(`${l.to.sheetRef}|${l.to.name}`);
-    if (!from || !to) throw new Error(`link ${l.from.name} → ${l.to.name}: item not found`);
-    const k = `${l.fieldId}|${from}`;
-    const c = calls.get(k) ?? { field: l.fieldId, from, to: [] };
-    c.to.push(to);
-    calls.set(k, c);
-  }
-  for (const c of calls.values()) {
-    must(
-      await db.rpc('set_item_links', {
-        p_field: c.field,
-        p_from: c.from,
-        p_to: c.to,
-        p_mode: 'add',
+  // the repository's pack for this template, else the template wrapped as a pack
+  const manifest =
+    repoPacks().find((p) => p.key === template.id) ??
+    parsePack(
+      templateToPack(template, {
+        version: meta?.version ?? `${template.version}.0.0`,
+        title: meta?.title ?? template.sheets[0]!.name,
       }),
-      'links',
     );
-    counts.links += c.to.length;
-  }
-
-  if (plan.automations.length)
-    must(await db.from('automations').insert(plan.automations as never), 'automations');
-  counts.automations = plan.automations.length;
-
-  return { counts, sheetIds: Object.fromEntries(sheets.map((s) => [s.ref, s.row.id])) };
+  await syncCatalogue(db, [manifest]);
+  const plan = await planInstall(
+    db,
+    env.orgId,
+    { manifest, hash: packHash(manifest) },
+    { userId: '', now: env.now, newId: env.newId ?? randomUUID },
+  );
+  if (plan.state === 'installed') return { status: 'exists', sheetIds: found };
+  const problems = [...plan.preview.conflicts, ...plan.preview.warnings];
+  if (plan.state === 'blocked' || problems.length)
+    throw new Error(`Template ${template.id} does not fit:\n  ${problems.join('\n  ')}`);
+  const written = await writeInstall(db, env.orgId, plan);
+  if (!written.ok) throw new Error(`install ${template.id}: ${written.error.message}`);
+  const c = written.data.counts;
+  const sheetIds = Object.fromEntries(
+    Object.entries(written.data.refMap)
+      .filter(([k]) => k.startsWith('sheet:') && !k.includes('.'))
+      .map(([k, v]) => [k.slice('sheet:'.length), v]),
+  );
+  return {
+    status: 'imported',
+    installId: written.data.installId,
+    sheetIds,
+    counts: {
+      sheets: c.sheets ?? 0,
+      fields: c.fields ?? 0,
+      groups: c.groups ?? 0,
+      views: (c.views ?? 0) + (c.forms ?? 0),
+      items: c.items ?? 0,
+      links: c.links ?? 0,
+      automations: c.automations ?? 0,
+    },
+  };
 }

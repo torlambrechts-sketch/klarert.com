@@ -45,6 +45,8 @@ export async function listDashboards(db: Db, orgId: string): Promise<Dashboard[]
       .from('dashboards')
       .select(DASHBOARD_COLUMNS)
       .eq('org_id', orgId)
+      // a pack's dashboards are archived with the pack (archive_pack)
+      .is('archived_at', null)
       .order('position')
       .order('id'),
   );

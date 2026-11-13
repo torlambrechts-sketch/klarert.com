@@ -121,14 +121,14 @@ isOneToOne: false
                   ]
                 },"automations": {
                   Row: {
-                    "actions": NonNullable<Json>,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"last_run_at": string | null,"locked": boolean,"name": string,"org_id": string,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number
+                    "actions": NonNullable<Json>,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"last_run_at": string | null,"locked": boolean,"name": string,"org_id": string,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "actions": NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"run_count"?: number,"sheet_id": string,"source"?: string,"trigger": NonNullable<Json>,"updated_at"?: string,"version"?: number
+                    "actions": NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"run_count"?: number,"sheet_id": string,"source"?: string,"trigger": NonNullable<Json>,"updated_at"?: string,"version"?: number,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Update: {
-                    "actions"?: NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"run_count"?: number,"sheet_id"?: string,"source"?: string,"trigger"?: NonNullable<Json>,"updated_at"?: string,"version"?: number
+                    "actions"?: NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"run_count"?: number,"sheet_id"?: string,"source"?: string,"trigger"?: NonNullable<Json>,"updated_at"?: string,"version"?: number,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -153,14 +153,14 @@ isOneToOne: false
                   ]
                 },"dashboards": {
                   Row: {
-                    "config": NonNullable<Json>,"created_at": string,"created_by": string | null,"id": string,"name": string,"org_id": string,"position": string,"updated_at": string
+                    "config": NonNullable<Json>,"created_at": string,"created_by": string | null,"id": string,"name": string,"org_id": string,"position": string,"updated_at": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"archived_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "config"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string,"org_id": string,"position": string,"updated_at"?: string
+                    "config"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string,"org_id": string,"position": string,"updated_at"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"archived_at"?: string | null
                   }
                   Update: {
-                    "config"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string,"updated_at"?: string
+                    "config"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string,"updated_at"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"archived_at"?: string | null
                   }
                   Relationships: [
                     {
@@ -199,14 +199,14 @@ isOneToOne: false
                   ]
                 },"fields": {
                   Row: {
-                    "archived_at": string | null,"config": NonNullable<Json>,"created_at": string,"description": string | null,"id": string,"key": string,"locked": boolean,"name": string,"org_id": string,"position": string,"required": boolean,"rules": NonNullable<Json>,"sheet_id": string,"type": string,"updated_at": string,"validation": NonNullable<Json>,"visibility": Json | null,"width": number | null
+                    "archived_at": string | null,"config": NonNullable<Json>,"created_at": string,"description": string | null,"id": string,"key": string,"locked": boolean,"name": string,"org_id": string,"position": string,"required": boolean,"rules": NonNullable<Json>,"sheet_id": string,"type": string,"updated_at": string,"validation": NonNullable<Json>,"visibility": Json | null,"width": number | null,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"description"?: string | null,"id"?: string,"key": string,"locked"?: boolean,"name": string,"org_id": string,"position": string,"required"?: boolean,"rules"?: NonNullable<Json>,"sheet_id": string,"type": string,"updated_at"?: string,"validation"?: NonNullable<Json>,"visibility"?: Json | null,"width"?: number | null
+                    "archived_at"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"description"?: string | null,"id"?: string,"key": string,"locked"?: boolean,"name": string,"org_id": string,"position": string,"required"?: boolean,"rules"?: NonNullable<Json>,"sheet_id": string,"type": string,"updated_at"?: string,"validation"?: NonNullable<Json>,"visibility"?: Json | null,"width"?: number | null,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Update: {
-                    "archived_at"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"description"?: string | null,"id"?: string,"key"?: string,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"required"?: boolean,"rules"?: NonNullable<Json>,"sheet_id"?: string,"type"?: string,"updated_at"?: string,"validation"?: NonNullable<Json>,"visibility"?: Json | null,"width"?: number | null
+                    "archived_at"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"description"?: string | null,"id"?: string,"key"?: string,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"required"?: boolean,"rules"?: NonNullable<Json>,"sheet_id"?: string,"type"?: string,"updated_at"?: string,"validation"?: NonNullable<Json>,"visibility"?: Json | null,"width"?: number | null,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -281,14 +281,14 @@ isOneToOne: false
                   ]
                 },"folders": {
                   Row: {
-                    "archived_at": string | null,"created_at": string,"id": string,"name": string,"org_id": string,"position": string
+                    "archived_at": string | null,"created_at": string,"id": string,"name": string,"org_id": string,"position": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name": string,"org_id": string,"position": string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name": string,"org_id": string,"position": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Update: {
-                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -379,14 +379,14 @@ isOneToOne: false
                   ]
                 },"groups": {
                   Row: {
-                    "color": string,"created_at": string,"id": string,"name": string,"org_id": string,"position": string,"sheet_id": string
+                    "color": string,"created_at": string,"id": string,"name": string,"org_id": string,"position": string,"sheet_id": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "color"?: string,"created_at"?: string,"id"?: string,"name": string,"org_id": string,"position": string,"sheet_id": string
+                    "color"?: string,"created_at"?: string,"id"?: string,"name": string,"org_id": string,"position": string,"sheet_id": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Update: {
-                    "color"?: string,"created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string,"sheet_id"?: string
+                    "color"?: string,"created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string,"sheet_id"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -501,14 +501,14 @@ isOneToOne: false
                   ]
                 },"items": {
                   Row: {
-                    "archived_at": string | null,"archived_with": string | null,"created_at": string,"created_by": string | null,"held_at": string | null,"held_by": string | null,"held_created": boolean,"held_snapshot": Json | null,"display_id": string,"group_id": string,"id": string,"lock_reason": string | null,"locked": boolean,"name": string,"next_sub_seq": number,"org_id": string,"parent_id": string | null,"position": string,"seq": number,"sheet_id": string,"source_channel": string | null,"source_form_id": string | null,"form_version": number | null,"sub_seq": number | null,"updated_at": string,"updated_by": string | null,"values": NonNullable<Json>
+                    "archived_at": string | null,"archived_with": string | null,"created_at": string,"created_by": string | null,"held_at": string | null,"held_by": string | null,"held_created": boolean,"held_snapshot": Json | null,"display_id": string,"group_id": string,"id": string,"lock_reason": string | null,"locked": boolean,"name": string,"next_sub_seq": number,"org_id": string,"parent_id": string | null,"position": string,"seq": number,"sheet_id": string,"source_channel": string | null,"source_form_id": string | null,"form_version": number | null,"sub_seq": number | null,"updated_at": string,"updated_by": string | null,"values": NonNullable<Json>,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id": string,"group_id": string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
+                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id": string,"group_id": string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Update: {
-                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id"?: string,"group_id"?: string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"seq"?: number,"sheet_id"?: string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
+                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id"?: string,"group_id"?: string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"seq"?: number,"sheet_id"?: string,"source_channel"?: string | null,"source_form_id"?: string | null,"form_version"?: number | null,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -679,6 +679,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"pack_installs": {
+                  Row: {
+                    "archived_at": string | null,"archived_by": string | null,"id": string,"installed_at": string,"installed_by": string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map": NonNullable<Json>,"status": string,"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"archived_by"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map"?: NonNullable<Json>,"status"?: string,"version": string
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"archived_by"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"manifest_hash"?: string,"org_id"?: string,"pack_key"?: string,"ref_map"?: NonNullable<Json>,"status"?: string,"version"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pack_installs_archived_by_fkey"
+      columns: ["archived_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pack_installs_installed_by_fkey"
+      columns: ["installed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pack_installs_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pack_installs_pack_key_version_fkey"
+      columns: ["pack_key","version"]
+isOneToOne: false
+      referencedRelation: "packs"
+      referencedColumns: ["key","version"]
+    }
+                  ]
+                },"packs": {
+                  Row: {
+                    "created_at": string,"description": string,"hash": string,"key": string,"manifest": NonNullable<Json>,"title": string,"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"description"?: string,"hash": string,"key": string,"manifest": NonNullable<Json>,"title": string,"version": string
+                  }
+                  Update: {
+                    "created_at"?: string,"description"?: string,"hash"?: string,"key"?: string,"manifest"?: NonNullable<Json>,"title"?: string,"version"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"profiles": {
                   Row: {
                     "color": string,"created_at": string,"display_name": string,"id": string,"initials": string
@@ -759,14 +811,14 @@ isOneToOne: false
                   ]
                 },"sheets": {
                   Row: {
-                    "archived_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"folder_id": string | null,"id": string,"id_prefix": string | null,"is_library": boolean,"item_label": string,"name": string,"next_seq": number,"org_id": string,"parent_sheet_id": string | null,"position": string,"settings": NonNullable<Json>,"updated_at": string
+                    "archived_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"folder_id": string | null,"id": string,"id_prefix": string | null,"is_library": boolean,"item_label": string,"name": string,"next_seq": number,"org_id": string,"parent_sheet_id": string | null,"position": string,"settings": NonNullable<Json>,"updated_at": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name": string,"next_seq"?: number,"org_id": string,"parent_sheet_id"?: string | null,"position": string,"settings"?: NonNullable<Json>,"updated_at"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name": string,"next_seq"?: number,"org_id": string,"parent_sheet_id"?: string | null,"position": string,"settings"?: NonNullable<Json>,"updated_at"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Update: {
-                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name"?: string,"next_seq"?: number,"org_id"?: string,"parent_sheet_id"?: string | null,"position"?: string,"settings"?: NonNullable<Json>,"updated_at"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name"?: string,"next_seq"?: number,"org_id"?: string,"parent_sheet_id"?: string | null,"position"?: string,"settings"?: NonNullable<Json>,"updated_at"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -875,14 +927,14 @@ isOneToOne: false
                   ]
                 },"views": {
                   Row: {
-                    "config": NonNullable<Json>,"created_at": string,"form_version": number,"id": string,"name": string,"org_id": string,"owner_id": string | null,"position": string,"sheet_id": string,"type": string
+                    "config": NonNullable<Json>,"created_at": string,"form_version": number,"id": string,"name": string,"org_id": string,"owner_id": string | null,"position": string,"sheet_id": string,"type": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "config"?: NonNullable<Json>,"created_at"?: string,"form_version"?: number,"id"?: string,"name": string,"org_id": string,"owner_id"?: string | null,"position": string,"sheet_id": string,"type": string
+                    "config"?: NonNullable<Json>,"created_at"?: string,"form_version"?: number,"id"?: string,"name": string,"org_id": string,"owner_id"?: string | null,"position": string,"sheet_id": string,"type": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Update: {
-                    "config"?: NonNullable<Json>,"created_at"?: string,"form_version"?: number,"id"?: string,"name"?: string,"org_id"?: string,"owner_id"?: string | null,"position"?: string,"sheet_id"?: string,"type"?: string
+                    "config"?: NonNullable<Json>,"created_at"?: string,"form_version"?: number,"id"?: string,"name"?: string,"org_id"?: string,"owner_id"?: string | null,"position"?: string,"sheet_id"?: string,"type"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -984,6 +1036,9 @@ isOneToOne: false
       } },
 "archive_file":
 { Args: { "p_file": string,"p_note"?: string | null }; Returns: undefined
+                           },
+"archive_pack":
+{ Args: { "p_install": string }; Returns: Json
                            },
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean
@@ -1194,6 +1249,9 @@ isOneToOne: false
 "has_role":
 { Args: { "o": string,"roles": (Database["public"]['Enums']["member_role"])[] }; Returns: boolean
                            },
+"install_pack":
+{ Args: { "p_org": string,"p_plan": Json }; Returns: Json
+                           },
 "is_admin":
 { Args: { "o": string }; Returns: boolean
                            },
@@ -1295,6 +1353,11 @@ isOneToOne: false
                            },
 "notify_mention":
 { Args: { "p_update": string,"p_user_ids": (string)[] }; Returns: number
+                           },
+"pack_member_emails":
+{ Args: { "p_org": string }; Returns: {
+              "email": string,"user_id": string
+            }[]
                            },
 "pause_pair_ok":
 { Args: { "p_automation": string,"p_item": string,"p_org": string }; Returns: boolean

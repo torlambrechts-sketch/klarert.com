@@ -62,3 +62,18 @@ export function suggestIdPrefix(name: string, taken: Iterable<string>): string {
   }
   return `${stem}-`;
 }
+
+/**
+ * A prefix made unique in the workspace by a number before the "-" (CA- → CA2- → CA3-), cutting the stem so the result
+ * still matches ^[A-Z0-9]{1,6}-$. Packs use it when a prefix they ship is already taken (docs/11).
+ */
+export function uniqueIdPrefix(prefix: string, taken: Iterable<string>): string {
+  const used = new Set(taken);
+  if (!used.has(prefix)) return prefix;
+  const stem = prefix.replace(/-$/, '') || 'IT';
+  for (let n = 2; n < 100000; n += 1) {
+    const candidate = `${stem.slice(0, 6 - String(n).length)}${n}-`;
+    if (!used.has(candidate)) return candidate;
+  }
+  return prefix;
+}

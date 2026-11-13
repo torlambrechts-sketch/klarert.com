@@ -394,15 +394,6 @@ async function userId(email: string): Promise<string> {
   return created.data.user.id;
 }
 
-function todayIn(timeZone: string, now: Date): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now);
-}
-
 async function main() {
   const existingOrg = await db
     .from('orgs')
@@ -452,24 +443,8 @@ async function main() {
     'memberships',
   );
 
-  const now = new Date();
-  const planEnv = {
-    jobRoles: [],
-    teams: [],
-    orgId: org.id,
-    people: people.map((p) => ({
-      ref: p.ref,
-      id: p.id,
-      name: p.name,
-      initials: p.key,
-      color: p.color,
-      email: p.email,
-    })),
-    today: todayIn(TIME_ZONE, now),
-    now,
-    timeZone: TIME_ZONE,
-    newId: randomUUID,
-  };
+  // the importer installs each folder's sheets as a pack (docs/11); the folder made below is reused by name
+  const planEnv = { orgId: org.id, now: new Date(), newId: randomUUID };
 
   let folderPos: string | null = null;
   let riskSheetId = '';
@@ -612,7 +587,11 @@ async function main() {
       folder: folder.name,
       sheets,
     });
-    const outcome = await importTemplate(db, template, { ...planEnv, folderId });
+    void folderId;
+    const outcome = await importTemplate(db, template, planEnv, {
+      title: folder.name,
+      version: '1.0.0',
+    });
     if (folder.name === 'Risk and controls') riskSheetId = outcome.sheetIds.risks!;
   }
 

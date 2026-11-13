@@ -20,15 +20,23 @@ import { readSubitemSettings } from '@/engine/subitems';
 import type { Database } from './database.types';
 
 type Tables = Database['public']['Tables'];
+/** Pack provenance (0024): written by install_pack, read by the pack screens only. */
+type Provenance = 'pack_install_id' | 'pack_ref' | 'pack_hash';
 export type ItemDbRow = Omit<
   Tables['items']['Row'],
-  'held_at' | 'held_by' | 'held_created' | 'held_snapshot' | 'next_sub_seq' | 'archived_with'
+  | 'held_at'
+  | 'held_by'
+  | 'held_created'
+  | 'held_snapshot'
+  | 'next_sub_seq'
+  | 'archived_with'
+  | Provenance
 >;
-export type FieldDbRow = Tables['fields']['Row'];
+export type FieldDbRow = Omit<Tables['fields']['Row'], Provenance>;
 export type GroupDbRow = Tables['groups']['Row'];
 export type LinkDbRow = Tables['item_links']['Row'];
 export type FileDbRow = Tables['files']['Row'];
-export type ViewDbRow = Tables['views']['Row'];
+export type ViewDbRow = Omit<Tables['views']['Row'], Provenance>;
 
 /** Columns only the form submit functions write (0022). */
 type SourceColumn = 'source_form_id' | 'form_version' | 'source_channel';

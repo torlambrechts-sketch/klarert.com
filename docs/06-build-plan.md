@@ -155,10 +155,43 @@ One level of sub-items per item on a hidden child sheet (docs/02 §12): own fiel
 - [x] Sheet settings: turn on, label, rules, template, the sub-items' fields; wizard starts CAPA, Internal audit, Incident, Control, Risk treatment; `first-sheet.json` Corrective actions with Steps
 - [ ] Lazy loading per expanded parent for sheets with more than 2 000 sub-items (all load with the sheet today); Insights "Items / Sub-items" scope; quick filters (status, owner) matching sub-items
 
+## Packs and apps (approved by Tor, advisory board review 13 Nov 2026)
+
+Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, fields by key, links, sub-items, views, forms, tab sets, column groups, automations and recipes, dashboards, documents and library items. Apps are packs with a front door (navigation + screens over existing views), never custom code. Board decisions: never ship ISO/IEC clause text (IDs + own paraphrased titles only; EU law text is fine; counsel to confirm); decide retention before the GDPR pack.
+
+### P1 · Pack framework  [Opus]
+- [x] Migration: `packs` (key, version, manifest, hash) and `pack_installs` (org, pack key, version, status, installed by, manifest hash); provenance `pack_install_id` + `pack_ref` + `pack_hash` on folders, sheets, fields, groups, views, automations, dashboards (and items seeded by a pack); unique `(org_id, pack_install_id, pack_ref)`
+- [x] Manifest schema (Zod, `src/lib/packs/manifest.ts`) extending the sheet template schema: key, semver version, `requires`, folders by ref, sheets, link fields by `sheetRef`, dashboards with `sheetRef`/`fieldKey`, documents, library items with stable refs (not names), id prefixes with collision renaming
+- [x] Pure install planner (`src/engine/packs/plan.ts`): manifest + workspace snapshot → operations (create / skip / conflict), reusing the template planner; preview text
+- [x] One transactional RPC `install_pack` (owners/admins; grant to authenticated) writing every row and a `pack.installed` log entry; commands `previewPack`, `installPack`, `archivePack` (uninstall archives, never deletes items or the log)
+- [x] The template importer moved onto the pack path; the first-sheet template and one start shipped as packs
+- [x] Workspace admin → Packs: available packs, preview (what will be created), install with progress, installed packs with version and Archive; audit entries readable
+- [x] Tests: planner and manifest units; pgTAP for the RPC (atomic, admin-only, provenance, grants); e2e install → preview → install → archive
+
+### P2 · Access control  [Opus]
+- [ ] Per-folder and per-sheet roles (owner / editor / commenter / viewer / no access) enforced in RLS, covering links, roll-ups, lookups, search, dashboards, Insights, exports and notifications; field-level hide for sensitive columns; a `restricted` flag packs can set; an auditor read-only role
+
+### P3 · Requirement library and cross-walks  [Opus]
+- [ ] `frameworks`, `requirements` (ref, parent, own-words title, guidance, source/licence) and `crosswalks` (equivalent / partial / related); org library items linked by `requirement_ref`; SoA as a view over the library with applicability and justification
+
+### P4 · First pack: ISO 27001:2022  [Opus + Sonnet]
+- [ ] Scope, risk register and treatment, Annex A library (93 controls, IDs + own titles), SoA, document set, evidence, internal audit, CAPA, management review; Starter and Full levels; guided setup and a 7-step checklist
+
+### P5 · Audit outputs  [Opus]
+- [ ] SoA export; audit pack (PDF/zip: SoA, registers, evidence index, log extract with chain verification); management review inputs compiled from existing data
+
+### P6 · Pack upgrades  [Opus]
+- [ ] Three-way diff (shipped hash, client's current, new manifest): apply untouched, flag conflicts, archive removed, fields add-only, keep client options and automation on/off; dry run and rollback
+
+### P7 · Apps  [Sonnet]
+- [ ] App manifest (navigation sections → screens: view / form / dashboard / workflow / item over sheet refs; role visibility); `/[org]/apps/[key]/[screen]`; first app: CAPA ("Report a problem", "My actions", "Needs my approval")
+
+Later: GDPR pack (after retention), ISO 9001, NIS2, consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
+
 ---
 
 ## After the MVP (do not start without Tor)
 
 - Multi-step workflows with approvals (the Sun mockup's "Workflow" tab): steps, assignees, approve/reject, SLA, `start_workflow` action
-- Compliance packs as data (sheets + fields + automations + views + libraries), dashboards, readiness, app builder, AI proposals
+- Readiness scoring, app builder for customers, AI proposals (packs and apps: see "Packs and apps" above)
 - SSO (Microsoft Entra ID, Google), email digests, Teams app, public API and webhooks in

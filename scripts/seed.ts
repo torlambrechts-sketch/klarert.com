@@ -4,12 +4,13 @@
 // Run: pnpm seed   (reads .env.local; refuses non-local Supabase unless SEED_ALLOW_REMOTE=1)
 // Options (environment): SEED_WORKSPACE=<slug> and SEED_WORKSPACE_NAME=<name> seed another workspace with the same
 // people (the first-sheet e2e test uses a fresh one per run); SEED_SHEETS=0 leaves it empty (docs/07 Part A).
-import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Database } from '../src/lib/database.types';
 import { parseTemplate } from '../src/lib/templates/schema';
+import { repoPacks } from '../src/lib/packs/catalogue';
+import { syncCatalogue } from '../src/server/packs/install';
 import { importTemplate } from '../src/server/templates/importer';
 
 const env = z
@@ -77,17 +78,9 @@ async function userId(email: string): Promise<string> {
   return created.data.user.id;
 }
 
-/** Today's date (YYYY-MM-DD) in a time zone. */
-function todayIn(timeZone: string, now: Date): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now);
-}
-
 async function main() {
+  // the pack catalogue (docs/11): the repository's packs, each version written once
+  const catalogue = await syncCatalogue(db, repoPacks());
   const people = [];
   for (const [i, p] of template.people.entries()) {
     const id = await userId(p.email);
@@ -186,8 +179,7 @@ async function main() {
     .maybeSingle();
   if (folderLookup.error) throw new Error(`folder lookup: ${folderLookup.error.message}`);
   const folder = folderLookup.data;
-  const folderId =
-    folder?.id ??
+  if (!folder)
     check(
       await db
         .from('folders')
@@ -195,33 +187,11 @@ async function main() {
         .select('id')
         .single(),
       'folder',
-    ).id;
+    );
 
   let sheetsLine = 'no sheets (SEED_SHEETS=0)';
   if (env.SEED_SHEETS === '1') {
-    const now = new Date();
-    const jobRoles = check(
-      await db.from('job_roles').select('id, name').eq('org_id', org.id),
-      'job roles lookup',
-    );
-    const outcome = await importTemplate(db, template, {
-      jobRoles,
-      teams,
-      orgId: org.id,
-      folderId,
-      people: people.map((p, i) => ({
-        ref: p.ref,
-        id: p.id,
-        name: p.name,
-        initials: p.initials,
-        color: COLORS[i % COLORS.length]!,
-        email: p.email,
-      })),
-      today: todayIn(WORKSPACE.time_zone, now),
-      now,
-      timeZone: WORKSPACE.time_zone,
-      newId: randomUUID,
-    });
+    const outcome = await importTemplate(db, template, { orgId: org.id, now: new Date() });
     sheetsLine =
       outcome.status === 'exists'
         ? `sheets from ${template.id} already there`
@@ -232,7 +202,8 @@ async function main() {
   console.log(
     `Seeded ${WORKSPACE.name} (/${WORKSPACE.slug}): ${people.length} people, ${teams.length} teams, ` +
       `${roleNames.length} job roles, 1 entity, ${ENTITY.sites.length} sites, folder "${template.folder}", ` +
-      `${sheetsLine}.`,
+      `${sheetsLine}. Packs in the catalogue: ${[...catalogue.added, ...catalogue.unchanged].length}` +
+      `${catalogue.added.length ? ` (${catalogue.added.length} new)` : ''}.`,
   );
   console.log(
     `Sign in as ${people.map((p) => `${p.email} (${p.role})`).join(', ')} — magic links arrive in Mailpit.`,
