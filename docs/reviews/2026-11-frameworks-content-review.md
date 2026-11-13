@@ -335,3 +335,34 @@ Titles: all GDPR article and chapter titles match the official headings, or are 
 4. **DORA statement in Art. 23(1).** The entry says financial entities in scope of DORA report under DORA rather than NIS2. This is correct as lex specialis, but legal may want to word it more cautiously, because some national laws keep parallel registration duties.
 5. **German DPO threshold (Art. 37).** The entry points to German law as an example of a wider DPO duty (BDSG §38, 20 or more people regularly processing personal data by automated means), without giving the number. Confirm you are happy to name a country.
 6. **GDPR Art. 46 and the 2021 SCCs.** Art. 46 was left unchanged, but the European Commission's planned additional standard clauses for importers already subject to GDPR (Art. 3(2)) may later need a note under Art. 46.
+
+# Revision 4 decisions
+
+The owner's decisions on the points raised above, and what changed. Every framework moves to `revision` 4 (library packs `<edition>.4.0`).
+
+## Decisions
+
+1. **NIS2 coverage gap.** Add scope (Art. 2), classification (Art. 3), registration (Art. 3(3) and Art. 27) and informing recipients of significant cyber threats (Art. 23(2)). Scope and classification are written as a guided self-check. Art. 24 and the supervision articles (32, 33) stay out for now.
+2. **Implementing Regulation (EU) 2024/2690** stays named for digital providers, and **DORA** stays named for financial entities. Both approved.
+3. **ISO titles use the published spelling** ("organization", "Organizational", "synchronization"), including theme titles. Our own text (purpose, guidance, questions, evidence) stays UK English. "Labelling" and "programme" are left as they are because that is how ISO publishes them.
+4. **Review frequencies.** Where the standard or law sets no frequency, the text says the organisation sets the interval and gives a typical example ("at intervals you set; many organisations review yearly"). Legal deadlines stay exact (72 hours, one month, two weeks, three months).
+
+## What changed
+
+| Framework | Refs changed | Detail |
+|---|---|---|
+| NIS2 | 13 (10 new) | New: themes Art. 2 · Scope, Art. 3 · Essential and important entities, Art. 27 · Registry of entities; requirements Art. 2(1) size-cap rule and Annex I/II sectors, Art. 2(2) entities in scope regardless of size, Art. 3(1) essential entities, Art. 3(2) important entities, Art. 3(3) the national list and the entity's own determination (details within two weeks of a change), Art. 23(2) informing recipients of significant cyber threats, Art. 27(2) registration of digital providers (details within three months of a change). New refs are appended, parent first. Frequencies reworded: Art. 21(2)(b), (f), (i). Library now has 34 refs. |
+| ISO/IEC 27001 | 9 | Titles: A.5 · Organizational controls, A.8.17 Clock synchronization. Frequencies: 4.1, 8.2, 9.2.1, 9.3, A.5.7, A.5.22, A.5.31. |
+| ISO 9001 | 2 | Title: Clause 4 · Context of the organization. Frequency: 7.1.1. |
+| ISO 14001 | 3 | Titles: Clause 4, 4.1 and 5.3 in US spelling. Frequency: 4.1. |
+| ISO 45001 | 3 | Titles: Clause 4, 4.1 and 5.3 in US spelling. |
+| GDPR | 2 | Frequencies: Art. 5 (retention review), Art. 39 (DPO work plan and reporting; one question and one evidence line). |
+
+Cross-walks (Klarert mapping v1, additions only, all `related`): ISO/IEC 27001 A.5.31 ↔ NIS2 Art. 2(1), and A.5.5 ↔ NIS2 Art. 3(3) and Art. 27(2). NIS2 Art. 23(2) is not mapped to GDPR Art. 34: one is about threats to service recipients, the other about breaches affecting people's data, so they are not equivalent.
+
+`src/lib/frameworks/catalogue.test.ts` expects the `.4.0` pack versions and checks the new NIS2 refs and the count of 34.
+
+## Still for a human
+
+- NIS2 Art. 3(3) and 27(2) describe registration at directive level. Registration deadlines, portals and extra fields come from national law; add country notes when the first target Member States are chosen.
+- The Art. 3(2) entry says financial entities under DORA follow DORA for risk management and reporting, and points to national law for classification and registration. Legal may want to confirm this wording against the national transposing acts.

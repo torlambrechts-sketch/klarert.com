@@ -87,6 +87,24 @@ describe('the shipped catalogue', () => {
     for (const p of 'abcd') expect(refs).toContain(`Art. 23(4)(${p})`);
   });
 
+  it('NIS2 covers scope, classification, registration and threat notices (revision 4)', () => {
+    const nis2 = byKey.get('nis2')!.requirements;
+    const refs = nis2.map((r) => r.ref);
+    for (const ref of [
+      'Art. 2(1)',
+      'Art. 2(2)',
+      'Art. 3(1)',
+      'Art. 3(2)',
+      'Art. 3(3)',
+      'Art. 23(2)',
+      'Art. 27(2)',
+    ])
+      expect(refs).toContain(ref);
+    for (const theme of ['Art. 2', 'Art. 3', 'Art. 27'])
+      expect(nis2.find((r) => r.ref === theme)?.kind).toBe('theme');
+    expect(nis2).toHaveLength(34);
+  });
+
   it('GDPR lists the articles a compliance team works with', () => {
     const refs = byKey.get('gdpr')!.requirements.map((r) => r.ref);
     for (const n of [
@@ -219,12 +237,12 @@ describe('framework libraries as packs', () => {
 
   it('one pack per framework, with one library item per requirement that is not a theme', () => {
     expect(packs.map((p) => `${p.key} ${p.version}`)).toEqual([
-      'framework-iso-27001 2022.3.0',
-      'framework-iso-9001 2015.3.0',
-      'framework-iso-14001 2015.3.0',
-      'framework-iso-45001 2018.3.0',
-      'framework-gdpr 2016.3.0',
-      'framework-nis2 2022.3.0',
+      'framework-iso-27001 2022.4.0',
+      'framework-iso-9001 2015.4.0',
+      'framework-iso-14001 2015.4.0',
+      'framework-iso-45001 2018.4.0',
+      'framework-gdpr 2016.4.0',
+      'framework-nis2 2022.4.0',
     ]);
     for (const [i, f] of frameworks.entries()) {
       const sheet = packs[i]!.sheets[0]!;

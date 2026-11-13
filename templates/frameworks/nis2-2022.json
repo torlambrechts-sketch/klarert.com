@@ -1,7 +1,7 @@
 {
   "key": "nis2",
   "version": "2022",
-  "revision": 3,
+  "revision": 4,
   "title": "NIS2 (Directive (EU) 2022/2555)",
   "shortTitle": "NIS2",
   "publisher": "European Union",
@@ -134,7 +134,7 @@
         "incidents"
       ],
       "purpose": "Requires you to be able to detect, assess, contain and recover from security incidents in an organised way.",
-      "guidance": "Define what counts as an incident, how staff report one, who leads response and how severity is judged. Provide logging and monitoring that can actually detect problems. Keep an incident log with timeline, cause, lessons and actions. Link the process to regulatory reporting deadlines. Auditors find no tested procedure, incidents handled informally and lessons never turned into actions. Rehearse with a tabletop exercise each year.",
+      "guidance": "Define what counts as an incident, how staff report one, who leads response and how severity is judged. Provide logging and monitoring that can actually detect problems. Keep an incident log with timeline, cause, lessons and actions. Link the process to regulatory reporting deadlines. Auditors find no tested procedure, incidents handled informally and lessons never turned into actions. Rehearse, for example with a tabletop exercise, at intervals you set; many entities do so yearly.",
       "questions": [
         "How do staff report a suspected incident?",
         "Who decides severity and leads response?",
@@ -227,7 +227,7 @@
       "kind": "paragraph",
       "title": "Checking whether the measures work",
       "purpose": "Requires you to assess whether your cybersecurity measures are effective, not just in place.",
-      "guidance": "Define how effectiveness is measured, using indicators such as patch times, incidents and test results. Combine internal reviews, technical testing such as penetration tests and management reviews. Track findings to closure and report to leadership. Auditors find controls assumed to work and testing that is never followed up. Plan a yearly testing calendar proportionate to your risk.",
+      "guidance": "Define how effectiveness is measured, using indicators such as patch times, incidents and test results. Combine internal reviews, technical testing such as penetration tests and management reviews. Track findings to closure and report to leadership. Auditors find controls assumed to work and testing that is never followed up. Plan a testing calendar proportionate to your risk, over a period you set; many entities plan a year ahead.",
       "questions": [
         "How do you measure whether controls are effective?",
         "What testing has been done in the past year?",
@@ -293,7 +293,7 @@
       "kind": "paragraph",
       "title": "People security, access control and asset management",
       "purpose": "Requires controls for staff-related risk, who may access what, and knowing which assets you hold.",
-      "guidance": "Screen staff proportionately, set security terms in contracts and run a joiner, mover, leaver process that grants and removes access promptly. Apply least privilege and review access at least yearly. Keep an asset inventory of hardware, software, data and services with owners. Auditors find leavers with active accounts, inventories that are out of date and excessive admin rights. Automate where you can.",
+      "guidance": "Screen staff proportionately, set security terms in contracts and run a joiner, mover, leaver process that grants and removes access promptly. Apply least privilege and review access at intervals you set; many entities review yearly, and privileged access more often. Keep an asset inventory of hardware, software, data and services with owners. Auditors find leavers with active accounts, inventories that are out of date and excessive admin rights. Automate where you can.",
       "questions": [
         "How are access rights granted, changed and removed?",
         "How often is access reviewed?",
@@ -525,6 +525,196 @@
         "Deadline tracking in the incident log",
         "Corrective actions raised",
         "Submission confirmation"
+      ]
+    },
+    {
+      "ref": "Art. 23(2)",
+      "parent": "Art. 23",
+      "kind": "paragraph",
+      "title": "Tell recipients about significant cyber threats and what they can do",
+      "tags": [
+        "incidents",
+        "communication"
+      ],
+      "purpose": "Requires you to tell service recipients who may be affected by a significant cyber threat which measures or remedies they can take, and where appropriate about the threat itself.",
+      "guidance": "A significant cyber threat is one whose technical features suggest it could severely affect your systems or your users through material or non-material damage (Article 6(11)). This duty applies before anything has happened, so treat it separately from incident reporting. Name who judges whether a threat is significant and which recipients may be affected, and keep customer contact lists current per service. Prepare short message templates that say what recipients can do themselves, such as installing an update, changing a setting or watching for a phishing campaign, and decide when to describe the threat too. Where telling people could help attackers, agree timing with your CSIRT. Keep a record of each threat assessed, who was told and when. Auditors find customer notices sent only after incidents, never for threats, and nobody owning the decision.",
+      "questions": [
+        "Who decides whether a cyber threat is significant and which service recipients may be affected?",
+        "How do you reach affected recipients quickly, and how current are the contact lists?",
+        "Which measures or remedies have you recently told recipients about, and why?",
+        "When do you also describe the threat itself, and who approves that wording?",
+        "How do threat notices link to your incident process and to the CSIRT?"
+      ],
+      "evidence": [
+        "Procedure for assessing significant cyber threats and informing recipients",
+        "Message templates for recipients with measures and remedies",
+        "Recipient contact lists per service",
+        "Log of threats assessed, recipients told and dates",
+        "Copies of notices sent to recipients"
+      ]
+    },
+    {
+      "ref": "Art. 2",
+      "kind": "theme",
+      "title": "Article 2 · Scope",
+      "purpose": "Sets out which organisations the directive covers: mainly medium-sized and larger entities in the sectors of Annexes I and II, plus some that are covered whatever their size."
+    },
+    {
+      "ref": "Art. 2(1)",
+      "parent": "Art. 2",
+      "kind": "paragraph",
+      "title": "Medium-sized and larger entities in the sectors of Annexes I and II",
+      "tags": [
+        "scope"
+      ],
+      "purpose": "Brings into scope public and private entities of a type listed in Annex I or II that are at least medium-sized and provide their services or carry out their activities in the EU.",
+      "guidance": "Treat this as a guided self-check and record the outcome. Step 1: list your services and activities and compare them with the sectors, subsectors and entity types in Annex I (such as energy, transport, banking, health, drinking water, digital infrastructure, ICT service management and public administration) and Annex II (such as postal services, waste, chemicals, food, manufacturing, digital providers and research). Step 2: apply the size-cap rule. Using Commission Recommendation 2003/361/EC, you are in scope if you have at least 50 staff, or both annual turnover and balance sheet total above EUR 10 million. Count partner and linked enterprises as the Recommendation requires, and check whether national guidance adjusts this for groups. Step 3: confirm you provide services or carry out activities in the EU. If step 1 or 2 says no, check Article 2(2) before concluding you are out of scope. Auditors find scoping decided by size alone, with no sector mapping on file.",
+      "questions": [
+        "Which of your services or activities match a sector, subsector or entity type in Annex I or II?",
+        "What are your headcount, annual turnover and balance sheet total, and how did you count partner and linked enterprises?",
+        "In which Member States do you provide services or carry out activities?",
+        "Who signed off the scoping decision, and what would make you recheck it?",
+        "Which national transposing law did you check, and does it widen the sectors or the size rule?"
+      ],
+      "evidence": [
+        "Scoping self-check mapping services to the sectors and entity types in Annexes I and II",
+        "Headcount, turnover and balance sheet figures used, with the year and source",
+        "Group structure showing partner and linked enterprises",
+        "List of Member States where services are provided",
+        "Management sign-off of the scoping decision",
+        "Note on the national transposing law consulted"
+      ]
+    },
+    {
+      "ref": "Art. 2(2)",
+      "parent": "Art. 2",
+      "kind": "paragraph",
+      "title": "Entities in scope regardless of size",
+      "tags": [
+        "scope"
+      ],
+      "purpose": "Brings some entities into scope whatever their size, because of the service they provide or how critical they are, so a small entity cannot assume it is out of scope.",
+      "guidance": "Check each of these even if the size-cap rule leaves you out. In scope regardless of size: providers of public electronic communications networks or publicly available electronic communications services; trust service providers; top-level domain name registries and DNS service providers; and central government bodies (and regional ones where national law says so). A Member State can also bring in an Annex I or II entity that is the sole national provider of a service essential for critical societal or economic activities, whose disruption could significantly affect public safety, security or health or cause significant systemic risk, or that is critical for its specific national or regional importance. Entities designated critical under Directive (EU) 2022/2557 (CER) are covered too, and domain name registration services are covered for the registration data duties in Article 28. National law may add local government or education. Public bodies working mainly in national security, defence or law enforcement are excluded. Auditors find small providers that assumed they were out of scope.",
+      "questions": [
+        "Do you provide a public electronic communications network or service, a trust service, a TLD name registry or a DNS service?",
+        "Has the authority identified you as a sole national provider, or as critical for public safety, security, health or systemic risk?",
+        "Have you been designated a critical entity under the CER Directive?",
+        "Does your national law bring in further entity types, such as local government or education?"
+      ],
+      "evidence": [
+        "Checklist of the size-independent criteria with the answer and reason for each",
+        "Any letter or decision from the authority identifying the entity",
+        "CER designation, where there is one",
+        "Note on national additions to scope"
+      ]
+    },
+    {
+      "ref": "Art. 3",
+      "kind": "theme",
+      "title": "Article 3 · Essential and important entities",
+      "purpose": "Sorts in-scope entities into essential and important, which decides how closely they are supervised and the maximum fines, and requires each Member State to keep a list of them."
+    },
+    {
+      "ref": "Art. 3(1)",
+      "parent": "Art. 3",
+      "kind": "paragraph",
+      "title": "Essential entities",
+      "tags": [
+        "scope"
+      ],
+      "purpose": "Defines which in-scope entities are essential: mainly large entities in Annex I sectors, plus certain providers and bodies named whatever their size or identified by the Member State.",
+      "guidance": "Continue the self-check from Article 2. You are essential if you are: an Annex I entity above the medium-sized ceilings (250 or more staff, or turnover above EUR 50 million and balance sheet total above EUR 43 million); a qualified trust service provider, TLD name registry or DNS service provider, whatever your size; a medium-sized provider of public electronic communications networks or services; an in-scope central government body; an entity the Member State identifies as essential under Article 2(2)(b) to (e); an entity designated critical under the CER Directive; or, where the Member State so decides, an operator of essential services under the first NIS Directive. Essential entities are supervised proactively, including audits, inspections and security scans, and face national maximum fines of at least EUR 10 million or 2% of worldwide annual turnover, whichever is higher. Record the criterion you applied, the reasoning and the date.",
+      "questions": [
+        "Which criterion makes you essential, or why does none apply?",
+        "Do your figures exceed the medium-sized ceilings, counted as the Recommendation requires?",
+        "Has the Member State identified you as essential, now or under the first NIS Directive?",
+        "How are you prepared for proactive supervision, such as audits or on-site inspections by the authority?"
+      ],
+      "evidence": [
+        "Classification record naming the criterion applied",
+        "Size figures and the group calculation used",
+        "Any identification decision from the authority",
+        "Plan for supporting supervisory audits and inspections",
+        "Management sign-off of the classification"
+      ]
+    },
+    {
+      "ref": "Art. 3(2)",
+      "parent": "Art. 3",
+      "kind": "paragraph",
+      "title": "Important entities",
+      "tags": [
+        "scope"
+      ],
+      "purpose": "Makes every other in-scope entity of a type in Annex I or II an important entity, including those a Member State identifies as important.",
+      "guidance": "If you are in scope under Article 2 but meet none of the essential criteria, you are important. Typical cases are medium-sized entities in Annex I sectors and medium-sized or large entities in Annex II sectors, such as manufacturers, food businesses or digital providers. The risk-management measures in Article 21 and the reporting duties in Article 23 are the same as for essential entities. What differs is supervision, which happens after the event when there are signs of non-compliance, and the national maximum fines of at least EUR 7 million or 1.4% of worldwide annual turnover, whichever is higher. Your class can change when you grow, shrink, merge or start a new service, so recheck it on those events and at intervals you set; many entities review yearly. Financial entities covered by DORA follow DORA for risk management and incident reporting; check how your national law treats them for classification and registration.",
+      "questions": [
+        "On what basis did you conclude that you are an important rather than an essential entity?",
+        "Which events would change your class, and who watches for them?",
+        "How do you show you meet Articles 21 and 23 when supervision only follows signs of non-compliance?",
+        "Does a sector-specific law such as DORA replace parts of NIS2 for you?"
+      ],
+      "evidence": [
+        "Classification record with the reasoning",
+        "List of events that trigger a reclassification, such as growth, mergers or new services",
+        "Record of the latest classification review",
+        "Note on overlapping sector-specific law, where relevant"
+      ]
+    },
+    {
+      "ref": "Art. 3(3)",
+      "parent": "Art. 3",
+      "kind": "paragraph",
+      "title": "National list of entities and the information you submit",
+      "tags": [
+        "scope",
+        "registration"
+      ],
+      "purpose": "Requires each Member State to keep a list of essential and important entities, and requires entities to give the authority their details and to report changes within two weeks.",
+      "guidance": "Member States had to establish the list by 17 April 2025 and must review it at least every two years. In most countries the authority will not tell you that you are in scope: you are expected to make the determination yourself and register, often through a national portal. Submit at least your name, address and current contact details including email addresses, IP ranges and telephone numbers, your sector and subsector under Annex I or II, and where applicable the Member States where you provide in-scope services. Report any change to these details without delay and in any event within two weeks. National law sets the deadline for first registration and may ask for more, such as a security contact. Digital providers listed in Article 27 also have the duties in that article. Auditors find entities that are in scope but never registered, and stale contact details.",
+      "questions": [
+        "Have you registered with the competent authority, through which channel, and when?",
+        "What information did you submit, and who keeps it current?",
+        "How would a change of address, contact details or IP ranges reach the authority within two weeks?",
+        "What deadline and extra information does your national law set for registration?"
+      ],
+      "evidence": [
+        "Self-determination record that led to registration",
+        "Registration confirmation from the competent authority",
+        "Copy of the information submitted",
+        "Owner and procedure for notifying changes within two weeks",
+        "Change log of submitted details"
+      ]
+    },
+    {
+      "ref": "Art. 27",
+      "kind": "theme",
+      "title": "Article 27 · Registry of entities",
+      "purpose": "Requires certain digital infrastructure and digital service providers to give their details to one authority, so that ENISA can keep an EU-wide registry of them."
+    },
+    {
+      "ref": "Art. 27(2)",
+      "parent": "Art. 27",
+      "kind": "paragraph",
+      "title": "Registration of digital providers with the authority",
+      "tags": [
+        "registration"
+      ],
+      "purpose": "Requires DNS, TLD, domain registration, cloud, data centre, CDN, managed and managed security service providers, online marketplaces, search engines and social networks to register their details and keep them current.",
+      "guidance": "First check whether you are one of these entity types. If so, register with the competent authority of the Member State of your main establishment in the EU (Article 26), or of your representative if you are established outside the EU. The directive's deadline was 17 January 2025. Submit your name; your sector, subsector and entity type under Annex I or II; the address of your main establishment and your other establishments in the EU, or of your representative; current contact details including email addresses and telephone numbers; the Member States where you provide services; and your IP ranges. Report changes without delay and in any event within three months. The authority passes the details to ENISA. National transposition sets the channel and may add fields or extend registration to other entities, so read your national law. Auditors find registrations made once and never updated after an office move or a new IP range.",
+      "questions": [
+        "Which entity type in Article 27 applies to you, and in which Member State is your main establishment?",
+        "When did you register, and with which authority?",
+        "Who keeps the registered details current, and how are changes reported within three months?",
+        "Are your registered IP ranges and contact details correct today?",
+        "What does your national law add to the registration duty?"
+      ],
+      "evidence": [
+        "Registration confirmation from the competent authority",
+        "Copy of the submitted details, including IP ranges",
+        "Determination of the main establishment or representative",
+        "Change log with the dates changes were notified",
+        "Owner and procedure for keeping the registration current"
       ]
     }
   ]

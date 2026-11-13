@@ -1,7 +1,7 @@
 {
   "key": "iso-9001",
   "version": "2015",
-  "revision": 3,
+  "revision": 4,
   "title": "ISO 9001:2015",
   "shortTitle": "9001",
   "publisher": "ISO",
@@ -20,7 +20,7 @@
     {
       "ref": "4",
       "kind": "theme",
-      "title": "Clause 4 · Context of the organisation",
+      "title": "Clause 4 · Context of the organization",
       "purpose": "Sets the foundation: what shapes the business, who cares about it and what the quality system covers."
     },
     {
@@ -312,7 +312,7 @@
       "kind": "clause",
       "title": "Providing what the system needs",
       "purpose": "Confirms that the business has identified and provided what the system needs, with attention to limits.",
-      "guidance": "Look at what exists in house and what must come from outside, and note where capacity or capability is a limit. Keep a brief record linking resource needs to processes and objectives. Review at least yearly and whenever demand changes. Pitfall: treating this clause as paperwork when the real evidence is decisions, such as hiring or replacing equipment, taken for quality reasons.",
+      "guidance": "Look at what exists in house and what must come from outside, and note where capacity or capability is a limit. Keep a brief record linking resource needs to processes and objectives. Review at intervals you set; many organisations review yearly, and whenever demand changes. Pitfall: treating this clause as paperwork when the real evidence is decisions, such as hiring or replacing equipment, taken for quality reasons.",
       "questions": [
         "What internal limits affect your ability to deliver?",
         "What do you need from external providers?",
