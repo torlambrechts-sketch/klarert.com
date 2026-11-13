@@ -1,6 +1,7 @@
 // The packs this repository ships (docs/11): native pack files (templates/packs/*.json), the first-sheet template and
 // two wizard starts wrapped as packs. The seed writes them into the `packs` catalogue table; the app reads the table.
 import firstSheet from '../../../templates/first-sheet.json';
+import iso27001 from '../../../templates/packs/iso-27001.json';
 import supplierManagement from '../../../templates/packs/supplier-management.json';
 import type { PackManifest } from '@/engine/packs/types';
 import { parseTemplate } from '@/lib/templates/schema';
@@ -21,6 +22,7 @@ export function repoPacks(): PackManifest[] {
   return [
     parsePack(first),
     parsePack(supplierManagement),
+    parsePack(iso27001),
     ...START_PACKS.map((id) => parsePack(startToPack(startById(id)!))),
   ];
 }
