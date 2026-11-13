@@ -5,7 +5,6 @@ import {
   Archive,
   ChevronDown,
   CircleDot,
-  Columns3,
   FolderInput,
   Layers3,
   Lock,
@@ -42,11 +41,10 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { LockDialog } from './lock-dialog';
 import { positionsAtEnd } from './table-model';
-import { toolbarButton, toolbarCount, toolbarSelect } from '@/components/table/toolbar-styles';
+import { toolbarButton, toolbarSelect } from '@/components/table/toolbar-styles';
 
 // The Table's toolbar controls (docs/05 §3.1), one row under the view tabs: "Actions" (bulk actions on the selected
 // rows and Group by), the status and owner filters, Columns and the row density. Filters and density are UI state;
@@ -261,58 +259,6 @@ export function OwnerFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-// ───────────────────────── columns ─────────────────────────
-
-export function ColumnsMenu({ fields, hiddenCount }: { fields: Field[]; hiddenCount: number }) {
-  const store = useGridStore();
-  const hidden = useGrid((s) => s.hidden);
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className={toolbarButton}>
-          <Columns3 aria-hidden /> Columns
-          {hiddenCount ? (
-            <span className={toolbarCount}>
-              +{hiddenCount}
-              <span className="sr-only"> hidden</span>
-            </span>
-          ) : null}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-64">
-        <fieldset className="flex flex-col gap-1">
-          <legend className="text-label-13 mb-1 font-semibold">Show columns</legend>
-          {fields.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13">No fields yet.</p>
-          ) : null}
-          <div className="flex max-h-72 flex-col gap-0.5 overflow-auto">
-            {fields.map((f) => {
-              const Icon = fieldUI(f.type).icon;
-              return (
-                <label
-                  key={f.id}
-                  className="hover:bg-soft text-label-13 flex items-center gap-2 rounded px-1 py-0.5"
-                >
-                  <input
-                    type="checkbox"
-                    checked={!hidden.has(f.id)}
-                    onChange={(e) => store.getState().setHidden(f.id, !e.target.checked)}
-                  />
-                  <Icon className="text-muted-foreground size-3.5" aria-hidden />
-                  {f.name}
-                </label>
-              );
-            })}
-          </div>
-          <p className="text-muted-foreground text-label-12 pt-1">
-            Hidden columns belong to this view.
-          </p>
-        </fieldset>
-      </PopoverContent>
-    </Popover>
   );
 }
 

@@ -23,6 +23,7 @@ import {
   importCsvInput,
   moveSheetInput,
   renameSheetInput,
+  setColumnGroupsInput,
   updateSheetInput,
 } from '@/lib/schemas/sheets';
 import { startById } from '@/lib/starts';
@@ -34,6 +35,7 @@ import { templateFormLayout } from '@/lib/templates/plan';
 import { activeFolders, insertFolder } from './folders';
 import { setUpSubitems } from './subitems';
 import { createInverseField } from './two-way';
+import { setColumnGroupsWith, type ColumnGroupsResult } from './column-groups-core';
 
 // Sheets (docs/01 FR-6, FR-7). Structure rows are written under RLS through create_sheet (one transaction, logged by
 // the schema triggers); imported items go through create_items (definer, same checks as create_item).
@@ -607,6 +609,67 @@ export async function updateSheet(input: unknown): Promise<Result<null>> {
       return error ? fromDbError(error) : ok(null);
     },
     'updateSheet',
+  );
+}
+
+/**
+ * Set a sheet's column groups (owners and admins, docs/02 sheets.settings.columnGroups). Fields assigned to a group move
+ * so the group's columns sit together. The settings write is logged by the sheets audit trigger.
+ */
+export async function setColumnGroups(input: unknown): Promise<Result<ColumnGroupsResult>> {
+  const p = setColumnGroupsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'admin',
+    async ({ supabase, orgId, role }) =>
+      setColumnGroupsWith(
+        {
+          role,
+          loadSheet: async () => {
+            const { data: s } = await supabase
+              .from('sheets')
+              .select('id, settings')
+              .eq('id', v.sheetId)
+              .eq('org_id', orgId)
+              .maybeSingle();
+            if (!s) return null;
+            const { data: fields, error } = await supabase
+              .from('fields')
+              .select('id, key, position')
+              .eq('sheet_id', s.id)
+              .is('archived_at', null)
+              .order('position');
+            if (error) throw new Error(error.message);
+            return { settings: (s.settings ?? {}) as Record<string, Json>, fields: fields ?? [] };
+          },
+          moveFields: async (moves) => {
+            for (const m of moves) {
+              const { error } = await supabase
+                .from('fields')
+                .update({ position: m.position })
+                .eq('id', m.fieldId)
+                .eq('org_id', orgId);
+              if (error) return fromDbError(error);
+            }
+            return ok(null);
+          },
+          saveSettings: async (settings) => {
+            const { error } = await supabase
+              .from('sheets')
+              .update({
+                settings: settings as NonNullable<Json>,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', v.sheetId)
+              .eq('org_id', orgId);
+            return error ? fromDbError(error) : ok(null);
+          },
+        },
+        { groups: v.groups },
+      ),
+    'setColumnGroups',
   );
 }
 

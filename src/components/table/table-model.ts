@@ -5,6 +5,12 @@
 import type { GridColumn } from '@/engine/clipboard';
 import { keyBetween } from '@/engine/ordering';
 import { resolveFieldType } from '@/engine/fields/resolve';
+import {
+  arrangeFields,
+  groupByKey,
+  OTHER_GROUP,
+  type ColumnGroup,
+} from '@/engine/views/column-groups';
 import type { Field, Group, Item } from '@/engine/types';
 
 export type TableRow =
@@ -35,14 +41,24 @@ export type SubRow = Extract<TableRow, { kind: 'subitem' }>;
 
 export type Density = 'comfortable' | 'compact';
 
-/** Row heights of the table (two-line item rows: the name, then the id and owner). */
-export function rowHeight(kind: TableRow['kind'], density: Density = 'comfortable'): number {
+/** The slim line of column group labels above a card's column names (sheets with column groups). */
+export const GROUP_LABEL_H = 28;
+
+/**
+ * Row heights of the table (two-line item rows: the name, then the id and owner). `groupLabels`: the column header
+ * carries the group label line.
+ */
+export function rowHeight(
+  kind: TableRow['kind'],
+  density: Density = 'comfortable',
+  groupLabels = false,
+): number {
   switch (kind) {
     case 'group':
       // 48 and the card's top border
       return 49;
     case 'header':
-      return 34;
+      return 34 + (groupLabels ? GROUP_LABEL_H : 0);
     case 'item':
       return density === 'compact' ? 40 : 52;
     case 'add':
@@ -195,15 +211,94 @@ export function buildLayout(input: {
   };
 }
 
-/** Table columns: the name, then the fields not hidden, in field order. */
-export function tableColumns(fields: Field[], hidden: ReadonlySet<string>): GridColumn[] {
-  return [
-    { kind: 'name' },
-    ...fields.filter((f) => !hidden.has(f.id)).map((field) => ({ kind: 'field' as const, field })),
-  ];
+/**
+ * Table columns: the name, then the fields not hidden, in field order. With column groups (docs/05 §3.1) each group's
+ * columns sit together where its first field is, and a group the view collapsed is one narrow stub instead of its
+ * columns.
+ */
+export function tableColumns(
+  fields: Field[],
+  hidden: ReadonlySet<string>,
+  groups?: { list: readonly ColumnGroup[]; collapsed: ReadonlySet<string> },
+): GridColumn[] {
+  const list = groups?.list ?? [];
+  if (list.length === 0)
+    return [
+      { kind: 'name' },
+      ...fields
+        .filter((f) => !hidden.has(f.id))
+        .map((field) => ({ kind: 'field' as const, field })),
+    ];
+  const of = groupByKey(list);
+  const out: GridColumn[] = [{ kind: 'name' }];
+  const stubbed = new Set<string>();
+  const arranged = arrangeFields(fields, list);
+  for (const field of arranged) {
+    const g = of.get(field.key);
+    if (g && groups!.collapsed.has(g.id)) {
+      if (stubbed.has(g.id)) continue;
+      stubbed.add(g.id);
+      out.push({
+        kind: 'stub',
+        groupId: g.id,
+        name: g.name,
+        fields: arranged.filter((f) => of.get(f.key)?.id === g.id),
+      });
+      continue;
+    }
+    if (!hidden.has(field.id)) out.push({ kind: 'field', field });
+  }
+  return out;
 }
 
-export const columnId = (c: GridColumn) => (c.kind === 'name' ? 'name' : c.field.id);
+export const columnId = (c: GridColumn) =>
+  c.kind === 'name' ? 'name' : c.kind === 'stub' ? `stub:${c.groupId}` : c.field.id;
+
+/** A run of adjacent columns of one group (or of no group: "Other"), for the group label line. */
+export interface ColumnRun {
+  key: string;
+  /** Null: the fields in no group. */
+  groupId: string | null;
+  name: string;
+  /** Index of the run's first and last column among the columns after the name. */
+  from: number;
+  to: number;
+  /** Fields of the group (all of them, shown or not). */
+  size: number;
+  collapsed: boolean;
+}
+
+/** The group label runs over the columns after the name; empty when the sheet has no column groups. */
+export function columnRuns(columns: GridColumn[], groups: readonly ColumnGroup[]): ColumnRun[] {
+  if (groups.length === 0) return [];
+  const of = groupByKey(groups);
+  const runs: ColumnRun[] = [];
+  columns.slice(1).forEach((c, i) => {
+    const g =
+      c.kind === 'stub'
+        ? (groups.find((x) => x.id === c.groupId) ?? null)
+        : c.kind === 'field'
+          ? (of.get(c.field.key) ?? null)
+          : null;
+    const id = g?.id ?? null;
+    const last = runs.at(-1);
+    if (last && last.groupId === id && !last.collapsed && c.kind !== 'stub') {
+      last.to = i;
+      return;
+    }
+    runs.push({
+      key: `${id ?? OTHER_GROUP.id}:${i}`,
+      groupId: id,
+      name: g?.name ?? OTHER_GROUP.name,
+      from: i,
+      to: i,
+      size: g ? g.fieldKeys.length : 0,
+      collapsed: c.kind === 'stub',
+    });
+  });
+  for (const r of runs) if (r.groupId === null) r.size = r.to - r.from + 1;
+  return runs;
+}
 
 /**
  * The values a phone card shows under the name, id and owner: the first `max` visible fields that hold values, in

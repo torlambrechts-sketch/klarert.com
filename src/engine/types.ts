@@ -1,5 +1,7 @@
 // Domain types shared by the engine, the server and the UI (docs/02 §10). Pure data: no React, no Supabase.
 
+import type { ColumnGroup } from './views/column-groups';
+
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 
 export type Role = 'owner' | 'admin' | 'editor' | 'viewer';
@@ -57,6 +59,8 @@ export interface Sheet {
   childSheetId?: string | null;
   /** Sub-item settings of a sheet with sub-items (sheets.settings.subitems), read leniently. */
   subitems?: SubitemSettings | null;
+  /** Column groups (sheets.settings.columnGroups), read leniently; absent = none. */
+  columnGroups?: ColumnGroup[];
 }
 
 /** sheets.settings.subitems (docs/02 §12). */

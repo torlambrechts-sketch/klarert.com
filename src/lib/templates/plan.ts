@@ -9,6 +9,7 @@ import { addDays } from '@/engine/fields/helpers';
 import { fieldType } from '@/engine/fields/registry';
 import { keysBetween } from '@/engine/ordering';
 import { STORED_VIEW_TYPE, type FormLayout } from '@/engine/views/config';
+import { arrangeFields, type ColumnGroup } from '@/engine/views/column-groups';
 import { resolveTemplateTabs, type SheetTab } from '@/engine/views/tabs';
 import type {
   Automation,
@@ -63,6 +64,7 @@ export interface PlannedSheet {
       tabs?: SheetTab[];
       tabsDefault?: SheetTab[];
       defaultViewId?: string;
+      columnGroups?: ColumnGroup[];
     };
   };
   /** The sheet's sub-items (docs/02 §12): its child sheet, written after the parents. */
@@ -165,7 +167,18 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
 
   const planned: PlannedSheet[] = t.sheets.map((s, si) => {
     const sheetId = sheetIds.get(s.ref)!;
-    const fieldPositions = keysBetween(null, null, s.fields.length);
+    // column groups: each group's fields sit together, at its first field (docs/02 sheets.settings.columnGroups)
+    const columnGroups: ColumnGroup[] = s.columnGroups.map((g) => ({
+      id: env.newId(),
+      name: g.name,
+      fieldKeys: g.fields,
+    }));
+    const order = arrangeFields(
+      s.fields.map((f, fi) => ({ id: f.key, key: f.key, position: String(fi).padStart(4, '0') })),
+      columnGroups,
+    ).map((f) => f.key);
+    const slots = keysBetween(null, null, s.fields.length);
+    const fieldPositions = s.fields.map((f) => slots[order.indexOf(f.key)]!);
     const groupPositions = keysBetween(null, null, s.groups.length);
     const viewPositions = keysBetween(null, null, s.views.length + s.forms.length);
     engineSheets.set(sheetId, {
@@ -271,6 +284,7 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
     }
     const settings: PlannedSheet['row']['settings'] = {
       template: { id: t.id, version: t.version, ref: s.ref },
+      ...(columnGroups.length ? { columnGroups } : {}),
     };
     if (s.tabs) {
       // view names → the new views' ids (docs/02 sheets.settings.tabs)

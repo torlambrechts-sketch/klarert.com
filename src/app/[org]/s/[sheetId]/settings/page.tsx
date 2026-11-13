@@ -7,6 +7,8 @@ import { ArchiveSheet, SheetSettingsForm } from '@/components/sheets/sheet-setti
 import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
 import { SheetTabsSettings } from '@/components/sheets/sheet-tabs-settings';
+import { SheetColumnGroups } from '@/components/table/column-groups-editor';
+import { parseColumnGroups } from '@/engine/views/column-groups';
 import { SubitemSettingsSection } from '@/components/subitems/subitem-settings';
 import { applyTabLayout, buildTabs, toTabRows } from '@/components/views/tabs-model';
 import { readSubitemSettings } from '@/engine/subitems';
@@ -145,6 +147,32 @@ export default async function SheetSettingsPage({
               </li>
             ))}
           </ul>
+        )}
+      </Card>
+
+      <Card
+        title="Column groups"
+        description="Sections of columns, such as Identify, Assess and Treat. A group's columns always sit together; each view can collapse a group into one narrow column."
+      >
+        {isAdminRole(role) && !sheet.archived_at ? (
+          <SheetColumnGroups
+            org={org}
+            sheetId={sheet.id}
+            fields={fields.map((f) => ({
+              id: f.id,
+              key: f.key,
+              name: f.name,
+              position: f.position,
+            }))}
+            groups={parseColumnGroups(
+              (sheet.settings as { columnGroups?: unknown } | null)?.columnGroups,
+              fields.map((f) => f.key),
+            )}
+          />
+        ) : (
+          <p className="text-muted-foreground text-copy-13">
+            Only owners and admins can change column groups.
+          </p>
         )}
       </Card>
 

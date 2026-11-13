@@ -4,8 +4,18 @@ import type { ValueKind } from './fields/types';
 import type { Ctx, Field, Item, Json } from './types';
 import { defOf, kindOf, textOf } from './values';
 
-/** A grid column: the item name or a field. */
-export type GridColumn = { kind: 'name' } | { kind: 'field'; field: Field };
+/**
+ * A grid column: the item name, a field, or the stub of a collapsed column group (docs/05 §3.1). Stubs only stand in
+ * for their group's columns: copy, paste and clear skip them.
+ */
+export type GridColumn =
+  | { kind: 'name' }
+  | { kind: 'field'; field: Field }
+  | { kind: 'stub'; groupId: string; name: string; fields: Field[] };
+
+/** The columns a selection runs over: everything but stubs. */
+export const cellColumns = <C extends GridColumn>(columns: readonly C[]) =>
+  columns.filter((c): c is Exclude<C, { kind: 'stub' }> => c.kind !== 'stub');
 
 export interface CellRange {
   /** Inclusive row and column indexes into the visible rows and columns. */
@@ -78,10 +88,12 @@ export function parseTsv(text: string): string[][] {
 
 /** The text of one cell, as copy puts it on the clipboard. */
 export function cellText(item: Item, column: GridColumn, ctx: Ctx): string {
+  if (column.kind === 'stub') return '';
   return column.kind === 'name' ? item.name : textOf(item, column.field, ctx);
 }
 
-export function copyRange(rows: Item[], columns: GridColumn[], range: CellRange, ctx: Ctx): string {
+export function copyRange(rows: Item[], all: GridColumn[], range: CellRange, ctx: Ctx): string {
+  const columns = cellColumns(all);
   const out: string[][] = [];
   for (let r = range.top; r <= range.bottom; r += 1) {
     const item = rows[r];
@@ -133,11 +145,13 @@ function summary(verb: string, written: number, skipped: string[]): string {
   return `${head}, ${skipped.length} skipped: ${reasons}`;
 }
 
-function writable(column: GridColumn): boolean {
+type CellColumn = Exclude<GridColumn, { kind: 'stub' }>;
+
+function writable(column: CellColumn): boolean {
   return column.kind === 'name' || defOf(column.field).storage === 'values';
 }
 
-function put(out: CellWrites, item: Item, column: GridColumn, value: Json | null | string) {
+function put(out: CellWrites, item: Item, column: CellColumn, value: Json | null | string) {
   if (column.kind === 'name') {
     out.names.set(item.id, value as string);
   } else {
@@ -155,11 +169,12 @@ function put(out: CellWrites, item: Item, column: GridColumn, value: Json | null
 export function planPaste(
   text: string,
   rows: Item[],
-  columns: GridColumn[],
+  all: GridColumn[],
   range: CellRange,
   ctx: Ctx,
   opts: PasteOptions,
 ): CellWrites {
+  const columns = cellColumns(all);
   const matrix = parseTsv(text);
   const single = matrix.length === 1 && matrix[0]!.length === 1;
   const height = single ? range.bottom - range.top + 1 : matrix.length;
@@ -216,10 +231,11 @@ export function planPaste(
 /** Plan clearing a range (Delete): names and required fields are kept, read-only cells skipped. */
 export function planClear(
   rows: Item[],
-  columns: GridColumn[],
+  all: GridColumn[],
   range: CellRange,
   opts: PasteOptions,
 ): CellWrites {
+  const columns = cellColumns(all);
   const out: CellWrites = {
     names: new Map(),
     values: new Map(),

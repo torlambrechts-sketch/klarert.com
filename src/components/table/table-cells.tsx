@@ -40,7 +40,13 @@ export function Sticky({
   return (
     <div
       role={role}
-      className={cn('bg-background-100 sticky left-0 z-[2] flex shrink-0 items-center', className)}
+      className={cn(
+        'bg-background-100 sticky left-0 z-[2] flex shrink-0 items-center',
+        // the left edge once the table scrolls sideways: a 1 px line and a soft shadow over the columns
+        'after:pointer-events-none after:absolute after:inset-y-0 after:left-full after:w-[14px] after:bg-[linear-gradient(90deg,var(--gray-alpha-200),transparent)] after:opacity-0 after:transition-opacity',
+        'group-data-[scrolled-left=true]/grid:shadow-[inset_-1px_0_0_var(--line)] group-data-[scrolled-left=true]/grid:after:opacity-100',
+        className,
+      )}
       style={{ width }}
     >
       {children}

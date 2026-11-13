@@ -43,6 +43,8 @@ export interface TableViewProps {
   sub?: SubitemsState | null;
   subMatches?: ReadonlyMap<string, ReadonlySet<string>>;
   onOpenSubitem?(item: Item): void;
+  /** The item the item panel shows (its row is marked). */
+  currentItemId?: string | null;
 }
 
 function usePhone() {
@@ -141,6 +143,7 @@ export function TableView(p: TableViewProps) {
             sub={p.sub ?? null}
             subMatches={p.subMatches}
             onOpenSubitem={p.onOpenSubitem}
+            currentItemId={p.currentItemId ?? null}
           />
         </div>
       )}

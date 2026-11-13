@@ -17,6 +17,8 @@ import {
   parseViewConfig,
   toViewType,
   sameConfig,
+  sameLayout,
+  withLayout,
   type SavedView,
   type ViewConfig,
   type ViewType,
@@ -137,11 +139,15 @@ export function useViews(input: {
       }
       if (!active.canWrite) return;
       const id = active.saved.id;
+      // a Table view's columns (hidden, collapsed groups) stay a draft until "Update"; the rest saves as it changes
+      const saved = active.saved.config;
+      const payload = active.type === 'table' ? withLayout(next, saved) : next;
       clearTimeout(timers.current.get(id));
+      if (sameConfig(payload, saved)) return;
       timers.current.set(
         id,
         setTimeout(async () => {
-          const r = await updateViewAction({ org, viewId: id, config: next });
+          const r = await updateViewAction({ org, viewId: id, config: payload });
           if (!r.ok) return void toast.error(r.error.message);
           qc.setQueryData<SavedView[]>(viewsKey(sheetId), (list) =>
             list?.map((v) => (v.id === id ? r.data.view : v)),
@@ -158,6 +164,42 @@ export function useViews(input: {
 
   /** A draft that differs from what the view saves: offer "Save as view". */
   const unsaved = !active.canWrite && !sameConfig(config, base);
+  /** A Table view I may change whose columns differ from what it saves: offer "Update". */
+  const layoutDirty =
+    active.type === 'table' && !!active.saved && active.canWrite && !sameLayout(config, base);
+
+  /** Save the draft's columns into the active saved view. */
+  const updateLayout = useCallback(async () => {
+    const saved = active.saved;
+    if (!saved || !active.canWrite) return;
+    const r = await updateViewAction({
+      org,
+      viewId: saved.id,
+      config: withLayout(saved.config, config),
+    });
+    if (!r.ok) return void toast.error(r.error.message);
+    qc.setQueryData<SavedView[]>(viewsKey(sheetId), (list) =>
+      list?.map((v) => (v.id === saved.id ? r.data.view : v)),
+    );
+    toast(`“${saved.name}” updated.`);
+  }, [active, config, org, qc, sheetId]);
+
+  /** Open a Table view with the columns it saves (a chip of the view bar). */
+  const choose = useCallback(
+    (id: string) => {
+      if (id === active.id) {
+        setDrafts((d) => ({ ...d, [id]: withLayout(config, base) }));
+        return;
+      }
+      setDrafts((d) => {
+        const { [id]: _drop, ...rest } = d;
+        void _drop;
+        return rest;
+      });
+      open(id);
+    },
+    [active.id, base, config, open],
+  );
 
   // ───────────── view commands ─────────────
   const upsert = useCallback(
@@ -264,6 +306,9 @@ export function useViews(input: {
     config,
     setConfig,
     unsaved,
+    layoutDirty,
+    updateLayout,
+    choose,
     /** Shared views need an editor. */
     canShare: canEdit,
     ready: query.isSuccess || query.isError,

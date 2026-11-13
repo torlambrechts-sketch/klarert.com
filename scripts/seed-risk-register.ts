@@ -572,15 +572,18 @@ async function main() {
                 },
                 { key: 'cost', name: 'Treatment cost (€)', type: 'number' },
               ],
+              // the first table view backs the Table tab, so the register opens on its essentials; "Show all" in
+              // the view bar shows every column
               views: [
                 {
-                  name: 'Table',
+                  name: 'Essentials',
                   type: 'table',
                   config: {
                     hidden: [
                       'likelihood',
                       'impact',
                       'treatment',
+                      'residual',
                       'controls',
                       'plan',
                       'site',
@@ -589,6 +592,13 @@ async function main() {
                     summaries: { inherent: 'average', residual: 'average' },
                   },
                 },
+              ],
+              columnGroups: [
+                { name: 'Identify', fields: ['owner', 'status', 'site'] },
+                { name: 'Assess', fields: ['likelihood', 'impact', 'inherent'] },
+                { name: 'Treat', fields: ['treatment', 'controls', 'plan', 'cost'] },
+                { name: 'Residual', fields: ['residual'] },
+                { name: 'Review', fields: ['review_date'] },
               ],
               tabs: TABS['Risk register'],
               items: [],

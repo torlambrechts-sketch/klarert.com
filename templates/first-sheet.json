@@ -318,6 +318,28 @@
           }
         },
         {
+          "name": "Essentials",
+          "type": "table",
+          "config": {
+            "hidden": [
+              "severity",
+              "site",
+              "found_on",
+              "risk",
+              "priority_score",
+              "description",
+              "root_cause",
+              "actions",
+              "actions_done",
+              "effectiveness",
+              "evidence",
+              "raise_action",
+              "ref",
+              "updated"
+            ]
+          }
+        },
+        {
           "name": "By status",
           "type": "kanban",
           "config": {
@@ -333,9 +355,19 @@
         }
       ],
       "tabs": [
-        { "ref": "table" },
-        { "ref": "kanban" },
-        { "ref": "calendar" }
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "kanban"
+        },
+        {
+          "ref": "calendar"
+        },
+        {
+          "ref": "Essentials",
+          "hidden": true
+        }
       ],
       "items": [
         {
@@ -562,7 +594,40 @@
             }
           }
         ]
-      }
+      },
+      "columnGroups": [
+        {
+          "name": "Identify",
+          "fields": [
+            "owner",
+            "status",
+            "source",
+            "severity",
+            "site",
+            "found_on",
+            "risk",
+            "priority_score",
+            "description",
+            "root_cause"
+          ]
+        },
+        {
+          "name": "Action",
+          "fields": [
+            "due_date",
+            "actions",
+            "actions_done",
+            "raise_action"
+          ]
+        },
+        {
+          "name": "Evidence",
+          "fields": [
+            "effectiveness",
+            "evidence"
+          ]
+        }
+      ]
     },
     {
       "ref": "act",

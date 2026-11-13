@@ -11,6 +11,7 @@ import {
   viewTypeInput,
 } from '@/engine/views/config';
 import { MAX_TABS, tabLabelSchema } from '@/engine/views/tabs';
+import { MAX_COLUMN_GROUPS } from '@/engine/views/column-groups';
 import { ID_PREFIX, LABEL_COLORS } from '@/lib/schemas/sheets';
 
 // Sheet templates (templates/*.json, docs/07 Part B): people, a folder, sheets with fields, groups, views and items,
@@ -162,6 +163,12 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /** A form_submitted trigger's formId in a template: null, or the ref of a form of the same sheet. */
 export const isFormRef = (v: unknown): v is string => typeof v === 'string' && !UUID_RE.test(v);
 
+/** A column group of a template sheet: its name and its fields by key. */
+export const templateColumnGroup = z.object({
+  name: z.string().trim().min(1).max(60),
+  fields: z.array(fieldKey).min(1).max(200),
+});
+
 /** A starting tab of a template sheet or a wizard start (resolved by resolveTemplateTabs). */
 export const templateTab = z.object({
   ref: z.string().min(1).max(80),
@@ -200,6 +207,11 @@ export const templateSheet = z.object({
   subitems: subitemSetSchema.optional(),
   /** Ready-made forms (drafts; their notices still need a review). */
   forms: z.array(templateForm).max(20).default([]),
+  /**
+   * Column groups (sheets.settings.columnGroups): named sections of columns by field key. The planner places each
+   * group's fields together, at its first field.
+   */
+  columnGroups: z.array(templateColumnGroup).max(MAX_COLUMN_GROUPS).default([]),
 });
 
 export const templateAutomation = z.object({
@@ -316,6 +328,19 @@ export const sheetTemplateSchema = z
         const tab = s.tabs?.find((x) => x.ref === s.defaultView);
         if (!tabRef(s.defaultView)) problem(at('defaultView'), `Unknown view "${s.defaultView}".`);
         else if (tab?.hidden) problem(at('defaultView'), 'The view that opens first cannot be hidden.');
+      }
+      const grouped = new Set<string>();
+      const groupNames = new Set<string>();
+      for (const [ci, g] of s.columnGroups.entries()) {
+        if (groupNames.has(g.name.toLowerCase()))
+          problem(at('columnGroups', ci), `Duplicate column group "${g.name}".`);
+        groupNames.add(g.name.toLowerCase());
+        for (const k of g.fields) {
+          if (!keys.has(k)) problem(at('columnGroups', ci), `Unknown field "${k}".`);
+          else if (grouped.has(k))
+            problem(at('columnGroups', ci), `"${k}" is in more than one column group.`);
+          grouped.add(k);
+        }
       }
       for (const p of formProblems(s.forms, new Set(keys.keys()), (r) => groups.has(r)))
         problem(at('forms', p.index), p.message);

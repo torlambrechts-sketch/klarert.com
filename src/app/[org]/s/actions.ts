@@ -46,6 +46,7 @@ export const enableSubitemsAction = call(subitems.enableSubitems);
 export const updateSubitemSettingsAction = call(subitems.updateSubitemSettings);
 
 export const renameSheetAction = call(sheets.renameSheet);
+export const setColumnGroupsAction = call(sheets.setColumnGroups);
 export const moveSheetAction = call(sheets.moveSheet);
 export const archiveSheetNowAction = call(sheets.archiveSheet);
 

@@ -108,7 +108,7 @@ export async function getFields(sheetId: string) {
   if (!session) return [];
   const { data } = await session.supabase
     .from('fields')
-    .select('id, key, name, type, locked')
+    .select('id, key, name, type, locked, position')
     .eq('sheet_id', sheetId)
     .is('archived_at', null)
     .order('position');

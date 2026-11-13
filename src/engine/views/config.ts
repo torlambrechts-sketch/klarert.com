@@ -55,6 +55,7 @@ export const viewTypeInput = z.string().transform((s, c) => {
 });
 
 const key = z.string().min(1).max(64);
+const groupId = z.string().min(1).max(64);
 const json: z.ZodType<Json> = z.lazy(() =>
   z.union([
     z.string(),
@@ -201,6 +202,8 @@ export const viewConfigSchema = z.object({
   form: formLayoutSchema.optional(),
   /** Insights: rows of widgets (src/engine/insights). Absent = the default layout worked out from the fields. */
   insights: insightsLayoutSchema.optional(),
+  /** Table: the sheet's column groups this view shows collapsed (ids of sheets.settings.columnGroups). */
+  collapsedGroups: z.array(groupId).max(30).optional(),
 });
 export type ViewConfig = z.infer<typeof viewConfigSchema>;
 
@@ -235,6 +238,8 @@ export function parseViewConfig(raw: unknown): ViewConfig {
   if (form) cfg.form = form;
   const insights = parseInsightsLayout(o.insights);
   if (insights) cfg.insights = insights;
+  const collapsed = part(z.array(groupId).max(30).optional(), o.collapsedGroups, undefined);
+  if (collapsed && collapsed.length) cfg.collapsedGroups = collapsed;
   return cfg;
 }
 
@@ -253,9 +258,34 @@ export function sameConfig(a: ViewConfig, b: ViewConfig): boolean {
       summaryOff: [...(c.summaryOff ?? [])].sort(),
       form: c.form ?? null,
       insights: c.insights ?? null,
+      collapsedGroups: [...(c.collapsedGroups ?? [])].sort(),
     });
   return norm(a) === norm(b);
 }
+
+/** Same columns: the hidden columns and collapsed groups match (the Table's view bar compares these). */
+export function sameLayout(a: ViewConfig, b: ViewConfig): boolean {
+  const norm = (c: ViewConfig) =>
+    JSON.stringify([[...c.hidden].sort(), [...(c.collapsedGroups ?? [])].sort()]);
+  return norm(a) === norm(b);
+}
+
+/** A config with this column layout (hidden columns, collapsed groups) and everything else of `c`. */
+export function withLayout(
+  c: ViewConfig,
+  layout: Pick<ViewConfig, 'hidden' | 'collapsedGroups'>,
+): ViewConfig {
+  const { collapsedGroups: _drop, ...rest } = c;
+  void _drop;
+  return {
+    ...rest,
+    hidden: [...layout.hidden],
+    ...(layout.collapsedGroups?.length ? { collapsedGroups: [...layout.collapsedGroups] } : {}),
+  };
+}
+
+/** Every column shown: nothing hidden, no group collapsed. */
+export const showsAll = (c: ViewConfig) => c.hidden.length === 0 && !c.collapsedGroups?.length;
 
 /**
  * The built-in views every sheet has, addressed as ?view=table … (saved views use their uuid). The former ids
