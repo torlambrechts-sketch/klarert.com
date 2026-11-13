@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import { Table } from './table';
 import { TableCards } from './table-cards';
-import { useUpdateCounts } from './use-update-counts';
+import { useUpdateSummaries } from './use-update-counts';
 
 // The Table view (docs/05 §3.1): the one view for working through a sheet's items as rows. Desktop and tablets get
 // the virtualised table of group cards; phones (< 640 px) get item cards grouped the same way. Above both: the
@@ -65,7 +65,7 @@ export function TableView(p: TableViewProps) {
   const statuses = useGrid((s) => s.statuses);
   const valueFilter = useGrid((s) => s.valueFilter);
   const store = useGridStore();
-  const updateCounts = useUpdateCounts(p.data.sheet.id);
+  const updateCounts = useUpdateSummaries(p.data.sheet.id, p.data.sheet.orgId);
   const items = useMemo(() => {
     const quick = quickFilter(p.items, people, statuses, p.ctx);
     const field = valueFilter && p.data.fields.find((f) => f.id === valueFilter.fieldId);
@@ -112,6 +112,7 @@ export function TableView(p: TableViewProps) {
           onOpenItem={p.onOpenItem}
           visibleItems={items}
           viewCompare={p.compare}
+          comments={updateCounts}
         />
       ) : (
         <div className="flex min-h-[240px] flex-1 flex-col">
