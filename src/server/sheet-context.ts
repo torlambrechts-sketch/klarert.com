@@ -9,6 +9,7 @@ import {
   fetchRelated,
   fetchSheetMeta,
   fetchItems,
+  fetchNoAccess,
   fetchSubitemContext,
   mergeSubitemContext,
   type Db,
@@ -45,10 +46,11 @@ export async function loadWriteContext(
 ): Promise<WriteContext | null> {
   const meta = await fetchSheetMeta(db, sheetId);
   if (!meta || meta.sheet.orgId !== who.orgId) return null;
-  const [directory, items, timeZone] = await Promise.all([
+  const [directory, items, timeZone, noAccessSheetIds] = await Promise.all([
     fetchDirectory(db, who.orgId),
     itemIds === 'all' ? fetchItems(db, sheetId) : fetchItemsById(db, itemIds),
     timeZoneOf(db, who.orgId),
+    fetchNoAccess(db, meta.fields),
   ]);
   const own = items.filter((i) => i.sheetId === sheetId);
   const attached = await fetchAttached(
@@ -64,7 +66,7 @@ export async function loadWriteContext(
   );
   // sub-items: a parent's sub-items (roll-ups, the sub-items column), or a sub-item's parent
   const data: SheetData = mergeSubitemContext(
-    { ...meta, ...directory, items: own, ...attached, related },
+    { ...meta, ...directory, items: own, ...attached, related, noAccessSheetIds },
     await fetchSubitemContext(
       db,
       meta.sheet,

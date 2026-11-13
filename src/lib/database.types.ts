@@ -199,14 +199,14 @@ isOneToOne: false
                   ]
                 },"fields": {
                   Row: {
-                    "archived_at": string | null,"config": NonNullable<Json>,"created_at": string,"description": string | null,"id": string,"key": string,"locked": boolean,"name": string,"org_id": string,"position": string,"required": boolean,"rules": NonNullable<Json>,"sheet_id": string,"type": string,"updated_at": string,"validation": NonNullable<Json>,"visibility": Json | null,"width": number | null,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
+                    "archived_at": string | null,"config": NonNullable<Json>,"created_at": string,"description": string | null,"id": string,"key": string,"locked": boolean,"name": string,"org_id": string,"position": string,"required": boolean,"rules": NonNullable<Json>,"sheet_id": string,"type": string,"updated_at": string,"validation": NonNullable<Json>,"visibility": Json | null,"width": number | null,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"restricted_to": Json | null,"field_hidden": boolean | null
                   }
-                  ComputedFields: never
+                  ComputedFields: "field_hidden"
                   Insert: {
-                    "archived_at"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"description"?: string | null,"id"?: string,"key": string,"locked"?: boolean,"name": string,"org_id": string,"position": string,"required"?: boolean,"rules"?: NonNullable<Json>,"sheet_id": string,"type": string,"updated_at"?: string,"validation"?: NonNullable<Json>,"visibility"?: Json | null,"width"?: number | null,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "archived_at"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"description"?: string | null,"id"?: string,"key": string,"locked"?: boolean,"name": string,"org_id": string,"position": string,"required"?: boolean,"rules"?: NonNullable<Json>,"sheet_id": string,"type": string,"updated_at"?: string,"validation"?: NonNullable<Json>,"visibility"?: Json | null,"width"?: number | null,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"restricted_to"?: Json | null
                   }
                   Update: {
-                    "archived_at"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"description"?: string | null,"id"?: string,"key"?: string,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"required"?: boolean,"rules"?: NonNullable<Json>,"sheet_id"?: string,"type"?: string,"updated_at"?: string,"validation"?: NonNullable<Json>,"visibility"?: Json | null,"width"?: number | null,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "archived_at"?: string | null,"config"?: NonNullable<Json>,"created_at"?: string,"description"?: string | null,"id"?: string,"key"?: string,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"required"?: boolean,"rules"?: NonNullable<Json>,"sheet_id"?: string,"type"?: string,"updated_at"?: string,"validation"?: NonNullable<Json>,"visibility"?: Json | null,"width"?: number | null,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"restricted_to"?: Json | null
                   }
                   Relationships: [
                     {
@@ -223,6 +223,18 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"access_grants": {
+                  Row: {
+                    "folder_id": string | null,"granted_at": string,"granted_by": string | null,"id": string,"level": string,"org_id": string,"sheet_id": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "folder_id"?: string | null,"granted_at"?: string,"granted_by"?: string | null,"id"?: string,"level": string,"org_id": string,"sheet_id"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "folder_id"?: string | null,"granted_at"?: string,"granted_by"?: string | null,"id"?: string,"level"?: string,"org_id"?: string,"sheet_id"?: string | null,"user_id"?: string
+                  }
+                  Relationships: []
                 },"file_access_log": {
                   Row: {
                     "at": string,"file_id": string,"id": number,"item_id": string,"org_id": string,"user_id": string | null
@@ -281,14 +293,14 @@ isOneToOne: false
                   ]
                 },"folders": {
                   Row: {
-                    "archived_at": string | null,"created_at": string,"id": string,"name": string,"org_id": string,"position": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
+                    "archived_at": string | null,"created_at": string,"id": string,"name": string,"org_id": string,"position": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"restricted": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name": string,"org_id": string,"position": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name": string,"org_id": string,"position": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"restricted"?: boolean
                   }
                   Update: {
-                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"restricted"?: boolean
                   }
                   Relationships: [
                     {
@@ -405,14 +417,14 @@ isOneToOne: false
                   ]
                 },"invites": {
                   Row: {
-                    "accepted_at": string | null,"created_at": string,"email": string,"id": string,"invited_by": string | null,"org_id": string,"role": Database["public"]['Enums']["member_role"],"token": string
+                    "accepted_at": string | null,"created_at": string,"email": string,"id": string,"invited_by": string | null,"org_id": string,"role": Database["public"]['Enums']["member_role"],"token": string,"expires_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"id"?: string,"invited_by"?: string | null,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
+                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"id"?: string,"invited_by"?: string | null,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string,"expires_at"?: string | null
                   }
                   Update: {
-                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"id"?: string,"invited_by"?: string | null,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
+                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"id"?: string,"invited_by"?: string | null,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string,"expires_at"?: string | null
                   }
                   Relationships: [
                     {
@@ -571,14 +583,14 @@ isOneToOne: false
                   ]
                 },"memberships": {
                   Row: {
-                    "created_at": string,"job_title": string | null,"org_id": string,"role": Database["public"]['Enums']["member_role"],"user_id": string
+                    "created_at": string,"job_title": string | null,"org_id": string,"role": Database["public"]['Enums']["member_role"],"user_id": string,"expires_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"job_title"?: string | null,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"user_id": string
+                    "created_at"?: string,"job_title"?: string | null,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"user_id": string,"expires_at"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"job_title"?: string | null,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"user_id"?: string
+                    "created_at"?: string,"job_title"?: string | null,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"user_id"?: string,"expires_at"?: string | null
                   }
                   Relationships: [
                     {
@@ -777,6 +789,30 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"restricted_activity": {
+                  Row: {
+                    "activity_id": number,"field_id": string,"new_value": Json | null,"old_value": Json | null,"org_id": string,"salt": string,"sheet_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activity_id": number,"field_id": string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id": string,"salt": string,"sheet_id"?: string | null
+                  }
+                  Update: {
+                    "activity_id"?: number,"field_id"?: string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id"?: string,"salt"?: string,"sheet_id"?: string | null
+                  }
+                  Relationships: []
+                },"restricted_values": {
+                  Row: {
+                    "field_id": string,"item_id": string,"org_id": string,"sheet_id": string,"value": Json
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "field_id": string,"item_id": string,"org_id": string,"sheet_id": string,"value": Json
+                  }
+                  Update: {
+                    "field_id"?: string,"item_id"?: string,"org_id"?: string,"sheet_id"?: string,"value"?: Json
+                  }
+                  Relationships: []
                 },"scheduler_fired": {
                   Row: {
                     "automation_id": string,"fired_at": string,"item_id": string,"occurrence": string,"org_id": string
@@ -811,14 +847,14 @@ isOneToOne: false
                   ]
                 },"sheets": {
                   Row: {
-                    "archived_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"folder_id": string | null,"id": string,"id_prefix": string | null,"is_library": boolean,"item_label": string,"name": string,"next_seq": number,"org_id": string,"parent_sheet_id": string | null,"position": string,"settings": NonNullable<Json>,"updated_at": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
+                    "archived_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"folder_id": string | null,"id": string,"id_prefix": string | null,"is_library": boolean,"item_label": string,"name": string,"next_seq": number,"org_id": string,"parent_sheet_id": string | null,"position": string,"settings": NonNullable<Json>,"updated_at": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"restricted": boolean,"access_inherit": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name": string,"next_seq"?: number,"org_id": string,"parent_sheet_id"?: string | null,"position": string,"settings"?: NonNullable<Json>,"updated_at"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name": string,"next_seq"?: number,"org_id": string,"parent_sheet_id"?: string | null,"position": string,"settings"?: NonNullable<Json>,"updated_at"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"restricted"?: boolean,"access_inherit"?: boolean
                   }
                   Update: {
-                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name"?: string,"next_seq"?: number,"org_id"?: string,"parent_sheet_id"?: string | null,"position"?: string,"settings"?: NonNullable<Json>,"updated_at"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name"?: string,"next_seq"?: number,"org_id"?: string,"parent_sheet_id"?: string | null,"position"?: string,"settings"?: NonNullable<Json>,"updated_at"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"restricted"?: boolean,"access_inherit"?: boolean
                   }
                   Relationships: [
                     {
@@ -1235,9 +1271,52 @@ isOneToOne: false
               "last_at": string,"responses": number,"view_id": string
             }[]
                            },
+"field_visible":
+{ Args: { "p_field": string }; Returns: boolean
+                           },
+"folder_access":
+{ Args: { "p_folder": string }; Returns: string
+                           },
+"folder_access_info":
+{ Args: { "p_folder": string }; Returns: Json
+                           },
+"hidden_field_ids":
+{ Args: never; Returns: string[]
+                           },
+"my_sheet_access":
+{ Args: { "p_org": string }; Returns: {
+              "archived_at": string | null,"folder_id": string | null,"level": string,"name": string,"own_setting": boolean,"parent_sheet_id": string | null,"position": string,"restricted": boolean,"sheet_id": string
+            }[]
+                           },
+"note_sheet_opened":
+{ Args: { "p_sheet": string }; Returns: boolean
+                           },
+"set_access_grant":
+{ Args: { "p_kind": string,"p_level": string | null,"p_target": string,"p_user": string }; Returns: string | null
+                           },
+"set_field_restriction":
+{ Args: { "p_field": string,"p_restricted": boolean,"p_roles": string[] | null,"p_user_ids": string[] | null }; Returns: Json
+                           },
+"set_folder_access":
+{ Args: { "p_folder": string,"p_restricted": boolean }; Returns: boolean
+                           },
+"set_sheet_access":
+{ Args: { "p_mode": string,"p_sheet": string }; Returns: string
+                           },
+"sheet_access":
+{ Args: { "p_sheet": string }; Returns: string
+                           },
+"sheet_access_info":
+{ Args: { "p_sheet": string }; Returns: Json
+                           },
+"sheet_levels":
+{ Args: { "p_sheets": string[] }; Returns: {
+              "level": string,"sheet_id": string
+            }[]
+                           },
 "get_invite":
 { Args: { "p_token": string }; Returns: {
-              "accepted": boolean,"email": string,"invited_by_name": string,"org_name": string,"org_slug": string,"role": Database["public"]['Enums']["member_role"]
+              "accepted": boolean,"email": string,"invited_by_name": string,"org_name": string,"org_slug": string,"role": Database["public"]['Enums']["member_role"],"expires_at": string | null
             }[]
                            },
 "get_public_form":
@@ -1516,7 +1595,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "member_role": "owner"|"admin"|"editor"|"viewer"
+            "member_role": "owner"|"admin"|"editor"|"viewer"|"auditor"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1636,7 +1715,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "member_role": ["owner", "admin", "editor", "viewer"]
+            "member_role": ["owner", "admin", "editor", "viewer", "auditor"]
           }
         }
 } as const

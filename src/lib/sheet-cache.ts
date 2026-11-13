@@ -38,13 +38,27 @@ export function patchItem(
   return hit ? { ...data, items } : data;
 }
 
+/**
+ * Restricted fields (docs/02 §16) live outside the item row: write results and realtime rows never carry them. Keep
+ * the values the cache already has for them (read from restricted_values with the sheet).
+ */
+function keepRestricted(data: SheetData, before: Item, after: Item): Item {
+  let values: Record<string, Json> | null = null;
+  for (const f of data.fields) {
+    if (!f.restrictedTo || f.id in after.values || !(f.id in before.values)) continue;
+    values ??= { ...after.values };
+    values[f.id] = before.values[f.id]!;
+  }
+  return values ? { ...after, values } : after;
+}
+
 /** Insert or replace an item; archived items and items of other sheets leave the cache. */
 export function upsertItem(data: SheetData, item: Item): SheetData {
   if (item.sheetId !== data.sheet.id || item.archivedAt) return removeItems(data, [item.id]);
   const i = data.items.findIndex((x) => x.id === item.id);
   if (i < 0) return { ...data, items: [...data.items, item].sort(byPosition) };
   const items = [...data.items];
-  items[i] = item;
+  items[i] = keepRestricted(data, data.items[i]!, item);
   return {
     ...data,
     items: items[i]!.position === data.items[i]!.position ? items : items.sort(byPosition),

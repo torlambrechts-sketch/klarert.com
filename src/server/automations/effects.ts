@@ -7,6 +7,7 @@ import '@/engine/fields/registry';
 import { keyBetween, keysBetween } from '@/engine/ordering';
 import { sheetCtx, type SheetData } from '@/engine/sheet-data';
 import type { Condition, Ctx, Field, Group, Item, Json } from '@/engine/types';
+import { effectiveRestriction } from '@/engine/access';
 import { kindOf } from '@/engine/values';
 import { checkCreate, checkWrite, defaultValues, planValues } from '@/engine/writes';
 import type { Database } from '@/lib/database.types';
@@ -19,6 +20,7 @@ import {
   fetchSheetMeta,
   fetchSubitemContext,
   mergeSubitemContext,
+  withRestrictedValues,
   type Db,
 } from '@/lib/sheet-query';
 import { toItem } from '@/lib/sheet-rows';
@@ -121,8 +123,43 @@ export function automationStore(scope: { orgId: string; userId: string | null })
           .map((x) => x.user_id);
     }));
 
+  /**
+   * Link targets that are restricted (docs/02 §16) and not this sheet: the runner sees everything, but messages it
+   * writes for people say "Restricted" for values read through them (lookups, roll-ups).
+   */
+  const restrictedTargets = async (m: Meta): Promise<string[]> => {
+    const targets = [
+      ...new Set(
+        m.fields.flatMap((f) => {
+          const t = (f.config as { targetSheetId?: unknown } | null)?.targetSheetId;
+          return typeof t === 'string' && t && t !== m.sheet.id && t !== m.sheet.parentSheetId
+            ? [t]
+            : [];
+        }),
+      ),
+    ];
+    if (targets.length === 0) return [];
+    const sheets = must(
+      await db
+        .from('sheets')
+        .select('id, restricted, access_inherit, folders(restricted)')
+        .eq('org_id', orgId)
+        .in('id', targets),
+    );
+    return sheets
+      .filter(
+        (x) =>
+          effectiveRestriction({
+            inherit: x.access_inherit,
+            restricted: x.restricted,
+            folderRestricted: !!x.folders?.restricted,
+          }).restricted,
+      )
+      .map((x) => x.id);
+  };
+
   async function ctxFor(m: Meta, items: Item[]): Promise<{ ctx: Ctx; data: SheetData }> {
-    const [dir, tz] = await Promise.all([people(), zone()]);
+    const [dir, tz, noAccessSheetIds] = await Promise.all([people(), zone(), restrictedTargets(m)]);
     const attached = await fetchAttached(
       db,
       m.fields,
@@ -136,7 +173,7 @@ export function automationStore(scope: { orgId: string; userId: string | null })
     );
     // sub-items: a parent sees its sub-items (roll-ups, sub-item triggers), a sub-item sees its parent
     const data: SheetData = mergeSubitemContext(
-      { ...m, ...dir, items, ...attached, related },
+      { ...m, ...dir, items, ...attached, related, noAccessSheetIds },
       await fetchSubitemContext(
         db,
         m.sheet,
@@ -188,6 +225,16 @@ export function automationStore(scope: { orgId: string; userId: string | null })
     return keyBetween(last, null);
   }
 
+  /** A run's event as stored: before/after of a restricted field read "Restricted" (docs/02 §16). */
+  async function maskEvent<E extends AutomationEvent>(event: E): Promise<E> {
+    const inner = event.type === 'subitem.event' ? event.event : event;
+    if (inner.type !== 'value.changed') return event;
+    const f = (await meta(inner.sheetId))?.fields.find((x) => x.id === inner.fieldId);
+    if (!f?.restrictedTo) return event;
+    const masked = { ...inner, before: null, after: 'Restricted' };
+    return (event.type === 'subitem.event' ? { ...event, event: masked } : masked) as E;
+  }
+
   const valueEvents = (before: Item, after: Item, automation: AutomationRow): AutomationEvent[] => {
     const ids = new Set([...Object.keys(before.values), ...Object.keys(after.values)]);
     const out: AutomationEvent[] = [];
@@ -236,7 +283,7 @@ export function automationStore(scope: { orgId: string; userId: string | null })
       // the sub-item gate refuses like a status rule: the run log says blocked
       return not(!r.ok && r.error.code === 'blocked' ? 'blocked' : 'failed', dbMessage(error));
     }
-    const saved = toItem(data);
+    const saved = await withRestrictedValues(db, toItem(data));
     return done({ events: valueEvents(w.item, saved, automation), touched: [w.item.id] });
   }
 
@@ -671,7 +718,8 @@ export function automationStore(scope: { orgId: string; userId: string | null })
       const { error } = await db.rpc('record_automation_run', {
         p_automation: run.automationId,
         p_item: run.itemId,
-        p_event: run.event as unknown as Json,
+        // the run log is read by everyone who can read the sheet: restricted values stay out of it
+        p_event: (await maskEvent(run.event)) as unknown as Json,
         p_status: run.status,
         p_detail: run.detail,
         p_steps: run.steps as unknown as Json,

@@ -72,6 +72,38 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
     'Only owners and admins can install and archive packs.',
   ],
   [/pack plan: (.*)/, 'invalid', 'This pack does not fit the workspace. Preview it again.'],
+  [
+    /no access: you cannot change a restricted field/,
+    'forbidden',
+    'This field is restricted. Only the people it lists can change it.',
+  ],
+  [
+    /no access: you cannot edit this sheet/,
+    'forbidden',
+    'You cannot edit this sheet. Ask an owner or an admin with access.',
+  ],
+  [
+    /no access: you cannot comment on this sheet/,
+    'forbidden',
+    'You can view this sheet but not comment on it.',
+  ],
+  [
+    /no access: you cannot add sheets to this folder/,
+    'forbidden',
+    'You cannot add sheets to this folder.',
+  ],
+  [/no access/, 'forbidden', 'You do not have access to this sheet.'],
+  [
+    /only owners and admins with access (manage access|restrict fields)/,
+    'forbidden',
+    'Only owners, and admins who have access, can change who has access.',
+  ],
+  [/invite expired/, 'forbidden', 'This invite has ended. Ask for a new one.'],
+  [
+    /memberships_auditor_expires|invites_auditor_expires/,
+    'invalid',
+    "Choose the day an auditor's access ends.",
+  ],
   [/item locked: (.*)/, 'forbidden', 'This item is locked. Only owners and admins can change it.'],
   [/item locked/, 'forbidden', 'This item is locked. Only owners and admins can change it.'],
   [
@@ -129,6 +161,9 @@ export function fromDbError(error: { message: string; code?: string }): Result<n
   // the documents register's workflow (0023) words its refusals for people, prefixed "document: "
   const doc = error.message.match(/document: (.*)/);
   if (doc) return fail('blocked', doc[1]!.trim());
+  // access control (0026–0028) words its refusals for people, prefixed "access: "
+  const access = error.message.match(/^access: (.*)/);
+  if (access) return fail('forbidden', access[1]!.trim());
   const form = error.message.match(/^form: (.*)/);
   if (form) return fail('invalid', form[1]!.trim());
   const parent = error.message.match(/restore the parent first: (\S+)/);

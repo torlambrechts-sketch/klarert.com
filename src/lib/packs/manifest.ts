@@ -47,6 +47,8 @@ export const packSheet = templateSheet.omit({ folder: true, items: true }).exten
   isLibrary: z.boolean().default(false),
   /** A documents register (docs/02 §14): its items are controlled documents. */
   register: z.literal('documents').optional(),
+  /** Restricted (docs/02 §16): only the installer (and owners) see it until people are given access. */
+  restricted: z.boolean().optional(),
   items: z.array(packItem).max(500).default([]),
 });
 
@@ -82,7 +84,14 @@ export const packManifestSchema = z
       .default([]),
     people: z.array(templatePerson).default([]),
     folders: z
-      .array(z.object({ ref, name: z.string().trim().min(1).max(80) }))
+      .array(
+        z.object({
+          ref,
+          name: z.string().trim().min(1).max(80),
+          /** Restricted (docs/02 §16): its sheets are seen by the installer (and owners) until shared. */
+          restricted: z.boolean().optional(),
+        }),
+      )
       .max(20)
       .default([]),
     sheets: z.array(packSheet).min(1).max(50),

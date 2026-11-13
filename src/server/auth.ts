@@ -31,10 +31,11 @@ export const getMyWorkspaces = cache(async () => {
   if (!session) return [];
   const { data } = await session.supabase
     .from('memberships')
-    .select('role, orgs!inner(id, name, slug, time_zone)')
+    .select('role, expires_at, orgs!inner(id, name, slug, time_zone)')
     .eq('user_id', session.user.id)
     .order('created_at');
-  return (data ?? []).map((m) => ({ role: m.role, ...m.orgs }));
+  // RLS hides memberships that have ended (an auditor after their end date, docs/02 §16)
+  return (data ?? []).map((m) => ({ role: m.role, expiresAt: m.expires_at, ...m.orgs }));
 });
 
 /** For pages: signed in with a profile, else redirect. */
@@ -55,4 +56,6 @@ export const requireMember = cache(async (slug: string) => {
 });
 
 export const isAdminRole = (role: Role) => role === 'owner' || role === 'admin';
-export const isEditorRole = (role: Role) => role !== 'viewer';
+/** Roles that may change sheets (subject to sheet access, docs/02 §16): viewers and auditors read only. */
+export const isEditorRole = (role: Role) =>
+  role === 'owner' || role === 'admin' || role === 'editor';

@@ -140,12 +140,17 @@ export async function computeDashboard(
     0,
     ...widgets.map((w, i) => (defs[i]?.data.runs ? (w.days ?? DEFAULT_DAYS) : 0)),
   );
-  const [sheetData, all, evidence, runs] = await Promise.all([
+  const [sheetData, all, evidence, runs, levels] = await Promise.all([
     Promise.all(sheetIds.map((id) => fetchSheetData(db, id).catch(() => null))),
     needsAll ? fetchAllSources(db, orgId, { ...env, now }) : Promise.resolve([]),
     needsEvidence ? fetchEvidence(db, orgId) : Promise.resolve([]),
     runDays > 0 ? fetchRuns(db, orgId, now, runDays + 1) : Promise.resolve([]),
+    // sheets a widget names that the person cannot read show "No access", not "no longer exists" (docs/02 §16)
+    sheetIds.length
+      ? db.rpc('sheet_levels', { p_sheets: sheetIds }).then((r) => r.data ?? [])
+      : Promise.resolve([]),
   ]);
+  const noAccess = new Set(levels.filter((l) => l.level === 'none').map((l) => l.sheet_id));
   const sources = new Map<string, SheetSource>(all.map((s) => [s.sheet.id, s]));
   for (const d of sheetData) {
     if (!d || d.sheet.orgId !== orgId) continue;
@@ -168,6 +173,7 @@ export async function computeDashboard(
     months,
     sheet: (id) => sources.get(id),
     sheets: () => all.map((s) => sources.get(s.sheet.id) ?? s),
+    noAccess: (id) => noAccess.has(id) && !sources.has(id),
     changes,
     evidence: evidence.map((e) => ({ sheetId: e.sheet.id, validUntil: e.validUntil })),
     runs: runs.map((r) => ({

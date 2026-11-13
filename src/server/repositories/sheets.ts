@@ -6,8 +6,17 @@ import { getSession } from '@/server/auth';
 
 // Reads for the app shell and the sheet pages. Run under the user's session and RLS.
 
-export type NavSheet = { id: string; name: string; code: string; folderId: string | null };
-export type NavFolder = { id: string; name: string; sheets: NavSheet[] };
+export type NavSheet = {
+  id: string;
+  name: string;
+  code: string;
+  folderId: string | null;
+  /** Restricted (docs/02 §16): only the people listed and the owners see it. */
+  restricted?: boolean;
+  /** Owners and admins see a restricted sheet's name without access: it opens nothing. */
+  noAccess?: boolean;
+};
+export type NavFolder = { id: string; name: string; sheets: NavSheet[]; restricted?: boolean };
 export type Nav = { folders: NavFolder[]; unfiled: NavSheet[] };
 
 /** Active folders with their (non-archived) sheets and rail codes, in menu order. */
@@ -15,10 +24,10 @@ export const getNav = cache(async (orgId: string): Promise<Nav> => {
   const session = await getSession();
   if (!session) return { folders: [], unfiled: [] };
   const db = session.supabase;
-  const [{ data: folders }, { data: sheets }] = await Promise.all([
+  const [{ data: folders }, { data: readable }, { data: access }] = await Promise.all([
     db
       .from('folders')
-      .select('id, name, position')
+      .select('id, name, position, restricted')
       .eq('org_id', orgId)
       .is('archived_at', null)
       .order('position'),
@@ -30,24 +39,43 @@ export const getNav = cache(async (orgId: string): Promise<Nav> => {
       // sub-item sheets live inside their parent sheet, not in the side menu (docs/02 §12)
       .is('parent_sheet_id', null)
       .order('position'),
+    // levels, and for owners and admins the names of restricted sheets they cannot open (docs/02 §16)
+    db.rpc('my_sheet_access', { p_org: orgId }),
   ]);
+  const levels = new Map((access ?? []).map((a) => [a.sheet_id, a]));
+  const hidden = (access ?? [])
+    .filter((a) => a.level === 'none' && !a.archived_at && !a.parent_sheet_id)
+    .map((a) => ({
+      id: a.sheet_id,
+      name: a.name,
+      folder_id: a.folder_id,
+      position: a.position,
+      created_at: '',
+    }));
+  const sheets = [...(readable ?? []), ...hidden];
   // fractional keys sort by code unit, not by the database's locale
   folders?.sort(byPosition);
-  sheets?.sort(byPosition);
+  sheets.sort(byPosition);
   const codes = sheetCodes(
-    (sheets ?? []).map((s) => ({ id: s.id, name: s.name, createdAt: s.created_at })),
+    sheets.map((s) => ({ id: s.id, name: s.name, createdAt: s.created_at })),
   );
-  const nav = (sheets ?? []).map((s) => ({
-    id: s.id,
-    name: s.name,
-    code: codes.get(s.id)!,
-    folderId: s.folder_id,
-  }));
+  const nav = (sheets ?? []).map((s) => {
+    const a = levels.get(s.id);
+    return {
+      id: s.id,
+      name: s.name,
+      code: codes.get(s.id)!,
+      folderId: s.folder_id,
+      ...(a?.restricted ? { restricted: true } : {}),
+      ...(a?.level === 'none' ? { noAccess: true } : {}),
+    };
+  });
   const folderIds = new Set((folders ?? []).map((f) => f.id));
   return {
     folders: (folders ?? []).map((f) => ({
       id: f.id,
       name: f.name,
+      ...(f.restricted ? { restricted: true } : {}),
       sheets: nav.filter((s) => s.folderId === f.id),
     })),
     unfiled: nav.filter((s) => !s.folderId || !folderIds.has(s.folderId)),
@@ -182,3 +210,20 @@ export async function getSubitemSheet(sheetId: string) {
     .order('position');
   return { id: child.id, dueKey: (fields ?? []).find((f) => f.type === 'date')?.key ?? null };
 }
+
+/**
+ * The person's level on a sheet and whether it is restricted (docs/02 §16), from the side menu's list (owners and
+ * admins also get restricted sheets they cannot open, by name). Opening a restricted sheet as an owner who is not
+ * listed is logged once a day (break-glass).
+ */
+export const getSheetAccess = cache(async (orgId: string, sheetId: string) => {
+  const session = await getSession();
+  if (!session || !/^[0-9a-f-]{36}$/i.test(sheetId)) return null;
+  const db = session.supabase;
+  const { data } = await db.rpc('my_sheet_access', { p_org: orgId });
+  const row = (data ?? []).find((r) => r.sheet_id === sheetId);
+  if (!row) return null;
+  if (row.restricted && row.level === 'owner')
+    await db.rpc('note_sheet_opened', { p_sheet: sheetId });
+  return { level: row.level, restricted: row.restricted, name: row.name };
+});
