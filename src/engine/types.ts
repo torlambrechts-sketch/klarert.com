@@ -136,6 +136,14 @@ export interface Item {
   parentId?: string | null;
   /** Sub-items: the number under the parent (display id = parent id + "." + subSeq at creation). */
   subSeq?: number | null;
+  /** The form the item came from (docs/02 §8): null formId when that form was deleted since. */
+  source?: ItemSource;
+}
+
+export interface ItemSource {
+  formId: string | null;
+  formVersion: number | null;
+  channel: 'public' | 'internal';
 }
 
 export interface FileRow {

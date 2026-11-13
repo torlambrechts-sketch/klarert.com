@@ -1,11 +1,11 @@
 import 'server-only';
-import { createHash } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createClient as createSupabase, type SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { keyBetween } from '@/engine/ordering';
 import type { Ctx, Field, Json } from '@/engine/types';
-import { formLayoutSchema } from '@/engine/views/config';
-import { checkFormAnswers, formCtx, formQuestions } from '@/engine/views/form';
+import { formLayoutSchema, privacyNoticeSchema, type PrivacyNotice } from '@/engine/views/config';
+import { checkFormAnswers, formCtx, formQuestions, needsConsent } from '@/engine/views/form';
 import type { Database } from '@/lib/database.types';
 import { env } from '@/lib/env';
 import { toField } from '@/lib/sheet-rows';
@@ -15,11 +15,13 @@ import { fail, invalid, ok, type Result } from '@/server/result';
 import { newId } from '@/server/sheet-context';
 import { log } from './context';
 
-// Public forms (docs/01 FR-25, /f/[token]): no session. Reading uses the anon key and get_public_form (the layout and
-// only its fields). Submitting uses submit_public_form (rate limit 10/min per hashed IP, honeypot, only fields on the
-// form, then submit_form) through a service-role client the public form route passes in (CLAUDE.md rule 6), so the
-// IP hash comes from the server and cannot be forged by a caller. The answers are checked with the field
-// registry here first, exactly as the builder's preview does.
+// Public forms (docs/01 FR-25, docs/05 §3.3, /f/[token]): no session. Reading uses the anon key and get_public_form
+// (the state, and when open the questions, their fields and the privacy notice; never hidden values or the people
+// notified). Submitting uses submit_public_form through a service-role client the public form route passes in
+// (CLAUDE.md rule 6): per-visitor limit (key = HMAC of IP + form id with a server secret, never the IP itself),
+// per-link limit and daily cap, honeypot, the form's state and fields, consent, then the item with its source.
+// Answers are checked with the field registry here first, as the builder's preview does, and a submission sent too
+// soon after the page was served is refused (minimum fill time).
 
 /** A client with the anon key and no session: what a signed-out visitor may do, nothing more. */
 const anon = () =>
@@ -27,7 +29,9 @@ const anon = () =>
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 
-const publicFormSchema = z.object({
+const openSchema = z.object({
+  state: z.literal('open'),
+  title: z.string(),
   sheet: z.object({
     id: z.uuid(),
     name: z.string(),
@@ -35,36 +39,72 @@ const publicFormSchema = z.object({
     idPrefix: z.string(),
     timeZone: z.string().nullable().optional(),
   }),
-  viewId: z.uuid().nullable(),
+  controller: z.string().nullable().optional(),
+  viewId: z.uuid(),
+  formVersion: z.number().int(),
   form: z.unknown(),
+  notice: z.unknown().optional(),
   fields: z.array(z.record(z.string(), z.unknown())),
   lastPosition: z.string().nullable(),
 });
+const closedSchema = z.object({
+  state: z.enum(['draft', 'closed', 'scheduled', 'full', 'internal_only']),
+  title: z.string(),
+  viewId: z.uuid(),
+  opensAt: z.string().nullable().optional(),
+  timeZone: z.string().nullable().optional(),
+});
+
+export type PublicFormState = 'open' | z.infer<typeof closedSchema>['state'];
 
 export interface PublicForm {
+  state: 'open';
   token: string;
-  viewId: string | null;
+  viewId: string;
+  formVersion: number;
   sheet: { id: string; name: string; itemLabel: string; idPrefix: string };
   timeZone: string;
   title: string;
   description: string;
   nameLabel: string;
+  confirmation: string;
+  controller: string;
+  notice: PrivacyNotice;
+  consent: boolean;
   fields: Field[];
   layout: z.infer<typeof formLayoutSchema>;
   lastPosition: string | null;
 }
 
+export interface UnavailableForm {
+  state: Exclude<PublicFormState, 'open'>;
+  title: string;
+  viewId: string;
+  opensAt: string | null;
+  timeZone: string;
+}
+
 const TOKEN = /^[0-9a-f]{64}$/;
 
-/** The form behind a public token, or null when the link is unknown or disabled. */
-export async function loadPublicForm(token: string): Promise<PublicForm | null> {
+/** The form behind a public token; null when the link is unknown or disabled. */
+export async function loadPublicForm(token: string): Promise<PublicForm | UnavailableForm | null> {
   if (!TOKEN.test(token)) return null;
   const { data, error } = await anon().rpc('get_public_form', { p_token: token });
   if (error || !data) return null;
-  const parsed = publicFormSchema.safeParse(data);
+  const closed = closedSchema.safeParse(data);
+  if (closed.success)
+    return {
+      state: closed.data.state,
+      title: closed.data.title,
+      viewId: closed.data.viewId,
+      opensAt: closed.data.opensAt ?? null,
+      timeZone: closed.data.timeZone ?? 'Europe/London',
+    };
+  const parsed = openSchema.safeParse(data);
   if (!parsed.success) return null;
   const d = parsed.data;
   const layout = formLayoutSchema.safeParse(d.form ?? { fields: [] });
+  const notice = privacyNoticeSchema.safeParse(d.notice ?? {});
   const fields = d.fields.map((r) =>
     toField({
       ...(r as unknown as Parameters<typeof toField>[0]),
@@ -78,13 +118,19 @@ export async function loadPublicForm(token: string): Promise<PublicForm | null> 
   );
   const form = layout.success ? layout.data : { fields: [] };
   return {
+    state: 'open',
     token,
     viewId: d.viewId,
+    formVersion: d.formVersion,
     sheet: d.sheet,
     timeZone: d.sheet.timeZone ?? 'Europe/London',
-    title: form.title?.trim() || d.sheet.name,
+    title: d.title,
     description: form.description?.trim() ?? '',
     nameLabel: form.nameLabel?.trim() || d.sheet.itemLabel,
+    confirmation: form.confirmation?.trim() ?? '',
+    controller: d.controller ?? '',
+    notice: notice.success ? notice.data : {},
+    consent: needsConsent({ ...form, notice: notice.success ? notice.data : undefined }),
     fields,
     layout: form,
     lastPosition: d.lastPosition,
@@ -104,17 +150,46 @@ export const publicCtx = (
     newId,
   });
 
-/** SHA-256 of the visitor's IP with a server-side salt: the database never sees the address itself. */
-export function hashIp(ip: string): string {
-  const salt = process.env.FORM_RATE_LIMIT_SALT ?? process.env.CRON_SECRET ?? '';
-  return createHash('sha256').update(`${salt}:${ip}`).digest('hex');
+const secret = () => process.env.FORM_RATE_LIMIT_SALT ?? process.env.CRON_SECRET ?? '';
+
+/** The per-visitor key: HMAC-SHA-256 of the IP and the form id. The database never sees the address itself. */
+export function visitorKey(ip: string, formId: string): string {
+  return createHmac('sha256', secret()).update(`${ip}|${formId}`).digest('hex');
+}
+
+/** Minimum time between serving the form and sending it: people take longer, scripts do not. */
+export const MIN_FILL_MS = 2000;
+const MAX_FILL_MS = 24 * 60 * 60 * 1000;
+
+/** A signed "page served at" stamp for the form behind this token. */
+export function startStamp(token: string, now = Date.now()): string {
+  const sig = createHmac('sha256', secret()).update(`start|${token}|${now}`).digest('hex');
+  return `${now}.${sig}`;
+}
+
+/** How long ago the page was served, or null when the stamp is not ours. */
+export function elapsedSince(token: string, stamp: string, now = Date.now()): number | null {
+  const [t, sig] = stamp.split('.');
+  const at = Number(t);
+  if (!Number.isFinite(at) || !sig || !/^[0-9a-f]{64}$/.test(sig)) return null;
+  const want = createHmac('sha256', secret()).update(`start|${token}|${at}`).digest();
+  const got = Buffer.from(sig, 'hex');
+  if (got.length !== want.length || !timingSafeEqual(got, want)) return null;
+  return now - at;
 }
 
 export type PublicSubmitResult = { displayId: string | null };
 
 const REASONS: Record<string, string> = {
-  rate_limited: 'Too many answers were sent from your network. Wait a minute and try again.',
+  rate_limited: 'Too many answers were sent to this form. Wait a while and try again.',
   not_found: 'This form is no longer available.',
+  draft: 'This form is not open.',
+  closed: 'This form is closed.',
+  scheduled: 'This form is not open yet.',
+  full: 'This form has all the answers it takes.',
+  internal_only: 'This form is for signed-in members only.',
+  consent_required: 'Tick the consent box to send your answers.',
+  too_fast: 'Take a moment to check your answers, then send them again.',
   invalid: 'Check your answers and try again.',
 };
 
@@ -128,6 +203,12 @@ export async function submitPublicForm(
   const v = p.data;
   const form = await loadPublicForm(v.token);
   if (!form) return fail('not_found', REASONS.not_found!);
+  if (form.state !== 'open') return fail('invalid', REASONS[form.state] ?? REASONS.invalid!);
+  const elapsed = elapsedSince(v.token, v.started);
+  if (elapsed === null || elapsed > MAX_FILL_MS) return fail('invalid', REASONS.not_found!);
+  if (elapsed < MIN_FILL_MS) return fail('invalid', REASONS.too_fast!);
+  if (form.consent && !v.consent)
+    return fail('invalid', REASONS.consent_required!, { __consent: REASONS.consent_required! });
   const ctx = publicCtx(form, new Date());
   const questions = formQuestions(form.layout, form.fields);
   const check = checkFormAnswers(questions, v.name, v.answers, ctx, form.nameLabel);
@@ -136,11 +217,12 @@ export async function submitPublicForm(
 
   const { data, error } = await submitter.rpc('submit_public_form', {
     p_token: v.token,
-    p_ip_hash: hashIp(ip),
+    p_ip_hash: visitorKey(ip, form.viewId),
     p_name: v.name.trim(),
     p_values: check.values as Json,
     p_position: keyBetween(form.lastPosition, null),
     p_honeypot: v.website ?? '',
+    p_consent: !!v.consent,
   });
   if (error) {
     console.error(
@@ -176,7 +258,7 @@ export async function submitPublicForm(
         sheetId: r.sheet_id!,
         itemId: r.id!,
         formId: form.viewId,
-        actor: { kind: 'form', id: null },
+        actor: { kind: 'form', id: form.viewId },
       },
     ],
     { orgId: r.org_id!, userId: null },

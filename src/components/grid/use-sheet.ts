@@ -560,8 +560,8 @@ export function useSheetActions(org: string, sheetId: string) {
       name: string,
       position: string,
       onSaved?: (tempId: string, item: Item) => void,
-      /** Values to start with (calendar day, kanban lane, internal form) and the form it came from. */
-      extra: { values?: Record<string, unknown>; formViewId?: string; hold?: boolean } = {},
+      /** Values to start with (calendar day, kanban lane). */
+      extra: { values?: Record<string, unknown>; hold?: boolean } = {},
     ): Promise<Item | null> => {
       const tempId = `temp-${newMutationId()}`;
       const now = new Date().toISOString();
@@ -589,7 +589,6 @@ export function useSheetActions(org: string, sheetId: string) {
             position,
             mutationId: tempId,
             ...(extra.values ? { values: extra.values } : {}),
-            ...(extra.formViewId ? { formViewId: extra.formViewId } : {}),
             ...(extra.hold ? { hold: true } : {}),
           }),
         );

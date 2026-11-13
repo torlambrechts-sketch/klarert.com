@@ -292,4 +292,6 @@ export interface SavedView {
   position: string;
   /** The type the row was stored with when it is a former one ('list', 'grid'). */
   legacyType?: string;
+  /** Forms: the version the database keeps (bumped by every saved change, 0022). */
+  formVersion?: number;
 }

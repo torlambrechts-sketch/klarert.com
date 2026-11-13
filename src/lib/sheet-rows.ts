@@ -28,8 +28,11 @@ export type LinkDbRow = Tables['item_links']['Row'];
 export type FileDbRow = Tables['files']['Row'];
 export type ViewDbRow = Tables['views']['Row'];
 
+/** Columns only the form submit functions write (0022). */
+type SourceColumn = 'source_form_id' | 'form_version' | 'source_channel';
+
 export const ITEM_COLUMNS =
-  'id, org_id, sheet_id, group_id, seq, display_id, name, values, position, locked, lock_reason, created_by, created_at, updated_by, updated_at, archived_at, parent_id, sub_seq';
+  'id, org_id, sheet_id, group_id, seq, display_id, name, values, position, locked, lock_reason, created_by, created_at, updated_by, updated_at, archived_at, parent_id, sub_seq, source_form_id, form_version, source_channel';
 /** The sheet columns the domain Sheet needs (sub-items: the parent, and the settings that hold the label and gate). */
 export const SHEET_COLUMNS =
   'id, org_id, name, item_label, id_prefix, is_library, parent_sheet_id, settings';
@@ -37,8 +40,8 @@ export const FIELD_COLUMNS =
   'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, created_at, updated_at, archived_at';
 
 export function toItem(
-  r: Pick<ItemDbRow, Exclude<keyof ItemDbRow, 'org_id' | 'parent_id' | 'sub_seq'>> &
-    Partial<Pick<ItemDbRow, 'parent_id' | 'sub_seq'>>,
+  r: Pick<ItemDbRow, Exclude<keyof ItemDbRow, 'org_id' | 'parent_id' | 'sub_seq' | SourceColumn>> &
+    Partial<Pick<ItemDbRow, 'parent_id' | 'sub_seq' | SourceColumn>>,
 ): Item {
   return {
     id: r.id,
@@ -57,6 +60,15 @@ export function toItem(
     updatedAt: r.updated_at,
     archivedAt: r.archived_at,
     ...(r.parent_id ? { parentId: r.parent_id, subSeq: r.sub_seq ?? null } : {}),
+    ...(r.source_form_id || r.source_channel
+      ? {
+          source: {
+            formId: r.source_form_id ?? null,
+            formVersion: r.form_version ?? null,
+            channel: r.source_channel === 'public' ? 'public' : 'internal',
+          },
+        }
+      : {}),
   };
 }
 
@@ -150,7 +162,9 @@ export function withChildIds(sheets: Sheet[]): Sheet[] {
   return sheets.map((s) => (child.has(s.id) ? { ...s, childSheetId: child.get(s.id)! } : s));
 }
 
-export function toView(r: ViewDbRow): SavedView {
+export function toView(
+  r: Omit<ViewDbRow, 'form_version'> & Partial<Pick<ViewDbRow, 'form_version'>>,
+): SavedView {
   return {
     id: r.id,
     sheetId: r.sheet_id,
@@ -160,6 +174,7 @@ export function toView(r: ViewDbRow): SavedView {
     config: parseViewConfig(r.config),
     ownerId: r.owner_id,
     position: r.position,
+    ...(r.type === 'form' ? { formVersion: r.form_version ?? 1 } : {}),
   };
 }
 

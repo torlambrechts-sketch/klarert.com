@@ -104,6 +104,9 @@ export function fromDbError(error: { message: string; code?: string }): Result<n
   // the sub-item gate (0020) writes its own message for people: which sub-items are still open
   const gate = error.message.match(/subitems open: (.*)/);
   if (gate) return fail('blocked', gate[1]!.trim());
+  // forms (0022) write their refusals for people, prefixed "form: "
+  const form = error.message.match(/^form: (.*)/);
+  if (form) return fail('invalid', form[1]!.trim());
   const parent = error.message.match(/restore the parent first: (\S+)/);
   if (parent)
     return fail('conflict', `Restore ${parent[1]} first: this sub-item was archived with it.`);
