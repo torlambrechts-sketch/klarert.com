@@ -51,13 +51,24 @@ test('keyboard only: add an item, set its status, open it, post an update, close
   const item = await ids.item('Corrective actions', 'Loose cable at line 4');
   await page.keyboard.press('Escape');
 
-  // 2. into the grid, down to the new item, right to Status, Enter, pick with the arrows, Enter
+  // 2. into the grid (no cell is active yet: the first ↓ picks one), down to the new item; on a parent's name the
+  // first → opens its sub-items (docs/05 §3.2), then → → to Status; Enter, pick with the arrows, Enter
   await tabTo(page, page.getByRole('grid'), { back: true });
+  expect(await activeCell(page)).toBeNull();
   for (let i = 0; i < 20 && (await activeCell(page)) !== `cell-${item.id}-name`; i += 1)
     await page.keyboard.press('ArrowDown');
   expect(await activeCell(page)).toBe(`cell-${item.id}-name`);
+  const status = await ids.field('Corrective actions', 'status');
+  const steps = page.getByRole('button', { name: `Show steps of ${item.display_id}` });
+  await expect(steps).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('ArrowRight');
+  await expect(
+    page.getByRole('button', { name: `Hide steps of ${item.display_id}` }),
+  ).toHaveAttribute('aria-expanded', 'true');
+  expect(await activeCell(page)).toBe(`cell-${item.id}-name`);
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight');
+  expect(await activeCell(page)).toBe(`cell-${item.id}-${status}`);
   await page.keyboard.press('Enter');
   const statuses = page.getByRole('listbox', { name: 'Status' });
   await expect(statuses).toBeVisible();
@@ -79,8 +90,11 @@ test('keyboard only: add an item, set its status, open it, post an update, close
   const panel = page.getByRole('dialog');
   await expect(panel.getByRole('heading', { name: 'Loose cable at line 4' })).toBeVisible();
 
-  // 4. the Updates tab (tabs: Tab reaches the selected one, arrows move between them), write, post
+  // 4. the Updates tab (tabs: Tab reaches the selected one, arrows move between them; the sub-items tab, Steps, sits
+  // between Details and Updates), write, post
   await tabTo(page, panel.getByRole('tab', { name: 'Details' }));
+  await page.keyboard.press('ArrowRight');
+  await expect(panel.getByRole('tab', { name: /^Steps/ })).toBeFocused();
   await page.keyboard.press('ArrowRight');
   const updatesTab = panel.getByRole('tab', { name: /^Updates/ });
   await expect(updatesTab).toBeFocused();
@@ -106,5 +120,5 @@ test('keyboard only: add an item, set its status, open it, post an update, close
     page,
     `items?id=eq.${item.id}&select=values`,
   );
-  expect(saved!.values[await ids.field('Corrective actions', 'status')]).toBe('opt_investigating');
+  expect(saved!.values[status]).toBe('opt_investigating');
 });
