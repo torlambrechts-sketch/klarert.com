@@ -175,7 +175,8 @@ function sliceLabel(
 
 /**
  * Items of `items` per value of `field`, with the widget's figure. Option fields keep their options' order (options
- * nobody holds included, so the scale stays put); other fields go largest first. At most `top` slices.
+ * nobody holds included, so the scale stays put); other fields go largest first, ties in the order they first
+ * appear. At most `top` slices.
  */
 export function breakdown(
   items: Item[],
@@ -202,7 +203,8 @@ export function breakdown(
     count: list.length,
     option: options.get(k),
   }));
-  if (!opts.length) slices.sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+  // largest first; ties keep the order the values first appear in (the items' order)
+  if (!opts.length) slices.sort((a, b) => b.value - a.value);
   return slices.slice(0, Math.max(1, top)).map((s, i) => ({
     key: s.key,
     label: s.label,

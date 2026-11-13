@@ -229,8 +229,8 @@ function SheetBody(props: SheetViewProps) {
     <main
       className={cn(
         'flex min-w-0 flex-col px-4 pt-5 sm:px-[28px] sm:pt-[26px]',
-        // the Table scrolls with the page; the other views fill the window and scroll inside
-        tabular
+        // the Table and Insights scroll with the page; the other views fill the window and scroll inside
+        tabular || active.type === 'insights'
           ? 'min-h-[calc(100dvh-48px)] pb-[24px]'
           : 'h-[calc(100dvh-48px)] pb-3 max-[759px]:h-[calc(100dvh-112px)]',
       )}

@@ -136,17 +136,24 @@ export function InsightsView({
     [org, onSlice, onOpenItem, data.items],
   );
 
+  // while the layout is edited, bars do not leave for the Table
+  const editBodyActions: BodyActions = useMemo(() => ({ org }), [org]);
+
   const saving = active.saved && active.canWrite;
+  const [busy, setBusy] = useState(false);
   const finish = async () => {
-    setEdit(false);
-    if (saving || !views.unsaved) return;
+    if (saving || !views.unsaved) return setEdit(false);
     const shared = views.canShare && !active.saved;
-    await views.create({
+    setBusy(true);
+    const view = await views.create({
       name: shared ? 'Insights' : 'My insights',
       type: 'insights',
       shared,
       config,
     });
+    setBusy(false);
+    // a refused save keeps the editor open with the changes (the toast says why)
+    if (view) setEdit(false);
   };
 
   const openAdd = (rowId: string | null, span: Span) => {
@@ -185,7 +192,7 @@ export function InsightsView({
   const empty = !layout.rows.some((r) => r.widgets.length);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-6">
+    <div className="flex flex-1 flex-col">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground text-label-12 m-0">
           {anyFilterable && !edit ? 'Click a bar to filter the table' : null}
@@ -236,8 +243,8 @@ export function InsightsView({
             Reset to default
           </Button>
           <AddRowButton onPick={(plan) => apply(addRow(layout, plan, newId))} />
-          <Button type="button" size="sm" onClick={() => void finish()}>
-            Done
+          <Button type="button" size="sm" disabled={busy} onClick={() => void finish()}>
+            {busy ? 'Saving…' : 'Done'}
           </Button>
         </div>
       ) : null}
@@ -284,7 +291,7 @@ export function InsightsView({
                         insights={insights}
                         org={org}
                         edit={edit}
-                        bodyActions={bodyActions}
+                        bodyActions={edit ? editBodyActions : bodyActions}
                         apply={apply}
                         onConfigure={() => {
                           setEditorSrc(w.src);
