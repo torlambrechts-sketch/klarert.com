@@ -24,7 +24,13 @@ type Tables = Database['public']['Tables'];
 type Provenance = 'pack_install_id' | 'pack_ref' | 'pack_hash';
 export type ItemDbRow = Omit<
   Tables['items']['Row'],
-  'held_at' | 'held_by' | 'held_created' | 'held_snapshot' | 'next_sub_seq' | 'archived_with' | Provenance
+  | 'held_at'
+  | 'held_by'
+  | 'held_created'
+  | 'held_snapshot'
+  | 'next_sub_seq'
+  | 'archived_with'
+  | Provenance
 >;
 export type FieldDbRow = Omit<Tables['fields']['Row'], Provenance>;
 export type GroupDbRow = Tables['groups']['Row'];

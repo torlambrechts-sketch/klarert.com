@@ -37,7 +37,9 @@ test.describe('desktop', () => {
     await expect(dialog.getByRole('list', { name: 'Folders' })).toContainText(
       'Uses the folder Your sheets',
     );
-    await expect(dialog.getByRole('list', { name: 'Sheets', exact: true })).toContainText('Corrective actions');
+    await expect(dialog.getByRole('list', { name: 'Sheets', exact: true })).toContainText(
+      'Corrective actions',
+    );
     await expect(dialog.getByRole('list', { name: 'Links between sheets' })).toContainText(
       'Corrective actions → Actions through Actions, both ways',
     );
