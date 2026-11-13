@@ -57,6 +57,8 @@ Prove the core before we build compliance packs on it: a flexible spreadsheet (a
 
 Personal saved views are visible to their owner only; shared views to everyone.
 
+**Access control (P2, docs/02 §16).** The table above is what a workspace role gives on an open sheet. An owner, or an admin who has access, can restrict a folder or a sheet to chosen people with a level: can edit, can comment (read, post updates, @mention; no value changes) or can view. A grant never gives more than the role (viewers and auditors only view). Owners always see everything (opening a restricted sheet they are not listed on is logged); admins see a restricted sheet's name, not its content, unless listed. A fifth role, **Auditor**, reads like a viewer (sheets, evidence and files with downloads logged, activity and run logs) until an end date set on the invite or the member, after which access ends by itself; auditors cannot edit, comment, post updates, submit internal forms, run buttons or change automations. Any field can be **restricted** to chosen people and roles (owners always see it): everyone else sees "Restricted", never the value, anywhere (Table, panel, lookups, summaries, Insights, dashboards, search, notifications, webhooks, the activity log).
+
 ## 5. Functional requirements
 
 IDs are referenced from the build plan. "Must" = MVP.

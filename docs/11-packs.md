@@ -25,8 +25,8 @@ Validated by `packManifestSchema` (`src/lib/packs/manifest.ts`), which extends t
 | `title`, `description` | Shown in Workspace admin › Packs |
 | `requires` | `[{ pack, range }]`; ranges `1.2.3`, `^1.2.0`, `~1.2.0`, `>=1.2.0`, `*`. Checked, not installed for you |
 | `people` | Example people by `ref` and `email`; values `$person:<ref>` match the workspace's members by email. Missing people are left out (a warning, never a blocker) |
-| `folders` | `[{ ref, name }]`. An active folder with the same name is used; otherwise the pack makes one |
-| `sheets` | A template sheet (docs/07 Part B: `ref`, `name`, `itemLabel`, `idPrefix`, `groups`, `fields`, `views`, `forms`, `tabs`, `defaultView`, `columnGroups`, `subitems`) plus `folder` (a folder ref), `isLibrary`, `register: "documents"` and `items` |
+| `folders` | `[{ ref, name, restricted? }]`. An active folder with the same name is used; otherwise the pack makes one. `restricted: true` (P2) makes a new folder restricted: the installer is listed as an editor (owners always see it) |
+| `sheets` | A template sheet (docs/07 Part B: `ref`, `name`, `itemLabel`, `idPrefix`, `groups`, `fields`, `views`, `forms`, `tabs`, `defaultView`, `columnGroups`, `subitems`) plus `folder` (a folder ref), `isLibrary`, `register: "documents"`, `restricted` (P2: created restricted, the installer listed as an editor) and `items` |
 | `sheets[].fields[].config.targetSheetRef` | A link: a sheet ref of this pack, or `<pack key>:<sheet ref>` of a pack in `requires` (checked; resolving another pack's sheets comes later, the planner reports it as a conflict) |
 | `sheets[].items` | `[{ ref, group, name, values, links: { <link field key>: [<item ref>] } }]`: example items, documents of a register, library items. Links name items by ref, never by name. Tokens `$today`, `$in:N`, `$option:<label>`, `$person:<ref>` |
 | `automations` | Template automations plus a `ref`. `sheetRef`, `groupRef` and a form's `ref` resolve to ids; `jobRole:<name>` / `team:<name>` recipients the workspace lacks are left out and said; an automation that then has nobody to tell is installed off |

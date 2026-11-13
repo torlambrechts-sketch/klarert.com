@@ -101,6 +101,8 @@ Commands also write: `item_updates` (comments), `notifications`, `automation_run
 
 ## 7. Row level security (summary)
 
+Since P2 every sheet-scoped read and write below is narrowed further by the person's level on the sheet (owner, editor, commenter, viewer, none) and restricted fields are kept out of reach: see §16.
+
 | Table group | Read | Write |
 |---|---|---|
 | Everything with `org_id` | members (`is_member`) | see below |
@@ -178,7 +180,7 @@ One level of items under an item. A sheet with sub-items has one hidden **child 
 
 ## 13. Folders (0021)
 
-Folders organise sheets in the side menu (docs/05 §2.1). They do not restrict who can see a sheet: every member sees every folder and sheet.
+Folders organise sheets in the side menu (docs/05 §2.1). A folder restricts who sees its sheets only when an owner or admin restricts it (§16); otherwise every member sees every folder and sheet.
 
 - **Columns:** `id, org_id, name (≤ 80), position, archived_at, created_at`. A sheet has at most one folder (`sheets.folder_id`, null = "Other sheets"). Sub-item child sheets (§12) are never in a folder and cannot be moved or renamed from the menu.
 - **Positions:** fractional keys (§3). The menu sends the ids of the new neighbours (`before`, `after`); the command reads their current keys and stores a key between them (`src/engine/organise.ts` `placeBetween`). When the keys around the gap are equal or out of order (concurrent moves), or the new key would pass 50 characters, the whole level is re-keyed evenly. Sheet keys are compared per level (the sheets of one folder, or of "Other sheets"); a new sheet goes to the end. Keys are compared by code unit in TypeScript, not by the database collation. "Sort A–Z" rewrites the keys of one folder's sheets once; it is not a lasting sort.
@@ -208,3 +210,38 @@ Packs are installable bundles of the core as data (docs/11): folders, sheets, fi
 | `pack_member_emails(org)` | owners and admins (service role) | The members' emails, so a pack's example people (`people` by email) can be matched |
 
 The plan (`p_plan`) is built by the pure planner `src/engine/packs/plan.ts` on the server from the catalogue manifest and a snapshot of the workspace (`src/server/packs/install.ts`); the browser never sends rows. Grants: the three functions to `authenticated` (`install_pack` and `pack_member_emails` also to `service_role`), `_pack_hash` and the guard to nobody.
+
+## 16. Access control (0025–0028, P2)
+
+Open by default: everyone in a workspace keeps the access their workspace role gives. Owners, and admins who have access themselves, can restrict a folder or a sheet and list people with a level. Everything is enforced in the database; the app only explains it.
+
+**Roles and levels.** Workspace roles: owner, admin, editor, viewer and **auditor** (0025: read-only like a viewer; `memberships.expires_at` is required for auditors, checked by a constraint; invites carry `expires_at` and `accept_invite` copies it). `is_member` and `has_role` ignore a membership whose `expires_at` has passed, so every policy and every definer function ends an auditor's access at the end date with no job. Sheet levels: `owner | editor | commenter | viewer | none`. Commenter = viewer + post updates, @mention; no value, file or structure changes.
+
+**Resolution** (`_sheet_levels(user, sheet)`, one place, 0026):
+
+| Case | Level |
+|---|---|
+| Workspace owner | `owner`, always (break-glass) |
+| Sheet not restricted | admin, editor → `editor`; viewer, auditor → `viewer` |
+| Restricted, the person listed | the grant's level, capped by the role: viewers and auditors only ever `viewer` |
+| Restricted, not listed (admins too) | `none` |
+
+A sheet follows its folder (`sheets.access_inherit`, default true): restricted when `folders.restricted`, with the folder's list. With its own setting (`access_inherit = false`) the sheet's `restricted` flag and its own list replace the folder's (a sheet in a restricted folder can be opened on its own). Sub-item (child) sheets always resolve as their parent. Grants: `access_grants (org_id, folder_id | sheet_id, user_id, level, granted_by, granted_at)`, exactly one target, unique per target and person, indexed by target+person and by person. No write policies: only `set_sheet_access(sheet, inherit|restricted|open)`, `set_folder_access(folder, restricted)` and `set_access_grant(kind, target, user, level|null)` write them (owners, and admins with access to that sheet or folder; restricting as an admin lists the admin as an editor so they keep access). `sheets.restricted/access_inherit`, `folders.restricted` and `fields.restricted_to` change only through those functions (guard triggers, `app.access_op`) or `install_pack`. Moving a sheet into or out of a restricted folder (it would change who sees it) needs someone who manages both folders; adding a sheet to a folder needs edit access to the folder.
+
+**Where it is enforced.**
+
+- RLS reads: `sheet_id in (select readable_sheet_ids())` on sheets, fields, groups, views, form links, automations, automation runs and items; item-scoped tables (item_updates, files, file_access_log, protected_values, automation_pauses, notifications) through the readable item; `item_links` need both ends readable; activity_log entries need the sheet readable (workspace entries: members; folder access entries: owners and admins). `readable_sheet_ids()` is evaluated once per statement (a hashed subplan), not per row.
+- RLS writes: structure tables need `editable_sheet_ids()`; `item_updates` need `commentable_sheet_ids()`.
+- Definer RPCs: guard triggers on items, item_links, files, file_access_log, item_updates, protected_values, restricted_values and automation_pauses hold every RPC (old and new) to the person's level on the sheet (`_need_sheet`, cached per transaction for bulk writes). They apply to people only (`role = authenticated`); automations run as the service role and were authorised when saved (the automation commands refuse actions that write to sheets the author cannot edit; buttons need edit access).
+- Notifications: a trigger drops a notification about an item its recipient cannot read, whoever sends it (mentions, forms, automations, webhook failures).
+- Storage: an object is readable when its `files` row is; uploads go to items of sheets the person can edit.
+- `my_sheet_access(org)` lists the sheets a person can read and, for owners and admins, the names of restricted sheets they cannot open (the side menu shows them as Restricted). `sheet_levels(ids)` tells "No access" from "does not exist" for link targets and widgets. `note_sheet_opened(sheet)` logs `restricted.accessed` on the sheet chain when an owner who is not listed opens a restricted sheet, at most once per person per day.
+
+**Restricted fields** (0027). `fields.restricted_to = { userIds, roles }` (null: not restricted); owners always see. Set by `set_field_restriction(field, restricted, user_ids, roles)` (owners, and admins with edit access to the sheet), logged as `field.restricted / field.restriction_changed / field.unrestricted` on the sheet chain.
+
+- Values leave `items.values` for `restricted_values (org_id, sheet_id, item_id, field_id, value)`, RLS: sheet readable and field visible (`hidden_field_ids()`). A BEFORE trigger on items moves any restricted key out of a written row (so `create_item`, imports, forms, sub-items, packs and the document workflow are all covered); `set_item_values` reads and writes the store for restricted keys (old value, clearing). Writing a restricted value needs sight of the field. Turning a restriction on or off moves existing values in one transaction. `fields.field_hidden` (a computed column) tells the app which fields the caller may not see.
+- Links and files of a restricted field are readable only by people who see it.
+- The log: a BEFORE INSERT trigger (`activity_a_mask`, before the hash chain) replaces a restricted field's old/new values (`value.changed`, `link.changed`, file events, and the field's entry in `item.created` values) with `{"$restricted": sha256(salt | value)}` and keeps the values in `restricted_activity` (RLS as `restricted_values`, append-only). The chain hashes the marker; `verify_activity_chain` also checks every stored value against its marker. Entries written before a field was restricted cannot change: RLS hides those that still hold its value from people who may not see it.
+- Derived outputs: lookups, roll-ups and formulas over a restricted field or through a link to a sheet the person cannot read are shown as "Restricted" (`hiddenFor`, `readsHidden` in the field registry), as are summaries, Insights and dashboard widgets; automation messages, posts and webhook payloads always say "Restricted" for restricted (and protected) fields, whoever reads them, and stored run events mask restricted values. Public forms never show or accept a restricted field. Search and My work find items through a restricted people field only for people who see it.
+
+**Packs.** A manifest's folders and sheets may say `"restricted": true` (P1 manifest, optional): `install_pack` creates them restricted and lists the installing person as an editor, logged as a grant.
