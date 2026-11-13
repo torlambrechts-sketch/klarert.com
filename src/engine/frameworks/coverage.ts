@@ -54,11 +54,13 @@ export function coverageOf(rows: readonly CoverageInput[]): Coverage {
   return c;
 }
 
-/** "62% covered · 80 applicable · 5 not applicable · 42 to decide" */
+/** "62% covered (75 of 122) · 80 applicable · 5 not applicable · 42 to decide" */
 export function coverageText(c: Coverage): string {
   if (c.total === 0) return 'No requirements';
   const parts = [
-    c.percent === null ? 'Nothing in scope' : `${c.percent}% covered`,
+    c.percent === null
+      ? 'Nothing in scope'
+      : `${c.percent}% covered (${c.covered} of ${c.total - c.notApplicable})`,
     `${c.applicable} applicable`,
     `${c.notApplicable} not applicable`,
   ];

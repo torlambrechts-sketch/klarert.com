@@ -77,14 +77,17 @@ create index crosswalks_to_idx on crosswalks(to_framework, to_version, to_ref);
 create or replace function catalogue_guard() returns trigger language plpgsql as $$
 begin
   if tg_op = 'DELETE' then raise exception 'the requirement catalogue is append-only'; end if;
-  if tg_table_name = 'requirements' and (new.framework_key, new.framework_version, new.ref, new.parent_ref, new.kind)
-       is distinct from (old.framework_key, old.framework_version, old.ref, old.parent_ref, old.kind) then
-    raise exception 'a requirement''s ref, parent and kind never change';
-  end if;
-  if tg_table_name = 'frameworks' and (new.key, new.version) is distinct from (old.key, old.version) then
-    raise exception 'a framework''s key and version never change';
-  end if;
   if tg_table_name = 'crosswalks' then raise exception 'a cross-walk never changes: add a new mapping version'; end if;
+  if tg_table_name = 'requirements' then
+    if (new.framework_key, new.framework_version, new.ref, new.parent_ref, new.kind)
+         is distinct from (old.framework_key, old.framework_version, old.ref, old.parent_ref, old.kind) then
+      raise exception 'a requirement''s ref, parent and kind never change';
+    end if;
+  elsif tg_table_name = 'frameworks' then
+    if (new.key, new.version) is distinct from (old.key, old.version) then
+      raise exception 'a framework''s key and version never change';
+    end if;
+  end if;
   return new;
 end $$;
 revoke all on function catalogue_guard() from public, anon, authenticated;
