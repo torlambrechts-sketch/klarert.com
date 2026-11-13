@@ -14,6 +14,7 @@ Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it
 | `/[org]/dashboards` | Opens the first dashboard; seeds "Compliance overview" on an editor's first visit |
 | `/[org]/dashboards/[dashboardId]` | One dashboard: tabs for every dashboard, widget cards |
 | `/[org]/evidence` | Evidence library. Query: `?q=<search>&sheet=<id>&status=valid\|expiring\|expired\|none` |
+| `/[org]/apps/[app]/[screen]` | One screen of an installed pack's app (docs/13); `/[org]/apps/[app]` opens its first screen |
 | `/[org]/workflow` | Workflow: every sheet's lifecycle by a status or label field, as an expandable list. Query: `?sheet=<id>&field=<key>` opens that sheet |
 | `/[org]/s/new` | New sheet wizard |
 | `/[org]/s/[sheetId]` | Sheet, default view. Query: `?view=<viewId>&item=<displayId>&q=<search>` |
