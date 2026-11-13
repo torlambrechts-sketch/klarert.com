@@ -141,3 +141,23 @@ export async function getWizardData(orgId: string) {
       .map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library })),
   };
 }
+
+/** The child sheet of a sheet with sub-items, and the key of its first date field ("Due in N days" in templates). */
+export async function getSubitemSheet(sheetId: string) {
+  const session = await getSession();
+  if (!session) return null;
+  const db = session.supabase;
+  const { data: child } = await db
+    .from('sheets')
+    .select('id')
+    .eq('parent_sheet_id', sheetId)
+    .maybeSingle();
+  if (!child) return null;
+  const { data: fields } = await db
+    .from('fields')
+    .select('key, type')
+    .eq('sheet_id', child.id)
+    .is('archived_at', null)
+    .order('position');
+  return { id: child.id, dueKey: (fields ?? []).find((f) => f.type === 'date')?.key ?? null };
+}

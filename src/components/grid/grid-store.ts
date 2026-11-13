@@ -16,6 +16,8 @@ export interface GridState {
   selected: ReadonlySet<string>;
   lastSelected: string | null;
   collapsed: ReadonlySet<string>;
+  /** Parents whose sub-items are open in the Table (kept per person and sheet in localStorage). */
+  expanded: ReadonlySet<string>;
   hidden: ReadonlySet<string>;
   /** Column widths while resizing, before they are saved. */
   widths: Readonly<Record<string, number>>;
@@ -41,6 +43,8 @@ export interface GridState {
   edit(cell: CellRef | null): void;
   setSelected(ids: Iterable<string>, last?: string | null): void;
   toggleCollapsed(groupId: string): void;
+  toggleExpanded(itemId: string, open?: boolean): void;
+  setExpanded(ids: Iterable<string>): void;
   setHidden(fieldId: string, hidden: boolean): void;
   /** Called with the new hidden set when a column is hidden or shown (the active view saves it). */
   onHiddenChange: ((hidden: ReadonlySet<string>) => void) | null;
@@ -65,6 +69,7 @@ export function createGridStore(): StoreApi<GridState> {
     selected: new Set(),
     lastSelected: null,
     collapsed: new Set(),
+    expanded: new Set(),
     hidden: new Set(),
     onHiddenChange: null,
     widths: {},
@@ -105,6 +110,13 @@ export function createGridStore(): StoreApi<GridState> {
       else next.add(groupId);
       set({ collapsed: next });
     },
+    toggleExpanded: (itemId, open) => {
+      const next = new Set(get().expanded);
+      if (open ?? !next.has(itemId)) next.add(itemId);
+      else next.delete(itemId);
+      set({ expanded: next });
+    },
+    setExpanded: (ids) => set({ expanded: new Set(ids) }),
     setHidden: (fieldId, hidden) => {
       const next = new Set(get().hidden);
       if (hidden) next.add(fieldId);

@@ -13,7 +13,25 @@ export type TableRow =
   | { kind: 'item'; key: string; group: Group; item: Item; index: number }
   | { kind: 'add'; key: string; group: Group }
   | { kind: 'summary'; key: string; group: Group; items: Item[] }
-  | { kind: 'gap'; key: string };
+  | { kind: 'gap'; key: string }
+  // sub-items under an expanded parent (docs/05 §3.1): their column header, the rows, the empty note, "+ Add"
+  | { kind: 'subheader'; key: string; group: Group; parent: Item }
+  | {
+      kind: 'subitem';
+      key: string;
+      group: Group;
+      parent: Item;
+      item: Item;
+      /** Index among the parent's visible sub-items. */
+      index: number;
+      last: boolean;
+      /** A search or filter matched this sub-item (its parent opened for it). */
+      match: boolean;
+    }
+  | { kind: 'subempty'; key: string; group: Group; parent: Item }
+  | { kind: 'subadd'; key: string; group: Group; parent: Item };
+
+export type SubRow = Extract<TableRow, { kind: 'subitem' }>;
 
 export type Density = 'comfortable' | 'compact';
 
@@ -33,8 +51,19 @@ export function rowHeight(kind: TableRow['kind'], density: Density = 'comfortabl
       return 38;
     case 'gap':
       return 24;
+    case 'subheader':
+      return 28;
+    case 'subitem':
+      return density === 'compact' ? 36 : 44;
+    case 'subempty':
+    case 'subadd':
+      return density === 'compact' ? 32 : 36;
   }
 }
+
+/** Sub-item rows draw their own bottom line, like item rows. */
+export const ownLine = (kind: TableRow['kind']) =>
+  kind === 'item' || kind === 'header' || kind === 'subitem' || kind === 'subheader';
 
 /** The last row of a group's card (it carries the card's bottom edge). */
 export const endsCard = (rows: TableRow[], i: number) => {
@@ -65,6 +94,20 @@ export interface Layout {
   index: Map<string, number>;
   /** group id → its items in display order (collapsed groups too). */
   byGroup: Map<string, Item[]>;
+  /** Sub-item rows in display order: their own keyboard axis, separate from selection and paste. */
+  subs: SubRow[];
+  /** sub-item id → index in `subs`. */
+  subIndex: Map<string, number>;
+}
+
+/** What the layout needs to open parents (docs/05 §3.1): their sub-items and which are expanded. */
+export interface SubitemLayout {
+  childrenOf(parentId: string): Item[];
+  expanded: ReadonlySet<string>;
+  /** Parents a search or filter opened, with the sub-items that matched. */
+  matched?: ReadonlyMap<string, ReadonlySet<string>>;
+  /** Editors get "+ Add sub-item". */
+  canAdd: boolean;
 }
 
 export const byPosition = (a: Item, b: Item) =>
@@ -86,6 +129,8 @@ export function buildLayout(input: {
   onlyGroup?: string | null;
   /** The group an item sits in; default its own group (virtual "group by" groups pass their lookup). */
   groupOf?: (item: Item) => string;
+  /** Sub-items of the sheet, when it has them. */
+  subitems?: SubitemLayout | null;
 }): Layout {
   const byGroup = new Map<string, Item[]>(input.groups.map((g) => [g.id, []]));
   const groupOf = input.groupOf ?? ((it: Item) => it.groupId);
@@ -94,6 +139,8 @@ export function buildLayout(input: {
 
   const rows: TableRow[] = [];
   const flat: Item[] = [];
+  const subs: SubRow[] = [];
+  const sub = input.subitems;
   const groups = input.onlyGroup
     ? input.groups.filter((g) => g.id === input.onlyGroup)
     : input.groups;
@@ -112,12 +159,40 @@ export function buildLayout(input: {
     for (const item of items) {
       rows.push({ kind: 'item', key: `i:${item.id}`, group, item, index: flat.length });
       flat.push(item);
+      const matched = sub?.matched?.get(item.id);
+      if (!sub || (!sub.expanded.has(item.id) && !matched)) continue;
+      const children = sub.childrenOf(item.id);
+      if (children.length > 0)
+        rows.push({ kind: 'subheader', key: `sh:${item.id}`, group, parent: item });
+      else rows.push({ kind: 'subempty', key: `se:${item.id}`, group, parent: item });
+      children.forEach((child, i) => {
+        const row: SubRow = {
+          kind: 'subitem',
+          key: `si:${child.id}`,
+          group,
+          parent: item,
+          item: child,
+          index: i,
+          last: i === children.length - 1,
+          match: !!matched?.has(child.id),
+        };
+        rows.push(row);
+        subs.push(row);
+      });
+      if (sub.canAdd) rows.push({ kind: 'subadd', key: `sa:${item.id}`, group, parent: item });
     }
     if (input.canAdd) rows.push({ kind: 'add', key: `a:${group.id}`, group });
     if (input.summaries && !empty)
       rows.push({ kind: 'summary', key: `s:${group.id}`, group, items });
   });
-  return { rows, flat, index: new Map(flat.map((it, i) => [it.id, i])), byGroup };
+  return {
+    rows,
+    flat,
+    index: new Map(flat.map((it, i) => [it.id, i])),
+    byGroup,
+    subs,
+    subIndex: new Map(subs.map((r, i) => [r.item.id, i])),
+  };
 }
 
 /** Table columns: the name, then the fields not hidden, in field order. */

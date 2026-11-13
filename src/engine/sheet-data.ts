@@ -175,6 +175,20 @@ export function withSubitems(data: SheetData, child: SheetData | null | undefine
   };
 }
 
+/** A child sheet's data with its parents (the parent sheet, its fields and items) for breadcrumbs and templates. */
+export function withParent(child: SheetData, parent: SheetData | null | undefined): SheetData {
+  if (!parent || child.sheet.parentSheetId !== parent.sheet.id) return child;
+  const known = new Set(child.related.items.map((i) => i.id));
+  return {
+    ...child,
+    related: {
+      sheets: [...child.related.sheets.filter((s) => s.id !== parent.sheet.id), parent.sheet],
+      fields: [...child.related.fields.filter((f) => f.sheetId !== parent.sheet.id), ...parent.fields],
+      items: [...child.related.items, ...parent.items.filter((i) => !known.has(i.id))],
+    },
+  };
+}
+
 /** A copy of the data with one fewer level of sharing: used by reducers that patch the cache. */
 export const emptySheetData = (sheet: Sheet): SheetData => ({
   sheet,

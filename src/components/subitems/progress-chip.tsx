@@ -26,7 +26,7 @@ export function ProgressChip({
       data-subitems-chip
       className={cn(
         'border-line text-label-12-mono text-ink bg-background-100 inline-flex h-5 shrink-0 items-center gap-1 rounded-full border px-1.5 tabular-nums',
-        all && 'border-[var(--good)] text-[var(--good)]',
+        all && 'border-good text-good',
         className,
       )}
       title={`${label}: ${done} of ${total} done`}

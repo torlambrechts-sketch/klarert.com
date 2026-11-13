@@ -12,6 +12,9 @@ import {
   changeFieldTypeAction,
   clickButtonAction,
   createItemAction,
+  createSubitemAction,
+  moveSubitemAction,
+  subitemsFromTemplateAction,
   finishItemAction,
   deleteFieldAction,
   duplicateFieldAction,
@@ -82,10 +85,11 @@ function usePending(): Pending {
   );
 }
 
-export function useSheetQuery(sheetId: string) {
+export function useSheetQuery(sheetId: string, enabled = true) {
   const db = useMemo(() => createClient(), []);
   return useQuery({
     queryKey: sheetKey(sheetId),
+    enabled,
     queryFn: async () => {
       const d = await fetchSheetData(db, sheetId);
       if (!d) throw new Error('This sheet no longer exists or you cannot see it.');
@@ -117,10 +121,12 @@ export function useSheetsList(orgId: string | undefined) {
 export type RealtimeStatus = 'connecting' | 'live' | 'offline';
 
 /** Subscribe to the sheet's rows and patch the cache; reconnects refetch so nothing is missed. */
-export function useSheetRealtime(sheetId: string, pending: Pending): RealtimeStatus {
+export function useSheetRealtime(sheetId: string | null, pending: Pending): RealtimeStatus {
   const qc = useQueryClient();
   const [status, setStatus] = useState<RealtimeStatus>('connecting');
   useEffect(() => {
+    // a sheet without sub-items has no child sheet to follow
+    if (!sheetId) return;
     const db = createClient();
     const key = sheetKey(sheetId);
     const patch = (fn: (d: SheetData) => SheetData) =>
@@ -606,6 +612,115 @@ export function useSheetActions(org: string, sheetId: string) {
     [markHeld, org, patch, run, sheetId],
   );
 
+  // ───────────── sub-items (this hook bound to a child sheet) ─────────────
+
+  /** Add a sub-item under a parent, inline: held like a new row until the person finishes it. */
+  const createSubitem = useCallback(
+    async (
+      parentId: string,
+      name: string,
+      position: string,
+      extra: { values?: Record<string, unknown>; hold?: boolean } = {},
+    ): Promise<Item | null> => {
+      const tempId = `temp-${newMutationId()}`;
+      const now = new Date().toISOString();
+      const groupId = get()?.groups[0]?.id ?? '';
+      patch((d) =>
+        upsertItem(d, {
+          id: tempId,
+          sheetId,
+          groupId,
+          seq: 0,
+          displayId: '…',
+          name,
+          values: {},
+          position,
+          locked: false,
+          createdAt: now,
+          updatedAt: now,
+          parentId,
+        }),
+      );
+      try {
+        const r = await run(() =>
+          createSubitemAction({
+            org,
+            sheetId,
+            parentId,
+            name,
+            position,
+            mutationId: tempId,
+            ...(extra.values ? { values: extra.values } : {}),
+            ...(extra.hold ? { hold: true } : {}),
+          }),
+        );
+        patch((d) => removeItems(d, [tempId]));
+        if (!r.ok) {
+          showError(r.error);
+          return null;
+        }
+        patch((d) => upsertItem(d, r.data.item));
+        if (r.data.held) markHeld(r.data.item.id);
+        showMessages(r.data.messages);
+        return r.data.item;
+      } catch {
+        patch((d) => removeItems(d, [tempId]));
+        toast.error('The sub-item was not added. Check your connection and try again.');
+        return null;
+      }
+    },
+    [get, markHeld, org, patch, run, sheetId],
+  );
+
+  /** "From template": the parent sheet's sub-item set under one item. */
+  const subitemsFromTemplate = useCallback(
+    async (parentSheetId: string, parentId: string): Promise<boolean> => {
+      try {
+        const r = await run(() =>
+          subitemsFromTemplateAction({ org, sheetId: parentSheetId, parentId }),
+        );
+        if (!r.ok) {
+          showError(r.error);
+          return false;
+        }
+        patch((d) => r.data.items.reduce((acc, it) => upsertItem(acc, it), d));
+        const n = r.data.items.length;
+        toast(`${n} ${n === 1 ? 'sub-item' : 'sub-items'} added from the template.`);
+        showMessages(r.data.messages);
+        return true;
+      } catch {
+        toast.error('The sub-items were not added. Check your connection and try again.');
+        return false;
+      }
+    },
+    [org, patch, run],
+  );
+
+  /** Move a sub-item to another parent (its id stays) or to another place under its own. */
+  const moveSubitem = useCallback(
+    async (item: Item, parentId: string, position: string, message?: string) => {
+      pending.add(item.id);
+      patch((d) => upsertItem(d, { ...item, parentId, position }));
+      try {
+        const r = await run(() =>
+          moveSubitemAction({ org, sheetId, itemId: item.id, parentId, position }),
+        );
+        if (!r.ok) {
+          patch((d) => upsertItem(d, item));
+          return showError(r.error);
+        }
+        patch((d) => upsertItem(d, r.data.item));
+        if (message) toast(message);
+      } catch {
+        patch((d) => upsertItem(d, item));
+        toast.error('The move was not saved. Check your connection and try again.');
+      } finally {
+        pending.done(item.id);
+      }
+    },
+    [org, patch, pending, run, sheetId],
+  );
+
   const moveItems = useCallback(
     async (moves: { itemId: string; groupId: string; position: string }[], message?: string) => {
       const before = (get()?.items ?? []).filter((i) => moves.some((m) => m.itemId === i.id));
@@ -870,6 +985,9 @@ export function useSheetActions(org: string, sheetId: string) {
     setCell,
     bulkSet,
     createItem,
+    createSubitem,
+    subitemsFromTemplate,
+    moveSubitem,
     moveItems,
     setArchived,
     setLinks,

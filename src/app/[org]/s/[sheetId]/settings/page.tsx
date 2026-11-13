@@ -6,8 +6,16 @@ import { GroupsManager } from '@/components/sheets/groups-manager';
 import { ArchiveSheet, SheetSettingsForm } from '@/components/sheets/sheet-settings';
 import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
+import { SubitemSettingsSection } from '@/components/subitems/subitem-settings';
+import { readSubitemSettings } from '@/engine/subitems';
 import { isEditorRole, requireMember } from '@/server/auth';
-import { getArchivedItems, getFields, getNav, getSheet } from '@/server/repositories/sheets';
+import {
+  getArchivedItems,
+  getFields,
+  getNav,
+  getSheet,
+  getSubitemSheet,
+} from '@/server/repositories/sheets';
 
 export const metadata = { title: 'Sheet settings · Compliance OS' };
 
@@ -42,11 +50,14 @@ export default async function SheetSettingsPage({
   if (!sheet) notFound();
   // a sub-item sheet is set up in its parent's settings (Sub-items)
   if (sheet.parent_sheet_id) redirect(`/${org}/s/${sheet.parent_sheet_id}/settings`);
-  const [nav, fields, archivedItems] = await Promise.all([
+  const [nav, fields, archivedItems, child] = await Promise.all([
     getNav(workspace.id),
     getFields(sheet.id),
     getArchivedItems(sheet.id),
+    getSubitemSheet(sheet.id),
   ]);
+  const subSettings = (sheet.settings as { subitems?: unknown } | null)?.subitems;
+  const archivedSubitems = child ? await getArchivedItems(child.id) : [];
   const canEdit = isEditorRole(role);
 
   return (
@@ -140,12 +151,38 @@ export default async function SheetSettingsPage({
         />
       </Card>
 
+      <Card
+        title="Sub-items"
+        description="Steps under an item with their own fields, IDs and activity log, like the actions of a CAPA or the clauses of an audit."
+      >
+        <SubitemSettingsSection
+          org={org}
+          sheetId={sheet.id}
+          userId={user.id}
+          timeZone={workspace.time_zone}
+          role={role}
+          archived={!!sheet.archived_at}
+          childSheetId={child?.id ?? null}
+          settings={child && subSettings ? readSubitemSettings(subSettings) : null}
+          dueKey={child?.dueKey ?? null}
+        />
+      </Card>
+
       {canEdit ? (
         <Card
           title={`Archived items · ${archivedItems.length}`}
           description="Archived items are hidden from views, search and automations. Restore one to bring it back."
         >
           <ArchivedItems org={org} sheetId={sheet.id} items={archivedItems} />
+        </Card>
+      ) : null}
+
+      {canEdit && child && archivedSubitems.length > 0 ? (
+        <Card
+          title={`Archived ${readSubitemSettings(subSettings).label.toLowerCase()} · ${archivedSubitems.length}`}
+          description="Restore one on its own, or restore its parent to bring back the ones archived with it."
+        >
+          <ArchivedItems org={org} sheetId={child.id} items={archivedSubitems} />
         </Card>
       ) : null}
 

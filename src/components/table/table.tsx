@@ -15,6 +15,7 @@ import {
 import { useVirtualizer, useWindowVirtualizer } from '@tanstack/react-virtual';
 import {
   Archive,
+  ChevronRight,
   ExternalLink,
   FileText,
   GripVertical,
@@ -35,7 +36,7 @@ import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { setSummary, type ViewConfig } from '@/engine/views/config';
 import { trendPolarity } from '@/engine/values/trend';
 import { fieldUI } from '@/components/fields/registry';
-import { cellValue, editorPopoverClass, TextEditor } from '@/components/fields/shared';
+import { cellValue, TextEditor } from '@/components/fields/shared';
 import { TrendContext } from '@/components/fields/trend';
 import type { EditorProps } from '@/components/fields/types';
 import { FieldPicker } from '@/components/grid/field-picker';
@@ -50,9 +51,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { ProgressChip } from '@/components/subitems/progress-chip';
+import type { SubitemsState } from '@/components/subitems/use-subitems';
+import { isSubitemDone, subitemLabel } from '@/engine/subitems';
 import { cn } from '@/lib/utils';
 import { CommentBubble } from './comment-bubble';
+import { CellEditor, cellId, explainOnly, Sticky, TableCell } from './table-cells';
+import {
+  SubAddRow,
+  subAddId,
+  SubEmptyRow,
+  SubHeaderRow,
+  SubItemRow,
+  type SubRowAction,
+  type SubRowContext,
+} from './subitem-rows';
 import type { UpdateSummary } from './use-update-counts';
 import { ColumnHeader, type ColumnMenuActions } from './column-header';
 import { GroupSummary } from './group-summary';
@@ -66,6 +81,7 @@ import {
   byPosition,
   columnId,
   endsCard,
+  ownLine,
   trailWidth,
   positionsAtEnd,
   rangeOf,
@@ -97,7 +113,6 @@ const CHECK_W = 58;
 const SCORE_W = 150;
 /** The card's left and right borders. */
 const EDGE = 2;
-const cellId = (itemId: string, col: string) => `cell-${itemId}-${col}`;
 
 export interface TableProps {
   data: SheetData;
@@ -120,15 +135,14 @@ export interface TableProps {
   setConfig(update: (c: ViewConfig) => ViewConfig): void;
   /** Comments (updates people wrote) per item, for the marker after the name. */
   updateCounts: ReadonlyMap<string, UpdateSummary>;
+  /** The sheet's sub-items (null when it has none or they are loading). */
+  sub?: SubitemsState | null;
+  /** Parents a search or filter opened, with the sub-items that matched. */
+  subMatches?: ReadonlyMap<string, ReadonlySet<string>>;
+  /** Open a sub-item in the item panel. */
+  onOpenSubitem?(item: Item): void;
 }
 
-const storageOf = (f: Field) => resolveFieldType(f.type)?.storage;
-
-/** Read-only values whose editor only explains them (computed, files, buttons). */
-const explainOnly = (f: Field) => {
-  const s = storageOf(f);
-  return s === 'computed' || s === 'files' || s === 'none';
-};
 
 /**
  * A callback that keeps its identity across renders and always calls the latest `fn`. Rows are memoised: handlers
@@ -157,6 +171,9 @@ export function Table({
   config,
   setConfig,
   updateCounts,
+  sub = null,
+  subMatches,
+  onOpenSubitem,
 }: TableProps) {
   const store = useGridStore();
   const collapsed = useGrid((s) => s.collapsed);
@@ -168,6 +185,7 @@ export function Table({
   const selected = useGrid((s) => s.selected);
   const density = useGrid((s) => s.density);
   const rowMenu = useGrid((s) => s.rowMenu);
+  const expanded = useGrid((s) => s.expanded);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [lockFor, setLockFor] = useState<Item[] | null>(null);
   // the width the columns stretch to fill
@@ -210,6 +228,52 @@ export function Table({
     items: visibleItems,
     onlyGroup,
   });
+  // sub-items (docs/05 §3.1): each parent's rows in position order (temporary rows too, while they save)
+  const childMap = useMemo(() => {
+    const m = new Map<string, Item[]>();
+    for (const it of sub?.data.items ?? []) {
+      if (!it.parentId) continue;
+      const list = m.get(it.parentId) ?? [];
+      list.push(it);
+      m.set(it.parentId, list);
+    }
+    for (const list of m.values()) list.sort(byPosition);
+    return m;
+  }, [sub?.data.items]);
+  const subLayout = useMemo(
+    () =>
+      sub
+        ? {
+            childrenOf: (id: string) => childMap.get(id) ?? [],
+            expanded,
+            matched: subMatches,
+            canAdd: canEdit,
+          }
+        : null,
+    [sub, childMap, expanded, subMatches, canEdit],
+  );
+  // expanded parents are kept per person and sheet
+  const expandKey = `subitems-expanded:${ctx.userId}:${data.sheet.id}`;
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(expandKey);
+      if (raw) store.getState().setExpanded(JSON.parse(raw) as string[]);
+    } catch {
+      // private windows and blocked storage start collapsed
+    }
+  }, [expandKey, store]);
+  useEffect(
+    () =>
+      store.subscribe((st, prev) => {
+        if (st.expanded === prev.expanded) return;
+        try {
+          window.localStorage.setItem(expandKey, JSON.stringify([...st.expanded].slice(0, 500)));
+        } catch {
+          // not kept: the rows still open and close
+        }
+      }),
+    [expandKey, store],
+  );
   const layout = useMemo(
     () =>
       buildLayout({
@@ -221,14 +285,17 @@ export function Table({
         summaries: showSummaries,
         onlyGroup: tg.onlyGroup,
         groupOf: tg.groupOf,
+        subitems: subLayout,
       }),
-    [tg, visibleItems, collapsed, viewCompare, canEdit, showSummaries],
+    [tg, visibleItems, collapsed, viewCompare, canEdit, showSummaries, subLayout],
   );
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
   const owner = useMemo(() => ownerField(ctx), [ctx]);
   const colIndex = useMemo(() => new Map(columns.map((c, i) => [columnId(c), i])), [columns]);
   const rowIndexOfItem = useMemo(() => {
     const m = new Map<string, number>();
-    layout.rows.forEach((r, i) => r.kind === 'item' && m.set(r.item.id, i));
+    layout.rows.forEach((r, i) => (r.kind === 'item' || r.kind === 'subitem') && m.set(r.item.id, i));
     return m;
   }, [layout.rows]);
   // trend lines (comfortable density): the history loads after the sheet; columns that show one get its width
@@ -273,7 +340,7 @@ export function Table({
     // the last row of a card also carries the card's bottom border (item and header rows draw their own line)
     estimateSize: (i) => {
       const kind = layout.rows[i]!.kind;
-      const edge = kind !== 'item' && kind !== 'header' && endsCard(layout.rows, i) ? 1 : 0;
+      const edge = !ownLine(kind) && endsCard(layout.rows, i) ? 1 : 0;
       return rowHeight(kind, density) + edge;
     },
     getItemKey: useCallback((i: number) => layout.rows[i]!.key, [layout.rows]),
@@ -349,10 +416,24 @@ export function Table({
       ? `This item is locked: ${item.lockReason}. Only owners and admins can change it.`
       : 'This item is locked. Only owners and admins can change it.';
 
+  /** The item a cell belongs to: a row of the sheet, or a sub-item row. */
+  const itemAt = (itemId: string): { item: Item; isSub: boolean } | null => {
+    const top = layout.flat[layout.index.get(itemId) ?? -1];
+    if (top) return { item: top, isSub: false };
+    const r = layout.subs[layout.subIndex.get(itemId) ?? -1];
+    return r ? { item: r.item, isSub: true } : null;
+  };
+  const fieldAt = (col: string, isSub: boolean) =>
+    col === 'name'
+      ? null
+      : ((isSub ? sub?.data.fields : data.fields)?.find((f) => f.id === col) ?? null);
+  const subCols = useMemo(() => ['name', ...(sub?.data.fields ?? []).map((f) => f.id)], [sub]);
+
   const startEdit = (cell: CellRef, typed: string | null = null) => {
-    const item = layout.flat[layout.index.get(cell.itemId) ?? -1];
-    if (!item) return;
-    const field = cell.col === 'name' ? null : data.fields.find((f) => f.id === cell.col);
+    const at = itemAt(cell.itemId);
+    if (!at) return;
+    const item = at.item;
+    const field = fieldAt(cell.col, at.isSub);
     if (field && explainOnly(field)) {
       setSeed(null);
       return store.getState().edit(cell);
@@ -371,14 +452,140 @@ export function Table({
       if (canEdit) toast.error(lockedMessage(item));
       return true;
     }
-    void commit(item, field.id, ui.toggle(cellValue(item, field, ctx)));
+    const isSub = !!item.parentId;
+    const value = cellValue(item, field, isSub && sub ? sub.ctx : ctx);
+    void (isSub ? commitSub : commit)(item, field.id, ui.toggle(value));
     return true;
+  };
+
+  // ───────────── sub-items: open and close, keyboard ─────────────
+
+  const focusAdd = (parentId: string) => {
+    store.getState().toggleExpanded(parentId, true);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const i = layoutRef.current.rows.findIndex((r) => r.key === `sa:${parentId}`);
+        if (i >= 0) rowV.scrollToIndex(i, { align: 'auto' });
+        requestAnimationFrame(() => document.getElementById(subAddId(parentId))?.focus());
+      }),
+    );
+  };
+  const childrenOf = (parentId: string) => childMap.get(parentId) ?? [];
+  const isOpen = (parentId: string) => expanded.has(parentId) || !!subMatches?.has(parentId);
+  const focusCell = (cell: CellRef) => {
+    store.getState().focus(cell);
+    const r = rowIndexOfItem.get(cell.itemId);
+    if (r !== undefined) rowV.scrollToIndex(r, { align: 'auto' });
+  };
+
+  /** Keys on a sub-item cell: its own axis (rows of the same parent, the sub-item columns). */
+  const onSubKey = (e: React.KeyboardEvent, cell: CellRef) => {
+    const i = layout.subIndex.get(cell.itemId)!;
+    const row = layout.subs[i]!;
+    const col = subCols.indexOf(cell.col);
+    const item = row.item;
+    const field = fieldAt(cell.col, true);
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = layout.subs[i - 1];
+      focusCell(
+        prev && prev.parent.id === row.parent.id
+          ? { itemId: prev.item.id, col: cell.col }
+          : { itemId: row.parent.id, col: 'name' },
+      );
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = layout.subs[i + 1];
+      if (next && next.parent.id === row.parent.id)
+        return focusCell({ itemId: next.item.id, col: cell.col });
+      const after = layout.flat[(layout.index.get(row.parent.id) ?? -1) + 1];
+      if (after) focusCell({ itemId: after.id, col: 'name' });
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      // from the name, ← goes up to the parent
+      if (col <= 0) focusCell({ itemId: row.parent.id, col: 'name' });
+      else focusCell({ itemId: item.id, col: subCols[col - 1]! });
+    } else if (e.key === 'ArrowRight' || (e.key === 'Tab' && !e.shiftKey)) {
+      if (col < subCols.length - 1) {
+        e.preventDefault();
+        focusCell({ itemId: item.id, col: subCols[col + 1]! });
+      }
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      if (col > 0) {
+        e.preventDefault();
+        focusCell({ itemId: item.id, col: subCols[col - 1]! });
+      }
+    } else if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      focusAdd(row.parent.id);
+    } else if (e.key === 'Enter' || e.key === 'F2') {
+      e.preventDefault();
+      if (field && toggle(item, field)) return;
+      startEdit(cell);
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      if (!field && !item.id.startsWith('temp-')) onOpenSubitem?.(item);
+      else if (field) toggle(item, field);
+    } else if ((e.key === 'Delete' || e.key === 'Backspace') && field) {
+      e.preventDefault();
+      if (!canEditItem(item) || explainOnly(field)) return;
+      void commitSub(item, field.id, null);
+    } else if ((e.key === 'F10' && e.shiftKey) || e.key === 'ContextMenu') {
+      e.preventDefault();
+      setSubMenu(item.id);
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (field && (fieldUI(field.type).toggle || explainOnly(field))) return;
+      e.preventDefault();
+      startEdit(cell, e.key);
+    }
+  };
+
+  /** Ctrl+Shift+E: open every parent with sub-items, or close them all when any is open. */
+  const toggleAll = () => {
+    if (!sub) return;
+    if (expanded.size > 0) return store.getState().setExpanded([]);
+    store.getState().setExpanded(layout.flat.filter((i) => childrenOf(i.id).length > 0).map((i) => i.id));
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.target !== scrollRef.current || editing) return;
+    if (sub && e.key.toLowerCase() === 'e' && e.shiftKey && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      return toggleAll();
+    }
+    if (active && layout.subIndex.has(active.itemId)) return onSubKey(e, active);
     const rows = layout.flat.length;
     if (rows === 0) return;
+    // a parent's name: → opens its sub-items, ← closes them, ↓ goes into them, Shift+Enter adds one
+    if (sub && active && layout.index.has(active.itemId) && !e.altKey && !e.ctrlKey && !e.metaKey) {
+      const parent = active.itemId;
+      const open = isOpen(parent);
+      const kids = layout.subs.filter((r) => r.parent.id === parent);
+      if (active.col === 'name' && e.key === 'ArrowRight' && !open && !e.shiftKey) {
+        e.preventDefault();
+        return store.getState().toggleExpanded(parent, true);
+      }
+      if (active.col === 'name' && e.key === 'ArrowLeft' && open && !e.shiftKey) {
+        e.preventDefault();
+        return store.getState().toggleExpanded(parent, false);
+      }
+      if (e.key === 'ArrowDown' && !e.shiftKey && open && kids.length > 0) {
+        e.preventDefault();
+        return focusCell({ itemId: kids[0]!.item.id, col: 'name' });
+      }
+      if (e.key === 'ArrowUp' && !e.shiftKey) {
+        const prev = layout.flat[(layout.index.get(parent) ?? 0) - 1];
+        const prevKids = prev ? layout.subs.filter((r) => r.parent.id === prev.id) : [];
+        if (prev && isOpen(prev.id) && prevKids.length > 0) {
+          e.preventDefault();
+          return focusCell({ itemId: prevKids.at(-1)!.item.id, col: 'name' });
+        }
+      }
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        return focusAdd(parent);
+      }
+    }
     if ((e.key === 'F10' && e.shiftKey) || e.key === 'ContextMenu') {
       if (!active || active.itemId.startsWith('temp-')) return;
       e.preventDefault();
@@ -491,6 +698,18 @@ export function Table({
     focusGrid();
     await valueCommit.commit(item, col, raw, note);
   };
+  // sub-items write through their own sheet's actions (the child sheet's fields, rules and holds)
+  const subCommit = useValueCommit(sub?.data ?? data, sub?.ctx ?? ctx, sub?.actions ?? actions, {
+    hold: true,
+  });
+  const commitSub = async (item: Item, col: string, raw: unknown) => {
+    store.getState().edit(null);
+    setSeed(null);
+    focusGrid();
+    await subCommit.commit(item, col, raw);
+  };
+  const [subMenu, setSubMenu] = useState<string | null>(null);
+  const [moveFor, setMoveFor] = useState<Item | null>(null);
 
   // ───────────── pointer ─────────────
 
@@ -500,13 +719,14 @@ export function Table({
     const [itemId, col] = el.dataset.cell!.split('|') as [string, string];
     const cell = { itemId, col };
     const was = active && active.itemId === itemId && active.col === col;
+    const at = itemAt(itemId);
     e.preventDefault();
-    store.getState().focus(cell, e.shiftKey);
+    // sub-item rows have their own axis: no ranges across them
+    store.getState().focus(cell, e.shiftKey && !at?.isSub);
     focusGrid();
     if (was && !e.shiftKey) {
-      const item = layout.flat[layout.index.get(itemId) ?? -1];
-      const field = data.fields.find((f) => f.id === col);
-      if (item && field && toggle(item, field)) return;
+      const field = fieldAt(col, !!at?.isSub);
+      if (at && field && toggle(at.item, field)) return;
       startEdit(cell);
     }
   };
@@ -514,7 +734,7 @@ export function Table({
     const el = (e.target as HTMLElement).closest<HTMLElement>('[data-cell]');
     if (!el) return;
     const [itemId, col] = el.dataset.cell!.split('|') as [string, string];
-    const field = data.fields.find((f) => f.id === col);
+    const field = fieldAt(col, !!itemAt(itemId)?.isSub);
     if (field && fieldUI(field.type).toggle) return;
     startEdit({ itemId, col });
   };
@@ -550,11 +770,15 @@ export function Table({
   // Held rows (see useSheetActions): leaving a row finishes every other held row.
   const finishAllRef = useRef(actions.finishAll);
   finishAllRef.current = actions.finishAll;
+  const finishSubRef = useRef(sub?.actions.finishAll);
+  finishSubRef.current = sub?.actions.finishAll;
   useEffect(
     () =>
       store.subscribe((s, prev) => {
-        if (s.active?.itemId !== prev.active?.itemId)
+        if (s.active?.itemId !== prev.active?.itemId) {
           finishAllRef.current(s.active?.itemId ?? null);
+          finishSubRef.current?.(s.active?.itemId ?? null);
+        }
       }),
     [store],
   );
@@ -709,6 +933,79 @@ export function Table({
     },
   }));
 
+  const subOpen = useStableEvent((item: Item) => onOpenSubitem?.(item));
+  const subCommitStable = useStableEvent(commitSub);
+  const subFieldProps = useStableEvent((field: Field) =>
+    subCommit.fieldProps(field, { canEdit, isAdmin }, () => store.getState().edit(null)),
+  );
+  const subAdd = useStableEvent(async (parent: Item, name: string) => {
+    if (!sub) return;
+    const list = childrenOf(parent.id);
+    const [position] = positionsAtEnd(list, 1);
+    await sub.actions.createSubitem(parent.id, name, position!, { hold: true });
+  });
+  const subFromTemplate = useStableEvent((parent: Item) => {
+    if (!sub) return;
+    store.getState().toggleExpanded(parent.id, true);
+    void sub.actions.subitemsFromTemplate(data.sheet.id, parent.id);
+  });
+  const subAction = useStableEvent((item: Item, action: SubRowAction) => {
+    setSubMenu(null);
+    if (action === 'open') return onOpenSubitem?.(item);
+    if (action === 'move') return setMoveFor(item);
+    if (action === 'archive') return void sub?.actions.setArchived([item.id], true);
+  });
+  const subWidth = useCallback(
+    (f: Field) => f.width ?? resolveFieldType(f.type)?.defaultWidth ?? 140,
+    [],
+  );
+  const subCtx: SubRowContext | null = useMemo(
+    () =>
+      sub
+        ? {
+            label: subitemLabel(ctx.sheet),
+            one: subitemLabel(ctx.sheet, 1),
+            ctx: sub.ctx,
+            fields: sub.data.fields,
+            widthOf: subWidth,
+            actions: sub.actions,
+            canEdit,
+            isAdmin,
+            canEditItem,
+            hasTemplate: (ctx.sheet.subitems?.template.length ?? 0) > 0,
+            onOpen: subOpen,
+            onCommit: subCommitStable,
+            onCancel: cancelEditStable,
+            fieldProps: subFieldProps,
+            onMouseDown: onMouseDownStable,
+            onDoubleClick: onDoubleClickStable,
+            onAdd: subAdd,
+            onFromTemplate: subFromTemplate,
+            onAction: subAction,
+          }
+        : null,
+    [
+      sub,
+      ctx.sheet,
+      subWidth,
+      canEdit,
+      isAdmin,
+      canEditItem,
+      subOpen,
+      subCommitStable,
+      cancelEditStable,
+      subFieldProps,
+      onMouseDownStable,
+      onDoubleClickStable,
+      subAdd,
+      subFromTemplate,
+      subAction,
+    ],
+  );
+  const toggleExpandedStable = useStableEvent((itemId: string) =>
+    store.getState().toggleExpanded(itemId),
+  );
+
   const vRows = rowV.getVirtualItems();
   const vCols = colV.getVirtualItems();
   const totalW = colV.getTotalSize() + EDGE;
@@ -768,11 +1065,11 @@ export function Table({
                     className={cn(
                       'absolute top-0 left-0 flex',
                       row.kind !== 'gap' && 'border-line bg-background-100 overflow-clip border-x',
-                      row.kind === 'item' && 'group/row',
+                      (row.kind === 'item' || row.kind === 'subitem') && 'group/row',
                       first && 'rounded-t-[10px] border-t',
                       last && 'rounded-b-[10px]',
-                      // item and header rows draw their own bottom line
-                      last && row.kind !== 'item' && row.kind !== 'header' && 'border-b',
+                      // item, sub-item and header rows draw their own bottom line
+                      last && !ownLine(row.kind) && 'border-b',
                     )}
                     style={{
                       height: vr.size,
@@ -821,6 +1118,17 @@ export function Table({
                       columnActions={columnActions}
                       density={density}
                       endOfCard={last}
+                      sub={subCtx}
+                      subMenu={subMenu}
+                      setSubMenu={setSubMenu}
+                      subExpanded={row.kind === 'item' && isOpen(row.item.id)}
+                      subTotal={row.kind === 'item' ? childrenOf(row.item.id).length : 0}
+                      subDone={
+                        row.kind === 'item' && sub
+                          ? childrenOf(row.item.id).filter((c) => isSubitemDone(c, sub.ctx)).length
+                          : 0
+                      }
+                      onToggleSub={toggleExpandedStable}
                     />
                   </div>
                 );
@@ -859,6 +1167,25 @@ export function Table({
         </DragOverlay>
         <LockDialog items={lockFor} actions={actions} onClose={() => setLockFor(null)} />
         {valueCommit.dialog}
+        {sub ? subCommit.dialog : null}
+        {sub ? (
+          <MoveSubitemDialog
+            item={moveFor}
+            parents={data.items}
+            label={subitemLabel(ctx.sheet, 1).toLowerCase()}
+            onClose={() => setMoveFor(null)}
+            onMove={(item, parent) => {
+              setMoveFor(null);
+              const [position] = positionsAtEnd(childrenOf(parent.id), 1);
+              void sub.actions.moveSubitem(
+                item,
+                parent.id,
+                position!,
+                `${item.displayId} moved to ${parent.displayId}. Its ID stays ${item.displayId}.`,
+              );
+            }}
+          />
+        ) : null}
       </DndContext>
     </TrendContext.Provider>
   );
@@ -915,35 +1242,43 @@ interface RowProps {
   density: Density;
   /** The row is the last of its group card. */
   endOfCard: boolean;
-}
-
-/** The sticky left part of a row: the leading controls and the name. */
-function Sticky({
-  width,
-  children,
-  className,
-  role = 'gridcell',
-}: {
-  width: number;
-  children?: React.ReactNode;
-  className?: string;
-  /** Rows own only cells (ARIA grid): the sticky part is a cell of its own, or none when it wraps the name cell. */
-  role?: 'gridcell' | 'none' | 'columnheader';
-}) {
-  return (
-    <div
-      role={role}
-      className={cn('bg-background-100 sticky left-0 z-[2] flex shrink-0 items-center', className)}
-      style={{ width }}
-    >
-      {children}
-    </div>
-  );
+  /** Sub-items of the sheet (null when it has none). */
+  sub: SubRowContext | null;
+  subMenu: string | null;
+  setSubMenu(itemId: string | null): void;
+  /** Item rows: their sub-items are open, how many there are and how many are done. */
+  subExpanded: boolean;
+  subTotal: number;
+  subDone: number;
+  onToggleSub(itemId: string): void;
 }
 
 function RowContent(p: RowProps) {
   const { row } = p;
   if (row.kind === 'gap') return null;
+  if (
+    p.sub &&
+    (row.kind === 'subheader' ||
+      row.kind === 'subitem' ||
+      row.kind === 'subempty' ||
+      row.kind === 'subadd')
+  ) {
+    const common = {
+      sub: p.sub,
+      stickyW: p.stickyW,
+      active: p.active,
+      editing: p.editing,
+      seed: p.seed,
+      menuOpen: row.kind === 'subitem' && p.subMenu === row.item.id,
+      setMenu: p.setSubMenu,
+    };
+    if (row.kind === 'subheader') return <SubHeaderRow {...common} row={row} />;
+    if (row.kind === 'subitem') return <SubItemRow {...common} row={row} />;
+    if (row.kind === 'subempty') return <SubEmptyRow {...common} row={row} />;
+    return <SubAddRow {...common} row={row} />;
+  }
+  if (row.kind !== 'group' && row.kind !== 'header' && row.kind !== 'item' && row.kind !== 'add' && row.kind !== 'summary')
+    return null;
   if (row.kind === 'group') return <GroupRow {...p} row={row} />;
   if (row.kind === 'header') return <HeaderRow {...p} row={row} />;
   if (row.kind === 'item') return <ItemRow {...p} row={row} />;
@@ -1184,7 +1519,27 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
             )}
           >
             <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
-              <span className="text-label-14 flex min-w-0 items-center">
+              <span className="text-label-14 flex min-w-0 items-center gap-1">
+                {p.sub && !item.id.startsWith('temp-') ? (
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-expanded={p.subExpanded}
+                    aria-label={`${p.subExpanded ? 'Hide' : 'Show'} ${p.sub.label.toLowerCase()} of ${item.displayId}`}
+                    title={`${p.subExpanded ? 'Hide' : 'Show'} ${p.sub.label.toLowerCase()} (→ and ←)`}
+                    className="text-muted-foreground hover:text-ink hover:bg-soft -ml-1 grid size-5 shrink-0 place-items-center rounded"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      p.onToggleSub(item.id);
+                    }}
+                  >
+                    <ChevronRight
+                      className={cn('size-3.5 transition-transform', p.subExpanded && 'rotate-90')}
+                      aria-hidden
+                    />
+                  </button>
+                ) : null}
                 {item.id.startsWith('temp-') ? (
                   <span className="text-ink truncate">{item.name}</span>
                 ) : (
@@ -1251,6 +1606,9 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                 </span>
               )}
             </span>
+            {p.sub && p.subTotal > 0 ? (
+              <ProgressChip total={p.subTotal} done={p.subDone} label={p.sub.label} />
+            ) : null}
             {p.comments && p.comments.count > 0 ? (
               <CommentBubble summary={p.comments} ctx={ctx} className="min-w-[40px]" />
             ) : (
@@ -1408,170 +1766,6 @@ function RowMenu({
   );
 }
 
-const TableCell = memo(function TableCell({
-  item,
-  field,
-  ctx,
-  left,
-  width,
-  selected,
-  rowSelected,
-  active,
-  editing,
-  seed,
-  readOnly,
-  canEdit,
-  onMouseDown,
-  onDoubleClick,
-  onCommit,
-  onCancel,
-  actions,
-  onOpenItem,
-  editorProps,
-}: {
-  item: Item;
-  field: Field;
-  ctx: Ctx;
-  left: number;
-  width: number;
-  selected: boolean;
-  /** The row's checkbox is ticked. */
-  rowSelected: boolean;
-  active: boolean;
-  editing: boolean;
-  seed: string | null;
-  readOnly: boolean;
-  canEdit: boolean;
-  onMouseDown(e: React.MouseEvent): void;
-  onDoubleClick(e: React.MouseEvent): void;
-  onCommit(item: Item, col: string, raw: unknown): void;
-  onCancel(): void;
-  actions: SheetActions;
-  onOpenItem(item: Item): void;
-  editorProps?: Pick<EditorProps, 'onAddOption' | 'onEditField'>;
-}) {
-  const ui = fieldUI(field.type);
-  const value = cellValue(item, field, ctx);
-  const def = resolveFieldType(field.type)!;
-  const missing = field.required && def.storage === 'values' && def.isEmpty(value as never);
-  return (
-    <div
-      id={cellId(item.id, field.id)}
-      role="gridcell"
-      aria-selected={selected}
-      aria-readonly={readOnly || undefined}
-      aria-label={missing ? `${field.name}: required, empty` : undefined}
-      data-cell={`${item.id}|${field.id}`}
-      onMouseDown={onMouseDown}
-      onDoubleClick={onDoubleClick}
-      className={cn(
-        'border-b-line text-ink group-hover/row:bg-subtle bg-background-100 text-label-14 absolute top-0 flex h-full items-center overflow-hidden border-b px-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] has-[[data-box]]:px-2 [&_[data-pill]]:-mx-1.5',
-        (selected || rowSelected) && 'bg-sel group-hover/row:bg-sel',
-        active && 'outline-focus z-[1] outline-2 -outline-offset-2',
-      )}
-      style={{ left, width }}
-    >
-      <ui.Cell value={value as never} field={field} item={item} ctx={ctx} density="table" />
-      {missing ? (
-        <span
-          aria-hidden
-          title="Required"
-          className="absolute top-0 right-0 size-0 border-t-[7px] border-l-[7px] border-t-[var(--crit)] border-l-transparent"
-        />
-      ) : null}
-      {editing ? (
-        <CellEditor
-          width={ui.editorWidth ?? Math.max(260, width)}
-          onCancel={onCancel}
-          seed={seed}
-          editor={
-            <ui.Editor
-              value={value as never}
-              field={field}
-              item={item}
-              ctx={ctx}
-              onCommit={(v) => onCommit(item, field.id, v)}
-              onCancel={onCancel}
-              onCommitField={canEdit ? (fieldId, v) => onCommit(item, fieldId, v) : undefined}
-              onButton={
-                canEdit
-                  ? () => {
-                      onCancel();
-                      void actions.clickButton(item, field);
-                    }
-                  : undefined
-              }
-              onOpenItem={() => {
-                onCancel();
-                onOpenItem(item);
-              }}
-              {...editorProps}
-            />
-          }
-        />
-      ) : null}
-    </div>
-  );
-});
-
-/**
- * The editor popover anchored to a cell. With a `seed` (the key typed on the cell), the editor's focused text box
- * starts with that character, as typing into a spreadsheet cell does.
- */
-function CellEditor({
-  width,
-  editor,
-  onCancel,
-  seed = null,
-}: {
-  width: number;
-  editor: React.ReactNode;
-  onCancel(): void;
-  seed?: string | null;
-}) {
-  const content = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!seed) return;
-    const frame = requestAnimationFrame(() => {
-      const el = document.activeElement;
-      if (!content.current?.contains(el)) return;
-      if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
-      if (el instanceof HTMLInputElement && !['text', 'search', ''].includes(el.type)) return;
-      if (el.value !== seed) {
-        // set through the native setter so React sees the change
-        const proto = el instanceof HTMLInputElement ? HTMLInputElement : HTMLTextAreaElement;
-        Object.getOwnPropertyDescriptor(proto.prototype, 'value')?.set?.call(el, seed);
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-      // carry on typing after the key, not over it
-      el.setSelectionRange(seed.length, seed.length);
-    });
-    return () => cancelAnimationFrame(frame);
-    // only when the editor opens
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return (
-    <Popover open onOpenChange={(o) => !o && onCancel()}>
-      <PopoverAnchor asChild>
-        <span className="absolute inset-0" aria-hidden />
-      </PopoverAnchor>
-      <PopoverContent
-        ref={content}
-        align="start"
-        sideOffset={2}
-        className={editorPopoverClass}
-        style={{ width: Math.min(width, 420) }}
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onCloseAutoFocus={(e) => e.preventDefault()}
-        onKeyDown={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        {editor}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
   const { row, ctx } = p;
   const [name, setName] = useState('');
@@ -1644,5 +1838,77 @@ function SummaryRow(p: RowProps & { row: Extract<TableRow, { kind: 'summary' }> 
         );
       })}
     </>
+  );
+}
+
+/** "Move to another item": the sub-item keeps its ID; the new parent counts it from now on. */
+function MoveSubitemDialog({
+  item,
+  parents,
+  label,
+  onClose,
+  onMove,
+}: {
+  item: Item | null;
+  parents: Item[];
+  label: string;
+  onClose(): void;
+  onMove(item: Item, parent: Item): void;
+}) {
+  const [to, setTo] = useState('');
+  const options = parents.filter((p) => p.id !== item?.parentId && !p.id.startsWith('temp-'));
+  return (
+    <Dialog
+      open={!!item}
+      onOpenChange={(o) => {
+        if (!o) {
+          setTo('');
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="w-[min(420px,calc(100vw-32px))]">
+        <DialogTitle className="text-heading-16">Move {item?.displayId}</DialogTitle>
+        <DialogDescription className="text-copy-13">
+          Choose the item this {label} belongs to. Its ID stays {item?.displayId}.
+        </DialogDescription>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const parent = options.find((p) => p.id === to);
+            if (item && parent) {
+              setTo('');
+              onMove(item, parent);
+            }
+          }}
+        >
+          <label className="text-label-13 flex flex-col gap-1.5 font-medium">
+            New parent
+            <select
+              className="border-line bg-background-100 text-label-14 h-9 rounded-md border px-2"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              required
+            >
+              <option value="">Choose an item</option>
+              {options.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.displayId} {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!to}>
+              Move
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

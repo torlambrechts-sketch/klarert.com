@@ -6,7 +6,9 @@ import { useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Folder, Plus, Settings, Share, Sheet } from 'lucide-react';
 import { toast } from 'sonner';
-import { sheetCtx } from '@/engine/sheet-data';
+import { sheetCtx, withSubitems } from '@/engine/sheet-data';
+import { useSubitems, type SubitemsHandle } from '@/components/subitems/use-subitems';
+import { searchSubitems } from '@/engine/subitems';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Item } from '@/engine/types';
 import { CLIENT_FILTER_LIMIT, groupRows } from '@/engine/views/apply';
@@ -148,7 +150,12 @@ function SheetBody(props: SheetViewProps) {
     const t = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(t);
   }, []);
-  const data = query.data;
+  const raw = query.data;
+  // sub-items (docs/02 §12): the child sheet loads beside the sheet; its rows join the Ctx for roll-ups
+  const subEnv = useMemo(() => ({ now, timeZone, userId, isAdmin }), [now, timeZone, userId, isAdmin]);
+  const sub = useSubitems(org, raw?.sheet.childSheetId ?? null, raw, subEnv);
+  const subData = sub.state?.data;
+  const data = useMemo(() => (raw ? withSubitems(raw, subData) : undefined), [raw, subData]);
   const ctx = useMemo(
     () =>
       data
@@ -415,6 +422,7 @@ function SheetBody(props: SheetViewProps) {
           addTick={addTick}
           newItem={newItem}
           setNewItem={setNewItem}
+          sub={sub}
         />
       )}
     </main>
@@ -436,6 +444,7 @@ function ViewBody({
   addTick,
   newItem,
   setNewItem,
+  sub,
 }: SheetViewProps & {
   data: SheetData;
   ctx: Ctx;
@@ -449,6 +458,7 @@ function ViewBody({
   addTick: number;
   newItem: NewItemRequest | null;
   setNewItem(r: NewItemRequest | null): void;
+  sub: SubitemsHandle;
 }) {
   const store = useGridStore();
   const settingsFor = useGrid((s) => s.settingsFor);
@@ -476,6 +486,31 @@ function ViewBody({
     window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', url.toString());
   }, []);
   const panelItem = itemParam ? data.items.find((i) => i.displayId === itemParam) : undefined;
+  // a sub-item opens in the same panel, with its parent in the breadcrumb (docs/05 §3.4)
+  const subState = sub.state;
+  const panelSub =
+    itemParam && !panelItem && subState
+      ? subState.data.items.find((i) => i.displayId === itemParam)
+      : undefined;
+  const panelParent = panelSub ? data.items.find((i) => i.id === panelSub.parentId) : undefined;
+  const [panelTab, setPanelTab] = useState<string | undefined>(undefined);
+  const panelSubId = panelSub?.id;
+  const finishSubRef = useRef(subState?.actions.finishItem);
+  finishSubRef.current = subState?.actions.finishItem;
+  useEffect(() => {
+    if (!panelSubId) return;
+    return () => {
+      if (store.getState().active?.itemId !== panelSubId) void finishSubRef.current?.(panelSubId);
+    };
+  }, [panelSubId, store]);
+  // a search that matches a sub-item opens its parent and keeps the parent in the Table
+  const subMatches = useMemo(
+    () =>
+      subState
+        ? searchSubitems(subState.data.items, subState.data.fields, search, subState.ctx)
+        : undefined,
+    [subState, search],
+  );
   // closing the panel or moving to another item finishes the row it showed (its held automations run)
   const panelItemId = panelItem?.id;
   const finishItemRef = useRef(actions.finishItem);
@@ -487,10 +522,25 @@ function ViewBody({
     };
   }, [panelItemId, store]);
   useEffect(() => {
-    if (!itemParam || panelItem) return;
+    if (!itemParam || panelItem || panelSub || sub.loading) return;
     toast.error(`${itemParam} no longer exists in this sheet or was archived.`);
     setItemParam(null, 'replace');
-  }, [itemParam, panelItem, setItemParam]);
+  }, [itemParam, panelItem, panelSub, sub.loading, setItemParam]);
+  const tableItems = useMemo(() => {
+    if (!subMatches || subMatches.size === 0) return view.items;
+    const shown = new Set(view.items.map((i) => i.id));
+    const extra = data.items.filter(
+      (i) => subMatches.has(i.id) && !shown.has(i.id) && (!onlyGroup || i.groupId === onlyGroup),
+    );
+    return extra.length ? [...view.items, ...extra] : view.items;
+  }, [subMatches, view.items, data.items, onlyGroup]);
+  const openSubitem = useCallback(
+    (item: Item) => {
+      setPanelTab(undefined);
+      setItemParam(item.displayId, 'push');
+    },
+    [setItemParam],
+  );
   const order = useMemo(() => {
     const groups = [...data.groups].sort((a, b) => (a.position < b.position ? -1 : 1));
     return groupRows(groups, view.items).flatMap((r) => r.items);
@@ -547,9 +597,12 @@ function ViewBody({
           narrow={narrow}
           addFocusTick={addTick + localAddTick}
           onOpenItem={openItem}
-          items={view.items}
+          items={tableItems}
           compare={view.compare}
           filtered={view.filtered}
+          sub={subState}
+          subMatches={subMatches}
+          onOpenSubitem={openSubitem}
           onClearFilters={clearFilters}
           onNew={() => setLocalAddTick((t) => t + 1)}
           config={config}
@@ -613,6 +666,7 @@ function ViewBody({
       />
       {panelItem ? (
         <ItemPanel
+          key={`item-${panelItem.id}`}
           org={org}
           data={data}
           ctx={ctx}
@@ -623,6 +677,30 @@ function ViewBody({
           isAdmin={isAdmin}
           onClose={() => setItemParam(null, 'push')}
           onNavigate={(it) => setItemParam(it.displayId, 'replace')}
+          subitems={data.sheet.childSheetId ? { handle: sub, onOpen: openSubitem } : null}
+          initialTab={panelTab}
+        />
+      ) : panelSub && subState ? (
+        <ItemPanel
+          key={`sub-${panelSub.id}`}
+          org={org}
+          data={subState.data}
+          ctx={subState.ctx}
+          actions={subState.actions}
+          item={panelSub}
+          order={subState.data.items
+            .filter((i) => i.parentId === panelSub.parentId)
+            .sort((a, b) => (a.position < b.position ? -1 : 1))}
+          canEdit={canEdit}
+          isAdmin={isAdmin}
+          onClose={() => setItemParam(null, 'push')}
+          onNavigate={(it) => setItemParam(it.displayId, 'replace')}
+          parent={panelParent ?? null}
+          onBack={() => {
+            if (!panelParent) return setItemParam(null, 'push');
+            setPanelTab('subitems');
+            setItemParam(panelParent.displayId, 'push');
+          }}
         />
       ) : null}
       <FieldSettings

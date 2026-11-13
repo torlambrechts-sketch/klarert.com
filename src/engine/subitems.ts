@@ -4,6 +4,8 @@
 import { itemStatusField } from './fields/item-status';
 import type { Ctx, Field, Item, Json, Sheet, SubitemSettings } from './types';
 import { isDoneOf } from './values';
+import { matchesSearch } from './views/apply';
+import { resolveFieldType } from './fields/resolve';
 
 export const DEFAULT_SUBITEM_LABEL = 'Sub-items';
 /** Sub-items the Table loads with the sheet; above this they load per expanded parent (docs/05 §3.1). */
@@ -91,3 +93,32 @@ export const progressText = (p: { total: number; done: number }) => `${p.done}/$
 /** The parent of a sub-item, when loaded. */
 export const parentOf = (item: Item, ctx: Ctx): Item | undefined =>
   item.parentId ? ctx.item(item.parentId) : undefined;
+
+/**
+ * Sub-items a sheet search matches, by parent (docs/05 §3.1: the parent opens and the sub-item is highlighted).
+ * `ctx` is the child sheet's Ctx. Empty when the search is empty.
+ */
+export function searchSubitems(
+  children: Item[],
+  fields: Field[],
+  search: string,
+  ctx: Ctx,
+): Map<string, Set<string>> {
+  const out = new Map<string, Set<string>>();
+  if (!search.trim()) return out;
+  for (const c of children) {
+    if (!c.parentId || c.archivedAt || !matchesSearch(c, search, fields, ctx)) continue;
+    const set = out.get(c.parentId) ?? new Set<string>();
+    set.add(c.id);
+    out.set(c.parentId, set);
+  }
+  return out;
+}
+
+/** A computed field that reads the sub-items (a roll-up, lookup or progress over the sub-items column). */
+export function readsSubitems(field: Field, ctx: Ctx): boolean {
+  const cfg = (field.config ?? {}) as { linkFieldKey?: unknown; sourceFieldKey?: unknown };
+  const key = typeof cfg.linkFieldKey === 'string' ? cfg.linkFieldKey : cfg.sourceFieldKey;
+  const source = typeof key === 'string' ? ctx.fieldsByKey.get(key) : undefined;
+  return !!source && !!resolveFieldType(source.type)?.relatedIds;
+}
