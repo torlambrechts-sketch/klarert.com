@@ -60,7 +60,7 @@ import { withOrg } from './context';
 // Audit outputs (docs/11 Audit outputs): the statement of applicability, the audit pack and the management review
 // inputs. Every member may export what they can read (auditors too: exports change nothing); everything is read with
 // the person's own client, so restricted sheets and fields stay out. Every export is logged on the workspace chain by
-// log_audit_export (0033) with what was exported and its scope.
+// log_audit_export (0034) with what was exported and its scope.
 
 const BUCKET = 'files';
 

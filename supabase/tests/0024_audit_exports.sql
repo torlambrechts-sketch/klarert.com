@@ -1,4 +1,4 @@
--- Audit exports (0033_audit_exports.sql, docs/11 Audit outputs): any member, auditors too, logs an export on the
+-- Audit exports (0034_audit_exports.sql, docs/11 Audit outputs): any member, auditors too, logs an export on the
 -- workspace chain; outsiders and auditors whose access ended cannot; the scope is a flat object of known keys.
 -- Run: pnpm db:test
 begin;
