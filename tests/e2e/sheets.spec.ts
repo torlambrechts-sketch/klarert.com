@@ -266,8 +266,11 @@ test.describe('desktop', () => {
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
-    // archive hides it from the rail
+    // archiving is for owners and admins (docs/02 §6); it hides the sheet from the rail
     await page.goto(`${url}/settings`);
+    await expect(page.getByRole('button', { name: 'Archive sheet' })).toHaveCount(0);
+    await page.context().clearCookies();
+    await signIn(page, 'maria@example.com', `${new URL(url, 'http://x').pathname}/settings`);
     await page.getByRole('button', { name: 'Archive sheet' }).click();
     await page.getByRole('button', { name: 'Archive sheet' }).click();
     await expect(page).toHaveURL(/\/meridian\/home$/);
@@ -280,7 +283,9 @@ test.describe('desktop', () => {
     await signIn(page, 'vic@example.com');
     await expect(page).toHaveURL(/\/meridian\/home$/);
     await expect(
-      page.getByRole('navigation', { name: 'Side menu' }).getByRole('link', { name: 'New sheet' }),
+      page
+        .getByRole('navigation', { name: 'Side menu' })
+        .getByRole('link', { name: 'New sheet', exact: true }),
     ).toHaveCount(0);
     await page.goto('/meridian/s/new?start=tracker');
     await expect(page.getByText('Viewers cannot create sheets.')).toBeVisible();
@@ -304,7 +309,7 @@ test.describe('phone', () => {
     const menu = page.getByRole('dialog', { name: 'Menu' });
     await expect(menu).toBeVisible();
     await expect(menu.getByRole('link', { name: 'Automations' })).toBeVisible();
-    await menu.getByRole('link', { name: 'New sheet' }).click();
+    await menu.getByRole('link', { name: 'New sheet', exact: true }).click();
     await expect(menu).toBeHidden();
     await expect(page).toHaveURL(/\/meridian\/s\/new$/);
 

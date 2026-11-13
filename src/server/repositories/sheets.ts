@@ -1,5 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
+import { byPosition } from '@/engine/organise';
 import { sheetCodes } from '@/lib/sheet-codes';
 import { getSession } from '@/server/auth';
 
@@ -9,13 +10,18 @@ export type NavSheet = { id: string; name: string; code: string; folderId: strin
 export type NavFolder = { id: string; name: string; sheets: NavSheet[] };
 export type Nav = { folders: NavFolder[]; unfiled: NavSheet[] };
 
-/** Folders with their (non-archived) sheets and rail codes. */
+/** Active folders with their (non-archived) sheets and rail codes, in menu order. */
 export const getNav = cache(async (orgId: string): Promise<Nav> => {
   const session = await getSession();
   if (!session) return { folders: [], unfiled: [] };
   const db = session.supabase;
   const [{ data: folders }, { data: sheets }] = await Promise.all([
-    db.from('folders').select('id, name, position').eq('org_id', orgId).order('position'),
+    db
+      .from('folders')
+      .select('id, name, position')
+      .eq('org_id', orgId)
+      .is('archived_at', null)
+      .order('position'),
     db
       .from('sheets')
       .select('id, name, folder_id, position, created_at')
@@ -25,6 +31,9 @@ export const getNav = cache(async (orgId: string): Promise<Nav> => {
       .is('parent_sheet_id', null)
       .order('position'),
   ]);
+  // fractional keys sort by code unit, not by the database's locale
+  folders?.sort(byPosition);
+  sheets?.sort(byPosition);
   const codes = sheetCodes(
     (sheets ?? []).map((s) => ({ id: s.id, name: s.name, createdAt: s.created_at })),
   );

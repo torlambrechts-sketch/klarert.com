@@ -10,10 +10,10 @@ export default async function NewSheetPage({
   searchParams,
 }: {
   params: Promise<{ org: string }>;
-  searchParams: Promise<{ start?: string }>;
+  searchParams: Promise<{ start?: string; folder?: string; source?: string }>;
 }) {
   const { org } = await params;
-  const { start } = await searchParams;
+  const { start, folder, source } = await searchParams;
   const { workspace, role } = await requireMember(org);
   if (!isEditorRole(role))
     return (
@@ -40,6 +40,8 @@ export default async function NewSheetPage({
           folders: nav.folders.map((f) => ({ id: f.id, name: f.name })),
           prefixes: data.prefixes,
           sheets: data.sheets,
+          folderId: folder ?? null,
+          sourceId: source ?? null,
         }}
       />
     </main>

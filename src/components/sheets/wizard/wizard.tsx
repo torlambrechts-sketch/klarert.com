@@ -25,7 +25,7 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
             return (
               <li key={s.id}>
                 <Link
-                  href={`?start=${s.id}`}
+                  href={`?start=${s.id}${ctx.folderId ? `&folder=${ctx.folderId}` : ''}`}
                   scroll={false}
                   aria-current={selected ? 'true' : undefined}
                   className={cn(
@@ -73,6 +73,7 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
                 itemLabel: start.itemLabel ?? 'Item',
                 groups: start.groups ?? [],
                 fields: (start.fields ?? []) as [string, string][],
+                folder: start.folder,
               }}
             />
           )}

@@ -72,19 +72,26 @@ export type Folder = { id: string; name: string };
 
 export function FolderSelect({
   folders,
+  newFolder,
   value,
   onChange,
   error,
   name,
 }: {
   folders: Folder[];
+  /** A start's folder that does not exist yet: offered as "<name> (new folder)". */
+  newFolder?: string | null;
   value: string;
   onChange?: (v: string) => void;
   error?: string;
   name?: string;
 }) {
   return (
-    <Field label="Folder" error={error}>
+    <Field
+      label="Folder"
+      error={error}
+      hint={newFolder && value === '__new__' ? 'Created with the sheet.' : undefined}
+    >
       {(p) => (
         <select
           {...p}
@@ -94,6 +101,7 @@ export function FolderSelect({
           defaultValue={onChange ? undefined : value}
           onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         >
+          {newFolder ? <option value="__new__">{newFolder} (new folder)</option> : null}
           {folders.map((f) => (
             <option key={f.id} value={f.id}>
               {f.name}

@@ -211,7 +211,7 @@ export default async function SheetSettingsPage({
         </Card>
       ) : null}
 
-      {canEdit ? (
+      {isAdminRole(role) ? (
         <Card
           title={sheet.archived_at ? 'Archived' : 'Archive'}
           description={

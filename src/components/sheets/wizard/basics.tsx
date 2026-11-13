@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { suggestIdPrefix } from '@/engine/ordering';
+import { templateFolderDefault } from '@/engine/organise';
 import { ID_PREFIX } from '@/lib/schemas/sheets';
 import type { Result } from '@/server/result';
 import { FolderSelect, TextInput, type Folder } from './fields';
@@ -15,17 +16,32 @@ export type WizardContext = {
   prefixes: string[];
   /** Sheets that can be copied or linked to. */
   sheets: { id: string; name: string; isLibrary?: boolean }[];
+  /** "New sheet here" in a folder's menu: that folder is preselected (it wins over a start's folder). */
+  folderId?: string | null;
+  /** "Duplicate" in a sheet's menu: the sheet to copy. */
+  sourceId?: string | null;
 };
+
+/** Folder field value for "the start's folder, created with the sheet". */
+export const NEW_FOLDER = '__new__';
 
 /** Name, item label, ID prefix (suggested from the name until edited), folder and groups. */
 export function useBasics(
   ctx: WizardContext,
-  init: { name?: string; itemLabel: string; groups: string },
+  init: { name?: string; itemLabel: string; groups: string; folder?: string },
 ) {
   const [name, setName] = useState(init.name ?? '');
   const [itemLabel, setItemLabel] = useState(init.itemLabel);
   const [typedPrefix, setTypedPrefix] = useState<string | null>(null);
-  const [folderId, setFolderId] = useState(ctx.folders[0]?.id ?? '');
+  // the folder picked in the menu, else the start's folder (existing or new), else the first folder
+  const fromStart = templateFolderDefault(ctx.folders, init.folder);
+  const newFolder = fromStart && 'newFolder' in fromStart ? fromStart.newFolder : null;
+  const [folderId, setFolderId] = useState(
+    (ctx.folderId && ctx.folders.some((f) => f.id === ctx.folderId) ? ctx.folderId : null) ??
+      (fromStart ? ('folderId' in fromStart ? fromStart.folderId : NEW_FOLDER) : null) ??
+      ctx.folders[0]?.id ??
+      '',
+  );
   const [groups, setGroups] = useState(init.groups);
   const idPrefix = typedPrefix ?? (name.trim() ? suggestIdPrefix(name, ctx.prefixes) : '');
   const prefixProblem = !idPrefix
@@ -36,6 +52,12 @@ export function useBasics(
         ? 'Another sheet uses this prefix. Choose another.'
         : undefined;
   return {
+    newFolder,
+    /** The command input for the folder: an id, or the start's folder name to create. */
+    folder:
+      folderId === NEW_FOLDER && newFolder
+        ? { folderId: null, folderName: newFolder }
+        : { folderId: folderId === NEW_FOLDER ? null : folderId },
     values: { name, itemLabel, idPrefix, folderId, groups },
     set: {
       name: (v: string) => setName(v),
@@ -96,6 +118,7 @@ export function BasicsFields({
       />
       <FolderSelect
         folders={ctx.folders}
+        newFolder={basics.newFolder}
         value={v.folderId}
         onChange={set.folderId}
         error={errors.folderId}
