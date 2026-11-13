@@ -884,10 +884,35 @@ export function Table({
   // ───────────── "More columns →" ─────────────
 
   const [more, setMore] = useState(false);
+  const [wide, setWide] = useState(false);
+  // a scrollbar pinned to the bottom of the window while the table is in view: rows scroll with the page, so the
+  // table's own scrollbar sits at its very end, out of reach on a long sheet
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    const bar = barRef.current;
+    if (!el || !bar) return;
+    const fromGrid = () => {
+      if (Math.abs(bar.scrollLeft - el.scrollLeft) > 1) bar.scrollLeft = el.scrollLeft;
+    };
+    const fromBar = () => {
+      if (Math.abs(el.scrollLeft - bar.scrollLeft) > 1) el.scrollLeft = bar.scrollLeft;
+    };
+    el.addEventListener('scroll', fromGrid, { passive: true });
+    bar.addEventListener('scroll', fromBar, { passive: true });
+    fromGrid();
+    return () => {
+      el.removeEventListener('scroll', fromGrid);
+      bar.removeEventListener('scroll', fromBar);
+    };
+  }, [wide]);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const update = () => setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    const update = () => {
+      setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+      setWide(el.scrollWidth > el.clientWidth + 1);
+    };
     update();
     el.addEventListener('scroll', update, { passive: true });
     const ro = new ResizeObserver(update);
@@ -1075,7 +1100,10 @@ export function Table({
                 store.getState().focus({ itemId: layout.flat[0].id, col: 'name' });
             }}
             // rows scroll with the page; only wide tables scroll sideways here
-            className="grid-scroll relative overflow-x-auto overflow-y-hidden rounded-lg outline-none"
+            className={cn(
+              'grid-scroll relative overflow-x-auto overflow-y-hidden rounded-lg outline-none',
+              wide && '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+            )}
           >
             <div style={{ height: rowV.getTotalSize(), width: totalW, position: 'relative' }}>
               {vRows.map((vr) => {
@@ -1159,6 +1187,14 @@ export function Table({
                 );
               })}
             </div>
+          </div>
+          <div
+            ref={barRef}
+            aria-hidden
+            hidden={!wide}
+            className="bg-background-100/95 border-line sticky bottom-0 z-[6] h-[14px] overflow-x-auto overflow-y-hidden border-t"
+          >
+            <div style={{ width: totalW, height: 1 }} />
           </div>
           {more ? (
             <div
