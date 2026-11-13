@@ -263,13 +263,17 @@ test.describe('desktop', () => {
       `fields?sheet_id=eq.${regId}&key=in.(approver,approved_on,version)&select=id,key`,
     );
     const fid = (k: string) => keyed.find((f) => f.key === k)!.id;
-    const [row] = await rest<{ values: Record<string, unknown> }[]>(
-      james,
-      `items?id=eq.${doc.id}&select=values`,
-    );
-    expect(row!.values[fid('approver')]).toHaveLength(1);
-    expect(row!.values[fid('approved_on')]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(row!.values[fid('version')]).toBe(1);
+    const values = async () =>
+      (
+        await rest<{ values: Record<string, unknown> }[]>(
+          james,
+          `items?id=eq.${doc.id}&select=values`,
+        )
+      )[0]!.values;
+    await expect.poll(async () => (await values())[fid('version')]).toBe(1);
+    const v1 = await values();
+    expect(v1[fid('approver')]).toHaveLength(1);
+    expect(v1[fid('approved_on')]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
     // an asset links the document and gets its approved version
     const assetsUrl = await sheetFrom(page, 'tracker', `Assets ${unique()}`);
