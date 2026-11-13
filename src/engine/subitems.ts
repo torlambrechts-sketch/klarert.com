@@ -17,7 +17,10 @@ const str = (v: unknown, fallback = '') => (typeof v === 'string' ? v : fallback
 
 /** sheets.settings.subitems, read leniently (missing keys take the defaults). */
 export function readSubitemSettings(raw: unknown): SubitemSettings {
-  const o = (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>;
+  const o = (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<
+    string,
+    unknown
+  >;
   const template = Array.isArray(o.template) ? o.template : [];
   return {
     label: str(o.label).trim().slice(0, 40) || DEFAULT_SUBITEM_LABEL,

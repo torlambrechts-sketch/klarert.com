@@ -33,4 +33,3 @@ export function valueLabel(field: Field, raw: Json | null, ctx: Ctx): string {
   const text = v === null ? '' : def.toText(v, field.config, ctx);
   return text || String(raw);
 }
-

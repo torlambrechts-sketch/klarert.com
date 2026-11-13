@@ -2,10 +2,10 @@
 // without executing anything. Pure: no writes, no clock but ctx.now, so the builder's Test (M8) shows the same steps
 // the runner executes.
 import { raiseVersion } from '../fields/version';
-import type { Automation, Ctx, Field, Item, Json } from '../types';
+import type { Automation, Ctx, Item, Json } from '../types';
 import { defOf, keysOfValue, kindOf, valueOf } from '../values';
 import { actorName, renderTemplate, type TemplateEnv } from './template';
-import type { ActionId, ActionJson, Actor, AutomationEvent, Effect, PlannedStep } from './types';
+import type { ActionId, ActionJson, AutomationEvent, Effect, PlannedStep } from './types';
 import { isWebhookPreset, webhookPayload } from './webhook';
 import { resolveValueToken, valueLabel } from './value-tokens';
 import { SUBITEM_ACTIONS } from './subitem-actions';

@@ -36,7 +36,10 @@ const not = (
 ): PlannedStep => ({ action, summary, effects: [], outcome, message });
 
 /** The sub-items an action lists, or the sheet's template set when it says `fromTemplate`. */
-export function subitemRows(action: ActionJson, ctx: Ctx): { name: string; values: Record<string, Json> }[] {
+export function subitemRows(
+  action: ActionJson,
+  ctx: Ctx,
+): { name: string; values: Record<string, Json> }[] {
   if (action.fromTemplate === true) return ctx.sheet.subitems?.template ?? [];
   const list = Array.isArray(action.items) ? action.items : [];
   return list.flatMap((r) => {
@@ -46,11 +49,15 @@ export function subitemRows(action: ActionJson, ctx: Ctx): { name: string; value
   });
 }
 
-export const SUBITEM_ACTIONS: Record<'create_subitems' | 'set_parent_field' | 'update_subitems', Planner> = {
+export const SUBITEM_ACTIONS: Record<
+  'create_subitems' | 'set_parent_field' | 'update_subitems',
+  Planner
+> = {
   create_subitems: (action, item, ctx, env) => {
     const label = subitemLabel(ctx.sheet).toLowerCase();
     const summary = `Add ${label}`;
-    if (item.parentId) return not('create_subitems', summary, 'failed', 'Sub-items cannot have sub-items.');
+    if (item.parentId)
+      return not('create_subitems', summary, 'failed', 'Sub-items cannot have sub-items.');
     const childId = childSheetIdOf(ctx);
     if (!childId)
       return not('create_subitems', summary, 'failed', 'Sub-items are off for this sheet.');
@@ -81,7 +88,12 @@ export const SUBITEM_ACTIONS: Record<'create_subitems' | 'set_parent_field' | 'u
     const parentSheetId = ctx.sheet.parentSheetId;
     const key = str(action.fieldKey);
     if (!item.parentId || !parentSheetId)
-      return not('set_parent_field', 'Set a field on the parent', 'failed', 'This item has no parent.');
+      return not(
+        'set_parent_field',
+        'Set a field on the parent',
+        'failed',
+        'This item has no parent.',
+      );
     const field = ctx.fieldsOf(parentSheetId).find((f) => f.key === key);
     if (!field)
       return not(
@@ -92,7 +104,12 @@ export const SUBITEM_ACTIONS: Record<'create_subitems' | 'set_parent_field' | 'u
       );
     const summary = `Set ${field.name} on the parent`;
     if (defOf(field).storage !== 'values')
-      return not('set_parent_field', summary, 'failed', `${field.name} cannot be set by automations.`);
+      return not(
+        'set_parent_field',
+        summary,
+        'failed',
+        `${field.name} cannot be set by automations.`,
+      );
     const v = resolveValueToken(action.value, ctx, env.actor);
     if (!v.ok) return not('set_parent_field', summary, 'skipped', v.message);
     return {
@@ -114,7 +131,13 @@ export const SUBITEM_ACTIONS: Record<'create_subitems' | 'set_parent_field' | 'u
     const key = str(action.fieldKey);
     const field = childId ? ctx.fieldsOf(childId).find((f) => f.key === key) : undefined;
     const label = subitemLabel(ctx.sheet).toLowerCase();
-    if (!childId) return not('update_subitems', `Update ${label}`, 'failed', 'Sub-items are off for this sheet.');
+    if (!childId)
+      return not(
+        'update_subitems',
+        `Update ${label}`,
+        'failed',
+        'Sub-items are off for this sheet.',
+      );
     if (!field)
       return not(
         'update_subitems',
@@ -124,7 +147,12 @@ export const SUBITEM_ACTIONS: Record<'create_subitems' | 'set_parent_field' | 'u
       );
     const summary = `Set ${field.name} on ${label}`;
     if (defOf(field).storage !== 'values')
-      return not('update_subitems', summary, 'failed', `${field.name} cannot be set by automations.`);
+      return not(
+        'update_subitems',
+        summary,
+        'failed',
+        `${field.name} cannot be set by automations.`,
+      );
     const v = resolveValueToken(action.value, ctx, env.actor);
     if (!v.ok) return not('update_subitems', summary, 'skipped', v.message);
     const wanted = v.value === null ? null : defOf(field).normalize(v.value, field.config, ctx);

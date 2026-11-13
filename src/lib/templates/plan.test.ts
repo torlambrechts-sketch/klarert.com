@@ -52,7 +52,18 @@ describe('first-sheet template', () => {
   it('plans the expected counts with no problems', () => {
     expect(plan.problems).toEqual([]);
     expect(plan.sheets).toHaveLength(2);
-    expect(plan.sheets.map((s) => s.fields.length)).toEqual([18, 7]);
+    // Corrective actions has sub-items: its column joins the 18 fields
+    expect(plan.sheets.map((s) => s.fields.length)).toEqual([19, 7]);
+    expect(plan.sheets[0]!.fields.find((f) => f.type === 'subitems')?.name).toBe('Actions');
+    expect(plan.sheets[0]!.subitems?.fields.map((f) => f.key)).toEqual([
+      'owner',
+      'status',
+      'due_date',
+      'evidence',
+    ]);
+    expect(plan.sheets[0]!.subitems?.sheet.parent_sheet_id).toBe(plan.sheets[0]!.row.id);
+    expect(plan.sheets[0]!.row.settings.subitems?.blockClose).toBe(true);
+    expect(plan.sheets[1]!.subitems).toBeUndefined();
     expect(plan.sheets.map((s) => s.groups.length)).toEqual([2, 2]);
     expect(plan.sheets.map((s) => s.views.length)).toEqual([3, 2]);
     expect(plan.sheets.map((s) => s.items.reduce((a, g) => a + g.rows.length, 0))).toEqual([5, 2]);

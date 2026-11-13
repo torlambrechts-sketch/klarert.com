@@ -241,11 +241,7 @@ async function recentActivity(
   const sheetIds = [...new Set(rows.map((r) => r.sheet_id).filter((s): s is string => !!s))];
   const [items, sheets, fields, groups, autos, directory] = await Promise.all([
     fetchItemsById(db, itemIds),
-    db
-      .from('sheets')
-      .select(SHEET_COLUMNS)
-      .in('id', sheetIds)
-      .then(must),
+    db.from('sheets').select(SHEET_COLUMNS).in('id', sheetIds).then(must),
     db
       .from('fields')
       .select(

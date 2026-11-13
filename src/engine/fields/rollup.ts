@@ -67,7 +67,11 @@ function worstOf(targets: Target[], ctx: Ctx): string | null {
     if (t.def.isEmpty(t.value)) continue;
     const cfg = t.field.config;
     const options = t.def.options?.(cfg, ctx) ?? [];
-    const key = t.def.keyOf ? t.def.keyOf(t.value, cfg) : typeof t.value === 'string' ? t.value : null;
+    const key = t.def.keyOf
+      ? t.def.keyOf(t.value, cfg)
+      : typeof t.value === 'string'
+        ? t.value
+        : null;
     const index = options.findIndex((o) => o.id === key);
     const order = t.def.rank?.(t.value, cfg) ?? index;
     if (order === null || order < 0) continue;
@@ -215,6 +219,8 @@ export const rollup: FieldTypeDef<RollupValue, RollupConfig> = base<RollupValue,
   toDate: (v) => (typeof v === 'string' && isIsoDate(v) ? v : null),
   compare: (a, b) =>
     emptyLast(a, b, isEmpty, (x, y) =>
-      typeof x === 'number' && typeof y === 'number' ? cmpNumber(x, y) : cmpText(String(x), String(y)),
+      typeof x === 'number' && typeof y === 'number'
+        ? cmpNumber(x, y)
+        : cmpText(String(x), String(y)),
     ),
 });

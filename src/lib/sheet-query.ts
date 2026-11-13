@@ -222,10 +222,7 @@ export async function fetchRelated(
   const sheetIds = [...new Set(items.map((i) => i.sheetId))].filter((id) => id !== sheetId);
   if (sheetIds.length === 0) return { sheets: [], fields: [], items };
   const [sheets, fields] = await Promise.all([
-    db
-      .from('sheets')
-      .select(SHEET_COLUMNS)
-      .in('id', sheetIds),
+    db.from('sheets').select(SHEET_COLUMNS).in('id', sheetIds),
     db
       .from('fields')
       .select(FIELD_COLUMNS)
@@ -272,7 +269,9 @@ export async function fetchSubitemContext(
   sheet: SheetData['sheet'],
   loaded: Item[],
   parentIds?: string[],
-): Promise<Pick<SheetData, 'links' | 'files' | 'protectedValues'> & { related: SheetData['related'] }> {
+): Promise<
+  Pick<SheetData, 'links' | 'files' | 'protectedValues'> & { related: SheetData['related'] }
+> {
   const none = {
     links: [],
     files: [],

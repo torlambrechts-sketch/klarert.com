@@ -44,7 +44,8 @@ export async function setUpSubitems(
     .eq('org_id', orgId)
     .maybeSingle();
   if (!parent || parent.archived_at) return fail('not_found', 'This sheet no longer exists.');
-  if (parent.parent_sheet_id) return fail('invalid', 'Sub-items cannot have sub-items of their own.');
+  if (parent.parent_sheet_id)
+    return fail('invalid', 'Sub-items cannot have sub-items of their own.');
   const { data: existing } = await db
     .from('sheets')
     .select('id')
@@ -84,9 +85,7 @@ export async function setUpSubitems(
   return ok({ childSheetId: rows.sheet.id });
 }
 
-export async function enableSubitems(
-  input: unknown,
-): Promise<Result<{ childSheetId: string }>> {
+export async function enableSubitems(input: unknown): Promise<Result<{ childSheetId: string }>> {
   const p = enableSubitemsInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   const v = p.data;
@@ -257,7 +256,10 @@ export async function createSubitemsFromTemplate(
         (parentSheet.settings as { subitems?: unknown } | null)?.subitems,
       ).template;
       if (template.length === 0)
-        return fail('invalid', 'This sheet has no sub-item template yet. Add one in the sheet settings.');
+        return fail(
+          'invalid',
+          'This sheet has no sub-item template yet. Add one in the sheet settings.',
+        );
       const w = await loadWriteContext(supabase, { orgId, userId: user.id, role }, child.id, []);
       if (!w) return fail('not_found', 'Sub-items are off for this sheet.');
       const actor = { kind: 'user' as const, id: user.id };
@@ -290,7 +292,8 @@ export async function createSubitemsFromTemplate(
           parentId: v.parentId,
         };
         const plan = planValues(blank, w.fields, raw, w.ctx, sha256);
-        if (plan.rejected.length > 0) return fail('invalid', `${t.name}: ${plan.rejected[0]!.reason}`);
+        if (plan.rejected.length > 0)
+          return fail('invalid', `${t.name}: ${plan.rejected[0]!.reason}`);
         rows.push({ name: t.name, position: positions[i]!, values: plan.next.values as Json });
       }
       const { data, error } = await supabase.rpc('create_subitems', {

@@ -134,7 +134,9 @@ const sheetFields = (ctx: Ctx) => ctx.fieldsOf(ctx.sheet.id);
 export function triggerFields(type: TriggerId, ctx: Ctx): Field[] {
   if (TRIGGER_CATALOGUE[type]?.subitems) {
     const child = childSheetIdOf(ctx);
-    return child ? ctx.fieldsOf(child).filter((f) => defOf(f).triggers.includes('field_becomes')) : [];
+    return child
+      ? ctx.fieldsOf(child).filter((f) => defOf(f).triggers.includes('field_becomes'))
+      : [];
   }
   return sheetFields(ctx).filter((f) => defOf(f).triggers.includes(type));
 }
@@ -817,7 +819,11 @@ function eventFor(
     case 'all_subitems_done': {
       // the item's first sub-item, as if it had just been added (or its field had just changed to its value)
       const child = subitemsOf(item, ctx)[0];
-      const childBase = { sheetId: child?.sheetId ?? '', itemId: child?.id ?? '', actor: actorOf(ctx) };
+      const childBase = {
+        sheetId: child?.sheetId ?? '',
+        itemId: child?.id ?? '',
+        actor: actorOf(ctx),
+      };
       return {
         type: 'subitem.event',
         ...base,

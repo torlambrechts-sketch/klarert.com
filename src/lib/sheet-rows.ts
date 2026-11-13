@@ -31,7 +31,8 @@ export type ViewDbRow = Tables['views']['Row'];
 export const ITEM_COLUMNS =
   'id, org_id, sheet_id, group_id, seq, display_id, name, values, position, locked, lock_reason, created_by, created_at, updated_by, updated_at, archived_at, parent_id, sub_seq';
 /** The sheet columns the domain Sheet needs (sub-items: the parent, and the settings that hold the label and gate). */
-export const SHEET_COLUMNS = 'id, org_id, name, item_label, id_prefix, is_library, parent_sheet_id, settings';
+export const SHEET_COLUMNS =
+  'id, org_id, name, item_label, id_prefix, is_library, parent_sheet_id, settings';
 export const FIELD_COLUMNS =
   'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, created_at, updated_at, archived_at';
 

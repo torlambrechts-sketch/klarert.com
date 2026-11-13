@@ -105,7 +105,8 @@ export function fromDbError(error: { message: string; code?: string }): Result<n
   const gate = error.message.match(/subitems open: (.*)/);
   if (gate) return fail('blocked', gate[1]!.trim());
   const parent = error.message.match(/restore the parent first: (\S+)/);
-  if (parent) return fail('conflict', `Restore ${parent[1]} first: this sub-item was archived with it.`);
+  if (parent)
+    return fail('conflict', `Restore ${parent[1]} first: this sub-item was archived with it.`);
   for (const [pattern, code, message] of DB_MESSAGES) {
     if (pattern.test(error.message)) return fail(code, message);
   }

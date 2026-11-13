@@ -25,11 +25,9 @@ const recipeSchema = z.object({
     z
       .array(
         // `sub:<type>`: a field of the sheet's sub-items (sub-item triggers)
-        z
-          .string()
-          .refine((t) => isFieldTypeId(t.replace(/^sub:/, '')), {
-            message: 'Unknown field type in a recipe role',
-          }),
+        z.string().refine((t) => isFieldTypeId(t.replace(/^sub:/, '')), {
+          message: 'Unknown field type in a recipe role',
+        }),
       )
       .min(1),
   ),
