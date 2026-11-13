@@ -2337,9 +2337,16 @@
         {
           "ref": "w_soa",
           "type": "by_option",
-          "title": "Statement of applicability: implementation",
+          "title": "Annex A controls by implementation",
           "library": "iso-27001@2022",
-          "fieldKey": "status"
+          "fieldKey": "status",
+          "conditions": [
+            {
+              "fieldKey": "ref",
+              "op": "starts_with",
+              "value": "A."
+            }
+          ]
         },
         {
           "ref": "w_nc_open",
