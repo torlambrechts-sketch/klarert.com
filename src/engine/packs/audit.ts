@@ -2,7 +2,7 @@
 import type { Json } from '../types';
 import { countsText, type PackCounts } from './plan';
 
-export const PACK_ACTIONS = ['pack.installed', 'pack.archived'] as const;
+export const PACK_ACTIONS = ['pack.installed', 'pack.extended', 'pack.archived'] as const;
 
 type Obj = Record<string, Json>;
 const obj = (v: Json | null | undefined): Obj =>
@@ -15,7 +15,7 @@ export function packLogText(action: string, newValue: Json | null): string {
   const name =
     `${typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack')} ${String(v.version ?? '')}`.trim();
   const c = obj(v.counts);
-  if (action === 'pack.installed') {
+  if (action === 'pack.installed' || action === 'pack.extended') {
     const counts: PackCounts = {
       folders: num(c.folders),
       sheets: num(c.sheets),
@@ -29,7 +29,15 @@ export function packLogText(action: string, newValue: Json | null): string {
       automations: num(c.automations),
       dashboards: num(c.dashboards),
     };
-    return `Installed ${name}: ${countsText(counts)}.`;
+    const level =
+      typeof v.level_name === 'string'
+        ? v.level_name
+        : typeof v.level === 'string'
+          ? v.level
+          : null;
+    if (action === 'pack.extended')
+      return `Added the ${level ?? 'next'} level to ${name}: ${countsText(counts)}.`;
+    return `Installed ${name}${level ? ` (${level})` : ''}: ${countsText(counts)}.`;
   }
   if (action === 'pack.archived') {
     const parts = [

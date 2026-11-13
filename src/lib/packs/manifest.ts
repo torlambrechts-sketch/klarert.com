@@ -10,9 +10,11 @@ import { isRequirementKey } from '@/engine/frameworks/refs';
 import { SEMVER, SEMVER_RANGE } from '@/engine/packs/semver';
 import { packToTemplate } from '@/engine/packs/template';
 import { SHEET_REF, splitSheetRef, type PackManifest } from '@/engine/packs/types';
+import { levelProblems } from '@/engine/packs/levels';
 import {
   sheetTemplateSchema,
   templateAutomation,
+  templateForm,
   templateItem,
   templatePerson,
   templateSheet,
@@ -46,7 +48,35 @@ export const packItem = templateItem.extend({
     .optional(),
 });
 
-export const packSheet = templateSheet.omit({ folder: true, items: true }).extend({
+/** A level key (docs/11 Levels): `starter`, `full`. */
+const levelKey = z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/, 'Use a short lower-case level key.');
+/** `<framework>@<version>`: a framework library the pack requires. */
+const libraryRef = z
+  .string()
+  .regex(/^[a-z0-9][a-z0-9-]{0,39}@[0-9A-Za-z.-]{1,20}$/, 'Use <framework>@<version>.');
+const setupCondition = z.object({
+  fieldKey,
+  op: z.string().min(1).max(40),
+  value: json.optional(),
+});
+const setupTarget = z.object({
+  sheetRef: ref.optional(),
+  library: libraryRef.optional(),
+  view: z.string().trim().min(1).max(80).optional(),
+});
+const setupRule = setupTarget.extend({
+  where: z.array(setupCondition).max(10).optional(),
+  all: z.array(setupCondition).max(10).optional(),
+  min: z.number().int().min(1).max(1000).optional(),
+});
+const setupText = z.object({
+  title: z.string().trim().min(1).max(80),
+  body: z.string().trim().min(1).max(400),
+  target: setupTarget,
+  rules: z.array(setupRule).min(1).max(5),
+});
+
+export const packSheet = templateSheet.omit({ folder: true, items: true, forms: true }).extend({
   /** The folder by ref (the manifest's `folders`). */
   folder: ref.optional(),
   /** A library sheet (requirement and control link fields point at libraries). */
@@ -64,15 +94,23 @@ export const packSheet = templateSheet.omit({ folder: true, items: true }).exten
     })
     .optional(),
   items: z.array(packItem).max(500).default([]),
+  /** The lowest level that installs this sheet (docs/11 Levels). */
+  level: levelKey.optional(),
+  forms: z
+    .array(templateForm.extend({ level: levelKey.optional() }))
+    .max(20)
+    .default([]),
 });
 
-export const packAutomation = templateAutomation.extend({ ref });
+export const packAutomation = templateAutomation.extend({ ref, level: levelKey.optional() });
 
 export const packWidget = z.object({
   ref: z.string().regex(/^[A-Za-z0-9_-]{1,40}$/),
   type: z.string().min(1).max(40),
   title: z.string().trim().min(1).max(80),
   sheetRef: ref.optional(),
+  /** A required framework's library (`<framework>@<version>`) in place of sheetRef. */
+  library: libraryRef.optional(),
   fieldKey: fieldKey.optional(),
   conditions: z
     .array(z.object({ fieldKey, op: z.string().min(1).max(40), value: json.optional() }))
@@ -104,6 +142,7 @@ export const packManifestSchema = z
           name: z.string().trim().min(1).max(80),
           /** Restricted (docs/02 §16): its sheets are seen by the installer (and owners) until shared. */
           restricted: z.boolean().optional(),
+          level: levelKey.optional(),
         }),
       )
       .max(20)
@@ -116,10 +155,46 @@ export const packManifestSchema = z
           ref,
           name: z.string().trim().min(1).max(80),
           widgets: z.array(packWidget).max(MAX_WIDGETS),
+          level: levelKey.optional(),
         }),
       )
       .max(10)
       .default([]),
+    levels: z
+      .array(
+        z.object({
+          key: levelKey,
+          name: z.string().trim().min(1).max(40),
+          description: z.string().trim().max(400),
+        }),
+      )
+      .min(2)
+      .max(5)
+      .optional(),
+    frameworks: z
+      .array(
+        z.object({
+          key: z.string().regex(/^[a-z0-9][a-z0-9-]{0,39}$/),
+          version: z.string().regex(/^[0-9A-Za-z.-]{1,20}$/),
+        }),
+      )
+      .max(5)
+      .optional(),
+    setup: z
+      .object({
+        title: z.string().trim().min(1).max(80),
+        description: z.string().trim().max(400),
+        steps: z
+          .array(
+            setupText.extend({
+              ref,
+              levels: z.record(levelKey, setupText.partial()).optional(),
+            }),
+          )
+          .min(1)
+          .max(12),
+      })
+      .optional(),
   })
   .superRefine((m, ctx) => {
     const problem = (path: (string | number)[], message: string) =>
@@ -229,11 +304,16 @@ export const packManifestSchema = z
         if (!widgetType(w.type)) problem(at, `Unknown widget "${w.type}".`);
         const s = w.sheetRef ? sheets.get(w.sheetRef) : undefined;
         if (w.sheetRef && !s) problem(at, `Unknown sheet "${w.sheetRef}".`);
+        if (w.sheetRef && w.library) problem(at, 'Name a sheetRef or a library, not both.');
         if (w.fieldKey && s && !s.fields.some((f) => f.key === w.fieldKey))
           problem(at, `Unknown field "${w.fieldKey}" on "${w.sheetRef}".`);
-        if (w.fieldKey && !w.sheetRef) problem(at, `"${w.fieldKey}" needs a sheetRef.`);
+        if (w.fieldKey && !w.sheetRef && !w.library)
+          problem(at, `"${w.fieldKey}" needs a sheetRef or a library.`);
       }
     }
+
+    // levels, required frameworks and the setup checklist: every reference resolves, nothing needs a higher level
+    for (const p of levelProblems(m as PackManifest)) problem(p.path, p.message);
 
     // everything a template checks: field refs, rules, views, tabs, forms, column groups, items, automations
     const asTemplate = sheetTemplateSchema.safeParse(packToTemplate(m as PackManifest));

@@ -22,6 +22,14 @@ import type {
   Person,
   Sheet,
 } from '../types';
+import {
+  defaultLevel,
+  levelRank,
+  levelSummaries,
+  libraryKey,
+  manifestAtLevel,
+  type LevelSummary,
+} from './levels';
 import { satisfies } from './semver';
 import { foreignLinks, packToTemplate } from './template';
 import type { PackManifest } from './types';
@@ -31,7 +39,18 @@ export interface PackSnapshot {
   /** ID prefixes in use (every sheet, archived ones too: the prefix stays unique). */
   prefixes: string[];
   folders: { id: string; name: string; archived: boolean }[];
-  installs: { id: string; packKey: string; version: string; status: 'installed' | 'archived' }[];
+  installs: {
+    id: string;
+    packKey: string;
+    version: string;
+    status: 'installed' | 'archived';
+    /** The level installed (packs with levels, docs/11). */
+    level?: string | null;
+    /** The install's ref → id map (`sheet:risk` → id): what a higher level must not create again. */
+    refMap?: Record<string, string>;
+  }[];
+  /** Framework libraries adopted here (`<framework>@<version>` → library sheet id), docs/12. */
+  libraries?: { library: string; sheetId: string }[];
   members: (Person & { email: string })[];
   jobRoles: { id: string; name: string }[];
   teams: { id: string; name: string }[];
@@ -77,7 +96,9 @@ type Row = Record<string, Json>;
 
 /** The rows install_pack writes (p_plan). Ids are new uuids; every row has its stable ref. */
 export interface InstallPayload {
-  pack: { key: string; version: string; hash: string };
+  pack: { key: string; version: string; hash: string; level?: string };
+  /** A higher level added to the live install of the same version (docs/11 Levels): rows join that install. */
+  extend_install?: string;
   folders: Row[];
   sheets: Row[];
   fields: Row[];
@@ -133,6 +154,13 @@ export interface PackPreview {
   conflicts: string[];
   /** What installs differently than written: people, job roles or teams the workspace does not have. */
   warnings: string[];
+  /** The level this preview installs (packs with levels), and what every level creates. */
+  level: { key: string; name: string } | null;
+  levels: LevelSummary[];
+  /** The level already installed when this preview adds a higher one: only what is missing is created. */
+  extendsLevel: { key: string; name: string } | null;
+  /** Framework libraries the pack builds on; `adopted: false` ones are adopted first at install (docs/12). */
+  frameworks: { library: string; adopted: boolean }[];
 }
 
 export interface PackPlan {
@@ -220,14 +248,39 @@ export function previewLines(p: PackPreview): string[] {
   return out;
 }
 
-export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEnv): PackPlan {
+export function planPackInstall(
+  full: PackManifest,
+  snap: PackSnapshot,
+  env: PackEnv,
+  opts: { level?: string | null } = {},
+): PackPlan {
   const conflicts: string[] = [];
   const operations: PackOperation[] = [];
+  // ── the level: the manifest as installed at it (a pack without levels installs whole)
+  const level = full.levels?.length ? (opts.level ?? defaultLevel(full)) : null;
+  if (level && levelRank(full, level) < 0)
+    conflicts.push(`"${level}" is not a level of this pack.`);
+  const m = manifestAtLevel(
+    full,
+    level && levelRank(full, level) >= 0 ? level : defaultLevel(full),
+  );
+  const levelOf = (k: string | null | undefined) => {
+    const l = full.levels?.find((x) => x.key === k);
+    return l ? { key: l.key, name: l.name } : null;
+  };
+  const libraries = new Map((snap.libraries ?? []).map((l) => [l.library, l.sheetId]));
   const base: Omit<PackPreview, 'state' | 'conflicts' | 'warnings'> = {
     key: m.key,
     title: m.title,
     version: m.version,
     description: m.description,
+    level: levelOf(level),
+    levels: levelSummaries(full),
+    extendsLevel: null,
+    frameworks: (full.frameworks ?? []).map((f) => ({
+      library: libraryKey(f),
+      adopted: libraries.has(libraryKey(f)),
+    })),
     counts: manifestCounts(m),
     folders: [],
     sheets: [],
@@ -240,7 +293,18 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
 
   // ── already installed, or something this pack needs is missing
   const live = snap.installs.find((i) => i.packKey === m.key && i.status === 'installed');
-  if (live && live.version === m.version) {
+  // a higher level of the version installed: plan the level whole, then leave out what the install already made
+  const extend =
+    live &&
+    live.version === m.version &&
+    level &&
+    levelRank(full, live.level) < levelRank(full, level)
+      ? live
+      : null;
+  const existing = extend?.refMap ?? {};
+  const has = (kind: string, ref: string) => typeof existing[`${kind}:${ref}`] === 'string';
+  if (extend) base.extendsLevel = levelOf(extend.level) ?? levelOf(defaultLevel(full));
+  if (live && live.version === m.version && !extend) {
     const skip = (kind: PackObjectKind, ref: string, name: string) =>
       operations.push({ kind, ref, name, action: 'skip', note: 'Already installed.' });
     for (const f of m.folders) skip('folder', f.ref, f.name);
@@ -264,7 +328,7 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
     };
     return { state: 'installed', operations, preview, payload: null };
   }
-  if (live)
+  if (live && !extend)
     conflicts.push(
       `Version ${live.version} is installed. Upgrading to ${m.version} is not available yet: archive the installed version first.`,
     );
@@ -285,6 +349,10 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
   const taken = new Set(snap.prefixes);
   const prefixes: Record<string, string> = {};
   for (const s of m.sheets) {
+    if (has('sheet', s.ref)) {
+      prefixes[s.ref] = s.idPrefix;
+      continue;
+    }
     const p = uniqueIdPrefix(s.idPrefix, taken);
     taken.add(p);
     prefixes[s.ref] = p;
@@ -296,8 +364,21 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
   const folderRows: Row[] = [];
   const folderKeys = keysBetween(snap.lastFolderPosition, null, Math.max(1, m.folders.length));
   m.folders.forEach((f, i) => {
-    const existing = snap.folders.find((x) => !x.archived && lower(x.name) === lower(f.name));
-    if (existing) {
+    const mine = existing[`folder:${f.ref}`];
+    if (mine) {
+      folderIds.set(f.ref, mine);
+      operations.push({
+        kind: 'folder',
+        ref: f.ref,
+        name: f.name,
+        action: 'skip',
+        note: 'Already installed.',
+      });
+      return;
+    }
+    const existingFolder = snap.folders.find((x) => !x.archived && lower(x.name) === lower(f.name));
+    if (existingFolder) {
+      const existing = existingFolder;
       folderIds.set(f.ref, existing.id);
       base.folders.push({ name: existing.name, action: 'reuse' });
       operations.push({
@@ -639,11 +720,15 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
       type: w.type,
       title: w.title,
       ...(w.sheetRef ? { sheetId: sheetIdOf.get(w.sheetRef) ?? null } : {}),
+      // a required framework's library: adopted before the install when missing (the command plans again then)
+      ...(w.library ? { sheetId: libraries.get(w.library) ?? null } : {}),
       ...(w.fieldKey ? { fieldKey: w.fieldKey } : {}),
       ...(w.conditions ? { conditions: w.conditions as Condition[] } : {}),
       ...(w.days !== undefined ? { days: w.days } : {}),
     }));
-    for (const w of widgets) {
+    for (const [wi, w] of widgets.entries()) {
+      // the library's fields are the framework's (docs/12); the manifest names them by key
+      if (d.widgets[wi]!.library) continue;
       const problem = widgetProblem(w, (id) => {
         if (!sheetsById.has(id)) return undefined;
         return { fields: engineFields.get(id) ?? [], ctx: ctxFor(id) };
@@ -661,11 +746,86 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
     };
   });
 
+  // ── a higher level: what the install already made is left out, and the new rows point at its ids
+  let rows = {
+    sheets: sheetRows,
+    fields: fieldRows,
+    groups: groupRows,
+    views: viewRows,
+    items: itemRows,
+    links: linkRows,
+    automations: automationRows,
+    dashboards: dashboardRows,
+  };
+  if (extend) {
+    const kinds: [keyof typeof rows, string][] = [
+      ['sheets', 'sheet'],
+      ['fields', 'field'],
+      ['groups', 'group'],
+      ['views', 'view'],
+      ['items', 'item'],
+      ['automations', 'automation'],
+      ['dashboards', 'dashboard'],
+    ];
+    const remap = new Map<string, string>();
+    for (const [list, kind] of kinds)
+      for (const r of rows[list] as Row[])
+        if (has(kind, String(r.ref)))
+          remap.set(String(r.id), existing[`${kind}:${String(r.ref)}`]!);
+    const swap = (v: Json): Json => {
+      if (typeof v === 'string') return remap.get(v) ?? v;
+      if (Array.isArray(v)) return v.map(swap);
+      if (v && typeof v === 'object')
+        return Object.fromEntries(Object.entries(v).map(([k, x]) => [remap.get(k) ?? k, swap(x)]));
+      return v;
+    };
+    const fresh = (list: Row[]) =>
+      list.filter((r) => !remap.has(String(r.id))).map((r) => swap(r) as Row);
+    const before = new Set(remap.keys());
+    rows = {
+      sheets: fresh(sheetRows),
+      fields: fresh(fieldRows),
+      groups: fresh(groupRows),
+      views: fresh(viewRows),
+      items: fresh(itemRows),
+      // links the install already has (both ends and the field made before) are not written again
+      links: linkRows
+        .filter((l) => !(before.has(l.field_id) && before.has(l.from_item)))
+        .map((l) => swap(l as unknown as Json) as unknown as InstallPayload['links'][number]),
+      automations: fresh(automationRows),
+      dashboards: fresh(dashboardRows),
+    };
+    for (const o of operations)
+      if (o.action === 'create' && has(o.kind, o.ref)) {
+        o.action = 'skip';
+        o.note = 'Already installed.';
+      }
+    const newSheet = (ref: string) => !has('sheet', ref);
+    const sheetsAdded = m.sheets.filter((s) => newSheet(s.ref));
+    const sheetNames = new Set(sheetsAdded.map((s) => s.name));
+    base.sheets = base.sheets.filter((s) => newSheet(s.ref));
+    base.links = base.links.filter((l) => sheetNames.has(l.from) || sheetNames.has(l.to));
+    base.forms = base.forms.filter((f) => sheetNames.has(f.sheet));
+    const newAutos = m.automations.filter((a) => !has('automation', a.ref));
+    base.automations = base.automations.filter(
+      (_a, i) => !has('automation', m.automations[i]!.ref),
+    );
+    const newDash = m.dashboards.filter((d) => !has('dashboard', d.ref));
+    base.dashboards = base.dashboards.filter((_d, i) => !has('dashboard', m.dashboards[i]!.ref));
+    base.counts = manifestCounts({
+      ...m,
+      folders: [],
+      sheets: sheetsAdded,
+      automations: newAutos,
+      dashboards: newDash,
+    });
+  }
+
   const state = conflicts.length ? 'blocked' : 'ready';
   const preview: PackPreview = {
     ...base,
     // folders the workspace already has are used, not counted as new
-    counts: { ...base.counts, folders: folderRows.length, links: linkRows.length },
+    counts: { ...base.counts, folders: folderRows.length, links: rows.links.length },
     state,
     conflicts: [...new Set(conflicts)],
     warnings: [...new Set(tp.warnings)],
@@ -677,16 +837,10 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
   const payload: InstallPayload | null =
     state === 'ready'
       ? {
-          pack: { key: m.key, version: m.version, hash: env.hash },
+          pack: { key: m.key, version: m.version, hash: env.hash, ...(level ? { level } : {}) },
+          ...(extend ? { extend_install: extend.id } : {}),
           folders: folderRows,
-          sheets: sheetRows,
-          fields: fieldRows,
-          groups: groupRows,
-          views: viewRows,
-          items: itemRows,
-          links: linkRows,
-          automations: automationRows,
-          dashboards: dashboardRows,
+          ...rows,
         }
       : null;
   return { state, operations, preview, payload };
