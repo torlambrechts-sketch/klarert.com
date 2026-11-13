@@ -103,6 +103,8 @@ export const templateSheet = z.object({
   description: z.string().max(2000).optional(),
   itemLabel: z.string().min(1).max(60),
   idPrefix: z.string().regex(ID_PREFIX),
+  /** The side-menu folder this sheet belongs in (by name); the template's `folder` when not set. */
+  folder: z.string().trim().min(1).max(80).optional(),
   groups: z.array(z.object({ ref, name: z.string().min(1).max(80), color })).min(1),
   fields: z.array(templateField).max(200),
   views: z

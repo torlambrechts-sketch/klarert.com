@@ -18,6 +18,8 @@ const startSchema = z.object({
       ]),
     )
     .optional(),
+  /** The side-menu folder a sheet from this start goes into (created when missing, docs/02 §1). */
+  folder: z.string().trim().min(1).max(80).optional(),
   /** Starts that come with sub-items (CAPA, audit, incident, control, treatment): the set the wizard turns on. */
   subitems: subitemSetSchema.optional(),
 });

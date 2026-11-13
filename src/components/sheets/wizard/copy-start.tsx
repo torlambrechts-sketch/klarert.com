@@ -8,7 +8,11 @@ import { Field, selectClass } from './fields';
 
 /** Step 2 for "Copy a sheet": same fields, groups, views and automations, no items. */
 export function CopyStart({ ctx }: { ctx: WizardContext }) {
-  const [sourceId, setSourceId] = useState(ctx.sheets[0]?.id ?? '');
+  const [sourceId, setSourceId] = useState(
+    (ctx.sourceId && ctx.sheets.some((s) => s.id === ctx.sourceId) ? ctx.sourceId : null) ??
+      ctx.sheets[0]?.id ??
+      '',
+  );
   const source = ctx.sheets.find((s) => s.id === sourceId);
   const basics = useBasics(ctx, {
     name: source ? `${source.name} copy` : '',

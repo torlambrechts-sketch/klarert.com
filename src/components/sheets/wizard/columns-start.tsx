@@ -64,11 +64,17 @@ export function ColumnsStart({
     itemLabel: string;
     groups: string[];
     fields: [string, string][];
+    /** The side-menu folder sheets from this start go into (templates/starts.json). */
+    folder?: string;
     /** Starts with a sub-item set: its name and the sub-items "From template" adds. */
     subitems?: { label: string; names: string[] };
   };
 }) {
-  const basics = useBasics(ctx, { itemLabel: start.itemLabel, groups: start.groups.join(', ') });
+  const basics = useBasics(ctx, {
+    itemLabel: start.itemLabel,
+    groups: start.groups.join(', '),
+    folder: start.folder,
+  });
   const [columns, setColumns] = useState<Column[]>(() =>
     start.fields.map(([name, type], i) => ({ key: i, name, type })),
   );
@@ -95,7 +101,7 @@ export function ColumnsStart({
           name: v.name,
           itemLabel: v.itemLabel,
           idPrefix: v.idPrefix,
-          folderId: v.folderId,
+          ...basics.folder,
           groups: v.groups,
           startId: start.id,
           columns: columns.map((c) => ({
