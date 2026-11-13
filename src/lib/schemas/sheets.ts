@@ -104,6 +104,13 @@ export const createSheetInput = z.object({
   columns: z.array(columnInput).max(100, 'Use at most 100 fields.'),
   /** The wizard start; starts with a sub-item set turn sub-items on (templates/starts.json). */
   startId: z.string().max(40).optional(),
+  /** The start's folder, when the person kept it and it does not exist yet (created with the sheet). */
+  folderName: z
+    .string()
+    .trim()
+    .max(80, 'Folder name can be at most 80 characters.')
+    .optional()
+    .transform((v) => v || null),
 });
 
 export const importCsvInput = z.object({
@@ -157,9 +164,34 @@ export const archiveSheetInput = z.object({
   archived: z.enum(['true', 'false']).transform((v) => v === 'true'),
 });
 
-export const folderInput = z.object({ org: slugInput, name: text('Folder name', 80) });
+export const folderInput = z.object({
+  org: slugInput,
+  name: text('Folder name', 80),
+  /** Where the new folder goes in the side menu ("New folder" in the menu puts it at the top). */
+  at: z.enum(['first', 'last']).optional(),
+});
 export const folderRef = z.object({ org: slugInput, folderId: uuid });
 export const renameFolderInput = folderRef.extend({ name: text('Folder name', 80) });
+
+/** A neighbour in the side menu: the row the moved one lands after (`before`) or before (`after`). */
+const neighbour = z
+  .union([z.literal(''), z.null(), uuid])
+  .optional()
+  .transform((v) => v || null);
+export const moveFolderInput = folderRef.extend({ before: neighbour, after: neighbour });
+export const moveSheetInput = z.object({
+  org: slugInput,
+  sheetId: uuid,
+  /** null = no folder ("Other sheets"). */
+  folderId: z.union([z.literal(''), z.null(), uuid]).transform((v) => v || null),
+  before: neighbour,
+  after: neighbour,
+});
+export const renameSheetInput = z.object({
+  org: slugInput,
+  sheetId: uuid,
+  name: text('Sheet name', 120),
+});
 
 export const groupColor = z.enum(LABEL_COLORS);
 export const createGroupInput = z.object({

@@ -45,9 +45,17 @@ export const archiveSheetAction = form(sheets.archiveSheet);
 export const enableSubitemsAction = call(subitems.enableSubitems);
 export const updateSubitemSettingsAction = call(subitems.updateSubitemSettings);
 
-export const createFolderAction = form(folders.createFolder);
-export const renameFolderAction = form(folders.renameFolder);
-export const deleteFolderAction = form(folders.deleteFolder);
+export const renameSheetAction = call(sheets.renameSheet);
+export const moveSheetAction = call(sheets.moveSheet);
+export const archiveSheetNowAction = call(sheets.archiveSheet);
+
+export const createFolderAction = call(folders.createFolder);
+export const renameFolderAction = call(folders.renameFolder);
+export const moveFolderAction = call(folders.moveFolder);
+export const sortFolderAction = call(folders.sortFolderAZ);
+export const archiveFolderAction = call(folders.archiveFolder);
+export const restoreFolderAction = call(folders.restoreFolder);
+export const deleteFolderAction = call(folders.deleteFolder);
 
 export const createGroupAction = form(groups.createGroup);
 export const updateGroupAction = form(groups.updateGroup);

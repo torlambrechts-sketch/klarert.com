@@ -8,7 +8,6 @@ import {
   Plus,
   UserRound,
 } from 'lucide-react';
-import { FolderManager } from '@/components/sheets/folders';
 import { WorkList } from '@/components/my-work/work-row';
 import { Card, PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
@@ -17,12 +16,11 @@ import { BUCKET_LABEL, type Bucket } from '@/engine/my-work';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import { getHome, getMyWork } from '@/server/repositories/my-work';
-import { getNav } from '@/server/repositories/sheets';
 
 export const metadata = { title: 'Home · Compliance OS' };
 
 // Home (docs/05 §4): greeting and a one-line summary, My work tiles, Getting started (computed; hidden once done),
-// Needs you, Next 30 days, Recent activity and Folders. Every number comes from the workspace's data.
+// Needs you, Next 30 days and Recent activity. Folders are organised in the side menu. Every number comes from the workspace's data.
 
 const TILES: { bucket: Bucket; icon: typeof AlertTriangle }[] = [
   { bucket: 'overdue', icon: AlertTriangle },
@@ -37,8 +35,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
   const { org } = await params;
   const { workspace, role, profile } = await requireMember(org);
   const first = profile.display_name.split(/\s+/)[0];
-  const [nav, home, mine] = await Promise.all([
-    getNav(workspace.id),
+  const [home, mine] = await Promise.all([
     getHome(workspace.id, workspace.time_zone).catch(() => null),
     getMyWork(workspace.id, workspace.time_zone).catch(() => null),
   ]);
@@ -260,22 +257,6 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
           )}
         </Card>
 
-        {canEdit ? (
-          <Card
-            headingId="folders"
-            title="Folders"
-            description="Folders are the sections of the side menu. A folder can be deleted once it is empty."
-          >
-            <FolderManager
-              org={org}
-              folders={nav.folders.map((f) => ({
-                id: f.id,
-                name: f.name,
-                sheetCount: f.sheets.length,
-              }))}
-            />
-          </Card>
-        ) : null}
       </div>
     </main>
   );

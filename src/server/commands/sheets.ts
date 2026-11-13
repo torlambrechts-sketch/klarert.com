@@ -11,6 +11,7 @@ import {
 import { fieldType } from '@/engine/fields/registry';
 import { fieldKeyFromName, keyBetween, keysBetween } from '@/engine/ordering';
 import { isLinkType, needsLibraryTarget } from '@/engine/fields/type-change';
+import { placeBetween, resolveFolder } from '@/engine/organise';
 import { rekeyIds } from '@/engine/rekey';
 import type { Json } from '@/engine/types';
 import {
@@ -19,12 +20,15 @@ import {
   copySheetInput,
   createSheetInput,
   importCsvInput,
+  moveSheetInput,
+  renameSheetInput,
   updateSheetInput,
 } from '@/lib/schemas/sheets';
 import { startById } from '@/lib/starts';
 import type { ServerClient } from '@/lib/supabase/server';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { log, withOrg } from './context';
+import { activeFolders, insertFolder } from './folders';
 import { setUpSubitems } from './subitems';
 import { createInverseField } from './two-way';
 
@@ -133,6 +137,37 @@ async function insertSheet(db: ServerClient, payload: SheetPayload): Promise<Res
   return ok(data);
 }
 
+/**
+ * The folder of a new sheet (docs/02 §1). A picked folder must be an active folder of the workspace. A sheet made
+ * from a start with a folder (templates/starts.json `folder`) goes into that folder: reused when one with the same
+ * name exists (case-insensitive), created otherwise. Creating it is allowed for editors here only, as part of
+ * creating the sheet, and only with the start's own folder name.
+ */
+export async function sheetFolder(
+  db: ServerClient,
+  orgId: string,
+  v: { folderId: string | null; folderName?: string | null; startId?: string },
+): Promise<Result<string | null>> {
+  const folders = await activeFolders(db, orgId);
+  if (v.folderId) {
+    return folders.some((f) => f.id === v.folderId)
+      ? ok(v.folderId)
+      : fail('invalid', 'Check the highlighted fields.', { folderId: 'Choose a folder.' });
+  }
+  if (!v.folderName) return ok(null);
+  const startFolder = v.startId ? startById(v.startId)?.folder : undefined;
+  const choice = resolveFolder(folders, { folderId: null, folderName: v.folderName });
+  if (choice.kind === 'existing') return ok(choice.id);
+  if (choice.kind === 'none') return ok(null);
+  const sameAsStart = startFolder
+    ? resolveFolder([{ id: 's', name: startFolder }], { folderId: null, folderName: v.folderName })
+    : null;
+  if (!startFolder || sameAsStart?.kind !== 'existing')
+    return fail('invalid', 'Check the highlighted fields.', { folderId: 'Choose a folder.' });
+  const made = await insertFolder(db, orgId, startFolder, 'last');
+  return made.ok ? ok(made.data.id) : made;
+}
+
 // ───────────────────────── wizard: Blank, Register, Tracker, Log, Inspection ─────────────────────────
 
 export async function createSheet(input: unknown): Promise<Result<{ sheetId: string }>> {
@@ -177,12 +212,14 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
               : undefined,
         })),
       );
+      const folder = await sheetFolder(supabase, orgId, v);
+      if (!folder.ok) return folder;
       const sheetId = randomUUID();
       const created = await insertSheet(supabase, {
         sheet: {
           id: sheetId,
           org_id: orgId,
-          folder_id: v.folderId,
+          folder_id: folder.data,
           name: v.name,
           description: v.description,
           item_label: v.itemLabel,
@@ -502,6 +539,7 @@ export async function updateSheet(input: unknown): Promise<Result<null>> {
           .select('id')
           .eq('id', v.folderId)
           .eq('org_id', orgId)
+          .is('archived_at', null)
           .maybeSingle();
         if (!f)
           return fail('invalid', 'Check the highlighted fields.', { folderId: 'Choose a folder.' });
@@ -529,24 +567,128 @@ export async function updateSheet(input: unknown): Promise<Result<null>> {
   );
 }
 
+/**
+ * Archive or restore a sheet (owners and admins). A sheet restored on its own while its folder is archived comes
+ * back under "Other sheets".
+ */
 export async function archiveSheet(input: unknown): Promise<Result<{ archived: boolean }>> {
   const p = archiveSheetInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   return withOrg(
     p.data.org,
-    'editor',
+    'admin',
     async ({ supabase, orgId }) => {
-      const { data, error } = await supabase
+      const { data: s } = await supabase
         .from('sheets')
-        .update({ archived_at: p.data.archived ? new Date().toISOString() : null })
+        .select('id, folder_id, parent_sheet_id, folders(archived_at)')
         .eq('id', p.data.sheetId)
         .eq('org_id', orgId)
-        .select('id');
-      if (error) return fromDbError(error);
-      return data.length
-        ? ok({ archived: p.data.archived })
-        : fail('not_found', 'Sheet not found.');
+        .maybeSingle();
+      if (!s || s.parent_sheet_id) return fail('not_found', 'Sheet not found.');
+      const folderArchived = !!s.folder_id && !!s.folders?.archived_at;
+      const { error } = await supabase
+        .from('sheets')
+        .update(
+          p.data.archived
+            ? { archived_at: new Date().toISOString() }
+            : { archived_at: null, ...(folderArchived ? { folder_id: null } : {}) },
+        )
+        .eq('id', s.id)
+        .eq('org_id', orgId);
+      return error ? fromDbError(error) : ok({ archived: p.data.archived });
     },
     'archiveSheet',
+  );
+}
+
+// ───────────────────────── side menu: rename and move ─────────────────────────
+
+async function menuSheet(db: ServerClient, orgId: string, sheetId: string) {
+  const { data } = await db
+    .from('sheets')
+    .select('id, name, folder_id, parent_sheet_id, archived_at')
+    .eq('id', sheetId)
+    .eq('org_id', orgId)
+    .maybeSingle();
+  return data;
+}
+
+const subitemSheet = () =>
+  fail(
+    'invalid',
+    'Sub-item sheets live inside their parent sheet and cannot be moved or renamed here.',
+  );
+
+export async function renameSheet(input: unknown): Promise<Result<null>> {
+  const p = renameSheetInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'editor',
+    async ({ supabase, orgId }) => {
+      const s = await menuSheet(supabase, orgId, p.data.sheetId);
+      if (!s) return fail('not_found', 'Sheet not found.');
+      if (s.parent_sheet_id) return subitemSheet();
+      const { error } = await supabase
+        .from('sheets')
+        .update({ name: p.data.name, updated_at: new Date().toISOString() })
+        .eq('id', s.id)
+        .eq('org_id', orgId);
+      return error ? fromDbError(error) : ok(null);
+    },
+    'renameSheet',
+  );
+}
+
+/**
+ * Move a sheet into a folder (or out of folders: folderId null) and/or reorder it. The server reads the current
+ * keys of the sheets of the target level and puts the sheet between the given neighbours (re-keying that level when
+ * needed). Logged by sheets_audit as sheets.update.
+ */
+export async function moveSheet(
+  input: unknown,
+): Promise<Result<{ index: number; total: number; folderId: string | null }>> {
+  const p = moveSheetInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId }) => {
+      const s = await menuSheet(supabase, orgId, v.sheetId);
+      if (!s || s.archived_at) return fail('not_found', 'Sheet not found.');
+      if (s.parent_sheet_id) return subitemSheet();
+      if (v.folderId && !(await activeFolders(supabase, orgId)).some((f) => f.id === v.folderId))
+        return fail('not_found', 'Folder not found.');
+      let level = supabase
+        .from('sheets')
+        .select('id, position')
+        .eq('org_id', orgId)
+        .is('archived_at', null)
+        .is('parent_sheet_id', null);
+      level = v.folderId ? level.eq('folder_id', v.folderId) : level.is('folder_id', null);
+      const { data: siblings, error: readError } = await level;
+      if (readError) return fromDbError(readError);
+      const placed = placeBetween(siblings ?? [], s.id, v.before, v.after);
+      if (!placed.ok)
+        return fail('conflict', 'The menu changed while you moved the sheet. Try again.');
+      for (const r of placed.rekey) {
+        const { error } = await supabase
+          .from('sheets')
+          .update({ position: r.position })
+          .eq('id', r.id)
+          .eq('org_id', orgId);
+        if (error) return fromDbError(error);
+      }
+      const { error } = await supabase
+        .from('sheets')
+        .update({ position: placed.position, folder_id: v.folderId })
+        .eq('id', s.id)
+        .eq('org_id', orgId);
+      return error
+        ? fromDbError(error)
+        : ok({ index: placed.index, total: placed.total, folderId: v.folderId });
+    },
+    'moveSheet',
   );
 }
