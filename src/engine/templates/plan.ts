@@ -8,6 +8,7 @@ import { basicCtx } from '../context';
 import { addDays } from '../fields/helpers';
 import { fieldType } from '../fields/registry';
 import { keysBetween } from '../ordering';
+import { readSubitemSettings } from '../subitems';
 import { STORED_VIEW_TYPE, type FormLayout } from '../views/config';
 import { arrangeFields, type ColumnGroup } from '../views/column-groups';
 import { resolveTemplateTabs, type SheetTab } from '../views/tabs';
@@ -384,6 +385,14 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
     if (!sub) continue;
     const childId = sub.sheet.id;
     subSheetIds.set(p.ref, childId);
+    // the parent knows its child and its template set, so automations on the parent may add sub-items
+    const parent = engineSheets.get(p.row.id);
+    if (parent)
+      engineSheets.set(p.row.id, {
+        ...parent,
+        childSheetId: childId,
+        subitems: readSubitemSettings(sub.settings),
+      });
     engineSheets.set(childId, {
       id: childId,
       orgId: env.orgId,

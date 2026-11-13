@@ -42,7 +42,7 @@ const env = {
 
 describe('ISO 27001 pack', () => {
   it('ships Starter and Full and builds on the 27001 library', () => {
-    expect(pack.version).toBe('1.1.0');
+    expect(pack.version).toBe('1.2.0');
     expect(pack.levels!.map((l) => l.key)).toEqual(['starter', 'full']);
     expect(pack.frameworks).toEqual([{ key: 'iso-27001', version: '2022' }]);
     const [starter, full] = levelSummaries(pack);
@@ -251,11 +251,14 @@ describe('ISO 27001 pack', () => {
     ]);
     const full = planPackInstall(pack, snapshot(), env, { level: 'full' });
     expect(full.preview.forms).toEqual([
+      { sheet: 'Nonconformities and CAPA', name: 'Report a problem', access: 'internal' },
       { sheet: 'Security incidents', name: 'Report a security incident', access: 'internal' },
     ]);
     const view = full.payload!.views.find((v) => v.ref === 'incident.form.report')!;
     expect((view.config as { form: { status: string } }).form.status).toBe('draft');
-    expect(planPackInstall(pack, snapshot(), env, { level: 'starter' }).preview.forms).toEqual([]);
+    expect(planPackInstall(pack, snapshot(), env, { level: 'starter' }).preview.forms).toEqual([
+      { sheet: 'Nonconformities and CAPA', name: 'Report a problem', access: 'internal' },
+    ]);
     const step = pack.setup!.steps.find((s) => s.ref === 'incidents')!;
     expect(step.target).toEqual({ sheetRef: 'incident', view: 'Report a security incident' });
     expect(step.levels!.starter!.target).toEqual({ sheetRef: 'nc' });

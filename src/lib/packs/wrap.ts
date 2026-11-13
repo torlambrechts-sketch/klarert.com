@@ -80,8 +80,11 @@ export function templateToPack(
   };
 }
 
-/** A wizard start (templates/starts.json) as a one-sheet pack: the sheet the wizard would make with its defaults. */
-export function startToPack(start: Start, version = '1.0.0'): PackManifest {
+/**
+ * A wizard start (templates/starts.json) as a one-sheet pack: the sheet the wizard would make with its defaults, plus
+ * the start's `pack` additions (version, automations, dashboards; checked when the manifest is parsed).
+ */
+export function startToPack(start: Start, version = start.pack?.version ?? '1.0.0'): PackManifest {
   const cols = start.fields ?? [];
   const keys = startFieldKeys(cols);
   const groupNames = start.groups?.length ? start.groups : ['Group 1'];
@@ -136,7 +139,7 @@ export function startToPack(start: Start, version = '1.0.0'): PackManifest {
         columnGroups: [],
       },
     ],
-    automations: [],
-    dashboards: [],
+    automations: (start.pack?.automations ?? []) as unknown as PackManifest['automations'],
+    dashboards: (start.pack?.dashboards ?? []) as unknown as PackManifest['dashboards'],
   };
 }

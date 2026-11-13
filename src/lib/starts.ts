@@ -46,6 +46,17 @@ const startSchema = z
     tabs: z.array(templateTab).min(1).optional(),
     /** Ready-made forms (group by name, fields by the keys the columns get). Created as drafts for owners and admins. */
     forms: z.array(templateForm).optional(),
+    /**
+     * What the start adds when it is offered as a pack (docs/11): the pack's version and its automations and
+     * dashboards (sheet ref = the start's id as a key). Checked by the pack manifest schema; the wizard ignores it.
+     */
+    pack: z
+      .object({
+        version: z.string(),
+        automations: z.array(z.record(z.string(), z.json())).optional(),
+        dashboards: z.array(z.record(z.string(), z.json())).optional(),
+      })
+      .optional(),
   })
   .superRefine((s, ctx) => {
     const keys = startFieldKeys(s.fields ?? []);

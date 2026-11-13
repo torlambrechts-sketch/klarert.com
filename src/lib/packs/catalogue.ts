@@ -1,9 +1,15 @@
 // The packs this repository ships (docs/11): native pack files (templates/packs/*.json), the first-sheet template and
-// two wizard starts wrapped as packs. The seed writes them into the `packs` catalogue table; the app reads the table.
+// two wizard starts wrapped as packs. App files (templates/apps/*.json, docs/13) join the pack they name before the
+// manifest is checked, so the catalogue carries them. The seed writes them into the `packs` catalogue table; the app
+// reads the table.
+import capaApp from '../../../templates/apps/capa.json';
 import firstSheet from '../../../templates/first-sheet.json';
 import iso27001 from '../../../templates/packs/iso-27001.json';
 import supplierManagement from '../../../templates/packs/supplier-management.json';
+import type { AppFile } from '@/engine/apps/types';
+import { satisfies } from '@/engine/packs/semver';
 import type { PackManifest } from '@/engine/packs/types';
+import { parseAppFile } from '@/lib/apps/manifest';
 import { parseTemplate } from '@/lib/templates/schema';
 import { startById } from '@/lib/starts';
 import { parsePack } from './manifest';
@@ -12,6 +18,24 @@ import { startToPack, templateToPack } from './wrap';
 /** Wizard starts shipped as one-sheet packs too (the wizard keeps making them its own way). */
 export const START_PACKS = ['capa', 'documents'] as const;
 
+/** The app files of the repository (templates/apps/*.json). */
+export const repoApps = (): AppFile[] => [parseAppFile(capaApp)];
+
+/** Each app file added to the pack it requires; a pack missing or at a version out of range is an error. */
+export function withApps(packs: PackManifest[], files: AppFile[]): PackManifest[] {
+  const out = packs.map((p) => ({ ...p }));
+  for (const f of files) {
+    const pack = out.find((p) => p.key === f.requires.pack);
+    if (!pack) throw new Error(`App "${f.app.key}" needs the pack "${f.requires.pack}".`);
+    if (!satisfies(pack.version, f.requires.range))
+      throw new Error(
+        `App "${f.app.key}" needs ${f.requires.pack} ${f.requires.range}, the repository has ${pack.version}.`,
+      );
+    pack.apps = [...(pack.apps ?? []), f.app];
+  }
+  return out;
+}
+
 export function repoPacks(): PackManifest[] {
   const first = templateToPack(parseTemplate(firstSheet), {
     version: '1.0.0',
@@ -19,10 +43,13 @@ export function repoPacks(): PackManifest[] {
     description:
       'Corrective actions with a linked Actions sheet, sample items, two-way links, a lookup, a formula, a button and 9 automations.',
   });
-  return [
-    parsePack(first),
-    parsePack(supplierManagement),
-    parsePack(iso27001),
-    ...START_PACKS.map((id) => parsePack(startToPack(startById(id)!))),
-  ];
+  return withApps(
+    [
+      parsePack(first),
+      parsePack(supplierManagement),
+      parsePack(iso27001),
+      ...START_PACKS.map((id) => parsePack(startToPack(startById(id)!))),
+    ],
+    repoApps(),
+  ).map((p) => parsePack(p));
 }
