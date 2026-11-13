@@ -79,6 +79,7 @@ UI (optimistic) ─► Server Action ─► src/server/commands/<command>.ts
 | `create_subitems(parent, rows, automation?)` | From template, automation `create_subitems` (≤ 50) | as above, per row |
 | `move_subitem(item, parent, position, automation?)` | "Move to another item", reorder | `subitem.moved` on the sub-item, `subitem.removed` / `subitem.added` on both parents |
 | `verify_activity_chain(chain_key)` | Verify button | — |
+| `log_audit_export(org, kind, scope)` (0034) | audit exports (members, auditors too) | `audit.exported` on the workspace chain with the kind and a flat scope of known keys (docs/11 Audit outputs) |
 
 Structure tables (folders, sheets, fields, groups, views, automations) are written directly by commands with the user's Supabase client under RLS; triggers log them to the sheet's chain (`sheets.insert`, `fields.update` …), ignoring bookkeeping columns.
 

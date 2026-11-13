@@ -43,7 +43,16 @@ export function SetupSummary({ progress }: { progress: SetupProgress }) {
   );
 }
 
-export function SetupSteps({ org, progress }: { org: string; progress: SetupProgress }) {
+export function SetupSteps({
+  org,
+  progress,
+  extraLinks = {},
+}: {
+  org: string;
+  progress: SetupProgress;
+  /** More links for the steps whose target is the given sheet id (the management review inputs). */
+  extraLinks?: Record<string, { href: string; label: string }>;
+}) {
   return (
     <ol
       className="divide-soft m-0 flex list-none flex-col divide-y p-0"
@@ -79,10 +88,18 @@ export function SetupSteps({ org, progress }: { org: string; progress: SetupProg
                 <Bar value={s.progress} label={`${s.title}: ${Math.round(s.progress * 100)}%`} />
               ) : null}
               {href ? (
-                <Link href={href} className={textLink}>
-                  Open {s.link!.sheetName}
-                  <ArrowRight className="size-3.5" aria-hidden />
-                </Link>
+                <span className="flex flex-wrap gap-x-4 gap-y-1">
+                  <Link href={href} className={textLink}>
+                    Open {s.link!.sheetName}
+                    <ArrowRight className="size-3.5" aria-hidden />
+                  </Link>
+                  {extraLinks[s.link!.sheetId] ? (
+                    <Link href={extraLinks[s.link!.sheetId]!.href} className={textLink}>
+                      {extraLinks[s.link!.sheetId]!.label}
+                      <ArrowRight className="size-3.5" aria-hidden />
+                    </Link>
+                  ) : null}
+                </span>
               ) : (
                 <span className="text-label-12 text-muted-foreground">
                   The sheet for this step is archived or not shared with you.

@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Folder, Lock, Plus, Settings, Share, Sheet, Users } from 'lucide-react';
+import { FileDown, Folder, Lock, Plus, Settings, Share, Sheet, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { sheetCtx, withSubitems } from '@/engine/sheet-data';
 import { useSubitems, type SubitemsHandle } from '@/components/subitems/use-subitems';
@@ -332,6 +332,13 @@ function SheetBody(props: SheetViewProps) {
             >
               {props.restricted ? <Lock aria-hidden /> : <Users aria-hidden />} Access
             </Button>
+            {data?.sheet.isLibrary && data.sheet.framework ? (
+              <Button asChild variant="outline" className={headerButton}>
+                <Link href={`/${org}/audit/soa/${sheetId}`} data-testid="export-soa">
+                  <FileDown aria-hidden /> Export SoA
+                </Link>
+              </Button>
+            ) : null}
             {canEdit && active.type !== 'form' ? (
               <Button
                 type="button"
