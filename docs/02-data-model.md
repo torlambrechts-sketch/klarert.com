@@ -20,6 +20,7 @@ orgs ─┬─ memberships ── profiles (auth.users)
       ├─ notifications (per user)
       ├─ dashboards (config: { widgets: [...] })
       ├─ pack_installs (ref_map) ── packs (global catalogue); provenance on every row a pack makes (§15)
+      ├─ library sheets: items.requirement_ref ── requirements ── frameworks, crosswalks (global catalogue, §17)
       └─ activity_log (append-only, hash chain per item / per sheet for schema)
 ```
 
@@ -245,3 +246,21 @@ A sheet follows its folder (`sheets.access_inherit`, default true): restricted w
 - Derived outputs: lookups, roll-ups and formulas over a restricted field or through a link to a sheet the person cannot read are shown as "Restricted" (`hiddenFor`, `readsHidden` in the field registry), as are summaries, Insights and dashboard widgets; automation messages, posts and webhook payloads always say "Restricted" for restricted (and protected) fields, whoever reads them, and stored run events mask restricted values. Public forms never show or accept a restricted field. Search and My work find items through a restricted people field only for people who see it.
 
 **Packs.** A manifest's folders and sheets may say `"restricted": true` (P1 manifest, optional): `install_pack` creates them restricted and lists the installing person as an editor, logged as a grant.
+
+## 17. Requirement library (0030, P3)
+
+Frameworks, their requirements and the cross-walks between them are global, versioned reference data (docs/12): reference numbers with our own short titles, never a standard's text.
+
+- **`frameworks`** (`key`, `version` = the edition, primary key `(key, version)`; `revision`, `title`, `short_title`, `publisher`, `kind` standard | law | regulation | internal, `source`, `licence`, `url`, `titles` = 'own-words' (checked), `pack_key` + `pack_version` → the library pack in `packs`, `hash`).
+- **`requirements`** (`framework_key`, `framework_version`, `ref`, primary key all three; `parent_ref` (FK to the same framework; themes have none, everything else has one), `kind` clause | control | article | paragraph | theme, `position`, `title` ≤ 80 characters, `guidance`, `tags`).
+- **`crosswalks`** (`from_*` and `to_*` framework, version, ref, each end an FK to `requirements`; `relation` equivalent | partial | related; `note`; `source` = the mapping and its version, e.g. 'Klarert mapping v1'; unique per pair; never within one framework version).
+- RLS: read to `authenticated`, no write grants (the seed path writes with the service role). `catalogue_guard`: nothing is deleted, a requirement's ref, parent and kind and a framework's key and version never change, a cross-walk never changes (a corrected mapping is a new source version). A revision may reword our titles and guidance and add requirements.
+- **`items.requirement_ref`** (`<framework>@<version>#<ref>`, checked format; unique per sheet; indexed by workspace): written once by `adopt_framework` (`app.pack_op = 'adopt'`), never changed (`items_requirement_guard`); the same guard keeps a library item's Ref value (the field named by `sheets.settings.framework.refFieldKey`) as it was, except while `set_field_restriction` moves values.
+- **`sheets.settings.framework`** = `{ key, version, refFieldKey }` on a library sheet made by adoption.
+- **Links to any library**: a `requirement` or `controllink` field whose `targetSheetId` is null links to items of every library sheet of the workspace (`set_item_links` refuses any other target). A link field may mirror such a field (its `config.inverseFieldId` names it, e.g. a library's Controls field): `setLinks` writes the mirror for each target whose sheet has one.
+
+| RPC | Who | Does |
+|---|---|---|
+| `adopt_framework(org, framework, version, plan)` (SECURITY DEFINER) | owners and admins of `org` | Checks the plan is the framework's library pack and the framework is not adopted (a live library sheet names it), runs `install_pack` (provenance, `pack.installed`), stamps each library item's `requirement_ref` from the plan, checks every key is a non-theme requirement of the framework and equals the item's Ref, and that every requirement has its item, and logs `framework.adopted` on the workspace chain. One transaction. Returns install_pack's result with `sheet_id` and `requirements` |
+
+Grants: `adopt_framework` to `authenticated`; `_library_ref_field`, `items_requirement_guard` and `catalogue_guard` to nobody.

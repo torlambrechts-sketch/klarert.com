@@ -10,6 +10,11 @@ export type PackItem = Omit<TemplateItem, 'ref' | 'links'> & {
   ref: string;
   /** link field key → refs of items of the field's target sheet */
   links?: Record<string, string[]>;
+  /**
+   * A library item of a framework's library sheet (docs/12): the requirement it stands for,
+   * `<framework>@<version>#<ref>`. Written once by install_pack into items.requirement_ref and never changed.
+   */
+  requirementRef?: string;
 };
 
 /**
@@ -23,6 +28,11 @@ export type PackSheet = Omit<TemplateSheet, 'folder' | 'items'> & {
   register?: 'documents';
   /** Restricted at install (docs/02 §16): the installer and the owners see it until people are given access. */
   restricted?: boolean;
+  /**
+   * The framework this library sheet holds (docs/12): stored in sheets.settings.framework. `refFieldKey` names the
+   * text field that shows each item's reference number (it cannot be edited).
+   */
+  framework?: { key: string; version: string; refFieldKey: string };
   items: PackItem[];
 };
 

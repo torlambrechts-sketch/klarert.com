@@ -13,7 +13,12 @@ import type { CellProps, EditorProps } from './types';
 // Link, requirement and control link cells and editors (docs/03 §3.3, §3.4). Links live in item_links; the editor
 // searches the target sheet through the search command and returns the chosen item ids.
 
-type Target = { id: string; displayId: string; name: string };
+type Target = { id: string; displayId: string; name: string; sheetName?: string };
+
+/** Requirement and control link fields with no target sheet link to any library sheet (docs/12). */
+const anyLibrary = (field: { type: string; config: unknown }) =>
+  (field.type === 'requirement' || field.type === 'controllink') &&
+  !(field.config as { targetSheetId?: string | null }).targetSheetId;
 
 export function LinkCell({ item, field, ctx }: CellProps) {
   const ids = ctx.links(item.id, field.id);
@@ -41,23 +46,35 @@ export function LinkCell({ item, field, ctx }: CellProps) {
   );
 }
 
-/** Items of the target sheet matching the query, from the search command (debounced, display id or name). */
-function useTargets(sheetId: string | undefined, query: string) {
+/**
+ * Items of the target sheet matching the query, from the search command (debounced, display id or name); with
+ * `library`, items of every library sheet, also by reference number.
+ */
+function useTargets(sheetId: string | undefined, query: string, library = false) {
   const { org } = useParams<{ org: string }>();
   const [rows, setRows] = useState<Target[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   useEffect(() => {
-    if (!sheetId || !org) return;
+    if ((!sheetId && !library) || !org) return;
     let live = true;
     setLoading(true);
     const t = setTimeout(async () => {
       try {
-        const r = await searchItemsAction({ org, sheetId, query });
+        const r = await searchItemsAction(
+          library ? { org, library: true, query } : { org, sheetId, query },
+        );
         if (!live) return;
         setError(!r.ok);
         setRows(
-          r.ok ? r.data.items.map((i) => ({ id: i.id, displayId: i.displayId, name: i.name })) : [],
+          r.ok
+            ? r.data.items.map((i) => ({
+                id: i.id,
+                displayId: i.displayId,
+                name: i.name,
+                ...(library ? { sheetName: r.data.sheetNames[i.sheetId] } : {}),
+              }))
+            : [],
         );
       } catch {
         if (live) setError(true);
@@ -69,7 +86,7 @@ function useTargets(sheetId: string | undefined, query: string) {
       live = false;
       clearTimeout(t);
     };
-  }, [org, sheetId, query]);
+  }, [org, sheetId, query, library]);
   return { rows, loading, error };
 }
 
@@ -85,11 +102,12 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
     return m;
   });
   const [query, setQuery] = useState('');
-  const { rows, loading, error } = useTargets(cfg.targetSheetId, query);
+  const library = anyLibrary(field);
+  const { rows, loading, error } = useTargets(cfg.targetSheetId, query, library);
   const ref = useRef<HTMLInputElement>(null);
   const listId = useId();
   useEffect(() => ref.current?.focus(), []);
-  if (!cfg.targetSheetId)
+  if (!cfg.targetSheetId && !library)
     return (
       <EditorFrame
         title={field.name}
@@ -146,7 +164,7 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
       <input
         ref={ref}
         className={inputClass}
-        placeholder="Search by name or ID"
+        placeholder={library ? 'Search by name, ID or reference' : 'Search by name or ID'}
         aria-label={`Search items for ${field.name}`}
         aria-controls={listId}
         value={query}
@@ -173,6 +191,11 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
                 <input type="checkbox" checked={picked.includes(r.id)} onChange={() => toggle(r)} />
                 <span className="text-label-12-mono">{r.displayId}</span>
                 <span className="truncate">{r.name}</span>
+                {r.sheetName ? (
+                  <span className="text-muted-foreground text-label-12 ml-auto shrink-0">
+                    {r.sheetName}
+                  </span>
+                ) : null}
               </label>
             </li>
           ))}

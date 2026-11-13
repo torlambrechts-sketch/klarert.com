@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { widgetType } from '@/engine/dashboards/registry';
 import { MAX_WIDGETS } from '@/engine/dashboards/types';
+import { isRequirementKey } from '@/engine/frameworks/refs';
 import { SEMVER, SEMVER_RANGE } from '@/engine/packs/semver';
 import { packToTemplate } from '@/engine/packs/template';
 import { SHEET_REF, splitSheetRef, type PackManifest } from '@/engine/packs/types';
@@ -38,6 +39,11 @@ export const packItem = templateItem.extend({
   ref,
   /** link field key → refs of items of the field's target sheet */
   links: z.record(fieldKey, z.array(ref)).optional(),
+  /** A framework library item (docs/12): `<framework>@<version>#<ref>`, written once into items.requirement_ref. */
+  requirementRef: z
+    .string()
+    .refine(isRequirementKey, 'Use <framework>@<version>#<ref>.')
+    .optional(),
 });
 
 export const packSheet = templateSheet.omit({ folder: true, items: true }).extend({
@@ -49,6 +55,14 @@ export const packSheet = templateSheet.omit({ folder: true, items: true }).exten
   register: z.literal('documents').optional(),
   /** Restricted (docs/02 §16): only the installer (and owners) see it until people are given access. */
   restricted: z.boolean().optional(),
+  /** A framework's library sheet (docs/12): stored in sheets.settings.framework. */
+  framework: z
+    .object({
+      key: z.string().regex(/^[a-z0-9][a-z0-9-]{0,39}$/),
+      version: z.string().regex(/^[0-9A-Za-z.-]{1,20}$/),
+      refFieldKey: fieldKey,
+    })
+    .optional(),
   items: z.array(packItem).max(500).default([]),
 });
 
@@ -144,6 +158,24 @@ export const packManifestSchema = z
         problem(at('folder'), `Unknown folder "${s.folder}".`);
       if (s.register === 'documents' && !s.fields.some((f) => f.type === 'status'))
         problem(at('register'), 'A documents register needs a status field.');
+      if (s.framework) {
+        if (!s.isLibrary) problem(at('framework'), 'A framework sheet is a library.');
+        if (!s.fields.some((f) => f.key === s.framework!.refFieldKey && f.type === 'text'))
+          problem(
+            at('framework'),
+            `"${s.framework.refFieldKey}" is not a text field of the sheet.`,
+          );
+      }
+      const prefix = s.framework ? `${s.framework.key}@${s.framework.version}#` : null;
+      const seenRefs = new Set<string>();
+      for (const [ii, item] of s.items.entries()) {
+        if (!item.requirementRef) continue;
+        if (!prefix || !item.requirementRef.startsWith(prefix))
+          problem(at('items', ii), "A requirement ref belongs to the sheet's framework.");
+        if (seenRefs.has(item.requirementRef))
+          problem(at('items', ii), `Duplicate requirement "${item.requirementRef}".`);
+        seenRefs.add(item.requirementRef);
+      }
       unique(
         s.items.map((i) => i.ref),
         at('items'),

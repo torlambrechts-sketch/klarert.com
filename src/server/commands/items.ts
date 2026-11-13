@@ -563,6 +563,22 @@ export async function lockItem(input: unknown): Promise<Result<ItemResult>> {
 
 // ───────────────────────── links ─────────────────────────
 
+/** Link fields of the workspace that mirror `fieldId` (their config.inverseFieldId names it). */
+async function mirrorFields(
+  db: Parameters<typeof loadWriteContext>[0],
+  orgId: string,
+  fieldId: string,
+): Promise<{ id: string; sheet_id: string }[]> {
+  const { data } = await db
+    .from('fields')
+    .select('id, sheet_id')
+    .eq('org_id', orgId)
+    .eq('type', 'link')
+    .is('archived_at', null)
+    .eq('config->>inverseFieldId', fieldId);
+  return data ?? [];
+}
+
 export type LinksResult = { links: LinkRow[]; messages: string[]; mutationId?: string };
 
 /** Replace the targets of a link field on one item; two-way links keep the inverse field in step. */
@@ -598,6 +614,30 @@ export async function setLinks(input: unknown): Promise<Result<LinksResult>> {
           return fail('invalid', 'Choose items from a library sheet.');
       }
       const before = w.ctx.links(item.id, field.id);
+      // a field with no inverse of its own may be mirrored by fields on its targets' sheets (docs/12: a library's
+      // Controls field mirrors the controls sheet's requirement field, one per adopted framework)
+      const mirrors = cfg.inverseFieldId ? [] : await mirrorFields(supabase, orgId, field.id);
+      const changed = [
+        ...to.filter((id) => !before.includes(id)),
+        ...before.filter((id) => !to.includes(id)),
+      ];
+      const mirrorOf = new Map<string, string>(); // target item → mirror field
+      if (mirrors.length && changed.length) {
+        const { data: targets } = await supabase
+          .from('items')
+          .select('id, sheet_id, locked, display_id')
+          .in('id', changed);
+        for (const t of targets ?? []) {
+          const m = mirrors.find((f) => f.sheet_id === t.sheet_id);
+          if (!m) continue;
+          if (t.locked && !isAdminRole(role))
+            return fail(
+              'forbidden',
+              `${t.display_id} is locked, so its side of this link cannot change. Ask an owner or admin.`,
+            );
+          mirrorOf.set(t.id, m.id);
+        }
+      }
       if (cfg.inverseFieldId && !isAdminRole(role)) {
         // the inverse side is written too: a locked item on the other sheet refuses the whole change up front
         const touched = [
@@ -624,6 +664,15 @@ export async function setLinks(input: unknown): Promise<Result<LinksResult>> {
         p_mode: 'replace',
       });
       if (error) return fromDbError(error);
+      for (const [target, mirror] of mirrorOf) {
+        const r = await supabase.rpc('set_item_links', {
+          p_field: mirror,
+          p_from: target,
+          p_to: [item.id],
+          p_mode: to.includes(target) ? 'add' : 'remove',
+        });
+        if (r.error) return fromDbError(r.error);
+      }
       if (cfg.inverseFieldId) {
         const added = to.filter((id) => !before.includes(id));
         const removed = before.filter((id) => !to.includes(id));

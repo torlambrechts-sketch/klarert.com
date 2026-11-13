@@ -40,10 +40,10 @@ export type FileDbRow = Tables['files']['Row'];
 export type ViewDbRow = Omit<Tables['views']['Row'], Provenance>;
 
 /** Columns only the form submit functions write (0022). */
-type SourceColumn = 'source_form_id' | 'form_version' | 'source_channel';
+type SourceColumn = 'source_form_id' | 'form_version' | 'source_channel' | 'requirement_ref';
 
 export const ITEM_COLUMNS =
-  'id, org_id, sheet_id, group_id, seq, display_id, name, values, position, locked, lock_reason, created_by, created_at, updated_by, updated_at, archived_at, parent_id, sub_seq, source_form_id, form_version, source_channel';
+  'id, org_id, sheet_id, group_id, seq, display_id, name, values, position, locked, lock_reason, created_by, created_at, updated_by, updated_at, archived_at, parent_id, sub_seq, source_form_id, form_version, source_channel, requirement_ref';
 /** The sheet columns the domain Sheet needs (sub-items: the parent, and the settings that hold the label and gate). */
 export const SHEET_COLUMNS =
   'id, org_id, name, item_label, id_prefix, is_library, parent_sheet_id, settings';
@@ -80,6 +80,7 @@ export function toItem(
           },
         }
       : {}),
+    ...(r.requirement_ref ? { requirementRef: r.requirement_ref } : {}),
   };
 }
 
@@ -182,8 +183,10 @@ export function toSheet(r: {
     subitems?: unknown;
     columnGroups?: unknown;
     register?: unknown;
+    framework?: unknown;
   };
   const columnGroups = parseColumnGroups(settings.columnGroups);
+  const framework = readLibraryFramework(settings.framework);
   return {
     id: r.id,
     orgId: r.org_id,
@@ -195,7 +198,23 @@ export function toSheet(r: {
     ...(settings.subitems ? { subitems: readSubitemSettings(settings.subitems) } : {}),
     ...(columnGroups.length ? { columnGroups } : {}),
     ...(settings.register === 'documents' ? { register: 'documents' as const } : {}),
+    ...(framework && r.is_library ? { framework } : {}),
   };
+}
+
+/** sheets.settings.framework of a library sheet (docs/12), read leniently. */
+export function readLibraryFramework(
+  raw: unknown,
+): { key: string; version: string; refFieldKey: string } | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  return typeof o.key === 'string' && typeof o.version === 'string'
+    ? {
+        key: o.key,
+        version: o.version,
+        refFieldKey: typeof o.refFieldKey === 'string' ? o.refFieldKey : 'ref',
+      }
+    : null;
 }
 
 /** Sheets of one list with `childSheetId` set from the child sheets in the same list. */

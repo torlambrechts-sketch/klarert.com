@@ -16,10 +16,11 @@ select is(
   (select coalesce(array_agg(c.relname::text order by c.relname), '{}')
      from pg_class c
     where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p')
-      and c.relname not in ('orgs', 'profiles', 'form_rate_limits', 'form_link_hits', 'packs')
+      and c.relname not in ('orgs', 'profiles', 'form_rate_limits', 'form_link_hits', 'packs',
+                            'frameworks', 'requirements', 'crosswalks')
       and not exists (select 1 from pg_attribute a where a.attrelid = c.oid and a.attname = 'org_id' and not a.attisdropped)),
   '{}'::text[],
-  'every workspace table has org_id (orgs, profiles, the form rate limits and the global pack catalogue are not workspace data)');
+  'every workspace table has org_id (orgs, profiles, the form rate limits and the global pack and requirement catalogues are not workspace data)');
 
 select is(
   (select coalesce(array_agg(c.relname::text order by c.relname), '{}')

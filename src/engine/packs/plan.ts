@@ -368,6 +368,7 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
     const settings = {
       ...ps.row.settings,
       ...(ms.register ? { register: ms.register } : {}),
+      ...(ms.framework ? { framework: ms.framework } : {}),
     } as unknown as Row;
     sheetRows.push({
       ...(ps.row as unknown as Row),
@@ -462,12 +463,16 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
         action: 'create',
       });
     }
-    // items with their refs (examples, documents of a register, library items)
+    // items with their refs (examples, documents of a register, library items with their requirement)
+    const requirementOf = new Map(
+      ms.items.flatMap((i) => (i.requirementRef ? [[i.ref, i.requirementRef] as const] : [])),
+    );
     for (const g of ps.items)
       for (const r of g.rows) {
         const id = env.newId();
         const ref = `${ms.ref}.${r.ref}`;
         itemIds.set(ref, id);
+        const requirement = r.ref ? requirementOf.get(r.ref) : undefined;
         itemRows.push({
           id,
           ref,
@@ -476,6 +481,7 @@ export function planPackInstall(m: PackManifest, snap: PackSnapshot, env: PackEn
           name: r.name,
           position: r.position,
           values: r.values,
+          ...(requirement ? { requirement_ref: requirement } : {}),
         });
         operations.push({ kind: 'item', ref, name: `${ms.name} › ${r.name}`, action: 'create' });
       }

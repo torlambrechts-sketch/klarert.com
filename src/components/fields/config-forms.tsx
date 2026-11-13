@@ -437,15 +437,18 @@ function LinkTarget(p: Props & { library: boolean }) {
         label={p.library ? 'Library sheet' : 'Links to sheet'}
         hint={
           p.library && sheets.length === 0
-            ? 'No library sheets yet. Mark a sheet as a library in its settings.'
-            : undefined
+            ? 'No library sheets yet. Adopt a framework, or mark a sheet as a library in its settings.'
+            : p.library && !p.config.targetSheetId
+              ? 'Links to items of every library sheet, such as the requirements of each adopted framework.'
+              : undefined
         }
         value={String(p.config.targetSheetId ?? '')}
         options={[
-          { value: '', label: 'Choose a sheet' },
+          // requirement and control links may point at every library sheet: a control can cover several frameworks
+          { value: '', label: p.library ? 'Any library sheet' : 'Choose a sheet' },
           ...sheets.map((s) => ({ value: s.id, label: s.name })),
         ]}
-        onChange={(v) => set(p, { targetSheetId: v })}
+        onChange={(v) => set(p, { targetSheetId: p.library && !v ? null : v })}
       />
       <Toggle
         label="Allow several items"

@@ -86,6 +86,10 @@ The full version is `templates/packs/supplier-management.json` (a library sheet,
 
 `archivePack` → `archive_pack`: automations off, sheets archived (restorable one by one from Workspace admin › Archived), folders archived when nothing else is in them, dashboards archived, the install marked archived, `pack.archived` logged. Items, links and the activity log are never deleted. An archived pack can be installed again (its prefixes are then renamed, as the archived sheets keep theirs).
 
+## Frameworks
+
+A framework's requirement library is a generated pack (docs/12): `frameworkToPack` (`src/engine/frameworks/pack.ts`) turns a framework file into a manifest with one library sheet (key `framework-<key>`, version `<edition>.<revision>.0`). The sheet carries `framework: { key, version, refFieldKey }` and each item a `requirementRef` (`<framework>@<version>#<ref>`). The seed writes these packs with the others and then the requirement catalogue (`syncFrameworks`). They are not listed under Packs and `previewPack` / `installPack` refuse them: a framework is adopted from Workspace admin › Frameworks, through `adopt_framework`, which calls `install_pack` and stamps the requirement keys in the same transaction. An adopted library is archived like any pack (Installed packs › Archive).
+
 ## Later
 
 Upgrades with a three-way diff from `pack_hash` and `ref_map` (P6), resolving `pack:sheet` links across installs, recipes in manifests, installing requirements for you, apps (P7).
