@@ -269,14 +269,14 @@ isOneToOne: false
                   ]
                 },"folders": {
                   Row: {
-                    "created_at": string,"id": string,"name": string,"org_id": string,"position": string
+                    "archived_at": string | null,"created_at": string,"id": string,"name": string,"org_id": string,"position": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"name": string,"org_id": string,"position": string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name": string,"org_id": string,"position": string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"org_id"?: string,"position"?: string
                   }
                   Relationships: [
                     {
@@ -1272,6 +1272,9 @@ isOneToOne: false
                            },
 "set_automation_pause":
 { Args: { "p_automation": string,"p_item": string,"p_paused": boolean }; Returns: boolean
+                           },
+"set_folder_archived":
+{ Args: { "p_archived": boolean,"p_folder": string }; Returns: number
                            },
 "set_item_archived":
 { Args: { "p_archived": boolean,"p_item": string }; Returns: {
