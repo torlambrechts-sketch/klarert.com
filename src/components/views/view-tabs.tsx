@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from 'react';
 import {
   Calendar,
+  ChartColumn,
   ChevronDown,
   FileText,
   MoreHorizontal,
@@ -31,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { BUILTIN_TABS } from './tabs-model';
 import type { ActiveView, ViewsState } from './use-views';
 
 // The view tab bar (docs/05 §3, FR-26): icon and label tabs with an ink underline on the active one: Table, Board
@@ -39,6 +41,7 @@ import type { ActiveView, ViewsState } from './use-views';
 
 const ICONS: Record<ViewType, typeof Table> = {
   table: Table,
+  insights: ChartColumn,
   kanban: SquareKanban,
   calendar: Calendar,
   form: FileText,
@@ -106,7 +109,7 @@ export function ViewTabs({
 }) {
   const { tabs, active, open, defaultViewId } = views;
   const [newOpen, setNewOpen] = useState(false);
-  const builtins = [tabs.table, tabs.more.kanban, tabs.more.calendar, tabs.more.form];
+  const builtins = [tabs.table, ...BUILTIN_TABS.map((t) => tabs.more[t])];
   const others = tabs.others.filter((v) => !builtins.some((b) => b.id === v.id));
   const shown = [...builtins, ...others];
   const extra = shown.some((v) => v.id === active.id) ? null : active;
@@ -127,7 +130,7 @@ export function ViewTabs({
               open={open}
             />
           </li>
-          {[tabs.more.kanban, tabs.more.calendar, tabs.more.form].map((v) => (
+          {BUILTIN_TABS.map((t) => tabs.more[t]).map((v) => (
             <li key={v.id}>
               <TabLink
                 view={v}

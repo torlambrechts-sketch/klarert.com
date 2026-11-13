@@ -5,3 +5,4 @@ export * from './layout';
 export * from './registry';
 export * from './source';
 export * from './types';
+export { defaultListColumns } from './widgets/list';

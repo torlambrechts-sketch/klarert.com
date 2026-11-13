@@ -13,7 +13,7 @@ export const progress: InsightWidgetDef = {
   autoTitle: () => 'Completion',
   editor: {
     source: true,
-    filter: true,
+    filter: false,
     aggregation: false,
     groupBy: false,
     date: 'filtered',

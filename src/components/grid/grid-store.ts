@@ -26,6 +26,11 @@ export interface GridState {
   people: ReadonlySet<string>;
   /** Table status filter: option ids of the item status field; empty = every status. */
   statuses: ReadonlySet<string>;
+  /**
+   * Table filter on one value of another field, set by clicking a bar in the Insights view (UI state, a removable
+   * chip in the toolbar). `label` names it: "Severity: High".
+   */
+  valueFilter: { fieldId: string; key: string; label: string } | null;
   /** Table row height (kept per browser by the sheet page). */
   density: 'comfortable' | 'compact';
   /** The item whose row actions menu is open (keyboard: Shift+F10 on the grid). */
@@ -46,6 +51,7 @@ export interface GridState {
   clearPeople(): void;
   toggleStatus(optionId: string): void;
   clearStatuses(): void;
+  setValueFilter(f: GridState['valueFilter']): void;
   setDensity(d: GridState['density']): void;
   openRowMenu(itemId: string | null): void;
   openAddField(at: GridState['addFieldAt']): void;
@@ -66,6 +72,7 @@ export function createGridStore(): StoreApi<GridState> {
     groupBy: null,
     people: new Set(),
     statuses: new Set(),
+    valueFilter: null,
     density: 'comfortable',
     rowMenu: null,
     addFieldAt: null,
@@ -89,6 +96,7 @@ export function createGridStore(): StoreApi<GridState> {
       set({ statuses: next });
     },
     clearStatuses: () => set({ statuses: new Set() }),
+    setValueFilter: (valueFilter) => set({ valueFilter }),
     setDensity: (density) => set({ density }),
     openRowMenu: (itemId) => set({ rowMenu: itemId }),
     toggleCollapsed: (groupId) => {
