@@ -1,15 +1,15 @@
 {
   "key": "nis2",
   "version": "2022",
-  "revision": 1,
+  "revision": 2,
   "title": "NIS2 (Directive (EU) 2022/2555)",
   "shortTitle": "NIS2",
   "publisher": "European Union",
   "kind": "law",
   "source": "Directive (EU) 2022/2555, as published on EUR-Lex; national transposition may add to it",
-  "licence": "EU law. Titles are short summaries in our own words with the article numbers; read the official text on EUR-Lex and your national law.",
+  "licence": "EU law. Article titles are the official headings; paragraph titles, purpose, guidance, audit questions and typical evidence are our own words. Read the official text on EUR-Lex.",
   "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
-  "titles": "own-words",
+  "titles": "official-short",
   "library": {
     "name": "NIS2 requirements",
     "itemLabel": "Requirement",
@@ -17,31 +17,509 @@
     "folder": "Frameworks"
   },
   "requirements": [
-    { "ref": "Art. 20", "kind": "theme", "title": "Article 20 · Governance" },
-    { "ref": "Art. 20(1)", "parent": "Art. 20", "kind": "paragraph", "title": "Management approves the measures and oversees them" },
-    { "ref": "Art. 20(2)", "parent": "Art. 20", "kind": "paragraph", "title": "Management and staff take cybersecurity training", "tags": ["training"] },
-
-    { "ref": "Art. 21", "kind": "theme", "title": "Article 21 · Cybersecurity risk-management measures" },
-    { "ref": "Art. 21(1)", "parent": "Art. 21", "kind": "paragraph", "title": "Measures that fit the risk", "tags": ["risk"] },
-    { "ref": "Art. 21(2)(a)", "parent": "Art. 21", "kind": "paragraph", "title": "Risk analysis and security policies for systems", "tags": ["risk"] },
-    { "ref": "Art. 21(2)(b)", "parent": "Art. 21", "kind": "paragraph", "title": "Handling incidents", "tags": ["incidents"] },
-    { "ref": "Art. 21(2)(c)", "parent": "Art. 21", "kind": "paragraph", "title": "Continuity, backups, disaster recovery and crisis handling", "tags": ["continuity"] },
-    { "ref": "Art. 21(2)(d)", "parent": "Art. 21", "kind": "paragraph", "title": "Security of the supply chain and direct suppliers", "tags": ["suppliers"] },
-    { "ref": "Art. 21(2)(e)", "parent": "Art. 21", "kind": "paragraph", "title": "Secure buying, building and upkeep of systems, with vulnerability handling", "tags": ["development"] },
-    { "ref": "Art. 21(2)(f)", "parent": "Art. 21", "kind": "paragraph", "title": "Checking whether the measures work" },
-    { "ref": "Art. 21(2)(g)", "parent": "Art. 21", "kind": "paragraph", "title": "Basic cyber hygiene and training", "tags": ["training"] },
-    { "ref": "Art. 21(2)(h)", "parent": "Art. 21", "kind": "paragraph", "title": "Use of cryptography and encryption" },
-    { "ref": "Art. 21(2)(i)", "parent": "Art. 21", "kind": "paragraph", "title": "People security, access control and asset management" },
-    { "ref": "Art. 21(2)(j)", "parent": "Art. 21", "kind": "paragraph", "title": "Multi-factor sign-in and secured communications" },
-    { "ref": "Art. 21(3)", "parent": "Art. 21", "kind": "paragraph", "title": "Considering each supplier's weaknesses and practices", "tags": ["suppliers"] },
-    { "ref": "Art. 21(4)", "parent": "Art. 21", "kind": "paragraph", "title": "Fixing gaps in the measures without undue delay" },
-
-    { "ref": "Art. 23", "kind": "theme", "title": "Article 23 · Reporting obligations" },
-    { "ref": "Art. 23(1)", "parent": "Art. 23", "kind": "paragraph", "title": "Report significant incidents to the CSIRT or authority", "tags": ["incidents"] },
-    { "ref": "Art. 23(3)", "parent": "Art. 23", "kind": "paragraph", "title": "What makes an incident significant", "tags": ["incidents"] },
-    { "ref": "Art. 23(4)(a)", "parent": "Art. 23", "kind": "paragraph", "title": "Early warning within 24 hours", "tags": ["incidents"] },
-    { "ref": "Art. 23(4)(b)", "parent": "Art. 23", "kind": "paragraph", "title": "Incident notification within 72 hours", "tags": ["incidents"] },
-    { "ref": "Art. 23(4)(c)", "parent": "Art. 23", "kind": "paragraph", "title": "Intermediate report when asked", "tags": ["incidents"] },
-    { "ref": "Art. 23(4)(d)", "parent": "Art. 23", "kind": "paragraph", "title": "Final report within one month", "tags": ["incidents"] }
+    {
+      "ref": "Art. 20",
+      "kind": "theme",
+      "title": "Article 20 · Governance",
+      "purpose": "Puts responsibility for cybersecurity on the leadership of in-scope organisations rather than leaving it to IT alone."
+    },
+    {
+      "ref": "Art. 20(1)",
+      "parent": "Art. 20",
+      "kind": "paragraph",
+      "title": "Management approves the measures and oversees them",
+      "purpose": "Makes senior management formally approve the cybersecurity risk measures, watch their implementation and answer for failures.",
+      "guidance": "Put cybersecurity on the regular management agenda and have the board or owners sign off the risk approach and key measures at least yearly. Give them a short report with risks, incidents, open actions and budget needs. Record decisions in minutes. Auditors often find policies approved by IT only, and no sign that leadership has ever challenged the results. Make clear who is accountable so liability is not left vague.",
+      "questions": [
+        "Who in management approved your cybersecurity measures and when?",
+        "How often does management review progress and risks?",
+        "What reports does leadership receive?",
+        "How are management decisions and budgets recorded?"
+      ],
+      "evidence": [
+        "Management approval of risk measures",
+        "Board or management meeting minutes with cybersecurity items",
+        "Periodic cybersecurity report to leadership",
+        "Named accountable executive",
+        "Budget approvals for security actions"
+      ]
+    },
+    {
+      "ref": "Art. 20(2)",
+      "parent": "Art. 20",
+      "kind": "paragraph",
+      "title": "Management and staff take cybersecurity training",
+      "tags": [
+        "training"
+      ],
+      "purpose": "Ensures leaders and employees have enough knowledge to spot risks and judge the impact of cybersecurity practices.",
+      "guidance": "Give management a dedicated briefing on threats, their legal duties and decisions they must take, and repeat it regularly. Offer all staff induction and refresher awareness training with role-specific content for admins and developers. Track attendance and test understanding, for example with phishing simulations. Auditors find training that is a one-off, skips senior people or has no records. Keep content current with recent incidents.",
+      "questions": [
+        "When did management last receive cybersecurity training?",
+        "How are new joiners trained and how often is refresher training run?",
+        "How do you track completion and follow up on gaps?",
+        "How do you test whether training works?"
+      ],
+      "evidence": [
+        "Management training attendance records",
+        "Staff awareness programme and materials",
+        "Completion tracking report",
+        "Phishing simulation results",
+        "Role-specific training plans"
+      ]
+    },
+    {
+      "ref": "Art. 21",
+      "kind": "theme",
+      "title": "Article 21 · Cybersecurity risk-management measures",
+      "purpose": "Sets the baseline set of security measures in-scope organisations must take, proportionate to their risk and size."
+    },
+    {
+      "ref": "Art. 21(1)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Measures that fit the risk",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Requires technical, operational and organisational measures that match the risks to your systems and the services you provide.",
+      "guidance": "Start from a documented risk assessment covering your network and information systems and the impact of incidents on your services and others. Scale measures to your size, exposure and the cost of failure, and use an all-hazards approach including physical events. Keep a measures register linked to risks and review it at least annually. Auditors look for the reasoning that links risk to measures, not a copied checklist.",
+      "questions": [
+        "How did you determine that your measures are proportionate?",
+        "Which risks drove your current security priorities?",
+        "How often is the risk assessment updated?",
+        "How do you cover physical and environmental threats?"
+      ],
+      "evidence": [
+        "Cybersecurity risk assessment",
+        "Register of measures linked to risks",
+        "Approved security policy set",
+        "Annual review minutes",
+        "Scope statement of systems and services"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(a)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Risk analysis and security policies for systems",
+      "tags": [
+        "risk"
+      ],
+      "purpose": "Requires you to analyse risks to your information systems and to have policies that set out how they are protected.",
+      "guidance": "Keep a policy set covering information security, acceptable use, access, change and data handling, each with an owner and review date. Maintain a risk register with likelihood, impact, owner and treatment decisions. Update it after incidents, major changes or new suppliers. Auditors find policies not matched by practice and risk registers never revisited. Keep documents short enough that staff actually read them.",
+      "questions": [
+        "Where are your security policies and who owns them?",
+        "How is the risk register maintained and reviewed?",
+        "How do you decide to accept or treat a risk?",
+        "How are policies communicated to staff?"
+      ],
+      "evidence": [
+        "Information security policy set with versions",
+        "Risk register with treatment plans",
+        "Risk acceptance records",
+        "Policy acknowledgement by staff",
+        "Review calendar"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(b)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Handling incidents",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Requires you to be able to detect, assess, contain and recover from security incidents in an organised way.",
+      "guidance": "Define what counts as an incident, how staff report one, who leads response and how severity is judged. Provide logging and monitoring that can actually detect problems. Keep an incident log with timeline, cause, lessons and actions. Link the process to regulatory reporting deadlines. Auditors find no tested procedure, incidents handled informally and lessons never turned into actions. Rehearse with a tabletop exercise each year.",
+      "questions": [
+        "How do staff report a suspected incident?",
+        "Who decides severity and leads response?",
+        "What monitoring detects incidents?",
+        "How do you capture and act on lessons learned?"
+      ],
+      "evidence": [
+        "Incident response procedure",
+        "Incident log with post-incident reviews",
+        "Monitoring and alerting configuration",
+        "Tabletop exercise records",
+        "On-call or contact list"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(c)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Continuity, backups, disaster recovery and crisis handling",
+      "tags": [
+        "continuity"
+      ],
+      "purpose": "Requires plans so that critical services can keep running or be restored after a disruption, with a way to manage a crisis.",
+      "guidance": "Identify critical services and set recovery time and data loss targets with the business. Back up key data using separate, protected copies and test restoring regularly. Write recovery and crisis communication plans with named roles and contact lists, and practise them. Auditors often find backups that have never been restored and plans that do not match real dependencies. Include key suppliers in the plan.",
+      "questions": [
+        "Which services are critical and what recovery targets apply?",
+        "When did you last restore from backup successfully?",
+        "Who runs a crisis and how is communication handled?",
+        "How are suppliers covered by the continuity plan?"
+      ],
+      "evidence": [
+        "Business continuity and recovery plans",
+        "Backup schedule and restore test results",
+        "Business impact analysis",
+        "Crisis communication plan with contacts",
+        "Exercise or test reports"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(d)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Security of the supply chain and direct suppliers",
+      "tags": [
+        "suppliers"
+      ],
+      "purpose": "Requires you to manage security risks that come from suppliers and service providers.",
+      "guidance": "Maintain a register of suppliers with a criticality rating and a named owner. Do proportionate due diligence before onboarding and include security terms in contracts, such as incident notification, access limits and audit rights. Review important suppliers periodically and plan exit routes. Auditors find missing contracts terms, no review of existing suppliers and no view of fourth parties. Focus effort on the few suppliers whose failure would hurt most.",
+      "questions": [
+        "Which suppliers are critical and how did you decide that?",
+        "What security terms are in supplier contracts?",
+        "How do you review supplier security over time?",
+        "What happens if a critical supplier fails or is breached?"
+      ],
+      "evidence": [
+        "Supplier register with criticality",
+        "Due diligence questionnaires or certificates",
+        "Contract clauses on security and incident notice",
+        "Supplier review records",
+        "Exit or contingency plans"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(e)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Secure buying, building and upkeep of systems, with vulnerability handling",
+      "tags": [
+        "development"
+      ],
+      "purpose": "Requires security to be considered when acquiring and developing systems, and weaknesses to be found and handled.",
+      "guidance": "Set security requirements for purchases and new builds, and require review before go-live. Patch on a defined timetable with faster handling for critical flaws, and scan regularly. Track vulnerabilities to closure and accept exceptions formally. If you operate software, offer a way for outsiders to report issues and handle disclosures responsibly. Auditors find unpatched systems, no asset-based scanning and changes without security review.",
+      "questions": [
+        "How are security requirements set when buying or building systems?",
+        "What is your patching timeline for critical vulnerabilities?",
+        "How do you find vulnerabilities?",
+        "How do you handle reports from outside researchers?"
+      ],
+      "evidence": [
+        "Secure development or procurement checklist",
+        "Vulnerability scan reports",
+        "Patch management records",
+        "Vulnerability register with closure dates",
+        "Change records with security review"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(f)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Checking whether the measures work",
+      "purpose": "Requires you to assess whether your cybersecurity measures are effective, not just in place.",
+      "guidance": "Define how effectiveness is measured, using indicators such as patch times, incidents and test results. Combine internal reviews, technical testing such as penetration tests and management reviews. Track findings to closure and report to leadership. Auditors find controls assumed to work and testing that is never followed up. Plan a yearly testing calendar proportionate to your risk.",
+      "questions": [
+        "How do you measure whether controls are effective?",
+        "What testing has been done in the past year?",
+        "How are findings tracked and closed?",
+        "How do results reach management?"
+      ],
+      "evidence": [
+        "Control effectiveness metrics",
+        "Penetration test or audit reports",
+        "Findings tracker with closure evidence",
+        "Internal review schedule and results",
+        "Management review minutes"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(g)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Basic cyber hygiene and training",
+      "tags": [
+        "training"
+      ],
+      "purpose": "Requires the everyday good practices, such as updates, strong passwords and backups, plus regular training to keep them working.",
+      "guidance": "Write a short hygiene baseline for devices and accounts: updates, endpoint protection, least privilege, secure configuration and safe email and web use. Enforce through central management where possible rather than rely on goodwill. Back it with onboarding and refresher training. Auditors find laptops outside management, local admin rights for everyone and unmanaged personal devices. Measure compliance with the baseline.",
+      "questions": [
+        "What is your baseline for devices and accounts?",
+        "How do you check devices meet it?",
+        "How are staff trained on safe working?",
+        "How do you handle exceptions?"
+      ],
+      "evidence": [
+        "Hygiene baseline document",
+        "Device compliance reports",
+        "Training records",
+        "Configuration standards",
+        "Exception register"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(h)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Use of cryptography and encryption",
+      "purpose": "Requires policies and procedures for when and how cryptography and encryption are used.",
+      "guidance": "Write a short policy stating what must be encrypted in transit and at rest, approved algorithms and key management responsibilities. Cover devices, backups, email where needed and external connections. Manage certificates and keys with owners, expiry tracking and secure storage. Auditors find expired certificates, unencrypted laptops and keys kept in code repositories. Review the policy when standards change.",
+      "questions": [
+        "What data and systems must be encrypted and where is this defined?",
+        "How are keys created, stored and rotated?",
+        "How do you track certificate expiry?",
+        "How do you check devices and backups are encrypted?"
+      ],
+      "evidence": [
+        "Cryptography policy",
+        "Key management procedure",
+        "Certificate inventory with expiry dates",
+        "Device encryption status report",
+        "Backup encryption configuration"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(i)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "People security, access control and asset management",
+      "purpose": "Requires controls for staff-related risk, who may access what, and knowing which assets you hold.",
+      "guidance": "Screen staff proportionately, set security terms in contracts and run a joiner, mover, leaver process that grants and removes access promptly. Apply least privilege and review access at least yearly. Keep an asset inventory of hardware, software, data and services with owners. Auditors find leavers with active accounts, inventories that are out of date and excessive admin rights. Automate where you can.",
+      "questions": [
+        "How are access rights granted, changed and removed?",
+        "How often is access reviewed?",
+        "How do you keep the asset inventory current?",
+        "What checks are made before people start?"
+      ],
+      "evidence": [
+        "Joiner, mover, leaver procedure and tickets",
+        "Access review records",
+        "Asset inventory",
+        "Employment terms with security clauses",
+        "Privileged access list"
+      ]
+    },
+    {
+      "ref": "Art. 21(2)(j)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Multi-factor sign-in and secured communications",
+      "purpose": "Requires strong authentication where appropriate and secured voice, video, text and emergency communication.",
+      "guidance": "Enable multi-factor authentication for remote access, admin accounts, email and critical applications, preferring phishing-resistant methods. Use approved, encrypted communication tools and define a backup channel for emergencies if normal systems are down. Auditors find MFA gaps for service accounts and admins and no out-of-band contact plan. Keep a record of exceptions with an end date.",
+      "questions": [
+        "Where is multi-factor authentication enforced?",
+        "Which accounts are exempt and why?",
+        "What tools are approved for confidential communication?",
+        "How would you communicate if email were unavailable?"
+      ],
+      "evidence": [
+        "MFA enforcement settings or reports",
+        "Exception register",
+        "Approved communication tools list",
+        "Emergency communication plan",
+        "Remote access configuration"
+      ]
+    },
+    {
+      "ref": "Art. 21(3)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Considering each supplier's weaknesses and practices",
+      "tags": [
+        "suppliers"
+      ],
+      "purpose": "Requires you to take account of the specific weaknesses of each direct supplier and the quality of its security practices.",
+      "guidance": "Assess suppliers individually rather than treating all the same, looking at their security posture, past incidents and dependency. Where relevant, use results of coordinated risk assessments published for critical supply chains. Record the risk and the mitigations, such as limiting access or requiring certifications. Auditors find generic questionnaires with no follow-up on poor answers. Reassess at renewal or after supplier incidents.",
+      "questions": [
+        "How do you assess an individual supplier's security practices?",
+        "What do you do when a supplier scores poorly?",
+        "How do you factor in published supply chain risk assessments?",
+        "When are suppliers reassessed?"
+      ],
+      "evidence": [
+        "Supplier risk assessments",
+        "Questionnaire responses with follow-up actions",
+        "Mitigation decisions",
+        "Supplier incident notices and responses",
+        "Renewal review records"
+      ]
+    },
+    {
+      "ref": "Art. 21(4)",
+      "parent": "Art. 21",
+      "kind": "paragraph",
+      "title": "Fixing gaps in the measures without undue delay",
+      "purpose": "Requires you to take corrective action promptly when you find that a measure does not meet the required standard.",
+      "guidance": "Keep a corrective action register for every audit finding, test result and incident cause, with owner, priority and due date. Track to closure and report overdue items to management. Verify that fixes work. Auditors find long-open items and findings repeated year after year. Agree realistic timelines and escalate when they slip.",
+      "questions": [
+        "How are gaps recorded and assigned?",
+        "How do you prioritise and time-box fixes?",
+        "What happens when an action is overdue?",
+        "How do you verify a fix?"
+      ],
+      "evidence": [
+        "Corrective action register",
+        "Closure evidence",
+        "Overdue action escalations",
+        "Management review records",
+        "Retest results"
+      ]
+    },
+    {
+      "ref": "Art. 23",
+      "kind": "theme",
+      "title": "Article 23 · Reporting obligations",
+      "purpose": "Requires in-scope organisations to tell the authorities quickly about significant incidents, in stages."
+    },
+    {
+      "ref": "Art. 23(1)",
+      "parent": "Art. 23",
+      "kind": "paragraph",
+      "title": "Report significant incidents to the CSIRT or authority",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Requires you to notify the national incident response team or competent authority of incidents with a significant impact on your services.",
+      "guidance": "Identify which authority or team you report to and how, and keep contact details and portal access ready. Name who decides to notify and who submits, with deputies. Fold the duty into your incident procedure with templates. Where service recipients are affected, plan how to inform them. Auditors find organisations that do not know their reporting channel until an incident occurs.",
+      "questions": [
+        "Which authority or CSIRT would you report to and how?",
+        "Who decides to notify and who submits?",
+        "How do you inform affected customers where needed?",
+        "Have you tested the reporting route?"
+      ],
+      "evidence": [
+        "Reporting procedure with contact details",
+        "Authority portal registration",
+        "Notification templates",
+        "Roles and deputies list",
+        "Exercise record including reporting"
+      ]
+    },
+    {
+      "ref": "Art. 23(3)",
+      "parent": "Art. 23",
+      "kind": "paragraph",
+      "title": "What makes an incident significant",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Defines the test for when an incident must be reported, based on serious disruption or financial loss or harm to others.",
+      "guidance": "Write practical criteria for significance covering service disruption, financial loss, number of people affected and material harm, aligned to national guidance. Add a triage step so someone judges this early in every incident, and record the reasoning even when you decide not to report. Review the criteria when guidance changes. Auditors find vague thresholds and unrecorded decisions.",
+      "questions": [
+        "What criteria do you use to judge an incident significant?",
+        "Who makes the judgement and by when?",
+        "Where is the decision recorded?",
+        "How do you keep the criteria aligned with national guidance?"
+      ],
+      "evidence": [
+        "Significance criteria document",
+        "Incident triage records",
+        "Decision log for reported and unreported incidents",
+        "Guidance review notes",
+        "Training on the criteria"
+      ]
+    },
+    {
+      "ref": "Art. 23(4)(a)",
+      "parent": "Art. 23",
+      "kind": "paragraph",
+      "title": "Early warning within 24 hours",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Requires a first quick notice within 24 hours of becoming aware of a significant incident, including whether it may be malicious or cross-border.",
+      "guidance": "Prepare a short early warning template and a way to send it at any hour. Do not wait for full facts: say what is known, whether malicious action is suspected and whether other countries may be affected. Set an internal clock from the moment of awareness and record that moment. Auditors find that nobody can submit outside office hours and that teams wait for certainty.",
+      "questions": [
+        "How do you send an early warning at night or on weekends?",
+        "What does your early warning template include?",
+        "How do you record the time you became aware?",
+        "Who is the backup submitter?"
+      ],
+      "evidence": [
+        "Early warning template",
+        "Out-of-hours contact roster",
+        "Timeline of past or test notifications",
+        "Exercise records",
+        "Incident clock procedure"
+      ]
+    },
+    {
+      "ref": "Art. 23(4)(b)",
+      "parent": "Art. 23",
+      "kind": "paragraph",
+      "title": "Incident notification within 72 hours",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Requires a fuller notification within 72 hours that updates the early warning with an initial assessment of the incident.",
+      "guidance": "Prepare a template covering severity, impact, indicators of compromise and updated assessment. Assign someone to gather facts from technical teams and review before submission. Update the earlier statement if the facts changed. Auditors find notices that merely repeat the early warning or arrive late because approvals were not planned. Pre-agree who signs off.",
+      "questions": [
+        "Who gathers the information for the 72-hour notification?",
+        "Who approves it before submission?",
+        "What does the template contain?",
+        "How do you correct the earlier warning?"
+      ],
+      "evidence": [
+        "72-hour notification template",
+        "Approval workflow description",
+        "Sample completed notification from an exercise",
+        "Indicators of compromise handling guidance",
+        "Timeline records"
+      ]
+    },
+    {
+      "ref": "Art. 23(4)(c)",
+      "parent": "Art. 23",
+      "kind": "paragraph",
+      "title": "Intermediate report when asked",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Requires status updates on request from the authority or CSIRT while the incident is still going on.",
+      "guidance": "Make sure you can quickly produce a status summary: current state, actions taken, remaining risk and next steps. Keep a single incident log that can feed the report. Name the person who responds to authority requests. Auditors find teams unable to supply updates because information is scattered. Rehearse this in exercises.",
+      "questions": [
+        "How would you respond to a request for an update mid-incident?",
+        "Who is the point of contact for the authority?",
+        "Where is the single source of incident information?",
+        "How do you keep reports consistent over time?"
+      ],
+      "evidence": [
+        "Intermediate report template",
+        "Incident log",
+        "Point of contact designation",
+        "Past correspondence with authorities",
+        "Exercise record"
+      ]
+    },
+    {
+      "ref": "Art. 23(4)(d)",
+      "parent": "Art. 23",
+      "kind": "paragraph",
+      "title": "Final report within one month",
+      "tags": [
+        "incidents"
+      ],
+      "purpose": "Requires a detailed final report within one month of the notification, covering cause, impact and mitigation.",
+      "guidance": "Schedule the final report as soon as the incident is notified, with an owner and due date. Cover a description, the type of threat or root cause, mitigation applied and cross-border impact. If the incident is still ongoing, provide a progress report and then the final one after closure. Auditors find missing deadlines and shallow root cause analysis. Use the lessons to create corrective actions.",
+      "questions": [
+        "Who owns the final report and what is the deadline?",
+        "How do you establish root cause?",
+        "What happens if the incident is still ongoing at one month?",
+        "How are lessons turned into actions?"
+      ],
+      "evidence": [
+        "Final report template and examples",
+        "Root cause analysis",
+        "Deadline tracking in the incident log",
+        "Corrective actions raised",
+        "Submission confirmation"
+      ]
+    }
   ]
 }
