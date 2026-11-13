@@ -191,6 +191,7 @@ export function ViewBar({
           variant="ghost"
           size="sm"
           className="text-muted-foreground hover:text-ink text-label-12.5 h-[30px] shrink-0 gap-1.5 px-2.5"
+          data-columns-opener
           onClick={() => store.getState().openColumns('hidden')}
         >
           <EyeOff aria-hidden className="size-3.5" />

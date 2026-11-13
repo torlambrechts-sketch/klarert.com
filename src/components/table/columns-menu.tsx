@@ -146,6 +146,14 @@ export function ColumnsMenu(p: ColumnsMenuProps) {
       <PopoverContent
         align="start"
         aria-label="Columns"
+        // opened from "Hidden · N": focus goes to the hidden list, not the first control
+        onOpenAutoFocus={(e) => {
+          if (open === 'hidden') e.preventDefault();
+        }}
+        // "Hidden · N" moves an open menu to its hidden list instead of closing it
+        onInteractOutside={(e) => {
+          if ((e.target as Element | null)?.closest?.('[data-columns-opener]')) e.preventDefault();
+        }}
         className="flex max-h-[min(640px,var(--radix-popover-content-available-height))] w-[360px] max-w-[calc(100vw-32px)] flex-col overflow-y-auto p-2"
       >
         <h2 className="text-label-14 px-2 pt-1.5 pb-1 font-semibold">Columns</h2>

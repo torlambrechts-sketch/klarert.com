@@ -1354,6 +1354,7 @@ export function Table({
           <div
             ref={barRef}
             aria-hidden
+            data-scrollbar
             hidden={!wide}
             className="bg-background-100/95 border-line sticky bottom-0 z-[6] h-[14px] overflow-x-auto overflow-y-hidden border-t"
           >
