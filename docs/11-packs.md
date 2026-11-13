@@ -118,7 +118,7 @@ Progress is computed from data by the pure `setupProgress` (`src/engine/packs/se
 
 - **Annex A links.** The example risks link to Annex A controls of the adopted library (phishing → A.6.3, A.8.7; lost laptop → A.8.1, A.7.9; supplier outage → A.5.19, A.5.30) and the example treatments to the control they put in place (multi-factor sign-in → A.8.5, disk encryption → A.8.24), so the requirements show linked risks straight after install.
 - **Report a security incident** (Full, on Security incidents): what happened (one line and the detail), when it was noticed, systems and data affected, a severity guess and the reporter's name and email; answers go to Open with the status New. It installs as an **internal** draft (signed-in members of the workspace), with a privacy notice to review. To take reports from people without an account (staff without a seat, contractors), an owner or admin switches it to public in the form's settings and opens it: the reporter's name and email are then the only way to reach them, and the notice must be reviewed first (docs/05 §3.3). The sheet shows its Forms tab and the setup step "Make incidents easy to report" opens the form (Starter: "Record incidents" as nonconformities with the source Incident).
-- **1.0.0 → 1.1.0.** A workspace on 1.0.0 keeps it (upgrades are P6); new installs get 1.1.0. Hosted catalogues need the new version loaded (`scripts/packs-sql.ts`) after migration 0033.
+- **1.0.0 → 1.1.0.** A workspace on 1.0.0 keeps it until an owner or admin updates it (Upgrades below); new installs get the newest version. Hosted catalogues need the new version loaded (`scripts/packs-sql.ts`) after migration 0033.
 - **1.2.0 (P7).** Adds the internal form "Report a problem" on Nonconformities and CAPA (Starter), the "Nonconformities overview" dashboard and the ISMS CAPA app (docs/13).
 
 ## Audit outputs (P5)
@@ -137,10 +137,38 @@ Exports for an auditor or a management review, made from the workspace as it is 
 
 `archivePack` → `archive_pack`: automations off, sheets archived (restorable one by one from Workspace admin › Archived), folders archived when nothing else is in them, dashboards archived, the install marked archived, `pack.archived` logged. Items, links and the activity log are never deleted. An archived pack can be installed again (its prefixes are then renamed, as the archived sheets keep theirs).
 
+## Upgrades (P6)
+
+A version is written once (change a pack, raise its version), and the catalogue keeps every version an install points at. A live install whose pack has a newer version in the catalogue shows **Update available x → y** on Workspace admin › Packs (installed packs) and, for an adopted framework library (`framework-<key>`), on Workspace admin › Frameworks. Owners and admins open the update dialog.
+
+**The three-way diff** (`planPackUpgrade`, `src/engine/packs/upgrade.ts`, pure). Each object is matched by its stable ref through the install's `ref_map` and compared three ways:
+
+- **base**: the installed version's manifest (read from the catalogue by the install's version; `pack_installs.manifest_hash` checked), planned as `install_pack` wrote it, with the plan's ids swapped for the install's;
+- **mine**: the object as the workspace holds it now (read with the person's client; what they cannot read counts as removed by them and is left alone);
+- **theirs**: the new manifest, planned the same way at the installed level (a level the new version dropped falls back to its lowest).
+
+Per attribute: the pack did not change it → nothing; the client did not change it → the pack's change is applied; both changed it to different things → a **conflict**. Example items compare against what the install wrote (their `item.created` entry), so `$today` and `$in:N` values never read as changes; values merge field by field, so answers the pack never sets (status, owner, applicability) are never touched.
+
+| Object | Compared | Rules |
+|---|---|---|
+| Folder | name | Removed from the pack: archived when nothing live is left in it |
+| Sheet | name, description, item label | Removed: archived (restorable) only when it holds no items the client added and no example item the client changed; otherwise kept |
+| Field | name, description, required, locked; settings key by key | **Add-only**: never a new type (a type change is kept and said), never removed (kept and said), options merged: the client's options stay in their order with their labels and colours, an option the client left as shipped takes the pack's new label and colour, new options are added, an option the client removed does not come back. New fields go after the sheet's last field |
+| Group | name, colour | Removed: kept (it holds items) |
+| View, form | name, settings | Removed: kept (views cannot be archived) |
+| Example item, document | name, group, each value the pack sets | Removed: archived only when untouched since install; otherwise kept |
+| Library requirement | the same | Rewords titles and the locked Purpose, Guidance, Audit questions and Typical evidence; new requirements are added with their requirement key; a requirement is never removed. Applicability, justification, status, owner and evidence are the client's |
+| Automation | name, trigger, conditions, actions | The on/off state is the client's and never changes; removed from the pack: turned off |
+| Dashboard | name, widgets | Removed: archived when untouched, otherwise kept |
+
+New objects are added as an install would add them (new sheets with their folder, fields, groups, views, forms, items and links; positions after what the workspace has; a taken ID prefix is renamed and said). Links are added only from an item or through a field the update adds; links the client made or removed stay as they are. Sub-items are not added to a sheet that already exists (said, with the automations that need them). Client-added objects (no provenance) are never touched.
+
+**Dry run and apply.** `previewPackUpgrade` plans on the server and returns the preview: added, changed, archived or turned off, kept (with why), conflicts and warnings, and the counts. The dialog shows each conflict with **Keep mine** (the default) or **Take the pack's**. `upgradePack` plans again from the catalogue and the workspace as they are now with those choices (the browser sends only the install, the new version's hash and the choices; a changed catalogue is refused) and calls `upgrade_pack(install, plan)` (0035): owners and admins, the plan for the version and hash installed now, only the install's own rows updated (only the columns the plan names; an option removed or a sheet with client items archived is refused), added rows with the install's provenance, new library items stamped with their requirement key (checked against the catalogue and the item's Ref), every item change logged on the item's chain (note "Pack update"), structure changes by the schema audit, and `pack.upgraded` on the workspace chain with the old and new version, the counts and the summary of conflicts. The install moves to the new version and hash and its ref map grows. One transaction: any failure leaves the workspace as it was. The result toast says how many objects were added, changed and archived and how many conflicts were kept.
+
 ## Frameworks
 
 A framework's requirement library is a generated pack (docs/12): `frameworkToPack` (`src/engine/frameworks/pack.ts`) turns a framework file into a manifest with one library sheet (key `framework-<key>`, version `<edition>.<revision>.0`). The sheet carries `framework: { key, version, refFieldKey }` and each item a `requirementRef` (`<framework>@<version>#<ref>`). The seed writes these packs with the others and then the requirement catalogue (`syncFrameworks`). They are not listed under Packs and `previewPack` / `installPack` refuse them: a framework is adopted from Workspace admin › Frameworks, through `adopt_framework`, which calls `install_pack` and stamps the requirement keys in the same transaction. An adopted library is archived like any pack (Installed packs › Archive).
 
 ## Later
 
-Upgrades with a three-way diff from `pack_hash` and `ref_map` (P6), resolving `pack:sheet` links across installs, recipes in manifests, installing requirements for you.
+Moving a library to a new edition of a standard (a new framework version, not a revision), resolving `pack:sheet` links across installs, recipes in manifests, installing requirements for you.

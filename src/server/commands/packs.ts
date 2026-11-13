@@ -18,9 +18,13 @@ import {
   listPacksInput,
   packSetupsInput,
   previewPackInput,
+  previewUpgradeInput,
+  upgradePackInput,
 } from '@/lib/schemas/packs';
+import { upgradeLines, type UpgradePreview } from '@/engine/packs/upgrade';
 import { isAdminRole } from '@/server/auth';
 import { planInstall, readCatalogue, readPack, writeInstall } from '@/server/packs/install';
+import { planUpgrade, updatesFor, writeUpgrade } from '@/server/packs/upgrade';
 import { readSetups, type InstalledSetup } from '@/server/packs/setup';
 import { readFrameworks } from '@/server/frameworks/catalogue';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
@@ -67,6 +71,10 @@ export interface InstalledPack {
   /** The level installed (packs with levels) and the next one that can be added. */
   level: { key: string; name: string } | null;
   nextLevel: { key: string; name: string } | null;
+  /** The catalogue's newer version, when there is one (docs/11 Upgrades). */
+  updateTo: string | null;
+  /** A framework's requirement library (adopted from Frameworks). */
+  isFramework: boolean;
 }
 
 export interface PackLogEntry {
@@ -138,6 +146,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
         const titles = new Map(catalogue.map((c) => [c.key, c.title]));
         const byKey = new Map(catalogue.map((c) => [c.key, c]));
         const liveRows = (installs.data ?? []).filter((i) => i.status === 'installed');
+        const updates = updatesFor(installs.data ?? [], catalogue);
         const live = new Map(liveRows.map((i) => [i.pack_key, i.version]));
         const liveLevel = new Map(liveRows.map((i) => [i.pack_key, i.level ?? null]));
         const levelOf = (key: string, version: string, level: string | null) => {
@@ -187,6 +196,11 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
             ...(() => {
               const l = levelOf(i.pack_key, i.version, i.level ?? null);
               return { level: l.level, nextLevel: i.status === 'installed' ? l.next : null };
+            })(),
+            updateTo: updates.get(i.id) ?? null,
+            isFramework: (() => {
+              const c = byKey.get(i.pack_key);
+              return c ? isFrameworkPack(c.manifest) : i.pack_key.startsWith('framework-');
             })(),
           })),
           log: (log.data ?? []).map((e) => ({
@@ -353,6 +367,99 @@ export async function archivePack(
       return ok({ installId: row.id, counts: data as Record<string, number> });
     },
     'archivePack',
+  );
+}
+
+export interface UpgradePreviewResult {
+  installId: string;
+  /** The catalogue hash of the new version: the update refuses a catalogue that changed since. */
+  hash: string;
+  preview: UpgradePreview;
+  lines: string[];
+}
+
+/** What updating an install to the catalogue's newest version would do here now (a dry run). Owners and admins. */
+export async function previewPackUpgrade(input: unknown): Promise<Result<UpgradePreviewResult>> {
+  const p = previewUpgradeInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'admin',
+    async ({ supabase, orgId, user }) => {
+      try {
+        const r = await planUpgrade(supabase, orgId, p.data.installId, {
+          userId: user.id,
+          now: new Date(),
+          newId: randomUUID,
+        });
+        if (!r.ok) return fail(r.code, r.message);
+        return ok({
+          installId: p.data.installId,
+          hash: r.to.hash,
+          preview: r.plan.preview,
+          lines: upgradeLines(r.plan.preview),
+        });
+      } catch (e) {
+        console.error(JSON.stringify({ level: 'error', source: 'packs', error: String(e) }));
+        return fail('failed', 'The update could not be previewed. Try again.');
+      }
+    },
+    'previewPackUpgrade',
+  );
+}
+
+export interface UpgradeResult {
+  installId: string;
+  title: string;
+  from: string;
+  to: string;
+  counts: Record<string, Json>;
+  /** "3 added, 5 changed, 1 archived; 2 conflicts kept as you had them" */
+  summary: string;
+}
+
+/** Update an install: planned again with the person's choices, written by upgrade_pack in one transaction. */
+export async function upgradePack(input: unknown): Promise<Result<UpgradeResult>> {
+  const p = upgradePackInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'admin',
+    async ({ supabase, orgId, user }) => {
+      const r = await planUpgrade(supabase, orgId, p.data.installId, {
+        userId: user.id,
+        now: new Date(),
+        newId: randomUUID,
+        choices: p.data.choices,
+      });
+      if (!r.ok) return fail(r.code, r.message);
+      if (r.to.hash !== p.data.hash)
+        return fail(
+          'conflict',
+          'This pack changed since you previewed the update. Preview it again.',
+        );
+      if (r.plan.state === 'current') return fail('conflict', 'This pack is up to date.');
+      if (r.plan.state === 'blocked')
+        return fail('conflict', r.plan.preview.blockers[0] ?? 'This pack cannot be updated.');
+      const written = await writeUpgrade(supabase, r.plan);
+      if (!written.ok) return fromDbError(written.error);
+      const c = r.plan.preview.counts;
+      const kept = r.plan.preview.conflicts.filter((x) => x.choice === 'mine').length;
+      const parts = [
+        `${c.added} added`,
+        `${c.changed} changed`,
+        `${c.archived} archived or turned off`,
+      ];
+      return ok({
+        installId: p.data.installId,
+        title: r.to.title,
+        from: r.from.version,
+        to: written.data.version,
+        counts: written.data.counts,
+        summary: `${parts.join(', ')}${kept ? `; ${kept} ${kept === 1 ? 'conflict' : 'conflicts'} kept as you had ${kept === 1 ? 'it' : 'them'}` : ''}.`,
+      });
+    },
+    'upgradePack',
   );
 }
 

@@ -9,7 +9,7 @@ import {
   suggestEquivalents,
   type AdoptedRequirement,
 } from '@/engine/frameworks/crosswalks';
-import { parseRequirementKey } from '@/engine/frameworks/refs';
+import { frameworkPackKey, parseRequirementKey } from '@/engine/frameworks/refs';
 import type { FrameworkKind, Relation } from '@/engine/frameworks/types';
 import { previewLines, type PackPreview } from '@/engine/packs/plan';
 import { todayIn } from '@/engine/sheet-data';
@@ -35,7 +35,8 @@ import {
   readLibraryCoverage,
   type Library,
 } from '@/server/frameworks/workspace';
-import { planInstall, readPack } from '@/server/packs/install';
+import { planInstall, readCatalogue, readPack } from '@/server/packs/install';
+import { updatesFor } from '@/server/packs/upgrade';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { sheetLevel } from './access';
 import { withOrg } from './context';
@@ -59,6 +60,8 @@ export interface AdoptedFramework {
   coverage: Coverage;
   /** "62% covered · 80 applicable · 5 not applicable · 42 to decide" */
   coverageText: string;
+  /** The library's install and a newer revision in the catalogue (docs/11 Upgrades), if any. */
+  install: { id: string; version: string; updateTo: string | null } | null;
 }
 
 export interface FrameworkCard extends CatalogueFramework {
@@ -101,20 +104,35 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
         const now = new Date();
         const timeZone = await timeZoneOf(supabase, orgId);
         const env = { today: todayIn(now, timeZone), now, timeZone, userId: user.id };
-        const [catalogue, libraries, controls] = await Promise.all([
+        const [catalogue, libraries, controls, installs, packs] = await Promise.all([
           readFrameworks(supabase),
           readLibraries(supabase, orgId, { items: true }),
           isAdminRole(role) ? readControlsSheets(supabase, orgId) : Promise.resolve([]),
+          supabase
+            .from('pack_installs')
+            .select('id, pack_key, version, status')
+            .eq('org_id', orgId)
+            .eq('status', 'installed')
+            .like('pack_key', 'framework-%'),
+          readCatalogue(supabase).catch(() => []),
         ]);
+        if (installs.error) throw new Error(installs.error.message);
+        const updates = updatesFor(installs.data ?? [], packs);
         const adopted = new Map<string, AdoptedFramework>();
         for (const lib of libraries) {
           const { coverage } = await readLibraryCoverage(supabase, lib, env);
+          const inst = (installs.data ?? []).find(
+            (i) => i.pack_key === frameworkPackKey(lib.framework.key),
+          );
           adopted.set(lib.framework.key, {
             sheetId: lib.sheet.id,
             sheetName: lib.sheet.name,
             version: lib.framework.version,
             coverage,
             coverageText: coverageText(coverage),
+            install: inst
+              ? { id: inst.id, version: inst.version, updateTo: updates.get(inst.id) ?? null }
+              : null,
           });
         }
         return ok({

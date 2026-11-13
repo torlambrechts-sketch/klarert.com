@@ -53,6 +53,22 @@ export async function archivePackAction(input: { org: string; installId: string 
   return result;
 }
 
+// Pack upgrades (docs/11 Upgrades): the dry run, and the update with the person's choices on conflicts.
+export async function previewPackUpgradeAction(input: { org: string; installId: string }) {
+  return packs.previewPackUpgrade(input);
+}
+
+export async function upgradePackAction(input: {
+  org: string;
+  installId: string;
+  hash: string;
+  choices: Record<string, 'mine' | 'theirs'>;
+}) {
+  const result = await packs.upgradePack(input);
+  if (result.ok) revalidatePath(`/${input.org}`, 'layout');
+  return result;
+}
+
 // Frameworks (docs/12): adopting creates a folder and a library sheet, so the workspace layout is revalidated.
 export async function previewAdoptionAction(input: {
   org: string;

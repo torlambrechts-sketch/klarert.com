@@ -2,7 +2,12 @@
 import type { Json } from '../types';
 import { countsText, type PackCounts } from './plan';
 
-export const PACK_ACTIONS = ['pack.installed', 'pack.extended', 'pack.archived'] as const;
+export const PACK_ACTIONS = [
+  'pack.installed',
+  'pack.extended',
+  'pack.upgraded',
+  'pack.archived',
+] as const;
 
 type Obj = Record<string, Json>;
 const obj = (v: Json | null | undefined): Obj =>
@@ -38,6 +43,22 @@ export function packLogText(action: string, newValue: Json | null): string {
     if (action === 'pack.extended')
       return `Added the ${level ?? 'next'} level to ${name}: ${countsText(counts)}.`;
     return `Installed ${name}${level ? ` (${level})` : ''}: ${countsText(counts)}.`;
+  }
+  if (action === 'pack.upgraded') {
+    const title = typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack');
+    const added = obj(c.added);
+    const nAdded = Object.values(added).reduce<number>((n, x) => n + num(x), 0);
+    const s = obj(v.summary);
+    const conflicts = num(s.conflicts);
+    const parts = [
+      `${nAdded} added`,
+      `${num(c.changed)} changed`,
+      `${num(c.archived) + num(c.turned_off)} archived or turned off`,
+    ];
+    const settled = conflicts
+      ? `; ${conflicts} ${conflicts === 1 ? 'conflict' : 'conflicts'} (${num(s.theirs)} took the pack's)`
+      : '';
+    return `Updated ${title} from ${String(v.from_version ?? '?')} to ${String(v.version ?? '?')}: ${parts.join(', ')}${settled}.`;
   }
   if (action === 'pack.archived') {
     const parts = [
