@@ -1681,6 +1681,7 @@
           "name": "Example: wrong labels on a delivery to a customer",
           "values": {
             "source": "opt_complaint",
+            "found_on": "$in:-40",
             "severity": "$option:Medium",
             "product": "Order 4711, 200 units",
             "description": "Labels showed last year's part number. The customer held the goods at receipt.",
@@ -1761,7 +1762,7 @@
     {
       "ref": "complaint",
       "name": "Customer feedback and complaints",
-      "itemLabel": "Feedback",
+      "itemLabel": "Feedback item",
       "idPrefix": "CFB-",
       "folder": "qms",
       "description": "What customers tell you: complaints, praise, suggestions and survey results. Log each complaint through the form \"Report a complaint\" (Forms tab), answer the customer and tick Needs corrective action when the cause must be fixed for good: that raises a nonconformity.",
@@ -2000,6 +2001,7 @@
           "values": {
             "kind": "opt_complaint",
             "customer": "Example Trading Ltd",
+            "received_on": "$in:-3",
             "channel": "opt_email",
             "product": "Order 4720",
             "description": "The goods came seven days after the confirmed date and the customer's line stood still for a day.",
@@ -2020,6 +2022,7 @@
           "values": {
             "kind": "opt_complaint",
             "customer": "Example Industries",
+            "received_on": "$in:-40",
             "channel": "opt_phone",
             "product": "Order 4711",
             "description": "Labels showed an old part number, so goods receipt held the delivery.",
@@ -2046,6 +2049,7 @@
           "name": "Example: annual customer survey, 4.2 of 5",
           "values": {
             "kind": "opt_survey",
+            "received_on": "$in:-60",
             "channel": "opt_survey",
             "description": "38 customers answered. Lowest marks for delivery reliability, highest for technical support.",
             "response": "Delivery reliability is a quality objective for next year.",
@@ -2566,7 +2570,7 @@
     {
       "ref": "equipment",
       "name": "Measuring equipment",
-      "itemLabel": "Equipment",
+      "itemLabel": "Instrument",
       "idPrefix": "MME-",
       "folder": "qms",
       "level": "full",
