@@ -47,5 +47,5 @@ create policy files_read on storage.objects for select using (
   and public.is_member(((storage.foldername(name))[2])::uuid)
   and (exists (select 1 from public.files f where f.storage_path = name)
        or ((storage.foldername(name))[3] = 'item' and public.file_object_pending(name)
-           and exists (select 1 from public.items i where i.id::text = (storage.foldername(name))[4]
+           and exists (select 1 from public.items i where i.id::text = (storage.foldername(objects.name))[4]
                          and i.sheet_id in (select public.editable_sheet_ids())))));

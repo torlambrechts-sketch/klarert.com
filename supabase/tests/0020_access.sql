@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(106);
+select plan(110);
 
 -- ───────────────────────── people ─────────────────────────
 insert into auth.users (id, email) values
@@ -323,6 +323,18 @@ select throws_ok($$ select create_subitem('ac000005-0000-0000-0000-000000000001'
 select throws_ok($$ select set_item_links('ac000004-0000-0000-0000-000000000002', 'ac000005-0000-0000-0000-000000000003',
                                           array['ac000005-0000-0000-0000-000000000002'::uuid], 'add') $$,
   '42501', null, 'editor not listed cannot link an open item to a restricted one');
+select pg_temp.as_user('a004');
+select lives_ok($$ insert into storage.objects (bucket_id, name, owner) values ('files',
+  'org/ac000000-0000-0000-0000-000000000000/item/ac000005-0000-0000-0000-000000000001/ac00000f-0000-0000-0000-000000000001/up.pdf',
+  auth.uid()) $$, 'a listed editor uploads to the restricted sheet''s items (storage)');
+select is((select count(*)::int from storage.objects where name like 'org/ac000000-0000-0000-0000-000000000000/item/ac000005-0000-0000-0000-000000000001/ac00000f%'), 1,
+  'and reads the object before its files row exists');
+select pg_temp.as_user('a005');
+select throws_ok($$ insert into storage.objects (bucket_id, name, owner) values ('files',
+  'org/ac000000-0000-0000-0000-000000000000/item/ac000005-0000-0000-0000-000000000001/ac00000f-0000-0000-0000-000000000002/up.pdf',
+  auth.uid()) $$, '42501', null, 'an editor not listed cannot upload there');
+select is((select count(*)::int from storage.objects where name like 'org/ac000000-0000-0000-0000-000000000000/%'), 0,
+  'nor read its objects');
 select pg_temp.as_user('a006');
 select is(pg_temp.try_edit(), 'no access: you cannot edit this sheet', 'commenter cannot edit values');
 select is(pg_temp.try_comment(), 'ok', 'commenter comments');

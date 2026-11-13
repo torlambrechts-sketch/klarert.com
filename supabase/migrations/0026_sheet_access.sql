@@ -499,7 +499,7 @@ create policy files_upload on storage.objects for insert with check (
   bucket_id = 'files' and (storage.foldername(name))[1] = 'org'
   and public.is_editor(((storage.foldername(name))[2])::uuid)
   and (storage.foldername(name))[3] = 'item'
-  and exists (select 1 from public.items i where i.id::text = (storage.foldername(name))[4]
+  and exists (select 1 from public.items i where i.id::text = (storage.foldername(objects.name))[4]
                 and i.sheet_id in (select public.editable_sheet_ids())));
 
 -- ───────────────────────── managing access ─────────────────────────
