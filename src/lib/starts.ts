@@ -3,7 +3,13 @@ import { z } from 'zod';
 import raw from '../../templates/starts.json';
 import { isFieldTypeId } from '@/engine/fields/registry';
 import { fieldKeyFromName } from '@/engine/ordering';
-import { formProblems, subitemSetSchema, templateForm, templateTab } from '@/lib/templates/schema';
+import {
+  formProblems,
+  statusRuleSchema,
+  subitemSetSchema,
+  templateForm,
+  templateTab,
+} from '@/lib/templates/schema';
 
 const startSchema = z
   .object({
@@ -12,14 +18,26 @@ const startSchema = z
     description: z.string(),
     itemLabel: z.string().optional(),
     groups: z.array(z.string()).optional(),
+    /** [name, type] or [name, type, config]: the config replaces the type's default (status options …). */
     fields: z
       .array(
-        z.tuple([
-          z.string(),
-          z.string().refine(isFieldTypeId, { message: 'Unknown field type in starts.json' }),
+        z.union([
+          z.tuple([
+            z.string(),
+            z.string().refine(isFieldTypeId, { message: 'Unknown field type in starts.json' }),
+          ]),
+          z.tuple([
+            z.string(),
+            z.string().refine(isFieldTypeId, { message: 'Unknown field type in starts.json' }),
+            z.record(z.string(), z.json()),
+          ]),
         ]),
       )
       .optional(),
+    /** A documents register (docs/02 §14): its items are controlled documents with the approval workflow. */
+    register: z.literal('documents').optional(),
+    /** Status rules of the start's fields, by field key (docs/03 §6). */
+    rules: z.array(statusRuleSchema).optional(),
     /** The side-menu folder a sheet from this start goes into (created when missing, docs/02 §1). */
     folder: z.string().trim().min(1).max(80).optional(),
     /** Starts that come with sub-items (CAPA, audit, incident, control, treatment): the set the wizard turns on. */
@@ -36,7 +54,9 @@ const startSchema = z
   });
 
 /** The keys a start's columns get (the same rule createSheet uses). */
-export function startFieldKeys(fields: readonly (readonly [string, string])[]): string[] {
+export function startFieldKeys(
+  fields: readonly (readonly [string, string, ...unknown[]])[],
+): string[] {
   const taken: string[] = [];
   for (const [name] of fields) taken.push(fieldKeyFromName(name, taken));
   return taken;
@@ -61,6 +81,7 @@ export const START_IDS = [
   'incident',
   'control',
   'treatment',
+  'documents',
   'csv',
   'copy',
 ] as const;

@@ -204,6 +204,10 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
         if (needsLibraryTarget(c.type) && !known.get(c.targetSheetId))
           return fail('invalid', `${c.name}: choose a library sheet.`);
       }
+      const start = v.startId ? startById(v.startId) : undefined;
+      // a start's own config for a column it lists (same name and type), e.g. the documents register's statuses
+      const startConfig = (c: { name: string; type: string }) =>
+        start?.fields?.find((f) => f[0] === c.name && f[1] === c.type)?.[2];
       const fields = newFields(
         columns.map((c) => ({
           name: c.name,
@@ -214,15 +218,25 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
                   ...(fieldType(c.type)!.defaultConfig() as object),
                   targetSheetId: c.targetSheetId,
                 }
-              : undefined,
+              : startConfig(c),
         })),
       );
+      // the start's status rules go on the field they watch (by key)
+      for (const f of fields) {
+        const rules = (start?.rules ?? []).filter((r) => r.whenFieldKey === f.key);
+        if (rules.length) f.rules = rules as unknown as Json;
+      }
       const folder = await sheetFolder(supabase, orgId, v);
       if (!folder.ok) return folder;
       const sheetId = randomUUID();
       // the start's tabs (docs/02 sheets.settings.tabs), kept as its default for "Reset to template default"
-      const startTabs = v.startId ? startById(v.startId)?.tabs : undefined;
+      const startTabs = start?.tabs;
       const tabs = startTabs ? resolveTemplateTabs(startTabs, undefined, []).tabs : null;
+      // a documents register (docs/02 §14): the start sets the flag; later only admins change it
+      const settings = {
+        ...(tabs ? { tabs, tabsDefault: tabs } : {}),
+        ...(start?.register ? { register: start.register } : {}),
+      };
       const created = await insertSheet(supabase, {
         sheet: {
           id: sheetId,
@@ -232,7 +246,7 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
           description: v.description,
           item_label: v.itemLabel,
           id_prefix: v.idPrefix,
-          ...(tabs ? { settings: { tabs, tabsDefault: tabs } as unknown as Json } : {}),
+          ...(Object.keys(settings).length ? { settings: settings as unknown as Json } : {}),
           position: keyBetween(await lastSheetPosition(supabase, orgId), null),
         },
         groups: newGroups(v.groups),

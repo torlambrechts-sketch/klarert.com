@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { documentView, isDocumentsRegister } from './documents';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { documentView, isDocumentsRegister, summariseDocument } from './documents';
+import { FIELD_TYPES } from './fields/registry';
+import { installFieldTypes } from './fields/resolve';
 import type { FileVersionRow } from './item-files';
-import { makeFile } from './testing/fixtures';
+import { makeCtx, makeField, makeFile, makeItem } from './testing/fixtures';
+
+beforeAll(() => installFieldTypes(Object.values(FIELD_TYPES)));
 
 const today = '2026-11-13';
 const v = (over: Partial<FileVersionRow> & { id: string }): FileVersionRow => ({
@@ -89,5 +93,57 @@ describe('documentView', () => {
     );
     expect(d.latestFile?.id).toBe('doc');
     expect(d.approvedFile).toBeNull();
+  });
+});
+
+describe('summariseDocument', () => {
+  const status = makeField(
+    'status',
+    {
+      options: [
+        { id: 'opt_draft', label: 'Draft', color: 'grey' },
+        { id: 'opt_approved', label: 'Approved', color: 'green', done: true },
+      ],
+    },
+    { id: 'f-status', key: 'status' },
+  );
+  const docId = makeField('text', {}, { id: 'f-docid', key: 'document_id' });
+  const owner = makeField('people', { multiple: false }, { id: 'f-owner', key: 'owner' });
+  const next = makeField('date', {}, { id: 'f-next', key: 'next_review' });
+  const fields = [status, docId, owner, next];
+
+  it('reads the status option by id, the Document ID, the owner and the next review', () => {
+    const item = makeItem(
+      {
+        'f-status': 'opt_approved',
+        'f-docid': 'POL-007',
+        'f-owner': ['u-maria'],
+        'f-next': '2026-11-01',
+      },
+      { id: 'doc-1', displayId: 'DOC-001', name: 'Access control policy' },
+    );
+    const ctx = makeCtx({ fields });
+    const files = [v({ id: 'v1', itemId: 'doc-1', approvedAt: '2026-02-01T00:00:00Z' })];
+    const s = summariseDocument(item, fields, files, ctx);
+    expect(s.documentId).toBe('POL-007');
+    expect(s.owner).toBe('Maria Pereira');
+    expect(s.view.chip).toBe('v1 · Approved');
+    expect(s.view.nextReview?.overdue).toBe(true);
+  });
+
+  it('a renamed option shows its new label: values are stored by id', () => {
+    const renamed = {
+      ...status,
+      config: { options: [{ id: 'opt_draft', label: 'Concept', color: 'grey' }] },
+    };
+    const item = makeItem({ 'f-status': 'opt_draft' }, { id: 'doc-2' });
+    const s = summariseDocument(
+      item,
+      [renamed],
+      [v({ id: 'x', itemId: 'doc-2' })],
+      makeCtx({ fields: [renamed] }),
+    );
+    expect(s.view.chip).toBe('v1 · Concept');
+    expect(s.documentId).toBeNull();
   });
 });

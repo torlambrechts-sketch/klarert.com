@@ -38,6 +38,17 @@ export const templatePerson = z.object({
   role: z.enum(['owner', 'admin', 'editor', 'viewer']),
 });
 
+/** A status rule (docs/03 §6) as templates and starts write it. */
+export const statusRuleSchema = z.object({
+  id: z.string().min(1),
+  whenFieldKey: fieldKey,
+  whenValues: z.array(json).min(1),
+  require: z.array(fieldKey).optional(),
+  requireComment: z.boolean().optional(),
+  message: z.string().optional(),
+  fromDone: z.boolean().optional(),
+});
+
 export const templateField = z.object({
   key: fieldKey,
   name: z.string().min(1).max(120),

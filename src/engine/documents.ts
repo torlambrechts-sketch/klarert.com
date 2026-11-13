@@ -2,9 +2,11 @@
 // register; its status field's done option means Approved (the approval workflow is enforced in SQL). This projects
 // one document for the places that show it: the version and status chip, the file to hand out (the last APPROVED
 // version, never a draft) and whether a newer draft is in review. Pure: today is passed in.
+import { itemStatusField } from './fields/item-status';
 import { daysBetween, formatDate } from './fields/helpers';
 import { fileChains, versionLabel, type FileVersionRow } from './item-files';
-import type { Sheet } from './types';
+import type { Ctx, Field, Item, Sheet } from './types';
+import { defOf } from './values';
 
 export const DOCUMENTS_REGISTER = 'documents';
 
@@ -81,5 +83,69 @@ export function documentView(input: DocumentStatusInput, today: string): Documen
     latestFile,
     draftInReview,
     nextReview,
+  };
+}
+
+/** One document as the Files tab, the link search and the register list it. */
+export interface DocumentSummary {
+  itemId: string;
+  sheetId: string;
+  displayId: string;
+  name: string;
+  /** The Document ID field's text ("POL-007"), or null. */
+  documentId: string | null;
+  /** Owner names, joined. */
+  owner: string | null;
+  view: DocumentView;
+}
+
+const textOf = (item: Item, field: Field | undefined, ctx: Ctx): string | null => {
+  if (!field) return null;
+  const v = item.values[field.id];
+  if (v === undefined || v === null || v === '') return null;
+  const t = defOf(field).toText(v as never, field.config, ctx);
+  return t ? t : null;
+};
+
+/**
+ * A document of a register: its status (the status field's option; done = Approved), Document ID, owner, next review
+ * and its item files. `fields` are the register's fields, `files` every version of the document's item files.
+ */
+export function summariseDocument(
+  item: Item,
+  fields: Field[],
+  files: FileVersionRow[],
+  ctx: Ctx,
+): DocumentSummary {
+  const byKey = new Map(fields.map((f) => [f.key, f]));
+  const status = itemStatusField(ctx, fields);
+  const statusId = status ? item.values[status.id] : undefined;
+  const option =
+    status && typeof statusId === 'string'
+      ? defOf(status)
+          .options?.(status.config, ctx)
+          .find((o) => o.id === statusId)
+      : undefined;
+  const next = byKey.get(DOCUMENT_KEYS.nextReview);
+  const nextValue = next ? item.values[next.id] : undefined;
+  return {
+    itemId: item.id,
+    sheetId: item.sheetId,
+    displayId: item.displayId,
+    name: item.name,
+    documentId: textOf(item, byKey.get(DOCUMENT_KEYS.documentId), ctx),
+    owner: textOf(item, byKey.get(DOCUMENT_KEYS.owner), ctx),
+    view: documentView(
+      {
+        statusLabel: option?.label ?? null,
+        approved: !!option?.done,
+        files: files.filter((f) => f.itemId === item.id && f.fieldId === null),
+        nextReview:
+          typeof nextValue === 'string' && /^\d{4}-\d{2}-\d{2}/.test(nextValue)
+            ? nextValue.slice(0, 10)
+            : null,
+      },
+      ctx.today,
+    ),
   };
 }

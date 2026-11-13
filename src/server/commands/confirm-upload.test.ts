@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
+import { checkUpload } from '@/engine/item-files';
 import { makeFile } from '@/engine/testing/fixtures';
 import { ok } from '@/server/result';
 import { CHANGED_DURING_UPLOAD, confirmWith, type ConfirmDeps } from './confirm-upload';
@@ -54,5 +55,35 @@ describe('confirmUpload', () => {
     const r = await confirmWith(d, expected);
     expect(r).toMatchObject({ ok: false, error: { code: 'not_found' } });
     expect(d.addFile).not.toHaveBeenCalled();
+  });
+
+  it('checks the stored bytes against the name: a program renamed to .pdf is refused with a reason', async () => {
+    const exe = new Uint8Array([0x4d, 0x5a, 0x90, 0, 3, 0]);
+    const d = {
+      ...deps(exe),
+      inspect: (b: Uint8Array) => {
+        const r = checkUpload('invoice.pdf', b.byteLength, b);
+        return r.ok ? null : r.reason;
+      },
+    };
+    const r = await confirmWith(d, { ...expected, sha256: sha(exe), size: exe.byteLength });
+    expect(r).toEqual({
+      ok: false,
+      error: {
+        code: 'invalid',
+        message: 'This file contains a program or web page and is not allowed.',
+      },
+    });
+    expect(d.addFile).not.toHaveBeenCalled();
+    expect(d.log).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'refused' }));
+  });
+
+  it('keeps a real PDF', async () => {
+    const pdf = new TextEncoder().encode('%PDF-1.7 drill');
+    const d = { ...deps(pdf), inspect: () => null };
+    expect(await confirmWith(d, { ...expected, sha256: sha(pdf), size: pdf.byteLength })).toEqual({
+      ok: true,
+      data: row,
+    });
   });
 });
