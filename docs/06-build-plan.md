@@ -145,6 +145,16 @@ Global gate for every milestone: `pnpm lint && pnpm typecheck && pnpm test && pn
 - [x] Security review: every command has Zod + role checks; RLS tests green; no service-role key in client bundles (`grep` in CI); public form rate-limited
 - [x] Error, empty, loading and offline states on every page (docs/05 §7)
 
+## Sub-items  [Opus]
+
+One level of sub-items per item on a hidden child sheet (docs/02 §12): own fields, IDs (`CA-014.2`, frozen on move), activity log and automations.
+
+- [x] Migration 0020: `sheets.parent_sheet_id`, `items.parent_id / sub_seq / next_sub_seq / archived_with`, guards (one level, right parent), `create_subitem(s)`, `move_subitem`, archive cascade, the close gate and lock cascade in `set_item_values`; grants; pgTAP `0015_subitems.sql`
+- [x] Field type `subitems` (58), roll-ups `worst`, `earliest`, `countExpired`; triggers `subitem_created`, `subitem_field_becomes`, `all_subitems_done` (projected at the same depth); actions `create_subitems`, `set_parent_field`, `update_subitems`; recipes
+- [x] Table: chevron and "3/5" chip, sub-header, indented rows, inline edit, "+ Add", From template, Move, Archive, keyboard (→ ← ↓, Shift+Enter, Ctrl+Shift+E), search opens parents; item panel tab and breadcrumb; phone cards; Kanban chip; My work context
+- [x] Sheet settings: turn on, label, rules, template, the sub-items' fields; wizard starts CAPA, Internal audit, Incident, Control, Risk treatment; `first-sheet.json` Corrective actions with Steps
+- [ ] Lazy loading per expanded parent for sheets with more than 2 000 sub-items (all load with the sheet today); Insights "Items / Sub-items" scope; quick filters (status, owner) matching sub-items
+
 ---
 
 ## After the MVP (do not start without Tor)

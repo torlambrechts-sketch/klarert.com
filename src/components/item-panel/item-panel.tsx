@@ -241,21 +241,21 @@ export function ItemPanel(props: ItemPanelProps) {
                     </span>
                   </nav>
                 ) : (
-                <p className="text-muted-foreground text-copy-13 m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate">
-                  <span className="truncate">{ctx.sheet.name}</span>
-                  <span aria-hidden className="text-line-strong">
-                    /
-                  </span>
-                  <span
-                    aria-hidden
-                    className="size-2 shrink-0 rounded-full"
-                    style={{
-                      background: `var(--label-${group?.color ?? 'grey'}, var(--label-grey))`,
-                    }}
-                  />
-                  <span className="sr-only">{' › '}</span>
-                  <span className="text-ink truncate">{group?.name ?? '—'}</span>
-                </p>
+                  <p className="text-muted-foreground text-copy-13 m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate">
+                    <span className="truncate">{ctx.sheet.name}</span>
+                    <span aria-hidden className="text-line-strong">
+                      /
+                    </span>
+                    <span
+                      aria-hidden
+                      className="size-2 shrink-0 rounded-full"
+                      style={{
+                        background: `var(--label-${group?.color ?? 'grey'}, var(--label-grey))`,
+                      }}
+                    />
+                    <span className="sr-only">{' › '}</span>
+                    <span className="text-ink truncate">{group?.name ?? '—'}</span>
+                  </p>
                 )}
                 <Button
                   type="button"
@@ -427,7 +427,9 @@ export function ItemPanel(props: ItemPanelProps) {
                     parent={item}
                     parentSheetId={item.sheetId}
                     handle={subitems.handle}
-                    canEdit={canEdit && (!item.locked || isAdmin || !ctx.sheet.subitems?.lockCascade)}
+                    canEdit={
+                      canEdit && (!item.locked || isAdmin || !ctx.sheet.subitems?.lockCascade)
+                    }
                     hasTemplate={(ctx.sheet.subitems?.template.length ?? 0) > 0}
                     onOpen={subitems.onOpen}
                   />

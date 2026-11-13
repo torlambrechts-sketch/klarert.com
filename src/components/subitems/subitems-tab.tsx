@@ -12,6 +12,7 @@ import { fieldUI } from '@/components/fields/registry';
 import { cellValue } from '@/components/fields/shared';
 import { Bar } from '@/components/fields/kit';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import type { SubitemsHandle } from './use-subitems';
 
 // The item panel's Sub-items tab (docs/05 §3.4): how many are done, a compact list (status, owner, due date) where a
@@ -48,7 +49,10 @@ export function SubitemsTab({
   const [adding, setAdding] = useState(false);
   if (handle.error)
     return (
-      <div role="alert" className="border-line flex flex-col items-start gap-2 rounded-lg border p-4">
+      <div
+        role="alert"
+        className="border-line flex flex-col items-start gap-2 rounded-lg border p-4"
+      >
         <p className="m-0 font-semibold">The sub-items could not be loaded.</p>
         <Button type="button" variant="outline" onClick={handle.refetch}>
           Retry
@@ -86,9 +90,7 @@ export function SubitemsTab({
     <section aria-label={label} className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <p className="text-label-13 m-0 shrink-0 font-medium">
-          {list.length === 0
-            ? `No ${label.toLowerCase()} yet.`
-            : `${done} of ${list.length} done`}
+          {list.length === 0 ? `No ${label.toLowerCase()} yet.` : `${done} of ${list.length} done`}
         </p>
         {list.length > 0 ? (
           <span className="flex-1">
@@ -109,7 +111,10 @@ export function SubitemsTab({
         ) : null}
       </div>
       {list.length > 0 ? (
-        <ul className="border-line m-0 flex list-none flex-col rounded-lg border p-0" aria-label={label}>
+        <ul
+          className="border-line m-0 flex list-none flex-col rounded-lg border p-0"
+          aria-label={label}
+        >
           {list.map((c) => (
             <li
               key={c.id}
@@ -119,24 +124,29 @@ export function SubitemsTab({
                 type="button"
                 disabled={c.id.startsWith('temp-')}
                 onClick={() => onOpen(c)}
-                className="hover:bg-subtle focus-visible:outline-focus flex min-w-0 flex-1 items-center gap-2 rounded px-1 py-1.5 text-left focus-visible:outline-2"
+                className="hover:bg-subtle focus-visible:outline-focus flex min-w-0 flex-1 flex-col rounded px-1 py-1 text-left focus-visible:outline-2"
               >
-                <span className="text-muted-foreground text-label-12-mono shrink-0">
-                  {c.displayId}
-                </span>
                 <span className="text-label-13 truncate">{c.name}</span>
+                <span className="text-muted-foreground text-label-12-mono">{c.displayId}</span>
               </button>
               {cols.map((f) => {
                 const ui = fieldUI(f.type);
+                const people = kindOf(f, ctx) === 'people';
                 return (
-                  <span key={f.id} className="flex w-[96px] shrink-0 items-center overflow-hidden">
+                  <span
+                    key={f.id}
+                    className={cn(
+                      'relative flex min-h-9 shrink-0 items-center overflow-hidden',
+                      people ? 'w-9' : 'w-[100px]',
+                    )}
+                  >
                     <span className="sr-only">{f.name}: </span>
                     <ui.Cell
                       value={cellValue(c, f, ctx) as never}
                       field={f}
                       item={c}
                       ctx={ctx}
-                      density="table"
+                      density="list"
                     />
                   </span>
                 );

@@ -94,10 +94,13 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
     case 'subitem.removed':
     case 'subitem.archived':
     case 'subitem.restored': {
-      const v = (
-        e.action === 'subitem.removed' ? e.oldValue : e.newValue
-      ) as Record<string, unknown> | null;
-      const what = v ? `${String(v.display_id ?? '')} ${quote(String(v.name ?? ''))}`.trim() : 'a sub-item';
+      const v = (e.action === 'subitem.removed' ? e.oldValue : e.newValue) as Record<
+        string,
+        unknown
+      > | null;
+      const what = v
+        ? `${String(v.display_id ?? '')} ${quote(String(v.name ?? ''))}`.trim()
+        : 'a sub-item';
       if (e.action === 'subitem.added')
         return v && typeof v.from === 'string'
           ? `Sub-item ${what} moved here from ${v.from}`

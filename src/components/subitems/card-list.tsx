@@ -55,7 +55,10 @@ export function CardSubitems({
       >
         <ChevronRight
           aria-hidden
-          className={cn('text-muted-foreground size-4 transition-transform', expanded && 'rotate-90')}
+          className={cn(
+            'text-muted-foreground size-4 transition-transform',
+            expanded && 'rotate-90',
+          )}
         />
         {list.length ? (
           <ProgressChip total={list.length} done={done} label={label} />
@@ -76,12 +79,17 @@ export function CardSubitems({
               onClick={() => onOpen(c)}
               className="border-line hover:bg-subtle focus-visible:outline-focus flex min-h-11 items-center gap-2 border-b px-2 text-left last:border-b-0 focus-visible:outline-2"
             >
-              <span className="text-muted-foreground text-label-12-mono shrink-0">{c.displayId}</span>
+              <span className="text-muted-foreground text-label-12-mono shrink-0">
+                {c.displayId}
+              </span>
               <span className="text-label-13 min-w-0 flex-1 truncate">{c.name}</span>
               {cols.map((f) => {
                 const ui = fieldUI(f.type);
                 return (
-                  <span key={f.id} className="flex max-w-[96px] shrink-0 items-center overflow-hidden">
+                  <span
+                    key={f.id}
+                    className="relative flex max-w-[96px] shrink-0 items-center overflow-hidden"
+                  >
                     <ui.Cell
                       value={cellValue(c, f, ctx) as never}
                       field={f}

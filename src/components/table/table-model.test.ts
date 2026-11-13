@@ -239,3 +239,84 @@ describe('selection', () => {
     expect(step({ row: 4, col: 2 }, 'tab', 5, 3)).toBeNull();
   });
 });
+
+describe('buildLayout with sub-items', () => {
+  const p1 = makeItem({}, { id: 'p1', position: 'a0', groupId: 'g-open' });
+  const p2 = makeItem({}, { id: 'p2', position: 'a1', groupId: 'g-open' });
+  const s1 = makeItem({}, { id: 's1', position: 'a0', parentId: 'p1', groupId: 'g-sub' });
+  const s2 = makeItem({}, { id: 's2', position: 'a1', parentId: 'p1', groupId: 'g-sub' });
+  const kids = new Map([['p1', [s1, s2]]]);
+  const layout = (
+    expanded: string[],
+    extra: Partial<Parameters<typeof buildLayout>[0]['subitems'] & object> = {},
+  ) =>
+    buildLayout({
+      groups,
+      items: [p1, p2],
+      collapsed: new Set(['g-closed']),
+      canAdd: true,
+      subitems: {
+        childrenOf: (id) => kids.get(id) ?? [],
+        expanded: new Set(expanded),
+        canAdd: true,
+        ...extra,
+      },
+    });
+
+  it('collapsed parents add no rows', () => {
+    const l = layout([]);
+    expect(l.rows.map((r) => r.kind)).toEqual([
+      'group',
+      'header',
+      'item',
+      'item',
+      'add',
+      'gap',
+      'group',
+    ]);
+    expect(l.subs).toEqual([]);
+  });
+
+  it('an expanded parent gets its sub-header, rows and add row; selection keeps to the parents', () => {
+    const l = layout(['p1', 'p2']);
+    expect(l.rows.map((r) => r.kind)).toEqual([
+      'group',
+      'header',
+      'item',
+      'subheader',
+      'subitem',
+      'subitem',
+      'subadd',
+      'item',
+      'subempty',
+      'subadd',
+      'add',
+      'gap',
+      'group',
+    ]);
+    expect(l.flat.map((i) => i.id)).toEqual(['p1', 'p2']);
+    expect(l.subs.map((r) => [r.item.id, r.index, r.last])).toEqual([
+      ['s1', 0, false],
+      ['s2', 1, true],
+    ]);
+    expect(l.subIndex.get('s2')).toBe(1);
+    const keys = l.rows.map((r) => r.key);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('a search match opens its parent and marks the sub-item', () => {
+    const l = layout([], { matched: new Map([['p1', new Set(['s2'])]]) });
+    expect(l.subs.map((r) => [r.item.id, r.match])).toEqual([
+      ['s1', false],
+      ['s2', true],
+    ]);
+  });
+
+  it('viewers get no add rows; heights are known per kind', () => {
+    const l = layout(['p1'], { canAdd: false });
+    expect(l.rows.some((r) => r.kind === 'subadd')).toBe(false);
+    expect(rowHeight('subheader')).toBe(28);
+    expect(rowHeight('subitem')).toBe(44);
+    expect(rowHeight('subitem', 'compact')).toBe(36);
+  });
+});

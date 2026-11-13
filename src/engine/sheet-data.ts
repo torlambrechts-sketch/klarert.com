@@ -183,7 +183,10 @@ export function withParent(child: SheetData, parent: SheetData | null | undefine
     ...child,
     related: {
       sheets: [...child.related.sheets.filter((s) => s.id !== parent.sheet.id), parent.sheet],
-      fields: [...child.related.fields.filter((f) => f.sheetId !== parent.sheet.id), ...parent.fields],
+      fields: [
+        ...child.related.fields.filter((f) => f.sheetId !== parent.sheet.id),
+        ...parent.fields,
+      ],
       items: [...child.related.items, ...parent.items.filter((i) => !known.has(i.id))],
     },
   };

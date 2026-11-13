@@ -76,14 +76,22 @@ function Spine({ last }: { last: boolean }) {
   return (
     <span aria-hidden className="relative h-full w-[58px] shrink-0">
       <span
-        className={cn('bg-line-strong absolute left-[30px] w-px', last ? 'top-0 h-1/2' : 'inset-y-0')}
+        className={cn(
+          'bg-line-strong absolute left-[30px] w-px',
+          last ? 'top-0 h-1/2' : 'inset-y-0',
+        )}
       />
       <span className="bg-line-strong absolute top-1/2 left-[30px] h-px w-[14px]" />
     </span>
   );
 }
 
-export function SubHeaderRow({ sub, stickyW }: Common & { row: Extract<TableRow, { kind: 'subheader' }> }) {
+export function SubHeaderRow({
+  sub,
+  stickyW,
+}: Common & { row: Extract<TableRow, { kind: 'subheader' }> }) {
+  const cols = offsets(sub, stickyW);
+  const end = cols.at(-1) ? cols.at(-1)!.left + cols.at(-1)!.width : stickyW;
   return (
     <>
       <Sticky width={stickyW} role="columnheader" className="bg-subtle border-b-soft border-b">
@@ -92,7 +100,7 @@ export function SubHeaderRow({ sub, stickyW }: Common & { row: Extract<TableRow,
         </span>
         <span className="text-muted-foreground text-label-12 truncate">{sub.label}</span>
       </Sticky>
-      {offsets(sub, stickyW).map(({ field, left, width }) => (
+      {cols.map(({ field, left, width }) => (
         <div
           key={field.id}
           role="columnheader"
@@ -102,6 +110,11 @@ export function SubHeaderRow({ sub, stickyW }: Common & { row: Extract<TableRow,
           <span className="truncate">{field.name}</span>
         </div>
       ))}
+      <div
+        aria-hidden
+        className="bg-subtle border-b-soft absolute top-0 h-full border-b"
+        style={{ left: end, width: `calc(100% - ${end}px)` }}
+      />
     </>
   );
 }
@@ -176,9 +189,7 @@ export const SubItemRow = memo(function SubItemRow(
                 <span className="sr-only">: actions run when you finish this row</span>
               </button>
             ) : null}
-            {isEditing('name') ? (
-              <NameEditor item={item} sub={sub} seed={p.seed} />
-            ) : null}
+            {isEditing('name') ? <NameEditor item={item} sub={sub} seed={p.seed} /> : null}
           </span>
         </div>
       </Sticky>
@@ -212,13 +223,11 @@ export const SubItemRow = memo(function SubItemRow(
       <div
         role="gridcell"
         className="border-b-line bg-background-100 group-hover/row:bg-subtle absolute top-0 flex h-full items-center border-b pl-1"
-        style={{ left: end, width: 44 }}
+        // the row's line runs to the card's edge
+        style={{ left: end, width: `max(44px, calc(100% - ${end}px))` }}
       >
         {temp ? null : (
-          <DropdownMenu
-            open={p.menuOpen}
-            onOpenChange={(o) => p.setMenu(o ? item.id : null)}
-          >
+          <DropdownMenu open={p.menuOpen} onOpenChange={(o) => p.setMenu(o ? item.id : null)}>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
@@ -315,7 +324,11 @@ export function SubEmptyRow({
   );
 }
 
-export function SubAddRow({ sub, stickyW, row }: Common & { row: Extract<TableRow, { kind: 'subadd' }> }) {
+export function SubAddRow({
+  sub,
+  stickyW,
+  row,
+}: Common & { row: Extract<TableRow, { kind: 'subadd' }> }) {
   const [name, setName] = useState('');
   const label = sub.one.toLowerCase();
   return (

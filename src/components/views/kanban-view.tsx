@@ -26,6 +26,7 @@ import { useValueCommit } from '@/components/grid/use-commit';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
 import { CommentBubble } from '@/components/table/comment-bubble';
+import { SubitemChip } from '@/components/subitems/progress-chip';
 import { useUpdateSummaries, type UpdateSummary } from '@/components/table/use-update-counts';
 import type { NewItemRequest } from './new-item-dialog';
 
@@ -295,6 +296,7 @@ function Card({
           <span className="font-mono">{item.displayId}</span>
           {person ? ` · ${person}` : ''}
         </span>
+        <SubitemChip item={item} ctx={ctx} />
         <CommentBubble summary={comments} ctx={ctx} />
       </span>
       <span className="text-label-12 flex items-center justify-between gap-2">

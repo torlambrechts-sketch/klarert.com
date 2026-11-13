@@ -53,7 +53,9 @@ function TurnOn({ org, sheetId, canEdit }: SubitemSettingsProps & { canEdit: boo
   const [pending, start] = useTransition();
   const id = useId();
   if (!canEdit)
-    return <p className="text-muted-foreground text-copy-13 m-0">Sub-items are off for this sheet.</p>;
+    return (
+      <p className="text-muted-foreground text-copy-13 m-0">Sub-items are off for this sheet.</p>
+    );
   return (
     <form
       className="flex flex-col gap-3"

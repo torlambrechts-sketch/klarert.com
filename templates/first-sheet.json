@@ -442,7 +442,7 @@
         }
       ],
       "subitems": {
-        "label": "Actions",
+        "label": "Steps",
         "blockClose": true,
         "fields": [
           {

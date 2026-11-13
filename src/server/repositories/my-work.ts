@@ -13,6 +13,8 @@ import {
   fetchRelated,
   fetchSheetMeta,
   type Db,
+  fetchSubitemContext,
+  mergeSubitemContext,
 } from '@/lib/sheet-query';
 import { SHEET_COLUMNS, toField, toItem } from '@/lib/sheet-rows';
 import { getSession } from '@/server/auth';
@@ -82,10 +84,19 @@ async function loadMyWork(db: Db, orgId: string, userId: string, timeZone: strin
         new Set(list.map((i) => i.id)),
         attached.links.map((l) => l.toItem),
       );
-      const ctx = sheetCtx(
+      // sub-items show their parent as context (docs/05 §3.6)
+      const data = mergeSubitemContext(
         { ...meta, ...directory, items: list, ...attached, related },
-        { now, timeZone, userId, newId },
+        meta.sheet.parentSheetId
+          ? await fetchSubitemContext(db, meta.sheet, list)
+          : {
+              links: [],
+              files: [],
+              protectedValues: [],
+              related: { sheets: [], fields: [], items: [] },
+            },
       );
+      const ctx = sheetCtx(data, { now, timeZone, userId, newId });
       for (const item of list) sources.push({ item, ctx });
     }),
   );

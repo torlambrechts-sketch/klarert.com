@@ -78,9 +78,9 @@ describe('planSubitems', () => {
     });
     expect(rows.group.name).toBe('Actions');
     expect(rows.fields.map((f) => f.key)).toEqual(['owner']);
-    // the column comes first on the parent, with a key that does not clash
+    // the column comes after the parent's fields, with a key that does not clash
     expect(rows.parentField).toMatchObject({ type: 'subitems', name: 'Actions', key: 'actions_2' });
-    expect(rows.parentField.position < 'a0').toBe(true);
+    expect(rows.parentField.position > 'a5').toBe(true);
     expect(rows.settings).toEqual({
       label: 'Actions',
       blockClose: true,

@@ -58,7 +58,7 @@ export interface SubitemRows {
     config: Json;
     rules: Json;
   }[];
-  /** The sub-items column on the parent, first after the name. */
+  /** The sub-items column on the parent, after its last field. */
   parentField: { id: string; key: string; name: string; type: 'subitems'; position: string; width: number; config: Json };
   settings: SubitemSettings;
 }
@@ -68,7 +68,7 @@ export function planSubitems(
   env: {
     orgId: string;
     parent: { id: string; name: string; folderId: string | null; position: string; holdAutomations: boolean };
-    /** Keys and the first position of the parent's fields (the column goes before them). */
+    /** Keys and positions of the parent's fields (the column goes after them). */
     parentFields: { key: string; position: string }[];
     newId(): string;
   },
@@ -94,7 +94,8 @@ export function planSubitems(
       rules: (c.rules ?? []) as Json,
     };
   });
-  const first = [...env.parentFields].sort((a, b) => (a.position < b.position ? -1 : 1))[0];
+  // after the last field: keys before "a0" sort differently under the database's collation than in JavaScript
+  const last = [...env.parentFields].sort((a, b) => (a.position < b.position ? -1 : 1)).at(-1);
   return {
     label,
     sheet: {
@@ -119,7 +120,7 @@ export function planSubitems(
       ),
       name: label.slice(0, 80),
       type: 'subitems',
-      position: keyBetween(null, first?.position ?? null),
+      position: keyBetween(last?.position ?? null, null),
       width: fieldType('subitems')!.defaultWidth,
       config: {},
     },

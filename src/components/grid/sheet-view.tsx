@@ -152,7 +152,10 @@ function SheetBody(props: SheetViewProps) {
   }, []);
   const raw = query.data;
   // sub-items (docs/02 §12): the child sheet loads beside the sheet; its rows join the Ctx for roll-ups
-  const subEnv = useMemo(() => ({ now, timeZone, userId, isAdmin }), [now, timeZone, userId, isAdmin]);
+  const subEnv = useMemo(
+    () => ({ now, timeZone, userId, isAdmin }),
+    [now, timeZone, userId, isAdmin],
+  );
   const sub = useSubitems(org, raw?.sheet.childSheetId ?? null, raw, subEnv);
   const subData = sub.state?.data;
   const data = useMemo(() => (raw ? withSubitems(raw, subData) : undefined), [raw, subData]);

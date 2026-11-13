@@ -54,7 +54,7 @@ describe('first-sheet template', () => {
     expect(plan.sheets).toHaveLength(2);
     // Corrective actions has sub-items: its column joins the 18 fields
     expect(plan.sheets.map((s) => s.fields.length)).toEqual([19, 7]);
-    expect(plan.sheets[0]!.fields.find((f) => f.type === 'subitems')?.name).toBe('Actions');
+    expect(plan.sheets[0]!.fields.find((f) => f.type === 'subitems')?.name).toBe('Steps');
     expect(plan.sheets[0]!.subitems?.fields.map((f) => f.key)).toEqual([
       'owner',
       'status',

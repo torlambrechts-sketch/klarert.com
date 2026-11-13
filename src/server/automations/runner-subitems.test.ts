@@ -173,4 +173,34 @@ describe('runChain with sub-items', () => {
     await runChain([valueChanged(state.get('a')!, cStatus.id, 'c_todo', 'c_done')], s, opts);
     expect(saved.map((r) => r.status)).toEqual(['done']);
   });
+
+  it('a released sub-item hold runs the sub-item’s automations, then the parent’s (child events first)', async () => {
+    const parent = makeItem({}, { id: 'p1', displayId: 'CA-001' });
+    const a = makeSubitem(parent, { [cStatus.id]: 'c_done' }, { id: 'a' });
+    const childAuto = automation({
+      sheetId: CHILD,
+      name: 'Child',
+      trigger: { type: 'item_created' },
+      actions: [{ type: 'post_update', message: 'Added' }],
+    });
+    const parentAuto = automation({
+      name: 'Parent',
+      trigger: { type: 'subitem_created' },
+      actions: [{ type: 'post_update', message: 'A step was added' }],
+    });
+    const { store: s, saved } = store([childAuto, parentAuto], [parent, a], () => ({}));
+    // what releaseHold emits for a new row: item_created, then the values set while it was held
+    await runChain(
+      [
+        { type: 'item.created', sheetId: CHILD, itemId: 'a', actor: user },
+        valueChanged(a, cStatus.id, null, 'c_done'),
+      ],
+      s,
+      opts,
+    );
+    expect(saved.map((r) => [r.automationId, r.itemId, r.depth])).toEqual([
+      [childAuto.id, 'a', 0],
+      [parentAuto.id, 'p1', 0],
+    ]);
+  });
 });

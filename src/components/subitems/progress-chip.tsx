@@ -1,7 +1,8 @@
 'use client';
 
 import { Check, ListTree } from 'lucide-react';
-import { progressText } from '@/engine/subitems';
+import { progressText, subitemLabel, subitemProgress } from '@/engine/subitems';
+import type { Ctx, Item } from '@/engine/types';
 import { cn } from '@/lib/utils';
 
 /**
@@ -42,4 +43,13 @@ export function ProgressChip({
       </span>
     </span>
   );
+}
+
+/** The chip for an item of a sheet with sub-items (Kanban cards and other views read the sheet's Ctx). */
+export function SubitemChip({ item, ctx }: { item: Item; ctx: Ctx }) {
+  if (!ctx.sheet.childSheetId) return null;
+  const p = subitemProgress(item, ctx);
+  return p.total ? (
+    <ProgressChip total={p.total} done={p.done} label={subitemLabel(ctx.sheet)} />
+  ) : null;
 }

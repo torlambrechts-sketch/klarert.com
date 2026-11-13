@@ -143,7 +143,6 @@ export interface TableProps {
   onOpenSubitem?(item: Item): void;
 }
 
-
 /**
  * A callback that keeps its identity across renders and always calls the latest `fn`. Rows are memoised: handlers
  * that changed identity on every render made every visible row render again on every scrolled frame (M10 perf).
@@ -295,7 +294,9 @@ export function Table({
   const colIndex = useMemo(() => new Map(columns.map((c, i) => [columnId(c), i])), [columns]);
   const rowIndexOfItem = useMemo(() => {
     const m = new Map<string, number>();
-    layout.rows.forEach((r, i) => (r.kind === 'item' || r.kind === 'subitem') && m.set(r.item.id, i));
+    layout.rows.forEach(
+      (r, i) => (r.kind === 'item' || r.kind === 'subitem') && m.set(r.item.id, i),
+    );
     return m;
   }, [layout.rows]);
   // trend lines (comfortable density): the history loads after the sheet; columns that show one get its width
@@ -544,7 +545,9 @@ export function Table({
   const toggleAll = () => {
     if (!sub) return;
     if (expanded.size > 0) return store.getState().setExpanded([]);
-    store.getState().setExpanded(layout.flat.filter((i) => childrenOf(i.id).length > 0).map((i) => i.id));
+    store
+      .getState()
+      .setExpanded(layout.flat.filter((i) => childrenOf(i.id).length > 0).map((i) => i.id));
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -1277,7 +1280,13 @@ function RowContent(p: RowProps) {
     if (row.kind === 'subempty') return <SubEmptyRow {...common} row={row} />;
     return <SubAddRow {...common} row={row} />;
   }
-  if (row.kind !== 'group' && row.kind !== 'header' && row.kind !== 'item' && row.kind !== 'add' && row.kind !== 'summary')
+  if (
+    row.kind !== 'group' &&
+    row.kind !== 'header' &&
+    row.kind !== 'item' &&
+    row.kind !== 'add' &&
+    row.kind !== 'summary'
+  )
     return null;
   if (row.kind === 'group') return <GroupRow {...p} row={row} />;
   if (row.kind === 'header') return <HeaderRow {...p} row={row} />;
