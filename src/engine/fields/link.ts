@@ -53,6 +53,25 @@ export function readValue(item: Item, field: Field, ctx: Ctx): unknown {
 }
 
 /**
+ * Lookups and rollups (docs/02 §16): hidden when the link field is a restricted field the caller may not see, when
+ * the target sheet is one they cannot read, or when the target field is restricted for them.
+ */
+export function throughHidden(
+  sheetId: string,
+  cfg: { linkFieldKey?: string | null; targetFieldKey?: string | null },
+  ctx: Ctx,
+): boolean {
+  const linkField = fieldByKey(sheetId, cfg.linkFieldKey, ctx);
+  if (!linkField) return false;
+  if (ctx.canSee && !ctx.canSee(linkField)) return true;
+  const target = (linkField.config as { targetSheetId?: unknown }).targetSheetId;
+  if (typeof target !== 'string' || !target) return false;
+  if (ctx.noAccess?.(target)) return true;
+  const tf = fieldByKey(target, cfg.targetFieldKey, ctx);
+  return !!tf && !!ctx.canSee && !ctx.canSee(tf);
+}
+
+/**
  * Items a link-kind field (link, requirement, controllink, or a type with `relatedIds` such as sub-items) on `item`
  * points to, skipping ids not in the cache.
  */

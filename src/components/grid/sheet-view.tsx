@@ -1,10 +1,17 @@
 'use client';
 
+import { AccessDialog } from '@/components/access/access-panel';
+import {
+  canComment as canCommentLevel,
+  canEdit as canEditLevel,
+  isReadOnlyRole,
+  type AccessLevel,
+} from '@/engine/access';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Folder, Plus, Settings, Share, Sheet } from 'lucide-react';
+import { Folder, Lock, Plus, Settings, Share, Sheet, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { sheetCtx, withSubitems } from '@/engine/sheet-data';
 import { useSubitems, type SubitemsHandle } from '@/components/subitems/use-subitems';
@@ -76,7 +83,11 @@ export interface SheetViewProps {
   archived: boolean;
   userId: string;
   timeZone: string;
-  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'auditor';
+  /** The person's level on this sheet (docs/02 §16): edit, comment, view. */
+  access?: AccessLevel;
+  /** The sheet is restricted (its own list or its folder's). */
+  restricted?: boolean;
   onlyGroup: string | null;
   /** sheets.settings.defaultViewId: a saved view's id or a built-in view; null = Table. */
   defaultViewId: string | null;
@@ -140,14 +151,19 @@ const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) =>
   a.size === b.size && [...a].every((x) => b.has(x));
 
 function SheetBody(props: SheetViewProps) {
-  const { org, sheetId, sheetName, userId, timeZone, role } = props;
+  const { org, sheetId, sheetName, userId, timeZone } = props;
+  const access = props.access ?? 'editor';
+  // what the person may do here: their workspace role, narrowed by the sheet's access (docs/02 §16)
+  const editable = !isReadOnlyRole(props.role) && canEditLevel(access);
+  const role = editable ? props.role : 'viewer';
+  const commentable = !isReadOnlyRole(props.role) && canCommentLevel(access);
   const query = useSheetQuery(sheetId);
   const actions = useSheetActions(org, sheetId);
   const realtime = useSheetRealtime(sheetId, actions.pending);
   useRelatedRealtime(sheetId, query.data?.related.sheets.map((s) => s.id) ?? []);
   const online = useOnline();
   const narrow = useNarrow();
-  const canEdit = role !== 'viewer';
+  const canEdit = editable;
   const isAdmin = role === 'owner' || role === 'admin';
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -234,6 +250,7 @@ function SheetBody(props: SheetViewProps) {
         : [],
     [data, props.onlyGroup],
   );
+  const [accessOpen, setAccessOpen] = useState(false);
   const share = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -271,6 +288,11 @@ function SheetBody(props: SheetViewProps) {
             <Sheet className="size-[15px] shrink-0" aria-hidden />
             <span className="truncate font-medium">{sheetName}</span>
           </span>
+          {props.restricted ? (
+            <span className="bg-soft text-muted-foreground text-label-12 flex shrink-0 items-center gap-1 rounded-full px-[9px] py-0.5 font-medium">
+              <Lock className="size-3" aria-hidden /> Restricted
+            </span>
+          ) : null}
           {props.archived || data?.sheet.isLibrary ? (
             <span className="bg-soft text-muted-foreground text-label-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
               {props.archived ? 'Archived' : 'Library'}
@@ -301,6 +323,14 @@ function SheetBody(props: SheetViewProps) {
               onClick={() => void share()}
             >
               <Share aria-hidden /> Share
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className={headerButton}
+              onClick={() => setAccessOpen(true)}
+            >
+              {props.restricted ? <Lock aria-hidden /> : <Users aria-hidden />} Access
             </Button>
             {canEdit && active.type !== 'form' ? (
               <Button
@@ -403,6 +433,12 @@ function SheetBody(props: SheetViewProps) {
           timeZone={timeZone}
         />
       </div>
+      <AccessDialog
+        org={org}
+        target={accessOpen ? { kind: 'sheet', id: sheetId, name: sheetName } : null}
+        onClose={() => setAccessOpen(false)}
+        timeZone={timeZone}
+      />
       {data && tabular && views.ready ? (
         <ViewBar
           views={views}
@@ -414,7 +450,11 @@ function SheetBody(props: SheetViewProps) {
       ) : null}
       {!canEdit ? (
         <p className="text-muted-foreground text-copy-13 -mt-1 mb-3">
-          You can view this sheet. Ask an editor or admin to change it.
+          {props.role === 'auditor'
+            ? 'You have read-only auditor access.'
+            : commentable
+              ? 'You can view and comment on this sheet. Ask an editor or admin to change it.'
+              : 'You can view this sheet. Ask an editor or admin to change it.'}
         </p>
       ) : null}
       {query.isError ? (
@@ -451,6 +491,7 @@ function SheetBody(props: SheetViewProps) {
           search={q}
           narrow={narrow}
           canEdit={canEdit}
+          canComment={commentable}
           isAdmin={isAdmin}
           addTick={addTick}
           newItem={newItem}
@@ -473,6 +514,7 @@ function ViewBody({
   search,
   narrow,
   canEdit,
+  canComment,
   isAdmin,
   addTick,
   newItem,
@@ -487,6 +529,7 @@ function ViewBody({
   search: string;
   narrow: boolean;
   canEdit: boolean;
+  canComment: boolean;
   isAdmin: boolean;
   addTick: number;
   newItem: NewItemRequest | null;
@@ -705,6 +748,7 @@ function ViewBody({
           item={panelItem}
           order={order.some((i) => i.id === panelItem.id) ? order : [panelItem]}
           canEdit={canEdit}
+          canComment={canComment}
           isAdmin={isAdmin}
           onClose={() => setItemParam(null, 'push')}
           onNavigate={(it) => setItemParam(it.displayId, 'replace')}
@@ -723,6 +767,7 @@ function ViewBody({
             .filter((i) => i.parentId === panelSub.parentId)
             .sort((a, b) => (a.position < b.position ? -1 : 1))}
           canEdit={canEdit}
+          canComment={canComment}
           isAdmin={isAdmin}
           onClose={() => setItemParam(null, 'push')}
           onNavigate={(it) => setItemParam(it.displayId, 'replace')}

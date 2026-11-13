@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import '@/engine/fields/registry';
 import type { SheetData } from '@/engine/sheet-data';
-import type { Field, Item, Person } from '@/engine/types';
+import type { Field, Item, Json, Person } from '@/engine/types';
 import type { Database } from './database.types';
 import {
   FIELD_COLUMNS,
@@ -84,6 +84,64 @@ export async function fetchDirectory(db: Db, orgId: string) {
   };
 }
 
+/**
+ * Restricted fields (docs/02 §16): their values live in restricted_values, readable only by the people who see the
+ * field (RLS). The ones the caller may read are merged into the items' values; the others never arrive.
+ */
+async function mergeRestricted(
+  items: Item[],
+  rows: { item_id: string; field_id: string; value: unknown }[],
+): Promise<Item[]> {
+  if (rows.length === 0) return items;
+  const byItem = new Map<string, Record<string, Json>>();
+  for (const r of rows) {
+    const v = byItem.get(r.item_id) ?? {};
+    v[r.field_id] = r.value as Json;
+    byItem.set(r.item_id, v);
+  }
+  return items.map((it) => {
+    const more = byItem.get(it.id);
+    return more ? { ...it, values: { ...it.values, ...more } } : it;
+  });
+}
+
+async function restrictedRows(
+  db: Db,
+  by: { sheetId: string } | { orgId: string },
+): Promise<{ item_id: string; field_id: string; value: unknown }[]> {
+  const out: { item_id: string; field_id: string; value: unknown }[] = [];
+  for (let from = 0; ; from += PAGE) {
+    let q = db.from('restricted_values').select('item_id, field_id, value');
+    q = 'sheetId' in by ? q.eq('sheet_id', by.sheetId) : q.eq('org_id', by.orgId);
+    const rows = must(
+      await q
+        .order('item_id')
+        .order('field_id')
+        .range(from, from + PAGE - 1),
+    );
+    out.push(...rows);
+    if (rows.length < PAGE) return out;
+  }
+}
+
+/** Link target sheets of these fields that the caller cannot read (lookups through them say "Restricted"). */
+export async function fetchNoAccess(db: Db, fields: Field[]): Promise<string[]> {
+  const targets = [
+    ...new Set(
+      fields.flatMap((f) => {
+        const t = (f.config as { targetSheetId?: unknown } | null)?.targetSheetId;
+        return resolveFieldType(f.type)?.storage === 'links' && typeof t === 'string' && t
+          ? [t]
+          : [];
+      }),
+    ),
+  ];
+  if (targets.length === 0) return [];
+  const { data, error } = await db.rpc('sheet_levels', { p_sheets: targets });
+  if (error) return [];
+  return (data ?? []).filter((r) => r.level === 'none').map((r) => r.sheet_id);
+}
+
 /** Items of a sheet (non-archived), in position order, all pages. */
 export async function fetchItems(db: Db, sheetId: string): Promise<Item[]> {
   const head = await db
@@ -102,7 +160,7 @@ export async function fetchItems(db: Db, sheetId: string): Promise<Item[]> {
       .order('id')
       .range(from, to),
   );
-  return rows.map(toItem);
+  return mergeRestricted(rows.map(toItem), await restrictedRows(db, { sheetId }));
 }
 
 /** Every live item of the given sheets in one paged read, by sheet (workspace-wide pages such as Workflow). */
@@ -130,14 +188,28 @@ export async function fetchItemsOfSheets(
       .order('id')
       .range(from, to),
   );
-  for (const it of rows.map(toItem)) out.get(it.sheetId)?.push(it);
+  const items = await mergeRestricted(rows.map(toItem), await restrictedRows(db, { orgId }));
+  for (const it of items) out.get(it.sheetId)?.push(it);
   return out;
 }
 
 export async function fetchItemsById(db: Db, ids: string[]): Promise<Item[]> {
-  return chunked(ids, async (part) =>
-    must(await db.from('items').select(ITEM_COLUMNS).in('id', part)).map(toItem),
-  );
+  return chunked(ids, async (part) => {
+    const [items, restricted] = await Promise.all([
+      db.from('items').select(ITEM_COLUMNS).in('id', part),
+      db.from('restricted_values').select('item_id, field_id, value').in('item_id', part),
+    ]);
+    return mergeRestricted(must(items).map(toItem), must(restricted));
+  });
+}
+
+/** One item's restricted values the caller may read, merged into an item a write just returned. */
+export async function withRestrictedValues(db: Db, item: Item): Promise<Item> {
+  const { data } = await db
+    .from('restricted_values')
+    .select('item_id, field_id, value')
+    .eq('item_id', item.id);
+  return (await mergeRestricted([item], data ?? []))[0]!;
 }
 
 /** Links, current files and visible protected values of the given fields (optionally only some items). */
@@ -367,10 +439,11 @@ export function mergeSubitemContext(
 export async function fetchSheetData(db: Db, sheetId: string): Promise<SheetData | null> {
   const meta = await fetchSheetMeta(db, sheetId);
   if (!meta) return null;
-  const [directory, items, attached] = await Promise.all([
+  const [directory, items, attached, noAccessSheetIds] = await Promise.all([
     fetchDirectory(db, meta.sheet.orgId),
     fetchItems(db, sheetId),
     fetchAttached(db, meta.fields),
+    fetchNoAccess(db, meta.fields),
   ]);
   const loaded = new Set(items.map((i) => i.id));
   const related = await fetchRelated(
@@ -379,5 +452,5 @@ export async function fetchSheetData(db: Db, sheetId: string): Promise<SheetData
     loaded,
     attached.links.map((l) => l.toItem),
   );
-  return { ...meta, ...directory, items, ...attached, related };
+  return { ...meta, ...directory, items, ...attached, related, noAccessSheetIds };
 }

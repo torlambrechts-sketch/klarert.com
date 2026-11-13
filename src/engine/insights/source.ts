@@ -6,7 +6,7 @@ import type { LabelOption } from '../fields/types';
 import { ownerField } from '../item-panel';
 import { dueField } from '../my-work';
 import type { Ctx, Field, Item, LabelColor, Sheet } from '../types';
-import { dateOf, defOf, isItemDone, keysOf, kindOf, numberOf } from '../values';
+import { dateOf, defOf, hiddenFor, isItemDone, keysOf, kindOf, numberOf } from '../values';
 import {
   filterLabel,
   SOON_DAYS,
@@ -39,6 +39,9 @@ export interface InsightsData {
 const byPosition = (a: Field, b: Field) =>
   a.position < b.position ? -1 : a.position > b.position ? 1 : 0;
 export const sortedFields = (fields: readonly Field[]) => [...fields].sort(byPosition);
+/** Fields a widget may read: restricted fields the person may not see are left out (docs/02 §16). */
+const seen = (s: Pick<InsightSource, 'fields' | 'ctx'>) =>
+  sortedFields(s.fields).filter((f) => !hiddenFor(f, s.ctx));
 
 const GROUP_KINDS = new Set(['option', 'ordered', 'multi', 'people', 'boolean']);
 const DATE_KINDS = new Set(['date', 'daterange']);
@@ -46,16 +49,16 @@ const HIDDEN_KINDS = new Set(['none', 'file', 'signature']);
 
 /** Fields bars and donuts can group by: options, people and checkboxes. */
 export const groupFields = (s: Pick<InsightSource, 'fields' | 'ctx'>) =>
-  sortedFields(s.fields).filter((f) => GROUP_KINDS.has(kindOf(f, s.ctx)));
+  seen(s).filter((f) => GROUP_KINDS.has(kindOf(f, s.ctx)));
 /** Fields that can be summed or averaged. */
 export const numberFields = (s: Pick<InsightSource, 'fields' | 'ctx'>) =>
-  sortedFields(s.fields).filter((f) => kindOf(f, s.ctx) === 'number');
+  seen(s).filter((f) => kindOf(f, s.ctx) === 'number');
 /** Fields with a date (timelines by their end). */
 export const dateFields = (s: Pick<InsightSource, 'fields' | 'ctx'>) =>
-  sortedFields(s.fields).filter((f) => DATE_KINDS.has(kindOf(f, s.ctx)));
+  seen(s).filter((f) => DATE_KINDS.has(kindOf(f, s.ctx)));
 /** Fields an item list can show after the name. */
 export const listFields = (s: Pick<InsightSource, 'fields' | 'ctx'>) =>
-  sortedFields(s.fields).filter((f) => !HIDDEN_KINDS.has(kindOf(f, s.ctx)));
+  seen(s).filter((f) => !HIDDEN_KINDS.has(kindOf(f, s.ctx)));
 
 const byKey = (fields: Field[], k: string | undefined) =>
   k ? fields.find((f) => f.key === k) : undefined;

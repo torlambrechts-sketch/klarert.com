@@ -11,7 +11,7 @@ import {
   isIsoDate,
   parseNumber,
 } from './helpers';
-import { fieldByKey, linkedItems, readValue } from './link';
+import { fieldByKey, linkedItems, readValue, throughHidden } from './link';
 import { resolveFieldType } from './resolve';
 import type { AnyFieldType, FieldTypeDef } from './types';
 
@@ -206,6 +206,7 @@ export const rollup: FieldTypeDef<RollupValue, RollupConfig> = base<RollupValue,
   normalize: (input) => parseNumber(input),
   parseText: (t) => parseNumber(t),
   compute: computeRollup,
+  readsHidden: (field, ctx) => throughHidden(field.sheetId, field.config, ctx),
   isEmpty,
   effectiveKind: (field) =>
     field.config.fn === 'worst' ? 'text' : field.config.fn === 'earliest' ? 'date' : 'number',

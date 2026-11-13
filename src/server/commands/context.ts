@@ -24,7 +24,12 @@ export async function withOrg<T>(
   if (need === 'admin' && !isAdminRole(m.role))
     return fail('forbidden', 'Only owners and admins can do that.');
   if (need === 'editor' && !isEditorRole(m.role))
-    return fail('forbidden', 'Viewers cannot change sheets. Ask an editor or admin.');
+    return fail(
+      'forbidden',
+      m.role === 'auditor'
+        ? 'Auditors have read-only access.'
+        : 'Viewers cannot change sheets. Ask an editor or admin.',
+    );
   const result = await run({ ...session, orgId: m.orgs.id, role: m.role });
   log(command, { org: m.orgs.id, user: session.user.id, ms: Date.now() - started, ok: result.ok });
   return result;

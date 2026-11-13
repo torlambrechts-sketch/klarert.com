@@ -21,7 +21,7 @@ export interface SubitemSettingsProps {
   sheetId: string;
   userId: string;
   timeZone: string;
-  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'auditor';
   archived: boolean;
   /** null: sub-items are off. */
   childSheetId: string | null;
@@ -39,7 +39,7 @@ const dueOf = (values: Record<string, Json>, key: string | null) => {
 };
 
 export function SubitemSettingsSection(p: SubitemSettingsProps) {
-  const canEdit = p.role !== 'viewer' && !p.archived;
+  const canEdit = p.role !== 'viewer' && p.role !== 'auditor' && !p.archived;
   return p.childSheetId && p.settings ? (
     <Enabled {...p} childSheetId={p.childSheetId} settings={p.settings} canEdit={canEdit} />
   ) : (

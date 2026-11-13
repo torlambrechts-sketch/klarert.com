@@ -1,5 +1,6 @@
 'use client';
 
+import { hiddenFor } from '@/engine/values';
 import { memo, useEffect, useRef } from 'react';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { readsSubitems, subitemLabel } from '@/engine/subitems';
@@ -98,7 +99,12 @@ export const TableCell = memo(function TableCell({
   const ui = fieldUI(field.type);
   const value = cellValue(item, field, ctx);
   const def = resolveFieldType(field.type)!;
-  const missing = field.required && def.storage === 'values' && def.isEmpty(value as never);
+  // a restricted field the person may not see is not "missing": its value never reached them
+  const missing =
+    field.required &&
+    def.storage === 'values' &&
+    !hiddenFor(field, ctx) &&
+    def.isEmpty(value as never);
   return (
     <div
       id={cellId(item.id, field.id)}

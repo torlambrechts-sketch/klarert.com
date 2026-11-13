@@ -1,3 +1,6 @@
+import { AccessPanel } from '@/components/access/access-panel';
+import { NoAccess } from '@/components/access/no-access';
+import { canEdit as canEditLevel, toLevel } from '@/engine/access';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
@@ -21,6 +24,7 @@ import {
   getFields,
   getNav,
   getSheet,
+  getSheetAccess,
   getSubitemSheet,
   getViews,
 } from '@/server/repositories/sheets';
@@ -53,9 +57,15 @@ export default async function SheetSettingsPage({
   params: Promise<{ org: string; sheetId: string }>;
 }) {
   const { org, sheetId } = await params;
-  const { workspace, role, user } = await requireMember(org);
-  const sheet = await getSheet(workspace.id, sheetId);
+  const { workspace, role: workspaceRole, user } = await requireMember(org);
+  const [sheet, access] = await Promise.all([
+    getSheet(workspace.id, sheetId),
+    getSheetAccess(workspace.id, sheetId),
+  ]);
+  if (!sheet && access?.level === 'none') return <NoAccess org={org} name={access.name} />;
   if (!sheet) notFound();
+  // the workspace role, narrowed by the sheet's access (docs/02 §16): without edit access, read only
+  const role = canEditLevel(toLevel(access?.level)) ? workspaceRole : 'viewer';
   // a sub-item sheet is set up in its parent's settings (Sub-items)
   if (sheet.parent_sheet_id) redirect(`/${org}/s/${sheet.parent_sheet_id}/settings`);
   const [nav, fields, archivedItems, child, viewRows] = await Promise.all([
@@ -124,6 +134,16 @@ export default async function SheetSettingsPage({
         </Card>
       )}
 
+      <Card
+        title="Access"
+        description="Who can see, comment on and edit this sheet. Restricted sheets are seen only by the people listed and the owners."
+      >
+        <AccessPanel
+          org={org}
+          target={{ kind: 'sheet', id: sheet.id, name: sheet.name }}
+          timeZone={workspace.time_zone}
+        />
+      </Card>
       <Card title="Controlled documents">
         <DocumentsRegisterSetting
           org={org}

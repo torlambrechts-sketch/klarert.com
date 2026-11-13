@@ -21,6 +21,8 @@ export type PackSheet = Omit<TemplateSheet, 'folder' | 'items'> & {
   folder?: string;
   isLibrary: boolean;
   register?: 'documents';
+  /** Restricted at install (docs/02 §16): the installer and the owners see it until people are given access. */
+  restricted?: boolean;
   items: PackItem[];
 };
 
@@ -58,7 +60,7 @@ export interface PackManifest {
   requires: PackRequirement[];
   /** People named by example values (`$person:<ref>`), matched to the workspace's members by email. */
   people: SheetTemplate['people'];
-  folders: { ref: string; name: string }[];
+  folders: { ref: string; name: string; restricted?: boolean }[];
   sheets: PackSheet[];
   automations: PackAutomation[];
   dashboards: PackDashboard[];

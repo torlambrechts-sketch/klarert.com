@@ -29,7 +29,7 @@ export interface SheetFieldsProps {
   sheetId: string;
   userId: string;
   timeZone: string;
-  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'auditor';
   /** Archived sheets take no new fields. */
   archived: boolean;
 }
@@ -55,7 +55,7 @@ function FieldsBody({ org, sheetId, userId, timeZone, role, archived }: SheetFie
   const store = useGridStore();
   const settingsFor = useGrid((s) => s.settingsFor);
   const [adding, setAdding] = useState(false);
-  const canEdit = role !== 'viewer';
+  const canEdit = role !== 'viewer' && role !== 'auditor';
   const isAdmin = role === 'owner' || role === 'admin';
   const data = query.data;
   const sheets = useSheetsList(data?.sheet.orgId);

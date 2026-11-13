@@ -48,6 +48,8 @@ export interface SheetData {
   sites: Site[];
   /** Other sheets reached through links (targets), with their fields and the linked items. */
   related: { sheets: Sheet[]; fields: Field[]; items: Item[] };
+  /** Link target sheets the caller cannot read (docs/02 §16): lookups through them read "Restricted". */
+  noAccessSheetIds?: string[];
 }
 
 export interface CtxEnv {
@@ -116,6 +118,7 @@ export function sheetCtx(data: SheetData, env: CtxEnv): Ctx {
     list.push(it.id);
     childIds.set(it.parentId, list);
   }
+  const noAccess = new Set(data.noAccessSheetIds ?? []);
   const prot = new Map(data.protectedValues.map((p) => [`${p.itemId}:${p.fieldId}`, p.value]));
   const canSeeProtected = (fieldId: string) => {
     const f = fields.find((x) => x.id === fieldId);
@@ -150,6 +153,9 @@ export function sheetCtx(data: SheetData, env: CtxEnv): Ctx {
       if (v !== undefined) return v;
       return canSeeProtected(fieldId) ? null : undefined;
     },
+    // restricted fields (docs/02 §16): the database marks the ones whose values the caller may not see
+    canSee: (field) => !field.hidden,
+    noAccess: (sheetId) => noAccess.has(sheetId),
     newId: env.newId,
   };
 }

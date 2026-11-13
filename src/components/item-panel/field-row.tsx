@@ -1,5 +1,6 @@
 'use client';
 
+import { hiddenFor } from '@/engine/values';
 import { useId, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -46,9 +47,11 @@ export function FieldRow({
   const value = cellValue(item, field, ctx);
   const explainOnly = def.storage === 'computed' || def.storage === 'none';
   const canOpen = explainOnly || editable;
-  const text = displayText(field, value, ctx);
+  // a restricted field the person may not see (docs/02 §16): its cell says Restricted, never Empty
+  const hidden = hiddenFor(field, ctx);
+  const text = hidden ? 'Restricted' : displayText(field, value, ctx);
   // protected values the person may not see are undefined: the cell says Restricted
-  const empty = value !== undefined && def.isEmpty(value as never);
+  const empty = !hidden && value !== undefined && def.isEmpty(value as never);
   const missing = field.required && def.storage === 'values' && empty;
 
   const commit = (fieldId: string, raw: unknown) => {

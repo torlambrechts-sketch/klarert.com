@@ -1,11 +1,12 @@
 import { z } from 'zod';
 
-export const ROLES = ['owner', 'admin', 'editor', 'viewer'] as const;
+export const ROLES = ['owner', 'admin', 'editor', 'viewer', 'auditor'] as const;
 export const ROLE_LABELS: Record<(typeof ROLES)[number], string> = {
   owner: 'Owner',
   admin: 'Admin',
   editor: 'Editor',
   viewer: 'Viewer',
+  auditor: 'Auditor',
 };
 
 export const PROFILE_COLORS = [
@@ -59,16 +60,30 @@ export const createWorkspaceInput = z.object({
 export const orgRef = z.object({ org: slugInput });
 const uuid = z.uuid('Invalid id.');
 
-export const createInviteInput = orgRef.extend({
-  email: z.email('Enter a valid email address.').trim().toLowerCase(),
-  role: z.enum(ROLES),
-});
+/** An auditor's access ends on this day (docs/02 §16): required for auditors, ignored for other roles. */
+const accessEnds = z
+  .union([z.iso.date('Choose the day access ends.'), z.literal('')])
+  .optional()
+  .transform((v) => v || undefined);
+const auditorNeedsEnd = (v: { role: string; expiresOn?: string }) =>
+  v.role !== 'auditor' || !!v.expiresOn;
+const endMessage = { message: "Choose the day an auditor's access ends.", path: ['expiresOn'] };
+
+export const createInviteInput = orgRef
+  .extend({
+    email: z.email('Enter a valid email address.').trim().toLowerCase(),
+    role: z.enum(ROLES),
+    expiresOn: accessEnds,
+  })
+  .refine(auditorNeedsEnd, endMessage);
 export const revokeInviteInput = orgRef.extend({ inviteId: uuid });
 export const acceptInviteInput = z.object({
   token: z.string().regex(/^[0-9a-f]{48}$/, 'Invalid invite link.'),
 });
 
-export const changeRoleInput = orgRef.extend({ userId: uuid, role: z.enum(ROLES) });
+export const changeRoleInput = orgRef
+  .extend({ userId: uuid, role: z.enum(ROLES), expiresOn: accessEnds })
+  .refine(auditorNeedsEnd, endMessage);
 export const removeMemberInput = orgRef.extend({ userId: uuid });
 
 export const teamInput = orgRef.extend({ name: name('Team name', 80) });

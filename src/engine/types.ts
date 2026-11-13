@@ -4,7 +4,7 @@ import type { ColumnGroup } from './views/column-groups';
 
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 
-export type Role = 'owner' | 'admin' | 'editor' | 'viewer';
+export type Role = 'owner' | 'admin' | 'editor' | 'viewer' | 'auditor';
 
 export type LabelColor =
   | 'grey'
@@ -120,6 +120,10 @@ export interface Field<C = unknown> {
   validation: Validation;
   rules: StatusRule[];
   visibility?: Condition | null;
+  /** Restricted field (docs/02 §16): who sees its values besides the owners. Absent or null: not restricted. */
+  restrictedTo?: { userIds: string[]; roles: Role[] } | null;
+  /** Restricted and the caller may not see its values (the database says so as it reads the field). */
+  hidden?: boolean;
 }
 
 export interface Item {
@@ -195,6 +199,13 @@ export interface Ctx {
   sheetOf(itemId: string): Sheet | undefined;
   /** Protected value, if the caller may see it. */
   protectedValue(itemId: string, fieldId: string): string | null | undefined;
+  /**
+   * Whether the caller sees a restricted field's values (docs/02 §16). Absent: everyone does (the system, tests).
+   * The values of a field the caller may not see never reach the app; the app says "Restricted" instead.
+   */
+  canSee?(field: Field): boolean;
+  /** Sheets the caller cannot read (link targets, widget sources): their values read as "Restricted". */
+  noAccess?(sheetId: string): boolean;
   /** New random id suffix (option ids, checklist line ids). */
   newId(prefix: string): string;
 }

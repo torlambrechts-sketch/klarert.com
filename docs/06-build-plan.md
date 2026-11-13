@@ -169,7 +169,14 @@ Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, 
 - [x] Tests: planner and manifest units; pgTAP for the RPC (atomic, admin-only, provenance, grants); e2e install → preview → install → archive
 
 ### P2 · Access control  [Opus]
-- [ ] Per-folder and per-sheet roles (owner / editor / commenter / viewer / no access) enforced in RLS, covering links, roll-ups, lookups, search, dashboards, Insights, exports and notifications; field-level hide for sensitive columns; a `restricted` flag packs can set; an auditor read-only role
+- [x] Per-folder and per-sheet roles (owner / editor / commenter / viewer / no access) enforced in RLS, covering links, roll-ups, lookups, search, dashboards, Insights, exports and notifications; field-level hide for sensitive columns; a `restricted` flag packs can set; an auditor read-only role
+- [x] Migrations 0025–0029: `auditor` role and `memberships.expires_at` (is_member/has_role end access at the date); `access_grants`, `folders.restricted`, `sheets.restricted/access_inherit`; one resolution `_sheet_levels` (owner always; open by role; restricted by grant capped by role; sheets follow their folder unless they have their own setting; sub-item sheets follow the parent) used by every RLS policy, guard triggers on the tables definer functions write, and a notifications guard (docs/02 §16)
+- [x] Restricted fields: values in `restricted_values`, the log masked with a salted digest and the values in `restricted_activity` (chain verifies both), links and files of the field hidden, public forms never show or accept them; owners and admins with access set them, every change logged
+- [x] Access panel for folders and sheets (side menu "…" › Access, the sheet's Access button, Sheet settings › Access) with levels and the access log; locks in the menu; admins without access see a restricted sheet's name only; owners opening a restricted sheet they are not listed on are logged once a day
+- [x] "Restricted" in cells, cards, the panel, lookups, roll-ups, formulas, summaries, Insights and dashboards ("No access" for sheets that cannot be read), search and My work, automation messages, posts, notifications and webhook payloads, stored run events and the activity log
+- [x] Auditor role in Workspace admin and invites with an end date (required), a read-only banner, read-only everywhere; access ends at the date without a job
+- [x] Packs: `restricted` on manifest folders and sheets, the installer listed as an editor
+- [x] Tests: pgTAP 0020 role × object matrix (110), unit tests for resolution, restricted fields, templating, lookups and the log (`src/engine/access.test.ts`), e2e `tests/e2e/access.spec.ts`; security inventory in docs/09 §7; 10 000-item read faster than before (docs/09 §7.4)
 
 ### P3 · Requirement library and cross-walks  [Opus]
 - [ ] `frameworks`, `requirements` (ref, parent, own-words title, guidance, source/licence) and `crosswalks` (equivalent / partial / related); org library items linked by `requirement_ref`; SoA as a view over the library with applicability and justification

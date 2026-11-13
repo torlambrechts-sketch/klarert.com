@@ -61,7 +61,7 @@ import { ErrorBox, ListSkeleton } from './states';
 export interface ScreenProps {
   org: string;
   orgId: string;
-  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'auditor';
   timeZone: string;
   userId: string;
 }
@@ -98,7 +98,7 @@ function Body(props: ScreenProps) {
   const params = useSearchParams();
   const tab = params.get('tab');
   const perms: ListPermissions = {
-    canEdit: props.role !== 'viewer',
+    canEdit: props.role !== 'viewer' && props.role !== 'auditor',
     isAdmin: props.role === 'owner' || props.role === 'admin',
   };
   if (tab === 'runs') return <RunLog {...props} />;

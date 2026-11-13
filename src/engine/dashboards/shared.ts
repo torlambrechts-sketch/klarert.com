@@ -3,6 +3,7 @@ import { matchesAll } from '../conditions';
 import { addDays } from '../fields/helpers';
 import { splitConditions } from '../views/apply';
 import type { Item } from '../types';
+import { hiddenFor } from '../values';
 import type { DashboardData, SheetSource, WidgetConfig, WidgetResult } from './types';
 
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -13,9 +14,22 @@ export function sourceOf(
   data: DashboardData,
 ): { source: SheetSource } | { problem: WidgetResult } {
   const source = w.sheetId ? data.sheet(w.sheetId) : undefined;
+  if (!source && w.sheetId && data.noAccess?.(w.sheetId))
+    return {
+      problem: { kind: 'problem', message: 'No access: this widget reads a sheet you cannot see.' },
+    };
   if (!source)
     return {
       problem: { kind: 'problem', message: 'The sheet of this widget no longer exists.' },
+    };
+  // a restricted field the person may not see (docs/02 §16)
+  const field = w.fieldKey ? source.fields.find((f) => f.key === w.fieldKey) : undefined;
+  if (field && hiddenFor(field, source.ctx))
+    return {
+      problem: {
+        kind: 'problem',
+        message: 'Restricted: this widget reads a field you cannot see.',
+      },
     };
   return { source };
 }

@@ -1,4 +1,6 @@
 import 'server-only';
+import { canEdit as canEditLevel } from '@/engine/access';
+import { sheetLevel } from './access';
 import type { LinkConfig } from '@/engine/fields/link';
 import { needsLibraryTarget } from '@/engine/fields/type-change';
 import { resolveFieldType } from '@/engine/fields/resolve';
@@ -17,7 +19,7 @@ import {
 } from '@/lib/schemas/items';
 import { toItem, toLink } from '@/lib/sheet-rows';
 import type { LinkRow } from '@/engine/sheet-data';
-import { fetchItemsById, type Db } from '@/lib/sheet-query';
+import { withRestrictedValues, fetchItemsById, type Db } from '@/lib/sheet-query';
 import { isAdminRole, type Role } from '@/server/auth';
 import { runAutomations, valueEvents, type AutomationEvent } from '@/server/automations';
 import { releaseHold } from '@/server/automations/holds';
@@ -169,7 +171,8 @@ async function writeValues(
       p_note: change.note,
     });
     if (error) return fromDbError(error);
-    saved = toItem(data);
+    // restricted values the person may read come back from their own store (docs/02 §16)
+    saved = await withRestrictedValues(who.supabase, toItem(data));
   } else if (protectedInputs.length > 0) {
     const { data } = await who.supabase
       .from('items')
@@ -681,6 +684,9 @@ export async function clickButton(
       if (!item || item.archivedAt) return itemNotFound();
       if (!field || resolveFieldType(field.type)?.storage !== 'none')
         return fail('not_found', 'This button no longer exists.');
+      // the runner acts as the system: the person must be able to edit this sheet (docs/02 §16)
+      if (!canEditLevel(await sheetLevel(supabase, v.sheetId)))
+        return fail('forbidden', 'You cannot run buttons on this sheet.');
       const outcome = await runAutomations(
         [
           {

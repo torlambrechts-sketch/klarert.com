@@ -1,4 +1,6 @@
+import { Eye } from 'lucide-react';
 import { PhoneNav } from '@/components/shell/phone-nav';
+import { auditorBanner } from '@/engine/access';
 import { ShellProvider } from '@/components/shell/shell-context';
 import { SideMenu } from '@/components/shell/side-menu';
 import { TopBar } from '@/components/shell/top-bar';
@@ -49,6 +51,16 @@ export default async function OrgLayout({
               email: user.email ?? '',
             }}
           />
+          {role === 'auditor' && workspace.expiresAt ? (
+            <p
+              role="status"
+              data-testid="auditor-banner"
+              className="border-line bg-subtle text-copy-13 flex items-center gap-2 border-b px-4 py-2 sm:px-[28px]"
+            >
+              <Eye className="size-4 shrink-0" aria-hidden />
+              {auditorBanner(workspace.expiresAt, workspace.time_zone)}.
+            </p>
+          ) : null}
           <div className="min-w-0 flex-1">{children}</div>
         </div>
       </div>

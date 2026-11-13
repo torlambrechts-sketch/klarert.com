@@ -1,4 +1,5 @@
 import 'server-only';
+import { canEdit as canEditLevel, toLevel } from '@/engine/access';
 import {
   autoName,
   draftProblems,
@@ -62,6 +63,26 @@ async function prepare(
   const keys = Object.keys(problems);
   if (keys.length > 0) return fail('invalid', problems[keys[0]!]!, problems);
   const names = new Map(b.sheets.map((s) => [s.id, s.name]));
+  // automations run as the system: they may only write where their author may edit (docs/02 §16)
+  const writes = new Set<string>();
+  for (const a of draft.actions as { type: string; sheetId?: unknown; linkFieldKey?: unknown }[]) {
+    if (typeof a.sheetId === 'string' && a.sheetId) writes.add(a.sheetId);
+    if (a.type === 'update_linked' && typeof a.linkFieldKey === 'string') {
+      const t = (b.ctx.fieldsByKey.get(a.linkFieldKey)?.config as { targetSheetId?: unknown })
+        ?.targetSheetId;
+      if (typeof t === 'string' && t) writes.add(t);
+    }
+  }
+  writes.delete(sheetId);
+  if (writes.size > 0) {
+    const { data } = await db.rpc('sheet_levels', { p_sheets: [...writes] });
+    const blocked = (data ?? []).filter((r) => !canEditLevel(toLevel(r.level)));
+    if (blocked.length > 0)
+      return fail(
+        'forbidden',
+        `You cannot edit ${names.get(blocked[0]!.sheet_id) ?? 'a sheet this automation writes to'}, so this automation cannot write to it.`,
+      );
+  }
   return ok({ name: draft.name.trim() || autoName(draft, b.ctx, (id) => names.get(id)) });
 }
 

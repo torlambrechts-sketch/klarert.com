@@ -23,6 +23,9 @@ export type MemberRow = {
   color: string;
   role: Role;
   isMe: boolean;
+  /** Auditors: when their access ends (ISO), and the same as a date for the form. */
+  expiresAt?: string | null;
+  expiresLabel?: string | null;
 };
 export type InviteRow = { id: string; email: string; role: Role; link: string; createdAt: string };
 
@@ -33,8 +36,18 @@ function copy(text: string) {
   );
 }
 
-export function InviteForm({ org, canInviteOwner }: { org: string; canInviteOwner: boolean }) {
+export function InviteForm({
+  org,
+  canInviteOwner,
+  today,
+}: {
+  org: string;
+  canInviteOwner: boolean;
+  /** Today in the workspace's time zone: an auditor's access ends on a later day. */
+  today: string;
+}) {
   const [link, setLink] = useState<string | null>(null);
+  const [role, setRole] = useState<Role>('editor');
   return (
     <div className="flex flex-col gap-3">
       <ActionForm
@@ -61,7 +74,8 @@ export function InviteForm({ org, canInviteOwner }: { org: string; canInviteOwne
               <select
                 id="invite-role"
                 name="role"
-                defaultValue="editor"
+                value={role}
+                onChange={(e) => setRole(e.currentTarget.value as Role)}
                 className="border-input bg-background-100 h-[40px] rounded-md border px-3"
               >
                 {ROLES.filter((r) => r !== 'owner' || canInviteOwner).map((r) => (
@@ -71,6 +85,23 @@ export function InviteForm({ org, canInviteOwner }: { org: string; canInviteOwne
                 ))}
               </select>
             </div>
+            {role === 'auditor' ? (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="invite-expires">Access ends on</Label>
+                <input
+                  id="invite-expires"
+                  name="expiresOn"
+                  type="date"
+                  required
+                  min={today}
+                  aria-describedby="invite-expires-hint"
+                  className="border-input bg-background-100 h-[40px] rounded-md border px-3"
+                />
+                <span id="invite-expires-hint" className="sr-only">
+                  Auditors have read-only access until the end of this day.
+                </span>
+              </div>
+            ) : null}
             <SubmitButton pendingText="Creating…">Create invite link</SubmitButton>
           </>
         )}
@@ -99,12 +130,17 @@ export function MemberRowControls({
   org,
   member,
   myRole,
+  today,
 }: {
   org: string;
   member: MemberRow;
   myRole: Role;
+  today: string;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [role, setRole] = useState<Role>(member.role);
+  // an auditor needs an end date: choosing Auditor shows it instead of saving at once (docs/02 §16)
+  const needsDate = role === 'auditor';
   // only owners change who owns the workspace (docs/01 §4)
   const locked = member.role === 'owner' && myRole !== 'owner';
   if (locked) {
@@ -117,11 +153,12 @@ export function MemberRowControls({
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
       <ActionForm
-        key={member.role}
+        key={`${member.role}:${member.expiresAt ?? ''}`}
         action={changeRoleAction}
         hidden={{ org, userId: member.userId }}
-        success="Role changed"
+        success={needsDate ? 'Auditor access saved' : 'Role changed'}
         resetOnFailure
+        className="flex flex-wrap items-center gap-2"
       >
         <label className="sr-only" htmlFor={`role-${member.userId}`}>
           Role for {member.name}
@@ -129,8 +166,12 @@ export function MemberRowControls({
         <select
           id={`role-${member.userId}`}
           name="role"
-          defaultValue={member.role}
-          onChange={(e) => e.currentTarget.form?.requestSubmit()}
+          value={role}
+          onChange={(e) => {
+            const next = e.currentTarget.value as Role;
+            setRole(next);
+            if (next !== 'auditor') e.currentTarget.form?.requestSubmit();
+          }}
           className="border-input bg-background-100 text-label-13 h-[32px] rounded-md border px-2"
         >
           {ROLES.filter((r) => r !== 'owner' || myRole === 'owner').map((r) => (
@@ -139,6 +180,24 @@ export function MemberRowControls({
             </option>
           ))}
         </select>
+        {needsDate ? (
+          <>
+            <label className="sr-only" htmlFor={`expires-${member.userId}`}>
+              Access for {member.name} ends on
+            </label>
+            <input
+              id={`expires-${member.userId}`}
+              name="expiresOn"
+              type="date"
+              min={today}
+              defaultValue={member.expiresAt ? member.expiresAt.slice(0, 10) : ''}
+              className="border-input bg-background-100 text-label-13 h-[32px] rounded-md border px-2"
+            />
+            <SubmitButton size="sm" pendingText="Saving…">
+              Save end date
+            </SubmitButton>
+          </>
+        ) : null}
       </ActionForm>
       {confirming ? (
         <ActionForm

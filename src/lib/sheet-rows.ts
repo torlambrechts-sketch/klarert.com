@@ -17,6 +17,7 @@ import type {
 } from '@/engine/types';
 import { parseViewConfig, toViewType, type SavedView } from '@/engine/views/config';
 import { readSubitemSettings } from '@/engine/subitems';
+import { parseRestriction } from '@/engine/access';
 import type { Database } from './database.types';
 
 type Tables = Database['public']['Tables'];
@@ -47,7 +48,7 @@ export const ITEM_COLUMNS =
 export const SHEET_COLUMNS =
   'id, org_id, name, item_label, id_prefix, is_library, parent_sheet_id, settings';
 export const FIELD_COLUMNS =
-  'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, created_at, updated_at, archived_at';
+  'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, restricted_to, field_hidden, created_at, updated_at, archived_at';
 
 export function toItem(
   r: Pick<ItemDbRow, Exclude<keyof ItemDbRow, 'org_id' | 'parent_id' | 'sub_seq' | SourceColumn>> &
@@ -82,7 +83,11 @@ export function toItem(
   };
 }
 
-export function toField(r: Omit<FieldDbRow, 'org_id' | 'created_at' | 'updated_at'>): Field {
+export function toField(
+  r: Omit<FieldDbRow, 'org_id' | 'created_at' | 'updated_at' | 'restricted_to' | 'field_hidden'> &
+    Partial<Pick<FieldDbRow, 'restricted_to' | 'field_hidden'>>,
+): Field {
+  const restrictedTo = parseRestriction((r.restricted_to ?? null) as Json | null);
   return {
     id: r.id,
     sheetId: r.sheet_id,
@@ -98,6 +103,9 @@ export function toField(r: Omit<FieldDbRow, 'org_id' | 'created_at' | 'updated_a
     validation: (r.validation ?? {}) as Validation,
     rules: (Array.isArray(r.rules) ? r.rules : []) as unknown as StatusRule[],
     visibility: (r.visibility ?? null) as Condition | null,
+    ...(restrictedTo ? { restrictedTo } : {}),
+    // computed by the database for the caller (0027): their values never reach this person
+    ...(restrictedTo && r.field_hidden ? { hidden: true } : {}),
   };
 }
 

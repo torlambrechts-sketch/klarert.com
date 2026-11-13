@@ -101,7 +101,8 @@ export async function search(raw: unknown): Promise<Result<SearchResults>> {
         ...byName.flatMap((r) => hit(r)),
         ...viaPeople.flatMap((r) => {
           const text = JSON.stringify(r.values ?? {});
-          const who = [...names].find(([id]) => text.includes(id))?.[1];
+          // a restricted people field (docs/02 §16) is not in the row: the function matched one of these people
+          const who = [...names].find(([id]) => text.includes(id))?.[1] ?? [...names.values()][0];
           return hit(r, who);
         }),
       ];

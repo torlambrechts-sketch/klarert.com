@@ -63,6 +63,8 @@ export interface ItemPanelProps {
   /** Items in view order, for J/K. */
   order: Item[];
   canEdit: boolean;
+  /** Commenters post updates without editing values (docs/02 §16). Default: canEdit. */
+  canComment?: boolean;
   isAdmin: boolean;
   onClose(): void;
   /** Show another item of this sheet (J/K, linked items). */
@@ -503,7 +505,7 @@ export function ItemPanel(props: ItemPanelProps) {
                   org={org}
                   item={item}
                   ctx={ctx}
-                  canEdit={canEdit}
+                  canEdit={props.canComment ?? canEdit}
                   updates={updates.data ?? []}
                   state={stateOf(updates)}
                   onRetry={() => void updates.refetch()}
