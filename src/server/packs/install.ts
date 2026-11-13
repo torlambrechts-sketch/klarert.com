@@ -66,12 +66,15 @@ export async function loadSnapshot(
   db: Db,
   orgId: string,
 ): Promise<{ snapshot: PackSnapshot; timeZone: string }> {
-  const [org, sheets, folders, installs, members, emails, jobRoles, teams, dashboards] =
+  const [org, sheets, folders, installs, members, emails, jobRoles, teams, dashboards, libraries] =
     await Promise.all([
       db.from('orgs').select('time_zone').eq('id', orgId).single(),
       db.from('sheets').select('id_prefix, position, parent_sheet_id').eq('org_id', orgId),
       db.from('folders').select('id, name, position, archived_at').eq('org_id', orgId),
-      db.from('pack_installs').select('id, pack_key, version, status').eq('org_id', orgId),
+      db
+        .from('pack_installs')
+        .select('id, pack_key, version, status, level, ref_map')
+        .eq('org_id', orgId),
       db
         .from('memberships')
         .select('user_id, profiles!inner(display_name, initials, color)')
@@ -80,6 +83,14 @@ export async function loadSnapshot(
       db.from('job_roles').select('id, name').eq('org_id', orgId),
       db.from('teams').select('id, name').eq('org_id', orgId),
       db.from('dashboards').select('position').eq('org_id', orgId),
+      // adopted framework libraries (docs/12): a pack's widgets and setup steps may read them
+      db
+        .from('sheets')
+        .select('id, settings')
+        .eq('org_id', orgId)
+        .eq('is_library', true)
+        .is('archived_at', null)
+        .is('parent_sheet_id', null),
     ]);
   const email = new Map((must(emails, 'member emails') ?? []).map((e) => [e.user_id, e.email]));
   const last = (rows: { position: string }[]) =>
@@ -103,7 +114,16 @@ export async function loadSnapshot(
         packKey: i.pack_key,
         version: i.version,
         status: i.status === 'archived' ? 'archived' : 'installed',
+        level: i.level ?? null,
+        refMap: (i.ref_map ?? {}) as Record<string, string>,
       })),
+      libraries: (must(libraries, 'libraries') ?? []).flatMap((s) => {
+        const fw = (s.settings as { framework?: { key?: unknown; version?: unknown } } | null)
+          ?.framework;
+        return typeof fw?.key === 'string' && typeof fw.version === 'string'
+          ? [{ library: `${fw.key}@${fw.version}`, sheetId: s.id }]
+          : [];
+      }),
       members: (must(members, 'members') ?? []).map((m) => ({
         id: m.user_id,
         name: m.profiles.display_name,
@@ -125,17 +145,22 @@ export async function planInstall(
   db: Db,
   orgId: string,
   pack: Pick<CataloguePack, 'manifest' | 'hash'>,
-  env: { userId: string; now: Date; newId: () => string },
+  env: { userId: string; now: Date; newId: () => string; level?: string | null },
 ): Promise<PackPlan> {
   const { snapshot, timeZone } = await loadSnapshot(db, orgId);
-  return planPackInstall(pack.manifest, snapshot, {
-    today: todayIn(env.now, timeZone),
-    now: env.now,
-    timeZone,
-    newId: env.newId,
-    hash: pack.hash,
-    userId: env.userId,
-  });
+  return planPackInstall(
+    pack.manifest,
+    snapshot,
+    {
+      today: todayIn(env.now, timeZone),
+      now: env.now,
+      timeZone,
+      newId: env.newId,
+      hash: pack.hash,
+      userId: env.userId,
+    },
+    { level: env.level ?? null },
+  );
 }
 
 export interface InstallOutcome {

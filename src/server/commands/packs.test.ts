@@ -12,7 +12,15 @@ const state = {
   rpcs: [] as { name: string; args: unknown }[],
   plan: {
     state: 'ready',
-    preview: { conflicts: [] as string[], renamedPrefixes: [], warnings: [] },
+    preview: {
+      conflicts: [] as string[],
+      renamedPrefixes: [],
+      warnings: [],
+      sheets: [],
+      frameworks: [],
+      level: null,
+      extendsLevel: null,
+    },
     operations: [],
     payload: {},
   } as Record<string, unknown>,
@@ -85,7 +93,15 @@ beforeEach(() => {
   state.written = [];
   state.plan = {
     state: 'ready',
-    preview: { conflicts: [], renamedPrefixes: [], warnings: [] },
+    preview: {
+      conflicts: [],
+      renamedPrefixes: [],
+      warnings: [],
+      sheets: [],
+      frameworks: [],
+      level: null,
+      extendsLevel: null,
+    },
     operations: [],
     payload: {},
   };
@@ -141,6 +157,9 @@ describe('pack commands', () => {
         counts: { sheets: 1 },
         renamedPrefixes: [],
         warnings: [],
+        adopted: [],
+        level: null,
+        extended: false,
       },
     });
     expect(state.written).toEqual([{ orgId: ORG, plan: state.plan }]);

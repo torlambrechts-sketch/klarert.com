@@ -241,6 +241,36 @@ export async function adoptFramework(input: unknown): Promise<Result<AdoptionRes
   );
 }
 
+/**
+ * Adopt a framework a pack builds on (docs/11 Frameworks), with no controls sheet: the pack's own sheets link to the
+ * library through their requirement fields. Called by installPack for an owner or admin, before the pack is planned.
+ * Adopted already: nothing to do.
+ */
+export async function adoptForPack(
+  db: Db,
+  orgId: string,
+  userId: string,
+  f: { key: string; version: string },
+): Promise<Result<{ title: string; adopted: boolean }>> {
+  const r = await planAdoption(db, orgId, userId, { framework: f.key, version: f.version });
+  if (!r.ok) return r;
+  const { fw, plan } = r.data;
+  if (plan.state === 'installed') return ok({ title: fw.title, adopted: false });
+  if (plan.state === 'blocked' || !plan.payload)
+    return fail('conflict', plan.preview.conflicts[0] ?? `${fw.title} cannot be adopted.`);
+  const { error } = await db.rpc('adopt_framework', {
+    p_org: orgId,
+    p_framework: fw.key,
+    p_version: fw.version,
+    p_plan: plan.payload as never,
+  });
+  if (error) {
+    if (/already adopted/.test(error.message)) return ok({ title: fw.title, adopted: false });
+    return fromDbError(error);
+  }
+  return ok({ title: fw.title, adopted: true });
+}
+
 // ───────────────────────── the item panel ─────────────────────────
 
 export interface RequirementChip {

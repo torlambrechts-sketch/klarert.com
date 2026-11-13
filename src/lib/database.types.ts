@@ -693,14 +693,14 @@ isOneToOne: false
                   ]
                 },"pack_installs": {
                   Row: {
-                    "archived_at": string | null,"archived_by": string | null,"id": string,"installed_at": string,"installed_by": string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map": NonNullable<Json>,"status": string,"version": string
+                    "archived_at": string | null,"archived_by": string | null,"id": string,"installed_at": string,"installed_by": string | null,"level": string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map": NonNullable<Json>,"status": string,"version": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"archived_by"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map"?: NonNullable<Json>,"status"?: string,"version": string
+                    "archived_at"?: string | null,"archived_by"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"level"?: string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map"?: NonNullable<Json>,"status"?: string,"version": string
                   }
                   Update: {
-                    "archived_at"?: string | null,"archived_by"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"manifest_hash"?: string,"org_id"?: string,"pack_key"?: string,"ref_map"?: NonNullable<Json>,"status"?: string,"version"?: string
+                    "archived_at"?: string | null,"archived_by"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"level"?: string | null,"manifest_hash"?: string,"org_id"?: string,"pack_key"?: string,"ref_map"?: NonNullable<Json>,"status"?: string,"version"?: string
                   }
                   Relationships: [
                     {

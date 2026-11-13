@@ -22,7 +22,7 @@ export type PackItem = Omit<TemplateItem, 'ref' | 'links'> & {
  * (`isLibrary`) or a documents register (`register: 'documents'`). Link fields name their target with
  * `config.targetSheetRef`: a sheet ref of this pack, or `<pack key>:<sheet ref>` for another pack's sheet.
  */
-export type PackSheet = Omit<TemplateSheet, 'folder' | 'items'> & {
+export type PackSheet = Omit<TemplateSheet, 'folder' | 'items' | 'forms'> & {
   folder?: string;
   isLibrary: boolean;
   register?: 'documents';
@@ -34,9 +34,13 @@ export type PackSheet = Omit<TemplateSheet, 'folder' | 'items'> & {
    */
   framework?: { key: string; version: string; refFieldKey: string };
   items: PackItem[];
+  /** The lowest level that installs this sheet (docs/11 Levels); every level when not set. */
+  level?: string;
+  /** Forms may name their lowest level too (forms of a sheet never install before the sheet). */
+  forms: (TemplateSheet['forms'][number] & { level?: string })[];
 };
 
-export type PackAutomation = TemplateAutomation & { ref: string };
+export type PackAutomation = TemplateAutomation & { ref: string; level?: string };
 
 /** A dashboard widget: the sheet by ref, the field by key; `ref` becomes the widget id. */
 export interface PackWidget {
@@ -44,6 +48,11 @@ export interface PackWidget {
   type: string;
   title: string;
   sheetRef?: string;
+  /**
+   * A framework library the pack requires (`<framework>@<version>`, one of the manifest's `frameworks`), in place of
+   * `sheetRef`: the widget reads the workspace's library sheet of that framework.
+   */
+  library?: string;
   fieldKey?: string;
   conditions?: { fieldKey: string; op: string; value?: Json }[];
   days?: number;
@@ -53,6 +62,62 @@ export interface PackDashboard {
   ref: string;
   name: string;
   widgets: PackWidget[];
+  level?: string;
+}
+
+/** A level of a pack (docs/11 Levels), lowest first: each level installs everything of the levels before it. */
+export interface PackLevel {
+  key: string;
+  name: string;
+  description: string;
+}
+
+/** A framework the pack builds on (docs/12): adopted at install when the workspace has not adopted it yet. */
+export interface PackFramework {
+  key: string;
+  version: string;
+}
+
+/**
+ * Where a setup step or its rule looks: a sheet of the pack by ref, or the library of a framework the pack requires
+ * (`<framework>@<version>`), optionally a saved view by name.
+ */
+export interface SetupTarget {
+  sheetRef?: string;
+  library?: string;
+  view?: string;
+}
+
+/**
+ * How a setup step's progress is computed from data (src/engine/packs/setup.ts): of the items matching `where`
+ * (all items when empty), the share that also match `all` (every one when empty), counted against at least `min`
+ * items. Conditions use the condition operators (docs/04 §4).
+ */
+export interface SetupRule extends SetupTarget {
+  where?: { fieldKey: string; op: string; value?: Json }[];
+  all?: { fieldKey: string; op: string; value?: Json }[];
+  min?: number;
+}
+
+export interface SetupStepText {
+  title: string;
+  body: string;
+  /** Where "Open" goes. */
+  target: SetupTarget;
+  /** Every rule counts the same; the step's progress is their average. */
+  rules: SetupRule[];
+}
+
+/** A step of a pack's guided setup; `levels` replaces parts of it at a level (e.g. without an asset register). */
+export interface SetupStep extends SetupStepText {
+  ref: string;
+  levels?: Record<string, Partial<SetupStepText>>;
+}
+
+export interface PackSetup {
+  title: string;
+  description: string;
+  steps: SetupStep[];
 }
 
 export interface PackRequirement {
@@ -70,10 +135,16 @@ export interface PackManifest {
   requires: PackRequirement[];
   /** People named by example values (`$person:<ref>`), matched to the workspace's members by email. */
   people: SheetTemplate['people'];
-  folders: { ref: string; name: string; restricted?: boolean }[];
+  folders: { ref: string; name: string; restricted?: boolean; level?: string }[];
   sheets: PackSheet[];
   automations: PackAutomation[];
   dashboards: PackDashboard[];
+  /** Levels chosen at install, lowest first (docs/11 Levels). None: the pack installs whole. */
+  levels?: PackLevel[];
+  /** Framework libraries the pack builds on, adopted at install when missing (docs/12). */
+  frameworks?: PackFramework[];
+  /** A guided setup checklist shown after install (docs/11 Setup). */
+  setup?: PackSetup;
 }
 
 /** `<pack key>:<sheet ref>` or `<sheet ref>`. */

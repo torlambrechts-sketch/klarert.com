@@ -14,6 +14,8 @@ A **pack** is an installable bundle of the core as data (CLAUDE.md: data, not co
 
 The wizard keeps creating a start's sheet its own way (editors may use it, the person picks name, prefix and columns); the same starts are also offered as packs to owners and admins. The template importer (`src/server/templates/importer.ts`, used by the seeds) installs through `install_pack`.
 
+For a hosted project, `pnpm exec tsx scripts/packs-sql.ts > packs-catalogue.sql` writes the repository's packs as idempotent inserts (`on conflict do nothing`); run it as the database owner after the migrations and after `scripts/frameworks-sql.ts`.
+
 ## The manifest
 
 Validated by `packManifestSchema` (`src/lib/packs/manifest.ts`), which extends the sheet template schema and then runs the template's own checks on every sheet.
@@ -30,7 +32,11 @@ Validated by `packManifestSchema` (`src/lib/packs/manifest.ts`), which extends t
 | `sheets[].fields[].config.targetSheetRef` | A link: a sheet ref of this pack, or `<pack key>:<sheet ref>` of a pack in `requires` (checked; resolving another pack's sheets comes later, the planner reports it as a conflict) |
 | `sheets[].items` | `[{ ref, group, name, values, links: { <link field key>: [<item ref>] } }]`: example items, documents of a register, library items. Links name items by ref, never by name. Tokens `$today`, `$in:N`, `$option:<label>`, `$person:<ref>` |
 | `automations` | Template automations plus a `ref`. `sheetRef`, `groupRef` and a form's `ref` resolve to ids; `jobRole:<name>` / `team:<name>` recipients the workspace lacks are left out and said; an automation that then has nobody to tell is installed off |
-| `dashboards` | `[{ ref, name, widgets: [{ ref, type, title, sheetRef?, fieldKey?, conditions?, days? }] }]`, checked against the widget registry |
+| `dashboards` | `[{ ref, name, widgets: [{ ref, type, title, sheetRef?, library?, fieldKey?, conditions?, days? }] }]`, checked against the widget registry. `library: "<framework>@<version>"` (one of `frameworks`) reads the workspace's library sheet of that framework instead of a sheet of the pack |
+| `levels` | Optional, 2–5, lowest first: `[{ key, name, description }]` (Levels below) |
+| `level` on folders, sheets, forms, automations, dashboards | The lowest level that installs the object; none = every level |
+| `frameworks` | `[{ key, version }]`: framework libraries the pack builds on, adopted at install when missing (Frameworks below) |
+| `setup` | `{ title, description, steps }`: the guided setup checklist (Setup below) |
 
 ID prefixes are unique inside a pack. When the workspace already uses one, the planner renames it with a number (`SUP-` → `SUP2-`, cutting the stem to stay within 6 characters) and the preview says so.
 
@@ -81,6 +87,28 @@ The full version is `templates/packs/supplier-management.json` (a library sheet,
 1. **Preview** (`previewPack`, owners and admins): the server reads the manifest from the catalogue, takes a snapshot of the workspace (prefixes, folders, installs, members with emails, job roles, teams, last positions) and runs the pure planner `planPackInstall` (`src/engine/packs/plan.ts`). The planner reuses the template planner (`src/engine/templates/plan.ts`) for everything sheet-level and returns operations per object (`create`, `reuse`, `skip`, `conflict`), the preview (counts, folders, sheets, links, renamed prefixes, automation sentences, forms, dashboards, warnings, conflicts) and the rows.
 2. **States:** `ready`; `installed` (the same version is installed: every operation is `skip`); `blocked` (another version is installed, a requirement is missing or at the wrong version, a link into another pack, a widget that does not fit, a document that would start approved, a value the template planner refuses).
 3. **Install** (`installPack`): plans again from the catalogue and the workspace as they are now (the browser sends only the key and the hash it previewed; a changed manifest is refused) and calls `install_pack`, which writes everything with provenance and the ref map in one transaction and logs `pack.installed`.
+
+## Levels
+
+A pack may offer levels (`levels`, lowest first, e.g. Starter and Full), chosen in the install dialog, which shows what each level creates and what it adds to the one before (`levelSummaries`). Every folder, sheet, form, automation and dashboard may name the lowest level that installs it; without one it installs at every level. `manifestAtLevel` (`src/engine/packs/levels.ts`) is the manifest as installed at a level.
+
+- The manifest is checked so that nothing needs a higher level than its own: a sheet's folder and link targets, an automation's sheets (its own and `sheetRef` in actions), a dashboard's widgets, a form after its sheet. A two-way link joins sheets of one level only (a higher level never adds a field to a sheet already installed), so links from a higher level to a lower one are one way.
+- `pack_installs.level` (0032) keeps the level installed. Installing a higher level of the same version later is not a new install: the planner plans the level whole, leaves out every row whose ref is already in the install's `ref_map` and points the new rows at the existing ids (`extend_install` in the plan). `install_pack` then adds the rows to the same install, refuses a level already installed or a ref the install already has, merges the ref map and logs `pack.extended` with what the level added. Picking a level at or below the installed one is `installed` (nothing to do).
+- Workspace admin › Packs shows the installed level and an "Add Full" button that opens the dialog on the next level.
+
+## Frameworks a pack builds on
+
+`frameworks: [{ key, version }]` names framework libraries (docs/12) the pack needs. The preview says which are not adopted yet ("Adopts the ISO/IEC 27001:2022 requirement library first"); `installPack` adopts them first with `adopt_framework` (each its own transaction, no controls sheet) and then plans the pack again so it finds the library. The pack's sheets link to library items through `requirement` fields with no target sheet (any library); its widgets read the library with `library`. Example items never link into a library (it is not part of the pack).
+
+## Setup
+
+`setup` is a checklist shown after install on Workspace admin › Packs (all steps) and as a dismissible card on Home (the next step; dismissing is kept per browser). Each step has a `ref`, a title, a short own-words body, a `target` (a pack sheet by `sheetRef` or a required library by `library`, optionally a saved view by name) and `rules`. A step may reword itself at a level (`levels: { starter: { title, body, target, rules } }`), e.g. "List your processes" when Starter has no asset register.
+
+Progress is computed from data by the pure `setupProgress` (`src/engine/packs/setup.ts`): for each rule, of the items matching `where` (all items when empty), the share that also match `all`, counted against at least `min` items (`matched / max(counted, min)`); conditions use the condition operators by field key. A step's progress is the average of its rules; the checklist's percent is the average of its steps (100 only when every step is done). Sheets the person cannot read count as not started and link nowhere. The checklist is checked at every level: each step names sheets, fields and views that level installs.
+
+## The ISO/IEC 27001:2022 pack
+
+`templates/packs/iso-27001.json` (key `iso-27001`): Starter has Scope and context, Risk register (likelihood and impact 1–5, inherent and residual scores as formulas, treatment option, Annex A controls from the library, review date), Risk treatment plan, ISMS documents (a documents register with the documented information an ISMS keeps) and Nonconformities and CAPA (actions as sub-items, the close gate); Full adds Asset register, Internal audit programme, Audit findings, Management review (inputs as checkboxes), Security incidents and Training and awareness. Eight automations (risk review due, residual score above 12, overdue nonconformity and treatment action, document review due, and in Full: a nonconformity finding or a closed incident that needs a root cause raises a linked nonconformity, training due), the "ISMS overview" dashboard (risks by level, by status, treatment progress, Annex A implementation from the library, open nonconformities, documents due for review) and a 7-step setup. Example items start with "Example:"; no text of the standard is shipped (docs/12 Licensing).
 
 ## Archive
 

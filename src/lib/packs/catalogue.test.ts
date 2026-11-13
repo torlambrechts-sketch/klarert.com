@@ -44,6 +44,7 @@ describe('repository packs', () => {
     expect(packs.map((p) => p.key)).toEqual([
       'first-sheet-corrective-actions',
       'supplier-management',
+      'iso-27001',
       'start-capa',
       'start-documents',
     ]);

@@ -19,7 +19,8 @@ import {
 import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
 import { ArchivePack, PackPreview } from './packs';
-import { listPacks } from '@/server/commands/packs';
+import { listPacks, packSetups } from '@/server/commands/packs';
+import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
 import { AdoptFramework } from './frameworks';
 import { Check, ExternalLink } from 'lucide-react';
@@ -383,7 +384,7 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
 
 /** Packs (docs/11): the catalogue, what is installed here and the pack entries of the activity log. */
 async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
-  const r = await listPacks({ org });
+  const [r, setupsResult] = await Promise.all([listPacks({ org }), packSetups({ org })]);
   if (!r.ok)
     return (
       <Card title="Packs">
@@ -418,6 +419,14 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                     {p.installedVersion ? (
                       <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
                         <Check className="text-good size-3" aria-hidden /> Installed
+                        {p.installedLevel
+                          ? `: ${p.levels.find((l) => l.key === p.installedLevel)?.name ?? p.installedLevel}`
+                          : ''}
+                      </span>
+                    ) : null}
+                    {p.levels.length ? (
+                      <span className="text-label-12 text-muted-foreground">
+                        {p.levels.map((l) => l.name).join(' or ')}
                       </span>
                     ) : null}
                   </span>
@@ -428,12 +437,24 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                     Inside: {p.inside}
                     <span className="text-muted-foreground"> · {p.sheets.join(', ')}</span>
                   </span>
+                  {p.frameworks.length ? (
+                    <span className="text-label-13 text-muted-foreground">
+                      Builds on the {p.frameworks.join(', ')} requirement library, adopted at
+                      install if this workspace has not adopted it.
+                    </span>
+                  ) : null}
                 </div>
                 {canInstall ? (
                   <div className="shrink-0">
                     <PackPreview
                       org={org}
-                      pack={{ key: p.key, title: p.title, version: p.version }}
+                      pack={{
+                        key: p.key,
+                        title: p.title,
+                        version: p.version,
+                        levels: p.levels,
+                        installedLevel: p.installedLevel,
+                      }}
                     />
                   </div>
                 ) : null}
@@ -459,6 +480,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{i.title}</span>
                     <span className="text-label-12-mono text-muted-foreground">{i.version}</span>
+                    {i.level ? <span className="text-label-12">{i.level.name}</span> : null}
                     <span className="text-label-12 text-muted-foreground">
                       {i.status === 'installed' ? 'Installed' : 'Archived'}
                     </span>
@@ -479,6 +501,24 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                         </Link>
                       </Button>
                     ) : null}
+                    {canInstall && i.nextLevel
+                      ? (() => {
+                          const card = available.find((a) => a.key === i.key);
+                          return card ? (
+                            <PackPreview
+                              org={org}
+                              label={`Add ${i.nextLevel.name}`}
+                              pack={{
+                                key: card.key,
+                                title: card.title,
+                                version: card.version,
+                                levels: card.levels,
+                                installedLevel: card.installedLevel,
+                              }}
+                            />
+                          ) : null;
+                        })()
+                      : null}
                     {canInstall ? <ArchivePack org={org} installId={i.id} title={i.title} /> : null}
                   </div>
                 ) : null}
@@ -487,6 +527,30 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
           </ul>
         )}
       </Card>
+      {setupsResult.ok ? (
+        setupsResult.data.map((s) => (
+          <div key={s.installId} id={`setup-${s.installId}`} className="scroll-mt-4">
+            <Card
+              title={`${s.progress.title}${s.level ? ` · ${s.level.name}` : ''}`}
+              description={s.progress.description}
+            >
+              <div className="flex flex-col gap-2">
+                <SetupSummary progress={s.progress} />
+                <SetupSteps org={org} progress={s.progress} />
+              </div>
+            </Card>
+          </div>
+        ))
+      ) : (
+        <Card title="Setup">
+          <div role="alert" className="flex flex-col items-start gap-2">
+            <p className="m-0">{setupsResult.error.message}</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/${org}/settings?tab=packs`}>Retry</Link>
+            </Button>
+          </div>
+        </Card>
+      )}
       <Card
         title="Pack activity"
         description="Installs and archives from the activity log, newest first."

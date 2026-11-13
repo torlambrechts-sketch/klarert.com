@@ -2,6 +2,7 @@ import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { isFrameworkPack } from '@/engine/frameworks/pack';
 import { packLogText, PACK_ACTIONS } from '@/engine/packs/audit';
+import { levelRank, levelSummaries, type LevelSummary } from '@/engine/packs/levels';
 import {
   countsText,
   manifestCounts,
@@ -15,12 +16,16 @@ import {
   archivePackInput,
   installPackInput,
   listPacksInput,
+  packSetupsInput,
   previewPackInput,
 } from '@/lib/schemas/packs';
 import { isAdminRole } from '@/server/auth';
 import { planInstall, readCatalogue, readPack, writeInstall } from '@/server/packs/install';
+import { readSetups, type InstalledSetup } from '@/server/packs/setup';
+import { readFrameworks } from '@/server/frameworks/catalogue';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
+import { adoptForPack } from './frameworks';
 
 // Packs (docs/11, docs/02 §15). The catalogue is global and read-only; owners and admins preview a pack against the
 // workspace as it is now and install it through install_pack (one transaction, provenance on every row, a
@@ -39,6 +44,12 @@ export interface PackCard {
   sheets: string[];
   /** The live install of this pack in the workspace, if any. */
   installedVersion: string | null;
+  /** Levels to choose from at install (docs/11 Levels), lowest first; empty for a pack without levels. */
+  levels: LevelSummary[];
+  /** The level installed here, if the pack has levels and is installed. */
+  installedLevel: string | null;
+  /** Titles of the frameworks the pack builds on, adopted at install when missing. */
+  frameworks: string[];
 }
 
 export interface InstalledPack {
@@ -53,6 +64,9 @@ export interface InstalledPack {
   archivedAt: string | null;
   /** The first live sheet the install made (for "Open"). */
   firstSheetId: string | null;
+  /** The level installed (packs with levels) and the next one that can be added. */
+  level: { key: string; name: string } | null;
+  nextLevel: { key: string; name: string } | null;
 }
 
 export interface PackLogEntry {
@@ -85,12 +99,12 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
     'member',
     async ({ supabase, orgId, role }) => {
       try {
-        const [catalogue, installs, members, sheets, log] = await Promise.all([
+        const [catalogue, installs, members, sheets, log, fws] = await Promise.all([
           readCatalogue(supabase),
           supabase
             .from('pack_installs')
             .select(
-              'id, pack_key, version, status, installed_by, installed_at, archived_by, archived_at',
+              'id, pack_key, version, status, level, installed_by, installed_at, archived_by, archived_at',
             )
             .eq('org_id', orgId)
             .order('installed_at', { ascending: false }),
@@ -113,17 +127,30 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
             .in('action', [...PACK_ACTIONS])
             .order('id', { ascending: false })
             .limit(20),
+          readFrameworks(supabase).catch(() => []),
         ]);
+        const fwTitle = (k: string, v: string) =>
+          fws.find((f) => f.key === k && f.version === v)?.title ?? `${k} ${v}`;
         for (const r of [installs, members, sheets, log]) if (r.error) return fromDbError(r.error);
         const names = new Map(
           (members.data ?? []).map((m) => [m.user_id, m.profiles.display_name]),
         );
         const titles = new Map(catalogue.map((c) => [c.key, c.title]));
-        const live = new Map(
-          (installs.data ?? [])
-            .filter((i) => i.status === 'installed')
-            .map((i) => [i.pack_key, i.version]),
-        );
+        const byKey = new Map(catalogue.map((c) => [c.key, c]));
+        const liveRows = (installs.data ?? []).filter((i) => i.status === 'installed');
+        const live = new Map(liveRows.map((i) => [i.pack_key, i.version]));
+        const liveLevel = new Map(liveRows.map((i) => [i.pack_key, i.level ?? null]));
+        const levelOf = (key: string, version: string, level: string | null) => {
+          const c = byKey.get(key);
+          if (!c || c.version !== version || !c.manifest.levels?.length)
+            return { level: null, next: null };
+          const rank = levelRank(c.manifest, level);
+          const at = (r: number) => {
+            const l = c.manifest.levels![r];
+            return l ? { key: l.key, name: l.name } : null;
+          };
+          return { level: at(Math.max(0, rank)), next: at(Math.max(0, rank) + 1) };
+        };
         return ok({
           canInstall: isAdminRole(role),
           // a framework's library is adopted from Frameworks (docs/12), not listed here
@@ -141,6 +168,9 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
                 inside: countsText(counts),
                 sheets: c.manifest.sheets.map((s) => s.name),
                 installedVersion: live.get(c.key) ?? null,
+                levels: levelSummaries(c.manifest),
+                installedLevel: liveLevel.get(c.key) ?? null,
+                frameworks: (c.manifest.frameworks ?? []).map((f) => fwTitle(f.key, f.version)),
               };
             }),
           installed: (installs.data ?? []).map((i) => ({
@@ -154,6 +184,10 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
             archivedBy: i.archived_by ? (names.get(i.archived_by) ?? 'Former member') : null,
             archivedAt: i.archived_at,
             firstSheetId: (sheets.data ?? []).find((s) => s.pack_install_id === i.id)?.id ?? null,
+            ...(() => {
+              const l = levelOf(i.pack_key, i.version, i.level ?? null);
+              return { level: l.level, nextLevel: i.status === 'installed' ? l.next : null };
+            })(),
           })),
           log: (log.data ?? []).map((e) => ({
             id: e.id,
@@ -177,6 +211,8 @@ export interface PackPreviewResult {
   lines: string[];
   /** Operations by action: how many objects are created, reused, skipped or in conflict. */
   actions: Record<PackOperation['action'], number>;
+  /** `<framework>@<version>` → the framework's title, for the frameworks the pack builds on. */
+  frameworkTitles: Record<string, string>;
 }
 
 /** What installing a pack would do in this workspace now. Owners and admins. */
@@ -196,10 +232,16 @@ export async function previewPack(input: unknown): Promise<Result<PackPreviewRes
           userId: user.id,
           now: new Date(),
           newId: randomUUID,
+          level: p.data.level ?? null,
         });
         const actions = { create: 0, reuse: 0, skip: 0, conflict: 0 };
         for (const o of plan.operations) actions[o.action] += 1;
+        const fws = plan.preview.frameworks.length ? await readFrameworks(supabase) : [];
+        const frameworkTitles = Object.fromEntries(
+          fws.map((f) => [`${f.key}@${f.version}`, f.title] as const),
+        );
         return ok({
+          frameworkTitles,
           hash: pack.hash,
           preview: plan.preview,
           lines: previewLines(plan.preview),
@@ -222,6 +264,11 @@ export interface InstallResult {
   counts: Record<string, number>;
   renamedPrefixes: PackPreview['renamedPrefixes'];
   warnings: string[];
+  /** Frameworks adopted first because the pack builds on them (docs/12). */
+  adopted: string[];
+  /** The level installed, and whether it was added to an install that was already there. */
+  level: string | null;
+  extended: boolean;
 }
 
 /** Install a pack: planned again from the catalogue and the workspace as they are now, written in one transaction. */
@@ -238,18 +285,36 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
         return fail('invalid', 'Adopt this framework from Workspace admin, Frameworks.');
       if (pack.hash !== p.data.hash)
         return fail('conflict', 'This pack changed since you previewed it. Preview it again.');
-      const plan = await planInstall(supabase, orgId, pack, {
+      const env = {
         userId: user.id,
         now: new Date(),
         newId: randomUUID,
-      });
+        level: p.data.level ?? null,
+      };
+      let plan = await planInstall(supabase, orgId, pack, env);
       if (plan.state === 'installed')
         return fail('conflict', 'This pack is already installed in this workspace.');
       if (plan.state === 'blocked')
         return fail('conflict', plan.preview.conflicts[0] ?? 'This pack cannot be installed.');
+      // the frameworks it builds on are adopted first (each its own transaction), then the pack is planned again so
+      // its sheets and widgets find the libraries
+      const adopted: string[] = [];
+      for (const f of plan.preview.frameworks.filter((x) => !x.adopted)) {
+        const [key, version] = f.library.split('@') as [string, string];
+        const r = await adoptForPack(supabase, orgId, user.id, { key, version });
+        if (!r.ok)
+          return fail(r.error.code, `${pack.title} needs ${f.library}: ${r.error.message}`);
+        if (r.data.adopted) adopted.push(r.data.title);
+      }
+      if (adopted.length) {
+        plan = await planInstall(supabase, orgId, pack, env);
+        if (plan.state !== 'ready')
+          return fail('conflict', plan.preview.conflicts[0] ?? 'This pack cannot be installed.');
+      }
       const written = await writeInstall(supabase, orgId, plan);
       if (!written.ok) return fromDbError(written.error);
-      const first = pack.manifest.sheets[0]?.ref;
+      // the first sheet this install made: for a new level, the first one that level added
+      const first = plan.preview.sheets[0]?.ref ?? pack.manifest.sheets[0]?.ref;
       return ok({
         installId: written.data.installId,
         title: pack.title,
@@ -257,6 +322,9 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
         counts: written.data.counts,
         renamedPrefixes: plan.preview.renamedPrefixes,
         warnings: plan.preview.warnings,
+        adopted,
+        level: plan.preview.level?.name ?? null,
+        extended: !!plan.preview.extendsLevel,
       });
     },
     'installPack',
@@ -285,5 +353,35 @@ export async function archivePack(
       return ok({ installId: row.id, counts: data as Record<string, number> });
     },
     'archivePack',
+  );
+}
+
+/** The guided setup checklists of the packs installed here, with progress from the data (docs/11 Setup). */
+export async function packSetups(input: unknown): Promise<Result<InstalledSetup[]>> {
+  const p = packSetupsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'member',
+    async ({ supabase, orgId, role, user }) => {
+      try {
+        const { data: org } = await supabase
+          .from('orgs')
+          .select('time_zone')
+          .eq('id', orgId)
+          .maybeSingle();
+        return ok(
+          await readSetups(supabase, orgId, {
+            timeZone: org?.time_zone ?? 'Europe/London',
+            userId: user.id,
+            isAdmin: isAdminRole(role),
+          }),
+        );
+      } catch (e) {
+        console.error(JSON.stringify({ level: 'error', source: 'packs', error: String(e) }));
+        return fail('failed', 'The setup checklist could not be loaded. Try again.');
+      }
+    },
+    'packSetups',
   );
 }
