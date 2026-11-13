@@ -193,6 +193,25 @@ test.describe('desktop', () => {
     await expect(grid(page).getByText('Bravo', { exact: true })).toBeVisible();
     await expect(grid(page)).toBeFocused();
   });
+
+  test('a click outside the table clears the active cell and the selected rows', async ({
+    page,
+  }) => {
+    await signIn(page, 'james@example.com');
+    const sheet = await twoGroupSheet(page);
+    await sheet.add('Open', [{ name: 'Alpha' }, { name: 'Beta' }]);
+    await page.reload();
+    const row = grid(page).getByRole('row').filter({ hasText: 'Alpha' });
+    await row.locator('[data-cell$="|name"]').click();
+    await expect(grid(page).locator('[role="gridcell"][aria-selected="true"]')).not.toHaveCount(0);
+    await row.getByRole('checkbox', { name: 'Select Alpha' }).check();
+    await expect(page.getByRole('region', { name: 'Selected items' })).toBeVisible();
+    // the page title is outside the table
+    await page.getByRole('heading', { level: 1 }).click();
+    await expect(grid(page).locator('[role="gridcell"][aria-selected="true"]')).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Selected items' })).toHaveCount(0);
+    await expect(row.getByRole('checkbox', { name: 'Select Alpha' })).not.toBeChecked();
+  });
 });
 
 test.describe('phone', () => {

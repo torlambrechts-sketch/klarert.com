@@ -321,7 +321,7 @@ function SheetBody(props: SheetViewProps) {
           </>
         }
       />
-      <div className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-2">
+      <div data-keep-selection className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-2">
         {filterable ? (
           <div className="flex min-w-0 flex-[1_1_240px] [&>*]:w-full">
             <SheetSearch value={q} onChange={setQ} />
