@@ -1,13 +1,13 @@
 {
   "key": "nis2",
   "version": "2022",
-  "revision": 2,
+  "revision": 3,
   "title": "NIS2 (Directive (EU) 2022/2555)",
   "shortTitle": "NIS2",
   "publisher": "European Union",
   "kind": "law",
   "source": "Directive (EU) 2022/2555, as published on EUR-Lex; national transposition may add to it",
-  "licence": "EU law. Article titles are the official headings; paragraph titles, purpose, guidance, audit questions and typical evidence are our own words. Read the official text on EUR-Lex.",
+  "licence": "EU law. Titles are the official article headings; purpose, guidance, audit questions and typical evidence are our own words. Read the official text on EUR-Lex.",
   "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
   "titles": "official-short",
   "library": {
@@ -28,19 +28,20 @@
       "parent": "Art. 20",
       "kind": "paragraph",
       "title": "Management approves the measures and oversees them",
-      "purpose": "Makes senior management formally approve the cybersecurity risk measures, watch their implementation and answer for failures.",
-      "guidance": "Put cybersecurity on the regular management agenda and have the board or owners sign off the risk approach and key measures at least yearly. Give them a short report with risks, incidents, open actions and budget needs. Record decisions in minutes. Auditors often find policies approved by IT only, and no sign that leadership has ever challenged the results. Make clear who is accountable so liability is not left vague.",
+      "purpose": "Makes the management body itself approve the cybersecurity risk measures, oversee how they are put in place and accept that its members can be held personally liable when the entity breaches Article 21.",
+      "guidance": "The duty sits with the management body, such as the board or managing directors, not with IT or the security lead; they can prepare the material but the decision is management's. Put cybersecurity on the management agenda on a fixed cycle, approve the risk assessment and the measures, and record challenge and decisions in minutes. Give members a short report on risks, incidents, open actions and budget needs. Liability is set by national law: check your transposing act, which may add personal duties or fines. For essential entities, authorities can as a last resort temporarily bar a chief executive or legal representative from managerial functions. Auditors often find policies signed off by IT only and no trace that management ever questioned the results.",
       "questions": [
-        "Who in management approved your cybersecurity measures and when?",
-        "How often does management review progress and risks?",
-        "What reports does leadership receive?",
-        "How are management decisions and budgets recorded?"
+        "Which members of the management body approved the cybersecurity risk measures, and when?",
+        "How does the management body oversee implementation between approvals?",
+        "What reports does management receive, and what decisions has it taken on them?",
+        "How have you checked what your national transposing law says about management liability?"
       ],
       "evidence": [
-        "Management approval of risk measures",
-        "Board or management meeting minutes with cybersecurity items",
-        "Periodic cybersecurity report to leadership",
-        "Named accountable executive",
+        "Management body resolution approving the risk measures, with date",
+        "Board or management minutes showing cybersecurity discussion and decisions",
+        "Periodic cybersecurity report to the management body",
+        "Allocation of cybersecurity responsibilities within the management body",
+        "Note on management duties and liability under the national transposing law",
         "Budget approvals for security actions"
       ]
     },
@@ -52,20 +53,20 @@
       "tags": [
         "training"
       ],
-      "purpose": "Ensures leaders and employees have enough knowledge to spot risks and judge the impact of cybersecurity practices.",
-      "guidance": "Give management a dedicated briefing on threats, their legal duties and decisions they must take, and repeat it regularly. Offer all staff induction and refresher awareness training with role-specific content for admins and developers. Track attendance and test understanding, for example with phishing simulations. Auditors find training that is a one-off, skips senior people or has no records. Keep content current with recent incidents.",
+      "purpose": "Makes training compulsory for members of the management body so they can recognise cyber risks and judge the security measures and their effect on services, and encourages similar regular training for staff.",
+      "guidance": "Treat training of the management body as mandatory: each member, including new appointees, should attend and records should show it. Cover the current threat picture, the entity's own risks, Article 21 measures, incident reporting duties and management's personal accountability, and refresh it regularly. The directive only encourages regular training for other employees, but national law may go further and Article 21(2)(g) already expects awareness training for all staff, so link the two programmes. Auditors find a one-off session years ago, members who never attended and no content records. Keep slides or agendas so the scope can be shown.",
       "questions": [
-        "When did management last receive cybersecurity training?",
-        "How are new joiners trained and how often is refresher training run?",
-        "How do you track completion and follow up on gaps?",
-        "How do you test whether training works?"
+        "When did each member of the management body last complete cybersecurity training?",
+        "What did the management training cover, and who delivered it?",
+        "How are newly appointed members trained?",
+        "How is regular training offered to other employees, and how does it link to your awareness programme?"
       ],
       "evidence": [
-        "Management training attendance records",
-        "Staff awareness programme and materials",
-        "Completion tracking report",
-        "Phishing simulation results",
-        "Role-specific training plans"
+        "Attendance records per management body member with dates",
+        "Management training agenda or materials",
+        "Training plan showing refresh frequency",
+        "Induction checklist for new board or management members",
+        "Staff training offer and completion report"
       ]
     },
     {
@@ -83,19 +84,21 @@
         "risk"
       ],
       "purpose": "Requires technical, operational and organisational measures that match the risks to your systems and the services you provide.",
-      "guidance": "Start from a documented risk assessment covering your network and information systems and the impact of incidents on your services and others. Scale measures to your size, exposure and the cost of failure, and use an all-hazards approach including physical events. Keep a measures register linked to risks and review it at least annually. Auditors look for the reasoning that links risk to measures, not a copied checklist.",
+      "guidance": "Start from a documented risk assessment of the network and information systems you rely on, and of how an incident would affect your customers and other services. Size the measures to your exposure, your size, the likelihood and severity of incidents, the state of the art, relevant standards and the cost. The same measures apply to essential and important entities; what differs is supervision (proactive for essential, after the event for important) and the maximum fines. Digital providers such as cloud, data centre, managed service and DNS providers must also meet the detailed technical rules in Implementing Regulation (EU) 2024/2690. Check your national transposing law, which may add requirements. Auditors look for reasoning that links risks to measures, not a copied checklist.",
       "questions": [
-        "How did you determine that your measures are proportionate?",
+        "How did you determine that your measures are appropriate and proportionate?",
         "Which risks drove your current security priorities?",
-        "How often is the risk assessment updated?",
-        "How do you cover physical and environmental threats?"
+        "Are you an essential or important entity, and how did you confirm that?",
+        "Which national law or implementing rules apply to you on top of the directive?",
+        "How often is the risk assessment updated?"
       ],
       "evidence": [
         "Cybersecurity risk assessment",
         "Register of measures linked to risks",
-        "Approved security policy set",
-        "Annual review minutes",
-        "Scope statement of systems and services"
+        "Entity classification and registration record with the national authority",
+        "Mapping to national law or Implementing Regulation (EU) 2024/2690 where applicable",
+        "Scope statement of systems and services",
+        "Management approval of the measures"
       ]
     },
     {
@@ -179,7 +182,7 @@
         "suppliers"
       ],
       "purpose": "Requires you to manage security risks that come from suppliers and service providers.",
-      "guidance": "Maintain a register of suppliers with a criticality rating and a named owner. Do proportionate due diligence before onboarding and include security terms in contracts, such as incident notification, access limits and audit rights. Review important suppliers periodically and plan exit routes. Auditors find missing contracts terms, no review of existing suppliers and no view of fourth parties. Focus effort on the few suppliers whose failure would hurt most.",
+      "guidance": "Maintain a register of suppliers with a criticality rating and a named owner. Do proportionate due diligence before onboarding and include security terms in contracts, such as incident notification, access limits and audit rights. Review important suppliers periodically and plan exit routes. Auditors find missing contract terms, no review of existing suppliers and no view of fourth parties. Focus effort on the few suppliers whose failure would hurt most.",
       "questions": [
         "Which suppliers are critical and how did you decide that?",
         "What security terms are in supplier contracts?",
@@ -203,7 +206,7 @@
         "development"
       ],
       "purpose": "Requires security to be considered when acquiring and developing systems, and weaknesses to be found and handled.",
-      "guidance": "Set security requirements for purchases and new builds, and require review before go-live. Patch on a defined timetable with faster handling for critical flaws, and scan regularly. Track vulnerabilities to closure and accept exceptions formally. If you operate software, offer a way for outsiders to report issues and handle disclosures responsibly. Auditors find unpatched systems, no asset-based scanning and changes without security review.",
+      "guidance": "Set security requirements for purchases and new builds, and require review before go-live. Patch on a defined timetable with faster handling for critical flaws, and scan regularly. Track vulnerabilities to closure and accept exceptions formally. If you build or operate software, offer a way for outsiders to report issues and handle disclosures responsibly, in line with your national coordinated disclosure arrangements. Auditors find unpatched systems, scanning that misses parts of the estate and changes without security review.",
       "questions": [
         "How are security requirements set when buying or building systems?",
         "What is your patching timeline for critical vulnerabilities?",
@@ -310,8 +313,8 @@
       "parent": "Art. 21",
       "kind": "paragraph",
       "title": "Multi-factor sign-in and secured communications",
-      "purpose": "Requires strong authentication where appropriate and secured voice, video, text and emergency communication.",
-      "guidance": "Enable multi-factor authentication for remote access, admin accounts, email and critical applications, preferring phishing-resistant methods. Use approved, encrypted communication tools and define a backup channel for emergencies if normal systems are down. Auditors find MFA gaps for service accounts and admins and no out-of-band contact plan. Keep a record of exceptions with an end date.",
+      "purpose": "Requires multi-factor or continuous authentication and secured voice, video, text and emergency communications, where appropriate to the risk.",
+      "guidance": "Enable multi-factor authentication for remote access, admin accounts, email and critical applications, preferring phishing-resistant methods; continuous authentication is an accepted alternative. Use approved, encrypted communication tools and define a backup channel for emergencies if normal systems are down. Record where you decided strong authentication or secured channels are not appropriate, and why. Auditors find MFA gaps for service accounts and admins and no out-of-band contact plan. Keep exceptions time-limited with an owner.",
       "questions": [
         "Where is multi-factor authentication enforced?",
         "Which accounts are exempt and why?",
@@ -334,12 +337,13 @@
       "tags": [
         "suppliers"
       ],
-      "purpose": "Requires you to take account of the specific weaknesses of each direct supplier and the quality of its security practices.",
-      "guidance": "Assess suppliers individually rather than treating all the same, looking at their security posture, past incidents and dependency. Where relevant, use results of coordinated risk assessments published for critical supply chains. Record the risk and the mitigations, such as limiting access or requiring certifications. Auditors find generic questionnaires with no follow-up on poor answers. Reassess at renewal or after supplier incidents.",
+      "purpose": "Requires supplier security choices to reflect the particular weaknesses of each direct supplier, the quality of what it delivers and how securely it develops, and any EU-level supply chain risk findings.",
+      "guidance": "Assess direct suppliers one by one rather than with a single standard, looking at their security posture, past incidents, how they build and maintain their products and how dependent you are on them. You must also take into account the results of EU coordinated risk assessments of critical supply chains, such as the one on 5G networks, where they cover your suppliers. Record the risk and the mitigations, such as limiting access or requiring certifications. Auditors find generic questionnaires with no follow-up on poor answers. Reassess at renewal or after supplier incidents.",
       "questions": [
-        "How do you assess an individual supplier's security practices?",
+        "How do you assess an individual supplier's security practices and product quality?",
+        "How do you check a supplier's secure development practices?",
         "What do you do when a supplier scores poorly?",
-        "How do you factor in published supply chain risk assessments?",
+        "Which EU coordinated supply chain risk assessments apply to your suppliers, and how did you act on them?",
         "When are suppliers reassessed?"
       ],
       "evidence": [
@@ -386,19 +390,21 @@
         "incidents"
       ],
       "purpose": "Requires you to notify the national incident response team or competent authority of incidents with a significant impact on your services.",
-      "guidance": "Identify which authority or team you report to and how, and keep contact details and portal access ready. Name who decides to notify and who submits, with deputies. Fold the duty into your incident procedure with templates. Where service recipients are affected, plan how to inform them. Auditors find organisations that do not know their reporting channel until an incident occurs.",
+      "guidance": "Identify which CSIRT or competent authority you report to, through which national entry point, and keep contact details and portal access ready. Name who decides to notify and who submits, with deputies. Fold the duty into your incident procedure with templates. Where a significant incident is likely to affect the services you provide, tell the recipients without undue delay; where they face a significant threat, tell them what they can do. A personal data breach also needs a separate GDPR assessment, and financial entities under DORA report under DORA instead. Auditors find organisations that do not know their reporting channel until an incident occurs.",
       "questions": [
-        "Which authority or CSIRT would you report to and how?",
+        "Which authority or CSIRT would you report to, and through which channel?",
         "Who decides to notify and who submits?",
-        "How do you inform affected customers where needed?",
+        "How do you inform affected service recipients, and who approves the message?",
+        "How do you coordinate NIS2 reporting with GDPR breach notification or other sector rules?",
         "Have you tested the reporting route?"
       ],
       "evidence": [
         "Reporting procedure with contact details",
         "Authority portal registration",
-        "Notification templates",
+        "Notification templates for the authority and for service recipients",
         "Roles and deputies list",
-        "Exercise record including reporting"
+        "Exercise record including reporting",
+        "Mapping of overlapping reporting duties such as GDPR and sector rules"
       ]
     },
     {
@@ -409,8 +415,8 @@
       "tags": [
         "incidents"
       ],
-      "purpose": "Defines the test for when an incident must be reported, based on serious disruption or financial loss or harm to others.",
-      "guidance": "Write practical criteria for significance covering service disruption, financial loss, number of people affected and material harm, aligned to national guidance. Add a triage step so someone judges this early in every incident, and record the reasoning even when you decide not to report. Review the criteria when guidance changes. Auditors find vague thresholds and unrecorded decisions.",
+      "purpose": "Defines when an incident must be reported: when it has caused or could cause severe disruption or financial loss to you, or considerable damage to other people or organisations.",
+      "guidance": "Write practical criteria for significance covering service disruption, financial loss, number of people affected and material or non-material harm, aligned to national guidance. Remember that potential impact counts, not only actual damage. Digital providers covered by Implementing Regulation (EU) 2024/2690 must use the thresholds it sets. Add a triage step so someone judges this early in every incident, and record the reasoning even when you decide not to report. Review the criteria when guidance changes. Auditors find vague thresholds and unrecorded decisions.",
       "questions": [
         "What criteria do you use to judge an incident significant?",
         "Who makes the judgement and by when?",
@@ -433,8 +439,8 @@
       "tags": [
         "incidents"
       ],
-      "purpose": "Requires a first quick notice within 24 hours of becoming aware of a significant incident, including whether it may be malicious or cross-border.",
-      "guidance": "Prepare a short early warning template and a way to send it at any hour. Do not wait for full facts: say what is known, whether malicious action is suspected and whether other countries may be affected. Set an internal clock from the moment of awareness and record that moment. Auditors find that nobody can submit outside office hours and that teams wait for certainty.",
+      "purpose": "Requires a first notice without undue delay and at the latest within 24 hours of becoming aware of a significant incident, saying whether it may be malicious or have cross-border impact.",
+      "guidance": "Prepare a short early warning template and a way to send it at any hour. The 24 hours is an outer limit, not a target. Do not wait for full facts: say what is known, whether unlawful or malicious action is suspected and whether other countries may be affected. Set an internal clock from the moment of awareness and record that moment. The CSIRT or authority should reply, where possible within 24 hours, and can offer support on request. Auditors find that nobody can submit outside office hours and that teams wait for certainty.",
       "questions": [
         "How do you send an early warning at night or on weekends?",
         "What does your early warning template include?",
@@ -457,8 +463,8 @@
       "tags": [
         "incidents"
       ],
-      "purpose": "Requires a fuller notification within 72 hours that updates the early warning with an initial assessment of the incident.",
-      "guidance": "Prepare a template covering severity, impact, indicators of compromise and updated assessment. Assign someone to gather facts from technical teams and review before submission. Update the earlier statement if the facts changed. Auditors find notices that merely repeat the early warning or arrive late because approvals were not planned. Pre-agree who signs off.",
+      "purpose": "Requires a fuller notification without undue delay and at the latest within 72 hours of becoming aware, updating the early warning with an initial assessment of severity and impact.",
+      "guidance": "Prepare a template covering severity, impact, indicators of compromise where available and the updated assessment. Assign someone to gather facts from technical teams and review before submission. Update the earlier statement if the facts changed. Trust service providers have a shorter limit of 24 hours for incidents affecting their trust services. Auditors find notices that merely repeat the early warning or arrive late because approvals were not planned. Pre-agree who signs off.",
       "questions": [
         "Who gathers the information for the 72-hour notification?",
         "Who approves it before submission?",
@@ -505,12 +511,12 @@
       "tags": [
         "incidents"
       ],
-      "purpose": "Requires a detailed final report within one month of the notification, covering cause, impact and mitigation.",
-      "guidance": "Schedule the final report as soon as the incident is notified, with an owner and due date. Cover a description, the type of threat or root cause, mitigation applied and cross-border impact. If the incident is still ongoing, provide a progress report and then the final one after closure. Auditors find missing deadlines and shallow root cause analysis. Use the lessons to create corrective actions.",
+      "purpose": "Requires a detailed final report no later than one month after the 72-hour incident notification, covering severity, impact, likely root cause, mitigation and any cross-border effect.",
+      "guidance": "Diary the final report as soon as the 72-hour notification goes in, with an owner and a due date one month later. Explain what happened and how serious it was, the threat or root cause that most likely triggered it, what you did and are still doing to contain it and whether other countries were affected. If the incident is still running at that point, send a progress report instead and the final report within one month of finishing handling the incident. Auditors find missed deadlines and shallow root cause analysis. Turn the lessons into corrective actions.",
       "questions": [
-        "Who owns the final report and what is the deadline?",
+        "Who owns the final report and how is the one-month deadline tracked?",
         "How do you establish root cause?",
-        "What happens if the incident is still ongoing at one month?",
+        "What do you send if the incident is still ongoing at one month?",
         "How are lessons turned into actions?"
       ],
       "evidence": [

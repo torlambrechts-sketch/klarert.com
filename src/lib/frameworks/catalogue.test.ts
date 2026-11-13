@@ -219,12 +219,12 @@ describe('framework libraries as packs', () => {
 
   it('one pack per framework, with one library item per requirement that is not a theme', () => {
     expect(packs.map((p) => `${p.key} ${p.version}`)).toEqual([
-      'framework-iso-27001 2022.2.0',
-      'framework-iso-9001 2015.2.0',
-      'framework-iso-14001 2015.2.0',
-      'framework-iso-45001 2018.2.0',
-      'framework-gdpr 2016.2.0',
-      'framework-nis2 2022.2.0',
+      'framework-iso-27001 2022.3.0',
+      'framework-iso-9001 2015.3.0',
+      'framework-iso-14001 2015.3.0',
+      'framework-iso-45001 2018.3.0',
+      'framework-gdpr 2016.3.0',
+      'framework-nis2 2022.3.0',
     ]);
     for (const [i, f] of frameworks.entries()) {
       const sheet = packs[i]!.sheets[0]!;

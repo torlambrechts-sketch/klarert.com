@@ -1,7 +1,7 @@
 {
   "key": "gdpr",
   "version": "2016",
-  "revision": 2,
+  "revision": 3,
   "title": "GDPR (Regulation (EU) 2016/679)",
   "shortTitle": "GDPR",
   "publisher": "European Union",
@@ -28,13 +28,14 @@
       "parent": "Ch. II",
       "kind": "article",
       "title": "Principles relating to processing of personal data",
-      "purpose": "Sets the core rules for all personal data use: be fair and open, collect only what you need, keep it accurate, secure and no longer than necessary.",
+      "purpose": "Sets the core rules for all personal data use: lawful, fair and open handling, fixed purposes, only the data needed, accuracy, limited retention and security, with the controller able to prove it follows them.",
       "guidance": "Turn each principle into a working habit. State a purpose before collecting any data, drop fields nobody uses, and set retention periods per data category with a named owner. Review them at least yearly. Auditors commonly find forms that ask for more than needed, retention schedules that exist on paper but are never run, and no evidence that anyone checks accuracy. Keep a short principles checklist inside your project and supplier onboarding steps so it is applied before data starts flowing.",
       "questions": [
-        "How do you decide which personal data a new process may collect?",
+        "How do you decide which personal data a new process may collect, and for what purpose?",
+        "How do you check that data collected for one purpose is not reused for an unrelated one?",
         "Where are retention periods defined and who deletes data when they expire?",
         "How do you keep personal data accurate over time?",
-        "How would you show that you can demonstrate compliance with these principles?"
+        "What records would you show us to prove these principles are applied?"
       ],
       "evidence": [
         "Data protection policy approved by management",
@@ -49,8 +50,8 @@
       "parent": "Ch. II",
       "kind": "article",
       "title": "Lawfulness of processing",
-      "purpose": "Requires every use of personal data to rest on one valid legal basis, so you can explain why you are allowed to do it.",
-      "guidance": "Map each processing activity to one basis such as contract, legal duty, legitimate interests or consent, and write the reasoning down. Where you rely on legitimate interests, keep a short balancing test showing whose interests were weighed. Do not default to consent, since it can be withdrawn and then forces you to stop. Auditors often find bases that were never chosen deliberately, or a basis that was changed after the fact. Reflect the chosen basis in your privacy notices and your record of processing.",
+      "purpose": "Requires every use of personal data to rest on at least one of the six legal bases, chosen and recorded before processing starts, so you can explain why you are allowed to do it.",
+      "guidance": "Map each processing purpose to the basis that genuinely fits: consent, contract, legal obligation, vital interests, public task or legitimate interests, and write the reasoning down. Where you rely on legitimate interests, keep a short balancing test showing whose interests were weighed; public authorities cannot use it for their official tasks. Do not default to consent, since it can be withdrawn and is rarely free in an employment relationship. Before reusing data for a new purpose, check whether the new purpose is compatible with the original. Auditors often find bases never chosen deliberately or swapped after the fact. Reflect the chosen basis in your privacy notices and your record of processing.",
       "questions": [
         "What legal basis applies to each of your main processing activities?",
         "Where you rely on legitimate interests, where is the balancing test?",
@@ -91,11 +92,12 @@
       "parent": "Ch. II",
       "kind": "article",
       "title": "Processing of special categories of personal data",
-      "purpose": "Adds stricter conditions for sensitive data such as health, beliefs, biometrics or union membership, because misuse causes greater harm.",
-      "guidance": "First identify whether you hold any sensitive data at all, including indirectly such as sickness absence reasons or dietary needs that reveal health. For each case record the extra condition relied on, in addition to the ordinary legal basis. Restrict access tightly and consider stronger security and shorter retention. Auditors often find sensitive data in free-text fields, shared drives or HR spreadsheets that nobody classified. Include these cases in your impact assessment screening.",
+      "purpose": "Prohibits using sensitive data such as health, religious or political beliefs, sexual orientation, union membership or biometrics used for identification unless a specific exception applies, because misuse causes greater harm.",
+      "guidance": "First identify whether you hold any sensitive data at all, including indirectly such as sickness absence reasons or dietary needs that reveal health. For each case record the exception relied on in addition to the ordinary legal basis under Article 6. Several exceptions, for example employment and social security, only work if national law provides for them, and national law may add conditions for health, genetic and biometric data, so check your local rules. Restrict access tightly and consider stronger security and shorter retention. Auditors often find sensitive data in free-text fields, shared drives or HR spreadsheets that nobody classified. Include these cases in your impact assessment screening.",
       "questions": [
         "Which sensitive categories of data do you process, and where are they stored?",
-        "What condition do you rely on for each?",
+        "Which exception do you rely on for each, and what Article 6 basis sits alongside it?",
+        "Where an exception depends on national law, which provision do you rely on?",
         "Who has access to this data and why?",
         "How do you stop sensitive details appearing in free-text notes?"
       ],
@@ -122,7 +124,7 @@
         "rights"
       ],
       "purpose": "Requires you to communicate in plain language and to handle requests from individuals promptly, free of charge in most cases and after checking identity.",
-      "guidance": "Set up one route for rights requests, such as a web form and mailbox, and log every request with received date, due date and outcome. Agree who triages, who gathers data and who signs off. Verify identity proportionately without asking for excessive documents. The usual deadline is one month, extendable only in genuine complex cases with notice to the person. Auditors find missing logs, late replies and requests lost in general inboxes. Test the process with a dummy request each year.",
+      "guidance": "Set up one route for rights requests, such as a web form and mailbox, and log every request with received date, due date and outcome. Agree who triages, who gathers data and who signs off. Where you have reasonable doubts about identity, ask for proportionate proof, not a stack of documents. Reply within one month; you may extend by up to two further months for complex or numerous requests, but must tell the person within the first month and say why. If you refuse, explain why and mention the right to complain to the authority. Charging or refusing is only possible for manifestly unfounded or excessive requests, and you must be able to show that. Auditors find missing logs, late replies and requests lost in general inboxes.",
       "questions": [
         "How does someone submit a rights request and who receives it?",
         "How do you track deadlines and extensions?",
@@ -146,7 +148,7 @@
         "rights"
       ],
       "purpose": "Ensures people are told who you are, why you use their data, how long you keep it and what rights they have at the moment you collect it.",
-      "guidance": "Provide a layered privacy notice at each collection point, such as sign-up forms, applications and cameras. Cover identity and contact details, purposes with legal bases, recipients, international transfers, retention, rights and the right to complain. Keep it in plain language and keep versions. Pitfalls include notices copied from other organisations, missing retention information, and staff or candidate data that has no notice at all. Update the notice whenever a process changes.",
+      "guidance": "Provide a layered privacy notice at each collection point, such as sign-up forms, job applications and cameras. Cover who you are and how to reach you and any DPO, purposes with legal bases and the legitimate interests pursued, recipients, international transfers, retention, rights including withdrawal of consent and complaint, whether providing the data is required and what happens if not, and any automated decision-making. Keep it in plain language and keep versions. Pitfalls include notices copied from other organisations, missing retention information, and staff or candidate data with no notice at all. Before reusing data for a new purpose, tell people first.",
       "questions": [
         "Where do people see your notice when you collect their data?",
         "Does the notice list purposes, legal bases, retention and recipients accurately?",
@@ -170,12 +172,12 @@
         "rights"
       ],
       "purpose": "Ensures people are informed when you receive their data from someone else, such as a partner, a broker or a public source.",
-      "guidance": "Identify flows where data arrives from third parties, such as purchased leads, referrals, customer-supplied contacts or public registers. Tell the individuals within a reasonable time, normally within a month, and say where the data came from. Limited exceptions exist, for example where informing is impossible or disproportionate, and these should be recorded with reasons. Auditors often find that organisations have notices only for direct collection and nothing for indirect sources.",
+      "guidance": "Identify flows where data arrives from third parties, such as purchased leads, referrals, customer-supplied contacts or public registers. Tell the individuals within a reasonable time and at the latest within one month, or earlier if you first contact them or pass the data on. Include the categories of data and where they came from. Exceptions are narrow: the person already has the information, informing is impossible or would take disproportionate effort, the collection is set by law, or professional secrecy applies. Record the reasoning, and where effort is disproportionate still protect people, for example by publishing the information. Auditors often find notices only for direct collection and nothing for indirect sources.",
       "questions": [
         "Which processes receive personal data from third parties?",
-        "How and when are those individuals informed?",
+        "How and when are those individuals informed, and how is the one-month limit tracked?",
         "Where you rely on an exception, where is the reasoning recorded?",
-        "Do you tell people the source of their data?"
+        "Do you tell people the source and categories of their data?"
       ],
       "evidence": [
         "List of indirect data sources",
@@ -314,12 +316,12 @@
         "rights"
       ],
       "purpose": "Lets people receive data they gave you in a usable format and have it sent to another provider where feasible.",
-      "guidance": "Check whether it applies: it covers data provided by the person where you rely on consent or contract and process by automated means. Prepare an export in a common machine-readable format such as CSV or JSON and test it. Offer direct transfer where technically feasible. Pitfalls are exports that include data supplied by others, or formats nobody can read. Document why a request was out of scope when you refuse.",
+      "guidance": "Check whether it applies: it covers data the person provided, including activity data you observed, where processing is based on consent or contract and is automated. It does not cover data you derived or inferred, or processing for a public task. Prepare an export in a structured, machine-readable format such as CSV or JSON and test it. Offer direct transfer to another provider where technically feasible. Where the export contains information about other people, such as contacts or shared messages, consider whether handing it over would harm them. Document why a request was out of scope when you refuse.",
       "questions": [
         "Which of your processes fall within portability?",
         "In what format do you provide the data?",
         "Can you send it directly to another provider if asked?",
-        "How do you exclude other people's data from the export?"
+        "How do you decide whether data about other people can be included in the export?"
       ],
       "evidence": [
         "Portability procedure and scope assessment",
@@ -361,7 +363,7 @@
       "tags": [
         "rights"
       ],
-      "purpose": "Protects people from significant decisions made only by machine, by requiring safeguards such as human review.",
+      "purpose": "Stops significant decisions about people being made solely by automated means, unless a narrow ground applies and safeguards such as human review and a right to contest are in place.",
       "guidance": "List any automated decisions that materially affect people, for example credit checks, recruitment screening or account blocking. For each, check whether a person is genuinely involved or merely rubber-stamps. Where the rule applies, rely on an allowed ground, give meaningful information about the logic and offer a route to human review and to challenge. Auditors find scoring tools adopted without anyone asking whether this applies. Record the assessment.",
       "questions": [
         "Which decisions about people are made automatically?",
@@ -434,7 +436,7 @@
         "suppliers"
       ],
       "purpose": "Requires you to use only processors who give sufficient guarantees and to bind them with a written contract.",
-      "guidance": "Keep a list of every supplier that handles personal data on your behalf and check each has a signed data processing agreement covering instructions, confidentiality, security, sub-processors, assistance, return or deletion and audits. Do due diligence before onboarding and revisit periodically. Common findings are missing agreements with smaller tools, unapproved sub-processors and no exit plan for data. Align this with supplier management.",
+      "guidance": "Keep a list of every supplier that handles personal data on your behalf and check each has a signed data processing agreement covering the subject, duration and nature of the processing, documented instructions, confidentiality, security, sub-processors, assistance, return or deletion and audits. Do due diligence before onboarding and revisit periodically. If you act as a processor for your customers, the same article sets your own duties, such as getting approval for sub-processors and flagging instructions you believe are unlawful. Common findings are missing agreements with smaller tools, unapproved sub-processors and no exit plan for data. Align this with supplier management.",
       "questions": [
         "How do you identify and list processors?",
         "Does every processor have a compliant contract?",
@@ -455,11 +457,12 @@
       "kind": "article",
       "title": "Records of processing activities",
       "purpose": "Requires a written record of what personal data you process and why, so you and regulators can see the whole picture.",
-      "guidance": "Maintain a register listing for each activity the purpose, categories of people and data, recipients, transfers, retention and security measures. Assign an owner per activity and review at least yearly or on any change. Use it as the base for notices, impact assessments and breach response. Auditors find registers that are out of date, stop at the IT team's view, or lack retention and transfer details. A small company may be partly exempt in theory, but sensitive or regular processing usually brings it back in.",
+      "guidance": "Maintain a register listing for each activity the purpose, categories of people and data, recipients, transfers and their safeguards, retention and a description of security measures, plus your contact and DPO details. If you also act as a processor, keep a separate record of processing you carry out for clients. Assign an owner per activity and review on a set cycle and on any change. Organisations with fewer than 250 staff are only exempt if processing is occasional, unlikely to create risk and excludes special-category and criminal offence data; regular HR or customer processing is not occasional, so most must keep a record. Auditors find registers that are out of date, stop at the IT view or lack retention and transfer details. The authority can ask to see it.",
       "questions": [
         "Who maintains the record and how often is it reviewed?",
         "Does it cover every department, including HR and marketing?",
         "Does it list retention periods and international transfers?",
+        "If you act as a processor, where is your processor record?",
         "How do changes in business processes reach the record?"
       ],
       "evidence": [
@@ -502,8 +505,8 @@
       "tags": [
         "incidents"
       ],
-      "purpose": "Requires you to report breaches likely to cause risk to the regulator without undue delay and within 72 hours where feasible.",
-      "guidance": "Have an incident procedure that lets anyone report a suspected breach quickly, with a named person to assess risk and decide on notification. Keep a log of all breaches, including those not reported, and the reasoning. The clock starts when you become aware, so detection and escalation speed matter. Pitfalls are staff not knowing to report, delays waiting for full facts and no template. Processors must tell you without delay, so check contracts.",
+      "purpose": "Requires you to report a personal data breach to the supervisory authority without undue delay and, where feasible, within 72 hours of becoming aware, unless it is unlikely to result in a risk to people.",
+      "guidance": "Have an incident procedure that lets anyone report a suspected breach quickly, with a named person to assess risk and decide on notification. The default is to notify; only a breach unlikely to create risk may stay internal. The clock starts when you become aware, so detection and escalation speed matter. If facts are incomplete, notify with what you know and add the rest in phases; if you miss 72 hours, explain the delay. Log every breach, including those not reported, with the reasoning. Processors must tell you without undue delay, so check contracts. If you are also in scope of NIS2, the same event may need a separate 24-hour early warning.",
       "questions": [
         "How do staff report a suspected breach and to whom?",
         "Who decides whether the authority must be told?",
@@ -527,7 +530,7 @@
         "incidents"
       ],
       "purpose": "Requires you to tell affected people promptly when a breach is likely to put them at high risk, so they can protect themselves.",
-      "guidance": "Add a high-risk decision step to the breach procedure with criteria such as sensitivity, volume and ease of misuse. Prepare plain-language notice templates saying what happened, likely effects, what you are doing and what people can do. Choose a channel that actually reaches them. Auditors find that decisions are not documented or the notice is vague. Encryption that makes data unreadable can reduce the need, but record that reasoning.",
+      "guidance": "Add a high-risk decision step to the breach procedure with criteria such as sensitivity, volume and ease of misuse. Prepare plain-language notice templates saying what happened, likely effects, what you are doing, what people can do and a contact point. Choose a channel that actually reaches them. You need not tell people if the data was unintelligible to others, for example properly encrypted, or if you have since removed the high risk; where contacting each person would take disproportionate effort, make a public announcement instead. Record that reasoning, because the authority can still order you to inform people. Auditors find undocumented decisions and vague notices.",
       "questions": [
         "How do you decide whether a breach is high risk to individuals?",
         "How quickly can you contact all affected people?",
@@ -551,10 +554,10 @@
         "risk"
       ],
       "purpose": "Requires a structured risk assessment before starting processing likely to be high risk, such as large-scale profiling or sensitive data.",
-      "guidance": "Create a short screening questionnaire used at project start and a template for full assessments covering the description, necessity, risks to people and mitigations. Involve the DPO or privacy owner and, where relevant, affected groups. Consult the authority if high risk remains. Auditors find assessments done after launch, or screening that never triggers. Keep completed assessments live and revisit when processing changes.",
+      "guidance": "Create a short screening questionnaire used at project start and a template for full assessments covering the description, necessity and proportionality, risks to people and mitigations. Check your supervisory authority's published list of processing that always needs an assessment; as a rule of thumb, two or more high-risk factors such as profiling, sensitive data, monitoring or new technology usually mean one is required. Seek the DPO's advice where you have one and, where relevant, the views of affected groups. If high risk remains after mitigation, consult the authority before starting. Auditors find assessments done after launch or screening that never triggers. Revisit assessments when processing changes.",
       "questions": [
-        "How do you decide whether an assessment is required?",
-        "Who completes and approves them?",
+        "How do you decide whether an assessment is required, and which authority list do you use?",
+        "Who completes and approves them, and how is the DPO involved?",
         "How are residual high risks handled?",
         "How do you revisit assessments after changes?"
       ],
@@ -574,13 +577,13 @@
       "tags": [
         "dpo"
       ],
-      "purpose": "Requires some organisations, such as public bodies or those with large-scale monitoring or sensitive data, to appoint a DPO.",
-      "guidance": "Document your assessment of whether appointment is mandatory, and keep it even when the answer is no. If you appoint voluntarily, treat the role under the same rules. The officer needs expert knowledge, can be internal or external, and their contact details must be published and given to the authority. Auditors find reasoning missing and contact details not registered. Do not give the title to someone whose other duties conflict.",
+      "purpose": "Requires a DPO for public bodies and for organisations whose core activities involve large-scale regular and systematic monitoring of people or large-scale processing of special-category or criminal offence data.",
+      "guidance": "Document your assessment of whether appointment is mandatory, including what your core activities are and whether processing is large scale, and keep it even when the answer is no. National law can widen the duty; for example German law requires a DPO in many smaller organisations, so check local rules. If you appoint voluntarily, the same rules on position and tasks apply. The DPO needs expert knowledge, can be an employee or an external provider, and one DPO may serve a group if easily reachable from each entity. Publish their contact details and notify them to the authority. Auditors find reasoning missing and contact details not registered.",
       "questions": [
-        "Have you assessed whether you must appoint a DPO?",
+        "Have you assessed whether you must appoint a DPO, under the GDPR and national law?",
         "Where is the decision and its reasoning recorded?",
         "Are the DPO's contact details published and notified to the authority?",
-        "What qualifications does the DPO have?"
+        "What qualifications and data protection expertise does the DPO have?"
       ],
       "evidence": [
         "DPO necessity assessment",
@@ -677,7 +680,7 @@
         "transfers"
       ],
       "purpose": "Allows data to flow to countries or frameworks the European Commission has found to offer adequate protection.",
-      "guidance": "Check the current list of adequacy decisions before relying on one, and note any conditions such as certification schemes for certain recipients. Record the date checked and monitor for changes or withdrawal. Keep a fallback mechanism in mind. Auditors find reliance on a decision that does not cover the recipient or that has since changed. Note the basis in your register and contracts.",
+      "guidance": "Check the current list of adequacy decisions before relying on one, and note any conditions; for example, transfers to the United States rely on adequacy only where the recipient is certified under the EU-US Data Privacy Framework. Record the date checked and monitor for changes, reviews or court challenges. Keep a fallback mechanism in mind. Auditors find reliance on a decision that does not cover the recipient or that has since changed. Note the basis in your register and contracts.",
       "questions": [
         "Which transfers rely on adequacy?",
         "How do you confirm that the recipient is covered?",
@@ -773,18 +776,20 @@
         "transfers"
       ],
       "purpose": "Provides narrow exceptions, such as explicit consent or contract necessity, for transfers where no other mechanism exists.",
-      "guidance": "Treat these as a last resort for occasional transfers, not a routine route. Record which exception applies and why the stronger mechanisms were not available. For consent, make sure people are told of the risks. Auditors challenge organisations that use exceptions for regular large-scale transfers. Review any reliance annually and move to standard clauses where possible.",
+      "guidance": "Treat these as a last resort for occasional transfers, not a routine route. Record which exception applies and why the stronger mechanisms were not available. For consent, it must be explicit and given after people are told of the risks. The final fallback, compelling legitimate interests, is only for rare, non-repetitive transfers about a limited number of people, and you must inform the supervisory authority and the people concerned. Auditors challenge organisations that use exceptions for regular large-scale transfers. Review any reliance periodically and move to standard clauses where possible.",
       "questions": [
-        "Do you rely on any exceptions, and for what transfers?",
+        "Do you rely on any exceptions, and for which transfers?",
         "Why could another mechanism not be used?",
         "How do you inform people about the risks where consent is used?",
+        "If you rely on compelling legitimate interests, how were the authority and the people informed?",
         "How often do you review this reliance?"
       ],
       "evidence": [
         "Register of derogations used",
         "Reasoning for each case",
         "Consent records with risk information",
-        "Annual review notes",
+        "Notice to the supervisory authority for compelling legitimate interests transfers",
+        "Periodic review notes",
         "Plan to move to a stronger mechanism"
       ]
     }
