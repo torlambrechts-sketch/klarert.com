@@ -12,7 +12,11 @@ import {
   rangeOf,
   step,
   tableColumns,
+  columnId,
+  columnRuns,
+  GROUP_LABEL_H,
 } from './table-model';
+import { cellColumns } from '@/engine/clipboard';
 
 const a = makeItem({}, { id: 'a', position: 'a1', groupId: 'g-open', name: 'B' });
 const b = makeItem({}, { id: 'b', position: 'a0', groupId: 'g-open', name: 'A' });
@@ -208,9 +212,7 @@ describe('columns and positions', () => {
   it('lists the name then the visible fields', () => {
     const f1 = makeField('text', {}, { id: 'f1' });
     const f2 = makeField('text', {}, { id: 'f2' });
-    expect(
-      tableColumns([f1, f2], new Set(['f1'])).map((c) => (c.kind === 'name' ? 'name' : c.field.id)),
-    ).toEqual(['name', 'f2']);
+    expect(tableColumns([f1, f2], new Set(['f1'])).map(columnId)).toEqual(['name', 'f2']);
   });
   it('computes fractional keys between neighbours', () => {
     const list = [b, a]; // a0, a1
@@ -318,5 +320,45 @@ describe('buildLayout with sub-items', () => {
     expect(rowHeight('subheader')).toBe(28);
     expect(rowHeight('subitem')).toBe(44);
     expect(rowHeight('subitem', 'compact')).toBe(36);
+  });
+});
+
+describe('column groups in the table', () => {
+  const owner = makeField('people', {}, { key: 'cg_owner', position: 'a0' });
+  const notes = makeField('text', {}, { key: 'cg_notes', position: 'a1' });
+  const score = makeField('number', {}, { key: 'cg_score', position: 'a2' });
+  const due = makeField('date', { relative: true }, { key: 'cg_due', position: 'a3' });
+  const fields = [owner, notes, score, due];
+  const list = [{ id: 'assess', name: 'Assess', fieldKeys: ['cg_owner', 'cg_score'] }];
+
+  it('puts a group’s columns together where its first field is', () => {
+    const cols = tableColumns(fields, new Set(), { list, collapsed: new Set() });
+    expect(cols.map(columnId)).toEqual(['name', owner.id, score.id, notes.id, due.id]);
+  });
+
+  it('a collapsed group is one stub column; the stub is skipped by the selection axis', () => {
+    const cols = tableColumns(fields, new Set([due.id]), { list, collapsed: new Set(['assess']) });
+    expect(cols.map(columnId)).toEqual(['name', 'stub:assess', notes.id]);
+    const stub = cols[1]!;
+    expect(stub.kind === 'stub' && stub.fields.map((f) => f.id)).toEqual([owner.id, score.id]);
+    expect(cellColumns(cols).map(columnId)).toEqual(['name', notes.id]);
+  });
+
+  it('label runs: the group, then Other; none without groups', () => {
+    const cols = tableColumns(fields, new Set(), { list, collapsed: new Set() });
+    expect(columnRuns(cols, list).map((r) => [r.name, r.from, r.to, r.size, r.collapsed])).toEqual([
+      ['Assess', 0, 1, 2, false],
+      ['Other', 2, 3, 2, false],
+    ]);
+    const shut = tableColumns(fields, new Set(), { list, collapsed: new Set(['assess']) });
+    expect(columnRuns(shut, list).map((r) => [r.name, r.from, r.to, r.collapsed])).toEqual([
+      ['Assess', 0, 0, true],
+      ['Other', 1, 2, false],
+    ]);
+    expect(columnRuns(tableColumns(fields, new Set()), [])).toEqual([]);
+  });
+
+  it('the column header grows by the label line', () => {
+    expect(rowHeight('header', 'comfortable', true)).toBe(rowHeight('header') + GROUP_LABEL_H);
   });
 });

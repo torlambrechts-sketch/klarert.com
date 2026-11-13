@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { isFieldTypeId } from '@/engine/fields/registry';
 import { csvImportable } from '@/engine/fields/csv';
+import { columnGroupsSchema } from '@/engine/views/column-groups';
 import { slugInput } from './workspace';
 
 /** The 11 label colours (docs/05 §6), in the order new groups take them. */
@@ -133,6 +134,13 @@ export const copySheetInput = z.object({
   name: text('Sheet name', 120),
   idPrefix,
   folderId,
+});
+
+/** A sheet's column groups (docs/02 sheets.settings.columnGroups); the command checks the field keys. */
+export const setColumnGroupsInput = z.object({
+  org: slugInput,
+  sheetId: uuid,
+  groups: columnGroupsSchema,
 });
 
 export const updateSheetInput = z.object({

@@ -1,4 +1,5 @@
 // Database rows → domain types (docs/02 §10). Pure; used by the sheet query (browser and server) and realtime.
+import { parseColumnGroups } from '@/engine/views/column-groups';
 import { parseDashboardConfig, type WidgetConfig } from '@/engine/dashboards/types';
 import type { LinkRow } from '@/engine/sheet-data';
 import type {
@@ -141,7 +142,8 @@ export function toSheet(r: {
   parent_sheet_id?: string | null;
   settings?: unknown;
 }): Sheet {
-  const settings = (r.settings ?? {}) as { subitems?: unknown };
+  const settings = (r.settings ?? {}) as { subitems?: unknown; columnGroups?: unknown };
+  const columnGroups = parseColumnGroups(settings.columnGroups);
   return {
     id: r.id,
     orgId: r.org_id,
@@ -151,6 +153,7 @@ export function toSheet(r: {
     isLibrary: r.is_library,
     ...(r.parent_sheet_id ? { parentSheetId: r.parent_sheet_id } : {}),
     ...(settings.subitems ? { subitems: readSubitemSettings(settings.subitems) } : {}),
+    ...(columnGroups.length ? { columnGroups } : {}),
   };
 }
 
