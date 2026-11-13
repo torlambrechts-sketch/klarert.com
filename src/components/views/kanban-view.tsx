@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useDraggable,
@@ -11,7 +12,6 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/engine/fields/helpers';
@@ -64,6 +64,7 @@ export function KanbanView({
   const comments = useUpdateSummaries(data.sheet.id, data.sheet.orgId);
   const { commit, dialog } = useValueCommit(data, ctx, actions);
   const [over, setOver] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor),
@@ -82,6 +83,7 @@ export function KanbanView({
   const laneId = (l: Lane) => `lane:${l.key ?? ''}`;
   const onDragEnd = (e: DragEndEvent) => {
     setOver(null);
+    setDragging(null);
     const itemId = String(e.active.id).replace(/^card:/, '');
     const target = e.over?.data.current as { key: string | null } | undefined;
     const item = items.find((i) => i.id === itemId);
@@ -119,7 +121,11 @@ export function KanbanView({
       <DndContext
         sensors={sensors}
         onDragOver={(e) => setOver(e.over ? String(e.over.id) : null)}
-        onDragCancel={() => setOver(null)}
+        onDragStart={(e) => setDragging(String(e.active.id).replace(/^card:/, ''))}
+        onDragCancel={() => {
+          setOver(null);
+          setDragging(null);
+        }}
         onDragEnd={onDragEnd}
         accessibility={{
           announcements: {
@@ -158,6 +164,14 @@ export function KanbanView({
             />
           ))}
         </div>
+        <DragOverlay dropAnimation={null}>
+          {(() => {
+            const item = dragging ? items.find((i) => i.id === dragging) : undefined;
+            return item ? (
+              <CardBody item={item} ctx={ctx} comments={comments.get(item.id)} lifted />
+            ) : null;
+          })()}
+        </DragOverlay>
       </DndContext>
       {dialog}
     </div>
@@ -261,20 +275,15 @@ function Card({
   onOpen(): void;
 }) {
   const drag = useDraggable({ id: `card:${item.id}`, disabled: !draggable });
-  const summary = itemSummary(item, ctx);
-  const person = summary.person?.userId ? ctx.people.get(summary.person.userId)?.name : null;
-  const group = ctx.groups.get(item.groupId);
+  // the card stays in its lane, faded, while a copy follows the pointer in the drag overlay (above every lane, so
+  // the lanes' scroll areas never clip it)
   return (
     <div
       ref={drag.setNodeRef}
       data-testid="kanban-card"
-      style={{
-        transform: CSS.Translate.toString(drag.transform),
-        zIndex: drag.isDragging ? 10 : undefined,
-      }}
       className={cn(
-        'border-line bg-background-100 text-label-13 flex flex-col gap-1 rounded-lg border p-2.5',
-        drag.isDragging && 'shadow-menu',
+        'rounded-lg',
+        drag.isDragging && 'opacity-40',
         draggable && 'cursor-grab touch-none',
       )}
       {...drag.attributes}
@@ -282,9 +291,38 @@ function Card({
       aria-roledescription={draggable ? 'Draggable card' : undefined}
       aria-label={draggable ? `${item.name}. Press space to move it to another lane.` : undefined}
     >
+      <CardBody item={item} ctx={ctx} comments={comments} onOpen={onOpen} />
+    </div>
+  );
+}
+
+function CardBody({
+  item,
+  ctx,
+  comments,
+  onOpen,
+  lifted = false,
+}: {
+  item: Item;
+  ctx: Ctx;
+  comments: UpdateSummary | undefined;
+  onOpen?: () => void;
+  lifted?: boolean;
+}) {
+  const summary = itemSummary(item, ctx);
+  const person = summary.person?.userId ? ctx.people.get(summary.person.userId)?.name : null;
+  const group = ctx.groups.get(item.groupId);
+  return (
+    <div
+      className={cn(
+        'border-line bg-background-100 text-label-13 flex flex-col gap-1 rounded-lg border p-2.5',
+        lifted && 'shadow-menu cursor-grabbing',
+      )}
+    >
       <button
         type="button"
         onClick={onOpen}
+        tabIndex={lifted ? -1 : undefined}
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         className="text-left leading-snug font-semibold break-words hover:underline"
