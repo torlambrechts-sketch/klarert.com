@@ -6,6 +6,8 @@ import { accessToken, rest, signIn } from './helpers';
 // "can't close while open" gate and a five-step template. Each test works in a fresh seeded workspace (Maria owner).
 
 const SHOTS = process.env.SUBITEM_SHOTS;
+// screenshots for review are taken at twice the resolution
+if (SHOTS) test.use({ deviceScaleFactor: 2 });
 
 async function createCapa(page: Page, slug: string, name: string) {
   await page.goto(`/${slug}/s/new?start=capa`);
@@ -101,6 +103,7 @@ test.describe('desktop', () => {
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/subitems-table-1440.png` });
 
     // the gate: the CAPA cannot close while actions are open, and the message names them
+    await expect(page.getByText('5 sub-items added from the template.')).toBeHidden();
     await parent.getByRole('gridcell').nth(2).dblclick();
     await page
       .getByRole('listbox', { name: 'Status' })
@@ -110,7 +113,11 @@ test.describe('desktop', () => {
       `Actions still open: ${pid}.4 Corrective action, ${pid}.5 Effectiveness check, ${pid}.6 Brief the night shift. Close them before closing ${pid}.`,
     );
     await expect(refusal).toBeVisible();
-    if (SHOTS) await page.screenshot({ path: `${SHOTS}/subitems-gate-1440.png` });
+    if (SHOTS) {
+      // let the toast settle in place
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: `${SHOTS}/subitems-gate-1440.png` });
+    }
     await expect(parent.getByRole('gridcell').nth(2)).not.toContainText('Done');
 
     await pickSubStatus(page, `${pid}.4`, 'Done');
