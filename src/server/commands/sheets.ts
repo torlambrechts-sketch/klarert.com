@@ -13,6 +13,7 @@ import { fieldKeyFromName, keyBetween, keysBetween } from '@/engine/ordering';
 import { isLinkType, needsLibraryTarget } from '@/engine/fields/type-change';
 import { rekeyIds } from '@/engine/rekey';
 import type { Json } from '@/engine/types';
+import { resolveTemplateTabs } from '@/engine/views/tabs';
 import {
   LABEL_COLORS,
   archiveSheetInput,
@@ -178,6 +179,9 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
         })),
       );
       const sheetId = randomUUID();
+      // the start's tabs (docs/02 sheets.settings.tabs), kept as its default for "Reset to template default"
+      const startTabs = v.startId ? startById(v.startId)?.tabs : undefined;
+      const tabs = startTabs ? resolveTemplateTabs(startTabs, undefined, []).tabs : null;
       const created = await insertSheet(supabase, {
         sheet: {
           id: sheetId,
@@ -187,6 +191,7 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
           description: v.description,
           item_label: v.itemLabel,
           id_prefix: v.idPrefix,
+          ...(tabs ? { settings: { tabs, tabsDefault: tabs } as unknown as Json } : {}),
           position: keyBetween(await lastSheetPosition(supabase, orgId), null),
         },
         groups: newGroups(v.groups),

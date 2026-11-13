@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { conditionSchema, viewConfigSchema, viewTypeInput } from '@/engine/views/config';
+import { MAX_TABS, sheetTabSchema } from '@/engine/views/tabs';
 import { slugInput } from './workspace';
 
 // Inputs of the view and form commands (docs/01 FR-25, FR-26).
@@ -40,6 +41,15 @@ export const duplicateViewInput = z.object({
 export const deleteViewInput = z.object({ org: slugInput, viewId: uuid });
 
 export const setDefaultViewInput = z.object({ org: slugInput, sheetId: uuid, viewId: viewRef });
+
+/** A sheet's tab set (the rules: sheetTabsSchema, checked by the command once the default is known). */
+export const setSheetTabsInput = z.object({
+  org: slugInput,
+  sheetId: uuid,
+  tabs: z.array(sheetTabSchema).min(1).max(MAX_TABS),
+  /** The view that opens first. Left out: the current one, or the Table when the new set hides it. */
+  defaultViewId: viewRef.optional(),
+});
 
 export const filterItemsInput = z.object({
   org: slugInput,

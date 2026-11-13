@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { resolveTemplateTabs } from '@/engine/views/tabs';
 import { COLUMN_STARTS, START_IDS, STARTS, startById } from './starts';
 
 describe('wizard starts', () => {
@@ -47,5 +48,25 @@ describe('wizard starts', () => {
       expect(s.subitems!.fields.map((f) => f.key)).toEqual(
         expect.arrayContaining(['owner', 'status', 'due_date', 'evidence']),
       );
+  });
+});
+
+describe('starting tabs', () => {
+  const visible = (id: string) =>
+    resolveTemplateTabs(startById(id)!.tabs!, undefined, [])
+      .tabs.filter((t) => !t.hidden)
+      .map((t) => t.id);
+
+  it('give each compliance start its tabs; the rest are hidden in More', () => {
+    expect(visible('treatment')).toEqual(['table', 'kanban', 'insights']);
+    expect(visible('control')).toEqual(['table', 'insights']);
+    expect(visible('capa')).toEqual(['table', 'kanban', 'calendar']);
+    expect(visible('incident')).toEqual(['table', 'form', 'kanban']);
+    expect(visible('audit')).toEqual(['table', 'calendar']);
+    expect(visible('register')).toEqual(['table', 'calendar']);
+    for (const s of STARTS.filter((x) => x.tabs))
+      expect(resolveTemplateTabs(s.tabs!, undefined, []).problems).toEqual([]);
+    // general starts keep today's order
+    expect(startById('tracker')!.tabs).toBeUndefined();
   });
 });

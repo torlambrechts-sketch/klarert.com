@@ -9,6 +9,7 @@ import {
   deleteViewAction,
   duplicateViewAction,
   setDefaultViewAction,
+  setSheetTabsAction,
   updateViewAction,
 } from '@/app/[org]/s/view-actions';
 import {
@@ -20,8 +21,9 @@ import {
   type ViewConfig,
   type ViewType,
 } from '@/engine/views/config';
+import { dropTab, type SheetTab } from '@/engine/views/tabs';
 import { toView } from '@/lib/sheet-rows';
-import { buildTabs, resolveActive, type ActiveView } from './tabs-model';
+import { applyTabLayout, buildTabs, resolveActive, type ActiveView } from './tabs-model';
 import { createClient } from '@/lib/supabase/client';
 
 // The sheet's views (docs/01 FR-26): saved views from the database (RLS: shared ones and my personal ones), the
@@ -30,7 +32,15 @@ import { createClient } from '@/lib/supabase/client';
 
 export const viewsKey = (sheetId: string) => ['views', sheetId] as const;
 
-export { buildTabs, resolveActive, type ActiveView, type ViewTabs } from './tabs-model';
+export {
+  applyTabLayout,
+  buildTabs,
+  resolveActive,
+  type ActiveView,
+  type LaidTab,
+  type TabLayout,
+  type ViewTabs,
+} from './tabs-model';
 
 const localKey = (sheetId: string, id: string) => `view:${sheetId}:${id}`;
 
@@ -57,6 +67,8 @@ export function useViews(input: {
   userId: string;
   canEdit: boolean;
   defaultViewId: string | null;
+  /** sheets.settings.tabs (null: today's order) and tabsDefault (the template's set). */
+  tabSet?: { tabs: SheetTab[] | null; tabsDefault: SheetTab[] | null };
 }) {
   const { org, sheetId, userId, canEdit } = input;
   const qc = useQueryClient();
@@ -76,6 +88,8 @@ export function useViews(input: {
   });
   const views = useMemo(() => query.data ?? [], [query.data]);
   const tabs = useMemo(() => buildTabs(views, userId, canEdit), [views, userId, canEdit]);
+  const [tabSet, setTabSet] = useState<SheetTab[] | null>(input.tabSet?.tabs ?? null);
+  const layout = useMemo(() => applyTabLayout(tabs, tabSet), [tabs, tabSet]);
 
   // ───────────── the active view: ?view=, else the sheet's default, else List ─────────────
   const search = useSearchParams();
@@ -204,6 +218,7 @@ export function useViews(input: {
         list?.filter((v) => v.id !== view.id),
       );
       if (defaultViewId === view.id) setDefaultViewId(null);
+      setTabSet((set) => (set ? (dropTab({ tabs: set }, view.id).tabs ?? set) : set));
       open('table');
       toast('View deleted.');
     },
@@ -220,10 +235,31 @@ export function useViews(input: {
     [org, sheetId],
   );
 
+  /** Save the sheet's tab set (owners and admins). Resolves true when saved. */
+  const saveTabs = useCallback(
+    async (next: SheetTab[], firstId: string) => {
+      const r = await setSheetTabsAction({ org, sheetId, tabs: next, defaultViewId: firstId });
+      if (!r.ok) {
+        toast.error(r.error.message);
+        return false;
+      }
+      setTabSet(r.data.tabs);
+      setDefaultViewId(r.data.defaultViewId);
+      toast('Tabs saved.', r.data.summary ? { description: r.data.summary } : undefined);
+      if (r.data.notice) toast(r.data.notice);
+      return true;
+    },
+    [org, sheetId],
+  );
+
   return {
     query,
     views,
     tabs,
+    layout,
+    tabSet,
+    tabsDefault: input.tabSet?.tabsDefault ?? null,
+    saveTabs,
     active,
     config,
     setConfig,

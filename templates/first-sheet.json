@@ -332,6 +332,11 @@
           }
         }
       ],
+      "tabs": [
+        { "ref": "table" },
+        { "ref": "kanban" },
+        { "ref": "calendar" }
+      ],
       "items": [
         {
           "group": "open",
