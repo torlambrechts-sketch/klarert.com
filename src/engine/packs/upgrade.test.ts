@@ -10,6 +10,7 @@ import {
 } from './upgrade';
 import type { PackManifest } from './types';
 import type { Json } from '../types';
+import { packLogText } from './audit';
 
 type Row = Record<string, Json>;
 
@@ -632,5 +633,21 @@ describe('planPackUpgrade', () => {
     const p = upgrade(state, m2);
     expect(p.state).toBe('blocked');
     expect(p.preview.blockers[0]).toMatch(/missing/);
+  });
+});
+
+describe('pack.upgraded in the log', () => {
+  it('reads as a sentence', () => {
+    expect(
+      packLogText('pack.upgraded', {
+        title: 'Risks',
+        from_version: '1.0.0',
+        version: '1.1.0',
+        counts: { added: { fields: 1, items: 2 }, changed: 4, archived: 1, turned_off: 1 },
+        summary: { conflicts: 2, theirs: 1 },
+      }),
+    ).toBe(
+      "Updated Risks from 1.0.0 to 1.1.0: 3 added, 4 changed, 2 archived or turned off; 2 conflicts (1 took the pack's).",
+    );
   });
 });

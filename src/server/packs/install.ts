@@ -150,7 +150,7 @@ export function manifestRequirementKeys(m: CataloguePack['manifest']): string[] 
 }
 
 /** The adopted libraries' live items for these requirement keys (key → item id). */
-async function loadRequirementItems(
+export async function loadRequirementItems(
   db: Db,
   orgId: string,
   libraries: { library: string; sheetId: string }[],

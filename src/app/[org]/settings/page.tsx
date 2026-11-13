@@ -19,6 +19,7 @@ import {
 import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
 import { ArchivePack, PackPreview } from './packs';
+import { PackUpgrade } from './pack-upgrade';
 import { listPacks, packSetups } from '@/server/commands/packs';
 import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
@@ -26,7 +27,7 @@ import { AdoptFramework } from './frameworks';
 import { listAuditOutputs, reviewSheetsByInstall } from '@/server/commands/audit';
 import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
 import { addDays, addMonths } from '@/engine/fields/helpers';
-import { Check, ExternalLink } from 'lucide-react';
+import { ArrowUpCircle, Check, ExternalLink } from 'lucide-react';
 
 export const metadata = { title: 'Settings · Compliance OS' };
 
@@ -497,6 +498,17 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                     <span className="text-label-12 text-muted-foreground">
                       {i.status === 'installed' ? 'Installed' : 'Archived'}
                     </span>
+                    {i.updateTo ? (
+                      <span
+                        className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5"
+                        data-testid="update-available"
+                      >
+                        <ArrowUpCircle className="size-3" aria-hidden /> Update available{' '}
+                        <span className="text-label-12-mono">
+                          {i.version} → {i.updateTo}
+                        </span>
+                      </span>
+                    ) : null}
                   </span>
                   <span className="text-muted-foreground text-label-13">
                     Installed by {i.installedBy}, {formatDateTime(i.installedAt, timeZone)}
@@ -532,6 +544,15 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                           ) : null;
                         })()
                       : null}
+                    {canInstall && i.updateTo ? (
+                      <PackUpgrade
+                        org={org}
+                        installId={i.id}
+                        title={i.title}
+                        from={i.version}
+                        to={i.updateTo}
+                      />
+                    ) : null}
                     {canInstall ? <ArchivePack org={org} installId={i.id} title={i.title} /> : null}
                   </div>
                 ) : null}
@@ -650,6 +671,17 @@ async function FrameworksTab({ org }: { org: string }) {
                     <span className="text-muted-foreground text-label-13">
                       {f.adopted!.sheetName}
                     </span>
+                    {f.adopted!.install?.updateTo ? (
+                      <span
+                        className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5"
+                        data-testid="update-available"
+                      >
+                        <ArrowUpCircle className="size-3" aria-hidden /> Update available{' '}
+                        <span className="text-label-12-mono">
+                          {f.adopted!.install.version} → {f.adopted!.install.updateTo}
+                        </span>
+                      </span>
+                    ) : null}
                   </span>
                   <CoverageBar
                     percent={f.adopted!.coverage.percent}
@@ -657,6 +689,15 @@ async function FrameworksTab({ org }: { org: string }) {
                   />
                 </div>
                 <span className="flex flex-wrap gap-2 self-start sm:self-center">
+                  {canAdopt && f.adopted!.install?.updateTo ? (
+                    <PackUpgrade
+                      org={org}
+                      installId={f.adopted!.install.id}
+                      title={f.title}
+                      from={f.adopted!.install.version}
+                      to={f.adopted!.install.updateTo}
+                    />
+                  ) : null}
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/${org}/s/${f.adopted!.sheetId}`} aria-label={`Open ${f.title}`}>
                       Open
