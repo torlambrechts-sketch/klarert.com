@@ -28,7 +28,7 @@ import { todayIn, type SheetData } from '@/engine/sheet-data';
 import type { Ctx, Item } from '@/engine/types';
 import { dateOf, isItemDone, isOverdueOf, visibleTextOf } from '@/engine/values';
 import { itemStatusField } from '@/engine/fields/item-status';
-import { REVIEW_PACK_SOURCES } from '@/lib/packs/management-review';
+import { REVIEW_PACK_SOURCES, type ReviewPackSource } from '@/lib/packs/management-review';
 import {
   auditPackInput,
   auditScopesInput,
@@ -431,7 +431,12 @@ async function compileReview(
   const sources: Partial<Record<ReviewSourceKey, ReviewSource | null>> = {};
   const partyGroupRefs: string[] = [];
   const issueGroupRefs: string[] = [];
-  let reviewSheet: { id: string; name: string; groupId: string | null } | null = null;
+  let reviewSheet: {
+    id: string;
+    name: string;
+    groupId: string | null;
+    checks: ReviewPackSource['review']['checks'];
+  } | null = null;
   const { data: installs } = await db
     .from('pack_installs')
     .select('id, pack_key, ref_map')
@@ -470,6 +475,7 @@ async function compileReview(
           id: sheetId,
           name: loaded.data.sheet.name,
           groupId: refMap[`group:${def.review.groupRef}`] ?? loaded.data.groups[0]?.id ?? null,
+          checks: def.review.checks,
         };
       }
     }
@@ -565,11 +571,10 @@ export async function createManagementReview(
         const loaded = await loadSheet(supabase, who, reviewSheet.id, ws.timeZone, now);
         if (!loaded)
           return fail('not_found', 'There is no management review sheet you can add to.');
-        const def = REVIEW_PACK_SOURCES.find((d) => d.sheets.reviews)!;
         const values: Record<string, unknown> = {};
         for (const s of review.sections) {
           if (!s.available) continue;
-          for (const key of def.review.checks[s.key] ?? []) {
+          for (const key of reviewSheet.checks[s.key] ?? []) {
             const f = loaded.data.fields.find((x) => x.key === key);
             if (f && !f.hidden) values[f.id] = true;
           }

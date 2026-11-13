@@ -5,6 +5,7 @@
 import capaApp from '../../../templates/apps/capa.json';
 import firstSheet from '../../../templates/first-sheet.json';
 import iso27001 from '../../../templates/packs/iso-27001.json';
+import iso9001 from '../../../templates/packs/iso-9001.json';
 import supplierManagement from '../../../templates/packs/supplier-management.json';
 import type { AppFile } from '@/engine/apps/types';
 import { satisfies } from '@/engine/packs/semver';
@@ -48,6 +49,7 @@ export function repoPacks(): PackManifest[] {
       parsePack(first),
       parsePack(supplierManagement),
       parsePack(iso27001),
+      parsePack(iso9001),
       ...START_PACKS.map((id) => parsePack(startToPack(startById(id)!))),
     ],
     repoApps(),
