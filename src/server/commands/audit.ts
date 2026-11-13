@@ -430,8 +430,8 @@ async function compileReview(
 ) {
   const sources: Partial<Record<ReviewSourceKey, ReviewSource | null>> = {};
   const partyGroupRefs: string[] = [];
-  let reviewSheet: { id: string; name: string; groupId: string | null; checks: string[][] } | null =
-    null;
+  const issueGroupRefs: string[] = [];
+  let reviewSheet: { id: string; name: string; groupId: string | null } | null = null;
   const { data: installs } = await db
     .from('pack_installs')
     .select('id, pack_key, ref_map')
@@ -447,6 +447,7 @@ async function compileReview(
         .map(([k, id]) => [id, k.slice('group:'.length)]),
     );
     partyGroupRefs.push(...def.partyGroups);
+    issueGroupRefs.push(...def.issueGroups);
     for (const [key, ref] of Object.entries(def.sheets) as [ReviewSourceKey, string][]) {
       if (sources[key]) continue;
       const sheetId = refMap[`sheet:${ref}`];
@@ -469,7 +470,6 @@ async function compileReview(
           id: sheetId,
           name: loaded.data.sheet.name,
           groupId: refMap[`group:${def.review.groupRef}`] ?? loaded.data.groups[0]?.id ?? null,
-          checks: [],
         };
       }
     }
@@ -491,6 +491,7 @@ async function compileReview(
     timeZone,
     sources,
     partyGroupRefs,
+    issueGroupRefs,
     monitoring,
   });
   return { review, reviewSheet };

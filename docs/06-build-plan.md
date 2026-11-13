@@ -195,7 +195,7 @@ Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, 
 - [x] 1.1.0: pack automations on sub-items (`subitems: true`, the CAPA actions' overdue reminder); the internal form "Report a security incident" (Full) opened from the setup checklist; example risks and treatments linked to Annex A by requirement key (`requirements`), resolved at install; migration 0033 (`install_pack` links into a library); pgTAP 0023
 
 ### P5 · Audit outputs  [Opus]
-- [ ] SoA export; audit pack (PDF/zip: SoA, registers, evidence index, log extract with chain verification); management review inputs compiled from existing data
+- [x] SoA export; audit pack (PDF/zip: SoA, registers, evidence index, log extract with chain verification); management review inputs compiled from existing data (docs/11 Audit outputs; 0033)
 
 ### P6 · Pack upgrades  [Opus]
 - [ ] Three-way diff (shipped hash, client's current, new manifest): apply untouched, flag conflicts, archive removed, fields add-only, keep client options and automation on/off; dry run and rollback

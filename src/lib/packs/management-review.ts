@@ -14,6 +14,8 @@ export interface ReviewPackSource {
   detailFields: Partial<Record<ReviewSourceKey, string>>;
   /** Group refs of the context sheet that hold interested parties. */
   partyGroups: string[];
+  /** Group refs of the context sheet that hold internal and external issues. */
+  issueGroups: string[];
   /** The management review sheet: where "Create the review" adds an item. */
   review: {
     source: 'reviews';
@@ -40,6 +42,7 @@ export const REVIEW_PACK_SOURCES: ReviewPackSource[] = [
     dateFields: { reviews: 'meeting_date', audits: 'audit_date', nonconformities: 'found_on' },
     detailFields: { risks: 'level' },
     partyGroups: ['scope.parties'],
+    issueGroups: ['scope.internal', 'scope.external'],
     review: {
       source: 'reviews',
       groupRef: 'review.planned',

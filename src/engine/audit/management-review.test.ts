@@ -94,6 +94,18 @@ describe('management review inputs', () => {
         ]),
       },
     });
+    const scoped = compileManagementReview({
+      ...period,
+      partyGroupRefs: ['scope.parties'],
+      issueGroupRefs: ['scope.internal', 'scope.external'],
+      sources: {
+        context: source([
+          row({ group: 'Internal issues', groupRef: 'scope.internal' }),
+          row({ group: 'Scope statement', groupRef: 'scope.scope' }),
+        ]),
+      },
+    });
+    expect(scoped.sections.find((s) => s.key === 'issues')!.items).toHaveLength(1);
     const issues = r.sections.find((s) => s.key === 'issues')!;
     expect(issues.facts).toEqual(['1 issue added and 1 changed in the period, 3 in all']);
     expect(issues.items.map((i) => i.note)).toEqual([

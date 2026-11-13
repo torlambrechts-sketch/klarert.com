@@ -53,6 +53,8 @@ export interface ReviewInput {
   sources: Partial<Record<ReviewSourceKey, ReviewSource | null>>;
   /** Group refs of the context sheet that hold interested parties (the rest are issues). */
   partyGroupRefs?: string[];
+  /** Group refs of the context sheet that hold internal and external issues (absent: every group but the parties). */
+  issueGroupRefs?: string[];
   /** Numbers the workspace already shows (framework coverage, dashboards), in words. */
   monitoring?: { label: string; value: string }[];
 }
@@ -184,7 +186,10 @@ export function compileManagementReview(input: ReviewInput): ManagementReview {
     ];
   };
   const contextRows = rows('context');
-  const issueRows = contextRows.filter((r) => !isParty(r));
+  const issueGroups = input.issueGroupRefs?.length ? new Set(input.issueGroupRefs) : null;
+  const issueRows = contextRows.filter((r) =>
+    issueGroups ? !!r.groupRef && issueGroups.has(r.groupRef) : !isParty(r),
+  );
   const partyRows = contextRows.filter(isParty);
   const issues = section(
     'issues',
