@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { ArchivedItems } from '@/components/sheets/archived-items';
 import { GroupsManager } from '@/components/sheets/groups-manager';
@@ -40,6 +40,8 @@ export default async function SheetSettingsPage({
   const { workspace, role, user } = await requireMember(org);
   const sheet = await getSheet(workspace.id, sheetId);
   if (!sheet) notFound();
+  // a sub-item sheet is set up in its parent's settings (Sub-items)
+  if (sheet.parent_sheet_id) redirect(`/${org}/s/${sheet.parent_sheet_id}/settings`);
   const [nav, fields, archivedItems] = await Promise.all([
     getNav(workspace.id),
     getFields(sheet.id),
@@ -72,7 +74,7 @@ export default async function SheetSettingsPage({
               name: sheet.name,
               description: sheet.description,
               itemLabel: sheet.item_label,
-              idPrefix: sheet.id_prefix,
+              idPrefix: sheet.id_prefix ?? '',
               prefixLocked: sheet.next_seq > 1,
               folderId: sheet.folder_id,
               isLibrary: sheet.is_library,

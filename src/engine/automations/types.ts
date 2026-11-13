@@ -40,6 +40,19 @@ export type AutomationEvent =
     }
   | { type: 'button.clicked'; sheetId: string; itemId: string; fieldId: string; actor: Actor }
   | {
+      /**
+       * A sub-item's event seen from its parent (docs/04 §3): the runner projects item.created and value.changed of a
+       * sub-item onto the parent at the same depth, so the parent sheet's sub-item triggers can match it.
+       */
+      type: 'subitem.event';
+      /** The parent's sheet and the parent. */
+      sheetId: string;
+      itemId: string;
+      subitemId: string;
+      event: Extract<AutomationEvent, { type: 'item.created' | 'value.changed' }>;
+      actor: Actor;
+    }
+  | {
       type: 'schedule';
       sheetId: string;
       itemId: string;
@@ -63,6 +76,9 @@ export const TRIGGER_EVENTS: Record<TriggerId, EventType[]> = {
   evidence_expiring: ['schedule'],
   button_clicked: ['button.clicked'],
   checklist_no: ['value.changed'],
+  subitem_created: ['subitem.event'],
+  subitem_field_becomes: ['subitem.event'],
+  all_subitems_done: ['subitem.event'],
 };
 
 export type ActionId =
@@ -76,7 +92,10 @@ export type ActionId =
   | 'lock_item'
   | 'post_update'
   | 'webhook'
-  | 'raise_version';
+  | 'raise_version'
+  | 'create_subitems'
+  | 'set_parent_field'
+  | 'update_subitems';
 
 export const ACTION_IDS: ActionId[] = [
   'set_field',
@@ -90,6 +109,9 @@ export const ACTION_IDS: ActionId[] = [
   'post_update',
   'webhook',
   'raise_version',
+  'create_subitems',
+  'set_parent_field',
+  'update_subitems',
 ];
 
 export type ActionJson = Automation['actions'][number];
@@ -139,6 +161,12 @@ export type Effect =
       linkFieldKey: string;
       fieldKey: string;
       value: Json | null;
+    }
+  | {
+      kind: 'create_subitems';
+      parentId: string;
+      /** Child field key → raw value, per sub-item, in order. */
+      items: { name: string; values: Record<string, Json | null> }[];
     }
   | { kind: 'move'; itemId: string; groupId: string }
   | { kind: 'lock'; itemId: string; reason: string | null }

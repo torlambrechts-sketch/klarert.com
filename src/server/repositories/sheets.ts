@@ -21,6 +21,8 @@ export const getNav = cache(async (orgId: string): Promise<Nav> => {
       .select('id, name, folder_id, position, created_at')
       .eq('org_id', orgId)
       .is('archived_at', null)
+      // sub-item sheets live inside their parent sheet, not in the side menu (docs/02 §12)
+      .is('parent_sheet_id', null)
       .order('position'),
   ]);
   const codes = sheetCodes(
@@ -60,7 +62,7 @@ export const getSheet = cache(async (orgId: string, sheetId: string) => {
   const { data: sheet } = await db
     .from('sheets')
     .select(
-      'id, name, description, item_label, id_prefix, next_seq, is_library, folder_id, archived_at, created_at, settings, folders(name)',
+      'id, name, description, item_label, id_prefix, next_seq, is_library, folder_id, archived_at, created_at, settings, parent_sheet_id, folders(name)',
     )
     .eq('id', sheetId)
     .eq('org_id', orgId)
@@ -129,13 +131,13 @@ export async function getWizardData(orgId: string) {
   if (!session) return { prefixes: [], sheets: [] };
   const { data } = await session.supabase
     .from('sheets')
-    .select('id, name, id_prefix, is_library, archived_at')
+    .select('id, name, id_prefix, is_library, archived_at, parent_sheet_id')
     .eq('org_id', orgId)
     .order('name');
   return {
-    prefixes: (data ?? []).map((s) => s.id_prefix),
+    prefixes: (data ?? []).flatMap((s) => (s.id_prefix ? [s.id_prefix] : [])),
     sheets: (data ?? [])
-      .filter((s) => !s.archived_at)
+      .filter((s) => !s.archived_at && !s.parent_sheet_id)
       .map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library })),
   };
 }

@@ -107,6 +107,16 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
   /** Number kinds: the default group-footer summary (docs/03 §8). Default `sum`. */
   defaultSummary?: 'sum' | 'average';
   /**
+   * False for types a feature creates, not the add-field picker (the sub-items column comes with "Turn on
+   * sub-items"). Default true.
+   */
+  addable?: boolean;
+  /**
+   * Link-like computed types: the items this field relates the item to (sub-items). Lookups, rollups and progress
+   * read them as they read a link field's targets.
+   */
+  relatedIds?(item: Item, field: Field<C>, ctx: Ctx): string[];
+  /**
    * Server-side stamping of a value about to be written: who, when, hashes (signature). `values` are the item's
    * values after the rest of the change; `hash` is SHA-256 of a string, injected.
    */

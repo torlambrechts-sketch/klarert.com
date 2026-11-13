@@ -76,6 +76,7 @@ export const FIELD_UI: Record<FieldTypeId, FieldTypeUI> = {
   workflowstep: ui(computed.workflowstepUI, cfg.OptionsConfig),
   button: ui(computed.buttonUI, cfg.ButtonConfig),
   ai: ui(computed.aiUI, cfg.AiConfig),
+  subitems: computed.subitemsUI,
 };
 
 export function fieldUI(type: string): FieldTypeUI {

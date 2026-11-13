@@ -108,6 +108,14 @@ export function sheetCtx(data: SheetData, env: CtxEnv): Ctx {
     list.push(f);
     files.set(k, list);
   }
+  // sub-items (docs/02 §12): every loaded item with a parent, live, in position order under it
+  const childIds = new Map<string, string[]>();
+  for (const it of [...items.values()].sort(byPosition)) {
+    if (!it.parentId || it.archivedAt) continue;
+    const list = childIds.get(it.parentId) ?? [];
+    list.push(it.id);
+    childIds.set(it.parentId, list);
+  }
   const prot = new Map(data.protectedValues.map((p) => [`${p.itemId}:${p.fieldId}`, p.value]));
   const canSeeProtected = (fieldId: string) => {
     const f = fields.find((x) => x.id === fieldId);
@@ -129,6 +137,7 @@ export function sheetCtx(data: SheetData, env: CtxEnv): Ctx {
     fieldsOf: (sheetId) => fieldsBySheet.get(sheetId) ?? [],
     groups: new Map(data.groups.map((g) => [g.id, g])),
     links: (itemId, fieldId) => linkIds.get(`${itemId}:${fieldId}`) ?? [],
+    children: (itemId) => childIds.get(itemId) ?? [],
     item: (id) => items.get(id),
     files: (itemId, fieldId) => files.get(`${itemId}:${fieldId}`) ?? [],
     sheetOf: (itemId) => {
@@ -142,6 +151,27 @@ export function sheetCtx(data: SheetData, env: CtxEnv): Ctx {
       return canSeeProtected(fieldId) ? null : undefined;
     },
     newId: env.newId,
+  };
+}
+
+/**
+ * The sheet's data with its sub-items (docs/02 §12): the child sheet, its fields and items join `related`, their links
+ * and files join the sheet's, so roll-ups, the sub-items column and triggers read them through the Ctx. Pure.
+ */
+export function withSubitems(data: SheetData, child: SheetData | null | undefined): SheetData {
+  if (!child || child.sheet.parentSheetId !== data.sheet.id) return data;
+  const known = new Set(data.related.items.map((i) => i.id));
+  return {
+    ...data,
+    sheet: { ...data.sheet, childSheetId: child.sheet.id },
+    links: [...data.links, ...child.links],
+    files: [...data.files, ...child.files],
+    protectedValues: [...data.protectedValues, ...child.protectedValues],
+    related: {
+      sheets: [...data.related.sheets.filter((s) => s.id !== child.sheet.id), child.sheet],
+      fields: [...data.related.fields.filter((f) => f.sheetId !== child.sheet.id), ...child.fields],
+      items: [...data.related.items, ...child.items.filter((i) => !known.has(i.id))],
+    },
   };
 }
 

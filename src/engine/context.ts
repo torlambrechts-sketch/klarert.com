@@ -25,6 +25,7 @@ export function basicCtx(input: {
     fieldsOf: () => [],
     groups: new Map(),
     links: () => [],
+    children: () => [],
     item: () => undefined,
     files: () => [],
     sheetOf: () => undefined,

@@ -2,6 +2,7 @@
 // people are injected, so the same plan is unit-tested here and written by src/server/templates/importer.ts.
 // Order: sheets (fields without links) → link fields with inverses → groups → views → items → links → automations.
 // Values go through each field type's `normalize`, as the commands do; nothing here runs automations or status rules.
+import { planSubitems, type SubitemFieldSpec, type SubitemRows } from './subitems';
 import { draftProblems } from '@/engine/automations/builder';
 import { basicCtx } from '@/engine/context';
 import { addDays } from '@/engine/fields/helpers';
@@ -54,8 +55,13 @@ export interface PlannedSheet {
     item_label: string;
     id_prefix: string;
     position: string;
-    settings: { template: { id: string; version: number; ref: string } };
+    settings: {
+      template: { id: string; version: number; ref: string };
+      subitems?: SubitemRows['settings'];
+    };
   };
+  /** The sheet's sub-items (docs/02 §12): its child sheet, written after the parents. */
+  subitems?: SubitemRows;
   groups: { id: string; org_id: string; sheet_id: string; name: string; color: string; position: string }[];
   fields: {
     id: string;
@@ -238,7 +244,7 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
         item_label: s.itemLabel,
         id_prefix: s.idPrefix,
         position: sheetPositions[si]!,
-        settings: { template: { id: t.id, version: t.version, ref: s.ref } },
+        settings: { template: { id: t.id, version: t.version, ref: s.ref } } as PlannedSheet['row']['settings'],
       },
       groups,
       fields,
@@ -253,8 +259,40 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
         owner_id: null,
       })),
       items: [],
+      ...(s.subitems
+        ? (() => {
+            const rows = planSubitems(
+              { ...s.subitems, fields: s.subitems.fields as SubitemFieldSpec[] },
+              {
+                orgId: env.orgId,
+                parent: {
+                  id: sheetId,
+                  name: s.name,
+                  folderId: env.folderId,
+                  position: sheetPositions[si]!,
+                  holdAutomations: true,
+                },
+                parentFields: fields,
+                newId: env.newId,
+              },
+            );
+            fields.push({
+              ...rows.parentField,
+              org_id: env.orgId,
+              sheet_id: sheetId,
+              required: false,
+              locked: false,
+              description: null,
+              rules: [],
+              visibility: null,
+            });
+            return { subitems: rows };
+          })()
+        : {}),
     };
   });
+
+  for (const p of planned) if (p.subitems) p.row.settings.subitems = p.subitems.settings;
 
   const ctxFor = (sheetRef: string): Ctx => {
     const sheetId = sheetIds.get(sheetRef)!;

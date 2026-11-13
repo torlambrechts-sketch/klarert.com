@@ -46,6 +46,7 @@ export const templateField = z.object({
         require: z.array(fieldKey).optional(),
         requireComment: z.boolean().optional(),
         message: z.string().optional(),
+        fromDone: z.boolean().optional(),
       }),
     )
     .optional(),
@@ -59,6 +60,42 @@ export const templateItem = z.object({
   /** link field key → `$item:<sheetRef>:<name>` tokens */
   links: z.record(fieldKey, z.array(z.string())).optional(),
 });
+
+/**
+ * A sheet's sub-item set (docs/02 §12): what its sub-items are called, the gates, the sub-items' own fields and the
+ * template set "From template" adds (values by child field key; $in:N and $today resolve when it is applied).
+ * Shared by sheet templates and the wizard's starts.
+ */
+export const subitemSetSchema = z
+  .object({
+    label: z.string().trim().min(1).max(40).default('Sub-items'),
+    blockClose: z.boolean().default(false),
+    lockCascade: z.boolean().default(false),
+    fields: z.array(templateField).min(1).max(40),
+    items: z
+      .array(z.object({ name: z.string().min(1).max(500), values: z.record(fieldKey, json).default({}) }))
+      .max(50)
+      .default([]),
+  })
+  .superRefine((set, ctx) => {
+    const keys = new Set(set.fields.map((f) => f.key));
+    if (keys.size !== set.fields.length)
+      ctx.addIssue({ code: 'custom', path: ['fields'], message: 'Duplicate sub-item field key.' });
+    for (const [fi, f] of set.fields.entries())
+      for (const r of f.rules ?? [])
+        for (const k of [r.whenFieldKey, ...(r.require ?? [])])
+          if (!keys.has(k))
+            ctx.addIssue({
+              code: 'custom',
+              path: ['fields', fi],
+              message: `Rule names unknown sub-item field "${k}".`,
+            });
+    for (const [ii, item] of set.items.entries())
+      for (const k of Object.keys(item.values))
+        if (!keys.has(k))
+          ctx.addIssue({ code: 'custom', path: ['items', ii], message: `Unknown sub-item field "${k}".` });
+  });
+export type SubitemSet = z.infer<typeof subitemSetSchema>;
 
 export const templateSheet = z.object({
   ref,
@@ -78,6 +115,8 @@ export const templateSheet = z.object({
     )
     .default([]),
   items: z.array(templateItem).default([]),
+  /** Sub-items for this sheet: a hidden child sheet with these fields (docs/02 §12). */
+  subitems: subitemSetSchema.optional(),
 });
 
 export const templateAutomation = z.object({

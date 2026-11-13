@@ -114,7 +114,16 @@ export function checkWrite(
   const now = validateItem(after, fields, ctx, o);
   const old = new Set(was.issues.filter((i) => i.level === 'error').map(issueKey));
   const blocking = now.issues.filter((i) => i.level === 'error' && !old.has(issueKey(i)));
-  return { blocking, commentRequired: now.commentRequired };
+  // a `fromDone` rule asks only when the field leaves a done value (reopening a done sub-item needs a comment)
+  const wasDone = (rule: StatusRule) => {
+    const field = fields.find((f) => f.key === rule.whenFieldKey);
+    const def = field && resolveFieldType(field.type);
+    return !!field && !!def?.isDone?.((before.values[field.id] ?? null) as never, field.config);
+  };
+  return {
+    blocking,
+    commentRequired: now.commentRequired.filter((r) => !r.fromDone || wasDone(r)),
+  };
 }
 
 /** Issues for a new item: only the values given are checked; empty required fields do not block (docs/03 §2). */

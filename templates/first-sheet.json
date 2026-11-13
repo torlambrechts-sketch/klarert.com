@@ -440,7 +440,124 @@
             }
           }
         }
-      ]
+      ],
+      "subitems": {
+        "label": "Actions",
+        "blockClose": true,
+        "fields": [
+          {
+            "key": "owner",
+            "name": "Owner",
+            "type": "people",
+            "config": {
+              "multiple": false
+            }
+          },
+          {
+            "key": "status",
+            "name": "Status",
+            "type": "status",
+            "config": {
+              "options": [
+                {
+                  "id": "opt_todo",
+                  "label": "To do",
+                  "color": "grey"
+                },
+                {
+                  "id": "opt_doing",
+                  "label": "Working on it",
+                  "color": "orange"
+                },
+                {
+                  "id": "opt_done",
+                  "label": "Done",
+                  "color": "green",
+                  "done": true
+                },
+                {
+                  "id": "opt_na",
+                  "label": "N/A",
+                  "color": "dark",
+                  "done": true
+                }
+              ]
+            },
+            "rules": [
+              {
+                "id": "na_reason",
+                "whenFieldKey": "status",
+                "whenValues": [
+                  "opt_na"
+                ],
+                "requireComment": true,
+                "message": "Say why this does not apply."
+              },
+              {
+                "id": "reopen",
+                "whenFieldKey": "status",
+                "whenValues": [
+                  "opt_todo",
+                  "opt_doing"
+                ],
+                "requireComment": true,
+                "fromDone": true,
+                "message": "Say why this is reopened."
+              }
+            ]
+          },
+          {
+            "key": "due_date",
+            "name": "Due date",
+            "type": "date",
+            "config": {
+              "relative": true
+            }
+          },
+          {
+            "key": "evidence",
+            "name": "Evidence",
+            "type": "evidence",
+            "config": {
+              "validDays": 365,
+              "multiple": true,
+              "accept": []
+            }
+          }
+        ],
+        "items": [
+          {
+            "name": "Containment",
+            "values": {
+              "due_date": "$in:2"
+            }
+          },
+          {
+            "name": "Root cause",
+            "values": {
+              "due_date": "$in:14"
+            }
+          },
+          {
+            "name": "Correction",
+            "values": {
+              "due_date": "$in:30"
+            }
+          },
+          {
+            "name": "Corrective action",
+            "values": {
+              "due_date": "$in:60"
+            }
+          },
+          {
+            "name": "Effectiveness check",
+            "values": {
+              "due_date": "$in:90"
+            }
+          }
+        ]
+      }
     },
     {
       "ref": "act",

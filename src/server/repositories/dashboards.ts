@@ -14,7 +14,14 @@ import { itemStatusField } from '@/engine/fields/item-status';
 import type { Ctx, Field, Group, Json, Person, Sheet } from '@/engine/types';
 import { monthPoints } from '@/engine/dashboards/history';
 import { fetchDirectory, fetchItemsOfSheets, fetchSheetData, type Db } from '@/lib/sheet-query';
-import { toDashboard, toField, toGroup, toSheet, type Dashboard } from '@/lib/sheet-rows';
+import {
+  SHEET_COLUMNS,
+  toDashboard,
+  toField,
+  toGroup,
+  toSheet,
+  type Dashboard,
+} from '@/lib/sheet-rows';
 import { fetchEvidence } from './evidence';
 
 // Reads for dashboards (docs/05 §4): the workspace's dashboards, the sheets and fields the widget editor offers, and
@@ -59,9 +66,11 @@ export async function fetchSheetMetas(
   const [sheets, fields, groups, directory] = await Promise.all([
     db
       .from('sheets')
-      .select('id, org_id, name, item_label, id_prefix, is_library')
+      .select(SHEET_COLUMNS)
       .eq('org_id', orgId)
       .is('archived_at', null)
+      // sub-item sheets are not offered: dashboards count parents (docs/02 §12)
+      .is('parent_sheet_id', null)
       .order('position')
       .then(must),
     db

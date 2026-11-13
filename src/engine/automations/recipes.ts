@@ -17,15 +17,30 @@ export interface Recipe {
 /** role → field key (null = not chosen yet). */
 export type RoleMapping = Record<string, string | null>;
 
-/** Fields of this sheet that can fill each role (the role's types, in sheet order). */
+/**
+ * Fields of this sheet that can fill each role (the role's types, in sheet order). A `sub:<type>` role is filled by a
+ * field of the sheet's sub-items.
+ */
 export function roleCandidates(recipe: Recipe, ctx: Ctx): Record<string, Field[]> {
   const fields = ctx.fieldsOf(ctx.sheet.id);
+  const child = ctx.sheet.childSheetId ? ctx.fieldsOf(ctx.sheet.childSheetId) : [];
   return Object.fromEntries(
     Object.entries(recipe.roles).map(([role, types]) => [
       role,
-      fields.filter((f) => types.includes(f.type)),
+      [
+        ...fields.filter((f) => types.includes(f.type)),
+        ...child.filter((f) => types.includes(`sub:${f.type}`)),
+      ],
     ]),
   );
+}
+
+/** Recipes about sub-items need a sheet with sub-items. */
+export function recipeFits(recipe: Recipe, ctx: Ctx): boolean {
+  const usesSubitems =
+    String(recipe.trigger.type).includes('subitem') ||
+    recipe.actions.some((a) => String(a.type).includes('subitems'));
+  return !usesSubitems || !!ctx.sheet.childSheetId;
 }
 
 /** The first fitting field per role, a different one per role where the sheet has enough. */

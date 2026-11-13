@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FIELD_TYPE_IDS, FIELD_TYPES } from './registry';
 
+// the latest migration that defines the type lists (0020 added `subitems`)
 const sql = readFileSync(
-  new URL('../../../supabase/migrations/0001_core.sql', import.meta.url),
+  new URL('../../../supabase/migrations/0020_subitems.sql', import.meta.url),
   'utf8',
 );
 const block = sql.slice(
@@ -17,8 +18,8 @@ const nonValueIds = [
 ].map((m) => m[1]);
 
 describe('field type registry', () => {
-  it('has exactly the 57 ids of field_types() in SQL, in the same order', () => {
-    expect(sqlIds).toHaveLength(57);
+  it('has exactly the 58 ids of field_types() in SQL, in the same order', () => {
+    expect(sqlIds).toHaveLength(58);
     expect(FIELD_TYPE_IDS).toEqual(sqlIds);
   });
 
@@ -26,10 +27,10 @@ describe('field type registry', () => {
     for (const [id, def] of Object.entries(FIELD_TYPES)) expect(def.id).toBe(id);
   });
 
-  it('families add up to 18 + 10 + 19 + 10', () => {
+  it('families add up to 18 + 10 + 19 + 11', () => {
     const count = (f: string) => Object.values(FIELD_TYPES).filter((d) => d.family === f).length;
     expect([count('basic'), count('choice'), count('compliance'), count('computed')]).toEqual([
-      18, 10, 19, 10,
+      18, 10, 19, 11,
     ]);
   });
 
@@ -61,6 +62,7 @@ describe('field type registry', () => {
         'clock',
         'signature',
         'ack',
+        'subitems',
       ].sort(),
     );
     expect(ids((d) => d.kanbanCapable)).toEqual(

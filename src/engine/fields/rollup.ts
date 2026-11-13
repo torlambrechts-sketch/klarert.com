@@ -1,6 +1,16 @@
 import { z } from 'zod';
 import type { Ctx, Field, Item, Json } from '../types';
-import { base, cmpNumber, emptyLast, formatNumber, parseNumber } from './helpers';
+import { freshness } from './evidence';
+import {
+  base,
+  cmpNumber,
+  cmpText,
+  emptyLast,
+  formatDate,
+  formatNumber,
+  isIsoDate,
+  parseNumber,
+} from './helpers';
 import { fieldByKey, linkedItems, readValue } from './link';
 import { resolveFieldType } from './resolve';
 import type { AnyFieldType, FieldTypeDef } from './types';
@@ -14,6 +24,10 @@ export const ROLLUP_FNS = [
   'pctDone',
   'countEmpty',
   'countWhere',
+  // sub-items and other linked items (docs/03 §3.4): the least finished option, the earliest date, expired evidence
+  'worst',
+  'earliest',
+  'countExpired',
 ] as const;
 export type RollupFn = (typeof ROLLUP_FNS)[number];
 
@@ -37,7 +51,33 @@ interface Target {
   value: unknown;
 }
 
-const isEmpty = (v: number | null) => v === null || v === undefined || Number.isNaN(v);
+/** number for most functions; the option label for `worst`; an ISO date for `earliest`. */
+export type RollupValue = number | string;
+
+const isEmpty = (v: RollupValue | null) =>
+  v === null || v === undefined || (typeof v === 'number' && Number.isNaN(v)) || v === '';
+
+/**
+ * The least finished value among option-like targets: a value that is not done beats a done one; then the higher
+ * rank (ordered kinds such as severity) or the later option in the list (status: Stuck after Working on it).
+ */
+function worstOf(targets: Target[], ctx: Ctx): string | null {
+  let best: { label: string; done: boolean; order: number } | null = null;
+  for (const t of targets) {
+    if (t.def.isEmpty(t.value)) continue;
+    const cfg = t.field.config;
+    const options = t.def.options?.(cfg, ctx) ?? [];
+    const key = t.def.keyOf ? t.def.keyOf(t.value, cfg) : typeof t.value === 'string' ? t.value : null;
+    const index = options.findIndex((o) => o.id === key);
+    const order = t.def.rank?.(t.value, cfg) ?? index;
+    if (order === null || order < 0) continue;
+    const done = t.def.isDone?.(t.value, cfg) ?? false;
+    const label = options[index]?.label ?? t.def.toText(t.value, cfg, ctx);
+    if (!best || (best.done && !done) || (best.done === done && order > best.order))
+      best = { label, done, order };
+  }
+  return best?.label ?? null;
+}
 
 // A small comparison for countWhere only; filters and automation conditions use src/engine/conditions.
 function matches(t: Target, where: RollupWhere, ctx: Ctx): boolean {
@@ -82,7 +122,11 @@ function targetField(t: Item, cfg: RollupConfig, ctx: Ctx): Field | undefined {
     : undefined;
 }
 
-export function computeRollup(item: Item, field: Field<RollupConfig>, ctx: Ctx): number | null {
+export function computeRollup(
+  item: Item,
+  field: Field<RollupConfig>,
+  ctx: Ctx,
+): RollupValue | null {
   const cfg = field.config;
   const linkField = fieldByKey(field.sheetId, cfg.linkFieldKey, ctx);
   if (!linkField) return null;
@@ -98,6 +142,21 @@ export function computeRollup(item: Item, field: Field<RollupConfig>, ctx: Ctx):
       return targets.filter((t) => t.def.isEmpty(t.value)).length;
     case 'countWhere':
       return cfg.where ? targets.filter((t) => matches(t, cfg.where!, ctx)).length : null;
+    case 'worst':
+      return worstOf(targets, ctx);
+    case 'earliest': {
+      const dates = targets
+        .map((t) => t.def.toDate(t.value, t.field.config, ctx))
+        .filter((d): d is string => !!d)
+        .sort();
+      return dates[0] ?? null;
+    }
+    case 'countExpired':
+      return targets.filter(
+        (t) =>
+          t.def.storage === 'files' &&
+          freshness(Array.isArray(t.value) ? (t.value as never) : null, ctx.today) === 'expired',
+      ).length;
     case 'pctDone': {
       if (!targets.length) return null;
       const done = targets.filter((t) => t.def.isDone?.(t.value, t.field.config) ?? false).length;
@@ -116,14 +175,16 @@ export function computeRollup(item: Item, field: Field<RollupConfig>, ctx: Ctx):
   }
 }
 
-export const rollup: FieldTypeDef<number, RollupConfig> = base<number, RollupConfig>({
+const asNumber = (v: RollupValue | null) => (typeof v === 'number' && !Number.isNaN(v) ? v : null);
+
+export const rollup: FieldTypeDef<RollupValue, RollupConfig> = base<RollupValue, RollupConfig>({
   id: 'rollup',
   label: 'Rollup',
   family: 'computed',
   description: 'Counts or totals a field across the linked items.',
   storage: 'computed',
   kind: 'number',
-  valueSchema: z.number().finite(),
+  valueSchema: z.union([z.number().finite(), z.string()]),
   configSchema: z.object({
     linkFieldKey: z.string(),
     targetFieldKey: z.string().min(1).nullable(),
@@ -142,8 +203,18 @@ export const rollup: FieldTypeDef<number, RollupConfig> = base<number, RollupCon
   parseText: (t) => parseNumber(t),
   compute: computeRollup,
   isEmpty,
-  toText: (v, cfg) =>
-    isEmpty(v) ? '' : `${formatNumber(v!, 2)}${cfg.fn === 'pctDone' ? '%' : ''}`,
-  toNumber: (v) => (isEmpty(v) ? null : v),
-  compare: (a, b) => emptyLast(a, b, isEmpty, cmpNumber),
+  effectiveKind: (field) =>
+    field.config.fn === 'worst' ? 'text' : field.config.fn === 'earliest' ? 'date' : 'number',
+  toText: (v, cfg) => {
+    if (v === null || isEmpty(v)) return '';
+    if (typeof v === 'string') return isIsoDate(v) ? formatDate(v) : v;
+    if (cfg.fn === 'countExpired') return `${formatNumber(v, 0)} expired`;
+    return `${formatNumber(v, 2)}${cfg.fn === 'pctDone' ? '%' : ''}`;
+  },
+  toNumber: (v) => asNumber(v),
+  toDate: (v) => (typeof v === 'string' && isIsoDate(v) ? v : null),
+  compare: (a, b) =>
+    emptyLast(a, b, isEmpty, (x, y) =>
+      typeof x === 'number' && typeof y === 'number' ? cmpNumber(x, y) : cmpText(String(x), String(y)),
+    ),
 });

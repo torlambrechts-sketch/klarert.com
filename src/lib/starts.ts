@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import raw from '../../templates/starts.json';
 import { isFieldTypeId } from '@/engine/fields/registry';
+import { subitemSetSchema } from '@/lib/templates/schema';
 
 const startSchema = z.object({
   id: z.string(),
@@ -17,6 +18,8 @@ const startSchema = z.object({
       ]),
     )
     .optional(),
+  /** Starts that come with sub-items (CAPA, audit, incident, control, treatment): the set the wizard turns on. */
+  subitems: subitemSetSchema.optional(),
 });
 
 const startsFile = z.object({
@@ -33,6 +36,11 @@ export const START_IDS = [
   'tracker',
   'log',
   'inspection',
+  'capa',
+  'audit',
+  'incident',
+  'control',
+  'treatment',
   'csv',
   'copy',
 ] as const;

@@ -14,7 +14,7 @@ import {
   fetchSheetMeta,
   type Db,
 } from '@/lib/sheet-query';
-import { toField, toItem } from '@/lib/sheet-rows';
+import { SHEET_COLUMNS, toField, toItem } from '@/lib/sheet-rows';
 import { getSession } from '@/server/auth';
 import { newId } from '@/server/sheet-context';
 
@@ -243,7 +243,7 @@ async function recentActivity(
     fetchItemsById(db, itemIds),
     db
       .from('sheets')
-      .select('id, org_id, name, item_label, id_prefix, is_library')
+      .select(SHEET_COLUMNS)
       .in('id', sheetIds)
       .then(must),
     db
@@ -276,7 +276,7 @@ async function recentActivity(
           orgId: sheet.org_id,
           name: sheet.name,
           itemLabel: sheet.item_label,
-          idPrefix: sheet.id_prefix,
+          idPrefix: sheet.id_prefix ?? '',
           isLibrary: sheet.is_library,
         }),
         ...directory,

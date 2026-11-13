@@ -414,10 +414,11 @@ function RecipeGallery(props: ScreenProps & { perms: ListPermissions }) {
               <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="text-label-14 font-medium">{r.title}</span>
                 <span className="text-muted-foreground text-label-13">
-                  Uses{' '}
-                  {Object.keys(r.roles)
-                    .map((role) => `${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role} field`)
-                    .join(', ')}
+                  {Object.keys(r.roles).length === 0
+                    ? 'Uses the sheet’s sub-items'
+                    : `Uses ${Object.keys(r.roles)
+                        .map((role) => `${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role} field`)
+                        .join(', ')}`}
                 </span>
               </span>
               <input

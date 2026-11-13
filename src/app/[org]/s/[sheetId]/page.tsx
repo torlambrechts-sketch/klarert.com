@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { SheetView } from '@/components/grid/sheet-view';
 import { requireMember } from '@/server/auth';
 import { getSheet } from '@/server/repositories/sheets';
@@ -35,6 +35,8 @@ export default async function SheetPage({
   const { workspace, role, user } = await requireMember(org);
   const sheet = await getSheet(workspace.id, sheetId);
   if (!sheet) notFound();
+  // sub-items live inside their parent sheet (docs/02 §12)
+  if (sheet.parent_sheet_id) redirect(`/${org}/s/${sheet.parent_sheet_id}`);
   return (
     <>
       {sheet.archived_at ? (

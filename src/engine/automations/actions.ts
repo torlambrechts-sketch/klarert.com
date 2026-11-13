@@ -1,13 +1,16 @@
 // Action planning (docs/04 §5): each action becomes a planned step with the effects to execute, or an outcome decided
 // without executing anything. Pure: no writes, no clock but ctx.now, so the builder's Test (M8) shows the same steps
 // the runner executes.
-import { addDays } from '../fields/helpers';
 import { raiseVersion } from '../fields/version';
 import type { Automation, Ctx, Field, Item, Json } from '../types';
 import { defOf, keysOfValue, kindOf, valueOf } from '../values';
 import { actorName, renderTemplate, type TemplateEnv } from './template';
 import type { ActionId, ActionJson, Actor, AutomationEvent, Effect, PlannedStep } from './types';
 import { isWebhookPreset, webhookPayload } from './webhook';
+import { resolveValueToken, valueLabel } from './value-tokens';
+import { SUBITEM_ACTIONS } from './subitem-actions';
+
+export { resolveValueToken, valueLabel };
 
 export interface PlanEnv extends TemplateEnv {
   automation: Pick<Automation, 'id' | 'name' | 'trigger'>;
@@ -46,36 +49,6 @@ const missingField = (action: string, key: string | null) =>
     'Change a field',
     key ? `The field "${key}" no longer exists.` : 'Choose a field.',
   );
-
-/** Value tokens (docs/04 §5): $today, $in:N (days), $actor, $empty, or a literal for the field type. */
-export function resolveValueToken(
-  raw: Json | undefined,
-  ctx: Ctx,
-  actor: Actor,
-): { ok: true; value: Json | null } | { ok: false; message: string } {
-  if (raw === undefined || raw === null) return { ok: true, value: null };
-  if (typeof raw !== 'string') return { ok: true, value: raw };
-  const t = raw.trim();
-  if (t === '$empty') return { ok: true, value: null };
-  if (t === '$today') return { ok: true, value: ctx.today };
-  const m = t.match(/^\$in:(-?\d{1,4})$/);
-  if (m) return { ok: true, value: addDays(ctx.today, Number(m[1])) };
-  if (t === '$actor') {
-    return actor.kind === 'user' && actor.id
-      ? { ok: true, value: actor.id }
-      : { ok: false, message: 'No person started this change, so there is no one to use.' };
-  }
-  return { ok: true, value: raw };
-}
-
-/** How a raw value reads for the field ("Done", "11 Nov 2026", "empty"). */
-export function valueLabel(field: Field, raw: Json | null, ctx: Ctx): string {
-  if (raw === null) return 'empty';
-  const def = defOf(field);
-  const v = def.normalize(raw, field.config, ctx);
-  const text = v === null ? '' : def.toText(v, field.config, ctx);
-  return text || String(raw);
-}
 
 /** People ids in a value, at any depth (people fields, lookups of people fields). Only workspace members. */
 function peopleIn(v: unknown, ctx: Ctx, out: string[] = []): string[] {
@@ -117,7 +90,10 @@ const storedField = (action: ActionJson, ctx: Ctx) => {
   return { key, field };
 };
 
-/** The 11 actions (docs/04 §5), keyed by id. A new action is one entry here and one executor case. */
+/**
+ * The actions (docs/04 §5), keyed by id: 11 on the item and 3 for sub-items (subitem-actions.ts). A new action is one
+ * entry here and one executor case.
+ */
 export const ACTIONS: Record<ActionId, Planner> = {
   set_field: (action, item, ctx, env) => {
     const { key, field } = storedField(action, ctx);
@@ -413,6 +389,7 @@ export const ACTIONS: Record<ActionId, Planner> = {
       ],
     };
   },
+  ...SUBITEM_ACTIONS,
 };
 
 export const isActionId = (id: unknown): id is ActionId =>

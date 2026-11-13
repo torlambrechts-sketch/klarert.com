@@ -14,6 +14,7 @@ import {
   LOOP_GUARD,
   matchTrigger,
   planActions,
+  projectToParent,
   runMessage,
   runStatus,
   TIME_BUDGET,
@@ -77,6 +78,8 @@ export interface RunnerStore {
   world(sheetId: string, itemId: string): Promise<World | null>;
   execute(effect: Effect, run: { automation: AutomationRow; world: World }): Promise<EffectResult>;
   saveRun(run: RunRecord): Promise<void>;
+  /** Sub-items: the parent sheet of a child sheet, null for other sheets. Optional (no projection without it). */
+  parentSheetOf?(sheetId: string): Promise<string | null>;
   /** Tell the automation's creator it failed (the store sends at most one notice per hour per automation). */
   reportFailure(automation: AutomationRow, item: Item, message: string): Promise<void>;
 }
@@ -191,6 +194,18 @@ export async function runChain(
       break;
     }
     const { event, depth } = queue.shift()!;
+    // a sub-item's created or changed event is seen by its parent's sheet too, at the same depth: sub-item triggers
+    // match it there, and the loop guard counts only the writes (docs/04 §7.4)
+    if ((event.type === 'item.created' || event.type === 'value.changed') && store.parentSheetOf) {
+      const parentSheet = await store.parentSheetOf(event.sheetId);
+      const child = parentSheet ? await world(event.sheetId, event.itemId) : null;
+      const p = child ? projectToParent(event, child.item, parentSheet) : null;
+      if (p) {
+        // the parent's world read the sub-item before this change
+        forget([p.itemId]);
+        queue.push({ event: p, depth });
+      }
+    }
     const autos = (await store.automations(event.sheetId)).filter((a) =>
       TRIGGER_EVENTS[a.trigger.type]?.includes(event.type),
     );
