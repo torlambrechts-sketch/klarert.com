@@ -164,44 +164,6 @@ begin
     from jsonb_array_elements(coalesce(p_plan->'update'->'dashboards', '[]')) e where x.id = (e->>'id')::uuid;
   get diagnostics n = row_count; n_changed := n_changed + n;
 
-  -- items: name, group and the values the plan names, each change logged on the item's chain
-  for ue in select x from jsonb_array_elements(coalesce(p_plan->'update'->'items', '[]')) x loop
-    select * into it from items where id = (ue->>'id')::uuid for update;
-    if it.archived_at is not null then continue; end if;
-    if ue ? 'name' and ue->>'name' is distinct from it.name then
-      insert into activity_log(org_id, sheet_id, item_id, chain_key, actor_kind, actor_id, action, old_value, new_value, note)
-      values (it.org_id, it.sheet_id, it.id, '', v_actor, auth.uid(), 'item.renamed', to_jsonb(it.name), ue->'name', 'Pack update');
-      it.name := ue->>'name';
-    end if;
-    if ue ? 'group_id' and (ue->>'group_id')::uuid is distinct from it.group_id then
-      if not exists (select 1 from groups g where g.id = (ue->>'group_id')::uuid and g.sheet_id = it.sheet_id) then
-        raise exception 'upgrade plan: group not in sheet';
-      end if;
-      insert into activity_log(org_id, sheet_id, item_id, chain_key, actor_kind, actor_id, action, old_value, new_value, note)
-      values (it.org_id, it.sheet_id, it.id, '', v_actor, auth.uid(), 'item.moved', to_jsonb(it.group_id), ue->'group_id', 'Pack update');
-      it.group_id := (ue->>'group_id')::uuid;
-    end if;
-    for vk in select jsonb_object_keys(coalesce(ue->'values', '{}'::jsonb)) loop
-      select * into f from fields where id::text = vk and sheet_id = it.sheet_id and archived_at is null;
-      if f.id is null then raise exception 'upgrade plan: field % not in sheet', vk; end if;
-      if f.type = any(non_value_types()) then raise exception 'upgrade plan: field % is not set through values', f.name; end if;
-      old_v := it."values" -> vk;
-      new_v := ue->'values'->vk;
-      if new_v is null or new_v = 'null'::jsonb then
-        it."values" := it."values" - vk; new_v := null;
-      else
-        it."values" := jsonb_set(it."values", array[vk], new_v, true);
-      end if;
-      if old_v is distinct from new_v then
-        insert into activity_log(org_id, sheet_id, item_id, chain_key, actor_kind, actor_id, action, field_id, old_value, new_value, note)
-        values (it.org_id, it.sheet_id, it.id, '', v_actor, auth.uid(), 'value.changed', f.id, old_v, new_v, 'Pack update');
-      end if;
-    end loop;
-    update items set name = it.name, group_id = it.group_id, "values" = it."values", updated_at = now(),
-                     updated_by = auth.uid(), pack_hash = _pack_hash(ue)
-     where id = it.id;
-    n_items_changed := n_items_changed + 1;
-  end loop;
 
   -- ═════════════ additions: rows as install_pack writes them, on the same install ═════════════
   perform set_config('app.pack_op', 'upgrade', true);
@@ -390,6 +352,46 @@ begin
                 and not exists (select 1 from sheets t where t.id::text = w->>'sheetId' and t.org_id = v_org)) then
     raise exception 'upgrade plan: a dashboard names a sheet outside the workspace';
   end if;
+
+  -- items (after the additions: a value may be for a field this update adds): name, group and the values the
+  -- plan names, each change logged on the item's chain
+  for ue in select x from jsonb_array_elements(coalesce(p_plan->'update'->'items', '[]')) x loop
+    select * into it from items where id = (ue->>'id')::uuid for update;
+    if it.archived_at is not null then continue; end if;
+    if ue ? 'name' and ue->>'name' is distinct from it.name then
+      insert into activity_log(org_id, sheet_id, item_id, chain_key, actor_kind, actor_id, action, old_value, new_value, note)
+      values (it.org_id, it.sheet_id, it.id, '', v_actor, auth.uid(), 'item.renamed', to_jsonb(it.name), ue->'name', 'Pack update');
+      it.name := ue->>'name';
+    end if;
+    if ue ? 'group_id' and (ue->>'group_id')::uuid is distinct from it.group_id then
+      if not exists (select 1 from groups g where g.id = (ue->>'group_id')::uuid and g.sheet_id = it.sheet_id) then
+        raise exception 'upgrade plan: group not in sheet';
+      end if;
+      insert into activity_log(org_id, sheet_id, item_id, chain_key, actor_kind, actor_id, action, old_value, new_value, note)
+      values (it.org_id, it.sheet_id, it.id, '', v_actor, auth.uid(), 'item.moved', to_jsonb(it.group_id), ue->'group_id', 'Pack update');
+      it.group_id := (ue->>'group_id')::uuid;
+    end if;
+    for vk in select jsonb_object_keys(coalesce(ue->'values', '{}'::jsonb)) loop
+      select * into f from fields where id::text = vk and sheet_id = it.sheet_id and archived_at is null;
+      if f.id is null then raise exception 'upgrade plan: field % not in sheet', vk; end if;
+      if f.type = any(non_value_types()) then raise exception 'upgrade plan: field % is not set through values', f.name; end if;
+      old_v := it."values" -> vk;
+      new_v := ue->'values'->vk;
+      if new_v is null or new_v = 'null'::jsonb then
+        it."values" := it."values" - vk; new_v := null;
+      else
+        it."values" := jsonb_set(it."values", array[vk], new_v, true);
+      end if;
+      if old_v is distinct from new_v then
+        insert into activity_log(org_id, sheet_id, item_id, chain_key, actor_kind, actor_id, action, field_id, old_value, new_value, note)
+        values (it.org_id, it.sheet_id, it.id, '', v_actor, auth.uid(), 'value.changed', f.id, old_v, new_v, 'Pack update');
+      end if;
+    end loop;
+    update items set name = it.name, group_id = it.group_id, "values" = it."values", updated_at = now(),
+                     updated_by = auth.uid(), pack_hash = _pack_hash(ue)
+     where id = it.id;
+    n_items_changed := n_items_changed + 1;
+  end loop;
 
   -- ═════════════ what the new version no longer ships: archived (never deleted), automations off ═════════════
   update automations set enabled = false

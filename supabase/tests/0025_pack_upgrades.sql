@@ -71,7 +71,7 @@ insert into plans values ('upgrade', $j${
                  "config": { "options": [{ "id": "opt_open", "label": "Open", "color": "blue" }, { "id": "opt_done", "label": "Done", "color": "green", "done": true },
                                          { "id": "opt_accepted", "label": "Accepted", "color": "orange" }] } },
                { "id": "c4000000-0000-4000-8000-000000000002", "name": "Risk score" }],
-    "items": [{ "id": "c6000000-0000-4000-8000-000000000001", "name": "Example: phishing email", "values": { "c4000000-0000-4000-8000-000000000002": 15 } }],
+    "items": [{ "id": "c6000000-0000-4000-8000-000000000001", "name": "Example: phishing email", "values": { "c4000000-0000-4000-8000-000000000002": 15, "c4000000-0000-4000-8000-000000000009": "Security" } }],
     "automations": [{ "id": "c7000000-0000-4000-8000-000000000001", "name": "Created → post an update" }] },
   "archive": { "folders": [], "sheets": [], "items": ["c6000000-0000-4000-8000-000000000002"], "dashboards": ["c8000000-0000-4000-8000-000000000001"] },
   "disable": { "automations": ["c7000000-0000-4000-8000-000000000002"] },
@@ -138,8 +138,9 @@ select ok((select pack_install_id is not null and pack_ref = 'risk.owner' from f
 select ok((select name = 'Example: phishing email'
                   and "values"->>'c4000000-0000-4000-8000-000000000002' = '15'
                   and "values"->>'c4000000-0000-4000-8000-000000000001' = 'opt_open'
+                  and "values"->>'c4000000-0000-4000-8000-000000000009' = 'Security'
              from items where id = 'c6000000-0000-4000-8000-000000000001'),
-  'an item takes the pack''s changes and keeps the client''s own values');
+  'an item takes the pack''s changes (a value for a field added in the same update too) and keeps the client''s own values');
 select ok((select not enabled and name = 'Created → post an update' from automations where id = 'c7000000-0000-4000-8000-000000000001')
           and (select not enabled from automations where id = 'c7000000-0000-4000-8000-000000000002')
           and (select enabled from automations where id = 'c7000000-0000-4000-8000-000000000009'),
@@ -151,7 +152,7 @@ select is((select count(*)::int from item_links where field_id = 'c4000000-0000-
              and from_item = 'c6000000-0000-4000-8000-000000000009'), 1, 'links of added items are written');
 select is((select string_agg(action, ',' order by action) from activity_log
             where org_id = 'c0c0c0c0-0000-0000-0000-000000000000' and note = 'Pack update'),
-  'item.archived,item.created,item.renamed,link.changed,value.changed', 'every item change is logged on the item''s chain');
+  'item.archived,item.created,item.renamed,link.changed,value.changed,value.changed', 'every item change is logged on the item''s chain');
 select ok((select new_value->>'from_version' = '1.0.0' and new_value->>'version' = '1.1.0'
                   and (new_value->'counts'->'added'->>'fields')::int = 1 and old_value->>'version' = '1.0.0'
              from activity_log where action = 'pack.upgraded' and chain_key = 'sheet:c0c0c0c0-0000-0000-0000-000000000000')
