@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   levelSummaries,
@@ -40,7 +42,7 @@ const env = {
 
 describe('ISO 27001 pack', () => {
   it('ships Starter and Full and builds on the 27001 library', () => {
-    expect(pack.version).toBe('1.0.0');
+    expect(pack.version).toBe('1.1.0');
     expect(pack.levels!.map((l) => l.key)).toEqual(['starter', 'full']);
     expect(pack.frameworks).toEqual([{ key: 'iso-27001', version: '2022' }]);
     const [starter, full] = levelSummaries(pack);
@@ -59,7 +61,7 @@ describe('ISO 27001 pack', () => {
       'Security incidents',
       'Training and awareness',
     ]);
-    expect(pack.setup!.steps).toHaveLength(7);
+    expect(pack.setup!.steps).toHaveLength(8);
   });
 
   it('never ships the text of the standard: example items are marked as examples', () => {
@@ -123,7 +125,7 @@ describe('ISO 27001 pack', () => {
     const live = {
       id: 'inst-1',
       packKey: 'iso-27001',
-      version: '1.0.0',
+      version: pack.version,
       status: 'installed' as const,
       level: 'starter',
       refMap,
@@ -171,6 +173,92 @@ describe('ISO 27001 pack', () => {
       level: 'starter',
     });
     expect(lower.state).toBe('installed');
+  });
+
+  it('tells the action owner when a corrective action (a sub-item) is overdue', () => {
+    const plan = planPackInstall(pack, snapshot(), env, { level: 'starter' });
+    const actions = plan.payload!.sheets.find((s) => s.ref === 'nc.subitems')!;
+    const a = plan.payload!.automations.find((x) => x.ref === 'capa_action_overdue')!;
+    expect(a.sheet_id).toBe(actions.id);
+    expect(a.enabled).toBe(true);
+    expect(a.trigger).toEqual({ type: 'date_arrives', fieldKey: 'due_date', offsetDays: 1 });
+    expect(plan.preview.automations.find((x) => x.name === a.name)!.sheet).toBe(
+      'Nonconformities and CAPA › Actions',
+    );
+    // the nonconformity's own due date keeps its reminder
+    expect(plan.payload!.automations.map((x) => x.ref)).toContain('capa_overdue');
+  });
+
+  it('links the example risks and treatments to Annex A controls of the adopted library', () => {
+    const keys = [
+      ...new Set(
+        pack.sheets.flatMap((s) =>
+          s.items.flatMap((i) => Object.values(i.requirements ?? {}).flat()),
+        ),
+      ),
+    ];
+    // every key names a requirement of the library the pack builds on
+    const requirementItems = Object.fromEntries(keys.map((k, i) => [k, `lib-item-${i}`]));
+    const plan = planPackInstall(pack, snapshot({ requirementItems }), env, { level: 'starter' });
+    expect(plan.state).toBe('ready');
+    const field = (ref: string) => plan.payload!.fields.find((f) => f.ref === ref)!.id;
+    const item = (ref: string) => plan.payload!.items.find((i) => i.ref === ref)!.id;
+    const linked = (fieldRef: string, itemRef: string) =>
+      plan
+        .payload!.links.filter(
+          (l) => l.field_id === field(fieldRef) && l.from_item === item(itemRef),
+        )
+        .map((l) => keys[Number(l.to_item.replace('lib-item-', ''))]);
+    expect(linked('risk.controls', 'risk.ex_phishing')).toEqual([
+      'iso-27001@2022#A.6.3',
+      'iso-27001@2022#A.8.7',
+    ]);
+    expect(linked('risk.controls', 'risk.ex_laptop')).toEqual([
+      'iso-27001@2022#A.8.1',
+      'iso-27001@2022#A.7.9',
+    ]);
+    expect(linked('risk.controls', 'risk.ex_supplier')).toEqual([
+      'iso-27001@2022#A.5.19',
+      'iso-27001@2022#A.5.30',
+    ]);
+    expect(linked('treatment.control', 'treatment.ex_mfa')).toEqual(['iso-27001@2022#A.8.5']);
+    expect(plan.preview.warnings).toEqual([]);
+  });
+
+  it('names only requirements the ISO/IEC 27001:2022 library has', () => {
+    const fw = JSON.parse(
+      readFileSync(join(process.cwd(), 'templates/frameworks/iso-27001-2022.json'), 'utf8'),
+    ) as { requirements: { ref: string }[] };
+    const refs = new Set(fw.requirements.map((r) => `iso-27001@2022#${r.ref}`));
+    for (const s of pack.sheets)
+      for (const i of s.items)
+        for (const k of Object.values(i.requirements ?? {}).flat())
+          expect(refs.has(k), `${s.ref}.${i.ref} → ${k}`).toBe(true);
+  });
+
+  it('asks for incidents through an internal form at Full, linked from the setup checklist', () => {
+    const incidents = pack.sheets.find((s) => s.ref === 'incident')!;
+    const form = incidents.forms.find((f) => f.ref === 'report')!;
+    expect(form.name).toBe('Report a security incident');
+    expect(form.access).toBe('internal');
+    expect(form.layout.fields.map((f) => f.key)).toEqual([
+      'description',
+      'detected',
+      'affected',
+      'severity',
+      'reporter_name',
+      'reporter_email',
+    ]);
+    const full = planPackInstall(pack, snapshot(), env, { level: 'full' });
+    expect(full.preview.forms).toEqual([
+      { sheet: 'Security incidents', name: 'Report a security incident', access: 'internal' },
+    ]);
+    const view = full.payload!.views.find((v) => v.ref === 'incident.form.report')!;
+    expect((view.config as { form: { status: string } }).form.status).toBe('draft');
+    expect(planPackInstall(pack, snapshot(), env, { level: 'starter' }).preview.forms).toEqual([]);
+    const step = pack.setup!.steps.find((s) => s.ref === 'incidents')!;
+    expect(step.target).toEqual({ sheetRef: 'incident', view: 'Report a security incident' });
+    expect(step.levels!.starter!.target).toEqual({ sheetRef: 'nc' });
   });
 
   it('refuses an unknown level', () => {
