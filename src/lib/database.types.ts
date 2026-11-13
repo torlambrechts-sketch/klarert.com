@@ -1382,6 +1382,9 @@ isOneToOne: false
 "is_editor":
 { Args: { "o": string }; Returns: boolean
                            },
+"folder_hidden_sheet_count":
+{ Args: { "p_folder": string }; Returns: number
+                           },
 "is_member":
 { Args: { "o": string }; Returns: boolean
                            },
