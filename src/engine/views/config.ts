@@ -1,15 +1,17 @@
 // Saved view configuration (docs/01 FR-26, docs/02 views.config). Field references are field keys (stable, rule 5),
 // so templates and copied sheets keep working. Pure; parsed with Zod wherever a config enters the app.
 import { z } from 'zod';
+import { insightsLayoutSchema, parseInsightsLayout } from '../insights/config';
 import type { SummaryFn } from '../summaries';
 import type { Condition, Json } from '../types';
 
 /** The view types (a registry keyed by id, CLAUDE.md rule 1). */
-export const VIEW_TYPES = ['table', 'kanban', 'calendar', 'form'] as const;
+export const VIEW_TYPES = ['table', 'insights', 'kanban', 'calendar', 'form'] as const;
 export type ViewType = (typeof VIEW_TYPES)[number];
 
 export const VIEW_TYPE_LABEL: Record<ViewType, string> = {
   table: 'Table',
+  insights: 'Insights',
   kanban: 'Kanban',
   calendar: 'Calendar',
   form: 'Form',
@@ -36,6 +38,7 @@ export function toViewType(raw: string): ViewType | null {
  */
 export const STORED_VIEW_TYPE: Record<ViewType, string> = {
   table: 'list',
+  insights: 'insights',
   kanban: 'kanban',
   calendar: 'calendar',
   form: 'form',
@@ -125,6 +128,8 @@ export const viewConfigSchema = z.object({
   /** Table: columns whose group summary was switched off. */
   summaryOff: z.array(key).max(500).optional(),
   form: formLayoutSchema.optional(),
+  /** Insights: rows of widgets (src/engine/insights). Absent = the default layout worked out from the fields. */
+  insights: insightsLayoutSchema.optional(),
 });
 export type ViewConfig = z.infer<typeof viewConfigSchema>;
 
@@ -157,6 +162,8 @@ export function parseViewConfig(raw: unknown): ViewConfig {
   if (off && off.length) cfg.summaryOff = off;
   const form = part(formLayoutSchema.optional(), o.form, undefined);
   if (form) cfg.form = form;
+  const insights = parseInsightsLayout(o.insights);
+  if (insights) cfg.insights = insights;
   return cfg;
 }
 
@@ -174,6 +181,7 @@ export function sameConfig(a: ViewConfig, b: ViewConfig): boolean {
       ),
       summaryOff: [...(c.summaryOff ?? [])].sort(),
       form: c.form ?? null,
+      insights: c.insights ?? null,
     });
   return norm(a) === norm(b);
 }
