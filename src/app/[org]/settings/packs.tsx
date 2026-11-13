@@ -3,10 +3,11 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Check, Loader2, RotateCcw, X } from 'lucide-react';
+import { AlertTriangle, BookOpen, Check, Loader2, RotateCcw, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import type { LevelSummary } from '@/engine/packs/levels';
 import type { InstallResult, PackPreviewResult } from '@/server/commands/packs';
 import type { Result } from '@/server/result';
 import { archivePackAction, installPackAction, previewPackAction } from './actions';
@@ -45,8 +46,28 @@ function List({ label, items }: { label: string; items: React.ReactNode[] }) {
 
 function PreviewBody({ data }: { data: PackPreviewResult }) {
   const p = data.preview;
+  const toAdopt = p.frameworks.filter((f) => !f.adopted);
   return (
     <div className="flex flex-col gap-4">
+      {p.state === 'ready' && p.extendsLevel && p.level ? (
+        <p className="text-copy-14 m-0" data-testid="extends-level">
+          {p.extendsLevel.name} is installed. {p.level.name} adds only what is missing; your sheets,
+          items and settings stay as they are.
+        </p>
+      ) : null}
+      {p.state !== 'installed' && toAdopt.length ? (
+        <p
+          className="border-line bg-soft text-copy-14 m-0 flex gap-2 rounded-md border p-3"
+          data-testid="adopts-framework"
+        >
+          <BookOpen className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            Adopts the {toAdopt.map((f) => data.frameworkTitles[f.library] ?? f.library).join(', ')}{' '}
+            requirement library first: one item per requirement, the statement of applicability and
+            the Applicability view. The pack&apos;s sheets link to it.
+          </span>
+        </p>
+      ) : null}
       {p.state === 'blocked' ? (
         <div
           role="alert"
@@ -167,23 +188,107 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
   );
 }
 
+/** The levels of a pack as a radio group: what each one creates (docs/11 Levels). */
+function LevelChoice({
+  levels,
+  installed,
+  value,
+  disabled,
+  onChange,
+}: {
+  levels: LevelSummary[];
+  installed: string | null;
+  value: string | null;
+  disabled: boolean;
+  onChange: (key: string) => void;
+}) {
+  const installedRank = installed ? levels.findIndex((l) => l.key === installed) : -1;
+  return (
+    <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+      <legend className="text-label-13 text-muted-foreground mb-1.5 font-medium">
+        Choose a level
+      </legend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {levels.map((l, i) => {
+          const done = i <= installedRank;
+          const checked = value === l.key;
+          return (
+            <label
+              key={l.key}
+              className={`border-line flex cursor-pointer flex-col gap-1 rounded-md border p-3 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 ${
+                checked ? 'border-ink bg-soft' : 'hover:border-line-strong'
+              } ${done ? 'cursor-not-allowed opacity-60' : ''}`}
+            >
+              <span className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="pack-level"
+                  value={l.key}
+                  checked={checked}
+                  disabled={disabled || done}
+                  onChange={() => onChange(l.key)}
+                  aria-label={l.name}
+                  aria-describedby={`level-${l.key}-what`}
+                  className="accent-ink size-4"
+                />
+                <span className="text-label-14 font-medium">{l.name}</span>
+                {done ? (
+                  <span className="text-label-12 bg-good-soft ml-auto flex items-center gap-1 rounded px-1.5 py-0.5">
+                    <Check className="text-good size-3" aria-hidden /> Installed
+                  </span>
+                ) : null}
+              </span>
+              <span id={`level-${l.key}-what`} className="text-copy-13 text-muted-foreground">
+                {l.description}
+              </span>
+              <span className="text-label-13">
+                {i === 0 ? 'Creates' : 'Adds'}: {(i === 0 ? l.sheets : l.adds).join(', ')}
+              </span>
+              <span className="text-label-12 text-muted-foreground">
+                {plural(l.sheets.length, 'sheet')} · {plural(l.automations, 'automation')} ·{' '}
+                {plural(l.dashboards, 'dashboard')} in all
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
 /** "Preview" on a pack: what installing it would do here, then Install with its progress and Open. */
 export function PackPreview({
   org,
   pack,
+  label = 'Preview',
 }: {
   org: string;
-  pack: { key: string; title: string; version: string };
+  pack: {
+    key: string;
+    title: string;
+    version: string;
+    levels?: LevelSummary[];
+    installedLevel?: string | null;
+  };
+  /** The button's words, e.g. "Add Full" on an installed pack. */
+  label?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>({ kind: 'loading' });
+  const levels = pack.levels ?? [];
+  const firstOpen = () => {
+    if (!levels.length) return null;
+    const at = pack.installedLevel ? levels.findIndex((l) => l.key === pack.installedLevel) : -1;
+    return (levels[at + 1] ?? levels[levels.length - 1])!.key;
+  };
+  const [level, setLevel] = useState<string | null>(firstOpen);
 
-  async function load() {
+  async function load(chosen: string | null = level) {
     setStep({ kind: 'loading' });
     let r: Result<PackPreviewResult>;
     try {
-      r = await previewPackAction({ org, key: pack.key });
+      r = await previewPackAction({ org, key: pack.key, ...(chosen ? { level: chosen } : {}) });
     } catch {
       setStep({ kind: 'error', message: 'The preview could not be loaded. Try again.' });
       return;
@@ -195,7 +300,12 @@ export function PackPreview({
     setStep({ kind: 'installing', data });
     let r: Result<InstallResult>;
     try {
-      r = await installPackAction({ org, key: pack.key, hash: data.hash });
+      r = await installPackAction({
+        org,
+        key: pack.key,
+        hash: data.hash,
+        ...(level ? { level } : {}),
+      });
     } catch {
       setStep({
         kind: 'failed',
@@ -224,13 +334,15 @@ export function PackPreview({
         type="button"
         variant="outline"
         size="sm"
-        aria-label={`Preview ${pack.title}`}
+        aria-label={`${label} ${pack.title}`}
         onClick={() => {
+          const l = firstOpen();
+          setLevel(l);
           setOpen(true);
-          void load();
+          void load(l);
         }}
       >
-        Preview
+        {label}
       </Button>
       <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
@@ -244,6 +356,19 @@ export function PackPreview({
             What installing this pack creates in this workspace.
           </DialogDescription>
         </div>
+
+        {levels.length ? (
+          <LevelChoice
+            levels={levels}
+            installed={pack.installedLevel ?? null}
+            value={level}
+            disabled={step.kind === 'installing' || step.kind === 'done'}
+            onChange={(k) => {
+              setLevel(k);
+              void load(k);
+            }}
+          />
+        ) : null}
 
         {step.kind === 'loading' ? (
           <div aria-busy="true" aria-label="Loading the preview" className="flex flex-col gap-2">
@@ -285,8 +410,16 @@ export function PackPreview({
         {step.kind === 'done' ? (
           <div role="status" className="flex flex-col gap-2">
             <p className="text-copy-16 m-0 flex items-center gap-1.5 font-medium">
-              <Check className="text-good size-4" aria-hidden /> Installed {step.result.title}.
+              <Check className="text-good size-4" aria-hidden />{' '}
+              {step.result.extended
+                ? `Added ${step.result.level ?? 'the level'} to ${step.result.title}.`
+                : `Installed ${step.result.title}${step.result.level ? ` (${step.result.level})` : ''}.`}
             </p>
+            {step.result.adopted.length ? (
+              <p className="text-copy-14 text-muted-foreground m-0">
+                Adopted {step.result.adopted.join(', ')} first.
+              </p>
+            ) : null}
             {step.result.renamedPrefixes.length ? (
               <p className="text-copy-14 text-muted-foreground m-0">
                 {step.result.renamedPrefixes.map((r) => `${r.sheet} uses ${r.to}`).join('; ')}.

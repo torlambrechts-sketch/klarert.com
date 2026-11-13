@@ -9,12 +9,14 @@ import {
   UserRound,
 } from 'lucide-react';
 import { WorkList } from '@/components/my-work/work-row';
+import { SetupCard } from '@/components/packs/setup-card';
 import { Card, PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
 import { checklistDone, greeting, homeSummary, hourIn, type ChecklistStepId } from '@/engine/home';
 import { BUCKET_LABEL, type Bucket } from '@/engine/my-work';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
+import { packSetups } from '@/server/commands/packs';
 import { getHome, getMyWork } from '@/server/repositories/my-work';
 
 export const metadata = { title: 'Home · Compliance OS' };
@@ -35,9 +37,13 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
   const { org } = await params;
   const { workspace, role, profile } = await requireMember(org);
   const first = profile.display_name.split(/\s+/)[0];
-  const [home, mine] = await Promise.all([
+  const [home, mine, setups] = await Promise.all([
     getHome(workspace.id, workspace.time_zone).catch(() => null),
     getMyWork(workspace.id, workspace.time_zone).catch(() => null),
+    // a pack's guided setup (docs/11 Setup); left out when it cannot be read, it stays on Workspace admin › Packs
+    packSetups({ org })
+      .then((r) => (r.ok ? r.data : []))
+      .catch(() => []),
   ]);
   const summary = mine ? homeSummary(mine.work, mine.today) : null;
   const canEdit = isEditorRole(role);
@@ -121,6 +127,16 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
           })}
         </nav>
       ) : null}
+
+      {setups.map((s) => (
+        <SetupCard
+          key={s.installId}
+          org={org}
+          installId={s.installId}
+          progress={s.progress}
+          levelName={s.level?.name ?? null}
+        />
+      ))}
 
       {home && !checklistDone(home.checklist) ? (
         <Card
