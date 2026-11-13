@@ -5,6 +5,7 @@ import { ShellProvider } from '@/components/shell/shell-context';
 import { SideMenu } from '@/components/shell/side-menu';
 import { TopBar } from '@/components/shell/top-bar';
 import { getMyWorkspaces, isAdminRole, isEditorRole, requireMember } from '@/server/auth';
+import { getAppsForMenu } from '@/server/apps/read';
 import { getMyWorkBadge } from '@/server/repositories/my-work';
 import { getNav } from '@/server/repositories/sheets';
 
@@ -18,10 +19,11 @@ export default async function OrgLayout({
 }) {
   const { org } = await params;
   const { workspace, role, profile, user } = await requireMember(org);
-  const [workspaces, nav, myWorkCount] = await Promise.all([
+  const [workspaces, nav, myWorkCount, apps] = await Promise.all([
     getMyWorkspaces(),
     getNav(workspace.id),
     getMyWorkBadge(workspace.id, workspace.time_zone),
+    getAppsForMenu(workspace.id, role),
   ]);
   const menuProps = {
     org,
@@ -31,6 +33,7 @@ export default async function OrgLayout({
     canEdit: isEditorRole(role),
     canManage: isAdminRole(role),
     myWorkCount,
+    apps,
   };
   return (
     <ShellProvider>
