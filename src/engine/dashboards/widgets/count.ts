@@ -1,4 +1,4 @@
-import { matchingItems, plural, sourceOf } from '../shared';
+import { matchingItems, plural, pluralOf, sourceOf } from '../shared';
 import type { WidgetTypeDef } from '../types';
 
 /** count: items in a sheet that match conditions. */
@@ -20,7 +20,7 @@ export const count: WidgetTypeDef = {
       caption:
         (w.conditions?.length ?? 0) > 0
           ? `of ${plural(total, s.source.sheet.itemLabel.toLowerCase())} in ${s.source.sheet.name}`
-          : `${s.source.sheet.itemLabel.toLowerCase()}s in ${s.source.sheet.name}`,
+          : `${pluralOf(s.source.sheet.itemLabel.toLowerCase())} in ${s.source.sheet.name}`,
       tone: 'neutral',
     };
   },

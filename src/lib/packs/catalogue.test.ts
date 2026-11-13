@@ -45,6 +45,7 @@ describe('repository packs', () => {
       'first-sheet-corrective-actions',
       'supplier-management',
       'iso-27001',
+      'iso-9001',
       'start-capa',
       'start-documents',
     ]);

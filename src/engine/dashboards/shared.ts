@@ -6,7 +6,16 @@ import type { Item } from '../types';
 import { hiddenFor } from '../values';
 import type { DashboardData, SheetSource, WidgetConfig, WidgetResult } from './types';
 
-export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+/** "entry" → "entries", "process" → "processes"; otherwise an added s ("day" → "days"). */
+export const pluralOf = (one: string) =>
+  /[^aeiou]y$/i.test(one)
+    ? `${one.slice(0, -1)}ies`
+    : /(s|x|ch|sh)$/i.test(one)
+      ? `${one}es`
+      : `${one}s`;
+
+export const plural = (n: number, one: string, many = pluralOf(one)) =>
+  `${n} ${n === 1 ? one : many}`;
 
 /** The widget's sheet, or a problem result when it is missing or no longer readable. */
 export function sourceOf(
