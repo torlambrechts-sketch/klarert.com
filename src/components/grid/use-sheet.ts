@@ -951,23 +951,38 @@ export function useSheetActions(org: string, sheetId: string) {
   );
 
   const changeType = useCallback(
-    async (field: Field, to: string, apply: boolean) => {
-      const r = await run(() => changeFieldTypeAction({ org, fieldId: field.id, to, apply }));
+    async (field: Field, to: string, apply: boolean, replace?: boolean) => {
+      const r = await run(() =>
+        changeFieldTypeAction({
+          org,
+          fieldId: field.id,
+          to,
+          apply,
+          ...(replace ? { replace } : {}),
+        }),
+      );
       if (!r.ok) {
         showError(r.error);
         return null;
       }
       if (apply) {
         await qc.invalidateQueries({ queryKey: key });
-        toast(
-          r.data.failed
-            ? `Type changed. ${r.data.failed} locked items kept their old value.`
-            : 'Type changed.',
-        );
+        const kept = r.data.failed ? ` ${r.data.failed} locked items kept their old value.` : '';
+        const label = r.data.field
+          ? (resolveFieldType(r.data.field.type)?.label ?? '').toLowerCase()
+          : '';
+        if (r.data.mode === 'copy' && r.data.replaced)
+          toast(
+            `${field.name} is now a ${label} field. The old field can be restored for 30 days.${kept}`,
+            { action: { label: 'Undo', onClick: () => void restoreField(field.id) } },
+          );
+        else if (r.data.mode === 'copy')
+          toast(`Added ${r.data.field?.name ?? 'a new field'} next to ${field.name}.${kept}`);
+        else toast(`Type changed.${kept}`);
       }
       return r.data;
     },
-    [key, org, qc, run],
+    [key, org, qc, restoreField, run],
   );
 
   const refresh = useCallback(() => qc.invalidateQueries({ queryKey: key }), [key, qc]);

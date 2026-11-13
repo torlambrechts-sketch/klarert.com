@@ -165,5 +165,8 @@ export const changeTypeInput = fieldRefInput.extend({
   to: z.string().min(1).max(40),
   /** false = preview only. */
   apply: z.boolean(),
+  /** When the type can't convert in place: true replaces the field (the old one is deleted, restorable for 30
+   *  days), false keeps both. */
+  replace: z.boolean().optional(),
 });
 export const deletedFieldsInput = z.object({ org: slugInput, sheetId: uuid });
