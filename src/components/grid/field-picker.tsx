@@ -86,7 +86,9 @@ function TypeStep({ onPick }: { onPick(type: string): void }) {
   const families = useMemo(
     () =>
       typesByFamily(
-        (t) => !q || t.label.toLowerCase().includes(q) || t.description.toLowerCase().includes(q),
+        (t) =>
+          t.addable !== false &&
+          (!q || t.label.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)),
       ),
     [q],
   );

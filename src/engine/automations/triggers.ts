@@ -2,7 +2,11 @@
 import { resolveFieldType } from '../fields/resolve';
 import type { Automation, Ctx, Field, Item, TriggerId } from '../types';
 import { defOf, keysOfValue, valueOf } from '../values';
+import { SUBITEM_TRIGGERS } from './subitem-triggers';
+import { ctxBefore, itemBefore } from './triggers-base';
 import { TRIGGER_EVENTS, type AutomationEvent } from './types';
+
+export { ctxBefore, itemBefore };
 
 type Trigger = Automation['trigger'];
 
@@ -67,7 +71,7 @@ const scheduled: Matcher = (_t, event, _ctx, automationId) =>
   event.type === 'schedule' && automationId !== undefined && event.automationId === automationId;
 
 /**
- * The 11 triggers (docs/04 §3), keyed by id. A new trigger is one entry here plus its events in TRIGGER_EVENTS.
+ * The triggers (docs/04 §3), keyed by id: 11 on the item and 3 on its sub-items (subitem-triggers.ts). A new trigger is one entry here plus its events in TRIGGER_EVENTS.
  * Scheduled triggers match the scheduler's events for their own automation; the scheduler (M9) decides the moment.
  */
 export const TRIGGERS: Record<TriggerId, Matcher> = {
@@ -105,6 +109,7 @@ export const TRIGGERS: Record<TriggerId, Matcher> = {
       count((c.before ?? null) as never, c.field.config)
     );
   },
+  ...SUBITEM_TRIGGERS,
 };
 
 /** Does this event fire the trigger? `automationId` is needed for scheduled triggers only. */
@@ -130,23 +135,6 @@ export function computedTriggerFields(triggers: Trigger[], ctx: Ctx): Field[] {
   return [...out.values()];
 }
 
-/** A Ctx that sees an item, or one item's links, as they were before a change (for computed before-values). */
-export function ctxBefore(
-  ctx: Ctx,
-  before: Item,
-  links: { fieldId: string; ids: string[] }[] = [],
-): Ctx {
-  const linkMap = new Map(links.map((l) => [l.fieldId, l.ids]));
-  return {
-    ...ctx,
-    item: (id) => (id === before.id ? before : ctx.item(id)),
-    links: (itemId, fieldId) =>
-      itemId === before.id && linkMap.has(fieldId)
-        ? linkMap.get(fieldId)!
-        : ctx.links(itemId, fieldId),
-  };
-}
-
 /**
  * Before/after values of computed fields whose number changed (docs/04 §2: "Residual score goes above 12" works even
  * though the score is not stored). The caller emits a `value.changed` event for each.
@@ -164,14 +152,4 @@ export function computedChanges(
     out.push({ fieldId: field.id, before: vb, after: va });
   }
   return out;
-}
-
-/** An item as it was before a value change: the after item with the changed fields' old values. */
-export function itemBefore(after: Item, changes: { fieldId: string; before: unknown }[]): Item {
-  const values = { ...after.values };
-  for (const c of changes) {
-    if (c.before === null || c.before === undefined) delete values[c.fieldId];
-    else values[c.fieldId] = c.before as Item['values'][string];
-  }
-  return { ...after, values };
 }

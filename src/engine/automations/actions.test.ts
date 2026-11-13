@@ -84,8 +84,8 @@ describe('resolveValueToken', () => {
 });
 
 describe('planActions', () => {
-  it('has a planner for each of the 11 actions', () => {
-    expect(ACTION_IDS).toHaveLength(11);
+  it('has a planner for each of the 14 actions (11 on the item, 3 for sub-items)', () => {
+    expect(ACTION_IDS).toHaveLength(14);
     expect(Object.keys(ACTIONS).sort()).toEqual([...ACTION_IDS].sort());
   });
 

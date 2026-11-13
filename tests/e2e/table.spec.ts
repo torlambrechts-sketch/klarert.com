@@ -121,8 +121,10 @@ test.describe('desktop', () => {
       ).toHaveAttribute('aria-current', 'page');
       await expect(grid(page).getByText('Calibrate scale', { exact: true })).toBeVisible();
     }
+    // Insights joined the tabs in 0b7bfb3 (sheet-insights); this list predates it
     await expect(page.getByRole('navigation', { name: 'Views' }).getByRole('link')).toHaveText([
       /Table/,
+      /Insights/,
       /Board/,
       /Calendar/,
       /Form/,

@@ -14,12 +14,13 @@ import type {
   Validation,
 } from '@/engine/types';
 import { parseViewConfig, toViewType, type SavedView } from '@/engine/views/config';
+import { readSubitemSettings } from '@/engine/subitems';
 import type { Database } from './database.types';
 
 type Tables = Database['public']['Tables'];
 export type ItemDbRow = Omit<
   Tables['items']['Row'],
-  'held_at' | 'held_by' | 'held_created' | 'held_snapshot'
+  'held_at' | 'held_by' | 'held_created' | 'held_snapshot' | 'next_sub_seq' | 'archived_with'
 >;
 export type FieldDbRow = Tables['fields']['Row'];
 export type GroupDbRow = Tables['groups']['Row'];
@@ -28,11 +29,17 @@ export type FileDbRow = Tables['files']['Row'];
 export type ViewDbRow = Tables['views']['Row'];
 
 export const ITEM_COLUMNS =
-  'id, org_id, sheet_id, group_id, seq, display_id, name, values, position, locked, lock_reason, created_by, created_at, updated_by, updated_at, archived_at';
+  'id, org_id, sheet_id, group_id, seq, display_id, name, values, position, locked, lock_reason, created_by, created_at, updated_by, updated_at, archived_at, parent_id, sub_seq';
+/** The sheet columns the domain Sheet needs (sub-items: the parent, and the settings that hold the label and gate). */
+export const SHEET_COLUMNS =
+  'id, org_id, name, item_label, id_prefix, is_library, parent_sheet_id, settings';
 export const FIELD_COLUMNS =
   'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, created_at, updated_at, archived_at';
 
-export function toItem(r: Pick<ItemDbRow, Exclude<keyof ItemDbRow, 'org_id'>>): Item {
+export function toItem(
+  r: Pick<ItemDbRow, Exclude<keyof ItemDbRow, 'org_id' | 'parent_id' | 'sub_seq'>> &
+    Partial<Pick<ItemDbRow, 'parent_id' | 'sub_seq'>>,
+): Item {
   return {
     id: r.id,
     sheetId: r.sheet_id,
@@ -49,6 +56,7 @@ export function toItem(r: Pick<ItemDbRow, Exclude<keyof ItemDbRow, 'org_id'>>): 
     updatedBy: r.updated_by,
     updatedAt: r.updated_at,
     archivedAt: r.archived_at,
+    ...(r.parent_id ? { parentId: r.parent_id, subSeq: r.sub_seq ?? null } : {}),
   };
 }
 
@@ -116,17 +124,30 @@ export function toSheet(r: {
   org_id: string;
   name: string;
   item_label: string;
-  id_prefix: string;
+  id_prefix: string | null;
   is_library: boolean;
+  parent_sheet_id?: string | null;
+  settings?: unknown;
 }): Sheet {
+  const settings = (r.settings ?? {}) as { subitems?: unknown };
   return {
     id: r.id,
     orgId: r.org_id,
     name: r.name,
     itemLabel: r.item_label,
-    idPrefix: r.id_prefix,
+    idPrefix: r.id_prefix ?? '',
     isLibrary: r.is_library,
+    ...(r.parent_sheet_id ? { parentSheetId: r.parent_sheet_id } : {}),
+    ...(settings.subitems ? { subitems: readSubitemSettings(settings.subitems) } : {}),
   };
+}
+
+/** Sheets of one list with `childSheetId` set from the child sheets in the same list. */
+export function withChildIds(sheets: Sheet[]): Sheet[] {
+  const child = new Map(
+    sheets.flatMap((s) => (s.parentSheetId ? [[s.parentSheetId, s.id] as const] : [])),
+  );
+  return sheets.map((s) => (child.has(s.id) ? { ...s, childSheetId: child.get(s.id)! } : s));
 }
 
 export function toView(r: ViewDbRow): SavedView {

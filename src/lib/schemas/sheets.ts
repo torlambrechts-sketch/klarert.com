@@ -102,6 +102,8 @@ export const columnInput = z.object({
 export const createSheetInput = z.object({
   ...sheetBasics,
   columns: z.array(columnInput).max(100, 'Use at most 100 fields.'),
+  /** The wizard start; starts with a sub-item set turn sub-items on (templates/starts.json). */
+  startId: z.string().max(40).optional(),
 });
 
 export const importCsvInput = z.object({

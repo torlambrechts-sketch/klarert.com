@@ -66,6 +66,10 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
               key={start.id}
               ctx={ctx}
               start={{
+                id: start.id,
+                subitems: start.subitems
+                  ? { label: start.subitems.label, names: start.subitems.items.map((i) => i.name) }
+                  : undefined,
                 itemLabel: start.itemLabel ?? 'Item',
                 groups: start.groups ?? [],
                 fields: (start.fields ?? []) as [string, string][],

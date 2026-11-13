@@ -3,7 +3,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp, Link2, Lock, Maximize2, Minimize2, Pencil, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Link2,
+  Lock,
+  Maximize2,
+  Minimize2,
+  Pencil,
+  X,
+} from 'lucide-react';
 import { Dialog as DialogPrimitive, Tabs } from 'radix-ui';
 import { toast } from 'sonner';
 import { neighbours } from '@/engine/item-panel';
@@ -17,6 +27,9 @@ import { ActivityTab } from './activity-tab';
 import { DetailsTab } from './details-tab';
 import { panelKeys, useActivity, useFileVersions, useIncoming, useUpdates } from './queries';
 import { UpdatesTab } from './updates-tab';
+import { SubitemsTab } from '@/components/subitems/subitems-tab';
+import type { SubitemsHandle } from '@/components/subitems/use-subitems';
+import { subitemLabel, subitemProgress } from '@/engine/subitems';
 
 // The item panel (docs/05 §3.4, FR-27…FR-29): a 470 px drawer from the right (Expand: min(1080px, 100vw − 100px),
 // full screen above the bottom bar on phones). A modal dialog: focus stays inside while it is open and returns to
@@ -40,14 +53,22 @@ export interface ItemPanelProps {
   onClose(): void;
   /** Show another item of this sheet (J/K, linked items). */
   onNavigate(item: Item): void;
+  /** A parent of a sheet with sub-items: the Sub-items tab (docs/05 §3.4). */
+  subitems?: { handle: SubitemsHandle; onOpen(item: Item): void } | null;
+  /** A sub-item: its parent, for the breadcrumb "CA-014 / CA-014.2" and Back. */
+  parent?: Item | null;
+  onBack?(): void;
+  /** The tab to open on (Back from a sub-item opens Sub-items). */
+  initialTab?: string;
 }
 
 export function ItemPanel(props: ItemPanelProps) {
   const { org, data, ctx, actions, item, order, canEdit, isAdmin, onClose, onNavigate } = props;
+  const { subitems, parent } = props;
   const router = useRouter();
   const qc = useQueryClient();
   const [wide, setWide] = useState(false);
-  const [tab, setTab] = useState('details');
+  const [tab, setTab] = useState(props.initialTab ?? 'details');
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(item.name);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -138,6 +159,8 @@ export function ItemPanel(props: ItemPanelProps) {
   };
 
   const updatesCount = updates.data?.length ?? 0;
+  const subLabel = subitemLabel(ctx.sheet);
+  const subCount = subitems ? subitemProgress(item, ctx).total : 0;
   const activityCount = (activity.data?.entries ?? []).length;
   const stateOf = (q: { isPending: boolean; isError: boolean }) =>
     q.isPending ? 'loading' : q.isError ? 'error' : 'ready';
@@ -188,21 +211,52 @@ export function ItemPanel(props: ItemPanelProps) {
           <Tabs.Root value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col">
             <header className="border-line flex flex-col gap-1.5 border-b px-4 pt-3.5 sm:px-6">
               <div className="flex items-center gap-1">
-                <p className="text-muted-foreground text-copy-13 m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate">
-                  <span className="truncate">{ctx.sheet.name}</span>
-                  <span aria-hidden className="text-line-strong">
-                    /
-                  </span>
-                  <span
-                    aria-hidden
-                    className="size-2 shrink-0 rounded-full"
-                    style={{
-                      background: `var(--label-${group?.color ?? 'grey'}, var(--label-grey))`,
-                    }}
-                  />
-                  <span className="sr-only">{' › '}</span>
-                  <span className="text-ink truncate">{group?.name ?? '—'}</span>
-                </p>
+                {parent ? (
+                  <nav
+                    aria-label="Breadcrumb"
+                    className="text-muted-foreground text-copy-13 m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate"
+                  >
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label={`Back to ${parent.displayId}`}
+                      title={`Back to ${parent.displayId}`}
+                      onClick={props.onBack}
+                    >
+                      <ArrowLeft aria-hidden />
+                    </Button>
+                    <button
+                      type="button"
+                      className="hover:text-ink text-label-12-mono truncate hover:underline"
+                      onClick={props.onBack}
+                    >
+                      {parent.displayId}
+                    </button>
+                    <span aria-hidden className="text-line-strong">
+                      /
+                    </span>
+                    <span className="text-ink text-label-12-mono truncate" aria-current="page">
+                      {item.displayId}
+                    </span>
+                  </nav>
+                ) : (
+                  <p className="text-muted-foreground text-copy-13 m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate">
+                    <span className="truncate">{ctx.sheet.name}</span>
+                    <span aria-hidden className="text-line-strong">
+                      /
+                    </span>
+                    <span
+                      aria-hidden
+                      className="size-2 shrink-0 rounded-full"
+                      style={{
+                        background: `var(--label-${group?.color ?? 'grey'}, var(--label-grey))`,
+                      }}
+                    />
+                    <span className="sr-only">{' › '}</span>
+                    <span className="text-ink truncate">{group?.name ?? '—'}</span>
+                  </p>
+                )}
                 <Button
                   type="button"
                   size="icon-sm"
@@ -326,6 +380,7 @@ export function ItemPanel(props: ItemPanelProps) {
               <Tabs.List aria-label="Item sections" className="-mb-px flex gap-[22px] pt-2">
                 {[
                   ['details', 'Details'],
+                  ...(subitems ? [['subitems', `${subLabel} · ${subCount}`]] : []),
                   ['updates', `Updates · ${updatesCount}`],
                   ['activity', `Activity log · ${activityCount}`],
                 ].map(([v, label]) => (
@@ -366,6 +421,20 @@ export function ItemPanel(props: ItemPanelProps) {
                   onFileSaved={onFileSaved}
                 />
               </Tabs.Content>
+              {subitems ? (
+                <Tabs.Content value="subitems" className="outline-none">
+                  <SubitemsTab
+                    parent={item}
+                    parentSheetId={item.sheetId}
+                    handle={subitems.handle}
+                    canEdit={
+                      canEdit && (!item.locked || isAdmin || !ctx.sheet.subitems?.lockCascade)
+                    }
+                    hasTemplate={(ctx.sheet.subitems?.template.length ?? 0) > 0}
+                    onOpen={subitems.onOpen}
+                  />
+                </Tabs.Content>
+              ) : null}
               <Tabs.Content value="updates" className="outline-none">
                 <UpdatesTab
                   org={org}

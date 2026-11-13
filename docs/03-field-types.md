@@ -1,8 +1,8 @@
-# 03 · Field types (57)
+# 03 · Field types (58)
 
 Every column is a field of one of these types. A type is defined **once** in `src/engine/fields/<type>.ts` (pure logic) and once in `src/components/fields/<type>.tsx` (cell, editor, config form). Nothing else in the code base may branch on a field type.
 
-Reference behaviour: `reference/sheets-mvp.html` implements all 57 (search its source for `case "<type>"`). This document wins where they differ.
+Reference behaviour: `reference/sheets-mvp.html` implements the first 57 (search its source for `case "<type>"`). This document wins where they differ.
 
 ## 1. The contracts
 
@@ -13,7 +13,7 @@ export type ValueKind =
   | 'boolean' | 'link' | 'file' | 'signature' | 'none';
 
 export interface FieldTypeDef<V = unknown, C = unknown> {
-  id: FieldTypeId;                     // 'text' | 'status' | …  (57 ids, same list as field_types() in SQL)
+  id: FieldTypeId;                     // 'text' | 'status' | …  (58 ids, same list as field_types() in SQL)
   label: string;                       // UI name, e.g. "Risk matrix"
   family: 'basic' | 'choice' | 'compliance' | 'computed';
   description: string;                 // one line, shown in the add-field picker
@@ -148,26 +148,27 @@ Option model for label types (`status`, `dropdown`, `multiselect`, `severity`, `
 | `retention` | Retention | `{"hold":false,"holdReason":""}` | `{"years":6,"fromFieldKey":null}` | date | `toDate` = from + years unless on hold; text "Delete after 3 Jan 2032" / "Legal hold" |
 | `version` | Version | `"v1.2"` (`^v\d+\.\d+$`) | `{}` | text | compare numerically; action "raise version" (docs/04) |
 
-### 3.4 Linked, computed and system (10)
+### 3.4 Linked, computed and system (11)
 
 | id | Label | V / storage | Config | Kind | Notes |
 |---|---|---|---|---|---|
 | `link` | Link to items | `item_links` | `{"targetSheetId":"<uuid>","multiple":true,"inverseFieldId":null}` | link | two-way when `inverseFieldId` set (the wizard creates the inverse field on the target sheet) |
 | `lookup` | Lookup | computed | `{"linkFieldKey":"…","targetFieldKey":"…"}` | (target's kind) | array of target values; text joins with ", " |
-| `rollup` | Rollup | computed | `{"linkFieldKey":"…","targetFieldKey":null,"fn":"count"}` | number | fn: `count, sum, avg, min, max, pctDone, countEmpty, countWhere` (+ `where: {op,value}`) |
+| `rollup` | Rollup | computed | `{"linkFieldKey":"…","targetFieldKey":null,"fn":"count"}` | number (`worst`: text, `earliest`: date) | fn: `count, sum, avg, min, max, pctDone, countEmpty, countWhere` (+ `where: {op,value}`), `worst` (least finished option: not done beats done, then higher rank or later option), `earliest` (minimum date, "20 Nov 2026"), `countExpired` (targets with expired evidence). Works over link fields and the sub-items column |
 | `formula` | Formula | computed | `{"expr":"","result":"auto"}` | by result | §7 |
 | `progress` | Progress | computed | `{"sourceFieldKey":"…"}` | number | checklist → answered %; link types → % of targets whose status is done |
 | `autoid` | Auto ID | `items.display_id` | `{}` | text | read-only |
 | `meta` | Created and updated | `items` columns | `{"which":"created_at"}` (`created_at, created_by, updated_at, updated_by`) | date / people | read-only |
 | `workflowstep` | Workflow step | `"opt_…"` | options: Draft, Review, Approval, Done (done) | option | only automations may set it (enforced in SQL) |
 | `button` | Button | none | `{"label":"Run","confirm":null}` | none | click emits `button` event (docs/04) |
+| `subitems` | Sub-items | computed (the child sheet's rows, docs/02 §12) | `{}` | link | "3/5" done; read-only; `relatedIds` = live sub-items, so rollup, lookup and progress read them like link targets. Created by "Turn on sub-items" (`addable: false`, not in the add-field picker); not on forms |
 | `ai` | AI proposal | `{"proposal":<any>,"source":"…","model":"…","status":"proposed\|accepted\|rejected","by":"<userId>","at":"<ISO>"}` | `{"targetFieldKey":"…"}` | option | Accept copies the proposal into the target field through the normal command (validated, logged); generation is out of scope |
 
-Counts: basic 18 · choice 10 · compliance 19 · computed 10 = **57**. Unit test: the registry has exactly the 57 ids of `field_types()`.
+Counts: basic 18 · choice 10 · compliance 19 · computed 11 = **58**. Unit test: the registry has exactly the 58 ids of `field_types()` (latest definition, 0020).
 
-Default widths (px): text 180, longtext 220, comment 200, number 96, value 120, percent 96, yesno 90, check 76, date 120, datetime 150, duration 100, timeline 170, recurrence 170, rating 110, email 180, phone 140, url 170, location 170, status 140, dropdown 130, multiselect 180, people 110, role 140, team 120, entity 200, country 140, classification 130, severity 110, requirement 180, controllink 160, evidence 150, attachment 120, signature 170, ack 130, justification 200, applicability 150, finding 170, checklist 150, question 160, riskmatrix 130, maturity 130, measurement 150, clock 150, protected 130, pdmarker 180, retention 160, version 90, link 180, lookup 160, rollup 110, formula 130, progress 130, autoid 100, meta 150, workflowstep 140, button 140, ai 180.
+Default widths (px): text 180, longtext 220, comment 200, number 96, value 120, percent 96, yesno 90, check 76, date 120, datetime 150, duration 100, timeline 170, recurrence 170, rating 110, email 180, phone 140, url 170, location 170, status 140, dropdown 130, multiselect 180, people 110, role 140, team 120, entity 200, country 140, classification 130, severity 110, requirement 180, controllink 160, evidence 150, attachment 120, signature 170, ack 130, justification 200, applicability 150, finding 170, checklist 150, question 160, riskmatrix 130, maturity 130, measurement 150, clock 150, protected 130, pdmarker 180, retention 160, version 90, link 180, lookup 160, rollup 110, formula 130, progress 130, autoid 100, meta 150, workflowstep 140, button 140, ai 180, subitems 110.
 
-Form-allowed: all except `lookup, rollup, formula, progress, autoid, meta, workflowstep, button, ai, clock, signature, ack`.
+Form-allowed: all except `lookup, rollup, formula, progress, autoid, meta, workflowstep, button, ai, clock, signature, ack, subitems`.
 Kanban-capable: `status, dropdown, severity, classification, finding, workflowstep, yesno, maturity, people (single)`.
 Calendar-capable: `date, datetime, timeline, recurrence, evidence (expiry), clock (deadline), retention`.
 
@@ -216,6 +217,7 @@ Everything else: "Create a new field and copy values" (same preview). Computed t
   { "id": "r2", "whenFieldKey": "status", "whenValues": ["opt_stuck"], "requireComment": true }
 ]
 ```
+- `fromDone: true`: the rule applies only when the field leaves a done value (the sub-item sets ask for a comment when a done sub-item is reopened; N/A asks for a reason).
 - Rules live on the field that changes (`whenFieldKey` = this field's key) and are checked in the command before the RPC.
 - `require`: listed fields must be non-empty (per `isEmpty`); otherwise the change is **blocked** and the message is shown (toast in grid, inline in panel). Automations hitting a rule get outcome `blocked` in the run log.
 - `requireComment`: the editor opens a comment box; the comment is posted as an update and copied into the activity entry's `note`. Automations skip `requireComment` and post "Set by automation …" as the note.

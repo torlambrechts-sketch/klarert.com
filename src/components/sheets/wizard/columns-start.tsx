@@ -19,7 +19,8 @@ type Column = {
   twoWay?: boolean;
 };
 
-const FAMILIES = typesByFamily();
+// the sub-items column comes with sub-items, not from this list
+const FAMILIES = typesByFamily((t) => t.addable !== false);
 
 export function TypeSelect({
   value,
@@ -58,7 +59,14 @@ export function ColumnsStart({
   start,
 }: {
   ctx: WizardContext;
-  start: { itemLabel: string; groups: string[]; fields: [string, string][] };
+  start: {
+    id: string;
+    itemLabel: string;
+    groups: string[];
+    fields: [string, string][];
+    /** Starts with a sub-item set: its name and the sub-items "From template" adds. */
+    subitems?: { label: string; names: string[] };
+  };
 }) {
   const basics = useBasics(ctx, { itemLabel: start.itemLabel, groups: start.groups.join(', ') });
   const [columns, setColumns] = useState<Column[]>(() =>
@@ -89,6 +97,7 @@ export function ColumnsStart({
           idPrefix: v.idPrefix,
           folderId: v.folderId,
           groups: v.groups,
+          startId: start.id,
           columns: columns.map((c) => ({
             name: c.name,
             type: c.type,
@@ -207,6 +216,16 @@ export function ColumnsStart({
           </Button>
         </div>
       </fieldset>
+      {start.subitems ? (
+        <section aria-label={start.subitems.label} className="flex flex-col gap-1.5">
+          <h3 className="text-label-14 m-0 font-bold">{start.subitems.label}</h3>
+          <p className="text-muted-foreground text-copy-13 m-0">
+            Comes with sub-items called {start.subitems.label.toLowerCase()}. Add them to an item in
+            one go with From template: {start.subitems.names.join(', ')}. You can change them in the
+            sheet settings.
+          </p>
+        </section>
+      ) : null}
       <div>
         <Button type="submit" disabled={pending || !!basics.prefixProblem}>
           {pending ? 'Creating…' : 'Create sheet'}

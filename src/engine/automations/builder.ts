@@ -10,6 +10,9 @@ import { dateOf, defOf, keysOfValue, kindOf, valueOf } from '../values';
 import { NO_VALUE_OPS } from '../views/apply';
 import { isActionId, planActions, valueLabel, type PlanEnv } from './actions';
 import { matchTrigger } from './triggers';
+import { subitemRows } from './subitem-actions';
+import { subitemTriggerField } from './subitem-triggers';
+import { childSheetIdOf, subitemLabel, subitemsOf } from '../subitems';
 import { type ActionId, type ActionJson, type AutomationEvent, type PlannedStep } from './types';
 import { isWebhookPreset } from './webhook';
 
@@ -38,11 +41,21 @@ export const TRIGGER_IDS: TriggerId[] = [
   'evidence_expiring',
   'button_clicked',
   'checklist_no',
+  'subitem_created',
+  'subitem_field_becomes',
+  'all_subitems_done',
 ];
 
 export const TRIGGER_CATALOGUE: Record<
   TriggerId,
-  { label: string; field: boolean; param: TriggerParam; scheduled?: true }
+  {
+    label: string;
+    field: boolean;
+    param: TriggerParam;
+    scheduled?: true;
+    /** Sub-item triggers: the sheet must have sub-items; the field is a field of the sub-items. */
+    subitems?: true;
+  }
 > = {
   field_becomes: { label: 'a field becomes a value', field: true, param: 'value' },
   field_changed: { label: 'a field changes', field: true, param: null },
@@ -60,6 +73,14 @@ export const TRIGGER_CATALOGUE: Record<
   },
   button_clicked: { label: 'a button is clicked', field: true, param: null },
   checklist_no: { label: 'a checklist answer is No', field: true, param: null },
+  subitem_created: { label: 'a sub-item is added', field: false, param: null, subitems: true },
+  subitem_field_becomes: {
+    label: 'a sub-item field becomes a value',
+    field: true,
+    param: 'value',
+    subitems: true,
+  },
+  all_subitems_done: { label: 'every sub-item is done', field: false, param: null, subitems: true },
 };
 
 export const ACTION_CATALOGUE: Record<ActionId, { label: string }> = {
@@ -74,6 +95,9 @@ export const ACTION_CATALOGUE: Record<ActionId, { label: string }> = {
   update_linked: { label: 'update linked items' },
   raise_version: { label: 'raise a version' },
   webhook: { label: 'send a webhook' },
+  create_subitems: { label: 'add sub-items' },
+  set_parent_field: { label: 'set a field on the parent' },
+  update_subitems: { label: 'update the sub-items' },
 };
 
 /** Builder order of the actions (most used first). */
@@ -89,6 +113,9 @@ export const ACTION_ORDER: ActionId[] = [
   'update_linked',
   'raise_version',
   'webhook',
+  'create_subitems',
+  'update_subitems',
+  'set_parent_field',
 ];
 
 export const isTriggerId = (id: unknown): id is TriggerId =>
@@ -100,14 +127,33 @@ const sheetFields = (ctx: Ctx) => ctx.fieldsOf(ctx.sheet.id);
 
 // ───────────────────────── compatibility ─────────────────────────
 
-/** Fields of this sheet a trigger can watch (the field type lists the trigger in `def.triggers`). */
+/**
+ * Fields a trigger can watch (the field type lists the trigger in `def.triggers`): this sheet's, or for a sub-item
+ * trigger the sub-items' fields that can "become" a value.
+ */
 export function triggerFields(type: TriggerId, ctx: Ctx): Field[] {
+  if (TRIGGER_CATALOGUE[type]?.subitems) {
+    const child = childSheetIdOf(ctx);
+    return child
+      ? ctx.fieldsOf(child).filter((f) => defOf(f).triggers.includes('field_becomes'))
+      : [];
+  }
   return sheetFields(ctx).filter((f) => defOf(f).triggers.includes(type));
+}
+
+/** The field a trigger names: this sheet's, or a sub-item field for sub-item triggers. */
+export function triggerFieldOf(trigger: Trigger, ctx: Ctx): Field | undefined {
+  if (TRIGGER_CATALOGUE[trigger.type]?.subitems) return subitemTriggerField(trigger, ctx);
+  return typeof trigger.fieldKey === 'string' ? ctx.fieldsByKey.get(trigger.fieldKey) : undefined;
 }
 
 /** Triggers the sheet can use: those without a field, and those with at least one compatible field. */
 export function availableTriggers(ctx: Ctx): TriggerId[] {
-  return TRIGGER_IDS.filter((t) => !TRIGGER_CATALOGUE[t].field || triggerFields(t, ctx).length > 0);
+  return TRIGGER_IDS.filter((t) => {
+    const spec = TRIGGER_CATALOGUE[t];
+    if (spec.subitems && !childSheetIdOf(ctx)) return false;
+    return !spec.field || triggerFields(t, ctx).length > 0;
+  });
 }
 
 const isStored = (f: Field) => defOf(f).storage === 'values';
@@ -137,6 +183,12 @@ export function actionFields(type: ActionId, ctx: Ctx): Field[] {
       return all.filter((f) => isStored(f) && isVersionField(f));
     case 'update_linked':
       return all.filter((f) => defOf(f).storage === 'links');
+    case 'update_subitems': {
+      const child = childSheetIdOf(ctx);
+      return child ? storedFields(ctx, child) : [];
+    }
+    case 'set_parent_field':
+      return ctx.sheet.parentSheetId ? storedFields(ctx, ctx.sheet.parentSheetId) : [];
     default:
       return [];
   }
@@ -148,11 +200,16 @@ const NEEDS_FIELD = new Set<ActionId>([
   'request_update',
   'raise_version',
   'update_linked',
+  'update_subitems',
+  'set_parent_field',
 ]);
 
-/** Actions the sheet can use (those that need a field only when one fits). */
+/** Actions the sheet can use (those that need a field only when one fits; sub-item actions only with sub-items). */
 export function availableActions(ctx: Ctx): ActionId[] {
-  return ACTION_ORDER.filter((a) => !NEEDS_FIELD.has(a) || actionFields(a, ctx).length > 0);
+  return ACTION_ORDER.filter((a) => {
+    if (a === 'create_subitems' && !childSheetIdOf(ctx)) return false;
+    return !NEEDS_FIELD.has(a) || actionFields(a, ctx).length > 0;
+  });
 }
 
 /** Link fields of this sheet and their target sheets (update_linked, direction out). */
@@ -228,6 +285,14 @@ export function defaultAction(type: ActionId, ctx: Ctx): ActionJson {
       return { type, url: '', preset: 'generic' };
     case 'raise_version':
       return { type, fieldKey: first, kind: 'minor' };
+    case 'create_subitems':
+      return ctx.sheet.subitems?.template.length
+        ? { type, fromTemplate: true }
+        : { type, items: [{ name: '', values: {} }] };
+    case 'update_subitems':
+      return { type, fieldKey: first, value: null, onlyOpen: false };
+    case 'set_parent_field':
+      return { type, fieldKey: first, value: null };
   }
 }
 
@@ -318,9 +383,9 @@ function dayWords(n: number) {
 
 /** "When Status becomes Done", "When Review date is 30 days away". */
 export function describeTrigger(trigger: Trigger, ctx: Ctx): string {
-  const field =
-    typeof trigger.fieldKey === 'string' ? ctx.fieldsByKey.get(trigger.fieldKey) : undefined;
-  const name = fieldName(trigger.fieldKey, ctx);
+  const field = triggerFieldOf(trigger, ctx);
+  const name = field?.name ?? fieldName(trigger.fieldKey, ctx);
+  const sub = subitemLabel(ctx.sheet, 1).toLowerCase();
   switch (trigger.type) {
     case 'item_created': {
       const label = ctx.sheet.itemLabel.trim().toLowerCase() || 'item';
@@ -353,6 +418,14 @@ export function describeTrigger(trigger: Trigger, ctx: Ctx): string {
       return `When ${name} is clicked`;
     case 'checklist_no':
       return `When ${name} gets a No answer`;
+    case 'subitem_created':
+      return `When ${/^[aeiou]/.test(sub) ? 'an' : 'a'} ${sub} is added`;
+    case 'subitem_field_becomes': {
+      const v = str(trigger.value);
+      return `When ${/^[aeiou]/.test(sub) ? 'an' : 'a'} ${sub}'s ${name} becomes ${v && field ? keyLabel(field, v, ctx) : '…'}`;
+    }
+    case 'all_subitems_done':
+      return `When every ${sub} is done`;
   }
   return 'When something happens';
 }
@@ -463,6 +536,18 @@ export function describeAction(
     }
     case 'raise_version':
       return `raise ${name}`;
+    case 'create_subitems': {
+      const n = subitemRows(action, ctx).length;
+      return `add ${n} ${subitemLabel(ctx.sheet, n).toLowerCase()}`;
+    }
+    case 'update_subitems': {
+      const f = actionFields('update_subitems', ctx).find((x) => x.key === action.fieldKey);
+      return `set ${f?.name ?? 'a field'} on the ${subitemLabel(ctx.sheet).toLowerCase()} to ${setValueText(f, action.value, ctx)}`;
+    }
+    case 'set_parent_field': {
+      const f = actionFields('set_parent_field', ctx).find((x) => x.key === action.fieldKey);
+      return `set ${f?.name ?? 'a field'} on the parent to ${setValueText(f, action.value, ctx)}`;
+    }
   }
   return 'do something';
 }
@@ -524,11 +609,12 @@ const blankValue = (v: Json | undefined) =>
 function triggerProblem(trigger: Trigger, ctx: Ctx): string | null {
   if (!isTriggerId(trigger.type)) return 'Choose a trigger.';
   const spec = TRIGGER_CATALOGUE[trigger.type];
+  if (spec.subitems && !childSheetIdOf(ctx)) return 'Turn on sub-items for this sheet first.';
   if (spec.field) {
     const key = str(trigger.fieldKey);
-    const field = key ? ctx.fieldsByKey.get(key) : undefined;
+    const field = triggerFieldOf(trigger, ctx);
     if (!field) return key ? `The field "${key}" no longer exists.` : 'Choose a field.';
-    if (!defOf(field).triggers.includes(trigger.type))
+    if (!spec.subitems && !defOf(field).triggers.includes(trigger.type))
       return `${field.name} cannot be used with this trigger.`;
   }
   switch (spec.param) {
@@ -587,7 +673,8 @@ function actionProblem(action: ActionJson, ctx: Ctx, env: ValidationEnv): string
   if (NEEDS_FIELD.has(type) && type !== 'update_linked') {
     const f = fieldOf(action, actionFields(type, ctx));
     if (typeof f === 'string') return f;
-    if (type === 'set_field') return valueProblem(f, action.value, ctx);
+    if (type === 'set_field' || type === 'set_parent_field' || type === 'update_subitems')
+      return valueProblem(f, action.value, ctx);
     if (type === 'raise_version')
       return action.kind === 'major' || action.kind === 'minor' ? null : 'Choose minor or major.';
     if (type === 'assign') {
@@ -647,6 +734,9 @@ function actionProblem(action: ActionJson, ctx: Ctx, env: ValidationEnv): string
     }
     case 'move_to_group':
       return ctx.groups.has(str(action.groupId) ?? '') ? null : 'Choose a group.';
+    case 'create_subitems':
+      if (!childSheetIdOf(ctx)) return 'Turn on sub-items for this sheet first.';
+      return subitemRows(action, ctx).length > 0 ? null : 'Add at least one sub-item with a name.';
     case 'lock_item':
       return null;
     case 'post_update':
@@ -724,6 +814,32 @@ function eventFor(
     case 'clock_warning':
     case 'evidence_expiring':
       return { type: 'schedule', ...base, automationId: 'test', occurrence: ctx.today };
+    case 'subitem_created':
+    case 'subitem_field_becomes':
+    case 'all_subitems_done': {
+      // the item's first sub-item, as if it had just been added (or its field had just changed to its value)
+      const child = subitemsOf(item, ctx)[0];
+      const childBase = {
+        sheetId: child?.sheetId ?? '',
+        itemId: child?.id ?? '',
+        actor: actorOf(ctx),
+      };
+      return {
+        type: 'subitem.event',
+        ...base,
+        subitemId: child?.id ?? '',
+        event:
+          trigger.type === 'subitem_field_becomes' && field && child
+            ? {
+                type: 'value.changed',
+                ...childBase,
+                fieldId: field.id,
+                before: null,
+                after: valueOf(child, field, ctx),
+              }
+            : { type: 'item.created', ...childBase },
+      };
+    }
     default:
       return {
         type: 'value.changed',
@@ -736,8 +852,27 @@ function eventFor(
 }
 
 function checkTrigger(trigger: Trigger, item: Item, ctx: Ctx): TestResult['trigger'] {
-  const key = str(trigger.fieldKey);
-  const field = key ? ctx.fieldsByKey.get(key) : undefined;
+  const field = triggerFieldOf(trigger, ctx);
+  if (TRIGGER_CATALOGUE[trigger.type]?.subitems) {
+    const first = subitemsOf(item, ctx)[0];
+    if (!first)
+      return {
+        check: 'no_match',
+        text: `${item.displayId} has no ${subitemLabel(ctx.sheet).toLowerCase()}, so the test has nothing to go on.`,
+      };
+    if (trigger.type === 'subitem_created')
+      return {
+        check: 'event',
+        text: `${describeTrigger(trigger, ctx)}. The test acts as if ${first.displayId} had just been added.`,
+      };
+    const ok = matchTrigger(trigger, eventFor(trigger, item, field, ctx), ctx, 'test');
+    return {
+      check: ok ? 'matches' : 'no_match',
+      text: ok
+        ? `${describeTrigger(trigger, ctx)}: this matches ${first.displayId} as it is now.`
+        : `${describeTrigger(trigger, ctx)}: this does not match as things are now.`,
+    };
+  }
   const now = field ? valueOf(item, field, ctx) : null;
   const shown = field && now !== null ? defOf(field).toText(now as never, field.config, ctx) : '';
   const is = shown ? `${field?.name} is ${shown}` : `${field?.name ?? 'The field'} is empty`;
@@ -800,8 +935,7 @@ export function testOnItem(
     ok: !conditionProblem(c, ctx) && matches(c, item, ctx),
   }));
   const conditionsOk = conditions.every((c) => c.ok);
-  const key = str(draft.trigger.fieldKey);
-  const event = eventFor(draft.trigger, item, key ? ctx.fieldsByKey.get(key) : undefined, ctx);
+  const event = eventFor(draft.trigger, item, triggerFieldOf(draft.trigger, ctx), ctx);
   const steps = planActions(draft.actions, item, event, ctx, { ...env, actor: actorOf(ctx) });
   return {
     trigger,

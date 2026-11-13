@@ -20,6 +20,8 @@ import { useDocumentTop } from './use-document-top';
 import { useTableGroups } from './use-table-groups';
 import { donePercent } from '@/engine/views/group-by';
 import { buildLayout, byPosition, cardFields, positionsAtEnd, type TableRow } from './table-model';
+import { CardSubitems } from '@/components/subitems/card-list';
+import type { SubitemsState } from '@/components/subitems/use-subitems';
 
 // The Table view on phones (< 640 px, docs/05 §5): the same groups with the same collapsible titles, one card per
 // item (name, display id, owner and a few key values as blocks), tap opens the item panel, "+ Add" per group.
@@ -32,6 +34,11 @@ const ESTIMATE: Record<TableRow['kind'], number> = {
   add: 48,
   summary: 0,
   gap: 12,
+  // phones show sub-items inside the card
+  subheader: 0,
+  subitem: 0,
+  subempty: 0,
+  subadd: 0,
 };
 
 export function TableCards({
@@ -45,6 +52,8 @@ export function TableCards({
   visibleItems,
   viewCompare,
   comments,
+  sub = null,
+  onOpenSubitem,
 }: {
   data: SheetData;
   ctx: Ctx;
@@ -57,9 +66,13 @@ export function TableCards({
   viewCompare: ((a: Item, b: Item) => number) | null;
   /** Comments per item, for the marker on each card. */
   comments: ReadonlyMap<string, UpdateSummary>;
+  /** Sub-items: the chip on each card opens them (docs/05 §5). */
+  sub?: SubitemsState | null;
+  onOpenSubitem?(item: Item): void;
 }) {
   const store = useGridStore();
   const collapsed = useGrid((s) => s.collapsed);
+  const expanded = useGrid((s) => s.expanded);
   const hidden = useGrid((s) => s.hidden);
   const tg = useTableGroups({
     groups: data.groups,
@@ -153,7 +166,19 @@ export function TableCards({
                     fields={shown}
                     comments={comments.get(row.item.id)}
                     onOpen={() => onOpenItem(row.item)}
-                  />
+                  >
+                    {sub && !row.item.id.startsWith('temp-') ? (
+                      <CardSubitems
+                        parent={row.item}
+                        parentSheetId={data.sheet.id}
+                        sub={sub}
+                        canEdit={canEdit}
+                        expanded={expanded.has(row.item.id)}
+                        onToggle={() => store.getState().toggleExpanded(row.item.id)}
+                        onOpen={(it) => onOpenSubitem?.(it)}
+                      />
+                    ) : null}
+                  </ItemCard>
                 </div>
               ) : row.kind === 'add' ? (
                 <div className="pt-2">
@@ -184,7 +209,9 @@ function ItemCard({
   fields,
   comments,
   onOpen,
+  children,
 }: {
+  children?: React.ReactNode;
   item: Item;
   group: Group;
   ctx: Ctx;
@@ -260,6 +287,7 @@ function ItemCard({
           {due.overdue ? ' · late' : ''}
         </span>
       ) : null}
+      {children}
     </article>
   );
 }

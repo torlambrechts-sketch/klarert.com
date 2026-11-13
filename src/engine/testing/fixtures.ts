@@ -123,6 +123,11 @@ export function makeCtx(world: CtxWorld = {}, over: Partial<Ctx> = {}): Ctx {
     fieldsOf: (sheetId) => (sheetId === sheet.id ? fields : (world.otherFields?.[sheetId] ?? [])),
     groups: new Map(groups.map((g) => [g.id, g])),
     links: (itemId, fieldId) => world.links?.[`${itemId}:${fieldId}`] ?? [],
+    children: (itemId) =>
+      [...items.values()]
+        .filter((i) => i.parentId === itemId && !i.archivedAt)
+        .sort((a, b) => (a.position < b.position ? -1 : a.position > b.position ? 1 : 0))
+        .map((i) => i.id),
     item: (id) => items.get(id),
     files: (itemId, fieldId) =>
       (world.files ?? []).filter(

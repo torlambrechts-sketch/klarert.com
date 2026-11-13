@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Step } from '@/engine/automations';
 import type { Automation, Condition, Field, Sheet } from '@/engine/types';
 import { fetchDirectory } from '@/lib/sheet-query';
-import { FIELD_COLUMNS, toField, toSheet } from '@/lib/sheet-rows';
+import { FIELD_COLUMNS, SHEET_COLUMNS, toField, toSheet, withChildIds } from '@/lib/sheet-rows';
 import { createClient } from '@/lib/supabase/client';
 
 // Reads for the Automations page, the builder, the sheet's side sheet and the item panel. All under the person's RLS
@@ -79,12 +79,12 @@ export function useWorkspaceSheets(orgId: string | undefined) {
     queryFn: async (): Promise<SheetRef[]> => {
       const { data, error } = await createClient()
         .from('sheets')
-        .select('id, org_id, name, item_label, id_prefix, is_library')
+        .select(SHEET_COLUMNS)
         .eq('org_id', orgId!)
         .is('archived_at', null)
         .order('name');
       if (error) throw new Error(error.message);
-      return (data ?? []).map(toSheet);
+      return withChildIds((data ?? []).map(toSheet));
     },
     staleTime: 60_000,
   });

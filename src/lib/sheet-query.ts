@@ -9,6 +9,7 @@ import type { Database } from './database.types';
 import {
   FIELD_COLUMNS,
   ITEM_COLUMNS,
+  SHEET_COLUMNS,
   toField,
   toFile,
   toGroup,
@@ -221,10 +222,7 @@ export async function fetchRelated(
   const sheetIds = [...new Set(items.map((i) => i.sheetId))].filter((id) => id !== sheetId);
   if (sheetIds.length === 0) return { sheets: [], fields: [], items };
   const [sheets, fields] = await Promise.all([
-    db
-      .from('sheets')
-      .select('id, org_id, name, item_label, id_prefix, is_library')
-      .in('id', sheetIds),
+    db.from('sheets').select(SHEET_COLUMNS).in('id', sheetIds),
     db
       .from('fields')
       .select(FIELD_COLUMNS)
@@ -236,12 +234,8 @@ export async function fetchRelated(
 }
 
 export async function fetchSheetMeta(db: Db, sheetId: string) {
-  const [sheet, fields, groups] = await Promise.all([
-    db
-      .from('sheets')
-      .select('id, org_id, name, item_label, id_prefix, is_library')
-      .eq('id', sheetId)
-      .maybeSingle(),
+  const [sheet, fields, groups, child] = await Promise.all([
+    db.from('sheets').select(SHEET_COLUMNS).eq('id', sheetId).maybeSingle(),
     db
       .from('fields')
       .select(FIELD_COLUMNS)
@@ -253,13 +247,99 @@ export async function fetchSheetMeta(db: Db, sheetId: string) {
       .select('id, sheet_id, name, color, position')
       .eq('sheet_id', sheetId)
       .order('position'),
+    db.from('sheets').select('id').eq('parent_sheet_id', sheetId).maybeSingle(),
   ]);
   const s = must(sheet);
   if (!s) return null;
+  const childId = must(child)?.id;
   return {
-    sheet: toSheet(s),
+    sheet: { ...toSheet(s), ...(childId ? { childSheetId: childId } : {}) },
     fields: must(fields).map(toField),
     groups: must(groups).map(toGroup),
+  };
+}
+
+/**
+ * Sub-items around the loaded items (docs/02 §12), as `related` data plus their links and files: for a sheet with
+ * sub-items, the child sheet, its fields and the live sub-items of `parentIds` (every sub-item of the sheet when
+ * undefined); for a child sheet, the parent sheet, its fields and the parents of `childItems`. Empty otherwise.
+ */
+export async function fetchSubitemContext(
+  db: Db,
+  sheet: SheetData['sheet'],
+  loaded: Item[],
+  parentIds?: string[],
+): Promise<
+  Pick<SheetData, 'links' | 'files' | 'protectedValues'> & { related: SheetData['related'] }
+> {
+  const none = {
+    links: [],
+    files: [],
+    protectedValues: [],
+    related: { sheets: [], fields: [], items: [] },
+  };
+  if (sheet.childSheetId) {
+    const meta = await fetchSheetMeta(db, sheet.childSheetId);
+    if (!meta) return none;
+    let items: Item[];
+    if (parentIds === undefined) items = await fetchItems(db, meta.sheet.id);
+    else
+      items = (
+        await chunked(parentIds, async (part) =>
+          must(
+            await db
+              .from('items')
+              .select(ITEM_COLUMNS)
+              .in('parent_id', part)
+              .is('archived_at', null)
+              .order('position'),
+          ),
+        )
+      ).map(toItem);
+    const attached = await fetchAttached(
+      db,
+      meta.fields,
+      items.map((i) => i.id),
+    );
+    return { ...attached, related: { sheets: [meta.sheet], fields: meta.fields, items } };
+  }
+  if (sheet.parentSheetId) {
+    const ids = [...new Set(loaded.flatMap((i) => (i.parentId ? [i.parentId] : [])))];
+    const [meta, parents] = await Promise.all([
+      fetchSheetMeta(db, sheet.parentSheetId),
+      fetchItemsById(db, ids),
+    ]);
+    if (!meta) return none;
+    return {
+      links: [],
+      files: [],
+      protectedValues: [],
+      related: { sheets: [meta.sheet], fields: meta.fields, items: parents },
+    };
+  }
+  return none;
+}
+
+/** Merge sub-item context into a sheet's data (related items, links and files of the sub-items). */
+export function mergeSubitemContext(
+  data: SheetData,
+  more: Awaited<ReturnType<typeof fetchSubitemContext>>,
+): SheetData {
+  const have = new Set([...data.items, ...data.related.items].map((i) => i.id));
+  const sheets = new Set(data.related.sheets.map((s) => s.id));
+  return {
+    ...data,
+    links: [...data.links, ...more.links],
+    files: [...data.files, ...more.files],
+    protectedValues: [...data.protectedValues, ...more.protectedValues],
+    related: {
+      sheets: [...data.related.sheets, ...more.related.sheets.filter((s) => !sheets.has(s.id))],
+      fields: [
+        ...data.related.fields,
+        ...more.related.fields.filter((f) => !sheets.has(f.sheetId)),
+      ],
+      items: [...data.related.items, ...more.related.items.filter((i) => !have.has(i.id))],
+    },
   };
 }
 

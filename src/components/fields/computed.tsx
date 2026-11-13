@@ -10,12 +10,15 @@ import {
   Loader2,
   MousePointerClick,
   Search,
+  ListTree,
   Sigma,
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
 import type { AiValue } from '@/engine/fields/ai';
 import type { FormulaConfig } from '@/engine/fields/formula';
+import { subitemLabel, subitemProgress } from '@/engine/subitems';
+import { ProgressChip } from '@/components/subitems/progress-chip';
 import { buttonKey, useRunningButtons } from '@/components/automations/running-buttons';
 import { Button } from '@/components/ui/button';
 import { computedUI, Muted, OptionCell, TextCell } from './kit';
@@ -73,6 +76,34 @@ export const rollupUI = computedUI({
         <p>
           The {cfg.fn} of {cfg.targetFieldKey ?? 'the items'} across the items linked through{' '}
           {nameOfKey(cfg.linkFieldKey, ctx.fieldsByKey)}.
+        </p>
+        {CALCULATED}
+      </>
+    );
+  },
+});
+
+/** The sub-items column (docs/03 §3.4): "3/5" done, read-only; the rows open under the item's name. */
+export const subitemsUI = computedUI({
+  icon: ListTree,
+  Cell: ({ item, ctx }) => {
+    const p = subitemProgress(item, ctx);
+    return p.total ? (
+      <ProgressChip total={p.total} done={p.done} label={subitemLabel(ctx.sheet)} />
+    ) : (
+      <span className="sr-only">No {subitemLabel(ctx.sheet).toLowerCase()}</span>
+    );
+  },
+  explain: ({ item, ctx }) => {
+    const p = subitemProgress(item, ctx);
+    const label = subitemLabel(ctx.sheet).toLowerCase();
+    return (
+      <>
+        <p>
+          {p.total
+            ? `${p.done} of ${p.total} ${label} are done.`
+            : `${item.displayId} has no ${label} yet.`}{' '}
+          Open the item or expand its row to work on them.
         </p>
         {CALCULATED}
       </>

@@ -13,8 +13,10 @@ import {
   fetchRelated,
   fetchSheetMeta,
   type Db,
+  fetchSubitemContext,
+  mergeSubitemContext,
 } from '@/lib/sheet-query';
-import { toField, toItem } from '@/lib/sheet-rows';
+import { SHEET_COLUMNS, toField, toItem } from '@/lib/sheet-rows';
 import { getSession } from '@/server/auth';
 import { newId } from '@/server/sheet-context';
 
@@ -82,10 +84,19 @@ async function loadMyWork(db: Db, orgId: string, userId: string, timeZone: strin
         new Set(list.map((i) => i.id)),
         attached.links.map((l) => l.toItem),
       );
-      const ctx = sheetCtx(
+      // sub-items show their parent as context (docs/05 §3.6)
+      const data = mergeSubitemContext(
         { ...meta, ...directory, items: list, ...attached, related },
-        { now, timeZone, userId, newId },
+        meta.sheet.parentSheetId
+          ? await fetchSubitemContext(db, meta.sheet, list)
+          : {
+              links: [],
+              files: [],
+              protectedValues: [],
+              related: { sheets: [], fields: [], items: [] },
+            },
       );
+      const ctx = sheetCtx(data, { now, timeZone, userId, newId });
       for (const item of list) sources.push({ item, ctx });
     }),
   );
@@ -241,11 +252,7 @@ async function recentActivity(
   const sheetIds = [...new Set(rows.map((r) => r.sheet_id).filter((s): s is string => !!s))];
   const [items, sheets, fields, groups, autos, directory] = await Promise.all([
     fetchItemsById(db, itemIds),
-    db
-      .from('sheets')
-      .select('id, org_id, name, item_label, id_prefix, is_library')
-      .in('id', sheetIds)
-      .then(must),
+    db.from('sheets').select(SHEET_COLUMNS).in('id', sheetIds).then(must),
     db
       .from('fields')
       .select(
@@ -276,7 +283,7 @@ async function recentActivity(
           orgId: sheet.org_id,
           name: sheet.name,
           itemLabel: sheet.item_label,
-          idPrefix: sheet.id_prefix,
+          idPrefix: sheet.id_prefix ?? '',
           isLibrary: sheet.is_library,
         }),
         ...directory,

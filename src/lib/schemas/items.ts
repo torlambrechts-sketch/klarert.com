@@ -107,6 +107,7 @@ const ruleSchema = z.object({
   require: z.array(z.string().max(40)).max(20).optional(),
   requireComment: z.boolean().optional(),
   message: z.string().trim().max(300).optional(),
+  fromDone: z.boolean().optional(),
 });
 
 const conditionSchema = z.object({

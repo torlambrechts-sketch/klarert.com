@@ -1,13 +1,21 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { ArchivedItems } from '@/components/sheets/archived-items';
 import { GroupsManager } from '@/components/sheets/groups-manager';
 import { ArchiveSheet, SheetSettingsForm } from '@/components/sheets/sheet-settings';
 import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
+import { SubitemSettingsSection } from '@/components/subitems/subitem-settings';
+import { readSubitemSettings } from '@/engine/subitems';
 import { isEditorRole, requireMember } from '@/server/auth';
-import { getArchivedItems, getFields, getNav, getSheet } from '@/server/repositories/sheets';
+import {
+  getArchivedItems,
+  getFields,
+  getNav,
+  getSheet,
+  getSubitemSheet,
+} from '@/server/repositories/sheets';
 
 export const metadata = { title: 'Sheet settings · Compliance OS' };
 
@@ -40,11 +48,16 @@ export default async function SheetSettingsPage({
   const { workspace, role, user } = await requireMember(org);
   const sheet = await getSheet(workspace.id, sheetId);
   if (!sheet) notFound();
-  const [nav, fields, archivedItems] = await Promise.all([
+  // a sub-item sheet is set up in its parent's settings (Sub-items)
+  if (sheet.parent_sheet_id) redirect(`/${org}/s/${sheet.parent_sheet_id}/settings`);
+  const [nav, fields, archivedItems, child] = await Promise.all([
     getNav(workspace.id),
     getFields(sheet.id),
     getArchivedItems(sheet.id),
+    getSubitemSheet(sheet.id),
   ]);
+  const subSettings = (sheet.settings as { subitems?: unknown } | null)?.subitems;
+  const archivedSubitems = child ? await getArchivedItems(child.id) : [];
   const canEdit = isEditorRole(role);
 
   return (
@@ -72,7 +85,7 @@ export default async function SheetSettingsPage({
               name: sheet.name,
               description: sheet.description,
               itemLabel: sheet.item_label,
-              idPrefix: sheet.id_prefix,
+              idPrefix: sheet.id_prefix ?? '',
               prefixLocked: sheet.next_seq > 1,
               folderId: sheet.folder_id,
               isLibrary: sheet.is_library,
@@ -138,12 +151,38 @@ export default async function SheetSettingsPage({
         />
       </Card>
 
+      <Card
+        title="Sub-items"
+        description="Steps under an item with their own fields, IDs and activity log, like the actions of a CAPA or the clauses of an audit."
+      >
+        <SubitemSettingsSection
+          org={org}
+          sheetId={sheet.id}
+          userId={user.id}
+          timeZone={workspace.time_zone}
+          role={role}
+          archived={!!sheet.archived_at}
+          childSheetId={child?.id ?? null}
+          settings={child && subSettings ? readSubitemSettings(subSettings) : null}
+          dueKey={child?.dueKey ?? null}
+        />
+      </Card>
+
       {canEdit ? (
         <Card
           title={`Archived items · ${archivedItems.length}`}
           description="Archived items are hidden from views, search and automations. Restore one to bring it back."
         >
           <ArchivedItems org={org} sheetId={sheet.id} items={archivedItems} />
+        </Card>
+      ) : null}
+
+      {canEdit && child && archivedSubitems.length > 0 ? (
+        <Card
+          title={`Archived ${readSubitemSettings(subSettings).label.toLowerCase()} · ${archivedSubitems.length}`}
+          description="Restore one on its own, or restore its parent to bring back the ones archived with it."
+        >
+          <ArchivedItems org={org} sheetId={child.id} items={archivedSubitems} />
         </Card>
       ) : null}
 

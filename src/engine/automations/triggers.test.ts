@@ -93,6 +93,9 @@ describe('matchTrigger', () => {
         'item_created',
         'number_above',
         'number_below',
+        'subitem_created',
+        'subitem_field_becomes',
+        'all_subitems_done',
       ].sort(),
     );
   });

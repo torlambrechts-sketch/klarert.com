@@ -11,6 +11,7 @@ import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import { Table } from './table';
 import { TableCards } from './table-cards';
 import { useUpdateSummaries } from './use-update-counts';
+import type { SubitemsState } from '@/components/subitems/use-subitems';
 
 // The Table view (docs/05 §3.1): the one view for working through a sheet's items as rows. Desktop and tablets get
 // the virtualised table of group cards; phones (< 640 px) get item cards grouped the same way. Above both: the
@@ -38,6 +39,10 @@ export interface TableViewProps {
   onNew(): void;
   config: ViewConfig;
   setConfig(update: (c: ViewConfig) => ViewConfig): void;
+  /** The sheet's sub-items, when it has them (docs/02 §12). */
+  sub?: SubitemsState | null;
+  subMatches?: ReadonlyMap<string, ReadonlySet<string>>;
+  onOpenSubitem?(item: Item): void;
 }
 
 function usePhone() {
@@ -113,6 +118,8 @@ export function TableView(p: TableViewProps) {
           visibleItems={items}
           viewCompare={p.compare}
           comments={updateCounts}
+          sub={p.sub ?? null}
+          onOpenSubitem={p.onOpenSubitem}
         />
       ) : (
         <div className="flex min-h-[240px] flex-1 flex-col">
@@ -131,6 +138,9 @@ export function TableView(p: TableViewProps) {
             config={p.config}
             setConfig={p.setConfig}
             updateCounts={updateCounts}
+            sub={p.sub ?? null}
+            subMatches={p.subMatches}
+            onOpenSubitem={p.onOpenSubitem}
           />
         </div>
       )}

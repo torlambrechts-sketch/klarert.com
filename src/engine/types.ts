@@ -51,6 +51,24 @@ export interface Sheet {
   itemLabel: string;
   idPrefix: string;
   isLibrary: boolean;
+  /** Sub-items (docs/02 §12): set on a child sheet, the sheet whose items its items belong to. */
+  parentSheetId?: string | null;
+  /** Set on a sheet with sub-items: its child sheet (the sub-items' fields and rows). */
+  childSheetId?: string | null;
+  /** Sub-item settings of a sheet with sub-items (sheets.settings.subitems), read leniently. */
+  subitems?: SubitemSettings | null;
+}
+
+/** sheets.settings.subitems (docs/02 §12). */
+export interface SubitemSettings {
+  /** What the sheet calls its sub-items ("Actions", "Clauses", "Test steps"). */
+  label: string;
+  /** The gate: the parent's status cannot become done while a sub-item is open (enforced in SQL). */
+  blockClose: boolean;
+  /** A locked parent locks its sub-items for people who are not admins (enforced in SQL). */
+  lockCascade: boolean;
+  /** "From template": the sub-item set added in one go (values by child field key, tokens like $in:90). */
+  template: { name: string; values: Record<string, Json> }[];
 }
 
 export interface Group {
@@ -69,6 +87,8 @@ export interface StatusRule {
   require?: string[];
   requireComment?: boolean;
   message?: string;
+  /** Only when the field was done before the change (reopening a done sub-item asks for a comment). */
+  fromDone?: boolean;
 }
 
 export interface Validation {
@@ -112,6 +132,10 @@ export interface Item {
   updatedBy?: string | null;
   updatedAt: string;
   archivedAt?: string | null;
+  /** Sub-items: the parent item (an item of the parent sheet). */
+  parentId?: string | null;
+  /** Sub-items: the number under the parent (display id = parent id + "." + subSeq at creation). */
+  subSeq?: number | null;
 }
 
 export interface FileRow {
@@ -147,6 +171,8 @@ export interface Ctx {
   groups: Map<string, Group>;
   /** Target item ids of a link field, ordered. */
   links(itemId: string, fieldId: string): string[];
+  /** Live sub-items of an item, in position order (empty when none are loaded). */
+  children(itemId: string): string[];
   item(id: string): Item | undefined;
   /** Current file versions (replaced_by is null). */
   files(itemId: string, fieldId: string): FileRow[];
@@ -172,7 +198,7 @@ export interface Condition {
   value?: Json;
 }
 
-/** The 11 automation triggers (docs/04 §3). */
+/** The automation triggers (docs/04 §3): 11 on the item, 3 on its sub-items. */
 export type TriggerId =
   | 'item_created'
   | 'form_submitted'
@@ -184,7 +210,10 @@ export type TriggerId =
   | 'clock_warning'
   | 'evidence_expiring'
   | 'button_clicked'
-  | 'checklist_no';
+  | 'checklist_no'
+  | 'subitem_created'
+  | 'subitem_field_becomes'
+  | 'all_subitems_done';
 
 export interface Automation {
   id: string;

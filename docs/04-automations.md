@@ -31,12 +31,15 @@ type AutomationEvent =
   | { type: 'item.moved';     sheetId; itemId; fromGroupId; toGroupId; actor }
   | { type: 'links.changed';  sheetId; itemId; fieldId; before: string[]; after: string[]; actor }
   | { type: 'button.clicked'; sheetId; itemId; fieldId; actor }
-  | { type: 'schedule';       sheetId; itemId; automationId; occurrence: string };
+  | { type: 'schedule';       sheetId; itemId; automationId; occurrence: string }
+  | { type: 'subitem.event';  sheetId; itemId; subitemId; event /* the sub-item's item.created | value.changed */ };
 // actor = { kind: 'user' | 'automation' | 'form' | 'system', id }
 ```
 A command emits one `value.changed` per changed field. For computed number fields (formula, rollup, riskmatrix score, progress) the runner computes before/after projections for every number trigger on that sheet, so "Residual score goes above 12" works even though the score is not stored.
 
-## 3. Triggers (11)
+A sub-item's `item.created` and `value.changed` are also **projected** onto its parent as `subitem.event` (parent sheet, parent item) at the **same depth**; only actions go one level deeper, so the loop guard covers child → parent → children chains. The parent's world is read again after a sub-item changes.
+
+## 3. Triggers (14)
 
 | id | Prototype id | JSON | Fires when | Field types allowed |
 |---|---|---|---|---|
@@ -51,6 +54,9 @@ A command emits one `value.changed` per changed field. For computed number field
 | `evidence_expiring` | `evidence` | `{ "type": "evidence_expiring", "fieldKey": "evidence", "days": 30 }` | scheduled: the earliest `valid_until` is within N days. Once per item per expiry date | evidence |
 | `button_clicked` | `button` | `{ "type": "button_clicked", "fieldKey": "send_for_approval" }` | someone clicks the button on an item | button |
 | `checklist_no` | `checklistno` | `{ "type": "checklist_no", "fieldKey": "inspection" }` | the number of "No" answers increases | checklist |
+| `subitem_created` | — | `{ "type": "subitem_created" }` | a sub-item is added under the item | — (sheet with sub-items) |
+| `subitem_field_becomes` | — | `{ "type": "subitem_field_becomes", "fieldKey": "status", "value": "opt_stuck" }` | a sub-item's field (key of the child sheet) becomes the value | as `field_becomes`, on the sub-items' fields |
+| `all_subitems_done` | — | `{ "type": "all_subitems_done" }` | fires once, on the change that makes every sub-item done | — |
 
 Moving an item between groups emits `item.moved`. No MVP trigger listens to it; group logic uses the `__group` condition and the `move_to_group` action. An `item_moved` trigger can be added later as one registry entry, but only when asked.
 
@@ -67,7 +73,7 @@ Array, all must be true (AND). Same operators as view filters (docs/03 §4), eva
 ```
 Conditions referencing a deleted field make the automation invalid: it is switched off and its owner notified ("Field ‘Severity’ was deleted").
 
-## 5. Actions (11)
+## 5. Actions (14)
 
 Actions run in array order. Each produces a step with outcome `done`, `no_change`, `blocked`, `failed` or `skipped`.
 
@@ -84,6 +90,9 @@ Actions run in array order. Each produces a step with outcome `done`, `no_change
 | `post_update` | `post` | `{ "type": "post_update", "message": "Checked by automation: {status}" }` | adds an item update with author "Automation" |
 | `webhook` | `webhook` | `{ "type": "webhook", "url": "https://…", "preset": "teams" }` (`teams`, `slack`, `generic`) | queues an `outbound_webhooks` row; payload below; `done` means queued |
 | `raise_version` | `version` | `{ "type": "raise_version", "fieldKey": "version", "kind": "minor" }` | `v1.2` → `v1.3` (minor) or `v2.0` (major); empty → `v1.0` |
+| `create_subitems` | — | `{ "type": "create_subitems", "items": [{ "name": "Check {id}", "values": { "due_date": "$in:90" } }] }` or `{ "type": "create_subitems", "fromTemplate": true }` | adds sub-items under the item through `create_subitems` (≤ 50; values by child field key, tokens resolved, names templated); emits `item.created` per sub-item |
+| `set_parent_field` | — | `{ "type": "set_parent_field", "fieldKey": "status", "value": "opt_done" }` | on a sub-item: sets a stored field of its parent (the gate and status rules apply) |
+| `update_subitems` | — | `{ "type": "update_subitems", "fieldKey": "owner", "value": "$actor", "onlyOpen": false }` | sets a field on the item's sub-items (only those that change, open ones only on request, at most 100) |
 
 Webhook payload (generic):
 ```json
@@ -143,6 +152,8 @@ Automations page: list per sheet (toggle, name, trigger summary, runs, last run,
 ## 11. Starter recipes
 
 `templates/automation-recipes.json` holds recipes the builder offers under "Start from a recipe". Each recipe uses field **roles** (e.g. `{ "role": "status" }`) that the builder maps to the sheet's fields before saving.
+
+Sub-item recipes (roles may be `sub:<type>`, a field of the sub-items): add the template set when an item is created, set the status when every sub-item is done (the optional "auto-close" rule), ask for a residual re-score when every treatment action is done, create a linked nonconformity when a clause becomes one, notify the owner when a sub-item is added.
 
 ## 12. Acceptance tests (Playwright + Vitest)
 

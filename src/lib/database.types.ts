@@ -469,14 +469,14 @@ isOneToOne: false
                   ]
                 },"items": {
                   Row: {
-                    "archived_at": string | null,"created_at": string,"created_by": string | null,"held_at": string | null,"held_by": string | null,"held_created": boolean,"held_snapshot": Json | null,"display_id": string,"group_id": string,"id": string,"lock_reason": string | null,"locked": boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"updated_at": string,"updated_by": string | null,"values": NonNullable<Json>
+                    "archived_at": string | null,"archived_with": string | null,"created_at": string,"created_by": string | null,"held_at": string | null,"held_by": string | null,"held_created": boolean,"held_snapshot": Json | null,"display_id": string,"group_id": string,"id": string,"lock_reason": string | null,"locked": boolean,"name": string,"next_sub_seq": number,"org_id": string,"parent_id": string | null,"position": string,"seq": number,"sheet_id": string,"sub_seq": number | null,"updated_at": string,"updated_by": string | null,"values": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"display_id": string,"group_id": string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
+                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id": string,"group_id": string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"position": string,"seq": number,"sheet_id": string,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
                   }
                   Update: {
-                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"display_id"?: string,"group_id"?: string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"seq"?: number,"sheet_id"?: string,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
+                    "archived_at"?: string | null,"archived_with"?: string | null,"created_at"?: string,"created_by"?: string | null,"held_at"?: string | null,"held_by"?: string | null,"held_created"?: boolean,"held_snapshot"?: Json | null,"next_sub_seq"?: number,"parent_id"?: string | null,"sub_seq"?: number | null,"display_id"?: string,"group_id"?: string,"id"?: string,"lock_reason"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"position"?: string,"seq"?: number,"sheet_id"?: string,"updated_at"?: string,"updated_by"?: string | null,"values"?: NonNullable<Json>
                   }
                   Relationships: [
                     {
@@ -496,6 +496,12 @@ isOneToOne: false
       columns: ["org_id"]
 isOneToOne: false
       referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "items_parent_id_fkey"
+      columns: ["parent_id"]
+isOneToOne: false
+      referencedRelation: "items"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "items_sheet_id_fkey"
@@ -721,14 +727,14 @@ isOneToOne: false
                   ]
                 },"sheets": {
                   Row: {
-                    "archived_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"folder_id": string | null,"id": string,"id_prefix": string,"is_library": boolean,"item_label": string,"name": string,"next_seq": number,"org_id": string,"position": string,"settings": NonNullable<Json>,"updated_at": string
+                    "archived_at": string | null,"created_at": string,"created_by": string | null,"description": string | null,"folder_id": string | null,"id": string,"id_prefix": string | null,"is_library": boolean,"item_label": string,"name": string,"next_seq": number,"org_id": string,"parent_sheet_id": string | null,"position": string,"settings": NonNullable<Json>,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string,"is_library"?: boolean,"item_label"?: string,"name": string,"next_seq"?: number,"org_id": string,"position": string,"settings"?: NonNullable<Json>,"updated_at"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name": string,"next_seq"?: number,"org_id": string,"parent_sheet_id"?: string | null,"position": string,"settings"?: NonNullable<Json>,"updated_at"?: string
                   }
                   Update: {
-                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string,"is_library"?: boolean,"item_label"?: string,"name"?: string,"next_seq"?: number,"org_id"?: string,"position"?: string,"settings"?: NonNullable<Json>,"updated_at"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"folder_id"?: string | null,"id"?: string,"id_prefix"?: string | null,"is_library"?: boolean,"item_label"?: string,"name"?: string,"next_seq"?: number,"org_id"?: string,"parent_sheet_id"?: string | null,"position"?: string,"settings"?: NonNullable<Json>,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -742,6 +748,12 @@ isOneToOne: false
       columns: ["folder_id"]
 isOneToOne: false
       referencedRelation: "folders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sheets_parent_sheet_id_fkey"
+      columns: ["parent_sheet_id"]
+isOneToOne: false
+      referencedRelation: "sheets"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "sheets_org_id_fkey"
@@ -1005,6 +1017,64 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_subitem":
+{ Args: { "p_automation"?: string,"p_name": string,"p_parent": string,"p_position": string,"p_values"?: Json }; Returns: {
+              "archived_at": string | null,
+"archived_with": string | null,
+"created_at": string,
+"created_by": string | null,
+"display_id": string,
+"group_id": string,
+"id": string,
+"lock_reason": string | null,
+"locked": boolean,
+"name": string,
+"next_sub_seq": number,
+"org_id": string,
+"parent_id": string | null,
+"position": string,
+"seq": number,
+"sheet_id": string,
+"sub_seq": number | null,
+"updated_at": string,
+"updated_by": string | null,
+"values": NonNullable<Json>
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "items"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"create_subitems":
+{ Args: { "p_automation"?: string,"p_parent": string,"p_rows": Json }; Returns: ({
+              "archived_at": string | null,
+"archived_with": string | null,
+"created_at": string,
+"created_by": string | null,
+"display_id": string,
+"group_id": string,
+"id": string,
+"lock_reason": string | null,
+"locked": boolean,
+"name": string,
+"next_sub_seq": number,
+"org_id": string,
+"parent_id": string | null,
+"position": string,
+"seq": number,
+"sheet_id": string,
+"sub_seq": number | null,
+"updated_at": string,
+"updated_by": string | null,
+"values": NonNullable<Json>
+            })[]
+                          SetofOptions: {
+        from: "*"
+        to: "items"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "create_items":
 { Args: { "p_group": string,"p_note"?: string,"p_rows": Json,"p_sheet": string }; Returns: number
                            },
@@ -1126,6 +1196,35 @@ isOneToOne: false
 "position": string,
 "seq": number,
 "sheet_id": string,
+"updated_at": string,
+"updated_by": string | null,
+"values": NonNullable<Json>
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "items"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"move_subitem":
+{ Args: { "p_automation"?: string,"p_item": string,"p_parent": string,"p_position": string }; Returns: {
+              "archived_at": string | null,
+"archived_with": string | null,
+"created_at": string,
+"created_by": string | null,
+"display_id": string,
+"group_id": string,
+"id": string,
+"lock_reason": string | null,
+"locked": boolean,
+"name": string,
+"next_sub_seq": number,
+"org_id": string,
+"parent_id": string | null,
+"position": string,
+"seq": number,
+"sheet_id": string,
+"sub_seq": number | null,
 "updated_at": string,
 "updated_by": string | null,
 "values": NonNullable<Json>

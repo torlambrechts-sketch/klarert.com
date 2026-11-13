@@ -12,7 +12,14 @@ export const itemHref = (org: string, r: Pick<WorkRow, 'sheetId' | 'displayId'>)
   `/${org}/s/${r.sheetId}?item=${encodeURIComponent(r.displayId)}`;
 
 export function WorkRowView({ org, row }: { org: string; row: WorkRow }) {
-  const meta = [row.displayId, row.sheetName, row.due?.fieldName].filter(Boolean).join(' · ');
+  const meta = [
+    row.displayId,
+    row.parent ? `in ${row.parent.displayId} ${row.parent.name}` : null,
+    row.sheetName,
+    row.due?.fieldName,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <li className="border-line border-t first:border-t-0">
       <Link

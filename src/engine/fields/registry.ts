@@ -1,4 +1,4 @@
-// The 57 field types (docs/03). A new type is one file plus one line here. Installs itself into the resolver
+// The 58 field types (docs/03). A new type is one file plus one line here. Installs itself into the resolver
 // so computed types can reach other types without import cycles.
 import { text } from './text';
 import { longtext } from './longtext';
@@ -57,6 +57,7 @@ import { meta } from './meta';
 import { workflowstep } from './workflowstep';
 import { button } from './button';
 import { ai } from './ai';
+import { subitems } from './subitems';
 import { installFieldTypes } from './resolve';
 import type { AnyFieldType, Family } from './types';
 
@@ -118,6 +119,7 @@ export const FIELD_TYPES = {
   workflowstep,
   button,
   ai,
+  subitems,
 } as const satisfies Record<string, AnyFieldType>;
 
 export type FieldTypeId = keyof typeof FIELD_TYPES;

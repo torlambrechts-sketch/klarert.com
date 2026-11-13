@@ -23,6 +23,7 @@ import {
   storedFields,
   testOnItem,
   TRIGGER_CATALOGUE,
+  triggerFieldOf,
   triggerFields,
   type ActionId,
   type ActionJson,
@@ -173,7 +174,7 @@ export function AutomationBuilder(props: BuilderProps) {
   const triggers = availableTriggers(ctx);
   const spec = TRIGGER_CATALOGUE[draft.trigger.type];
   const tFields = triggerFields(draft.trigger.type, ctx);
-  const tField = ctx.fieldsByKey.get(str(draft.trigger.fieldKey));
+  const tField = triggerFieldOf(draft.trigger, ctx);
   const conditionFields = filterable(ctx.fieldsOf(ctx.sheet.id), ctx);
 
   const sentence = describeAutomation(draft, ctx, sheetName);
@@ -614,6 +615,62 @@ function ActionRow({
             ) : null}
           </>
         ) : null}
+        {type === 'set_parent_field' || type === 'update_subitems'
+          ? (() => {
+              // a field of the parent (on a sub-item) or of the sub-items (on a parent)
+              const list = actionFields(type, ctx);
+              const target = list.find((f) => f.key === fieldKey);
+              return (
+                <>
+                  <FieldSelect
+                    label={label('field')}
+                    value={fieldKey}
+                    fields={list}
+                    onChange={(k) => set({ fieldKey: k, value: null })}
+                  />
+                  {target ? (
+                    <>
+                      <span className="text-label-13">to</span>
+                      <ValuePicker
+                        field={target}
+                        ctx={ctx}
+                        value={action.value}
+                        label={label('value')}
+                        invalid={invalid}
+                        onChange={(v) => set({ value: v })}
+                      />
+                    </>
+                  ) : null}
+                  {type === 'update_subitems' ? (
+                    <label className="text-label-13 flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        checked={action.onlyOpen === true}
+                        onChange={(e) => set({ onlyOpen: e.target.checked })}
+                      />
+                      only open ones
+                    </label>
+                  ) : null}
+                </>
+              );
+            })()
+          : null}
+        {type === 'create_subitems' ? (
+          <label className="text-label-13 flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={action.fromTemplate === true}
+              onChange={(e) =>
+                onChange(
+                  e.target.checked
+                    ? { type, fromTemplate: true }
+                    : { type, items: [{ name: '', values: {} }] },
+                )
+              }
+            />
+            from the sheet&apos;s template
+          </label>
+        ) : null}
         {type === 'request_update' || type === 'raise_version' ? (
           <FieldSelect
             label={label('field')}
@@ -757,6 +814,24 @@ function ActionRow({
             </p>
           ) : null}
         </div>
+      ) : null}
+      {type === 'create_subitems' && action.fromTemplate !== true ? (
+        <textarea
+          aria-label={label('sub-items, one per line')}
+          className={cn(inputClass, 'min-h-20 py-1.5')}
+          placeholder={'One per line, like:\nContainment\nRoot cause'}
+          value={(Array.isArray(action.items) ? action.items : [])
+            .map((r) => String((r as { name?: unknown })?.name ?? ''))
+            .join('\n')}
+          onChange={(e) =>
+            set({
+              items: e.target.value
+                .split('\n')
+                .slice(0, 50)
+                .map((name) => ({ name, values: {} })),
+            })
+          }
+        />
       ) : null}
       {type === 'lock_item' ? (
         <input

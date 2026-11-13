@@ -81,11 +81,42 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
   const comment = e.note && e.action === 'value.changed' ? ` · Comment: ${quote(e.note)}` : '';
   switch (e.action) {
     case 'item.created': {
-      const g =
+      const o =
         e.newValue && typeof e.newValue === 'object' && !Array.isArray(e.newValue)
-          ? look.groupName(String(e.newValue.group_id ?? ''))
-          : undefined;
+          ? e.newValue
+          : null;
+      if (o && typeof o.parent === 'string') return `Created under ${o.parent}`;
+      const g = o ? look.groupName(String(o.group_id ?? '')) : undefined;
       return g ? `Created in ${g}` : 'Created';
+    }
+    // sub-items (docs/02 §12): the pointer entries on the parent, and a sub-item moving between parents
+    case 'subitem.added':
+    case 'subitem.removed':
+    case 'subitem.archived':
+    case 'subitem.restored': {
+      const v = (e.action === 'subitem.removed' ? e.oldValue : e.newValue) as Record<
+        string,
+        unknown
+      > | null;
+      const what = v
+        ? `${String(v.display_id ?? '')} ${quote(String(v.name ?? ''))}`.trim()
+        : 'a sub-item';
+      if (e.action === 'subitem.added')
+        return v && typeof v.from === 'string'
+          ? `Sub-item ${what} moved here from ${v.from}`
+          : `Sub-item added: ${what}`;
+      if (e.action === 'subitem.removed')
+        return v && typeof v.to === 'string'
+          ? `Sub-item ${what} moved to ${v.to}`
+          : `Sub-item removed: ${what}`;
+      return e.action === 'subitem.archived'
+        ? `Sub-item archived: ${what}`
+        : `Sub-item restored: ${what}`;
+    }
+    case 'subitem.moved': {
+      const from = (e.oldValue as Record<string, unknown> | null)?.parent;
+      const to = (e.newValue as Record<string, unknown> | null)?.parent;
+      return `Moved from ${String(from ?? 'another item')} to ${String(to ?? 'another item')}. The ID stays.`;
     }
     case 'value.changed': {
       const before = valueText(field, e.oldValue, look);
@@ -102,9 +133,9 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
       return `Moved from ${from} to ${to}`;
     }
     case 'item.archived':
-      return 'Archived';
+      return e.note ? `Archived (${e.note.charAt(0).toLowerCase()}${e.note.slice(1)})` : 'Archived';
     case 'item.restored':
-      return 'Restored';
+      return e.note ? `Restored (${e.note.charAt(0).toLowerCase()}${e.note.slice(1)})` : 'Restored';
     case 'item.locked':
       return e.note ? `Locked: ${e.note}` : 'Locked';
     case 'item.unlocked':

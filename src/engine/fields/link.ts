@@ -52,9 +52,16 @@ export function readValue(item: Item, field: Field, ctx: Ctx): unknown {
   }
 }
 
-/** Items a link-kind field (link, requirement, controllink) on `item` points to, skipping ids not in the cache. */
+/**
+ * Items a link-kind field (link, requirement, controllink, or a type with `relatedIds` such as sub-items) on `item`
+ * points to, skipping ids not in the cache.
+ */
 export function linkedItems(item: Item, linkField: Field, ctx: Ctx): Item[] {
-  return ctx.links(item.id, linkField.id).flatMap((id) => {
+  const def = resolveFieldType(linkField.type);
+  const ids = def?.relatedIds
+    ? def.relatedIds(item, linkField, ctx)
+    : ctx.links(item.id, linkField.id);
+  return ids.flatMap((id) => {
     const t = ctx.item(id);
     return t ? [t] : [];
   });

@@ -70,6 +70,9 @@ UI (optimistic) ─► Server Action ─► src/server/commands/<command>.ts
 | `submit_public_form(token, ip_hash, name, values, position, honeypot)` | public form route (anon): rate limit 10/min per hashed IP (`form_rate_limits`), honeypot, only fields on the form's layout, then `submit_form` | as `submit_form` |
 | `get_public_form(token)` | public form page (anon): the form view's layout and only the fields on it | — |
 | `filter_item_ids(sheet, where, params)` | server-side filters for sheets > 2 000 items (SECURITY INVOKER: RLS applies; refuses clauses with tokens `src/server/query/filters.ts` does not emit) | — |
+| `create_subitem(parent, name, position, values, automation?)` | inline add, item panel (§12) | `item.created` on the sub-item, `subitem.added` on the parent |
+| `create_subitems(parent, rows, automation?)` | From template, automation `create_subitems` (≤ 50) | as above, per row |
+| `move_subitem(item, parent, position, automation?)` | "Move to another item", reorder | `subitem.moved` on the sub-item, `subitem.removed` / `subitem.added` on both parents |
 | `verify_activity_chain(chain_key)` | Verify button | — |
 
 Structure tables (folders, sheets, fields, groups, views, automations) are written directly by commands with the user's Supabase client under RLS; triggers log them to the sheet's chain (`sheets.insert`, `fields.update` …), ignoring bookkeeping columns.
@@ -128,6 +131,16 @@ Subscribe per open sheet to `items`, `item_links`, `fields`, `groups` (filter `s
 ## 10. TypeScript types
 
 Generate with `pnpm db:types` into `src/lib/database.types.ts`. Domain types (`Sheet`, `Field<T>`, `Item`, `FieldValue<T>`, `Automation`) live in `src/engine/types.ts` and are what the engine and UI use; repositories map database rows to domain types.
+
+## 12. Sub-items (0020)
+
+One level of items under an item. A sheet with sub-items has one hidden **child sheet** (`sheets.parent_sheet_id`, at most one per sheet, never a child of its own, no `id_prefix`, one hidden group, its own fields, automations and RLS like any sheet; hidden from the side menu, dashboards and the wizard). Sub-items are `items` of the child sheet with `parent_id` (an item of the parent sheet; a trigger enforces both directions) and `sub_seq`.
+
+- **Display id** = parent's display id + `.` + `sub_seq` (`CA-014.2`), counted per parent in `items.next_sub_seq` under the parent's row lock: no gaps, never reused, **frozen** when the sub-item moves to another parent (it takes the new parent's next `sub_seq`; `(parent_id, sub_seq)` stays unique).
+- `create_item` refuses child sheets; `move_item` refuses sub-items. `set_item_archived` on a parent archives its live sub-items (`archived_with = parent`) and restoring the parent brings back only those; a sub-item of an archived parent cannot be restored alone. Archiving or restoring one sub-item writes `subitem.archived` / `subitem.restored` on the parent's chain.
+- **Gate** (`sheets.settings.subitems.blockClose`): `set_item_values` refuses to move the parent's status field (first `status`, else the first field with a done option) to a done option while a live sub-item is not done, with `subitems open: <Label> still open: CA-014.2 Root cause, … Close them before closing CA-014.` (people, bulk edits, imports and automations alike; the run log says `blocked`). `lockCascade`: a locked parent locks its sub-items for non-admins.
+- `sheets.settings.subitems = { label, blockClose, lockCascade, template: [{ name, values by child field key }] }`; template values keep tokens (`$in:N`, `$today`, `$actor`) until applied.
+- The parent sheet gets a `subitems` field (non-value, docs/03); grants: the three RPCs to `authenticated`, the `_` helpers to nobody.
 
 ## 11. Seed (M1)
 

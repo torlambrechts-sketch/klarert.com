@@ -21,9 +21,11 @@ import {
   importCsvInput,
   updateSheetInput,
 } from '@/lib/schemas/sheets';
+import { startById } from '@/lib/starts';
 import type { ServerClient } from '@/lib/supabase/server';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { log, withOrg } from './context';
+import { setUpSubitems } from './subitems';
 import { createInverseField } from './two-way';
 
 // Sheets (docs/01 FR-6, FR-7). Structure rows are written under RLS through create_sheet (one transaction, logged by
@@ -212,6 +214,12 @@ export async function createSheet(input: unknown): Promise<Result<{ sheetId: str
           })
           .eq('id', f.id);
         if (error) return fromDbError(error);
+      }
+      // starts that come with sub-items (CAPA, audit, incident …): the set and its gate, as data
+      const set = v.startId ? startById(v.startId)?.subitems : undefined;
+      if (set) {
+        const sub = await setUpSubitems(supabase, orgId, created.data, set);
+        if (!sub.ok) return sub;
       }
       return ok({ sheetId: created.data });
     },
@@ -481,7 +489,7 @@ export async function updateSheet(input: unknown): Promise<Result<null>> {
         .maybeSingle();
       if (!s) return fail('not_found', 'Sheet not found.');
       const prefix = v.idPrefix ?? s.id_prefix;
-      if (prefix !== s.id_prefix) {
+      if (prefix !== s.id_prefix && prefix !== null) {
         if (s.next_seq > 1)
           return fail('invalid', 'Check the highlighted fields.', {
             idPrefix: 'The prefix is fixed once the sheet has items.',

@@ -3,7 +3,7 @@ import { RECIPES, recipeById } from './recipes';
 
 describe('automation recipes', () => {
   it('loads every recipe of templates/automation-recipes.json', () => {
-    expect(RECIPES.length).toBe(10);
+    expect(RECIPES.length).toBe(15);
     expect(recipeById('done-lock')?.title).toBe('When status is done, lock the item');
   });
 

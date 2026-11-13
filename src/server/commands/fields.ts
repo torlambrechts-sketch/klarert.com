@@ -76,6 +76,8 @@ export async function addField(input: unknown): Promise<Result<{ field: Field }>
   const v = p.data;
   if (!isFieldTypeId(v.type)) return fail('invalid', 'Choose a field type.');
   const def = fieldType(v.type)!;
+  if (def.addable === false)
+    return fail('invalid', 'Turn on sub-items in the sheet settings instead.');
   return withOrg(
     v.org,
     'editor',

@@ -12,9 +12,9 @@ beforeAll(async () => {
 });
 
 describe('UI field registry', () => {
-  it('has a Cell, an Editor and an icon for each of the 57 types', () => {
+  it('has a Cell, an Editor and an icon for each of the 58 types', () => {
     expect(Object.keys(FIELD_UI).sort()).toEqual([...FIELD_TYPE_IDS].sort());
-    expect(FIELD_TYPE_IDS).toHaveLength(57);
+    expect(FIELD_TYPE_IDS).toHaveLength(58);
     for (const id of FIELD_TYPE_IDS) {
       const ui = FIELD_UI[id]!;
       expect(typeof ui.Cell, id).toBe('function');

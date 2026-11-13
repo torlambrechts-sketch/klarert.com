@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import * as fields from '@/server/commands/fields';
 import * as items from '@/server/commands/items';
+import * as subitems from '@/server/commands/subitems';
 import type { Result } from '@/server/result';
 
 // Server actions for the grid. Each binds one command, which validates (Zod), authorises and writes. Changes that
@@ -30,6 +31,10 @@ export const archiveItemsAction = bind(items.archiveItems, true);
 export const setLinksAction = bind(items.setLinks, false);
 export const lockItemAction = bind(items.lockItem, false);
 export const clickButtonAction = bind(items.clickButton, false);
+
+export const createSubitemAction = bind(subitems.createSubitem, false);
+export const subitemsFromTemplateAction = bind(subitems.createSubitemsFromTemplate, false);
+export const moveSubitemAction = bind(subitems.moveSubitem, false);
 
 export const addFieldAction = bind(fields.addField, true);
 export const updateFieldAction = bind(fields.updateField, true);

@@ -4,7 +4,7 @@ Read this file first, every session. It tells you what we are building, how the 
 
 ## What we are building
 
-A monday.com-style spreadsheet for compliance and operations work. A workspace holds **sheets**; a sheet has **fields** (57 types), **groups** and **items**. **Automations** (trigger → conditions → actions) run on every change, on a schedule and on button clicks. Everything a person or an automation changes is written to a **hash-chained activity log**.
+A monday.com-style spreadsheet for compliance and operations work. A workspace holds **sheets**; a sheet has **fields** (58 types), **groups** and **items**; an item can have one level of **sub-items** (a hidden child sheet, docs/02 §12). **Automations** (trigger → conditions → actions) run on every change, on a schedule and on button clicks. Everything a person or an automation changes is written to a **hash-chained activity log**.
 
 This MVP is the spreadsheet core only. Compliance packs (ISO 27001, ISO 9001 …), dashboards and the app builder come later and will be built *on* this core as data, not code. If a design choice would make packs harder later, stop and ask.
 
@@ -16,14 +16,14 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 |---|---|
 | `docs/01-product-spec.md` | Always, once per session: scope, concepts, every functional requirement |
 | `docs/02-data-model.md` | Touching the database, RPCs, RLS, storage |
-| `docs/03-field-types.md` | Touching any cell, editor, validation, filter, summary or formula |
+| `docs/03-field-types.md` | Touching any cell, editor, validation, filter, summary or formula (58 types) |
 | `docs/04-automations.md` | Touching triggers, conditions, actions, scheduler, run log, notifications |
 | `docs/05-ui-layout.md` | Building any screen. Look: the Geist design system (§6, tokens in `src/app/globals.css`); behaviour reference: `reference/compliance-os-sun-v2.html` |
 | `docs/06-build-plan.md` | Picking the next milestone; tick acceptance boxes as you finish |
 | `docs/07-first-sheet.md` | Milestone M10 and the end-to-end acceptance test |
 | `supabase/migrations/0001_core.sql` | The schema. Change it only through new numbered migrations. `node scripts/test-migration.mjs` smoke-tests it without Docker |
 | `templates/*.json` | Sheet templates used by the wizard and the seed |
-| `reference/sheets-mvp.html` | Working prototype of all 57 field types and the automation engine. Open it in a browser and read its source when behaviour in the docs is unclear. The docs win if they disagree |
+| `reference/sheets-mvp.html` | Working prototype of 57 of the field types (not `subitems`) and the automation engine. Open it in a browser and read its source when behaviour in the docs is unclear. The docs win if they disagree |
 
 ## Stack (do not change without asking)
 

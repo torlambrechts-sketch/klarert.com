@@ -108,6 +108,27 @@ async function write(db: Db, plan: ImportPlan) {
   must(await db.from('groups').insert(groups), 'groups');
   counts.groups = groups.length;
 
+  // sub-items: the child sheets after their parents (docs/02 §12)
+  for (const s of sheets) {
+    const sub = s.subitems;
+    if (!sub) continue;
+    const orgId = s.row.org_id;
+    must(await db.from('sheets').insert(sub.sheet as never), 'sub-item sheet');
+    must(
+      await db.from('groups').insert({ ...sub.group, org_id: orgId, sheet_id: sub.sheet.id }),
+      'sub-item group',
+    );
+    must(
+      await db
+        .from('fields')
+        .insert(sub.fields.map((f) => ({ ...f, org_id: orgId, sheet_id: sub.sheet.id })) as never),
+      'sub-item fields',
+    );
+    counts.sheets += 1;
+    counts.groups += 1;
+    counts.fields += sub.fields.length;
+  }
+
   const views = sheets.flatMap((s) => s.views);
   if (views.length) must(await db.from('views').insert(views as never), 'views');
   counts.views = views.length;

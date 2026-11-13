@@ -82,6 +82,11 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   [/file not uploaded/, 'not_found', 'The upload did not arrive. Try again.'],
   [/bad file field|bad file path/, 'invalid', 'This file cannot be added to this field.'],
   [/group not in sheet/, 'not_found', 'This group no longer exists.'],
+  [/sub-items are off for this sheet/, 'conflict', 'Sub-items are off for this sheet.'],
+  [/sub-items cannot have sub-items/, 'invalid', 'Sub-items cannot have sub-items of their own.'],
+  [/wrong parent/, 'invalid', 'Choose an item of the same sheet as the parent.'],
+  [/sheet holds sub-items/, 'invalid', 'Add sub-items under an item.'],
+  [/at most 50 sub-items at once/, 'invalid', 'Add at most 50 sub-items at once.'],
   [/prefix locked/, 'conflict', 'The ID prefix is fixed once the sheet has items.'],
   [/sheets_org_id_id_prefix_key/, 'conflict', 'Another sheet uses this ID prefix. Choose another.'],
   [/a sheet needs at least one group/, 'conflict', 'A sheet needs at least one group.'],
@@ -96,6 +101,12 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
 ];
 
 export function fromDbError(error: { message: string; code?: string }): Result<never> {
+  // the sub-item gate (0020) writes its own message for people: which sub-items are still open
+  const gate = error.message.match(/subitems open: (.*)/);
+  if (gate) return fail('blocked', gate[1]!.trim());
+  const parent = error.message.match(/restore the parent first: (\S+)/);
+  if (parent)
+    return fail('conflict', `Restore ${parent[1]} first: this sub-item was archived with it.`);
   for (const [pattern, code, message] of DB_MESSAGES) {
     if (pattern.test(error.message)) return fail(code, message);
   }

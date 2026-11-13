@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { AutomationEvent, Effect } from '@/engine/automations';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import '@/engine/fields/registry';
-import { keyBetween } from '@/engine/ordering';
+import { keyBetween, keysBetween } from '@/engine/ordering';
 import { sheetCtx, type SheetData } from '@/engine/sheet-data';
 import type { Condition, Ctx, Field, Group, Item, Json } from '@/engine/types';
 import { kindOf } from '@/engine/values';
@@ -17,6 +17,8 @@ import {
   fetchItemsById,
   fetchRelated,
   fetchSheetMeta,
+  fetchSubitemContext,
+  mergeSubitemContext,
   type Db,
 } from '@/lib/sheet-query';
 import { toItem } from '@/lib/sheet-rows';
@@ -132,7 +134,16 @@ export function automationStore(scope: { orgId: string; userId: string | null })
       new Set(items.map((i) => i.id)),
       attached.links.map((l) => l.toItem),
     );
-    const data: SheetData = { ...m, ...dir, items, ...attached, related };
+    // sub-items: a parent sees its sub-items (roll-ups, sub-item triggers), a sub-item sees its parent
+    const data: SheetData = mergeSubitemContext(
+      { ...m, ...dir, items, ...attached, related },
+      await fetchSubitemContext(
+        db,
+        m.sheet,
+        items,
+        items.map((i) => i.id),
+      ),
+    );
     const ctx = sheetCtx(data, {
       now: new Date(),
       timeZone: tz,
@@ -220,7 +231,11 @@ export function automationStore(scope: { orgId: string; userId: string | null })
       p_note:
         check.commentRequired.length > 0 ? `Set by automation "${automation.name}"` : undefined,
     });
-    if (error) return not('failed', dbMessage(error));
+    if (error) {
+      const r = fromDbError(error);
+      // the sub-item gate refuses like a status rule: the run log says blocked
+      return not(!r.ok && r.error.code === 'blocked' ? 'blocked' : 'failed', dbMessage(error));
+    }
     const saved = toItem(data);
     return done({ events: valueEvents(w.item, saved, automation), touched: [w.item.id] });
   }
@@ -399,6 +414,75 @@ export function automationStore(scope: { orgId: string; userId: string | null })
     return done({ message: created.displayId, events, touched });
   }
 
+  /** A template set or an automation's list of sub-items, under one parent, after its last sub-item. */
+  async function createSubitems(
+    automation: AutomationRow,
+    e: Extract<Effect, { kind: 'create_subitems' }>,
+  ): Promise<EffectResult> {
+    const parent = await worldOf(e.parentId);
+    if (!parent) return not('failed', 'This item no longer exists or was archived.');
+    const childId = parent.ctx.sheet.childSheetId;
+    const child = childId ? await meta(childId) : null;
+    if (!child) return not('failed', 'Sub-items are off for this sheet.');
+    const { ctx } = await ctxFor(child, []);
+    const fields = [...child.fields].sort(byPosition);
+    const now = new Date().toISOString();
+    const rows: { name: string; position: string; values: Record<string, Json> }[] = [];
+    const last = must(
+      await db
+        .from('items')
+        .select('position')
+        .eq('parent_id', e.parentId)
+        .order('position', { ascending: false })
+        .limit(1),
+    )[0]?.position;
+    const positions = keysBetween(last ?? null, null, e.items.length);
+    for (const [i, r] of e.items.entries()) {
+      const raw: Record<string, Json | null> = {};
+      for (const [key, v] of Object.entries(r.values)) {
+        const f = fields.find((x) => x.key === key);
+        if (f && v !== null) raw[f.id] = v;
+      }
+      const blank: Item = {
+        id: '00000000-0000-0000-0000-000000000000',
+        sheetId: child.sheet.id,
+        groupId: child.groups[0]?.id ?? '',
+        seq: 0,
+        displayId: '',
+        name: r.name,
+        values: defaultValues(fields, ctx),
+        position: '',
+        locked: false,
+        createdAt: now,
+        updatedAt: now,
+        parentId: e.parentId,
+      };
+      const plan = planValues(blank, fields, raw, ctx, sha256);
+      if (plan.rejected.length > 0) return not('failed', `${r.name}: ${plan.rejected[0]!.reason}`);
+      const check = checkCreate(plan.next, fields, ctx);
+      if (check.blocking.length > 0)
+        return not('blocked', `${r.name}: ${check.blocking.map((x) => x.message).join(' ')}`);
+      rows.push({ name: r.name.slice(0, 500), position: positions[i]!, values: plan.next.values });
+    }
+    const { data, error } = await db.rpc('create_subitems', {
+      p_parent: e.parentId,
+      p_rows: rows as unknown as Json,
+      p_automation: automation.id,
+    });
+    if (error) return not('failed', dbMessage(error));
+    const created = (data ?? []).map(toItem);
+    return done({
+      message: created.map((c) => c.displayId).join(', '),
+      events: created.map((c) => ({
+        type: 'item.created' as const,
+        sheetId: c.sheetId,
+        itemId: c.id,
+        actor: { kind: 'automation' as const, id: automation.id },
+      })),
+      touched: [e.parentId, ...created.map((c) => c.id)],
+    });
+  }
+
   async function updateLinked(
     automation: AutomationRow,
     w: World,
@@ -499,6 +583,10 @@ export function automationStore(scope: { orgId: string; userId: string | null })
 
     world: loadWorld,
 
+    async parentSheetOf(sheetId) {
+      return (await meta(sheetId))?.sheet.parentSheetId ?? null;
+    },
+
     async execute(effect, { automation, world }) {
       switch (effect.kind) {
         case 'set_values': {
@@ -574,6 +662,8 @@ export function automationStore(scope: { orgId: string; userId: string | null })
           return createItem(automation, effect);
         case 'update_linked':
           return updateLinked(automation, world, effect);
+        case 'create_subitems':
+          return createSubitems(automation, effect);
       }
     },
 

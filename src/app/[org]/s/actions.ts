@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import * as folders from '@/server/commands/folders';
 import * as groups from '@/server/commands/groups';
 import * as sheets from '@/server/commands/sheets';
+import * as subitems from '@/server/commands/subitems';
 import type { Result } from '@/server/result';
 
 // Server actions binding the sheet, group and folder commands. The commands validate (Zod) and authorise;
@@ -41,6 +42,8 @@ export const importCsvAction = call(sheets.importCsv);
 export const copySheetAction = call(sheets.copySheet);
 export const updateSheetAction = form(sheets.updateSheet);
 export const archiveSheetAction = form(sheets.archiveSheet);
+export const enableSubitemsAction = call(subitems.enableSubitems);
+export const updateSubitemSettingsAction = call(subitems.updateSubitemSettings);
 
 export const createFolderAction = form(folders.createFolder);
 export const renameFolderAction = form(folders.renameFolder);

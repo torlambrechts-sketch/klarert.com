@@ -40,6 +40,8 @@ export interface WorkRow {
   dueSoon: boolean;
   assigned: boolean;
   requests: OpenRequest[];
+  /** A sub-item's parent, shown as context ("in CA-014 Guard missing"). */
+  parent?: { displayId: string; name: string } | null;
 }
 
 export interface MyWork {
@@ -112,6 +114,12 @@ export function workRow(source: WorkSource, userId: string, requests: OpenReques
     dueSoon,
     assigned: !done && isAssigned(item, ctx, userId),
     requests,
+    ...(item.parentId
+      ? (() => {
+          const p = ctx.item(item.parentId);
+          return { parent: p ? { displayId: p.displayId, name: p.name } : null };
+        })()
+      : {}),
   };
 }
 

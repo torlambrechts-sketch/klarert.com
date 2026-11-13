@@ -9,6 +9,8 @@ import {
   fetchRelated,
   fetchSheetMeta,
   fetchItems,
+  fetchSubitemContext,
+  mergeSubitemContext,
   type Db,
 } from '@/lib/sheet-query';
 import { isAdminRole, type Role } from '@/server/auth';
@@ -60,7 +62,16 @@ export async function loadWriteContext(
     new Set(own.map((i) => i.id)),
     attached.links.map((l) => l.toItem),
   );
-  const data: SheetData = { ...meta, ...directory, items: own, ...attached, related };
+  // sub-items: a parent's sub-items (roll-ups, the sub-items column), or a sub-item's parent
+  const data: SheetData = mergeSubitemContext(
+    { ...meta, ...directory, items: own, ...attached, related },
+    await fetchSubitemContext(
+      db,
+      meta.sheet,
+      own,
+      itemIds === 'all' ? undefined : own.map((i) => i.id),
+    ),
+  );
   const ctx = sheetCtx(data, {
     now: new Date(),
     timeZone,
