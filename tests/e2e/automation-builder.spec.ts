@@ -73,7 +73,7 @@ test('build "When Status becomes Done → set a date to Today and lock" in the b
   await page.getByLabel('Action 2 type').selectOption({ label: 'lock the item' });
   await page.getByLabel('Action 2 reason').fill('Closed');
   const name = 'When Status becomes Done → set Closed on to Today and lock';
-  await expect(page.getByLabel('Name')).toHaveAttribute('placeholder', name);
+  await expect(page.getByLabel('Name', { exact: true })).toHaveAttribute('placeholder', name);
 
   // Test on an item plans the steps and writes nothing
   await page.getByLabel('Item to test on').selectOption(items['Pump A']!);
@@ -296,7 +296,7 @@ test('the sheet header opens this sheet’s automations in a side sheet', async 
   );
   await side.getByRole('link', { name: 'Post on done' }).click();
   await expect(page.getByRole('heading', { name: 'Edit automation' })).toBeVisible();
-  await expect(page.getByLabel('Name')).toHaveValue('Post on done');
+  await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Post on done');
 });
 
 test('pausing an automation on one item: it skips that item and runs for another', async ({

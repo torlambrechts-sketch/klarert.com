@@ -68,7 +68,8 @@ test('editor adds items with Enter to continue and edits cells with the keyboard
   const people = page.getByRole('listbox', { name: 'Owner' });
   await expect(people).toBeVisible();
   await page.keyboard.press('Enter'); // first person is me (James)
-  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  // the editor's Done (the row's own "Editing · Done" finishes the held row)
+  await page.getByRole('dialog').getByRole('button', { name: 'Done', exact: true }).click();
   await expect(cell(page, 'Fix guard rail', 'Owner')).toContainText('James');
 
   // Status: Enter, arrows, Enter
@@ -253,8 +254,13 @@ test('add a field from the picker, change its settings and change its type with 
   await expect(page.getByText('Field settings saved.')).toBeVisible();
   await expect(grid(page).getByRole('button', { name: 'Score column menu' }).first()).toBeVisible();
 
+  // the row whose name button is the item ("One" as text also matches the "Done" group's row)
   const scoreCell = (item: string) =>
-    grid(page).getByRole('row').filter({ hasText: item }).getByRole('gridcell').nth(6);
+    grid(page)
+      .getByRole('row')
+      .filter({ has: page.getByRole('button', { name: item, exact: true }) })
+      .getByRole('gridcell')
+      .nth(6);
   await scoreCell('One').click();
   await page.keyboard.press('Enter');
   await page.getByRole('textbox', { name: 'Score' }).fill('3');
@@ -297,6 +303,9 @@ test('bulk archive with Undo, and dragging a row to another group', async ({ pag
   // drag "Keep me" into Done
   const handle = page.getByRole('button', { name: 'Drag Keep me to move it' });
   const target = page.getByRole('textbox', { name: 'Add task to Done' });
+  // keep the drop target clear of the window's bottom edge, where dragging auto-scrolls the page from under it
+  const start = (await handle.boundingBox())!;
+  await page.evaluate((dy) => window.scrollBy(0, dy), start.y - 200);
   const from = (await handle.boundingBox())!;
   const to = (await target.boundingBox())!;
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);

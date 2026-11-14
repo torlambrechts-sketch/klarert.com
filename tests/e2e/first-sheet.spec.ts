@@ -82,8 +82,10 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   await page.getByLabel('Sheet name').fill('Corrective actions');
   await page.getByLabel('Items are called').fill('Corrective action');
   await expect(page.getByLabel('ID prefix')).toHaveValue('CA-');
-  await expect(page.getByLabel('Folder')).toHaveValue(/.+/);
-  await expect(page.getByLabel('Folder').locator('option:checked')).toHaveText('Your sheets');
+  await expect(page.getByLabel('Folder', { exact: true })).toHaveValue(/.+/);
+  await expect(page.getByLabel('Folder', { exact: true }).locator('option:checked')).toHaveText(
+    'Your sheets',
+  );
   await page.getByLabel('Groups').fill('Open, Closed');
   const columns: [string, string][] = [
     ['Owner', 'people'],
@@ -310,7 +312,8 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   );
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(cell(page, 'Burrs on bracket 44-210', 4)).toContainText('in 5 days');
+  // the Table's date track counts down in short form (docs/05 Cells: "in 65d"); the panel says "in 5 days" above
+  await expect(cell(page, 'Burrs on bracket 44-210', 4)).toContainText('in 5d');
   await expect(cell(page, 'Burrs on bracket 44-210', 4)).toContainText(shortDate(due));
 
   // ── 7. CA-001 Status → Done: blocked by the rule, value unchanged, no activity entry
@@ -450,9 +453,10 @@ test.describe('Part B · automations on the reference template', () => {
 
   /**
    * Edits in the panel hold the row's automations until the person finishes it. Close the panel (that finishes the
-   * row), wait for the server to answer, then open the same item again.
+   * row), wait for the server to answer, then open the same item again. The finished row's automations report in a
+   * toast: pass `toast` to see it before the item is opened again (a page load clears toasts).
    */
-  async function finishPanel(page: Page) {
+  async function finishPanel(page: Page, toast?: string | RegExp) {
     const url = new URL(page.url());
     const item = url.searchParams.get('item');
     const answered = page
@@ -464,6 +468,7 @@ test.describe('Part B · automations on the reference template', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await answered;
+    if (toast) await expect(page.getByText(toast).first()).toBeVisible();
     if (item) {
       url.searchParams.set('item', item);
       await page.goto(url.toString());
@@ -471,8 +476,8 @@ test.describe('Part B · automations on the reference template', () => {
     }
   }
 
-  /** Pick an option of a label field in the panel and wait for the command (and its automations). */
-  async function pick(page: Page, field: string, option: string) {
+  /** Pick an option of a label field in the panel and wait for the command (and its automations, and their toast). */
+  async function pick(page: Page, field: string, option: string, toast?: string | RegExp) {
     await panel(page)
       .getByRole('button', { name: new RegExp(`^Edit ${field}`) })
       .click();
@@ -480,7 +485,7 @@ test.describe('Part B · automations on the reference template', () => {
     await page.getByRole('listbox', { name: field }).getByRole('option', { name: option }).click();
     await answered;
     await popoverGone(page);
-    await finishPanel(page);
+    await finishPanel(page, toast);
   }
 
   async function risk(page: Page, l: number, i: number) {
@@ -498,7 +503,20 @@ test.describe('Part B · automations on the reference template', () => {
     page,
   }) => {
     const ids = await as(page, 'maria@example.com');
-    expect(Object.keys(ids.sheets).sort()).toEqual(['Actions', 'Corrective actions']);
+    const sheets = await rest<{ id: string; name: string; parent_sheet_id: string | null }[]>(
+      page,
+      `sheets?org_id=eq.${ids.orgId}&select=id,name,parent_sheet_id`,
+    );
+    expect(
+      sheets
+        .filter((s) => !s.parent_sheet_id)
+        .map((s) => s.name)
+        .sort(),
+    ).toEqual(['Actions', 'Corrective actions']);
+    // the template's sub-items (Steps) live on a hidden child sheet of Corrective actions (docs/02 §12)
+    expect(sheets.filter((s) => s.parent_sheet_id).map((s) => [s.name, s.parent_sheet_id])).toEqual(
+      [['Corrective actions · Steps', ids.sheets['Corrective actions']]],
+    );
     const items = await rest<{ display_id: string; sheet_id: string }[]>(
       page,
       `items?org_id=eq.${ids.orgId}&select=display_id,sheet_id&order=display_id`,
@@ -516,13 +534,13 @@ test.describe('Part B · automations on the reference template', () => {
       await rest<unknown[]>(page, `item_links?org_id=eq.${ids.orgId}&select=from_item`),
     ).toHaveLength(4);
     expect(autoId.size).toBe(9);
-    // written as the system, with the template note
+    // written as the system: the importer installs the template through install_pack (docs/11), whose note it is
     const log = await rest<{ actor_kind: string; note: string }[]>(
       page,
       `activity_log?org_id=eq.${ids.orgId}&action=eq.item.created&select=actor_kind,note`,
     );
     expect(new Set(log.map((l) => `${l.actor_kind}:${l.note}`))).toEqual(
-      new Set(['system:Template import']),
+      new Set(['system:Pack install']),
     );
     // the Table view hides what the template says; the template's Kanban is under More
     await page.goto(`/${slug}/s/${ca}`);
@@ -537,10 +555,7 @@ test.describe('Part B · automations on the reference template', () => {
     );
     await openItem(page, ca, guard.display_id);
     await pick(page, 'Severity', 'High');
-    await pick(page, 'Severity', 'Critical');
-    await expect(
-      page.getByText(/^Critical severity → alert the HSE manager: Notify/).first(),
-    ).toBeVisible();
+    await pick(page, 'Severity', 'Critical', /^Critical severity → alert the HSE manager: Notify/);
     const r = await runs(page, auto('Critical severity'));
     expect(r.map((x) => [x.status, x.steps.length])).toEqual([['done', 1]]);
 
@@ -760,12 +775,12 @@ test.describe('Part B · automations on the reference template', () => {
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await answered;
     await popoverGone(page);
-    await pick(page, 'Status', 'Done');
-    await expect(
-      page
-        .getByText(/^Done → move to Closed and lock: Move to Closed · Lock the item: Closed/)
-        .first(),
-    ).toBeVisible();
+    await pick(
+      page,
+      'Status',
+      'Done',
+      /^Done → move to Closed and lock: Move to Closed · Lock the item: Closed/,
+    );
     const [closed] = await rest<{ locked: boolean; lock_reason: string; group_id: string }[]>(
       page,
       `items?id=eq.${sup.id}&select=locked,lock_reason,group_id`,
@@ -925,12 +940,12 @@ test.describe('Part B · automations on the reference template', () => {
     // Pong ACT-001 (3) → Ping again CA-001 at depth 4 is stopped
     const burrs = await ids.item('Corrective actions', 'Burrs on bracket 44-210');
     await openItem(page, ca, burrs.display_id);
-    await pick(page, 'Status', 'Investigating');
-    await expect(
-      page.getByText(
-        'Ping again: action set resets the actions and investigates stopped. Loop guard: chain deeper than 3.',
-      ),
-    ).toBeVisible();
+    await pick(
+      page,
+      'Status',
+      'Investigating',
+      'Ping again: action set resets the actions and investigates stopped. Loop guard: chain deeper than 3.',
+    );
     const depths = async (id: string) =>
       (await runs(page, id)).map((r) => `${r.depth}:${r.status}`);
     expect(await depths(byName['Ping']!)).toEqual(['0:done']);
@@ -1043,6 +1058,8 @@ test.describe('Part B · automations on the reference template', () => {
       await dialog.getByRole('button', { name: 'Save with comment' }).click();
       await answered;
       await expect(panel(page).getByRole('button', { name: /^Edit Status: Stuck/ })).toBeVisible();
+      // the panel holds the row's automations until it is finished
+      await finishPanel(page);
     };
     await stuckWithComment('Waiting for the new brackets');
     expect(await runs(page, stuck, burrs.id)).toEqual([]);

@@ -18,7 +18,7 @@ Signed in as Maria (owner) in an empty workspace.
    - ✓ Both link fields exist; linking from either side shows on both.
 5. Status field settings → Rules → "When Status becomes Done, require Root cause, Evidence, Effectiveness check"; "When Status becomes Stuck, require a comment".
 6. CA-001: Owner Tom, Source Customer complaint, Priority Medium, Due date 16 Nov, Risk 3×3.
-   - ✓ Priority score shows `17` (9 + (30 − 5)/3 = 17.33 → 17); due date cell says "in 5 days".
+   - ✓ Priority score shows `17` (9 + (30 − 5)/3 = 17.33 → 17); due date says "in 5 days" (the Table's date track: "in 5d").
 7. CA-001 Status → Done.
    - ✓ Blocked with "Add the root cause, evidence and the effectiveness check before closing." Value unchanged. No activity entry.
 8. CA-002 Status → Stuck → comment box → "Waiting for the safety engineer" → Save.

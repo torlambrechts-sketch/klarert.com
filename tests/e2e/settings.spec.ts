@@ -8,7 +8,12 @@ test('owner manages teams, job roles, entities and sites', async ({ page }) => {
   await signIn(page, 'maria@example.com');
   await expect(page).toHaveURL(/\/meridian\/home$/);
 
-  // workspace switcher lists the workspace
+  // workspace switcher lists the workspace (on a phone it is in the side menu the bottom bar's Menu opens)
+  if (test.info().project.name === 'phone')
+    await page
+      .getByRole('navigation', { name: 'Bottom bar' })
+      .getByRole('button', { name: 'Menu' })
+      .click();
   await page.getByRole('button', { name: /Switch workspace/ }).click();
   await expect(page.getByRole('menuitem', { name: /Meridian Components Ltd/ })).toBeVisible();
   await page.keyboard.press('Escape');

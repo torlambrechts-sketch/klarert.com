@@ -45,7 +45,10 @@ test.describe('desktop', () => {
     await nav.getByRole('heading', { name: 'Sheets', exact: true }).hover();
     await nav.getByRole('button', { name: 'Add a sheet or folder' }).click();
     await expect(
-      page.getByText('Folders organise sheets. They do not restrict who can see them.'),
+      // folders can be restricted (Access, docs/02 §16): the note says where (docs/05 §2.1)
+      page.getByText(
+        'Folders organise sheets. To choose who sees a folder’s sheets, use Access in its menu.',
+      ),
     ).toBeVisible();
     await page.getByRole('menuitem', { name: 'New folder' }).click();
     const name = nav.getByRole('textbox', { name: 'Folder name' });
@@ -170,7 +173,9 @@ test.describe('desktop', () => {
         .getByRole('main')
         .getByRole('link', { name: /^Corrective action \(CAPA\)/ })
         .click();
-      await expect(page.getByLabel('Folder').locator('option:checked')).toHaveText(option);
+      await expect(page.getByLabel('Folder', { exact: true }).locator('option:checked')).toHaveText(
+        option,
+      );
       await page.waitForLoadState('networkidle');
       await page.getByLabel('Sheet name').fill(sheet);
       await page.getByRole('button', { name: 'Create sheet' }).click();
@@ -187,7 +192,9 @@ test.describe('desktop', () => {
       .getByRole('main')
       .getByRole('link', { name: /^Internal audit/ })
       .click();
-    await expect(page.getByLabel('Folder').locator('option:checked')).toHaveText('Your sheets');
+    await expect(page.getByLabel('Folder', { exact: true }).locator('option:checked')).toHaveText(
+      'Your sheets',
+    );
   });
 
   test('an editor moves sheets but cannot change folders; a viewer sees no controls', async ({

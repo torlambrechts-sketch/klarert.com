@@ -65,8 +65,11 @@ test.describe('desktop', () => {
     await expect(listbox.getByRole('option')).toHaveCount(2);
     await expect(listbox.getByRole('option', { name: 'Process' })).toBeVisible();
     await expect(listbox.getByRole('option', { name: 'Add “pro”' })).toBeVisible();
+    // nothing matches: the only row offers to add it ("No matches" shows only where no label can be added)
     await search.fill('zzz');
-    await expect(page.getByText('No matches')).toBeVisible();
+    await expect(listbox.getByRole('option')).toHaveCount(1);
+    await expect(listbox.getByRole('option', { name: 'Add “zzz”' })).toBeVisible();
+    await expect(page.getByText('No matches')).toHaveCount(0);
     // an exact match (any case) offers no new option
     await search.fill('software');
     await expect(listbox.getByRole('option')).toHaveCount(1);

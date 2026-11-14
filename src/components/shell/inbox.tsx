@@ -171,6 +171,8 @@ export function Inbox({
       >
         <Bell className="size-4" aria-hidden />
         <span className="desk-only">Inbox</span>
+        {/* the visible words read "Inbox 4", the start of the name (WCAG 2.5.3, label in name); flex drops the space */}
+        {unread > 0 ? ' ' : null}
         {unread > 0 ? (
           <span
             className="bg-crit text-label-12 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 font-bold text-white"

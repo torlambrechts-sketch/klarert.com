@@ -126,7 +126,14 @@ export const TableCell = memo(function TableCell({
       )}
       style={{ left, width }}
     >
-      <ui.Cell value={value as never} field={field} item={item} ctx={ctx} density="table" />
+      <ui.Cell
+        value={value as never}
+        field={field}
+        item={item}
+        ctx={ctx}
+        density="table"
+        active={active && !editing}
+      />
       {missing ? (
         <span
           aria-hidden

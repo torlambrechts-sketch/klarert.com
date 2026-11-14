@@ -15,6 +15,7 @@ import {
   columnId,
   columnRuns,
   GROUP_LABEL_H,
+  stickyHeaders,
 } from './table-model';
 import { cellColumns } from '@/engine/clipboard';
 
@@ -154,6 +155,32 @@ describe('buildLayout', () => {
       compare: (x, y) => y.name.localeCompare(x.name),
     });
     expect(l.flat.map((i) => i.id)).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('sticky column headers', () => {
+  it('points every row of a card at its column header, and each header at its card end', () => {
+    const l = buildLayout({ groups, items: [a, b, c], collapsed: new Set(), canAdd: true });
+    const { headerOf, cardEnd } = stickyHeaders(l.rows);
+    // group, header, item, item, add, gap, group, header, item, add
+    expect([...headerOf]).toEqual([-1, 1, 1, 1, 1, -1, -1, 7, 7, 7]);
+    expect([...cardEnd]).toEqual([
+      [1, 4],
+      [7, 9],
+    ]);
+  });
+
+  it('has no header for a collapsed card', () => {
+    const l = buildLayout({
+      groups,
+      items: [a, b, c],
+      collapsed: new Set(['g-open']),
+      canAdd: true,
+    });
+    const { headerOf, cardEnd } = stickyHeaders(l.rows);
+    expect(l.rows.map((r) => r.kind).slice(0, 3)).toEqual(['group', 'gap', 'group']);
+    expect([...headerOf].slice(0, 3)).toEqual([-1, -1, -1]);
+    expect([...cardEnd.keys()]).toEqual([3]);
   });
 });
 

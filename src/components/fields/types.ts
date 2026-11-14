@@ -12,6 +12,8 @@ export interface CellProps<V = unknown, C = unknown> {
   ctx: Ctx;
   /** grid: dense; list: forms and panels; table: the Table view (date countdowns, stacked avatars). */
   density: 'grid' | 'list' | 'table';
+  /** The Table's active cell (keyboard), not being edited: a cell may show what it truncates (links: all of them). */
+  active?: boolean;
 }
 
 export interface EditorProps<V = unknown, C = unknown> {
