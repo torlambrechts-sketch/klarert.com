@@ -38,6 +38,8 @@ import { useViews, type ViewsState } from '@/components/views/use-views';
 import { ViewMenu, ViewTabs } from '@/components/views/view-tabs';
 import type { SheetTab } from '@/engine/views/tabs';
 import { PageHeader } from '@/components/shell/page-header';
+import { BundleBanner } from '@/components/create/bundle-banner';
+import type { SheetBundle } from '@/server/bundles/read';
 import { ShellCrumb } from '@/components/shell/shell-crumb';
 import { cn } from '@/lib/utils';
 import { FieldPicker } from './field-picker';
@@ -93,6 +95,8 @@ export interface SheetViewProps {
   defaultViewId: string | null;
   /** sheets.settings.tabs and tabsDefault (docs/02); null tabs = today's order. */
   tabSet?: { tabs: SheetTab[] | null; tabsDefault: SheetTab[] | null };
+  /** The set this sheet was created with by Create (docs/11 Bundles): its label, review state and next action. */
+  bundle?: SheetBundle | null;
 }
 
 export function SheetView(props: SheetViewProps) {
@@ -260,6 +264,21 @@ function SheetBody(props: SheetViewProps) {
     }
   };
   const itemLabel = data?.sheet.itemLabel.toLowerCase() ?? 'item';
+  const addNew = () => (tabular ? setAddTick((t) => t + 1) : setNewItem({}));
+  // ?new=1 (Create › Entry, docs/05 §4): open the add-item flow once the sheet has loaded
+  const wantsNew = useRef(false);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('new') !== '1') return;
+    wantsNew.current = true;
+    url.searchParams.delete('new');
+    window.history.replaceState(window.history.state, '', url);
+  }, []);
+  useEffect(() => {
+    if (!wantsNew.current || !data || !canEdit) return;
+    wantsNew.current = false;
+    setNewItem({});
+  }, [data, canEdit]);
 
   return (
     <main
@@ -343,7 +362,7 @@ function SheetBody(props: SheetViewProps) {
               <Button
                 type="button"
                 className={cn(headerButton, 'font-semibold')}
-                onClick={() => (tabular ? setAddTick((t) => t + 1) : setNewItem({}))}
+                onClick={addNew}
                 disabled={!data}
               >
                 <Plus aria-hidden /> New {itemLabel}
@@ -367,6 +386,18 @@ function SheetBody(props: SheetViewProps) {
           </Link>
           . Its items are locked; the history stays here.
         </p>
+      ) : null}
+      {props.bundle ? (
+        <BundleBanner
+          org={org}
+          bundle={props.bundle}
+          userId={userId}
+          isAdmin={isAdmin}
+          timeZone={timeZone}
+          itemLabel={data?.sheet.itemLabel ?? 'item'}
+          canAdd={canEdit && !!data}
+          onAdd={addNew}
+        />
       ) : null}
       <ViewTabs
         className="-mx-4 px-4 sm:-mx-[28px] sm:px-[28px]"

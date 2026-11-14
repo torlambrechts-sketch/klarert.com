@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, useTransition } from 'react';
+import { useEffect, useId, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -67,6 +67,14 @@ export function DashboardScreen({
   const [pending, startTransition] = useTransition();
   const [widgetDialog, setWidgetDialog] = useState<{ widget?: WidgetConfig } | null>(null);
   const [nameDialog, setNameDialog] = useState<'rename' | 'new' | null>(null);
+  // ?new=1 (Create › Dashboard): open "New dashboard" once, then drop the parameter
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('new') !== '1') return;
+    url.searchParams.delete('new');
+    window.history.replaceState(window.history.state, '', url);
+    if (canEdit) setNameDialog('new');
+  }, [canEdit]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const widgets = dashboard.widgets;
   const usesPeriod = widgets.some((w) => WIDGET_TYPES[w.type]?.usesPeriod);

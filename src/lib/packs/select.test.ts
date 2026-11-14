@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { repoPacks } from '@/lib/packs/catalogue';
-import { manifestAtLevel } from './levels';
-import { planPackInstall, type PackSnapshot } from './plan';
+import { repoPacks } from './catalogue';
+import { packLogText } from '@/engine/packs/audit';
+import { manifestAtLevel } from '@/engine/packs/levels';
+import { planPackInstall, type PackSnapshot } from '@/engine/packs/plan';
 import {
   appsAfter,
   bundleParts,
@@ -11,8 +12,8 @@ import {
   selectionCounts,
   selectManifest,
   togglePart,
-} from './select';
-import type { PackManifest } from './types';
+} from '@/engine/packs/select';
+import type { PackManifest } from '@/engine/packs/types';
 
 const pack = (key: string) => repoPacks().find((p) => p.key === key)!;
 
@@ -163,5 +164,15 @@ describe('the chosen manifest', () => {
     expect(appsAfter(capa, [])).toEqual([{ title: 'CAPA', screens: 6 }]);
     expect(appsAfter(capa, ['dashboard:capa_overview'])).toEqual([{ title: 'CAPA', screens: 5 }]);
     expect(appsAfter(capa, ['sheet:capa'])).toEqual([]);
+  });
+});
+
+describe('bundle entries of the activity log', () => {
+  it('reads as sentences', () => {
+    const v = { name: 'Customer complaints', title: 'Corrective action (CAPA)', version: '1.1.0' };
+    expect(packLogText('bundle.created', v)).toBe(
+      'Created Customer complaints via Create from Corrective action (CAPA) 1.1.0.',
+    );
+    expect(packLogText('bundle.reviewed', v)).toBe('Marked Customer complaints reviewed.');
   });
 });

@@ -293,7 +293,7 @@ export function selectManifest(
     .map((s) => ({ ...s, forms: s.forms.filter((f) => !ex.has(partId.form(s.ref, f.ref))) }));
   const keptRefs = new Set(keptSheets.map((s) => s.ref));
   const choose = folder.mode !== 'pack' && canChooseFolder(m);
-  const sheets = choose
+  const sheets: PackManifest['sheets'] = choose
     ? keptSheets.map((s) => {
         const { folder: _f, ...rest } = s;
         void _f;
@@ -338,30 +338,44 @@ export interface AppPreview {
   screens: number;
 }
 
+export interface AppNeeds {
+  title: string;
+  /** Per screen, the part ids it shows (all of them must be created for the screen to show). */
+  screens: string[][];
+}
+
+/** The apps of a manifest and, per screen, the parts it needs (docs/13: a screen without its objects is hidden). */
+export function appNeeds(m: PackManifest): AppNeeds[] {
+  return (m.apps ?? []).map((app) => ({
+    title: app.title,
+    screens: app.sections.flatMap((sec) =>
+      sec.screens.flatMap((sc) => {
+        const s = sc as { kind: string; sheet?: string; form?: string; dashboard?: string };
+        if (s.kind === 'dashboard')
+          return s.dashboard && m.dashboards.some((d) => d.ref === s.dashboard)
+            ? [[partId.dashboard(s.dashboard)]]
+            : [];
+        const sheet = s.sheet ? m.sheets.find((x) => x.ref === s.sheet) : undefined;
+        if (!sheet) return [];
+        if (s.kind !== 'form') return [[partId.sheet(sheet.ref)]];
+        return s.form && sheet.forms.some((f) => f.ref === s.form)
+          ? [[partId.sheet(sheet.ref), partId.form(sheet.ref, s.form)]]
+          : [];
+      }),
+    ),
+  }));
+}
+
+/** The apps the chosen parts carry and how many of their screens stay. */
+export function appsFor(needs: AppNeeds[], excluded: Iterable<string>): AppPreview[] {
+  const ex = new Set(excluded);
+  return needs.flatMap((a) => {
+    const n = a.screens.filter((ids) => ids.every((id) => !ex.has(id))).length;
+    return n ? [{ title: a.title, screens: n }] : [];
+  });
+}
+
 /** The apps the chosen parts carry and how many of their screens survive (docs/13: missing objects hide a screen). */
 export function appsAfter(m: PackManifest, excluded: string[]): AppPreview[] {
-  const ex = closeExclusions(bundleParts(m), excluded);
-  const sheetOk = (ref: string) =>
-    m.sheets.some((s) => s.ref === ref) && !ex.has(partId.sheet(ref));
-  return (m.apps ?? []).flatMap((app) => {
-    let n = 0;
-    for (const sec of app.sections)
-      for (const sc of sec.screens) {
-        const s = sc as { kind: string; sheet?: string; form?: string; dashboard?: string };
-        const ok =
-          s.kind === 'dashboard'
-            ? !!s.dashboard &&
-              m.dashboards.some((d) => d.ref === s.dashboard) &&
-              !ex.has(partId.dashboard(s.dashboard))
-            : !!s.sheet &&
-              sheetOk(s.sheet) &&
-              (s.kind !== 'form' ||
-                (!!s.form &&
-                  m.sheets.find((x) => x.ref === s.sheet)?.forms.some((f) => f.ref === s.form) ===
-                    true &&
-                  !ex.has(partId.form(s.sheet, s.form))));
-        if (ok) n += 1;
-      }
-    return n ? [{ title: app.title, screens: n }] : [];
-  });
+  return appsFor(appNeeds(m), closeExclusions(bundleParts(m), excluded));
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Copy, FileText, Globe, Lock, MoreHorizontal, Plus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -228,7 +228,15 @@ function FormsList({
   onChanged(v: SavedView): void;
   onDeleted(id: string): void;
 }) {
+  // ?newform=1 (Create › Form, docs/05 §4 Create): "New form" opens at once for owners and admins
   const [creating, setCreating] = useState(false);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('newform') !== '1') return;
+    url.searchParams.delete('newform');
+    window.history.replaceState(window.history.state, '', url);
+    if (isAdmin) setCreating(true);
+  }, [isAdmin]);
   const [copying, setCopying] = useState<SavedView | null>(null);
   const [deleting, setDeleting] = useState<SavedView | null>(null);
 

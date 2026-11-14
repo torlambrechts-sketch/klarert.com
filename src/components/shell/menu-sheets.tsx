@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { CreateSheetLink } from '@/components/create/create-provider';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -581,13 +582,13 @@ export function MenuSheets(props: MenuSheetsProps) {
         <div className="flex flex-col items-start gap-1 px-2.5 py-1.5">
           <p className="text-muted-foreground text-copy-13 m-0">No sheets yet.</p>
           {canEdit ? (
-            <Link
-              href={newSheetHref()}
-              onClick={onNavigate}
+            <CreateSheetLink
+              org={org}
+              onNavigate={onNavigate}
               className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
             >
               Create your first sheet
-            </Link>
+            </CreateSheetLink>
           ) : null}
         </div>
       ) : null}
@@ -1108,13 +1109,14 @@ function EmptyFolder({
     >
       <span className="text-muted-foreground text-label-13">No sheets in this folder</span>
       {canEdit ? (
-        <Link
-          href={href}
-          onClick={onNavigate}
+        <CreateSheetLink
+          org={href.split('/')[1] ?? ''}
+          folderId={folderId}
+          onNavigate={onNavigate}
           className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
         >
           New sheet here
-        </Link>
+        </CreateSheetLink>
       ) : null}
     </li>
   );
@@ -1152,9 +1154,9 @@ function AddMenu({
         }}
       >
         <DropdownMenuItem asChild>
-          <Link href={`/${org}/s/new`} onClick={onNavigate}>
+          <CreateSheetLink org={org} onNavigate={onNavigate}>
             New sheet
-          </Link>
+          </CreateSheetLink>
         </DropdownMenuItem>
         {canManage ? (
           <DropdownMenuItem
@@ -1196,7 +1198,7 @@ function FolderMenu({
   onArchive,
   onAccess,
   setRenaming,
-  newSheetHref,
+  org,
   onNavigate,
 }: Shared & {
   folderId: string;
@@ -1224,9 +1226,9 @@ function FolderMenu({
         }}
       >
         <DropdownMenuItem asChild>
-          <Link href={newSheetHref(folderId)} onClick={onNavigate}>
+          <CreateSheetLink org={org} folderId={folderId} onNavigate={onNavigate}>
             New sheet here
-          </Link>
+          </CreateSheetLink>
         </DropdownMenuItem>
         {canManage ? (
           <>
