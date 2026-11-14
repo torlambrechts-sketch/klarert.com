@@ -15,7 +15,10 @@ test('sign up, create a workspace, invite a colleague who accepts', async ({ bro
   await owner.getByLabel('Web address').fill(slug);
   await owner.getByRole('button', { name: 'Create workspace' }).click();
   await expect(owner).toHaveURL(new RegExp(`/${slug}/home$`));
-  await expect(owner.getByRole('heading', { name: 'Good to see you, Ada' })).toBeVisible();
+  // Home greets by the hour in the workspace's time zone (src/engine/home.ts greeting)
+  await expect(
+    owner.getByRole('heading', { name: /^Good (morning|afternoon|evening), Ada$/ }),
+  ).toBeVisible();
 
   // invite
   const inviteeEmail = freshEmail('invitee');
