@@ -28,6 +28,8 @@ export const ROLLUP_FNS = [
   'worst',
   'earliest',
   'countExpired',
+  // "7 of 9": done out of the targets that count (requirement checks, docs/11)
+  'doneOf',
 ] as const;
 export type RollupFn = (typeof ROLLUP_FNS)[number];
 
@@ -42,6 +44,11 @@ export interface RollupConfig {
   targetFieldKey: string | null;
   fn: RollupFn;
   where?: RollupWhere;
+  /**
+   * Status option ids (or labels) of linked items left out of every function (the first status field of the target
+   * sheet): "Not applicable" checks count neither as done nor as open.
+   */
+  ignore?: string[];
 }
 
 interface Target {
@@ -118,10 +125,23 @@ function matches(t: Target, where: RollupWhere, ctx: Ctx): boolean {
   }
 }
 
+/** A linked item whose status (the first status field of its sheet) is one of `ignore`, by option id or label. */
+function ignored(t: Item, ignore: string[], ctx: Ctx): boolean {
+  const f = ctx.fieldsOf(t.sheetId).find((x) => x.type === 'status');
+  const def = f && resolveFieldType(f.type);
+  if (!f || !def) return false;
+  const v = readValue(t, f, ctx);
+  const key = def.keyOf ? def.keyOf(v, f.config) : typeof v === 'string' ? v : null;
+  if (key === null) return false;
+  if (ignore.includes(key)) return true;
+  const label = def.options?.(f.config, ctx).find((o) => o.id === key)?.label;
+  return !!label && ignore.some((x) => x.trim().toLowerCase() === label.trim().toLowerCase());
+}
+
 /** The target field to read on a linked item; pctDone without a target uses the sheet's first status field. */
 function targetField(t: Item, cfg: RollupConfig, ctx: Ctx): Field | undefined {
   if (cfg.targetFieldKey) return fieldByKey(t.sheetId, cfg.targetFieldKey, ctx);
-  return cfg.fn === 'pctDone'
+  return cfg.fn === 'pctDone' || cfg.fn === 'doneOf'
     ? ctx.fieldsOf(t.sheetId).find((f) => f.type === 'status')
     : undefined;
 }
@@ -134,7 +154,8 @@ export function computeRollup(
   const cfg = field.config;
   const linkField = fieldByKey(field.sheetId, cfg.linkFieldKey, ctx);
   if (!linkField) return null;
-  const items = linkedItems(item, linkField, ctx);
+  const linked = linkedItems(item, linkField, ctx);
+  const items = cfg.ignore?.length ? linked.filter((t) => !ignored(t, cfg.ignore!, ctx)) : linked;
   if (cfg.fn === 'count') return items.length;
   const targets: Target[] = items.flatMap((t) => {
     const f = targetField(t, cfg, ctx);
@@ -156,11 +177,17 @@ export function computeRollup(
       return dates[0] ?? null;
     }
     case 'countExpired':
-      return targets.filter(
-        (t) =>
-          t.def.storage === 'files' &&
-          freshness(Array.isArray(t.value) ? (t.value as never) : null, ctx.today) === 'expired',
+      // evidence files past their valid-until date, or a date (an evidence expiry) before today
+      return targets.filter((t) =>
+        t.def.storage === 'files'
+          ? freshness(Array.isArray(t.value) ? (t.value as never) : null, ctx.today) === 'expired'
+          : t.def.kind === 'date' &&
+            (t.def.toDate(t.value, t.field.config, ctx) ?? '9999') < ctx.today,
       ).length;
+    case 'doneOf': {
+      const done = targets.filter((t) => t.def.isDone?.(t.value, t.field.config) ?? false).length;
+      return `${done} of ${targets.length}`;
+    }
     case 'pctDone': {
       if (!targets.length) return null;
       const done = targets.filter((t) => t.def.isDone?.(t.value, t.field.config) ?? false).length;
@@ -196,6 +223,7 @@ export const rollup: FieldTypeDef<RollupValue, RollupConfig> = base<RollupValue,
     where: z
       .object({ op: z.enum(WHERE_OPS), value: z.custom<Json>((x) => x !== undefined).optional() })
       .optional(),
+    ignore: z.array(z.string().min(1).max(200)).max(50).optional(),
   }) as z.ZodType<RollupConfig>,
   defaultConfig: () => ({ linkFieldKey: '', targetFieldKey: null, fn: 'count' }),
   defaultWidth: 110,
@@ -209,7 +237,11 @@ export const rollup: FieldTypeDef<RollupValue, RollupConfig> = base<RollupValue,
   readsHidden: (field, ctx) => throughHidden(field.sheetId, field.config, ctx),
   isEmpty,
   effectiveKind: (field) =>
-    field.config.fn === 'worst' ? 'text' : field.config.fn === 'earliest' ? 'date' : 'number',
+    field.config.fn === 'worst' || field.config.fn === 'doneOf'
+      ? 'text'
+      : field.config.fn === 'earliest'
+        ? 'date'
+        : 'number',
   toText: (v, cfg) => {
     if (v === null || isEmpty(v)) return '';
     if (typeof v === 'string') return isIsoDate(v) ? formatDate(v) : v;
