@@ -274,5 +274,12 @@ export function erasureMessage(r: {
   return msg;
 }
 
-/** "Due 11 Nov 2026" */
-export const dueText = (dueOn: string) => `Due ${formatDate(dueOn)}`;
+/** "Due 11 Nov 2026" or "Postponed to 1 Dec 2026". */
+export const queueDueText = (r: {
+  state: QueueStatus;
+  dueOn: string;
+  postponedUntil: string | null;
+}) =>
+  r.state === 'postponed' && r.postponedUntil
+    ? `Postponed to ${formatDate(r.postponedUntil)}`
+    : `Due ${formatDate(r.dueOn)}`;

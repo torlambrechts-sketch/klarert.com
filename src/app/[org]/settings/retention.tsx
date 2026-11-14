@@ -8,7 +8,6 @@ import { AlertTriangle, Check, Clock, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { inputClass } from '@/components/fields/shared';
-import { formatDate } from '@/engine/fields/helpers';
 import type { QueueStatus } from '@/engine/retention';
 import type { RetentionQueueRow } from '@/server/commands/retention';
 import type { Result } from '@/server/result';
@@ -321,8 +320,3 @@ export function QueueItemLink({ org, row }: { org: string; row: RetentionQueueRo
     </Link>
   );
 }
-
-export const dueLabel = (row: RetentionQueueRow) =>
-  row.state === 'postponed' && row.postponedUntil
-    ? `Postponed to ${formatDate(row.postponedUntil)}`
-    : `Due ${formatDate(row.dueOn)}`;

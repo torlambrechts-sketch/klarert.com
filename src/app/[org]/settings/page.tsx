@@ -25,9 +25,9 @@ import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
 import { AdoptFramework } from './frameworks';
 import { retentionOverview } from '@/server/commands/retention';
+import { queueDueText } from '@/engine/retention';
 import {
   CheckRetentionNow,
-  dueLabel,
   QueueActions,
   QueueItemLink,
   RemoveErasedFiles,
@@ -868,7 +868,7 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <QueueItemLink org={org} row={q} />
                   <span className="text-muted-foreground text-label-13">
-                    {q.sheetName} · {q.ruleName} · {dueLabel(q)}
+                    {q.sheetName} · {q.ruleName} · {queueDueText(q)}
                     {q.archived ? ' · archived item' : ''}
                   </span>
                   <span className="flex flex-wrap items-center gap-2">
