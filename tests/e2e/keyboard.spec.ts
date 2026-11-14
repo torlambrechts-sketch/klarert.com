@@ -56,6 +56,12 @@ test('keyboard only: add an item, set its status, open it, post an update, close
   for (let i = 0; i < 20 && (await activeCell(page)) !== `cell-${item.id}-name`; i += 1)
     await page.keyboard.press('ArrowDown');
   expect(await activeCell(page)).toBe(`cell-${item.id}-name`);
+  // the CAPA sheet has sub-items (Steps): → on a parent's name opens them first (docs/05 §3.2 Keys)
+  await page.keyboard.press('ArrowRight');
+  await expect(
+    page.getByRole('grid').getByRole('button', { name: `Hide steps of ${item.display_id}` }),
+  ).toHaveAttribute('aria-expanded', 'true');
+  expect(await activeCell(page)).toBe(`cell-${item.id}-name`);
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');
@@ -81,6 +87,11 @@ test('keyboard only: add an item, set its status, open it, post an update, close
 
   // 4. the Updates tab (tabs: Tab reaches the selected one, arrows move between them), write, post
   await tabTo(page, panel.getByRole('tab', { name: 'Details' }));
+  // tab order: Details, the sub-items (Steps), Files, Updates (docs/05 §3.4)
+  await page.keyboard.press('ArrowRight');
+  await expect(panel.getByRole('tab', { name: /^Steps/ })).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(panel.getByRole('tab', { name: /^Files/ })).toBeFocused();
   await page.keyboard.press('ArrowRight');
   const updatesTab = panel.getByRole('tab', { name: /^Updates/ });
   await expect(updatesTab).toBeFocused();
