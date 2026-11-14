@@ -230,6 +230,11 @@ The plan (`p_plan`) is built by the pure planner `src/engine/packs/plan.ts` on t
 - **`install_pack`** and **`upgrade_pack`** (as 0041) write a plan automation's `mode` (`test` when the plan says so, else `live`); the planner decides it from the manifest (docs/11 Pack quality bar). A pack sheet with `personalData` is planned `restricted`.
 - **`set_pack_automations_mode(install, mode)`** (SECURITY DEFINER): owners and admins of the install's workspace set every automation of the install on a sheet they can edit to `mode`; logs `pack.automations_mode` (`install_id`, `pack_key`, `title`, `mode`, `count`) on the workspace chain when any changed; each automation is also logged by the audit trigger. Returns the count. Granted to `authenticated`; the guard to nobody. pgTAP `0032_automation_test_mode.sql`.
 
+### Pack settings (0043)
+
+- **`pack_installs.settings`** (jsonb object, default `{}`): the workspace's choices for the pack's settings, setting key → choice id (docs/11 Pack settings).
+- **`set_pack_settings(install, settings, fields)`** (SECURITY DEFINER): owners and admins of a live install; every key a setting of the install's manifest and every value one of its choices; `fields` = `[{ id, default }]`, each a live field made by this install (`pack_install_id`), whose `config.default` is set (text) or removed (null). Stores the settings, logs `pack.settings_changed` (`install_id`, `pack_key`, `title`, `version`, `settings`, `labels` (setting label → choice label), `fields` changed) on the workspace chain when anything changed; field changes are logged by the schema audit. Returns the number of fields changed. Granted to `authenticated`. pgTAP `0033_pack_settings.sql`.
+
 ### Core registers and extends (0041)
 
 A pack may add to the sheets of a pack it requires (docs/11 Extends): an add-on to the Core registers adds columns, groups, views, forms, example items, automations and options to their sheets. Every row it adds carries **its own** provenance, so upgrade and archive stay per pack.
