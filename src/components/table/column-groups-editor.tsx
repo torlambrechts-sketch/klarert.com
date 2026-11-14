@@ -38,11 +38,13 @@ export function ColumnGroupsEditor({
   onSaved(groups: ColumnGroup[]): void;
 }) {
   const id = useId();
+  // the editor holds the groups while it is open: each save answers with the groups as stored. Following the prop
+  // as well let a reload started by an earlier save land after a later one and put back the older groups, so the
+  // next change saved without the column just added.
   const [list, setList] = useState(groups);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => setList(groups), [groups]);
   const ordered = arrangeFields(fields, list);
   const of = groupByKey(list);
   const byKey = new Map(fields.map((f) => [f.key, f]));
@@ -59,6 +61,7 @@ export function ColumnGroupsEditor({
       setError(r.error.message);
       return toast.error(r.error.message);
     }
+    setList(r.data.groups);
     toast(r.data.summary ?? 'Column groups saved.');
     onSaved(r.data.groups);
   };
