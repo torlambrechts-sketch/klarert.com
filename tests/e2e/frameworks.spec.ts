@@ -32,7 +32,12 @@ async function adopt(page: Page, title: string, requirements: number) {
   });
   await expect(created).toContainText('→ Controls through Controls, both ways');
   await expect(dialog).toContainText('official short titles');
-  await dialog.getByRole('button', { name: 'Adopt', exact: true }).click();
+  // a withdrawn edition (ISO 9001:2015 since ISO 9001:2026) asks for confirmation first (docs/12 Standards watch)
+  if (await dialog.getByTestId('replaced-warning').count()) {
+    await expect(dialog.getByRole('button', { name: 'Adopt this edition' })).toBeDisabled();
+    await dialog.getByRole('checkbox').check();
+    await dialog.getByRole('button', { name: 'Adopt this edition' }).click();
+  } else await dialog.getByRole('button', { name: 'Adopt', exact: true }).click();
   await expect(dialog.getByRole('status')).toContainText(
     `Adopted ${title}: ${requirements} requirements in the library.`,
     { timeout: 30_000 },
@@ -58,6 +63,8 @@ test.describe('desktop', () => {
     test.setTimeout(240_000);
     const slug = seedWorkspace('fw', { empty: true });
     await signIn(page, 'maria@example.com', `/${slug}/settings?tab=frameworks`);
+    // the sign-in link lands on the auth site URL: open this workspace on the server under test
+    await page.goto(`/${slug}/settings?tab=frameworks`);
     await expect(page.getByRole('heading', { name: 'Framework catalogue' })).toBeVisible();
 
     // the workspace's controls: a requirement field that links to any library sheet
