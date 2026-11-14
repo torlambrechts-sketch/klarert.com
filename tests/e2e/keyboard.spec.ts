@@ -35,24 +35,35 @@ test('keyboard only: add an item, set its status, open it, post an update, close
   await expect(page.getByRole('grid').getByText('Guard bypassed on press 3')).toBeVisible();
 
   // 1. add an item: Tab to "+ New corrective action" (Tab inside the grid moves between cells, like a spreadsheet),
-  // Enter puts the focus in the add row of the first group; type, Enter
-  await tabTo(page, page.getByRole('button', { name: 'New corrective action' }));
+  // Enter opens the New item dialog (docs/05 §3.7) with the name focused; its required Owner is picked with the keys
+  // (Due date starts from its default), then Create
+  const newButton = page.getByRole('button', { name: 'New corrective action' });
+  await tabTo(page, newButton);
   await page.keyboard.press('Enter');
-  const add = page.getByRole('textbox', { name: 'Add corrective action to Open' });
-  await expect(add).toBeFocused();
+  const dialog = page.getByRole('dialog', { name: 'New corrective action' });
+  await expect(dialog.getByRole('textbox', { name: /^Name/ })).toBeFocused();
   await page.keyboard.type('Loose cable at line 4');
+  await tabTo(page, dialog.getByRole('button', { name: /^Owner/ }));
+  await page.keyboard.press('Enter');
+  const owners = page.getByRole('listbox', { name: 'Owner' });
+  await expect(owners).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(owners).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: /^Owner/ })).toContainText('Maria Pereira');
+  await tabTo(page, dialog.getByRole('button', { name: 'Create', exact: true }));
   let answered = nextAnswer(page);
   await page.keyboard.press('Enter');
   await answered;
+  await expect(dialog).toHaveCount(0);
+  await expect(newButton).toBeFocused();
   await expect(
     page.getByRole('grid').getByText('Loose cable at line 4', { exact: true }),
   ).toBeVisible();
   await expect(page.getByRole('grid').locator('[id^="cell-temp-"]')).toHaveCount(0);
   const item = await ids.item('Corrective actions', 'Loose cable at line 4');
-  await page.keyboard.press('Escape');
 
   // 2. into the grid, down to the new item, right to Status, Enter, pick with the arrows, Enter
-  await tabTo(page, page.getByRole('grid'), { back: true });
+  await tabTo(page, page.getByRole('grid'));
   for (let i = 0; i < 20 && (await activeCell(page)) !== `cell-${item.id}-name`; i += 1)
     await page.keyboard.press('ArrowDown');
   expect(await activeCell(page)).toBe(`cell-${item.id}-name`);

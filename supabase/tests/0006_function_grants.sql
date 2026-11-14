@@ -11,8 +11,8 @@ select ok(not has_function_privilege('authenticated', '_create_item(uuid, uuid, 
 select ok(not has_function_privilege('anon', 'submit_public_form(text, text, text, jsonb, text, text, boolean)', 'execute')
        and has_function_privilege('service_role', 'submit_public_form(text, text, text, jsonb, text, text, boolean)', 'execute'),
   'public form submits go only through the route (service role), so the IP hash cannot be forged');
-select ok(has_function_privilege('authenticated', 'create_item(uuid, uuid, text, text, jsonb, uuid)', 'execute'),
-  'signed-in people still call create_item, which checks permissions');
+select ok(has_function_privilege('authenticated', 'create_item(uuid, uuid, text, text, jsonb, uuid, text, uuid)', 'execute'),
+  'signed-in people still call create_item (0046: with how it was added), which checks permissions');
 select bag_eq(
   $$ select p.proname::text from pg_proc p
       where p.pronamespace = 'public'::regnamespace and p.prorettype <> 'trigger'::regtype
