@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import '../fields/registry';
 import { makeCtx, makeField, makeItem, NOW, sheet } from '../testing/fixtures';
 import { matchTrigger, planActions, type AutomationEvent } from '../automations';
+import { activityText } from '../activity';
 import type { Automation } from '../types';
 import {
   approvalState,
@@ -706,5 +707,56 @@ describe('automations', () => {
       outcome: 'skipped',
       message: 'Document approval is turned off.',
     });
+  });
+});
+
+describe('activity log lines', () => {
+  const look = {
+    ctx: ctxWith(),
+    field: () => undefined,
+    groupName: () => undefined,
+    displayId: () => undefined,
+    personName: () => undefined,
+  };
+  const entry = (action: string, newValue: Record<string, unknown>, note: string | null = null) =>
+    activityText(
+      {
+        id: 1,
+        at: '2026-11-11T10:00:00Z',
+        actorKind: 'user',
+        actorId: 'u-maria',
+        action,
+        fieldId: null,
+        oldValue: null,
+        newValue: newValue as never,
+        note,
+        hash: 'x',
+      },
+      look,
+    );
+  it('words submissions, decisions and the end', () => {
+    expect(
+      entry(
+        'workflow.submitted',
+        { workflow: 'Document approval', steps: ['Review', 'Approval'] },
+        'Ready',
+      ),
+    ).toBe('Submitted for approval: Document approval (2 steps) · Note: “Ready”');
+    expect(
+      entry(
+        'workflow.decided',
+        { workflow: 'Document approval', step_index: 1, step: 'Approval', decision: 'rejected' },
+        'Missing scope',
+      ),
+    ).toBe('Rejected step 2, Approval of Document approval · Comment: “Missing scope”');
+    expect(entry('workflow.approved', { workflow: 'Document approval' })).toBe(
+      'Approval complete: Document approval',
+    );
+    expect(
+      entry('workflow.rejected', { workflow: 'Document approval', end_reason: 'closed' }),
+    ).toBe('Rejected and closed: Document approval');
+    expect(entry('workflow.withdrawn', { workflow: 'Document approval' })).toBe(
+      'Withdrew the approval: Document approval',
+    );
   });
 });

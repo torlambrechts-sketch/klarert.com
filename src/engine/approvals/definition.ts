@@ -188,6 +188,13 @@ export function workflowProblems(
   w.steps.forEach((s, i) => {
     if (ids.has(s.id)) out.push(`${stepWords(i, s.name)}: two steps have the same id.`);
     ids.add(s.id);
+    if (s.approvers.kind === 'people' && s.approvers.userIds.length === 0)
+      out.push(`${stepWords(i, s.name)}: choose at least one person.`);
+    if (
+      (s.approvers.kind === 'jobRole' && !s.approvers.roleName.trim()) ||
+      (s.approvers.kind === 'team' && !s.approvers.teamName.trim())
+    )
+      out.push(`${stepWords(i, s.name)}: choose who approves.`);
     if (s.approvers.kind === 'field') {
       const f = byKey.get(s.approvers.fieldKey);
       if (!f || !approverFields(fields).includes(f))

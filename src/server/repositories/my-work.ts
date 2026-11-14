@@ -18,6 +18,7 @@ import {
 } from '@/lib/sheet-query';
 import { SHEET_COLUMNS, toField, toItem } from '@/lib/sheet-rows';
 import { getSession } from '@/server/auth';
+import { getMyApprovals } from './approvals';
 import { newId } from '@/server/sheet-context';
 
 // Reads for My work, the rail badge and Home (docs/05 §4). Run under the person's session and RLS: the items are the
@@ -113,10 +114,14 @@ export const getMyWork = cache(
   },
 );
 
-/** The rail badge: overdue items plus open requests to me. Never fails the page. */
+/** The rail badge: overdue items, open requests to me and approvals waiting for me. Never fails the page. */
 export const getMyWorkBadge = cache(async (orgId: string, timeZone: string): Promise<number> => {
   try {
-    return (await getMyWork(orgId, timeZone))?.work.badge ?? 0;
+    const [work, approvals] = await Promise.all([
+      getMyWork(orgId, timeZone),
+      getMyApprovals(orgId),
+    ]);
+    return (work?.work.badge ?? 0) + (approvals?.length ?? 0);
   } catch (e) {
     console.error(
       JSON.stringify({

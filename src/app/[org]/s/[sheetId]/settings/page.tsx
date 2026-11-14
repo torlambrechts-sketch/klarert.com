@@ -16,6 +16,9 @@ import { isPersonalField, readRetention, retentionDateFields } from '@/engine/re
 import { SheetColumnGroups } from '@/components/table/column-groups-editor';
 import { parseColumnGroups } from '@/engine/views/column-groups';
 import { SubitemSettingsSection } from '@/components/subitems/subitem-settings';
+import { WorkflowEditor } from '@/components/approvals/workflow-editor';
+import { readWorkflows } from '@/engine/approvals/definition';
+import { fetchDirectory } from '@/lib/sheet-query';
 import { applyTabLayout, buildTabs, toTabRows } from '@/components/views/tabs-model';
 import { readSubitemSettings } from '@/engine/subitems';
 import { normaliseViewId, readTabSettings } from '@/engine/views/tabs';
@@ -81,13 +84,15 @@ export default async function SheetSettingsPage({
   // retention (docs/02 §18): the fields with their settings (personal data, date results)
   const { data: retentionRows } = await supabase
     .from('fields')
-    .select('key, name, type, config')
+    .select('key, name, type, config, restricted_to')
     .eq('sheet_id', sheet.id)
     .is('archived_at', null)
     .order('position');
   const retentionFields = (retentionRows ?? []).map((f) => ({ ...f, config: f.config ?? {} }));
   const dateKeys = new Set(retentionDateFields(retentionFields).map((f) => f.key));
   const archivedSubitems = child ? await getArchivedItems(child.id) : [];
+  // approval workflows (docs/04 §13): the people, job roles and teams a step can name
+  const directory = await fetchDirectory(supabase, workspace.id);
   const canEdit = isEditorRole(role);
   const tabSettings = readTabSettings(sheet.settings);
   const tabLayout = applyTabLayout(
@@ -163,6 +168,33 @@ export default async function SheetSettingsPage({
           canChange={isAdminRole(role) && !sheet.archived_at}
         />
       </Card>
+
+      <section id="approvals" className="scroll-mt-4">
+        <Card
+          title="Approval workflows"
+          description="Steps an item goes through to be approved: who approves each step, whether any one or all must, a time limit and what a rejection does. Every submission and decision is written to the item's activity log."
+        >
+          <WorkflowEditor
+            org={org}
+            sheetId={sheet.id}
+            initial={readWorkflows(sheet.settings)}
+            fields={(retentionRows ?? []).map((f) => ({
+              key: f.key,
+              name: f.name,
+              type: f.type,
+              options: Array.isArray((f.config as { options?: unknown } | null)?.options)
+                ? ((f.config as { options: { id: string; label: string; done?: boolean }[] })
+                    .options ?? [])
+                : [],
+              restricted: !!f.restricted_to,
+            }))}
+            people={directory.people.map((p) => ({ id: p.id, name: p.name }))}
+            jobRoles={directory.jobRoles.map((r) => ({ id: r.id, name: r.name }))}
+            teams={directory.teams.map((t) => ({ id: t.id, name: t.name }))}
+            canEdit={isAdminRole(role) && !sheet.archived_at}
+          />
+        </Card>
+      </section>
 
       <section id="retention" className="scroll-mt-4">
         <Card

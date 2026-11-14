@@ -128,6 +128,7 @@ export function WorkflowScreen({
   data,
   explicit,
   canEdit,
+  canManage = false,
 }: {
   org: string;
   orgId: string;
@@ -135,6 +136,8 @@ export function WorkflowScreen({
   /** The URL names the sheet; otherwise the remembered choice is restored. */
   explicit: boolean;
   canEdit: boolean;
+  /** Owners and admins set up approval workflows. */
+  canManage?: boolean;
 }) {
   const router = useRouter();
   const [q, setQ] = useState('');
@@ -224,6 +227,7 @@ export function WorkflowScreen({
             }}
             onField={(key) => go(r.sheet.id, key)}
             canEdit={canEdit}
+            canManage={canManage}
             mover={mover}
           />
         ))}
@@ -270,6 +274,50 @@ function FieldPicker({
   );
 }
 
+/** The sheet's approval workflows (docs/04 §13), with the way to set them up (owners and admins). */
+function Approvals({ org, row, canManage }: { org: string; row: WorkflowRow; canManage: boolean }) {
+  const href = `/${org}/s/${row.sheet.id}/settings#approvals`;
+  return (
+    <div
+      className="border-soft flex flex-col gap-1.5 border-b py-2.5"
+      data-testid="workflow-approvals"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-muted-foreground text-label-12 font-medium">Approval workflows</span>
+        {canManage ? (
+          <Link
+            href={href}
+            className="text-ink text-label-13 font-medium underline underline-offset-4"
+          >
+            {row.approvals.length ? 'Edit approval workflows' : 'Set up an approval workflow'}
+          </Link>
+        ) : null}
+      </div>
+      {row.approvals.length === 0 ? (
+        <p className="text-muted-foreground text-copy-13 m-0">
+          None yet. An approval workflow sends items through review and approval steps, with every
+          decision in the activity log.
+        </p>
+      ) : (
+        <ul className="m-0 flex list-none flex-col gap-1 p-0">
+          {row.approvals.map((a) => (
+            <li key={a.id} className="text-copy-13 flex flex-wrap items-center gap-x-2">
+              <ShieldCheck className="text-muted-foreground size-3.5" aria-hidden />
+              <span className="font-medium">{a.name}</span>
+              <span className="text-muted-foreground">
+                {a.steps.map((st, i) => `${i + 1}. ${st}`).join(' → ')}
+              </span>
+              <span className={a.enabled ? 'text-good' : 'text-muted-foreground'}>
+                {a.enabled ? 'On' : 'Off'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function WorkflowListRow({
   org,
   row,
@@ -277,6 +325,7 @@ function WorkflowListRow({
   onToggle,
   onField,
   canEdit,
+  canManage,
   mover,
 }: {
   org: string;
@@ -285,6 +334,7 @@ function WorkflowListRow({
   onToggle(): void;
   onField(key: string): void;
   canEdit: boolean;
+  canManage: boolean;
   mover: Move;
 }) {
   const l = row.lifecycle;
@@ -313,6 +363,9 @@ function WorkflowListRow({
               {l
                 ? `${l.field.key} · ${plural(l.total, row.sheet.itemLabel.toLowerCase())}`
                 : 'no stages'}
+              {row.approvals.length
+                ? ` · ${plural(row.approvals.length, 'approval workflow')}`
+                : ''}
             </span>
           </span>
         </span>
@@ -349,6 +402,7 @@ function WorkflowListRow({
       </div>
       {open ? (
         <RowDrawer id={drawer}>
+          <Approvals org={org} row={row} canManage={canManage} />
           <div className="flex flex-col gap-1.5 py-2.5 md:hidden">
             <label
               htmlFor={`${drawer}-field`}

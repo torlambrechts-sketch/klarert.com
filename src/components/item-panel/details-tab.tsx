@@ -24,6 +24,7 @@ import { FieldRow } from './field-row';
 import { RequirementLinks, showsRequirements } from './requirements';
 import { FilesField } from './files-field';
 import { ChecklistSection } from './checklist';
+import { ItemApprovals } from '@/components/approvals/item-approvals';
 import type { FileVersion } from './queries';
 
 // Details (docs/05 §3.4, FR-28): the summary strip, linked items in both directions, the automations with per-item pause and every
@@ -263,6 +264,7 @@ export function DetailsTab({
   return (
     <div className="flex flex-col gap-5">
       <Summary item={item} ctx={ctx} />
+      <ItemApprovals org={org} item={item} ctx={ctx} canSubmit={canEditItem} />
       <LinkedItems
         item={item}
         ctx={ctx}

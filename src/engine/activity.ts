@@ -147,6 +147,33 @@ export function who(e: Pick<ActivityEntry, 'actorKind' | 'actorId'>, look: Activ
   return (e.actorId && look.personName(e.actorId)) || 'Former member';
 }
 
+/** Approval workflow entries (docs/04 §13): submitted, each decision with its step and comment, the end. */
+function approvalText(e: ActivityEntry): string {
+  const v = objOf(e.newValue);
+  const name = v && typeof v.workflow === 'string' ? v.workflow : 'an approval workflow';
+  const note = e.note
+    ? ` · ${e.action === 'workflow.decided' ? 'Comment' : 'Note'}: ${quote(e.note)}`
+    : '';
+  switch (e.action) {
+    case 'workflow.submitted': {
+      const steps = Array.isArray(v?.steps) ? v.steps.length : 0;
+      return `Submitted for approval: ${name}${steps ? ` (${steps} ${steps === 1 ? 'step' : 'steps'})` : ''}${note}`;
+    }
+    case 'workflow.decided': {
+      const i = typeof v?.step_index === 'number' ? v.step_index + 1 : null;
+      const step = typeof v?.step === 'string' ? v.step : '';
+      const what = v?.decision === 'rejected' ? 'Rejected' : 'Approved';
+      return `${what} ${i ? `step ${i}, ${step}` : 'a step'} of ${name}${note}`;
+    }
+    case 'workflow.approved':
+      return `Approval complete: ${name}`;
+    case 'workflow.rejected':
+      return `${v?.end_reason === 'closed' ? 'Rejected and closed' : 'Rejected and back to draft'}: ${name}${note}`;
+    default:
+      return `Withdrew the approval: ${name}${note}`;
+  }
+}
+
 /** The sentence for one entry: "Status: Working on it → Done", "Moved from Open to Done", … */
 export function activityText(e: ActivityEntry, look: ActivityLookup): string {
   const field = e.fieldId ? look.field(e.fieldId) : undefined;
@@ -264,6 +291,12 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
       return 'Edited an update';
     case 'update.deleted':
       return 'Deleted an update';
+    case 'workflow.submitted':
+    case 'workflow.decided':
+    case 'workflow.approved':
+    case 'workflow.rejected':
+    case 'workflow.withdrawn':
+      return approvalText(e);
     case 'automation.paused':
       return e.note
         ? `Paused the automation ${quote(e.note)} for this item`
