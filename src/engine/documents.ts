@@ -6,7 +6,7 @@ import { itemStatusField } from './fields/item-status';
 import { daysBetween, formatDate } from './fields/helpers';
 import { fileChains, versionLabel, type FileVersionRow } from './item-files';
 import type { Ctx, Field, Item, Sheet } from './types';
-import { defOf } from './values';
+import { defOf, isDoneOf } from './values';
 
 export const DOCUMENTS_REGISTER = 'documents';
 
@@ -56,6 +56,27 @@ export function documentApprovalValues(
   const on = fields.find((f) => f.key === DOCUMENT_KEYS.approvedOn && f.type === 'date');
   if (on) out[on.id] = today;
   return out;
+}
+
+/**
+ * A document approved by hand: its status set to the done option (Approved) in a cell or the item panel, outside an
+ * approval workflow. The database records the person and today as Approver and Approved on, the same as for a
+ * workflow's approval (`_document_transition`), so checks made before it (the status rule that asks for the
+ * approver) see the document as it will be saved: the values approving writes, by field id, or none when this
+ * change does not approve a document.
+ */
+export function manualApprovalValues(
+  sheet: Pick<Sheet, 'register'> | null | undefined,
+  fields: Field[],
+  before: Item,
+  after: Item,
+  ctx: Ctx,
+): Record<string, unknown> {
+  if (!isDocumentsRegister(sheet)) return {};
+  const status = itemStatusField(ctx, fields);
+  if (!status || status.hidden) return {};
+  if (isDoneOf(before, status, ctx) || !isDoneOf(after, status, ctx)) return {};
+  return documentApprovalValues(fields, ctx.userId, ctx.today);
 }
 
 export interface DocumentStatusInput {

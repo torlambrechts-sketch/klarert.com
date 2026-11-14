@@ -6,6 +6,7 @@ import { needsLibraryTarget } from '@/engine/fields/type-change';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { Ctx, Field, Item, Json } from '@/engine/types';
 import { checkCreate, checkWrite, defaultValues, planValues } from '@/engine/writes';
+import { manualApprovalValues } from '@/engine/documents';
 import { parseViewConfig } from '@/engine/views/config';
 import {
   answerableOnNew,
@@ -138,7 +139,13 @@ async function writeValues(
     w.fields,
     plan.patch,
   );
-  const check = checkWrite(item, plan.next, w.fields, plan.changedKeys, w.ctx, {
+  // approving a document by hand: the database records the approver and the date as it saves the status, as for an
+  // approval workflow, so the status rules see the document as it will be saved (src/engine/documents.ts)
+  const record = manualApprovalValues(w.data.sheet, w.fields, item, plan.next, w.ctx);
+  const seen = Object.keys(record).length
+    ? planValues(item, w.fields, { ...values, ...record }, w.ctx, sha256)
+    : plan;
+  const check = checkWrite(item, seen.next, w.fields, seen.changedKeys, w.ctx, {
     isUnique: (f) => !conflicts.has(f.id),
   });
   if (check.blocking.length > 0) {
