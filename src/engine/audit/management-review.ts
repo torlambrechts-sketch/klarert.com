@@ -42,6 +42,7 @@ export const REVIEW_SOURCE_KEYS = [
   'findings',
   'incidents',
   'training',
+  'feedback',
 ] as const;
 export type ReviewSourceKey = (typeof REVIEW_SOURCE_KEYS)[number];
 
@@ -199,13 +200,40 @@ export function compileManagementReview(input: ReviewInput): ManagementReview {
       .filter((r) => created(r) || changed(r))
       .map((r) => ref(r, `${r.group} · ${created(r) ? 'added' : 'changed'}`)),
   );
+  // customer feedback (complaints, praise, suggestions, surveys): received in the period by kind, and still open
+  const feedback = rows('feedback');
+  const fbIn = feedback.filter((r) => inPeriod(r.date ?? dayOf(r.createdAt)));
+  const fbOpen = feedback.filter((r) => !r.done);
+  const fbKinds = new Map<string, number>();
+  for (const r of fbIn) if (r.detail) fbKinds.set(r.detail, (fbKinds.get(r.detail) ?? 0) + 1);
   const partySection = section(
     'parties',
-    !!src('context'),
-    src('context') ? contextFacts(partyRows, 'interested party', 'interested parties') : [],
-    partyRows
-      .filter((r) => created(r) || changed(r))
-      .map((r) => ref(r, created(r) ? 'added' : 'changed')),
+    !!src('context') || !!src('feedback'),
+    [
+      ...(src('context')
+        ? contextFacts(partyRows, 'interested party', 'interested parties')
+        : []),
+      ...(src('feedback')
+        ? [
+            `${plural(fbIn.length, 'piece', 'pieces')} of customer feedback received in the period` +
+              (fbKinds.size
+                ? `: ${[...fbKinds]
+                    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+                    .map(([k, n]) => `${k} ${n}`)
+                    .join(', ')}`
+                : ''),
+            `${fbOpen.length} open now, ${fbOpen.filter((r) => r.overdue).length} overdue`,
+          ]
+        : []),
+    ],
+    [
+      ...partyRows
+        .filter((r) => created(r) || changed(r))
+        .map((r) => ref(r, created(r) ? 'added' : 'changed')),
+      ...[...new Map([...fbIn, ...fbOpen].map((r) => [r.id, r])).values()].map((r) =>
+        ref(r, statusNote(r)),
+      ),
+    ],
   );
 
   // 4. nonconformities and corrective actions
@@ -238,7 +266,7 @@ export function compileManagementReview(input: ReviewInput): ManagementReview {
       ...(input.monitoring ?? []).map((m) => `${m.label}: ${m.value}`),
       ...(src('incidents')
         ? [
-            `${plural(incidents.filter(created).length, 'security incident')} reported in the period, ${incidents.filter((r) => !r.done).length} open now`,
+            `${plural(incidents.filter(created).length, 'incident')} reported in the period, ${incidents.filter((r) => !r.done).length} open now`,
           ]
         : []),
       ...(src('training')
@@ -311,7 +339,7 @@ export function compileManagementReview(input: ReviewInput): ManagementReview {
   );
 
   // 8. opportunities: what the inputs above say to follow up
-  const overdue = [...nc, ...treatments, ...findings, ...training, ...risks].filter(
+  const overdue = [...nc, ...treatments, ...findings, ...training, ...risks, ...feedback].filter(
     (r) => r.overdue,
   );
   const lessons = ncClosed;

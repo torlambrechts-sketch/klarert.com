@@ -154,9 +154,55 @@ describe('management review inputs', () => {
     const monitoring = r.sections.find((s) => s.key === 'monitoring')!;
     expect(monitoring.facts).toEqual([
       'ISO/IEC 27001:2022: 62% covered',
-      '1 security incident reported in the period, 1 open now',
+      '1 incident reported in the period, 1 open now',
       'Training: 1 of 3 completed, 1 overdue',
     ]);
+  });
+
+  it('customer feedback feeds the needs and feedback of interested parties', () => {
+    const r = compileManagementReview({
+      ...period,
+      sources: {
+        feedback: source([
+          row({ date: '2026-02-03', detail: 'Complaint', status: 'Investigating' }),
+          row({ date: '2026-03-04', detail: 'Complaint', status: 'Closed', done: true }),
+          row({ date: '2026-04-05', detail: 'Praise', status: 'Closed', done: true }),
+          row({
+            date: '2025-11-01',
+            detail: 'Complaint',
+            status: 'Answered',
+            overdue: true,
+            createdAt: before,
+            updatedAt: before,
+          }),
+          row({ date: '2025-10-01', detail: 'Suggestion', done: true, createdAt: before }),
+        ]),
+      },
+    });
+    const parties = r.sections.find((s) => s.key === 'parties')!;
+    expect(parties.available).toBe(true);
+    expect(parties.facts).toEqual([
+      '3 pieces of customer feedback received in the period: Complaint 2, Praise 1',
+      '2 open now, 1 overdue',
+    ]);
+    expect(parties.items.map((i) => i.note)).toEqual([
+      'Investigating · Complaint',
+      'Closed · Complaint',
+      'Closed · Praise',
+      'Answered · overdue · Complaint',
+    ]);
+    const opp = r.sections.find((s) => s.key === 'opportunities')!;
+    expect(opp.facts[0]).toBe('1 overdue item to follow up');
+    expect(r.summary).toContain('3 pieces of customer feedback received in the period');
+  });
+
+  it('words incidents neutrally (security, quality or privacy)', () => {
+    const r = compileManagementReview({
+      ...period,
+      sources: { incidents: source([row({ status: 'New' }), row({ done: true, createdAt: before })]) },
+    });
+    const m = r.sections.find((s) => s.key === 'monitoring')!;
+    expect(m.facts).toEqual(['1 incident reported in the period, 1 open now']);
   });
 
   it('earlier reviews are those dated before the period', () => {

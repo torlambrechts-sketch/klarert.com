@@ -69,9 +69,15 @@ export const REVIEW_PACK_SOURCES: ReviewPackSource[] = [
       audits: 'audit',
       findings: 'finding',
       training: 'competence',
+      feedback: 'complaint',
     },
-    dateFields: { reviews: 'meeting_date', audits: 'audit_date', nonconformities: 'found_on' },
-    detailFields: { risks: 'level' },
+    dateFields: {
+      reviews: 'meeting_date',
+      audits: 'audit_date',
+      nonconformities: 'found_on',
+      feedback: 'received_on',
+    },
+    detailFields: { risks: 'level', feedback: 'kind' },
     partyGroups: ['context.parties'],
     issueGroups: ['context.internal', 'context.external'],
     review: {
