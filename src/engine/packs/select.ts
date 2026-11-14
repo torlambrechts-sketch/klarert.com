@@ -279,6 +279,78 @@ export const canChooseFolder = (m: PackManifest) => !m.folders.some((f) => f.res
 
 const FOLDER_REF = 'chosen_folder';
 
+type Extension = NonNullable<PackManifest['extends']>[number];
+const isObj = (v: unknown): v is Record<string, Json> =>
+  !!v && typeof v === 'object' && !Array.isArray(v);
+const KEY_PROPS = new Set([
+  'fieldKey',
+  'labelFieldKey',
+  'dateFieldKey',
+  'linkFieldKey',
+  'whenFieldKey',
+  'key',
+]);
+/** Whether a view, form field, trigger, condition or action names one of these field keys. */
+function namesKey(v: unknown, keys: ReadonlySet<string>): boolean {
+  if (Array.isArray(v)) return v.some((x) => namesKey(x, keys));
+  if (!isObj(v)) return false;
+  return Object.entries(v).some(([k, x]) =>
+    KEY_PROPS.has(k) && typeof x === 'string' ? keys.has(x) : namesKey(x, keys),
+  );
+}
+
+/**
+ * An extends entry without what needs an own sheet left out: the columns that link to it, the roll-ups and lookups
+ * through those columns, and the views, form fields, example values and links, workflows and automations that name
+ * them or act on that sheet (Supplier management 3.0's checks columns on Core's Suppliers, when the checks are left
+ * out).
+ */
+function withoutLeftOut(e: Extension, keptRefs: ReadonlySet<string>): Extension {
+  const leftOut = (raw: unknown) =>
+    typeof raw === 'string' && !raw.includes(':') && !keptRefs.has(raw);
+  const dropped = new Set<string>();
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const f of e.fields ?? []) {
+      const cfg = (f.config ?? {}) as Record<string, Json>;
+      if (dropped.has(f.key)) continue;
+      if (
+        leftOut(cfg.targetSheetRef) ||
+        (typeof cfg.linkFieldKey === 'string' && dropped.has(cfg.linkFieldKey))
+      ) {
+        dropped.add(f.key);
+        grew = true;
+      }
+    }
+  }
+  const actsOnLeftOut = (a: NonNullable<Extension['automations']>[number]) =>
+    a.actions.some((x) => leftOut(x.sheetRef));
+  const automations = e.automations?.filter(
+    (a) =>
+      !actsOnLeftOut(a) &&
+      !namesKey([a.trigger, ...a.conditions, ...a.actions] as unknown as Json, dropped),
+  );
+  if (!dropped.size && automations?.length === e.automations?.length) return e;
+  const without = <T extends Record<string, Json>>(o: T): T =>
+    Object.fromEntries(Object.entries(o).filter(([k]) => !dropped.has(k))) as T;
+  return {
+    ...e,
+    fields: e.fields?.filter((f) => !dropped.has(f.key)),
+    views: e.views?.filter((v) => !namesKey(v.config as Json, dropped)),
+    forms: e.forms?.map((f) => ({
+      ...f,
+      layout: { ...f.layout, fields: f.layout.fields.filter((x) => !dropped.has(x.key)) },
+    })),
+    items: e.items?.map((i) => ({
+      ...i,
+      values: without(i.values),
+      ...(i.links ? { links: without(i.links as Record<string, Json>) as typeof i.links } : {}),
+    })),
+    workflows: e.workflows?.filter((w) => !namesKey(w as unknown as Json, dropped)),
+    automations,
+  };
+}
+
 /**
  * The manifest as the person chose it: parts left out (and what needs them), folders nobody uses dropped, the folder
  * choice applied, setup steps on a left-out sheet dropped, outbound automations installed off. Apps stay: a screen
@@ -309,7 +381,9 @@ export function selectManifest(
       ? [{ ref: FOLDER_REF, name: folder.name.trim().slice(0, 80) }]
       : []
     : m.folders.filter((f) => usedFolders.has(f.ref));
-  const usesSheet = (t: { sheetRef?: string }) => !t.sheetRef || keptRefs.has(t.sheetRef);
+  // a step on a required pack's sheet (core:suppliers) stays
+  const usesSheet = (t: { sheetRef?: string }) =>
+    !t.sheetRef || t.sheetRef.includes(':') || keptRefs.has(t.sheetRef);
   return {
     ...m,
     folders,
@@ -318,36 +392,8 @@ export function selectManifest(
       .filter((a) => !ex.has(partId.automation(a.ref)))
       .map((a) => (isOutbound(a) ? { ...a, enabled: false } : a)),
     dashboards: m.dashboards.filter((d) => !ex.has(partId.dashboard(d.ref))),
-    // what it adds to other packs' sheets (docs/11 Extends) keeps no link to one of its own sheets left out
-    ...(m.extends
-      ? {
-          extends: m.extends.map((e) => {
-            const dropped = new Set(
-              (e.fields ?? [])
-                .filter((f) => {
-                  const t = (f.config as { targetSheetRef?: unknown } | undefined)?.targetSheetRef;
-                  return typeof t === 'string' && !t.includes(':') && !keptRefs.has(t);
-                })
-                .map((f) => f.key),
-            );
-            if (!dropped.size) return e;
-            return {
-              ...e,
-              fields: e.fields?.filter((f) => !dropped.has(f.key)),
-              items: e.items?.map((i) => ({
-                ...i,
-                ...(i.links
-                  ? {
-                      links: Object.fromEntries(
-                        Object.entries(i.links).filter(([k]) => !dropped.has(k)),
-                      ),
-                    }
-                  : {}),
-              })),
-            };
-          }),
-        }
-      : {}),
+    // what it adds to other packs' sheets (docs/11 Extends) keeps nothing that needs one of its own sheets left out
+    ...(m.extends ? { extends: m.extends.map((e) => withoutLeftOut(e, keptRefs)) } : {}),
     ...(m.setup
       ? {
           setup: {

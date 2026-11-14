@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { repoPacks } from './catalogue';
 import { parsePack } from './manifest';
 import { packLogText } from '@/engine/packs/audit';
+import { afterInstall } from '@/engine/packs/installed.fixture';
 import { manifestAtLevel } from '@/engine/packs/levels';
 import { planPackInstall, type PackSnapshot } from '@/engine/packs/plan';
 import {
@@ -172,6 +173,58 @@ describe('the chosen manifest', () => {
     expect(appsAfter(capa, [])).toEqual([{ title: 'CAPA', screens: 6 }]);
     expect(appsAfter(capa, ['dashboard:capa_overview'])).toEqual([{ title: 'CAPA', screens: 5 }]);
     expect(appsAfter(capa, ['sheet:capa'])).toEqual([]);
+  });
+});
+
+describe('Supplier management 3.0.0 from Create (an add-on on Core’s Suppliers)', () => {
+  const m = () => pack('supplier-management');
+  const core = pack('core');
+  const onCore = () => {
+    const corePlan = planPackInstall(core, { ...snapshot, folders: [] }, env, {
+      level: 'starter',
+    });
+    return afterInstall({ ...snapshot, folders: [] }, corePlan.payload!, 'inst-core');
+  };
+
+  it('offers the whole add-on with its setup on Core’s Suppliers', () => {
+    const chosen = parsePack(selectManifest(m(), []));
+    expect(chosen.version).toBe('3.0.0');
+    expect(chosen.setup!.steps.map((s) => s.ref)).toEqual([
+      'suppliers',
+      'requirements',
+      'checks',
+      'approve',
+    ]);
+    expect(planPackInstall(chosen, onCore(), env).state).toBe('ready');
+  });
+
+  it('leaving the checks out leaves out what needs them on Core’s Suppliers too', () => {
+    const ex = closeExclusions(bundleParts(m()), ['sheet:check']);
+    expect([...ex]).toEqual(expect.arrayContaining(['sheet:check', 'sheet:requirement']));
+    const chosen = parsePack(selectManifest(m(), ['sheet:check']));
+    const suppliers = chosen.extends!.find((e) => e.sheet === 'suppliers')!;
+    const keys = suppliers.fields!.map((f) => f.key);
+    for (const k of [
+      'suppliermanagement_checks',
+      'suppliermanagement_met',
+      'suppliermanagement_pct_met',
+      'suppliermanagement_worst',
+      'suppliermanagement_expired',
+      'suppliermanagement_extra',
+    ])
+      expect(keys).not.toContain(k);
+    expect(keys).toContain('suppliermanagement_category');
+    // no sync left to run, no view sorted by a column that is gone
+    expect(
+      suppliers.automations!.some((a) =>
+        a.actions.some((x) => x.type === 'sync_requirement_checks'),
+      ),
+    ).toBe(false);
+    expect(suppliers.views ?? []).toEqual([]);
+    expect(chosen.setup!.steps.map((s) => s.ref)).toEqual(['suppliers', 'approve']);
+    const plan = planPackInstall(chosen, onCore(), env);
+    expect(plan.preview.conflicts).toEqual([]);
+    expect(plan.state).toBe('ready');
   });
 });
 
