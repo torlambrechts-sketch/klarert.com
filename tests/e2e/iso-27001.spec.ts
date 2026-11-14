@@ -10,6 +10,7 @@ import { rest, signIn } from './helpers';
 
 const TITLE = 'ISO/IEC 27001:2022 ISMS (add-on)';
 const SHOTS = process.env.ISO27001_SHOTS;
+const CORE12_SHOTS = process.env.CORE12_SHOTS;
 const shot = async (page: Page, name: string) => {
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
 };
@@ -166,5 +167,18 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
   ]);
   await page.goto(`/${slug}/apps/isms-capa/overview`);
   await expect(page.getByRole('heading', { name: 'Open ISMS nonconformities' })).toBeVisible();
+  // the risk widgets read the same risks, the ones tagged ISO 27001 (owner decision, Nov 2026): Core's own example
+  // risk is in neither count
+  await expect(
+    page.getByRole('listitem', { name: 'Information security risks by status' }),
+  ).toContainText('3 risks in Risk register');
+  await expect(
+    page.getByRole('listitem', { name: 'Risks with a residual score above 12' }),
+  ).toContainText('of 3 risks in Risk register');
   await shot(page, '04-isms-overview');
+  if (CORE12_SHOTS) {
+    await page.setViewportSize({ width: 1280, height: 1400 });
+    await page.screenshot({ path: `${CORE12_SHOTS}/isms-overview.png` });
+    await page.setViewportSize({ width: 1280, height: 720 });
+  }
 });

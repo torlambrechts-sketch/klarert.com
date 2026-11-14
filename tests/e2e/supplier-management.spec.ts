@@ -2,15 +2,17 @@ import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// Supplier management 2.0.0 (docs/11, Phase 2): an owner installs the add-on into an empty workspace; the Core
-// registers are installed first and the supplier sheets sit in the Suppliers domain, supplier documents in Documents
-// and policies (its "Supplier documents" view). A supplier's panel shows its checks as a checklist; "Sync
-// requirements" adds the checks its category, criticality and personal data call for ("Added 7, flagged 0"); a second
-// sync changes nothing; lowering the criticality flags the checks that no longer apply, never deleting them. The
-// review escalation is in test mode and the register carries the Supplier approval workflow.
+// Supplier management 3.0.0 (docs/11): an owner installs the add-on into an empty workspace; the Core registers are
+// installed first. The add-on has no supplier register of its own: its columns, forms, examples, automations and the
+// Supplier approval workflow are on Core's Suppliers register, and its reviews, requirement library and checks sit in
+// the Suppliers domain beside it; supplier documents are in Documents and policies (its "Supplier documents" view).
+// A supplier's panel shows its checks as a checklist; "Sync requirements" adds the checks its category, Core's
+// criticality and personal data call for ("Added 7, flagged 0"); a second sync changes nothing; lowering the
+// criticality flags the checks that no longer apply, never deleting them. The review escalation is in test mode.
 
 const TITLE = 'Supplier management (add-on)';
 const SHOTS = process.env.SUPPLIER_SHOTS;
+const CORE12_SHOTS = process.env.CORE12_SHOTS;
 const shot = async (page: Page, name: string) => {
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
 };
@@ -56,9 +58,20 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
     `sheets?org_id=eq.${org!.id}&archived_at=is.null&parent_sheet_id=is.null&select=id,name,folder_id`,
   );
   const sheetId = (name: string) => sheets.find((s) => s.name === name)!.id;
-  const suppliers = sheetId('Supplier register');
+  // Core's Suppliers register is the supplier register
+  const suppliers = sheetId('Suppliers');
   const checks = sheetId('Supplier requirement checks');
   expect(sheets.some((s) => s.name === 'Supplier documents')).toBe(false);
+  expect(sheets.some((s) => s.name === 'Supplier register')).toBe(false);
+  const [supplierSheet] = await rest<{ pack_install_id: string }[]>(
+    page,
+    `sheets?id=eq.${suppliers}&select=pack_install_id`,
+  );
+  const [coreInstall] = await rest<{ id: string }[]>(
+    page,
+    `pack_installs?org_id=eq.${org!.id}&pack_key=eq.core&select=id`,
+  );
+  expect(supplierSheet!.pack_install_id).toBe(coreInstall!.id);
 
   // ── the Suppliers domain in the side menu, after the Core domains
   await page.goto(`/${slug}/home`);
@@ -70,12 +83,12 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
     'Suppliers',
   ]);
   for (const name of [
-    'Supplier register',
+    'Suppliers',
     'Supplier reviews',
     'Supplier requirements',
     'Supplier requirement checks',
   ])
-    await expect(menu.getByRole('link', { name })).toBeVisible();
+    await expect(menu.getByRole('link', { name, exact: true })).toBeVisible();
   await shot(page, '05-suppliers-domain');
 
   // ── supplier documents are Core documents, with the add-on's view
@@ -138,6 +151,12 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
   expect(await countChecks()).toBe(11);
   await list.getByRole('heading').evaluate((h) => h.scrollIntoView({ block: 'start' }));
   await shot(page, '06-supplier-checklist');
+  if (CORE12_SHOTS) {
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    await list.getByRole('heading').evaluate((h) => h.scrollIntoView({ block: 'start' }));
+    await page.screenshot({ path: `${CORE12_SHOTS}/supplier-management-3-checks.png` });
+    await page.setViewportSize({ width: 1280, height: 720 });
+  }
 
   // a second sync changes nothing: one check per supplier and requirement
   await sync();
