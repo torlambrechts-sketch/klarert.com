@@ -186,7 +186,7 @@ Sub-item recipes (roles may be `sub:<type>`, a field of the sub-items): add the 
 
 ## 13. Approval workflows
 
-Owner-approved (14 Nov 2026), built after the MVP. An approval workflow is **data per sheet** (`sheets.settings.workflows`, at most 10 per sheet, 10 steps each; shape and checks in `src/engine/approvals/definition.ts`). Nothing in the code knows a document, a CAPA or a pack: packs ship workflows in their manifests (docs/11).
+Owner-approved (14 Nov 2026), built after the MVP. An approval workflow is **data per sheet** (`sheets.settings.workflows`, at most 10 per sheet, 10 steps each; shape and checks in `src/engine/approvals/definition.ts`). Nothing in the code knows a document, a CAPA or a pack: packs ship workflows in their manifests (docs/11), on their own sheets or, from an add-on, on a required pack's sheet (`extends[].workflows`, ids in the add-on's namespace). The Core registers ship Document approval, Risk acceptance and CAPA closure (docs/11 Core registers).
 
 ```json
 { "id": "document-approval", "name": "Document approval", "enabled": true,
