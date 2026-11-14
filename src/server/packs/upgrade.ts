@@ -96,6 +96,13 @@ function lastBy<T extends { position: string }>(rows: T[], key: (r: T) => string
   return Object.fromEntries([...by].map(([k, list]) => [k, position(list)!]));
 }
 
+/** A sheet's tab set as stored (settings.tabs and defaultViewId), null when it has none. */
+function tabsOf(settings: unknown): { tabs: Json; defaultViewId: Json } | null {
+  const st = (settings ?? {}) as { tabs?: Json; defaultViewId?: Json };
+  if (st.tabs === undefined && st.defaultViewId === undefined) return null;
+  return { tabs: st.tabs ?? null, defaultViewId: st.defaultViewId ?? null };
+}
+
 /** What an install made, as the workspace holds it now. */
 export async function loadInstalledState(
   db: Db,
@@ -208,6 +215,7 @@ export async function loadInstalledState(
       archived: !!s.archived_at,
       clientItems: clientItems.get(s.id) ?? 0,
       workflows: ((s.settings as { workflows?: Json } | null)?.workflows ?? []) as Json,
+      tabs: tabsOf(s.settings),
     })),
     fields: own(fieldRows).map((f) => ({
       id: f.id,

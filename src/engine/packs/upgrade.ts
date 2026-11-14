@@ -14,7 +14,7 @@
 // against the values the install logged (item.created), so `$today` and `$in:N` do not read as changes.
 import { keysBetween } from '../ordering';
 import type { Json } from '../types';
-import { extensionUses } from './extend';
+import { extensionUses, foreignKey, namespaceOf, ownWorkflowId, workflowList } from './extend';
 import { defaultLevel, levelRank, manifestAtLevel } from './levels';
 import { planPackInstall, type PackEnv, type PackSnapshot } from './plan';
 import { compareVersions } from './semver';
@@ -43,6 +43,11 @@ export interface InstalledState {
     clientItems: number;
     /** sheets.settings.workflows as the workspace holds it (approval workflows, docs/04 §13). */
     workflows?: Json;
+    /**
+     * The sheet's tab set as the workspace holds it (sheets.settings `tabs` and `defaultViewId`, docs/02); null or
+     * absent when it has none (today's order).
+     */
+    tabs?: { tabs: Json; defaultViewId: Json } | null;
   }[];
   fields: {
     id: string;
@@ -168,8 +173,13 @@ export interface UpgradePayload {
     items: Row[];
     automations: Row[];
     dashboards: Row[];
-    /** A sheet's approval workflows (sheets.settings.workflows), replaced as a whole. */
+    /**
+     * A sheet's approval workflows (sheets.settings.workflows), replaced as a whole. On another pack's sheet (docs/11
+     * Extends) only the entries in this pack's namespace may differ from what the sheet holds.
+     */
     workflows?: { sheet_id: string; workflows: Json }[];
+    /** A sheet's tab set (sheets.settings tabs, tabsDefault and defaultViewId), on the install's own sheets. */
+    tabs?: { sheet_id: string; tabs: Json; tabsDefault: Json; defaultViewId: Json }[];
   };
   archive: { folders: string[]; sheets: string[]; items: string[]; dashboards: string[] };
   /** Automations the new version no longer ships: turned off. */
@@ -500,6 +510,10 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   const B = base.planned;
   const T = theirsPlan.planned;
 
+  // approval workflows packs that build on this one added to its sheets (ids in their namespace, docs/11 Extends)
+  const extenderSpaces = (input.extenders ?? []).map((e) => namespaceOf(e.manifest.key));
+  const extenderFlow = (id: string) => extenderSpaces.some((ns) => ownWorkflowId(ns, id));
+
   // the install as it is now, by ref
   const mineSheets = new Map(state.sheets.map((s) => [s.ref, s]));
   const mineFields = new Map(state.fields.map((f) => [f.ref, f]));
@@ -605,7 +619,7 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   // ── existing objects the new version still ships: three-way per attribute
   const simple = (
     kind: UpgradeObjectKind,
-    list: Exclude<keyof UpgradePayload['update'], 'workflows'>,
+    list: Exclude<keyof UpgradePayload['update'], 'workflows' | 'tabs'>,
     ref: string,
     name: string,
     id: string,
@@ -634,23 +648,40 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
       description: mine.description,
       item_label: mine.itemLabel,
     });
-    // approval workflows (docs/04 §13): the sheet's list as one value, three ways like any attribute
+    // approval workflows (docs/04 §13): the sheet's list as one value, three ways like any attribute. Workflows an
+    // add-on built on this pack put on the sheet (ids in its namespace, docs/11 Extends) are the add-on's: left out of
+    // the comparison and kept as they are
     const flows = (r: Row | undefined): Json =>
       ((r?.settings as { workflows?: Json } | undefined)?.workflows ?? []) as Json;
+    const mineFlows = workflowList(mine.workflows ?? []);
+    const theirsOnSheet = mineFlows.filter((w) => extenderFlow(w.id));
     const b = { workflows: flows(B.sheets.get(ref)) };
     const tw = { workflows: flows(t) };
     const apply = settle(
       'sheet',
       ref,
       String(t.name),
-      threeWay(b, b, { workflows: mine.workflows ?? [] }, tw, ['workflows']),
+      threeWay(
+        b,
+        b,
+        {
+          workflows: (theirsOnSheet.length
+            ? mineFlows.filter((w) => !extenderFlow(w.id))
+            : (mine.workflows ?? [])) as Json,
+        },
+        tw,
+        ['workflows'],
+      ),
       tw,
       () => 'approval workflows',
     );
     if ('workflows' in apply) {
       (payload.update.workflows ??= []).push({
         sheet_id: mine.id,
-        workflows: apply.workflows ?? [],
+        workflows: [
+          ...(Array.isArray(apply.workflows) ? apply.workflows : []),
+          ...(theirsOnSheet as unknown as Json[]),
+        ],
       });
       preview.changed.push({
         kind: 'sheet',
@@ -658,6 +689,71 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
         name: String(t.name),
         note: 'Approval workflows',
       });
+    }
+    // the tab set (docs/02 sheets.settings.tabs): one value, three ways; the new version's tabs name its views by
+    // the ids this upgrade gives them (or the install's, for views it has)
+    const tabsOf = (r: Row | undefined): Json => {
+      const st = (r?.settings ?? {}) as Record<string, Json>;
+      return { tabs: st.tabs ?? null, defaultViewId: st.defaultViewId ?? null };
+    };
+    const bt = { tabs: tabsOf(B.sheets.get(ref)) };
+    const tt = { tabs: tabsOf(t) };
+    const tabsApply = settle(
+      'sheet',
+      ref,
+      String(t.name),
+      threeWay(bt, bt, { tabs: mine.tabs ?? { tabs: null, defaultViewId: null } }, tt, ['tabs']),
+      tt,
+      () => 'tabs',
+    );
+    if ('tabs' in tabsApply) {
+      const st = (t.settings ?? {}) as Record<string, Json>;
+      (payload.update.tabs ??= []).push({
+        sheet_id: mine.id,
+        tabs: st.tabs ?? null,
+        tabsDefault: st.tabsDefault ?? st.tabs ?? null,
+        defaultViewId: st.defaultViewId ?? null,
+      });
+      preview.changed.push({ kind: 'sheet', ref, name: String(t.name), note: 'Tabs' });
+    }
+  }
+
+  // approval workflows this pack adds to other packs' sheets (docs/11 Extends): its own entries (ids in its
+  // namespace) as one value, three ways; everything else on the sheet is kept as it is
+  {
+    const ns = namespaceOf(m.key);
+    const entries = (mf: PackManifest, lvl: string | null) =>
+      (manifestAtLevel(mf, lvl).extends ?? []).filter((e) => e.workflows?.length);
+    const bExt = entries(from.manifest, levelFrom);
+    const tExt = entries(m, levelTo);
+    const targets = new Set([...bExt, ...tExt].map((e) => foreignKey(e.pack, e.sheet)));
+    for (const key of targets) {
+      const f = input.snapshot.foreign?.[key];
+      if (!f) continue;
+      const pick = (list: typeof bExt) =>
+        (list.find((e) => foreignKey(e.pack, e.sheet) === key)?.workflows ?? []) as unknown as Json;
+      const bw = { workflows: pick(bExt) };
+      const tw = { workflows: pick(tExt) };
+      const all = workflowList(f.workflows);
+      const ownFlows = all.filter((w) => ownWorkflowId(ns, w.id));
+      const others = all.filter((w) => !ownWorkflowId(ns, w.id));
+      const apply = settle(
+        'sheet',
+        key,
+        f.name,
+        threeWay(bw, bw, { workflows: ownFlows as unknown as Json }, tw, ['workflows']),
+        tw,
+        () => 'approval workflows',
+      );
+      if (!('workflows' in apply)) continue;
+      (payload.update.workflows ??= []).push({
+        sheet_id: f.sheetId,
+        workflows: [
+          ...(others as unknown as Json[]),
+          ...(Array.isArray(apply.workflows) ? apply.workflows : []),
+        ],
+      });
+      preview.changed.push({ kind: 'sheet', ref: key, name: f.name, note: 'Approval workflows' });
     }
   }
   for (const [ref, t] of T.groups) {

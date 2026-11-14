@@ -191,6 +191,17 @@ export interface PackExtension {
   automations?: (Omit<TemplateAutomation, 'sheet'> & PackAutomationMeta & { ref: string })[];
   /** Field key of the extended sheet → options added to it (by id; an id already there is left as it is). */
   options?: Record<string, ExtensionOption[]>;
+  /**
+   * Approval workflows (docs/04 §13) added to the extended sheet's `settings.workflows`, merged by id (an id already
+   * there is left as it is). Ids start with `<namespace>_`: that is how the extender's own entries are told apart on
+   * a shared sheet (its upgrade and archive touch only those).
+   */
+  workflows?: TemplateSheet['workflows'];
+  /**
+   * The lowest level of this pack that installs the entry (docs/11 Levels); every level when not set. An add-on's
+   * Starter then needs only what its Starter entries use of the required pack (`neededLevel` per level).
+   */
+  level?: string;
 }
 
 /**

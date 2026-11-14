@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Json } from '../types';
 import {
   augmentManifest,
+  extendsAgainst,
   extendsProblems,
   extensionUses,
   inNamespace,
@@ -9,6 +10,7 @@ import {
   neededLevel,
 } from './extend';
 import { afterInstall, refMapOf } from './installed.fixture';
+import { levelProblems } from './levels';
 import { planPackInstall, previewLines, type InstallPayload, type PackSnapshot } from './plan';
 import type { PackManifest } from './types';
 import { planPackUpgrade, type InstalledState } from './upgrade';
@@ -704,5 +706,184 @@ describe('upgrades with extends', () => {
     expect(p.add.items).toEqual([]);
     expect(p.add.views).toEqual([]);
     expect(p.archive.sheets).toEqual([]);
+  });
+});
+
+// ───────────────────────── approval workflows and levels in extends ─────────────────────────
+
+const signOff = (id = 'iso14001_sign_off', name = 'Environmental sign-off') => ({
+  id,
+  name,
+  enabled: true,
+  requiredFields: ['score'],
+  allowSelfApproval: false,
+  lockOnApproval: false,
+  steps: [
+    {
+      id: 'manager',
+      name: 'Environmental manager',
+      approvers: { kind: 'jobRole' as const, roleName: 'Environmental manager' },
+      mode: 'any' as const,
+      onReject: { to: 'draft' as const },
+    },
+  ],
+});
+
+/** The add-on with an approval workflow on the Core risk register. */
+const withFlow = (flow = signOff()): PackManifest => {
+  const m = addon();
+  m.extends![1]!.workflows = [flow];
+  return m;
+};
+
+describe('approval workflows an add-on adds to a Core sheet', () => {
+  it('needs ids in the namespace, once each, and counts the fields it names as uses', () => {
+    expect(extendsProblems(withFlow())).toEqual([]);
+    const m = withFlow(signOff('sign_off'));
+    m.extends![1]!.workflows!.push(signOff('sign_off', 'Again'));
+    expect(extendsProblems(m).map((p) => p.message)).toEqual([
+      'The approval workflow id "sign_off" is not in the pack\'s namespace: start it with "iso14001_".',
+      'The approval workflow id "sign_off" is not in the pack\'s namespace: start it with "iso14001_".',
+      'Duplicate approval workflow "sign_off".',
+    ]);
+    // the bare namespace is not an extension workflow id (a workflow people call "ISO 14001" is theirs)
+    expect(extendsProblems(withFlow(signOff('iso14001'))).length).toBe(1);
+    // the fields it names are uses of the Core sheet, so a Core update cannot take them away
+    expect([...extensionUses(withFlow(), 'core').get('risk')!]).toContain('score');
+    // checked against the Core sheet like a workflow of its own
+    expect(extendsAgainst(withFlow(), core())).toEqual([]);
+    expect(extendsAgainst(withFlow({ ...signOff(), requiredFields: ['nope'] }), core())).toEqual([
+      'Risk register has no field "nope".',
+      'Risk register › Environmental sign-off: The field nope cannot be required before submitting.',
+    ]);
+  });
+
+  it('plans the workflow onto the Core sheet by its real id, merged by id', () => {
+    const { snap } = withCore();
+    const plan = planPackInstall(withFlow(), snap, env);
+    expect(plan.preview.conflicts).toEqual([]);
+    const riskId = snap.foreign!['core:risk']!.sheetId;
+    expect(plan.payload!.workflows).toEqual([
+      { ref: 'core:risk.workflow.iso14001_sign_off', sheet_id: riskId, workflow: signOff() },
+    ]);
+    expect(previewLines(plan.preview).join('\n')).toContain('1 approval workflow');
+    // a workflow with that id on the sheet already is left as it is
+    snap.foreign!['core:risk']!.workflows = [signOff() as unknown as Json];
+    const again = planPackInstall(withFlow(), snap, env);
+    expect(again.payload!.workflows).toBeUndefined();
+    expect(again.operations.find((o) => o.kind === 'workflow')).toMatchObject({ action: 'skip' });
+  });
+
+  it('upgrades only its own workflows on the Core sheet, keeping Core’s and the client’s', () => {
+    const { snap } = withCore();
+    const first = planPackInstall(withFlow(), snap, env).payload!;
+    const after = afterInstall(snap, first, 'inst-addon');
+    for (const f of after.foreign!['core:risk']!.fields)
+      if (f.key.startsWith('iso14001_')) f.installId = 'inst-addon';
+    for (const g of after.foreign!['core:risk']!.groups)
+      if (first.groups.some((x) => x.id === g.id)) g.installId = 'inst-addon';
+    const coreFlow = signOff('risk-acceptance', 'Risk acceptance');
+    after.foreign!['core:risk']!.workflows = [
+      coreFlow as unknown as Json,
+      signOff() as unknown as Json,
+    ];
+    const next = withFlow({ ...signOff(), name: 'Environmental approval' });
+    next.version = '1.1.0';
+    const upgrade = () =>
+      planPackUpgrade({
+        from: { manifest: withFlow(), hash: 'h' },
+        to: { manifest: next, hash: 'h2' },
+        state: stateOf(first, 'inst-addon', '1.0.0'),
+        snapshot: { ...after, installs: after.installs.filter((i) => i.id !== 'inst-addon') },
+        env,
+      });
+    const plan = upgrade();
+    expect(plan.state).toBe('ready');
+    const riskId = after.foreign!['core:risk']!.sheetId;
+    expect(plan.payload!.update.workflows).toEqual([
+      {
+        sheet_id: riskId,
+        workflows: [coreFlow, { ...signOff(), name: 'Environmental approval' }],
+      },
+    ]);
+    // the client changed the add-on's workflow: a conflict, theirs only when chosen
+    after.foreign!['core:risk']!.workflows = [
+      coreFlow as unknown as Json,
+      { ...signOff(), enabled: false } as unknown as Json,
+    ];
+    const kept = upgrade();
+    expect(kept.preview.conflicts.map((c) => c.id)).toEqual(['sheet:core:risk']);
+    expect(kept.payload!.update.workflows ?? []).toEqual([]);
+  });
+
+  it('keeps an add-on’s workflow when Core changes the sheet’s own workflows', () => {
+    const { payload } = withCore();
+    const next = core();
+    next.version = '1.1.0';
+    next.sheets[0]!.workflows = [signOff('risk-acceptance', 'Risk acceptance')];
+    const state = stateOf(payload, 'inst-core', '1.0.0');
+    const risk = state.sheets.find((s) => s.ref === 'risk')!;
+    risk.workflows = [signOff() as unknown as Json];
+    const plan = planPackUpgrade({
+      from: { manifest: core(), hash: 'h' },
+      to: { manifest: next, hash: 'h2' },
+      state,
+      snapshot: snapshot(),
+      env,
+      extenders: [{ title: 'ISO 14001', manifest: withFlow() }],
+    });
+    expect(plan.preview.conflicts).toEqual([]);
+    expect(plan.payload!.update.workflows).toEqual([
+      { sheet_id: risk.id, workflows: [signOff('risk-acceptance', 'Risk acceptance'), signOff()] },
+    ]);
+  });
+});
+
+describe('levels of extends entries', () => {
+  /** An add-on with levels whose Starter extends only the risk register; Full extends Core's controls. */
+  const leveled = (): PackManifest => {
+    const m = addon();
+    m.levels = [
+      { key: 'starter', name: 'Starter', description: '' },
+      { key: 'full', name: 'Full', description: '' },
+    ];
+    m.extends!.push({
+      pack: 'core',
+      sheet: 'controls',
+      level: 'full',
+      fields: [{ key: 'iso14001_aspects', name: 'Aspects', type: 'text' }],
+    });
+    return m;
+  };
+
+  it('computes the Core level each level of the add-on needs', () => {
+    expect(neededLevel(leveled(), core())).toBe('full');
+    expect(neededLevel(leveled(), core(), 'starter')).toBe('starter');
+    expect(neededLevel(leveled(), core(), null)).toBe('starter');
+    expect(neededLevel(leveled(), core(), 'full')).toBe('full');
+  });
+
+  it('installs an entry only from its level', () => {
+    const { snap } = withCore('full');
+    const starter = planPackInstall(leveled(), snap, env, { level: 'starter' });
+    expect(starter.preview.conflicts).toEqual([]);
+    expect(starter.payload!.fields.map((f) => f.ref)).not.toContain(
+      'core:controls.iso14001_aspects',
+    );
+    const full = planPackInstall(leveled(), snap, env, { level: 'full' });
+    expect(full.payload!.fields.map((f) => f.ref)).toContain('core:controls.iso14001_aspects');
+  });
+
+  it('refuses an entry that needs an own sheet of a higher level, or a two-way link across levels', () => {
+    const m = leveled();
+    m.sheets[0]!.level = 'full';
+    expect(levelProblems(m).map((p) => p.message)).toEqual(
+      expect.arrayContaining([
+        '"iso14001_aspect" links to "aspects", which is installed only from Full.',
+        '"risks" links both ways to "core:risk", whose extends entry installs at another level. Give them one level.',
+      ]),
+    );
+    m.extends![1]!.level = 'full';
+    expect(levelProblems(m)).toEqual([]);
   });
 });

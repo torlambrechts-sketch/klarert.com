@@ -246,7 +246,7 @@ export async function bundleDetails(input: unknown): Promise<Result<BundleDetail
             now: new Date(),
             newId: randomUUID,
             level: levelKey,
-            installFirst: await requiredFirst(supabase, orgId, pack.manifest),
+            installFirst: await requiredFirst(supabase, orgId, pack.manifest, undefined, levelKey),
           });
           check = {
             state: plan.state,
@@ -340,7 +340,7 @@ export async function createBundle(input: unknown): Promise<Result<CreatedBundle
       if (!chosen.manifest.sheets.length) return fail('invalid', 'Keep at least one sheet.');
       const env = { userId: user.id, now: new Date(), newId: randomUUID, level: levelKey };
       // the packs it requires (the Core registers) are installed first (docs/11 Extends)
-      const firsts = await requiredFirst(supabase, orgId, pack.manifest);
+      const firsts = await requiredFirst(supabase, orgId, chosen.manifest, undefined, levelKey);
       let plan = await planInstall(supabase, orgId, chosen, { ...env, installFirst: firsts });
       if (plan.state === 'ready' && firsts.length) {
         const r = await installRequired(supabase, orgId, user.id, firsts);

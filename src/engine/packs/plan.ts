@@ -40,6 +40,7 @@ import {
   foreignKey,
   standardViewName,
   virtualRef,
+  workflowList,
   type ForeignSheet,
 } from './extend';
 import { packToTemplate } from './template';
@@ -120,6 +121,7 @@ export type PackObjectKind =
   | 'automation'
   | 'dashboard'
   | 'option'
+  | 'workflow'
   | 'pack';
 
 export interface PackOperation {
@@ -151,6 +153,11 @@ export interface InstallPayload {
    * `<pack>:<sheet>.<field key>.<option id>` (ref map `option:<ref>` → the field's id).
    */
   options?: { ref: string; field_id: string; option: Json }[];
+  /**
+   * Approval workflows added to another pack's sheet (docs/11 Extends), merged by id into its settings.workflows:
+   * `ref` is `<pack>:<sheet>.workflow.<id>`; the id starts with the pack's namespace (`<ns>_…`).
+   */
+  workflows?: { ref: string; sheet_id: string; workflow: Json }[];
 }
 
 export interface PackCounts {
@@ -591,6 +598,7 @@ export function planPackInstall(
   // the virtual sheets' planned ids → the foreign sheet's real ones (sheet, existing fields and groups)
   const real = new Map<string, string>();
   const virtualSheetRows: Row[] = [];
+  const workflowRows: NonNullable<InstallPayload['workflows']> = [];
   const optionRows: NonNullable<InstallPayload['options']> = aug.options.map((o) => ({
     ref: o.ref,
     field_id: o.fieldId,
@@ -719,6 +727,28 @@ export function planPackInstall(
         });
       }
       const ext = (m.extends ?? []).find((e) => e.pack === v.pack && e.sheet === v.sheet);
+      // approval workflows merged by id: one the sheet has already is left as it is
+      const has = new Set(workflowList(v.foreign.workflows).map((w) => w.id));
+      for (const w of ext?.workflows ?? []) {
+        const ref = `${v.key}.workflow.${w.id}`;
+        if (has.has(w.id)) {
+          operations.push({
+            kind: 'workflow',
+            ref,
+            name: `${ms.name} › ${w.name}`,
+            action: 'skip',
+            note: 'The sheet has this approval workflow.',
+          });
+          continue;
+        }
+        workflowRows.push({ ref, sheet_id: v.foreign.sheetId, workflow: w as unknown as Json });
+        operations.push({
+          kind: 'workflow',
+          ref,
+          name: `${ms.name} › ${w.name}`,
+          action: 'create',
+        });
+      }
       const opts = aug.options.filter((o) => o.ref.startsWith(`${v.key}.`));
       if (ext || opts.length)
         base.extends.push({
@@ -1285,6 +1315,7 @@ export function planPackInstall(
           folders: folderRows,
           ...rows,
           ...(options.length ? { options } : {}),
+          ...(workflowRows.length ? { workflows: workflowRows } : {}),
         }
       : null;
   return { state, operations, preview, payload };
