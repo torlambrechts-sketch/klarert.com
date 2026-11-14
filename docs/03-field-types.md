@@ -159,7 +159,7 @@ Option model for label types (`status`, `dropdown`, `multiselect`, `severity`, `
 | `progress` | Progress | computed | `{"sourceFieldKey":"…"}` | number | checklist → answered %; link types → % of targets whose status is done |
 | `autoid` | Auto ID | `items.display_id` | `{}` | text | read-only |
 | `meta` | Created and updated | `items` columns | `{"which":"created_at"}` (`created_at, created_by, updated_at, updated_by`) | date / people | read-only |
-| `workflowstep` | Workflow step | `"opt_…"` | options: Draft, Review, Approval, Done (done) | option | only automations may set it (enforced in SQL) |
+| `workflowstep` | Workflow step | `"opt_…"` | options: Draft, Review, Approval, Done (done) | option | only automations and approval workflows set it (enforced in SQL); an approval workflow's step field shows where the item is (docs/04 §13), its options matched to the steps by name |
 | `button` | Button | none | `{"label":"Run","confirm":null}` | none | click emits `button` event (docs/04) |
 | `subitems` | Sub-items | computed (the child sheet's rows, docs/02 §12) | `{}` | link | "3/5" done; read-only; `relatedIds` = live sub-items, so rollup, lookup and progress read them like link targets. Created by "Turn on sub-items" (`addable: false`, not in the add-field picker); not on forms |
 | `ai` | AI proposal | `{"proposal":<any>,"source":"…","model":"…","status":"proposed\|accepted\|rejected","by":"<userId>","at":"<ISO>"}` | `{"targetFieldKey":"…"}` | option | Accept copies the proposal into the target field through the normal command (validated, logged); generation is out of scope |

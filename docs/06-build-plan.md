@@ -240,6 +240,16 @@ Owner-approved design (advisory board, all seven agreed, 14 Nov 2026). docs/05 �
 - [x] Incident and Internal audit starts ship as packs too (`start-incident`, `start-audit` 1.0.0)
 - [x] Tests: `src/engine/create/match.test.ts`, `src/lib/create/intents.test.ts`, `src/lib/packs/select.test.ts`, pgTAP 0028, e2e `tests/e2e/create-wizard.spec.ts`
 
+### Approval workflows  [Opus]
+Owner-approved (14 Nov 2026), moved here from After the MVP. docs/04 §13, docs/02 §19, docs/05 (My work, item panel, Sheet settings), docs/11 (manifests).
+- [x] Definitions as data per sheet (`sheets.settings.workflows`): ordered steps with approvers (named people, a people field, a job role, a team; the owner's manager is not modelled), any one / all, an SLA, on reject (back to a step, to draft, close), required fields, a step field, a status set as it moves, lock on approval, the self-approval block (off only when the definition allows it); owners and admins only (trigger)
+- [x] Migration 0040: `workflow_instances` (approvers of every step fixed at submit, one in progress per item) and append-only `workflow_decisions`, RLS by the item's sheet; `workflow_submit`, `workflow_decide`, `workflow_withdraw` write the instance, the decision, the item's own changes and the activity log in one transaction; approvers without access or auditors reported at submit; `upgrade_pack` wrapped to apply manifest workflows
+- [x] Triggers `workflow_step_decided`, `workflow_approved`, `workflow_rejected`, `approval_overdue` (scheduler, dedupe per instance, round and step); action `start_workflow`; builder pickers; the loop guard applies
+- [x] Sheet settings › Approval workflows editor (reachable from the Workflow screen), the item panel's Approval section (state in words and a symbol, submit, approve, reject with a reason, withdraw, timeline), My work › Needs my approval with Approve, Reject and Open; the My work badge counts approvals waiting
+- [x] Pack manifests declare `workflows` per sheet (checked, planned, upgraded three ways); `iso-27001` 1.3.0: Document approval on ISMS documents (owner review → top management, status and lock on approval)
+- [x] Tests: `src/engine/approvals/approvals.test.ts`, `src/server/approvals/events.test.ts`, the upgrade and ISO 27001 pack tests, pgTAP `0030_approval_workflows.sql`, e2e `tests/e2e/approvals.spec.ts`
+- [ ] Reassign an approver mid-flight, delegation while away, working-day SLAs, reminders before the SLA (not asked for yet)
+
 ### NIS2 pack (not built yet)
 - Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace.
 
@@ -249,6 +259,5 @@ Later: NIS2, consultant multi-workspace view, private and forked packs, pack sig
 
 ## After the MVP (do not start without Tor)
 
-- Multi-step workflows with approvals (the Sun mockup's "Workflow" tab): steps, assignees, approve/reject, SLA, `start_workflow` action
 - Readiness scoring, app builder for customers, AI proposals (packs and apps: see "Packs and apps" above)
 - SSO (Microsoft Entra ID, Google), email digests, Teams app, public API and webhooks in

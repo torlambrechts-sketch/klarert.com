@@ -143,7 +143,7 @@ export function DecisionDialog({
               className={cn(inputClass, 'h-auto min-h-20 py-2')}
               value={comment}
               maxLength={2000}
-              required={needed}
+              aria-required={needed}
               aria-invalid={!!error}
               autoFocus
               onChange={(e) => setComment(e.target.value)}
