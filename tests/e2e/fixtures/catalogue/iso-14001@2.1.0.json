@@ -1,0 +1,1193 @@
+{
+  "key": "iso-14001",
+  "version": "2.1.0",
+  "title": "ISO 14001 environment (add-on)",
+  "description": "ISO 14001:2026 on the Core registers: environmental aspects and their significance, monitoring results and the concerns neighbours and others raise, with compliance obligations in the Legal register, environmental objectives, risks, incidents and documents in the shared registers, tagged ISO 14001 with their own views. Full adds emergency preparedness with tested response plans. Installs the Core registers (Full, for the Legal register) first. Written in our own words; no text of the standard.",
+  "requires": [{ "pack": "core", "range": "^1.0.0" }],
+  "standard": { "id": "iso14001", "label": "ISO 14001", "color": "green" },
+  "frameworks": [{ "key": "iso-14001", "version": "2026" }],
+  "levels": [
+    {
+      "key": "starter",
+      "name": "Starter",
+      "description": "Environmental aspects with significance, monitoring results and environmental communications, ISO 14001 columns, views and examples on the Core registers, the Environmental risk category and the audit-readiness dashboard."
+    },
+    {
+      "key": "full",
+      "name": "Full",
+      "description": "Everything in Starter plus emergency preparedness: the emergencies you could face, the response plan for each and when it was last tested."
+    }
+  ],
+  "folders": [],
+  "sheets": [
+    {
+      "ref": "aspects",
+      "name": "Environmental aspects",
+      "itemLabel": "Aspect",
+      "idPrefix": "ASP-",
+      "folder": "core:operations",
+      "kind": "register",
+      "description": "What your activities, products and services do to the environment, under normal and abnormal conditions and in an emergency, across the life cycle, and which of those effects are significant and why.",
+      "groups": [
+        { "ref": "identified", "name": "Identified", "color": "blue" },
+        { "ref": "assessed", "name": "Assessed", "color": "green" }
+      ],
+      "fields": [
+        { "key": "activity", "name": "Activity, product or service", "type": "text" },
+        {
+          "key": "aspect",
+          "name": "Environmental aspect",
+          "type": "text",
+          "description": "The part of the activity that interacts with the environment: a discharge, a use of energy, a waste."
+        },
+        {
+          "key": "impact",
+          "name": "Environmental impact",
+          "type": "text",
+          "description": "The change it causes: water pollution, emissions, landfill."
+        },
+        {
+          "key": "condition",
+          "name": "Condition",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              { "id": "opt_normal", "label": "Normal", "color": "green" },
+              { "id": "opt_abnormal", "label": "Abnormal", "color": "orange" },
+              { "id": "opt_emergency", "label": "Emergency", "color": "red" }
+            ]
+          }
+        },
+        {
+          "key": "life_cycle",
+          "name": "Life cycle stage",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              { "id": "opt_materials", "label": "Materials and purchasing", "color": "blue" },
+              { "id": "opt_production", "label": "Our operations", "color": "purple" },
+              { "id": "opt_transport", "label": "Transport", "color": "teal" },
+              { "id": "opt_use", "label": "Use by customers", "color": "orange" },
+              { "id": "opt_end", "label": "End of life", "color": "dark" }
+            ]
+          }
+        },
+        { "key": "severity", "name": "Severity", "type": "rating", "config": { "scale": 5 }, "description": "1 hardly noticeable, 5 lasting harm to the environment." },
+        { "key": "frequency", "name": "Frequency", "type": "rating", "config": { "scale": 5 }, "description": "1 rare, 5 all the time." },
+        {
+          "key": "score",
+          "name": "Score",
+          "type": "formula",
+          "config": { "expr": "IF(OR(EMPTY({severity}), EMPTY({frequency})), 0, {severity} * {frequency})", "result": "number" }
+        },
+        { "key": "obligation", "name": "Covered by a compliance obligation", "type": "check" },
+        { "key": "concern", "name": "Raised by interested parties", "type": "check" },
+        {
+          "key": "significance",
+          "name": "Significance",
+          "type": "dropdown",
+          "description": "Significant when the score is 12 or more, or when a compliance obligation or the concerns of interested parties make it so.",
+          "config": {
+            "options": [
+              { "id": "opt_not_assessed", "label": "Not assessed", "color": "grey" },
+              { "id": "opt_significant", "label": "Significant", "color": "red" },
+              { "id": "opt_not_significant", "label": "Not significant", "color": "green" }
+            ]
+          }
+        },
+        { "key": "control", "name": "How it is controlled", "type": "longtext" },
+        { "key": "owner", "name": "Owner", "type": "people", "config": { "multiple": false } },
+        {
+          "key": "risks",
+          "name": "Risks",
+          "type": "link",
+          "config": { "targetSheetRef": "core:risk", "multiple": true, "inverseKey": "iso14001_aspect" }
+        },
+        {
+          "key": "objectives",
+          "name": "Objectives",
+          "type": "link",
+          "config": { "targetSheetRef": "core:objectives", "multiple": true, "inverseKey": "iso14001_aspects" }
+        },
+        {
+          "key": "obligations",
+          "name": "Compliance obligations",
+          "type": "link",
+          "config": { "targetSheetRef": "core:legal", "multiple": true, "inverseKey": "iso14001_aspects" }
+        },
+        {
+          "key": "measurements",
+          "name": "Monitoring",
+          "type": "link",
+          "config": { "targetSheetRef": "monitoring", "multiple": true, "inverseKey": "aspect" }
+        },
+        { "key": "clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_identified", "label": "Identified", "color": "grey" },
+              { "id": "opt_review", "label": "Under review", "color": "blue" },
+              { "id": "opt_approved", "label": "Approved", "color": "green", "done": true },
+              { "id": "opt_retired", "label": "No longer applies", "color": "dark", "done": true }
+            ]
+          }
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the significance decision is in its approval. Set by the Significance approval workflow, never by hand.",
+          "config": {
+            "options": [
+              { "id": "opt_step_draft", "label": "Not submitted", "color": "grey" },
+              { "id": "opt_step_owner", "label": "Owner review", "color": "blue" },
+              { "id": "opt_step_env", "label": "Environmental approval", "color": "purple" },
+              { "id": "opt_step_rejected", "label": "Sent back", "color": "red" },
+              { "id": "opt_step_approved", "label": "Approved", "color": "green", "done": true }
+            ]
+          }
+        },
+        { "key": "review_date", "name": "Next review", "type": "date" }
+      ],
+      "views": [
+        { "name": "By status", "type": "kanban", "config": { "labelFieldKey": "status" } },
+        { "name": "By significance", "type": "kanban", "config": { "labelFieldKey": "significance" } }
+      ],
+      "tabs": [{ "ref": "table" }, { "ref": "By status" }, { "ref": "By significance" }, { "ref": "calendar" }],
+      "workflows": [
+        {
+          "id": "significance-approval",
+          "name": "Significance approval",
+          "enabled": true,
+          "requiredFields": ["aspect", "impact", "significance", "owner"],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_review",
+            "onApproved": "opt_approved",
+            "onRejected": "opt_identified"
+          },
+          "steps": [
+            {
+              "id": "owner-review",
+              "name": "Owner review",
+              "approvers": { "kind": "field", "fieldKey": "owner" },
+              "mode": "any",
+              "sla": { "amount": 5, "unit": "days" },
+              "onReject": { "to": "draft" },
+              "optionId": "opt_step_owner"
+            },
+            {
+              "id": "environmental-approval",
+              "name": "Environmental approval",
+              "approvers": { "kind": "jobRole", "roleName": "Environmental manager" },
+              "mode": "any",
+              "sla": { "amount": 10, "unit": "days" },
+              "onReject": { "to": "step", "stepId": "owner-review" },
+              "optionId": "opt_step_env"
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "coolant",
+          "group": "assessed",
+          "name": "Example: Coolant use and disposal",
+          "values": {
+            "activity": "Machining",
+            "aspect": "Used coolant",
+            "impact": "Water and soil contamination",
+            "condition": "opt_normal",
+            "life_cycle": "opt_production",
+            "severity": 4,
+            "frequency": 3,
+            "obligation": true,
+            "significance": "opt_significant",
+            "control": "Closed coolant system, collected by a licensed waste carrier",
+            "status": "opt_identified",
+            "approval_step": "opt_step_draft",
+            "review_date": "$in:180"
+          },
+          "links": { "measurements": ["ex_ph"] },
+          "requirements": { "clauses": ["iso-14001@2026#6.1.2", "iso-14001@2026#8.1"] }
+        },
+        {
+          "ref": "electricity",
+          "group": "identified",
+          "name": "Example: Electricity use",
+          "values": {
+            "activity": "Press lines",
+            "aspect": "Electricity use",
+            "impact": "Greenhouse gas emissions",
+            "condition": "opt_normal",
+            "life_cycle": "opt_production",
+            "severity": 2,
+            "frequency": 5,
+            "significance": "opt_not_assessed",
+            "status": "opt_identified",
+            "approval_step": "opt_step_draft",
+            "review_date": "$in:90"
+          },
+          "links": { "measurements": ["ex_kwh"] },
+          "requirements": { "clauses": ["iso-14001@2026#6.1.2"] }
+        },
+        {
+          "ref": "packaging",
+          "group": "identified",
+          "name": "Example: Packaging thrown away by customers",
+          "values": {
+            "activity": "Shipping finished goods",
+            "aspect": "Single-use plastic packaging",
+            "impact": "Waste to landfill and incineration",
+            "condition": "opt_normal",
+            "life_cycle": "opt_end",
+            "severity": 2,
+            "frequency": 4,
+            "concern": true,
+            "significance": "opt_not_assessed",
+            "status": "opt_identified",
+            "approval_step": "opt_step_draft",
+            "review_date": "$in:120"
+          },
+          "requirements": { "clauses": ["iso-14001@2026#6.1.2"] }
+        }
+      ]
+    },
+    {
+      "ref": "monitoring",
+      "name": "Environmental monitoring",
+      "itemLabel": "Measurement",
+      "idPrefix": "EMO-",
+      "folder": "core:operations",
+      "kind": "log",
+      "description": "The measurements that show how your significant aspects behave: what was measured, when, the result against its limit and what was done when it was over.",
+      "groups": [
+        { "ref": "recorded", "name": "Recorded", "color": "blue" },
+        { "ref": "reviewed", "name": "Reviewed", "color": "green" }
+      ],
+      "fields": [
+        { "key": "parameter", "name": "What is measured", "type": "text" },
+        {
+          "key": "aspect",
+          "name": "Aspect",
+          "type": "link",
+          "config": { "targetSheetRef": "aspects", "multiple": false, "inverseKey": "measurements" }
+        },
+        { "key": "location", "name": "Where", "type": "text" },
+        { "key": "measured_on", "name": "Measured on", "type": "date" },
+        { "key": "value", "name": "Result", "type": "number" },
+        { "key": "limit", "name": "Limit", "type": "number", "description": "The highest result allowed by a permit, a law or your own target. Leave empty when there is none." },
+        { "key": "unit", "name": "Unit", "type": "text" },
+        {
+          "key": "margin",
+          "name": "Over the limit by",
+          "type": "formula",
+          "config": { "expr": "IF(OR(EMPTY({value}), EMPTY({limit})), 0, {value} - {limit})", "result": "number" }
+        },
+        {
+          "key": "result",
+          "name": "Against the limit",
+          "type": "formula",
+          "config": { "expr": "IF(OR(EMPTY({value}), EMPTY({limit})), \"\", IF({value} > {limit}, \"Over limit\", \"Within limit\"))", "result": "text" }
+        },
+        { "key": "owner", "name": "Measured by", "type": "people", "config": { "multiple": false } },
+        { "key": "equipment", "name": "Equipment or lab", "type": "text" },
+        { "key": "nonconformity", "name": "Nonconformity", "type": "link", "config": { "targetSheetRef": "core:nc", "multiple": false } },
+        { "key": "clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_to_review", "label": "To review", "color": "blue" },
+              { "id": "opt_action", "label": "Action needed", "color": "red" },
+              { "id": "opt_reviewed", "label": "Reviewed", "color": "green", "done": true }
+            ]
+          }
+        }
+      ],
+      "views": [{ "name": "Measurement dates", "type": "calendar", "config": { "dateFieldKey": "measured_on" } }],
+      "tabs": [{ "ref": "table" }, { "ref": "Measurement dates" }],
+      "items": [
+        {
+          "ref": "ex_ph",
+          "group": "reviewed",
+          "name": "Example: pH of process water discharge, October",
+          "values": {
+            "parameter": "pH at the discharge point",
+            "location": "Outlet to the municipal sewer",
+            "measured_on": "$in:-14",
+            "value": 8.2,
+            "limit": 9,
+            "unit": "pH",
+            "equipment": "Accredited lab",
+            "status": "opt_reviewed"
+          },
+          "requirements": { "clauses": ["iso-14001@2026#9.1.1"] }
+        },
+        {
+          "ref": "ex_kwh",
+          "group": "recorded",
+          "name": "Example: Electricity use, October",
+          "values": {
+            "parameter": "Electricity per unit produced",
+            "location": "Main meter",
+            "measured_on": "$in:-10",
+            "value": 4.6,
+            "unit": "kWh per unit",
+            "status": "opt_to_review"
+          },
+          "requirements": { "clauses": ["iso-14001@2026#9.1.1", "iso-14001@2026#6.2.2"] }
+        }
+      ]
+    },
+    {
+      "ref": "communications",
+      "name": "Environmental communications",
+      "itemLabel": "Communication",
+      "idPrefix": "ECO-",
+      "folder": "core:operations",
+      "kind": "log",
+      "personalData": true,
+      "description": "What neighbours, authorities, customers and others tell you or ask about your environmental performance, and what you answered. Holds names and contact details, so it is installed restricted. An answer is due 14 days after it is received.",
+      "groups": [
+        { "ref": "new", "name": "New", "color": "red" },
+        { "ref": "answering", "name": "Being answered", "color": "orange" },
+        { "ref": "closed", "name": "Closed", "color": "green" }
+      ],
+      "fields": [
+        {
+          "key": "party",
+          "name": "From",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              { "id": "opt_neighbour", "label": "Neighbour or the public", "color": "orange" },
+              { "id": "opt_authority", "label": "Authority", "color": "red" },
+              { "id": "opt_customer", "label": "Customer", "color": "blue" },
+              { "id": "opt_employee", "label": "Employee", "color": "purple" },
+              { "id": "opt_other", "label": "Other", "color": "grey" }
+            ]
+          }
+        },
+        { "key": "contact_name", "name": "Name", "type": "text", "config": { "personalData": true } },
+        { "key": "contact_email", "name": "Contact", "type": "email", "config": { "personalData": true } },
+        { "key": "received_on", "name": "Received on", "type": "date" },
+        {
+          "key": "answer_due",
+          "name": "Answer due",
+          "type": "formula",
+          "config": { "expr": "IF(EMPTY({received_on}), \"\", ADDDAYS({received_on}, 14))", "result": "date" }
+        },
+        { "key": "topic", "name": "What it is about", "type": "longtext" },
+        {
+          "key": "aspect",
+          "name": "Aspect",
+          "type": "link",
+          "config": { "targetSheetRef": "aspects", "multiple": false }
+        },
+        { "key": "owner", "name": "Handled by", "type": "people", "config": { "multiple": false } },
+        { "key": "answer", "name": "Our answer", "type": "longtext" },
+        { "key": "needs_action", "name": "Needs action", "type": "check" },
+        { "key": "actions", "name": "Actions", "type": "link", "config": { "targetSheetRef": "core:actions", "multiple": true } },
+        { "key": "clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_new", "label": "New", "color": "red" },
+              { "id": "opt_answering", "label": "Being answered", "color": "orange" },
+              { "id": "opt_answered", "label": "Answered", "color": "green", "done": true },
+              { "id": "opt_no_answer", "label": "No answer needed", "color": "grey", "done": true }
+            ]
+          },
+          "rules": [
+            {
+              "id": "answer_needs",
+              "whenFieldKey": "status",
+              "whenValues": ["opt_answered"],
+              "require": ["answer"],
+              "message": "Write down what you answered before marking it answered."
+            },
+            {
+              "id": "no_answer_why",
+              "whenFieldKey": "status",
+              "whenValues": ["opt_no_answer"],
+              "requireComment": true,
+              "message": "Say why no answer is needed."
+            }
+          ]
+        }
+      ],
+      "views": [{ "name": "By status", "type": "kanban", "config": { "labelFieldKey": "status" } }],
+      "tabs": [{ "ref": "table" }, { "ref": "By status" }, { "ref": "calendar" }, { "ref": "form" }],
+      "forms": [
+        {
+          "ref": "concern",
+          "name": "Raise an environmental concern",
+          "groupRef": "new",
+          "access": "internal",
+          "layout": {
+            "title": "Raise an environmental concern",
+            "description": "Tell us about noise, smells, dust, spills, waste or anything else from our site or our work that worries you. We answer within 14 days.",
+            "nameLabel": "Your concern, in one line",
+            "fields": [
+              { "key": "topic", "label": "What did you notice, where and when?", "required": true },
+              { "key": "party", "label": "Who are you?", "help": "A neighbour, an authority, a customer …" },
+              { "key": "contact_name", "label": "Your name" },
+              { "key": "contact_email", "label": "Your email, so we can answer you" },
+              { "key": "received_on", "label": "Today's date", "required": true }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. We have your concern and will answer within 14 days.",
+            "prefill": [{ "key": "status", "value": "opt_new" }]
+          },
+          "notice": {
+            "purpose": "To look into environmental concerns about our site and work and to answer you.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who handle environmental communications.",
+            "retention": "Kept for 3 years after we answered.",
+            "rights": "You can ask to see, correct or delete what you sent. Contact the person who shared this form."
+          }
+        }
+      ],
+      "retention": {
+        "personalNames": true,
+        "rules": [
+          {
+            "id": "communications_3y",
+            "name": "Communications: 3 years after they were received",
+            "from": { "kind": "field", "fieldKey": "received_on" },
+            "period": { "n": 3, "unit": "years" },
+            "action": "erase",
+            "comments": true,
+            "onlyDone": true,
+            "note": "A suggestion, not advice: set the period your workspace needs. Erases the name and contact of the person who wrote and the comments; what was said and answered stays so you can show how you responded."
+          }
+        ]
+      },
+      "items": [
+        {
+          "ref": "ex_noise",
+          "group": "answering",
+          "name": "Example: Night-time noise from the loading bay",
+          "values": {
+            "party": "opt_neighbour",
+            "received_on": "$in:-5",
+            "topic": "Lorries reversing with alarms after 22:00 three nights this week.",
+            "status": "opt_answering"
+          },
+          "requirements": { "clauses": ["iso-14001@2026#7.4.3", "iso-14001@2026#4.2"] }
+        }
+      ]
+    },
+    {
+      "ref": "emergency",
+      "name": "Emergency preparedness",
+      "itemLabel": "Emergency situation",
+      "idPrefix": "EMG-",
+      "folder": "core:operations",
+      "level": "full",
+      "kind": "register",
+      "description": "The environmental emergencies you could face, the response planned for each, the equipment it needs and when the plan was last tested.",
+      "groups": [
+        { "ref": "planned", "name": "Planned", "color": "blue" },
+        { "ref": "tested", "name": "Tested", "color": "green" }
+      ],
+      "fields": [
+        { "key": "situation", "name": "What could happen", "type": "longtext" },
+        { "key": "aspect", "name": "Aspect", "type": "link", "config": { "targetSheetRef": "aspects", "multiple": false } },
+        { "key": "response", "name": "Response plan", "type": "longtext", "description": "Who does what, in which order, and who is told (emergency services, the authority, neighbours)." },
+        { "key": "equipment", "name": "Equipment needed", "type": "text" },
+        { "key": "owner", "name": "Owner", "type": "people", "config": { "multiple": false } },
+        { "key": "last_tested", "name": "Last tested", "type": "date" },
+        { "key": "next_test", "name": "Next test", "type": "date" },
+        { "key": "lessons", "name": "What the last test taught us", "type": "longtext" },
+        { "key": "clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_needed", "label": "Plan needed", "color": "red" },
+              { "id": "opt_approval", "label": "Awaiting approval", "color": "purple" },
+              { "id": "opt_ready", "label": "Plan ready", "color": "blue" },
+              { "id": "opt_tested", "label": "Tested", "color": "green", "done": true },
+              { "id": "opt_update", "label": "Needs update", "color": "orange" }
+            ]
+          },
+          "rules": [
+            {
+              "id": "tested_needs",
+              "whenFieldKey": "status",
+              "whenValues": ["opt_tested"],
+              "require": ["response", "lessons"],
+              "message": "Write down the response plan and what the test taught you."
+            }
+          ]
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the response plan is in its approval. Set by the Response plan approval workflow, never by hand.",
+          "config": {
+            "options": [
+              { "id": "opt_step_draft", "label": "Not submitted", "color": "grey" },
+              { "id": "opt_step_env", "label": "Environmental approval", "color": "blue" },
+              { "id": "opt_step_rejected", "label": "Sent back", "color": "red" },
+              { "id": "opt_step_approved", "label": "Approved", "color": "green", "done": true }
+            ]
+          }
+        }
+      ],
+      "views": [{ "name": "By status", "type": "kanban", "config": { "labelFieldKey": "status" } }],
+      "tabs": [{ "ref": "table" }, { "ref": "By status" }, { "ref": "calendar" }],
+      "workflows": [
+        {
+          "id": "response-plan-approval",
+          "name": "Response plan approval",
+          "enabled": true,
+          "requiredFields": ["situation", "response", "owner"],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_approval",
+            "onApproved": "opt_ready",
+            "onRejected": "opt_update"
+          },
+          "steps": [
+            {
+              "id": "environmental-approval",
+              "name": "Environmental approval",
+              "approvers": { "kind": "jobRole", "roleName": "Environmental manager" },
+              "mode": "any",
+              "sla": { "amount": 10, "unit": "days" },
+              "onReject": { "to": "draft" },
+              "optionId": "opt_step_env"
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_oil_spill",
+          "group": "planned",
+          "name": "Example: Oil spill in the yard reaches the storm drain",
+          "values": {
+            "situation": "A delivery hose fails while filling the oil tank and oil runs towards the storm drain.",
+            "response": "Stop the pump, cover the drain with the mat from the spill kit, contain with booms, call the waste carrier, tell the environmental manager and the authority if oil reached the drain.",
+            "equipment": "Spill kit and drain mat by the tank",
+            "next_test": "$in:45",
+            "status": "opt_ready",
+            "approval_step": "opt_step_draft"
+          },
+          "requirements": { "clauses": ["iso-14001@2026#8.2"] }
+        }
+      ]
+    }
+  ],
+  "extends": [
+    {
+      "pack": "core",
+      "sheet": "risk_category",
+      "items": [
+        {
+          "ref": "iso14001_environmental",
+          "group": "in_use",
+          "name": "Environmental",
+          "values": {
+            "likelihood_scale": "1 Rare: never happened here or at similar sites. 2 Unlikely: happened at a similar site. 3 Possible: happened here before. 4 Likely: happens most years. 5 Almost certain: happens several times a year.",
+            "impact_scale": "1 Negligible: contained on site, no lasting effect. 2 Minor: cleaned up within a day. 3 Moderate: reported to the authority or a neighbour complains. 4 Major: harm outside the site that takes months to put right. 5 Severe: lasting harm to the environment or a prosecution.",
+            "appetite": 6,
+            "review_date": "$in:365",
+            "standards": ["$option:ISO 14001"]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "risk",
+      "fields": [
+        {
+          "key": "iso14001_aspect",
+          "name": "Environmental aspect",
+          "type": "link",
+          "config": { "targetSheetRef": "aspects", "multiple": true, "inverseKey": "risks" }
+        },
+        { "key": "iso14001_clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "items": [
+        {
+          "ref": "iso14001_spill",
+          "group": "identified",
+          "name": "Example: Coolant spill reaches a surface drain",
+          "values": {
+            "cause": "Worn hose clamp on a grinder",
+            "consequence": "Water pollution and a report to the authority",
+            "likelihood": 2,
+            "impact": 4,
+            "treatment": "opt_reduce",
+            "review_date": "$in:90",
+            "status": "opt_open",
+            "standards": ["$option:ISO 14001"]
+          },
+          "links": { "category": ["iso14001_environmental"], "iso14001_aspect": ["coolant"] },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#6.1.4", "iso-14001@2026#8.2"] }
+        },
+        {
+          "ref": "iso14001_ev",
+          "group": "identified",
+          "name": "Example: Switch the forklift fleet to electric",
+          "values": {
+            "cause": "Diesel forklifts are due for replacement next year",
+            "consequence": "Lower emissions and fuel costs, quieter nights for neighbours",
+            "likelihood": 4,
+            "impact": 2,
+            "treatment": "opt_pursue",
+            "review_date": "$in:150",
+            "status": "opt_open",
+            "standards": ["$option:ISO 14001"]
+          },
+          "links": { "category": ["iso14001_environmental"] },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#6.1.4"] }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso14001_above_appetite",
+          "name": "Environmental risk above appetite → owner treats it, the environmental manager is told",
+          "advanced": true,
+          "description": "Escalation: when an ISO 14001 risk's score rises above 6 (the Environmental category's appetite) and it is above its category's appetite, the risk owner is asked to plan the treatment and the environmental manager is told.",
+          "trigger": { "type": "number_above", "fieldKey": "score", "threshold": 6 },
+          "conditions": [
+            { "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] },
+            { "fieldKey": "against_appetite", "op": "is", "value": "Above appetite" }
+          ],
+          "actions": [
+            { "type": "request_update", "fieldKey": "owner", "message": "{id} {name} scores {score}, above the appetite of its category. Plan the treatment and set a review date." },
+            { "type": "notify", "to": ["jobRole:Environmental manager", "field:owner"], "message": "{id} {name} is above appetite (score {score}). The risk owner has been asked to treat it." }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "incidents",
+      "fields": [
+        { "key": "iso14001_released", "name": "What was released, and how much", "type": "text" },
+        { "key": "iso14001_reported", "name": "Reported to the authority", "type": "check" },
+        { "key": "iso14001_clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "options": {
+        "incident_type": [{ "id": "iso14001_environmental", "label": "Environmental", "color": "green" }]
+      },
+      "forms": [
+        {
+          "ref": "iso14001_spill",
+          "name": "Report a spill or environmental incident",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report a spill or environmental incident",
+            "description": "Report any spill, leak, release to air or water, or near miss with chemicals or waste, even a small one you cleaned up yourself.",
+            "nameLabel": "What happened, in one line",
+            "fields": [
+              { "key": "occurred_on", "label": "When did it happen?", "required": true },
+              { "key": "iso14001_released", "label": "What was released, and roughly how much?" },
+              { "key": "severity", "label": "How serious do you think it is?", "help": "Your best guess. The investigator decides." },
+              { "key": "reported_by", "label": "Your name", "help": "So the investigator can ask you more." }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The environmental team has your report.",
+            "prefill": [
+              { "key": "status", "value": "opt_new" },
+              { "key": "incident_type", "value": "iso14001_environmental" },
+              { "key": "standards", "value": ["iso14001"] }
+            ]
+          },
+          "notice": {
+            "purpose": "To investigate environmental incidents and stop them happening again.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who investigate incidents.",
+            "retention": "Kept for 5 years after the incident is closed.",
+            "rights": "You can ask to see, correct or delete what you reported. Contact the person who shared this form."
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "iso14001_hydraulic",
+          "group": "closed",
+          "name": "Example: Hydraulic oil leak at press 3",
+          "values": {
+            "incident_type": "iso14001_environmental",
+            "occurred_on": "$in:-30",
+            "reported_by": "Shift lead",
+            "severity": "opt_low",
+            "status": "opt_closed",
+            "root_cause": "A worn seal that was not on the maintenance plan.",
+            "iso14001_released": "About 5 litres of hydraulic oil, contained on the floor",
+            "standards": ["$option:ISO 14001"]
+          },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#8.2", "iso-14001@2026#10.2"] }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso14001_incident_escalate",
+          "name": "Serious environmental incident → tell the environmental manager and raise a nonconformity",
+          "advanced": true,
+          "description": "Escalation and cascade: an environmental incident reported as High severity goes straight to the environmental manager and raises a linked nonconformity tagged ISO 14001, so the cause is found and the report to the authority is not missed.",
+          "trigger": { "type": "item_created" },
+          "conditions": [
+            { "fieldKey": "incident_type", "op": "is_any_of", "value": ["iso14001_environmental"] },
+            { "fieldKey": "severity", "op": "is_any_of", "value": ["opt_high"] },
+            { "fieldKey": "nonconformity", "op": "has_none" }
+          ],
+          "actions": [
+            { "type": "notify", "to": ["jobRole:Environmental manager", "field:owner"], "message": "Serious environmental incident {id} {name} on {occurred_on}: {iso14001_released}. Check whether the authority must be told." },
+            {
+              "type": "create_item",
+              "sheetRef": "core:nc",
+              "groupRef": "open",
+              "name": "Environmental incident: {name}",
+              "values": { "source": "opt_incident", "stage": "opt_containment", "due_date": "$in:30", "standards": ["iso14001"] },
+              "link": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "objectives",
+      "fields": [
+        {
+          "key": "iso14001_aspects",
+          "name": "Environmental aspects",
+          "type": "link",
+          "config": { "targetSheetRef": "aspects", "multiple": true, "inverseKey": "objectives" }
+        },
+        { "key": "iso14001_baseline", "name": "Baseline", "type": "text", "description": "Where you started, so progress can be shown: the figure and the year." },
+        { "key": "iso14001_clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "items": [
+        {
+          "ref": "iso14001_energy",
+          "group": "active",
+          "name": "Example: Cut electricity per unit by 10% by year end",
+          "values": {
+            "kpi": "kWh per unit produced, from the main meter each month",
+            "target": "4.1 kWh per unit",
+            "result": "4.6 kWh per unit in October",
+            "status": "opt_at_risk",
+            "due": "$in:200",
+            "review_date": "$in:30",
+            "iso14001_baseline": "4.6 kWh per unit (last year)",
+            "standards": ["$option:ISO 14001"]
+          },
+          "links": { "iso14001_aspects": ["electricity"] },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#6.2.1", "iso-14001@2026#6.2.2"] }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "legal",
+      "fields": [
+        {
+          "key": "iso14001_aspects",
+          "name": "Environmental aspects",
+          "type": "link",
+          "config": { "targetSheetRef": "aspects", "multiple": true, "inverseKey": "obligations" }
+        },
+        { "key": "iso14001_permit", "name": "Permit or licence", "type": "text", "description": "The permit, licence or agreement number, when there is one." },
+        { "key": "iso14001_nc", "name": "Nonconformities", "type": "link", "config": { "targetSheetRef": "core:nc", "multiple": true } },
+        { "key": "iso14001_clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "items": [
+        {
+          "ref": "iso14001_discharge",
+          "group": "current",
+          "name": "Example: Discharge permit for process water",
+          "values": {
+            "jurisdiction": "opt_local",
+            "source": "Discharge agreement with the municipal water company",
+            "summary": "pH between 6 and 9 at the outlet, sampled every month by an accredited lab, results sent each quarter.",
+            "evaluation": "opt_compliant",
+            "last_evaluated": "$in:-120",
+            "next_evaluation": "$in:245",
+            "iso14001_permit": "EXAMPLE-0042",
+            "standards": ["$option:ISO 14001"]
+          },
+          "links": { "iso14001_aspects": ["coolant"] },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#6.1.3", "iso-14001@2026#9.1.2"] }
+        },
+        {
+          "ref": "iso14001_waste",
+          "group": "current",
+          "name": "Example: Hazardous waste records",
+          "values": {
+            "jurisdiction": "opt_national",
+            "source": "National waste regulations",
+            "summary": "Use licensed carriers, keep a consignment note for each load of hazardous waste and keep the notes for three years.",
+            "evaluation": "opt_not_evaluated",
+            "next_evaluation": "$in:60",
+            "standards": ["$option:ISO 14001"]
+          },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#6.1.3"] }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso14001_not_compliant",
+          "name": "Obligation evaluated as not compliant → raise a nonconformity",
+          "advanced": true,
+          "description": "Cascade: when the evaluation of an ISO 14001 compliance obligation finds it not compliant, a linked nonconformity tagged ISO 14001 is raised and the owner told, so the gap is closed and the evidence is there for the auditor.",
+          "trigger": { "type": "field_becomes", "fieldKey": "evaluation", "value": "opt_not_compliant" },
+          "conditions": [
+            { "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] },
+            { "fieldKey": "iso14001_nc", "op": "has_none" }
+          ],
+          "actions": [
+            {
+              "type": "create_item",
+              "sheetRef": "core:nc",
+              "groupRef": "open",
+              "name": "Not compliant: {name}",
+              "values": { "source": "iso14001_compliance", "stage": "opt_containment", "due_date": "$in:30", "standards": ["iso14001"] },
+              "link": true
+            },
+            { "type": "notify", "to": ["field:owner"], "message": "{id} {name} was evaluated as not compliant. A nonconformity has been raised." }
+          ]
+        },
+        {
+          "ref": "iso14001_next_evaluation",
+          "name": "Obligation evaluated as compliant → next evaluation in a year",
+          "advanced": true,
+          "description": "Recurring evaluation of compliance: when an ISO 14001 obligation is evaluated as compliant, the date is recorded and the next evaluation set a year ahead, so Core's 30-day reminder comes round again.",
+          "trigger": { "type": "field_becomes", "fieldKey": "evaluation", "value": "opt_compliant" },
+          "conditions": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }],
+          "actions": [
+            { "type": "set_field", "fieldKey": "last_evaluated", "value": "$today" },
+            { "type": "set_field", "fieldKey": "next_evaluation", "value": "$in:365" }
+          ]
+        },
+        {
+          "ref": "iso14001_evaluation_overdue",
+          "name": "Obligation evaluation 14 days overdue → tell the environmental manager",
+          "advanced": true,
+          "description": "Escalation ladder: Core reminds the owner 30 days before an evaluation is due; when an ISO 14001 obligation is still not evaluated as compliant 14 days after the date, the environmental manager is told.",
+          "trigger": { "type": "date_arrives", "fieldKey": "next_evaluation", "offsetDays": 14 },
+          "conditions": [
+            { "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] },
+            { "fieldKey": "evaluation", "op": "is_not_done" }
+          ],
+          "actions": [
+            { "type": "notify", "to": ["jobRole:Environmental manager", "field:owner"], "message": "{id} {name} was due for its compliance evaluation on {next_evaluation} and is still {evaluation}." }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "nc",
+      "fields": [
+        { "key": "iso14001_clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "options": {
+        "source": [
+          { "id": "iso14001_monitoring", "label": "Monitoring result", "color": "teal" },
+          { "id": "iso14001_compliance", "label": "Compliance evaluation", "color": "purple" }
+        ]
+      }
+    },
+    {
+      "pack": "core",
+      "sheet": "documents",
+      "fields": [
+        { "key": "iso14001_clauses", "name": "ISO 14001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "items": [
+        {
+          "ref": "iso14001_policy",
+          "group": "draft",
+          "name": "Environmental policy",
+          "values": { "document_id": "EMS-POL-01", "doc_type": "opt_policy", "status": "opt_draft", "version": 1, "next_review": "$in:365", "standards": ["$option:ISO 14001"] },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#5.2"] }
+        },
+        {
+          "ref": "iso14001_scope",
+          "group": "draft",
+          "name": "Scope of the environmental management system",
+          "values": { "document_id": "EMS-SCP-01", "doc_type": "opt_policy", "status": "opt_draft", "version": 1, "next_review": "$in:365", "standards": ["$option:ISO 14001"] },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#4.3"] }
+        },
+        {
+          "ref": "iso14001_aspects_method",
+          "group": "draft",
+          "name": "How we find and rate environmental aspects",
+          "values": { "document_id": "EMS-PRO-01", "doc_type": "opt_procedure", "status": "opt_draft", "version": 1, "next_review": "$in:365", "standards": ["$option:ISO 14001"] },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#6.1.2"] }
+        },
+        {
+          "ref": "iso14001_emergency_plan",
+          "group": "draft",
+          "name": "Environmental emergency plan",
+          "values": { "document_id": "EMS-PLN-01", "doc_type": "opt_plan", "status": "opt_draft", "version": 1, "next_review": "$in:365", "standards": ["$option:ISO 14001"] },
+          "requirements": { "iso14001_clauses": ["iso-14001@2026#8.2"] }
+        }
+      ]
+    },
+    { "pack": "core", "sheet": "actions" }
+  ],
+  "automations": [
+    {
+      "ref": "aspect_review_due",
+      "sheet": "aspects",
+      "name": "Aspect review in 14 days → tell the owner",
+      "trigger": { "type": "date_arrives", "fieldKey": "review_date", "offsetDays": -14 },
+      "conditions": [{ "fieldKey": "status", "op": "is_none_of", "value": ["opt_retired"] }],
+      "actions": [
+        { "type": "notify", "to": ["field:owner"], "message": "Review {id} {name} and its significance by {review_date}." }
+      ]
+    },
+    {
+      "ref": "aspect_significant",
+      "sheet": "aspects",
+      "name": "Aspect scores 12 or more → mark it significant",
+      "advanced": true,
+      "startInTestMode": false,
+      "description": "Gate on the method: an aspect whose severity × frequency reaches 12 is marked Significant and the decision is noted on the item, so the significance rule in your method is applied the same way every time. A person can still mark a lower-scoring aspect significant for an obligation or a concern.",
+      "trigger": { "type": "number_above", "fieldKey": "score", "threshold": 11 },
+      "conditions": [{ "fieldKey": "significance", "op": "is_none_of", "value": ["opt_significant"] }],
+      "actions": [
+        { "type": "set_field", "fieldKey": "significance", "value": "opt_significant" },
+        { "type": "post_update", "message": "Marked significant: the score is {score} (12 or more). Plan how it is controlled and submit it for approval." }
+      ]
+    },
+    {
+      "ref": "aspect_next_review",
+      "sheet": "aspects",
+      "name": "Significance approved → next review in a year",
+      "advanced": true,
+      "description": "Recurring review cycle: when the significance of an aspect is approved, the next review is set a year ahead, so every aspect is looked at again at least once a year.",
+      "trigger": { "type": "workflow_approved", "workflowId": "significance-approval" },
+      "conditions": [],
+      "actions": [{ "type": "set_field", "fieldKey": "review_date", "value": "$in:365" }]
+    },
+    {
+      "ref": "monitoring_over_limit",
+      "sheet": "monitoring",
+      "name": "Measurement over its limit → raise a nonconformity",
+      "advanced": true,
+      "description": "Cascade: a monitoring result above its limit marks the measurement Action needed and raises a linked nonconformity tagged ISO 14001 with the figures, so the cause is investigated and a permit breach is not overlooked.",
+      "trigger": { "type": "number_above", "fieldKey": "margin", "threshold": 0 },
+      "conditions": [{ "fieldKey": "nonconformity", "op": "has_none" }],
+      "actions": [
+        { "type": "set_field", "fieldKey": "status", "value": "opt_action" },
+        {
+          "type": "create_item",
+          "sheetRef": "core:nc",
+          "groupRef": "open",
+          "name": "Over the limit: {parameter} on {measured_on}",
+          "values": { "source": "iso14001_monitoring", "stage": "opt_containment", "due_date": "$in:14", "standards": ["iso14001"] },
+          "link": true
+        }
+      ]
+    },
+    {
+      "ref": "communication_answer_soon",
+      "sheet": "communications",
+      "name": "Answer due in 2 days → tell the handler",
+      "advanced": true,
+      "description": "SLA clock, step 1: a concern from a neighbour, an authority or anyone else is answered within 14 days. Two days before the answer is due, the handler is reminded.",
+      "trigger": { "type": "date_arrives", "fieldKey": "answer_due", "offsetDays": -2 },
+      "conditions": [{ "fieldKey": "status", "op": "is_not_done" }],
+      "actions": [
+        { "type": "notify", "to": ["field:owner"], "message": "{id} {name} should have our answer by {answer_due}." }
+      ]
+    },
+    {
+      "ref": "communication_answer_late",
+      "sheet": "communications",
+      "name": "No answer in 14 days → tell the environmental manager",
+      "advanced": true,
+      "description": "SLA clock, step 2: when the 14 days have passed without an answer, the environmental manager is told the next day along with the handler.",
+      "trigger": { "type": "date_arrives", "fieldKey": "answer_due", "offsetDays": 1 },
+      "conditions": [{ "fieldKey": "status", "op": "is_not_done" }],
+      "actions": [
+        { "type": "notify", "to": ["jobRole:Environmental manager", "field:owner"], "message": "{id} {name} was due an answer on {answer_due} and has none yet." }
+      ]
+    },
+    {
+      "ref": "communication_action",
+      "sheet": "communications",
+      "name": "Concern needs action → create an action",
+      "advanced": true,
+      "description": "Cascade: ticking Needs action on a communication creates a linked action in Actions, tagged ISO 14001 and due in 30 days, so what you promised the neighbour or the authority is followed up like any other action.",
+      "trigger": { "type": "field_becomes", "fieldKey": "needs_action", "value": "true" },
+      "conditions": [{ "fieldKey": "actions", "op": "has_none" }],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "core:actions",
+          "groupRef": "open",
+          "name": "Follow up: {name}",
+          "values": { "origin": "Environmental communication {id}", "due": "$in:30", "standards": ["iso14001"] },
+          "link": true
+        }
+      ]
+    },
+    {
+      "ref": "emergency_test_due",
+      "sheet": "emergency",
+      "level": "full",
+      "name": "Emergency test in 14 days → tell the owner",
+      "trigger": { "type": "date_arrives", "fieldKey": "next_test", "offsetDays": -14 },
+      "conditions": [],
+      "actions": [
+        { "type": "notify", "to": ["field:owner"], "message": "Test the response to {id} {name} by {next_test}: run a drill or a walk-through and write down what it taught you." }
+      ]
+    },
+    {
+      "ref": "emergency_tested",
+      "sheet": "emergency",
+      "level": "full",
+      "name": "Plan tested → record the date and plan the next test",
+      "advanced": true,
+      "description": "Recurring test cycle: when a response plan is marked Tested, today's date is recorded and the next test set a year ahead, so every plan is tested at least once a year.",
+      "trigger": { "type": "field_becomes", "fieldKey": "status", "value": "opt_tested" },
+      "conditions": [],
+      "actions": [
+        { "type": "set_field", "fieldKey": "last_tested", "value": "$today" },
+        { "type": "set_field", "fieldKey": "next_test", "value": "$in:365" }
+      ]
+    }
+  ],
+  "dashboards": [
+    {
+      "ref": "ems_overview",
+      "name": "ISO 14001 audit readiness",
+      "headline": true,
+      "widgets": [
+        { "ref": "w_clauses", "type": "by_option", "title": "ISO 14001 requirements by implementation", "library": "iso-14001@2026", "fieldKey": "status" },
+        { "ref": "w_significance", "type": "by_option", "title": "Environmental aspects by significance", "sheetRef": "aspects", "fieldKey": "significance" },
+        { "ref": "w_aspects_due", "type": "overdue", "title": "Aspects due for review", "sheetRef": "aspects", "fieldKey": "review_date" },
+        {
+          "ref": "w_obligations",
+          "type": "by_option",
+          "title": "Compliance obligations by evaluation",
+          "sheetRef": "core:legal",
+          "fieldKey": "evaluation",
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
+        },
+        {
+          "ref": "w_obligations_due",
+          "type": "overdue",
+          "title": "Compliance evaluations overdue",
+          "sheetRef": "core:legal",
+          "fieldKey": "next_evaluation",
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
+        },
+        { "ref": "w_monitoring", "type": "by_option", "title": "Monitoring results by status", "sheetRef": "monitoring", "fieldKey": "status" },
+        { "ref": "w_concerns", "type": "overdue", "title": "Concerns not answered in time", "sheetRef": "communications", "fieldKey": "answer_due" },
+        {
+          "ref": "w_objectives",
+          "type": "by_option",
+          "title": "Environmental objectives by status",
+          "sheetRef": "core:objectives",
+          "fieldKey": "status",
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
+        },
+        {
+          "ref": "w_incidents",
+          "type": "by_option",
+          "title": "Environmental incidents by status",
+          "sheetRef": "core:incidents",
+          "fieldKey": "status",
+          "conditions": [{ "fieldKey": "incident_type", "op": "is_any_of", "value": ["iso14001_environmental"] }]
+        },
+        {
+          "ref": "w_nc_open",
+          "type": "count",
+          "title": "Open ISO 14001 nonconformities",
+          "sheetRef": "core:nc",
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }],
+          "conditions": [{ "fieldKey": "stage", "op": "is_not_done" }]
+        },
+        {
+          "ref": "w_risks",
+          "type": "by_option",
+          "title": "Environmental risks and opportunities by status",
+          "sheetRef": "core:risk",
+          "fieldKey": "status",
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
+        }
+      ]
+    }
+  ],
+  "setup": {
+    "title": "ISO 14001 setup",
+    "description": "Four steps to an environmental system an auditor can follow, on the shared registers.",
+    "steps": [
+      {
+        "ref": "applicability",
+        "title": "Decide what applies",
+        "body": "Mark every ISO 14001 requirement applicable or not, with a reason for the ones that are not.",
+        "target": { "library": "iso-14001@2026" },
+        "rules": [{ "library": "iso-14001@2026", "all": [{ "fieldKey": "applicable", "op": "is_not_empty" }] }]
+      },
+      {
+        "ref": "aspects",
+        "title": "Find and rate your environmental aspects",
+        "body": "List what your activities do to the environment, across the life cycle, rate each one and get the significant ones approved.",
+        "target": { "sheetRef": "aspects" },
+        "rules": [
+          { "sheetRef": "aspects", "all": [{ "fieldKey": "significance", "op": "is_none_of", "value": ["opt_not_assessed"] }], "min": 5 },
+          { "sheetRef": "aspects", "all": [{ "fieldKey": "status", "op": "is_done" }], "min": 5 }
+        ]
+      },
+      {
+        "ref": "monitoring",
+        "title": "Record what you monitor",
+        "body": "Record the measurements that show how your significant aspects behave, with their limits.",
+        "target": { "sheetRef": "monitoring" },
+        "rules": [{ "sheetRef": "monitoring", "min": 3 }]
+      },
+      {
+        "ref": "concerns",
+        "title": "Open a channel for concerns",
+        "body": "Share the concern form with neighbours and others who may be affected, and log what they already told you.",
+        "target": { "sheetRef": "communications", "view": "Raise an environmental concern" },
+        "rules": [{ "sheetRef": "communications", "min": 1 }]
+      }
+    ]
+  }
+}

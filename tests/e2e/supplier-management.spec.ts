@@ -26,7 +26,7 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
   await signIn(page, 'maria@example.com', `/${slug}/home`);
   await page.goto(`/${slug}/home`);
 
-  // ── Create offers 3.0.0 for "Supplier onboarding" (a new major: a fresh install)
+  // ── Create offers 3.1.0 for "Supplier onboarding" (a new major: a fresh install)
   const wizard = page.getByRole('dialog', { name: 'Create' });
   await expect(async () => {
     await page.keyboard.press('Control+k');
@@ -36,7 +36,7 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
   await wizard.getByTestId('create-matches').getByRole('button').filter({ hasText: TITLE }).click();
   const preview = wizard.getByTestId('create-preview');
   await expect(preview.getByRole('heading', { name: TITLE })).toBeVisible();
-  await expect(preview).toContainText('3.0.0');
+  await expect(preview).toContainText('3.1.0');
   await page.keyboard.press('Escape');
   await expect(wizard).toBeHidden();
 
@@ -46,14 +46,14 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
     .getByRole('list', { name: 'Available packs' })
     .getByRole('listitem')
     .filter({ hasText: TITLE });
-  await expect(row).toContainText('3.0.0');
+  await expect(row).toContainText('3.1.0');
   const dialog = page.getByRole('dialog');
   await expect(async () => {
     await row.getByRole('button', { name: `Preview ${TITLE}` }).click();
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.2.0 (Starter) first.',
+    'Installs Core registers 1.3.0 (Starter) first.',
     { timeout: 30_000 },
   );
   await expect(dialog.getByTestId('adopts-framework')).toHaveCount(0);

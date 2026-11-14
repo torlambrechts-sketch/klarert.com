@@ -54,8 +54,8 @@ const sheet = (ref: string) => pack.sheets.find((s) => s.ref === ref)!;
 const country = pack.settings![0]!;
 
 describe('NIS2 add-on', () => {
-  it('is a 1.0.0 add-on to Core (Full: Controls and training) on the NIS2 library that meets the quality bar', () => {
-    expect(pack.version).toBe('1.0.0');
+  it('is a 1.1.0 add-on to Core (Full: Controls and training) on the NIS2 library that meets the quality bar', () => {
+    expect(pack.version).toBe('1.1.0');
     expect(pack.requires).toEqual([{ pack: 'core', range: '^1.0.0' }]);
     expect(pack.frameworks).toEqual([{ key: 'nis2', version: '2022' }]);
     expect(neededLevel(pack, core)).toBe('full');

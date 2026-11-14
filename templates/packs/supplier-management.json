@@ -1,6 +1,6 @@
 {
   "key": "supplier-management",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "title": "Supplier management (add-on)",
   "description": "Supplier approval, reviews, a library of supplier requirements with the rules for who they apply to, and a check per supplier and requirement kept in step for you, on the shared Suppliers register of the Core registers. Supplier documents go in Documents and policies, supplier risks in the Risk register and supplier problems in Nonconformities and CAPA. Installs the Core registers first.",
   "requires": [
@@ -63,13 +63,17 @@
           "name": "Reviewer",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
           "key": "review_date",
           "name": "Review date",
-          "type": "date"
+          "type": "date",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "result",
@@ -92,7 +96,8 @@
                 "label": "Fail",
                 "color": "red"
               }
-            ]
+            ],
+            "askWhenAdding": true
           }
         },
         {

@@ -1,6 +1,6 @@
 {
   "key": "iso-14001",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "title": "ISO 14001 environment (add-on)",
   "description": "ISO 14001:2026 on the Core registers: environmental aspects and their significance, monitoring results and the concerns neighbours and others raise, with compliance obligations in the Legal register, environmental objectives, risks, incidents and documents in the shared registers, tagged ISO 14001 with their own views. Full adds emergency preparedness with tested response plans. Installs the Core registers (Full, for the Legal register) first. Written in our own words; no text of the standard.",
   "requires": [{ "pack": "core", "range": "^1.0.0" }],
@@ -33,17 +33,19 @@
         { "ref": "assessed", "name": "Assessed", "color": "green" }
       ],
       "fields": [
-        { "key": "activity", "name": "Activity, product or service", "type": "text" },
+        { "key": "activity", "name": "Activity, product or service", "type": "text", "config": { "askWhenAdding": true } },
         {
           "key": "aspect",
           "name": "Environmental aspect",
           "type": "text",
+          "config": { "askWhenAdding": true },
           "description": "The part of the activity that interacts with the environment: a discharge, a use of energy, a waste."
         },
         {
           "key": "impact",
           "name": "Environmental impact",
           "type": "text",
+          "config": { "askWhenAdding": true },
           "description": "The change it causes: water pollution, emissions, landfill."
         },
         {
@@ -96,7 +98,7 @@
           }
         },
         { "key": "control", "name": "How it is controlled", "type": "longtext" },
-        { "key": "owner", "name": "Owner", "type": "people", "config": { "multiple": false } },
+        { "key": "owner", "name": "Owner", "type": "people", "config": { "multiple": false, "askWhenAdding": true } },
         {
           "key": "risks",
           "name": "Risks",

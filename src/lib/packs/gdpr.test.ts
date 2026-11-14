@@ -55,8 +55,8 @@ const withCore = (over: Partial<PackSnapshot> = {}): PackSnapshot => {
 const sheet = (ref: string) => pack.sheets.find((s) => s.ref === ref)!;
 
 describe('GDPR add-on', () => {
-  it('is a 2.1.0 add-on to Core Starter on the GDPR library that meets the quality bar', () => {
-    expect(pack.version).toBe('2.1.0');
+  it('is a 2.2.0 add-on to Core Starter on the GDPR library that meets the quality bar', () => {
+    expect(pack.version).toBe('2.2.0');
     // 2.1.0 links processors to Core's Suppliers register (Core 1.1.0)
     expect(pack.requires).toEqual([{ pack: 'core', range: '^1.1.0' }]);
     expect(pack.standard).toEqual({ id: 'gdpr', label: 'GDPR', color: 'purple' });

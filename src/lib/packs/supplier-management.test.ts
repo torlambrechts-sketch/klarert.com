@@ -245,7 +245,7 @@ describe('Supplier management add-on 3.0.0 on the Core Suppliers register', () =
   };
 
   it('is a new major that extends Core Suppliers instead of shipping a supplier register', () => {
-    expect(m.version).toBe('3.0.0');
+    expect(m.version).toBe('3.1.0');
     // Core's Suppliers register came with 1.1.0
     expect(m.requires).toEqual([{ pack: 'core', range: '^1.1.0' }]);
     expect(packQualityProblems(m)).toEqual([]);

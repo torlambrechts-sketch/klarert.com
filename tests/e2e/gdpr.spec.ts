@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// The GDPR add-on 2.1.0 (docs/11 The GDPR add-on, docs/02 §18): an owner installs Starter into an empty workspace;
+// The GDPR add-on 2.2.0 (docs/11 The GDPR add-on, docs/02 §18): an owner installs Starter into an empty workspace;
 // the Core registers are installed first and the GDPR library adopted; the GDPR sheets sit in the Privacy and
 // security and Suppliers domains; the shared risk register has the GDPR view; the incident-to-breach cascade waits in
 // test mode; the processing record approval workflow is on its sheet. Then the retention rule erases an old request:
@@ -37,7 +37,7 @@ test('install the GDPR add-on on Core and erase a request record under its reten
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.2.0 (Starter) first.',
+    'Installs Core registers 1.3.0 (Starter) first.',
   );
   await expect(dialog.getByTestId('adopts-framework')).toContainText('GDPR');
   await expect(dialog.getByTestId('extends-list')).toContainText('Risk register');
@@ -47,7 +47,7 @@ test('install the GDPR add-on on Core and erase a request record under its reten
     timeout: 90_000,
   });
   await expect(dialog.getByRole('status')).toContainText(
-    'Installed Core registers 1.2.0 (Starter) first.',
+    'Installed Core registers 1.3.0 (Starter) first.',
   );
   await dialog.getByRole('button', { name: 'Done' }).click();
 
@@ -58,7 +58,7 @@ test('install the GDPR add-on on Core and erase a request record under its reten
   );
   expect(installs.map((i) => i.pack_key).sort()).toEqual(['core', 'framework-gdpr', 'gdpr']);
   const gdpr = installs.find((i) => i.pack_key === 'gdpr')!;
-  expect(gdpr.version).toBe('2.1.0');
+  expect(gdpr.version).toBe('2.2.0');
 
   // ── its sheets sit in Core's domains
   const sheets = await rest<

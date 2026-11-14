@@ -20,8 +20,8 @@ import {
 } from './form';
 
 /** The field setting "Ask when adding": the dialog asks it although it is not required. */
-export const askWhenAdding = (field: Pick<Field, 'config'>): boolean =>
-  (field.config as { askWhenAdding?: unknown } | null)?.askWhenAdding === true;
+export const askWhenAdding = (field: { config?: unknown }): boolean =>
+  (field.config as { askWhenAdding?: unknown } | null | undefined)?.askWhenAdding === true;
 
 /**
  * A field the person adding an item may answer: a value a form can ask for (no computed, file or link fields), and
