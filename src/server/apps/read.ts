@@ -44,6 +44,9 @@ export const getApps = cache(async (orgId: string, role: Role): Promise<Resolved
     .select('key, version, manifest')
     .in('key', [...new Set(installs.map((i) => i.pack_key))]);
   if (packsError) throw new Error(`packs: ${packsError.message}`);
+  const refMaps = new Map(
+    installs.map((i) => [i.pack_key, (i.ref_map ?? {}) as Record<string, string>]),
+  );
   const list: AppInstall[] = installs.flatMap((i) => {
     const row = (packs ?? []).find((p) => p.key === i.pack_key && p.version === i.version);
     if (!row || !hasApps(row.manifest)) return [];
@@ -55,7 +58,22 @@ export const getApps = cache(async (orgId: string, role: Role): Promise<Resolved
         packKey: i.pack_key,
         refMap: (i.ref_map ?? {}) as Record<string, string>,
         apps: manifest.apps,
-        pack: { sheets: manifest.sheets.map((s) => ({ ref: s.ref, views: s.views })) },
+        pack: {
+          sheets: [
+            ...manifest.sheets.map((s) => ({ ref: s.ref, views: s.views })),
+            // a required pack's sheet: the views this pack added to it (docs/13)
+            ...(manifest.extends ?? []).map((e) => ({
+              ref: `${e.pack}:${e.sheet}`,
+              views: e.views ?? [],
+            })),
+          ],
+        },
+        required: Object.fromEntries(
+          manifest.requires.flatMap((r) => {
+            const map = refMaps.get(r.pack);
+            return map ? [[r.pack, map]] : [];
+          }),
+        ),
       },
     ];
   });

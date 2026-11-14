@@ -15,7 +15,10 @@ export function appRoleOf(role: Role): AppRole {
 export const visibleTo = (roles: readonly AppRole[] | undefined, role: Role) =>
   !roles || roles.length === 0 || roles.includes(appRoleOf(role));
 
-/** The manifest bits resolution needs: each sheet's saved view names, in order. */
+/**
+ * The manifest bits resolution needs: each sheet's saved view names, in order. A required pack's sheet is listed as
+ * `<pack>:<sheet>` with the views this pack's extends adds to it (refs `<pack>:<sheet>.view.<n>`).
+ */
 export interface AppPackView {
   sheets: { ref: string; views: { name: string }[] }[];
 }
@@ -57,6 +60,8 @@ export interface AppInstall {
   refMap: Record<string, string>;
   apps: AppManifest[];
   pack: AppPackView;
+  /** The ref maps of the live installs of the packs this one requires, by pack key (screens on `core:nc`). */
+  required?: Record<string, Record<string, string>>;
 }
 
 /** One screen's ids through the install's ref map, or null when something it names is not installed. */
@@ -65,6 +70,7 @@ export function resolveScreen(
   section: string,
   refMap: Record<string, string>,
   pack: AppPackView,
+  required: Record<string, Record<string, string>> = {},
 ): ResolvedScreen | null {
   const base = {
     key: screen.key,
@@ -73,12 +79,18 @@ export function resolveScreen(
     kind: screen.kind,
     section,
   };
-  const sheet = (ref: string) => refMap[`sheet:${ref}`];
+  // a required pack's sheet lives in that pack's install; what this pack added to it (views, forms) in its own
+  const sheet = (ref: string) => {
+    const colon = ref.indexOf(':');
+    return colon > 0
+      ? required[ref.slice(0, colon)]?.[`sheet:${ref.slice(colon + 1)}`]
+      : refMap[`sheet:${ref}`];
+  };
   switch (screen.kind) {
     case 'view':
     case 'item': {
       const parent = sheet(screen.sheet);
-      const id = screen.subitems ? refMap[`sheet:${screen.sheet}.subitems`] : parent;
+      const id = screen.subitems ? sheet(`${screen.sheet}.subitems`) : parent;
       if (!id || !parent) return null;
       const where = screen.subitems ? { subitems: true, parentSheetId: parent } : {};
       if (screen.kind === 'view') {
@@ -131,7 +143,7 @@ export function resolveApps(installs: readonly AppInstall[], role: Role): Resolv
           title: s.title,
           screens: s.screens
             .filter((sc) => visibleTo(sc.roles, role))
-            .map((sc) => resolveScreen(sc, s.title, install.refMap, install.pack))
+            .map((sc) => resolveScreen(sc, s.title, install.refMap, install.pack, install.required))
             .filter((sc): sc is ResolvedScreen => sc !== null),
         }))
         .filter((s) => s.screens.length > 0);

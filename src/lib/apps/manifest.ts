@@ -20,7 +20,13 @@ const appKey = z
 const screenKey = z
   .string()
   .regex(/^[a-z][a-z0-9-]{0,39}$/, 'Use a short lower-case screen key (letters, digits, "-").');
-const sheetRef = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/, 'Use a sheet ref of the pack.');
+/** A sheet of the pack, or `<pack>:<sheet>` of a pack it requires (an add-on's app over the Core registers). */
+const sheetRef = z
+  .string()
+  .regex(
+    /^(?:[a-z0-9][a-z0-9-]{0,79}:)?[a-z][a-z0-9_]{0,39}$/,
+    'Use a sheet ref of the pack or <pack>:<sheet> of a pack it requires.',
+  );
 const fieldKey = z
   .string()
   .regex(/^(?:[a-z][a-z0-9_]{0,63}|__name|__group|__id)$/, 'Use a field key.');
@@ -130,10 +136,45 @@ export interface AppProblem {
   message: string;
 }
 
-/** Every ref of an app that the pack does not have, with a path inside the app. */
-export function appProblems(app: AppManifest, pack: PackManifest): AppProblem[] {
+type AppSheet = Pick<PackManifest['sheets'][number], 'fields' | 'views' | 'forms' | 'subitems'>;
+
+/**
+ * A required pack's sheet as the app sees it: what the pack's extends adds to it (forms, views, columns), plus the
+ * dependency's own columns and views when its manifest is given (the catalogue checks; the schema has only the pack).
+ */
+function foreignSheet(
+  pack: PackManifest,
+  depKey: string,
+  ref: string,
+  deps: readonly PackManifest[] | undefined,
+): { sheet: AppSheet; checked: boolean } | null {
+  if (!pack.requires.some((r) => r.pack === depKey)) return null;
+  const e = (pack.extends ?? []).find((x) => x.pack === depKey && x.sheet === ref);
+  const dep = deps?.find((d) => d.key === depKey);
+  const base = dep?.sheets.find((s) => s.ref === ref);
+  if (dep && !base) return null;
+  return {
+    sheet: {
+      fields: [...(base?.fields ?? []), ...(e?.fields ?? [])],
+      views: [...(base?.views ?? []), ...(e?.views ?? [])],
+      forms: [...(base?.forms ?? []), ...(e?.forms ?? [])],
+    },
+    checked: !!dep,
+  };
+}
+
+/**
+ * Every ref of an app that the pack does not have, with a path inside the app. A screen may read a sheet of a pack
+ * the pack requires (`core:nc`, docs/13): its forms and views are the pack's extends of that sheet; its field keys are
+ * checked when `deps` (the required packs' manifests) are given.
+ */
+export function appProblems(
+  app: AppManifest,
+  pack: PackManifest,
+  deps?: readonly PackManifest[],
+): AppProblem[] {
   const out: AppProblem[] = [];
-  const sheets = new Map(pack.sheets.map((s) => [s.ref, s]));
+  const own = new Map<string, AppSheet>(pack.sheets.map((s) => [s.ref, s]));
   const dashboards = new Set(pack.dashboards.map((d) => d.ref));
   app.sections.forEach((section, si) =>
     section.screens.forEach((screen: AppScreen, i) => {
@@ -144,29 +185,43 @@ export function appProblems(app: AppManifest, pack: PackManifest): AppProblem[] 
           problem(at('dashboard'), `Unknown dashboard "${screen.dashboard}".`);
         return;
       }
-      const s = sheets.get(screen.sheet);
-      if (!s) return problem(at('sheet'), `Unknown sheet "${screen.sheet}".`);
+      const colon = screen.sheet.indexOf(':');
+      const foreign =
+        colon > 0
+          ? foreignSheet(pack, screen.sheet.slice(0, colon), screen.sheet.slice(colon + 1), deps)
+          : null;
+      const s = colon > 0 ? foreign?.sheet : own.get(screen.sheet);
+      if (!s)
+        return problem(
+          at('sheet'),
+          colon > 0
+            ? `"${screen.sheet}" is not a sheet of a pack this one requires.`
+            : `Unknown sheet "${screen.sheet}".`,
+        );
       const sub = (screen.kind === 'view' || screen.kind === 'item') && screen.subitems;
       if (sub && !s.subitems) return problem(at('subitems'), `"${screen.sheet}" has no sub-items.`);
       const keys = new Set(
         (sub && s.subitems ? s.subitems.fields : s.fields).map((f) => f.key as string),
       );
-      const known = (k: string) => keys.has(k) || k in SPECIAL_KEYS;
+      // a required pack's columns are known only with its manifest (the catalogue checks them)
+      const unchecked = colon > 0 && !foreign?.checked;
+      const known = (k: string) => unchecked || keys.has(k) || k in SPECIAL_KEYS;
       if (screen.kind === 'view' && screen.view && !s.views.some((v) => v.name === screen.view))
         problem(at('view'), `Unknown view "${screen.view}" on "${screen.sheet}".`);
       if (screen.kind === 'form' && !s.forms.some((f) => f.ref === screen.form))
         problem(at('form'), `Unknown form "${screen.form}" on "${screen.sheet}".`);
-      if (screen.kind === 'workflow' && screen.fieldKey && !keys.has(screen.fieldKey))
+      const column = (k: string) => unchecked || keys.has(k);
+      if (screen.kind === 'workflow' && screen.fieldKey && !column(screen.fieldKey))
         problem(at('fieldKey'), `Unknown field "${screen.fieldKey}".`);
       if (screen.kind === 'item') {
         screen.filters.forEach((f, fi) => {
           if (!known(f.fieldKey)) problem(at('filters', fi), `Unknown field "${f.fieldKey}".`);
         });
         (screen.sort ?? []).forEach((f, fi) => {
-          if (!keys.has(f.fieldKey)) problem(at('sort', fi), `Unknown field "${f.fieldKey}".`);
+          if (!column(f.fieldKey)) problem(at('sort', fi), `Unknown field "${f.fieldKey}".`);
         });
         (screen.show ?? []).forEach((k, fi) => {
-          if (!keys.has(k)) problem(at('show', fi), `Unknown field "${k}".`);
+          if (!column(k)) problem(at('show', fi), `Unknown field "${k}".`);
         });
       }
     }),
