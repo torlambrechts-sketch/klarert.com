@@ -1,14 +1,19 @@
 {
   "key": "core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "Core registers",
-  "description": "The shared registers every management system standard builds on, in five domains: Management system, Risk and controls, Operations, Privacy and security, and Suppliers. Standards are added as add-ons that extend these registers with their own columns, categories and views, so a risk, an incident or a document is recorded once and counts for every standard that uses it.",
+  "description": "The shared registers every management system standard builds on, in five domains: Management system, Risk and controls, Operations, Privacy and security, and Suppliers. Standards are added as add-ons that extend these registers with their own columns, categories and views, so a risk, an incident or a document is recorded once and counts for every standard that uses it. Documents, risks and nonconformities come with approval workflows, and each record can link to the requirements of any framework you adopt.",
   "system": true,
   "levels": [
     {
+      "key": "foundations",
+      "name": "Foundations",
+      "description": "Where every management system starts: its context and scope, documents and policies, objectives and KPIs, and the risk register with its risk categories."
+    },
+    {
       "key": "starter",
       "name": "Starter",
-      "description": "The registers most standards use first: documents and policies, objectives and KPIs, the risk register with its risk categories, incidents, nonconformities and CAPA, and actions."
+      "description": "Everything in Foundations plus incidents, nonconformities and CAPA, actions and suppliers: the registers most standards use first."
     },
     {
       "key": "full",
@@ -45,13 +50,276 @@
   ],
   "sheets": [
     {
+      "ref": "context",
+      "name": "Context and interested parties",
+      "itemLabel": "Entry",
+      "idPrefix": "CTX-",
+      "folder": "management",
+      "kind": "register",
+      "description": "What shapes the management system: the internal and external issues, the interested parties and what they need and expect of you, and the scope you draw from them. Link each to the risks and opportunities it raises, and look at the changes at every management review.",
+      "groups": [
+        {
+          "ref": "internal",
+          "name": "Internal issues",
+          "color": "blue"
+        },
+        {
+          "ref": "external",
+          "name": "External issues",
+          "color": "purple"
+        },
+        {
+          "ref": "parties",
+          "name": "Interested parties",
+          "color": "teal"
+        },
+        {
+          "ref": "scope",
+          "name": "Scope",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "kind",
+          "name": "Type",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_internal",
+                "label": "Internal issue",
+                "color": "blue"
+              },
+              {
+                "id": "opt_external",
+                "label": "External issue",
+                "color": "purple"
+              },
+              {
+                "id": "opt_party",
+                "label": "Interested party",
+                "color": "teal"
+              },
+              {
+                "id": "opt_scope",
+                "label": "Scope",
+                "color": "green"
+              }
+            ]
+          }
+        },
+        {
+          "key": "details",
+          "name": "Description",
+          "type": "longtext",
+          "description": "The issue, the party or the scope, in your own words."
+        },
+        {
+          "key": "needs",
+          "name": "Needs and expectations",
+          "type": "longtext",
+          "description": "For an interested party: what they need or expect of you, and which of these you take on as requirements."
+        },
+        {
+          "key": "relevant",
+          "name": "Relevant to the management system",
+          "type": "check"
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_review",
+                "label": "In review",
+                "color": "orange"
+              },
+              {
+                "id": "opt_agreed",
+                "label": "Agreed",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_retired",
+                "label": "No longer relevant",
+                "color": "dark",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "review_date",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "risks",
+          "name": "Risks and opportunities",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "risk",
+            "multiple": true,
+            "inverseKey": "context"
+          }
+        },
+        {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
+          "key": "standards",
+          "name": "Standards",
+          "type": "multiselect",
+          "config": {
+            "options": [
+              {
+                "id": "all",
+                "label": "All standards",
+                "color": "grey"
+              }
+            ]
+          },
+          "description": "The standards this record counts for. Each standard you add puts its own option here. It never decides who can see a record."
+        }
+      ],
+      "views": [
+        {
+          "name": "All entries",
+          "type": "table",
+          "config": {}
+        },
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
+        {
+          "name": "Review dates",
+          "type": "calendar",
+          "config": {
+            "dateFieldKey": "review_date"
+          }
+        },
+        {
+          "name": "By type",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "kind"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Review dates"
+        },
+        {
+          "ref": "By type"
+        }
+      ],
+      "items": [
+        {
+          "ref": "knowledge",
+          "group": "internal",
+          "name": "Example: Know-how sits with a few long-serving people",
+          "values": {
+            "kind": "opt_internal",
+            "details": "Several key processes are known in detail by one or two people and are not written down.",
+            "relevant": true,
+            "status": "opt_draft",
+            "review_date": "$in:180",
+            "standards": [
+              "all"
+            ]
+          }
+        },
+        {
+          "ref": "customer_proof",
+          "group": "external",
+          "name": "Example: Customers ask for proof of how we work",
+          "values": {
+            "kind": "opt_external",
+            "details": "More customers ask for certificates, audit reports and answers to questionnaires before they sign.",
+            "relevant": true,
+            "status": "opt_draft",
+            "review_date": "$in:180",
+            "standards": [
+              "all"
+            ]
+          }
+        },
+        {
+          "ref": "customers",
+          "group": "parties",
+          "name": "Example: Customers",
+          "values": {
+            "kind": "opt_party",
+            "details": "The companies that buy our products and services.",
+            "needs": "Products and services as agreed, delivered on time, answers when something goes wrong, and evidence that we keep our promises.",
+            "relevant": true,
+            "status": "opt_draft",
+            "review_date": "$in:180",
+            "standards": [
+              "all"
+            ]
+          }
+        },
+        {
+          "ref": "scope",
+          "group": "scope",
+          "name": "Example: Scope of the management system",
+          "values": {
+            "kind": "opt_scope",
+            "details": "Write which sites, activities, products and services the management system covers, and why anything is left out.",
+            "relevant": true,
+            "status": "opt_draft",
+            "review_date": "$in:365",
+            "standards": [
+              "all"
+            ]
+          }
+        }
+      ],
+      "forms": []
+    },
+    {
       "ref": "documents",
       "name": "Documents and policies",
       "itemLabel": "Document",
       "idPrefix": "DOC-",
       "folder": "management",
       "register": "documents",
-      "description": "Controlled documents for every standard: policies, procedures, work instructions, forms and records. Approved by a second person, reviewed on a date. Attach the files on each document’s Files tab.",
+      "description": "Controlled documents for every standard: policies, procedures, work instructions, forms and records. Approved by a second person through the Document approval workflow and reviewed on a date. Attach the files on each document’s Files tab.",
       "groups": [
         {
           "ref": "draft",
@@ -195,6 +463,46 @@
           "type": "date"
         },
         {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the document is in its approval. Set by the Document approval workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_approval",
+                "label": "Waiting for approval",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Sent back",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -261,6 +569,62 @@
               "all"
             ]
           }
+        }
+      ],
+      "kind": "register",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Review dates"
+        }
+      ],
+      "workflows": [
+        {
+          "id": "document-approval",
+          "name": "Document approval",
+          "enabled": true,
+          "requiredFields": [
+            "owner",
+            "approver"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_review",
+            "onApproved": "opt_approved",
+            "onRejected": "opt_draft"
+          },
+          "steps": [
+            {
+              "id": "approval",
+              "name": "Approval",
+              "approvers": {
+                "kind": "field",
+                "fieldKey": "approver"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_approval"
+            }
+          ]
         }
       ]
     },
@@ -359,6 +723,15 @@
           "type": "date"
         },
         {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -410,6 +783,18 @@
               "all"
             ]
           }
+        }
+      ],
+      "kind": "register",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Due dates"
         }
       ]
     },
@@ -527,6 +912,15 @@
           "type": "date"
         },
         {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -563,7 +957,19 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "kind": "register",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By evaluation"
+        },
+        {
+          "ref": "Evaluation dates"
+        }
+      ]
     },
     {
       "ref": "training",
@@ -686,7 +1092,19 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "kind": "register",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Expiry dates"
+        }
+      ]
     },
     {
       "ref": "audits",
@@ -773,6 +1191,15 @@
           "type": "number"
         },
         {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -809,7 +1236,19 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "kind": "plan",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Audit dates"
+        }
+      ]
     },
     {
       "ref": "reviews",
@@ -881,6 +1320,66 @@
           "type": "longtext"
         },
         {
+          "key": "input_actions",
+          "name": "Actions from earlier reviews",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_issues",
+          "name": "Changes in internal and external issues",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_parties",
+          "name": "Needs, expectations and feedback of interested parties",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_nonconformities",
+          "name": "Nonconformities and corrective actions",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_monitoring",
+          "name": "Monitoring and measurement results",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_audits",
+          "name": "Audit results",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_objectives",
+          "name": "How far objectives are met",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_risks",
+          "name": "Risks and opportunities, and the actions on them",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_resources",
+          "name": "Whether resources are enough",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
+          "key": "input_improvement",
+          "name": "Opportunities to improve",
+          "type": "check",
+          "description": "Ticked when the review looked at this input."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -917,7 +1416,36 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "kind": "log",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Meeting dates"
+        }
+      ],
+      "columnGroups": [
+        {
+          "name": "Review inputs",
+          "fields": [
+            "input_actions",
+            "input_issues",
+            "input_parties",
+            "input_nonconformities",
+            "input_monitoring",
+            "input_audits",
+            "input_objectives",
+            "input_risks",
+            "input_resources",
+            "input_improvement"
+          ]
+        }
+      ]
     },
     {
       "ref": "risk",
@@ -925,7 +1453,7 @@
       "itemLabel": "Risk",
       "idPrefix": "R-",
       "folder": "risk",
-      "description": "Every risk and opportunity in one register. Each risk has a category, and each category has its own likelihood and impact scales and its own appetite (Risk categories). The score is likelihood times impact.",
+      "description": "Every risk and opportunity in one register. Each risk has a category, and each category has its own likelihood and impact scales and its own appetite (Risk categories). The score is likelihood times impact, before and after treatment (the residual risk). The risk owner, then top management, accept a risk through the Risk acceptance workflow.",
       "groups": [
         {
           "ref": "identified",
@@ -1110,6 +1638,98 @@
           ]
         },
         {
+          "key": "residual_likelihood",
+          "name": "Residual likelihood",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          },
+          "description": "How likely it is once the treatment is in place, on the category’s likelihood scale."
+        },
+        {
+          "key": "residual_impact",
+          "name": "Residual impact",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          },
+          "description": "How bad it would be once the treatment is in place, on the category’s impact scale."
+        },
+        {
+          "key": "residual_score",
+          "name": "Residual score",
+          "type": "formula",
+          "config": {
+            "expr": "IF(OR(EMPTY({residual_likelihood}), EMPTY({residual_impact})), 0, {residual_likelihood} * {residual_impact})",
+            "result": "number"
+          }
+        },
+        {
+          "key": "residual_against_appetite",
+          "name": "Residual against appetite",
+          "type": "formula",
+          "config": {
+            "expr": "IF({residual_score} = 0, \"\", IF(EMPTY({appetite}), \"No appetite set\", IF({residual_score} > {appetite}, \"Above appetite\", \"Within appetite\")))",
+            "result": "text"
+          }
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the risk is in its acceptance. Set by the Risk acceptance workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Not submitted",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_owner",
+                "label": "Risk owner",
+                "color": "blue"
+              },
+              {
+                "id": "opt_step_management",
+                "label": "Top management",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Not accepted",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Accepted",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "context",
+          "name": "Context",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "context",
+            "multiple": true,
+            "inverseKey": "risks"
+          },
+          "description": "The issues, interested parties and needs this risk or opportunity comes from."
+        },
+        {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -1156,6 +1776,15 @@
             "appetite",
             "against_appetite"
           ]
+        },
+        {
+          "name": "Residual risk",
+          "fields": [
+            "residual_likelihood",
+            "residual_impact",
+            "residual_score",
+            "residual_against_appetite"
+          ]
         }
       ],
       "items": [
@@ -1180,6 +1809,82 @@
               "general"
             ]
           }
+        }
+      ],
+      "kind": "register",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Review dates"
+        }
+      ],
+      "workflows": [
+        {
+          "id": "risk-acceptance",
+          "name": "Risk acceptance",
+          "enabled": true,
+          "requiredFields": [
+            "owner",
+            "treatment",
+            "likelihood",
+            "impact"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": null,
+            "onApproved": "opt_accepted",
+            "onRejected": "opt_treating"
+          },
+          "steps": [
+            {
+              "id": "risk-owner",
+              "name": "Risk owner",
+              "approvers": {
+                "kind": "field",
+                "fieldKey": "owner"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 5,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_owner"
+            },
+            {
+              "id": "management",
+              "name": "Top management",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Top management"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "step",
+                "stepId": "risk-owner"
+              },
+              "optionId": "opt_step_management"
+            }
+          ]
         }
       ]
     },
@@ -1281,6 +1986,12 @@
               "all"
             ]
           }
+        }
+      ],
+      "kind": "library",
+      "tabs": [
+        {
+          "ref": "table"
         }
       ]
     },
@@ -1421,6 +2132,15 @@
           }
         },
         {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -1457,7 +2177,19 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "kind": "register",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By health"
+        },
+        {
+          "ref": "Test dates"
+        }
+      ]
     },
     {
       "ref": "assets",
@@ -1633,7 +2365,19 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "kind": "register",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Review dates"
+        }
+      ]
     },
     {
       "ref": "incidents",
@@ -1655,6 +2399,18 @@
         }
       ],
       "fields": [
+        {
+          "key": "what_happened",
+          "name": "What happened",
+          "type": "longtext",
+          "description": "What happened, in plain words: where, who or what was affected and what was done straight away."
+        },
+        {
+          "key": "noticed_at",
+          "name": "Noticed at",
+          "type": "datetime",
+          "description": "When someone first noticed it. Deadlines for telling customers or authorities often run from this moment."
+        },
         {
           "key": "incident_type",
           "name": "Type",
@@ -1777,6 +2533,15 @@
           }
         },
         {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -1813,7 +2578,78 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "level": "starter",
+      "kind": "log",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Incident dates"
+        },
+        {
+          "ref": "form"
+        }
+      ],
+      "forms": [
+        {
+          "ref": "report",
+          "level": "starter",
+          "name": "Report an incident",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report an incident",
+            "description": "Tell us about anything that went wrong or nearly did: an injury, a near miss, a security or quality event. Report it as soon as you can, even if you do not know everything yet.",
+            "nameLabel": "What happened, in one line",
+            "fields": [
+              {
+                "key": "what_happened",
+                "label": "What happened?",
+                "required": true
+              },
+              {
+                "key": "noticed_at",
+                "label": "When did you notice it?",
+                "required": true
+              },
+              {
+                "key": "incident_type",
+                "label": "What kind of incident is it?"
+              },
+              {
+                "key": "severity",
+                "label": "How serious is it?",
+                "help": "Your best guess. The investigator decides."
+              },
+              {
+                "key": "reported_by",
+                "label": "Your name"
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The incident is logged and the person who looks into it will follow up.",
+            "prefill": [
+              {
+                "key": "status",
+                "value": "opt_new"
+              }
+            ]
+          },
+          "notice": {
+            "purpose": "To record and look into incidents, put things right and stop them happening again.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who handle incidents.",
+            "retention": "Kept as long as the incident record is kept.",
+            "rights": "You can ask to see, correct or delete what was recorded about you. Contact the person who shared this form."
+          }
+        }
+      ]
     },
     {
       "ref": "nc",
@@ -1821,7 +2657,7 @@
       "itemLabel": "Nonconformity",
       "idPrefix": "NCR-",
       "folder": "operations",
-      "description": "One loop for every nonconformity, whatever the standard: containment, root cause, the corrective actions and the check that they worked. A nonconformity closes only with a root cause and a verified effect.",
+      "description": "One loop for every nonconformity, whatever the standard: what was found, containment, root cause, the corrective actions and the check that they worked. A nonconformity closes only with a root cause and a verified effect, through the CAPA closure workflow: someone other than the owner checks that the actions worked.",
       "groups": [
         {
           "ref": "open",
@@ -1835,6 +2671,17 @@
         }
       ],
       "fields": [
+        {
+          "key": "details",
+          "name": "What was found",
+          "type": "longtext",
+          "description": "What is wrong, in plain words, and the evidence: what was seen, where, and what it should have been."
+        },
+        {
+          "key": "found_on",
+          "name": "Found on",
+          "type": "date"
+        },
         {
           "key": "source",
           "name": "Source",
@@ -1991,6 +2838,55 @@
           }
         },
         {
+          "key": "verifier",
+          "name": "Effectiveness checked by",
+          "type": "people",
+          "config": {
+            "multiple": false
+          },
+          "description": "Who checks that the actions worked before the nonconformity is closed. Not the owner."
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the nonconformity is in its closure. Set by the CAPA closure workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Not submitted",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_verification",
+                "label": "Effectiveness check",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Sent back",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
           "key": "standards",
           "name": "Standards",
           "type": "multiselect",
@@ -2027,7 +2923,112 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "level": "starter",
+      "kind": "actions",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By stage"
+        },
+        {
+          "ref": "Due dates"
+        },
+        {
+          "ref": "form"
+        }
+      ],
+      "workflows": [
+        {
+          "id": "capa-closure",
+          "name": "CAPA closure",
+          "enabled": true,
+          "requiredFields": [
+            "root_cause",
+            "effective",
+            "verifier"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "stage",
+            "onSubmit": "opt_verification",
+            "onApproved": "opt_closed",
+            "onRejected": "opt_action_plan"
+          },
+          "steps": [
+            {
+              "id": "verification",
+              "name": "Effectiveness check",
+              "approvers": {
+                "kind": "field",
+                "fieldKey": "verifier"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_verification"
+            }
+          ]
+        }
+      ],
+      "forms": [
+        {
+          "ref": "report",
+          "level": "starter",
+          "name": "Report a nonconformity",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report a nonconformity",
+            "description": "Something does not meet a requirement: a procedure not followed, a product or service not as agreed, an audit finding. Say what you found and where.",
+            "nameLabel": "The problem, in one line",
+            "fields": [
+              {
+                "key": "details",
+                "label": "What did you find?",
+                "required": true
+              },
+              {
+                "key": "found_on",
+                "label": "When did you find it?",
+                "required": true
+              },
+              {
+                "key": "source",
+                "label": "Where did it come from?"
+              },
+              {
+                "key": "grade",
+                "label": "How serious is it?",
+                "help": "Your best guess. The owner decides."
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The nonconformity is logged and its owner will contain it and find the root cause.",
+            "prefill": [
+              {
+                "key": "stage",
+                "value": "opt_containment"
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "ref": "actions",
@@ -2144,7 +3145,217 @@
           }
         }
       ],
-      "items": []
+      "items": [],
+      "level": "starter",
+      "kind": "actions",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Due dates"
+        }
+      ]
+    },
+    {
+      "ref": "suppliers",
+      "name": "Suppliers",
+      "itemLabel": "Supplier",
+      "idPrefix": "SPL-",
+      "folder": "suppliers",
+      "level": "starter",
+      "kind": "register",
+      "description": "The suppliers you rely on, recorded once for every standard: who owns each relationship, how critical the supplier is and whether it is approved. Supplier management, quality, safety and privacy add-ons link their records here.",
+      "groups": [
+        {
+          "ref": "active",
+          "name": "In use",
+          "color": "green"
+        },
+        {
+          "ref": "onboarding",
+          "name": "Onboarding",
+          "color": "blue"
+        },
+        {
+          "ref": "ended",
+          "name": "No longer used",
+          "color": "grey"
+        }
+      ],
+      "fields": [
+        {
+          "key": "supplies",
+          "name": "What they supply",
+          "type": "text"
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          },
+          "description": "Who looks after the relationship with this supplier."
+        },
+        {
+          "key": "criticality",
+          "name": "Criticality",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_low",
+                "label": "Low",
+                "color": "green"
+              },
+              {
+                "id": "opt_medium",
+                "label": "Medium",
+                "color": "orange"
+              },
+              {
+                "id": "opt_high",
+                "label": "High",
+                "color": "red"
+              },
+              {
+                "id": "opt_critical",
+                "label": "Critical",
+                "color": "purple"
+              }
+            ]
+          },
+          "description": "How much you depend on this supplier: what happens if it fails to deliver."
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_new",
+                "label": "New",
+                "color": "blue"
+              },
+              {
+                "id": "opt_review",
+                "label": "Under review",
+                "color": "orange"
+              },
+              {
+                "id": "opt_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_blocked",
+                "label": "Blocked",
+                "color": "red"
+              },
+              {
+                "id": "opt_ended",
+                "label": "No longer used",
+                "color": "grey",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "requirements",
+          "name": "Requirements",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The requirements this record meets or answers to, from any framework library you have adopted. Every standard links here instead of adding its own column."
+        },
+        {
+          "key": "standards",
+          "name": "Standards",
+          "type": "multiselect",
+          "config": {
+            "options": [
+              {
+                "id": "all",
+                "label": "All standards",
+                "color": "grey"
+              }
+            ]
+          },
+          "description": "The standards this record counts for. Each standard you add puts its own option here. It never decides who can see a record."
+        }
+      ],
+      "views": [
+        {
+          "name": "All suppliers",
+          "type": "table",
+          "config": {}
+        },
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
+        {
+          "name": "Review dates",
+          "type": "calendar",
+          "config": {
+            "dateFieldKey": "next_review"
+          }
+        },
+        {
+          "name": "By criticality",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "criticality"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "Review dates"
+        },
+        {
+          "ref": "By criticality"
+        }
+      ],
+      "items": [
+        {
+          "ref": "logistics",
+          "group": "active",
+          "name": "Example: Fabrikam Logistics",
+          "values": {
+            "supplies": "Transport of finished goods to customers",
+            "criticality": "opt_high",
+            "status": "opt_approved",
+            "next_review": "$in:120",
+            "standards": [
+              "all"
+            ]
+          }
+        }
+      ],
+      "forms": []
     }
   ],
   "automations": [
@@ -2231,7 +3442,8 @@
           ],
           "message": "{id} {name} was due on {due_date} and is not closed."
         }
-      ]
+      ],
+      "level": "starter"
     },
     {
       "ref": "action_overdue",
@@ -2256,7 +3468,8 @@
           ],
           "message": "{id} {name} was due on {due} and is not done."
         }
-      ]
+      ],
+      "level": "starter"
     },
     {
       "ref": "legal_evaluation_due",
@@ -2297,6 +3510,205 @@
             "field:person"
           ],
           "message": "{name} expires on {expires_on}. Plan the renewal."
+        }
+      ]
+    },
+    {
+      "ref": "context_review_due",
+      "sheet": "context",
+      "name": "Context review in 30 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "review_date",
+        "offsetDays": -30
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_none_of",
+          "value": [
+            "opt_retired"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} is due for review on {review_date}. Has anything changed?"
+        }
+      ]
+    },
+    {
+      "ref": "context_agreed",
+      "sheet": "context",
+      "name": "Context entry agreed → next review in a year",
+      "advanced": true,
+      "description": "Recurring review cycle: when an issue, an interested party or the scope is agreed, its next review is set a year ahead, so the 30-day reminder comes round again and changes reach the management review.",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_agreed"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "review_date",
+          "value": "$in:365"
+        }
+      ]
+    },
+    {
+      "ref": "document_approved",
+      "sheet": "documents",
+      "name": "Document approved → record the date and plan the next review",
+      "advanced": true,
+      "description": "Recurring review cycle: when the Document approval workflow approves a document, today's date is recorded as Approved on and the next review set a year ahead, so the review reminder comes round without anyone having to remember.",
+      "trigger": {
+        "type": "workflow_approved",
+        "workflowId": "document-approval"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "approved_on",
+          "value": "$today"
+        },
+        {
+          "type": "set_field",
+          "fieldKey": "next_review",
+          "value": "$in:365"
+        }
+      ]
+    },
+    {
+      "ref": "risk_accepted",
+      "sheet": "risk",
+      "name": "Risk accepted → next review in a year",
+      "advanced": true,
+      "description": "Recurring review cycle: when top management accepts a risk through the Risk acceptance workflow, its next review is set a year ahead, so an accepted risk is looked at again before it is forgotten.",
+      "trigger": {
+        "type": "workflow_approved",
+        "workflowId": "risk-acceptance"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "review_date",
+          "value": "$in:365"
+        }
+      ]
+    },
+    {
+      "ref": "incident_high",
+      "sheet": "incidents",
+      "level": "starter",
+      "name": "High-severity incident → tell the investigator and top management",
+      "advanced": true,
+      "description": "Escalation: an incident marked High, by the person reporting it or later, reaches the investigator and everyone with the job title Top management at once, so a serious event is never left in the queue.",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "severity",
+        "value": "opt_high"
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner",
+            "jobRole:Top management"
+          ],
+          "message": "{id} {name} is marked High. Look at it today."
+        }
+      ]
+    },
+    {
+      "ref": "action_escalation",
+      "sheet": "actions",
+      "level": "starter",
+      "name": "Action 14 days overdue → tell top management",
+      "advanced": true,
+      "description": "Escalation ladder: the owner is told the day after the due date; when an action is still open 14 days later, the owner and everyone with the job title Top management are told, so nothing stalls unseen.",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "due",
+        "offsetDays": 14
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner",
+            "jobRole:Top management"
+          ],
+          "message": "{id} {name} was due on {due} and is still not done."
+        }
+      ]
+    },
+    {
+      "ref": "supplier_review_due",
+      "sheet": "suppliers",
+      "level": "starter",
+      "name": "Supplier review in 30 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -30
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_none_of",
+          "value": [
+            "opt_ended"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} is due for review on {next_review}."
+        }
+      ]
+    },
+    {
+      "ref": "supplier_approved",
+      "sheet": "suppliers",
+      "level": "starter",
+      "name": "Supplier approved → next review in a year",
+      "advanced": true,
+      "description": "Recurring review cycle: when a supplier is marked Approved, its next review is set a year ahead, so every supplier you rely on is looked at again.",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_approved"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "next_review",
+          "value": "$in:365"
         }
       ]
     }
@@ -2359,8 +3771,24 @@
           "title": "Actions past their due date",
           "sheetRef": "actions",
           "fieldKey": "due"
+        },
+        {
+          "ref": "w_context",
+          "type": "by_option",
+          "title": "Context and interested parties by status",
+          "sheetRef": "context",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_suppliers",
+          "type": "by_option",
+          "title": "Suppliers by status",
+          "sheetRef": "suppliers",
+          "fieldKey": "status"
         }
-      ]
+      ],
+      "level": "starter",
+      "headline": true
     }
   ]
 }

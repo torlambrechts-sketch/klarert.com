@@ -45,21 +45,30 @@ describe('Core registers', () => {
     }
   });
 
-  it('keeps Starter small: Privacy and security and Suppliers stay empty until an add-on fills them', () => {
-    const starter = manifestAtLevel(core, 'starter');
-    expect(starter.sheets.map((s) => s.name)).toEqual([
+  it('keeps its lowest level small: Foundations, then Starter, then Full', () => {
+    expect(core.levels?.map((l) => l.key)).toEqual(['foundations', 'starter', 'full']);
+    const names = (level: string) => manifestAtLevel(core, level).sheets.map((s) => s.name);
+    expect(names('foundations')).toEqual([
+      'Context and interested parties',
       'Documents and policies',
       'Objectives and KPIs',
       'Risk register',
       'Risk categories',
+    ]);
+    // Starter is what Core 1.0.0 called Starter, plus Context and Suppliers: an install at Starter keeps every sheet
+    expect(names('starter')).toEqual([
+      ...names('foundations'),
       'Incidents',
       'Nonconformities and CAPA',
       'Actions',
+      'Suppliers',
     ]);
     const full = manifestAtLevel(core, 'full');
-    expect(full.sheets).toHaveLength(13);
-    for (const domain of ['privacy', 'suppliers'])
-      expect(full.sheets.some((s) => s.folder === domain)).toBe(false);
+    expect(full.sheets).toHaveLength(15);
+    expect(full.sheets.some((s) => s.folder === 'privacy')).toBe(false);
+    expect(full.sheets.filter((s) => s.folder === 'suppliers').map((s) => s.ref)).toEqual([
+      'suppliers',
+    ]);
   });
 
   it('scores each risk against its category: scales and appetite are data', () => {

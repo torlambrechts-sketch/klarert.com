@@ -37,7 +37,7 @@ test('install the GDPR add-on on Core and erase a request record under its reten
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.0.0 (Starter) first.',
+    'Installs Core registers 1.1.0 (Starter) first.',
   );
   await expect(dialog.getByTestId('adopts-framework')).toContainText('GDPR');
   await expect(dialog.getByTestId('extends-list')).toContainText('Risk register');
@@ -47,7 +47,7 @@ test('install the GDPR add-on on Core and erase a request record under its reten
     timeout: 90_000,
   });
   await expect(dialog.getByRole('status')).toContainText(
-    'Installed Core registers 1.0.0 (Starter) first.',
+    'Installed Core registers 1.1.0 (Starter) first.',
   );
   await dialog.getByRole('button', { name: 'Done' }).click();
 
