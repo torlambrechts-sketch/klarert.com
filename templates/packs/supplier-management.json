@@ -1437,7 +1437,7 @@
             "filters": [
               {
                 "fieldKey": "suppliermanagement_suppliers",
-                "op": "is_not_empty"
+                "op": "has_any"
               }
             ]
           }
