@@ -198,6 +198,9 @@ export function extendsProblems(m: PackManifest): { path: (string | number)[]; m
       if (!inNamespace(ns, f.ref)) problem(at('forms', fi), nsWord('The form ref', f.ref));
       if (forms.has(f.ref)) problem(at('forms', fi), `Duplicate form ref "${f.ref}".`);
       forms.add(f.ref);
+      // a shared register asks one intake form for every standard: the required pack chooses it, never an add-on
+      if (f.layout.intake)
+        problem(at('forms', fi), 'An add-on cannot make a shared register’s intake form.');
     }
     const items = new Set<string>();
     for (const [ii, item] of (e.items ?? []).entries()) {

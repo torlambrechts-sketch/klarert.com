@@ -2673,6 +2673,59 @@
             "retention": "Kept as long as the incident record is kept.",
             "rights": "You can ask to see, correct or delete what was recorded about you. Contact the person who shared this form."
           }
+        },
+        {
+          "ref": "intake",
+          "level": "starter",
+          "name": "New incident",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Record an incident",
+            "description": "Two short steps: what happened and when, then how serious it is and who looks into it. Record it now, even if you do not know everything yet.",
+            "nameLabel": "What happened, in one line",
+            "fields": [
+              {
+                "key": "what_happened",
+                "label": "What happened?",
+                "help": "Where, who or what was affected, and what was done straight away.",
+                "required": true
+              },
+              {
+                "key": "noticed_at",
+                "label": "When was it noticed?",
+                "required": true
+              },
+              {
+                "key": "occurred_on",
+                "label": "When did it happen, if earlier?"
+              },
+              {
+                "key": "incident_type",
+                "label": "What kind of incident is it?",
+                "step": "How serious"
+              },
+              {
+                "key": "severity",
+                "label": "How serious is it?",
+                "help": "Your best guess. The investigator decides."
+              },
+              {
+                "key": "owner",
+                "label": "Who looks into it?",
+                "required": true
+              }
+            ],
+            "intake": true
+          },
+          "settings": {
+            "prefill": [
+              {
+                "key": "status",
+                "value": "opt_new"
+              }
+            ]
+          }
         }
       ]
     },
@@ -3056,6 +3109,61 @@
           },
           "settings": {
             "confirmation": "Thank you. The nonconformity is logged and its owner will contain it and find the root cause.",
+            "prefill": [
+              {
+                "key": "stage",
+                "value": "opt_containment"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "intake",
+          "level": "starter",
+          "name": "New nonconformity",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Record a nonconformity",
+            "description": "Three short steps: what you found, where it came from and how serious it is, then who takes it on. Write down facts, not blame.",
+            "nameLabel": "The problem, in one line",
+            "fields": [
+              {
+                "key": "details",
+                "label": "What did you find?",
+                "help": "What you saw, where, and what it should have been.",
+                "required": true
+              },
+              {
+                "key": "found_on",
+                "label": "When did you find it?",
+                "required": true
+              },
+              {
+                "key": "source",
+                "label": "Where did it come from?",
+                "step": "Where it came from"
+              },
+              {
+                "key": "grade",
+                "label": "How serious is it?",
+                "help": "Your best guess. The owner can change it."
+              },
+              {
+                "key": "owner",
+                "label": "Who takes it on?",
+                "step": "Who takes it on",
+                "required": true
+              },
+              {
+                "key": "due_date",
+                "label": "Contained by",
+                "help": "When the immediate fix should be in place."
+              }
+            ],
+            "intake": true
+          },
+          "settings": {
             "prefill": [
               {
                 "key": "stage",

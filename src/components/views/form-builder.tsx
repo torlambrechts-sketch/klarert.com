@@ -543,6 +543,12 @@ function PreviewPanel({
         </label>
         <p className="text-label-12 text-muted-foreground">Always asked and required.</p>
       </div>
+      {on.some((q, i) => i > 0 && q.step !== undefined) ? (
+        <p className="text-label-12 text-muted-foreground" data-testid="form-steps-note">
+          The New item dialog asks this form a step at a time when the sheet uses it as its new-item
+          form (Sheet settings › New item form). Elsewhere every question shows on one page.
+        </p>
+      ) : null}
       {on.length === 0 ? (
         <p className="text-copy-13 text-muted-foreground">
           Only the name is asked. Turn on fields to add questions.
@@ -675,6 +681,28 @@ function SortableQuestion({
         />
         Required
       </label>
+      {!first ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-label-13 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={q.step !== undefined}
+              onChange={(e) => onSet({ step: e.target.checked ? '' : undefined })}
+            />
+            Start a new step here
+          </label>
+          {q.step !== undefined ? (
+            <input
+              aria-label={`Title of the step that starts at ${name}`}
+              className={cn(field, 'text-label-13 h-8 min-w-0 flex-1')}
+              value={q.step}
+              placeholder="Step title (optional)"
+              maxLength={120}
+              onChange={(e) => onSet({ step: e.target.value })}
+            />
+          ) : null}
+        </div>
+      ) : null}
     </li>
   );
 }

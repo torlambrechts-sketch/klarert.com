@@ -5,8 +5,8 @@ import { afterInstall, installedStateOf } from '@/engine/packs/installed.fixture
 import { planPackInstall, type PackSnapshot } from '@/engine/packs/plan';
 import { planPackUpgrade } from '@/engine/packs/upgrade';
 import type { PackManifest } from '@/engine/packs/types';
-import { askWhenAdding } from '@/engine/views/new-item';
-import { core, emptySnapshot, env, libraryItems, packByKey } from './addon.fixture';
+import { askWhenAdding, intakePlan } from '@/engine/views/new-item';
+import { core, emptySnapshot, env, libraryItems, packByKey, packs } from './addon.fixture';
 import { parsePack } from './manifest';
 import { packQualityProblems } from './quality';
 
@@ -155,6 +155,12 @@ describe.each(Object.keys(MARKED))('%s asks for its key fields when an item is a
     expect(p.state).toBe('ready');
     expect(p.preview.conflicts).toEqual([]);
     expect(p.preview.archived).toEqual([]);
+    // the stepped intake forms (Phase B): Core's two, and ISO/IEC 27001's risk intake; nothing else is added
+    const forms: Record<string, string[]> = {
+      core: ['form:incidents.form.intake', 'form:nc.form.intake'],
+      'iso-27001': ['form:core:risk.form.iso27001_risk_intake'],
+    };
+    expect(p.preview.added.map((a) => `${a.kind}:${a.ref}`)).toEqual(forms[key] ?? []);
     const marked = Object.entries(m.sheets).flatMap(([s, keys]) => keys.map((k) => `${s}.${k}`));
     expect(
       p.preview.changed
@@ -177,5 +183,103 @@ describe('Core registers asks the key fields of its audit registers', () => {
       'Owner',
       'Due',
     ]);
+  });
+});
+
+describe('Core registers ships stepped intake forms (Phase B)', () => {
+  const nc = core.sheets.find((s) => s.ref === 'nc')!;
+  const incidents = core.sheets.find((s) => s.ref === 'incidents')!;
+
+  it('makes them the intake forms of Nonconformities and CAPA and Incidents, at Starter', () => {
+    for (const s of [nc, incidents]) {
+      const intake = s.forms.filter((f) => f.layout.intake);
+      expect(
+        intake.map((f) => [f.ref, f.level, f.access]),
+        s.ref,
+      ).toEqual([['intake', 'starter', 'internal']]);
+    }
+    // the shared registers' intake is the Core registers' choice: no add-on makes one
+    for (const p of packs)
+      for (const e of p.extends ?? [])
+        expect(
+          (e.forms ?? []).some((f) => f.layout.intake),
+          `${p.key}:${e.sheet}`,
+        ).toBe(false);
+  });
+
+  it('asks them a step at a time: what, then where and how serious, then who', () => {
+    const intake = nc.forms.find((f) => f.ref === 'intake')!;
+    const fields = nc.fields.map((f, i) => ({
+      id: `f-${f.key}`,
+      sheetId: 's-nc',
+      key: f.key,
+      name: f.name,
+      type: f.type,
+      position: String(i).padStart(4, '0'),
+      required: f.required ?? false,
+      locked: false,
+      config: f.config ?? {},
+      validation: {},
+      rules: [],
+    }));
+    const plan = intakePlan({ id: 'v', name: intake.name, form: intake.layout }, fields);
+    expect(plan.steps.map((st) => [st.title, st.questions.map((q) => q.field.key)])).toEqual([
+      [null, ['details', 'found_on']],
+      ['Where it came from', ['source', 'grade']],
+      ['Who takes it on', ['owner', 'due_date']],
+    ]);
+    expect(intake.settings?.prefill).toEqual([{ key: 'stage', value: 'opt_containment' }]);
+    const steps = incidents.forms.find((f) => f.ref === 'intake')!.layout.fields;
+    expect(steps.filter((q) => q.step !== undefined).map((q) => q.step)).toEqual(['How serious']);
+  });
+
+  it('is in the workspace’s own words: no standard text', () => {
+    const text = JSON.stringify([nc.forms, incidents.forms]);
+    expect(text).not.toMatch(/shall|ISO|clause/i);
+  });
+
+  // a later version that rewords the intake form: what the client changed survives the update
+  const coreP = planPackInstall(core, emptySnapshot(), env, { level: 'starter' }).payload!;
+  const later: PackManifest = {
+    ...structuredClone(core),
+    version: '1.3.1',
+    sheets: core.sheets.map((s) =>
+      s.ref !== 'nc'
+        ? s
+        : {
+            ...s,
+            forms: s.forms.map((f) =>
+              f.ref !== 'intake'
+                ? f
+                : { ...f, layout: { ...f.layout, title: 'Record a nonconformity now' } },
+            ),
+          },
+    ),
+  };
+  const upgrade = (state: ReturnType<typeof installedStateOf>) =>
+    planPackUpgrade({
+      from: { manifest: core, hash: 'h-130' },
+      to: { manifest: later, hash: 'h-131' },
+      state,
+      snapshot: { ...afterInstall(emptySnapshot(), coreP, 'inst-core'), installs: [] },
+      env,
+    });
+
+  it('takes the pack’s new wording when the client left the form as shipped', () => {
+    const p = upgrade(installedStateOf(coreP, 'inst-core'));
+    expect(p.preview.conflicts).toEqual([]);
+    expect(p.preview.changed.map((c) => `${c.kind}:${c.ref}`)).toEqual(['form:nc.form.intake']);
+  });
+
+  it('keeps the client’s changes to the form: a conflict, kept by default', () => {
+    const state = installedStateOf(coreP, 'inst-core');
+    const view = state.views.find((v) => v.ref === 'nc.form.intake')!;
+    const form = (view.config as { form: Record<string, unknown> }).form;
+    view.config = { ...(view.config as object), form: { ...form, nameLabel: 'Our wording' } };
+    const p = upgrade(state);
+    expect(p.preview.conflicts.map((c) => c.id)).toEqual(['form:nc.form.intake']);
+    expect(p.payload!.update.views.some((v) => v.id === view.id)).toBe(false);
+    // the sheet's own choice of form (sheets.settings.newItemForm) is never part of an update
+    expect(JSON.stringify(p.payload!.update.sheets)).not.toContain('newItemForm');
   });
 });

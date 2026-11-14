@@ -34,3 +34,4 @@ export const copyFormToSheetAction = bind(forms.copyFormToSheet);
 export const deleteFormAction = bind(forms.deleteForm);
 export const changeFormLinkAction = bind(forms.changeFormLink);
 export const submitInternalFormAction = bind(forms.submitInternalForm);
+export const setNewItemFormAction = bind(forms.setNewItemForm, true);

@@ -102,6 +102,16 @@ export const formLinkInput = z.object({
   op: z.enum(['create', 'regenerate', 'disable']),
 });
 
+/**
+ * The sheet's new-item form (docs/05 §3.7): a form of the sheet, false for the standard New item dialog, or null to
+ * follow the sheet's pack (its intake form, if any).
+ */
+export const setNewItemFormInput = z.object({
+  org: slugInput,
+  sheetId: uuid,
+  formId: z.union([uuid, z.literal(false), z.null()]),
+});
+
 export const internalSubmitInput = z.object({
   org: slugInput,
   viewId: uuid,

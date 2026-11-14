@@ -159,6 +159,8 @@ describe('ISO 27001 add-on', () => {
       (e.forms ?? []).map((f) => [e.sheet, f.name, f.access]),
     );
     expect(forms).toEqual([
+      // 2.2.0: a stepped risk intake on Core's Risk register, for the sheet to choose (never its default)
+      ['risk', 'New information security risk', 'internal'],
       ['incidents', 'Report a security incident', 'internal'],
       ['nc', 'Report a problem', 'internal'],
     ]);

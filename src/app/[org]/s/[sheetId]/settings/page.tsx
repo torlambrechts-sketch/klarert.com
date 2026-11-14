@@ -11,6 +11,9 @@ import { DocumentsRegisterSetting } from '@/components/sheets/documents-register
 import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
 import { SheetTabsSettings } from '@/components/sheets/sheet-tabs-settings';
+import { NewItemFormSetting } from '@/components/sheets/new-item-form-setting';
+import { formAccess, formState } from '@/engine/views/form';
+import { intakePlan } from '@/engine/views/new-item';
 import { RetentionSettingsSection } from '@/components/sheets/retention-settings';
 import { isPersonalField, readRetention, retentionDateFields } from '@/engine/retention';
 import { SheetColumnGroups } from '@/components/table/column-groups-editor';
@@ -24,7 +27,7 @@ import { fetchDirectory } from '@/lib/sheet-query';
 import { applyTabLayout, buildTabs, toTabRows } from '@/components/views/tabs-model';
 import { readSubitemSettings } from '@/engine/subitems';
 import { normaliseViewId, readTabSettings } from '@/engine/views/tabs';
-import { toView } from '@/lib/sheet-rows';
+import { FIELD_COLUMNS, toField, toView } from '@/lib/sheet-rows';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import {
   getArchivedItems,
@@ -101,6 +104,35 @@ export default async function SheetSettingsPage({
     buildTabs(viewRows.map(toView), user.id, canEdit),
     tabSettings.tabs,
   );
+  // the New item form (docs/05 §3.7): the sheet's forms, how many steps each would ask, closed or not
+  const now = new Date();
+  const { data: fullFields } = await supabase
+    .from('fields')
+    .select(FIELD_COLUMNS)
+    .eq('sheet_id', sheet.id)
+    .is('archived_at', null);
+  const engineFields = (fullFields ?? []).map(toField);
+  const formChoices = viewRows
+    .map(toView)
+    .filter((v) => v.type === 'form' && v.ownerId === null && v.config.form)
+    .sort((a, b) => (a.position < b.position ? -1 : 1))
+    .map((v) => {
+      const form = v.config.form!;
+      const steps = intakePlan({ id: v.id, name: v.name, form }, engineFields).steps.length;
+      const state = formState(form, now, 0);
+      return {
+        id: v.id,
+        name: v.name,
+        summary: [
+          formAccess(form) === 'public' ? 'Public' : 'Internal',
+          steps > 1 ? `${steps} steps` : 'One page',
+          state === 'draft' ? 'Draft' : state === 'closed' ? 'Closed' : 'Open',
+        ].join(' · '),
+        closed: state === 'closed',
+        intake: form.intake === true,
+      };
+    });
+  const newItemSetting = (sheet.settings as { newItemForm?: unknown } | null)?.newItemForm;
 
   return (
     <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
@@ -272,6 +304,23 @@ export default async function SheetSettingsPage({
           </p>
         )}
       </Card>
+
+      <section id="new-item" className="scroll-mt-4">
+        <Card
+          title="New item form"
+          description="What “+ New”, Create › Entry and the N key ask when someone adds an item to this sheet."
+        >
+          <NewItemFormSetting
+            org={org}
+            sheetId={sheet.id}
+            setting={
+              newItemSetting === false || typeof newItemSetting === 'string' ? newItemSetting : null
+            }
+            forms={formChoices}
+            canChange={isAdminRole(role) && !sheet.archived_at}
+          />
+        </Card>
+      </section>
 
       <Card
         title="Tabs"

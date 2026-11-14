@@ -935,6 +935,64 @@
             ]
           }
         }
+      ],
+      "forms": [
+        {
+          "ref": "iso27001_risk_intake",
+          "name": "New information security risk",
+          "groupRef": "identified",
+          "access": "internal",
+          "layout": {
+            "title": "Record an information security risk",
+            "description": "Three short steps: what is at risk and how, how likely and how bad it would be, then who owns it. Choose it in Sheet settings › New item form to ask it when someone adds a risk.",
+            "nameLabel": "The risk, in one line",
+            "fields": [
+              {
+                "key": "iso27001_asset",
+                "label": "What is at risk?",
+                "help": "The information, system, service or process.",
+                "required": true
+              },
+              {
+                "key": "iso27001_threat",
+                "label": "What could go wrong?"
+              },
+              {
+                "key": "iso27001_vulnerability",
+                "label": "What weakness would let it happen?"
+              },
+              {
+                "key": "iso27001_cia",
+                "label": "What would it affect?",
+                "step": "How likely and how bad"
+              },
+              {
+                "key": "likelihood",
+                "label": "How likely is it?"
+              },
+              {
+                "key": "impact",
+                "label": "How bad would it be?"
+              },
+              {
+                "key": "owner",
+                "label": "Who owns this risk?",
+                "step": "Who owns it",
+                "required": true
+              }
+            ]
+          },
+          "settings": {
+            "prefill": [
+              {
+                "key": "standards",
+                "value": [
+                  "iso27001"
+                ]
+              }
+            ]
+          }
+        }
       ]
     },
     {
