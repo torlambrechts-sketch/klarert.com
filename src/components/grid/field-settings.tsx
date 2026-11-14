@@ -15,6 +15,7 @@ import type { ConfigEnv } from '@/components/fields/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle, SideSheetContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { systemColumnText } from '@/engine/packs/system';
 import type { SheetActions } from './use-sheet';
 
 // Field settings (docs/05 §3.5, FR-16): General, Type settings, Validation, Rules (status rules and comment on
@@ -218,7 +219,7 @@ function FieldSettingsBody({
         <DialogTitle className="text-heading-16">{field.name}</DialogTitle>
         <DialogDescription className="text-muted-foreground text-label-12">
           {def.label} · key <span className="font-mono">{field.key}</span>
-          {field.locked ? ' · kept by the app' : ''}
+          {field.system ? ' · system column' : field.locked ? ' · kept by the app' : ''}
         </DialogDescription>
       </div>
       <fieldset
@@ -337,13 +338,21 @@ function FieldSettingsBody({
           </Section>
         ) : null}
 
-        <TypeSection
-          field={field}
-          ctx={ctx}
-          canEdit={canEdit}
-          actions={actions}
-          onChanged={onClose}
-        />
+        {field.system ? (
+          <Section title="Field type">
+            <p className="text-muted-foreground text-copy-13" data-testid="system-column-note">
+              {systemColumnText([...ctx.fieldsByKey.values()])}
+            </p>
+          </Section>
+        ) : (
+          <TypeSection
+            field={field}
+            ctx={ctx}
+            canEdit={canEdit}
+            actions={actions}
+            onChanged={onClose}
+          />
+        )}
 
         {ui.ConfigForm ? (
           <Section title="Type settings">
@@ -409,7 +418,7 @@ function FieldSettingsBody({
             type="button"
             variant="outline"
             className="text-crit self-start"
-            disabled={field.locked}
+            disabled={field.locked || field.system}
             onClick={() => {
               onClose();
               void actions.deleteField(field);
@@ -417,7 +426,11 @@ function FieldSettingsBody({
           >
             <Trash2 aria-hidden /> Delete field
           </Button>
-          {field.locked ? (
+          {field.system ? (
+            <p className="text-muted-foreground text-label-12">
+              A system column. You can hide it in a view, not delete it.
+            </p>
+          ) : field.locked ? (
             <p className="text-muted-foreground text-label-12">
               Kept by the app. You can hide it, not delete it.
             </p>

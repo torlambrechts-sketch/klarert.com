@@ -98,7 +98,19 @@ export async function loadInstalledState(
   const sheetRows = must(sheets, 'sheets') ?? [];
   const sheetIds = sheetRows.map((s) => s.id);
   const none = ['00000000-0000-0000-0000-000000000000'];
-  const ids = sheetIds.length ? sheetIds : none;
+  // its own rows on other packs' sheets (docs/11 Extends) are read on those sheets too
+  const [extFields, extItems] = await Promise.all([
+    db.from('fields').select('sheet_id').eq('pack_install_id', install.id).range(0, MAX_ROWS),
+    db.from('items').select('sheet_id').eq('pack_install_id', install.id).range(0, MAX_ROWS),
+  ]);
+  const extSheets = [
+    ...new Set(
+      [...(must(extFields, 'fields') ?? []), ...(must(extItems, 'items') ?? [])].map(
+        (r) => r.sheet_id,
+      ),
+    ),
+  ].filter((id) => !sheetIds.includes(id));
+  const ids = sheetIds.length || extSheets.length ? [...sheetIds, ...extSheets] : none;
   const [fields, groups, views, items, created] = await Promise.all([
     db
       .from('fields')
@@ -145,7 +157,7 @@ export async function loadInstalledState(
       createdBy.set(e.item_id, e.new_value as Record<string, Json>);
   const clientItems = new Map<string, number>();
   for (const i of itemRows)
-    if (!i.pack_install_id && !i.archived_at)
+    if (!i.pack_install_id && !i.archived_at && sheetIds.includes(i.sheet_id))
       clientItems.set(i.sheet_id, (clientItems.get(i.sheet_id) ?? 0) + 1);
   const liveItems = itemRows.filter((i) => !i.archived_at);
 
@@ -280,9 +292,10 @@ export async function planUpgrade(
   const from = await readPackVersion(db, install.pack_key, install.version);
   if (!to || !from)
     return { ok: false, code: 'not_found', message: 'This pack is no longer in the catalogue.' };
-  const [{ snapshot, timeZone }, state] = await Promise.all([
-    loadSnapshot(db, orgId),
+  const [{ snapshot, timeZone }, state, extenders] = await Promise.all([
+    loadSnapshot(db, orgId, to.manifest),
     loadInstalledState(db, orgId, install),
+    loadExtenders(db, orgId, install.pack_key),
   ]);
   snapshot.requirementItems = await loadRequirementItems(
     db,
@@ -303,8 +316,44 @@ export async function planUpgrade(
       userId: env.userId,
     },
     choices: env.choices,
+    extenders,
   });
   return { ok: true, plan, from, to };
+}
+
+/** The live installs that build on a pack (name it in requires), with their installed manifests (docs/11 Extends). */
+async function loadExtenders(
+  db: Db,
+  orgId: string,
+  packKey: string,
+): Promise<{ title: string; manifest: CataloguePack['manifest'] }[]> {
+  const installs =
+    must(
+      await db
+        .from('pack_installs')
+        .select('pack_key, version')
+        .eq('org_id', orgId)
+        .eq('status', 'installed')
+        .neq('pack_key', packKey),
+      'pack installs',
+    ) ?? [];
+  if (!installs.length) return [];
+  // only the catalogue rows that name this pack in requires, at the versions installed here
+  const rows =
+    must(
+      await db
+        .from('packs')
+        .select('key, version, title, manifest')
+        .in(
+          'key',
+          installs.map((i) => i.pack_key),
+        )
+        .contains('manifest', { requires: [{ pack: packKey }] }),
+      'packs',
+    ) ?? [];
+  return rows
+    .filter((r) => installs.some((i) => i.pack_key === r.key && i.version === r.version))
+    .map((r) => ({ title: r.title, manifest: parsePack(r.manifest) }));
 }
 
 /** Write a ready upgrade plan: upgrade_pack and the sheets' approval workflows (apply_pack_upgrade), all or nothing. */

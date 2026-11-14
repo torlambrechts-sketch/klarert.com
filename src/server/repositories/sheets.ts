@@ -17,17 +17,21 @@ export type NavSheet = {
   noAccess?: boolean;
 };
 export type NavFolder = { id: string; name: string; sheets: NavSheet[]; restricted?: boolean };
-export type Nav = { folders: NavFolder[]; unfiled: NavSheet[] };
+/**
+ * `registers`: the domain folders of shared registers (docs/05 §2.1 Registers), in order, only those with sheets;
+ * `folders` and `unfiled`: the workspace's own sheets ("Your sheets").
+ */
+export type Nav = { registers: NavFolder[]; folders: NavFolder[]; unfiled: NavSheet[] };
 
 /** Active folders with their (non-archived) sheets and rail codes, in menu order. */
 export const getNav = cache(async (orgId: string): Promise<Nav> => {
   const session = await getSession();
-  if (!session) return { folders: [], unfiled: [] };
+  if (!session) return { registers: [], folders: [], unfiled: [] };
   const db = session.supabase;
   const [{ data: folders }, { data: readable }, { data: access }] = await Promise.all([
     db
       .from('folders')
-      .select('id, name, position, restricted')
+      .select('id, name, position, restricted, domain')
       .eq('org_id', orgId)
       .is('archived_at', null)
       .order('position'),
@@ -71,13 +75,19 @@ export const getNav = cache(async (orgId: string): Promise<Nav> => {
     };
   });
   const folderIds = new Set((folders ?? []).map((f) => f.id));
+  const toFolder = (f: NonNullable<typeof folders>[number]): NavFolder => ({
+    id: f.id,
+    name: f.name,
+    ...(f.restricted ? { restricted: true } : {}),
+    sheets: nav.filter((s) => s.folderId === f.id),
+  });
   return {
-    folders: (folders ?? []).map((f) => ({
-      id: f.id,
-      name: f.name,
-      ...(f.restricted ? { restricted: true } : {}),
-      sheets: nav.filter((s) => s.folderId === f.id),
-    })),
+    // domain folders of shared registers: shown only once a sheet is in them
+    registers: (folders ?? [])
+      .filter((f) => f.domain)
+      .map(toFolder)
+      .filter((f) => f.sheets.length > 0),
+    folders: (folders ?? []).filter((f) => !f.domain).map(toFolder),
     unfiled: nav.filter((s) => !s.folderId || !folderIds.has(s.folderId)),
   };
 });

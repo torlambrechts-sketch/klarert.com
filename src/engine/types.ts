@@ -135,6 +135,11 @@ export interface Field<C = unknown> {
   restrictedTo?: { userIds: string[]; roles: Role[] } | null;
   /** Restricted and the caller may not see its values (the database says so as it reads the field). */
   hidden?: boolean;
+  /**
+   * A system column (docs/11 Core registers): made by the Core registers or an add-on extending them. It can be
+   * hidden and renamed; it is never deleted, retyped or re-keyed (the database refuses).
+   */
+  system?: boolean;
 }
 
 export interface Item {

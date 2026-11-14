@@ -40,6 +40,8 @@ import type { SheetTab } from '@/engine/views/tabs';
 import { PageHeader } from '@/components/shell/page-header';
 import { BundleBanner } from '@/components/create/bundle-banner';
 import type { SheetBundle } from '@/server/bundles/read';
+import type { SheetSystem } from '@/server/packs/system';
+import { usedByText } from '@/engine/packs/system';
 import { ShellCrumb } from '@/components/shell/shell-crumb';
 import { cn } from '@/lib/utils';
 import { FieldPicker } from './field-picker';
@@ -97,6 +99,8 @@ export interface SheetViewProps {
   tabSet?: { tabs: SheetTab[] | null; tabsDefault: SheetTab[] | null };
   /** The set this sheet was created with by Create (docs/11 Bundles): its label, review state and next action. */
   bundle?: SheetBundle | null;
+  /** A shared register of a system pack (docs/11 Core registers): "System board" in the header. */
+  system?: SheetSystem | null;
 }
 
 export function SheetView(props: SheetViewProps) {
@@ -316,6 +320,25 @@ function SheetBody(props: SheetViewProps) {
             <span className="bg-soft text-muted-foreground text-label-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
               {props.archived ? 'Archived' : 'Library'}
             </span>
+          ) : null}
+          {props.system ? (
+            <>
+              <span
+                data-testid="system-board"
+                className="bg-soft text-ink text-label-12 flex shrink-0 items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
+              >
+                <Lock className="size-3" aria-hidden /> System board
+                <span className="hidden sm:inline">· installed by {props.system.source}</span>
+              </span>
+              {data ? (
+                <span
+                  data-testid="system-used-by"
+                  className="border-line text-muted-foreground text-label-12 hidden shrink-0 rounded-full border px-[9px] py-0.5 font-medium md:inline"
+                >
+                  {usedByText(data.fields)}
+                </span>
+              ) : null}
+            </>
           ) : null}
         </nav>
       </ShellCrumb>

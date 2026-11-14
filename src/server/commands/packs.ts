@@ -23,7 +23,16 @@ import {
 } from '@/lib/schemas/packs';
 import { upgradeLines, type UpgradePreview } from '@/engine/packs/upgrade';
 import { isAdminRole } from '@/server/auth';
-import { planInstall, readCatalogue, readPack, writeInstall } from '@/server/packs/install';
+import {
+  planInstall,
+  readCatalogue,
+  readPack,
+  requiredFirst,
+  writeInstall,
+} from '@/server/packs/install';
+import type { InstallFirst } from '@/engine/packs/plan';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/database.types';
 import { planUpgrade, updatesFor, writeUpgrade } from '@/server/packs/upgrade';
 import { readSetups, type InstalledSetup } from '@/server/packs/setup';
 import { readFrameworks } from '@/server/frameworks/catalogue';
@@ -77,6 +86,11 @@ export interface InstalledPack {
   updateTo: string | null;
   /** A framework's requirement library (adopted from Frameworks). */
   isFramework: boolean;
+  /**
+   * An add-on (docs/11 Extends): the titles of the packs whose sheets it adds to, and the standard it tags them with.
+   * Archiving it takes back only what it added.
+   */
+  addOn: { onto: string[]; standard: string | null } | null;
 }
 
 export interface PackLogEntry {
@@ -209,6 +223,12 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
               const c = byKey.get(i.pack_key);
               return c ? isFrameworkPack(c.manifest) : i.pack_key.startsWith('framework-');
             })(),
+            addOn: (() => {
+              const c = byKey.get(i.pack_key)?.manifest;
+              if (!c?.extends?.length) return null;
+              const onto = [...new Set(c.extends.map((e) => titles.get(e.pack) ?? e.pack))];
+              return { onto, standard: c.standard?.label ?? null };
+            })(),
           })),
           log: (log.data ?? []).map((e) => ({
             id: e.id,
@@ -254,6 +274,8 @@ export async function previewPack(input: unknown): Promise<Result<PackPreviewRes
           now: new Date(),
           newId: randomUUID,
           level: p.data.level ?? null,
+          // required packs (the Core registers) are installed first: install order does not matter
+          installFirst: await requiredFirst(supabase, orgId, pack.manifest),
         });
         const actions = { create: 0, reuse: 0, skip: 0, conflict: 0 };
         for (const o of plan.operations) actions[o.action] += 1;
@@ -290,6 +312,8 @@ export interface InstallResult {
   /** The level installed, and whether it was added to an install that was already there. */
   level: string | null;
   extended: boolean;
+  /** Required packs installed (or raised to a level) first, in words (docs/11 Extends). */
+  installedFirst: string[];
 }
 
 /** Install a pack: planned again from the catalogue and the workspace as they are now, written in one transaction. */
@@ -312,7 +336,16 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
         newId: randomUUID,
         level: p.data.level ?? null,
       };
-      let plan = await planInstall(supabase, orgId, pack, env);
+      // the packs it requires first (the Core registers, at the level it needs): install order does not matter
+      const firsts = await requiredFirst(supabase, orgId, pack.manifest);
+      let plan = await planInstall(supabase, orgId, pack, { ...env, installFirst: firsts });
+      if (plan.state === 'installed')
+        return fail('conflict', 'This pack is already installed in this workspace.');
+      if (plan.state === 'blocked')
+        return fail('conflict', plan.preview.conflicts[0] ?? 'This pack cannot be installed.');
+      const installedFirst = await installRequired(supabase, orgId, user.id, firsts);
+      if (!installedFirst.ok) return installedFirst;
+      plan = await planInstall(supabase, orgId, pack, env);
       if (plan.state === 'installed')
         return fail('conflict', 'This pack is already installed in this workspace.');
       if (plan.state === 'blocked')
@@ -347,10 +380,44 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
         adopted,
         level: plan.preview.level?.name ?? null,
         extended: !!plan.preview.extendsLevel,
+        installedFirst: installedFirst.data,
       });
     },
     'installPack',
   );
+}
+
+/**
+ * Install (or raise to a level) the packs another pack requires, each in its own transaction, before that pack
+ * (docs/11 Extends). Returns what was done, in words ("Core registers 1.0.0 (Starter)").
+ */
+export async function installRequired(
+  supabase: SupabaseClient<Database>,
+  orgId: string,
+  userId: string,
+  firsts: InstallFirst[],
+): Promise<Result<string[]>> {
+  const done: string[] = [];
+  for (const d of firsts) {
+    const dep = await readPack(supabase, d.key);
+    if (!dep) return fail('not_found', `${d.title} is no longer available.`);
+    const plan = await planInstall(supabase, orgId, dep, {
+      userId,
+      now: new Date(),
+      newId: randomUUID,
+      level: d.level,
+    });
+    if (plan.state === 'installed') continue;
+    if (plan.state !== 'ready' || !plan.payload)
+      return fail(
+        'conflict',
+        `${d.title}: ${plan.preview.conflicts[0] ?? 'it cannot be installed.'}`,
+      );
+    const written = await writeInstall(supabase, orgId, plan);
+    if (!written.ok) return fromDbError(written.error);
+    done.push(`${d.title} ${d.version}${d.levelName ? ` (${d.levelName})` : ''}`);
+  }
+  return ok(done);
 }
 
 /** Archive what an install made (sheets, folders, dashboards; automations off). Items and the log stay. */
@@ -371,6 +438,9 @@ export async function archivePack(
         .maybeSingle();
       if (!row) return fail('not_found', 'This pack is no longer installed.');
       const { data, error } = await supabase.rpc('archive_pack', { p_install: row.id });
+      // a pack another install builds on (the Core registers under an add-on) goes last
+      const first = error?.message.match(/archive (.+) first, it builds on this pack/);
+      if (first) return fail('conflict', `Archive ${first[1]} first: it builds on this pack.`);
       if (error) return fromDbError(error);
       return ok({ installId: row.id, counts: data as Record<string, number> });
     },

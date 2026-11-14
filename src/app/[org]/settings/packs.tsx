@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, BookOpen, Check, Loader2, RotateCcw, X } from 'lucide-react';
+import { AlertTriangle, BookOpen, Check, Layers, Loader2, RotateCcw, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -68,6 +68,41 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
             the Applicability view. The pack&apos;s sheets link to it.
           </span>
         </p>
+      ) : null}
+      {p.state === 'ready' && p.installsFirst?.length ? (
+        <p
+          className="border-line bg-soft text-copy-14 m-0 flex gap-2 rounded-md border p-3"
+          data-testid="installs-first"
+        >
+          <Layers className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            {p.installsFirst
+              .map((d) =>
+                d.raise
+                  ? `Adds ${d.levelName ?? d.level} to ${d.title} first.`
+                  : `Installs ${d.title} ${d.version}${d.levelName ? ` (${d.levelName})` : ''} first.`,
+              )
+              .join(' ')}{' '}
+            This pack adds its columns, views and tags to those shared registers.
+          </span>
+        </p>
+      ) : null}
+      {p.state === 'ready' && p.extends?.length ? (
+        <div className="flex flex-col gap-1" data-testid="extends-list">
+          <p className="text-label-14 m-0 font-medium">Adds to the shared registers</p>
+          <ul className="text-copy-14 text-muted-foreground m-0 flex list-disc flex-col gap-0.5 pl-5">
+            {p.extends.map((e) => (
+              <li key={`${e.pack}:${e.sheet}`}>
+                {e.sheet}:{' '}
+                {[
+                  ...e.adds,
+                  ...e.views.map((v) => `the view ${v}`),
+                  ...e.options.map((o) => `the option ${o}`),
+                ].join(', ')}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
       {p.state !== 'installed' && linked.length ? (
         <p className="text-copy-14 text-muted-foreground m-0" data-testid="links-framework">
@@ -423,6 +458,11 @@ export function PackPreview({
                 ? `Added ${step.result.level ?? 'the level'} to ${step.result.title}.`
                 : `Installed ${step.result.title}${step.result.level ? ` (${step.result.level})` : ''}.`}
             </p>
+            {step.result.installedFirst?.length ? (
+              <p className="text-copy-14 text-muted-foreground m-0">
+                Installed {step.result.installedFirst.join(', ')} first.
+              </p>
+            ) : null}
             {step.result.adopted.length ? (
               <p className="text-copy-14 text-muted-foreground m-0">
                 Adopted {step.result.adopted.join(', ')} first.
@@ -484,10 +524,13 @@ export function ArchivePack({
   org,
   installId,
   title,
+  addOn,
 }: {
   org: string;
   installId: string;
   title: string;
+  /** An add-on (docs/11 Extends): what it added to other packs' shared registers goes, their rows stay. */
+  addOn?: { onto: string[]; standard: string | null } | null;
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -507,7 +550,9 @@ export function ArchivePack({
       }
       const c = r.data.counts;
       toast(
-        `Archived ${title}: ${plural(c.sheets ?? 0, 'sheet')} archived, ${plural(c.automations ?? 0, 'automation')} turned off.`,
+        `Archived ${title}: ${plural(c.sheets ?? 0, 'sheet')} archived${
+          c.fields ? `, ${plural(c.fields, 'column')} taken off the shared registers` : ''
+        }, ${plural(c.automations ?? 0, 'automation')} turned off.`,
       );
       setConfirming(false);
       router.refresh();
@@ -527,10 +572,20 @@ export function ArchivePack({
     );
   return (
     <span className="flex flex-col items-start gap-1 sm:items-end">
-      <span className="text-label-13 text-muted-foreground">
-        Archives its sheets, folders and dashboards and turns its automations off. Items and the
-        activity log are kept.
-      </span>
+      {addOn ? (
+        <span className="text-label-13 text-muted-foreground" data-testid="archive-addon-note">
+          Archives its own sheets and dashboards, turns its automations off and takes its columns,
+          views and empty groups
+          {addOn.standard ? ` and the ${addOn.standard} tag` : ''} off the shared registers of{' '}
+          {addOn.onto.join(', ')}. No shared rows are deleted: items it added there, and items
+          tagged with it, stay with their history.
+        </span>
+      ) : (
+        <span className="text-label-13 text-muted-foreground">
+          Archives its sheets, folders and dashboards and turns its automations off. Items and the
+          activity log are kept.
+        </span>
+      )}
       <span className="flex gap-1">
         <Button type="button" variant="destructive" size="sm" disabled={pending} onClick={run}>
           {pending ? 'Archiving…' : `Archive ${title}`}

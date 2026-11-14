@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import type { Nav } from '@/server/repositories/sheets';
 import { AppIcon, type MenuApp } from '@/components/apps/app-icon';
 import { iconClass, itemClass } from './menu-bits';
+import { MenuRegisters } from './menu-registers';
 import { MenuSheets } from './menu-sheets';
 import { CreateButton, CreateSheetLink } from '@/components/create/create-provider';
 
@@ -227,7 +228,7 @@ export function SideMenu({
       writeClosed(next);
       return next;
     });
-  const empty = nav.folders.length === 0 && nav.unfiled.length === 0;
+  const empty = nav.registers.length === 0 && nav.folders.length === 0 && nav.unfiled.length === 0;
   // "New sheet" opens Create at the Sheet card (docs/05 §4 Create): one way to make a sheet
   const newSheet =
     canEdit && !empty && hit('New sheet') ? (
@@ -372,7 +373,20 @@ export function SideMenu({
         ) : null}
 
         <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
+        {/* the Core registers' domains, then the workspace's own sheets (docs/05 §2.1) */}
+        <MenuRegisters
+          org={org}
+          registers={nav.registers}
+          activeSheet={activeSheet}
+          q={q}
+          hit={hit}
+          isClosed={(id) => closed.has(id)}
+          toggle={toggle}
+          onNavigate={onNavigate}
+        />
+        {nav.registers.length && !q ? <div className="h-2.5 shrink-0" /> : null}
         <MenuSheets
+          title={nav.registers.length ? 'Your sheets' : 'Sheets'}
           org={org}
           nav={nav}
           activeSheet={activeSheet}
@@ -431,7 +445,7 @@ export function SideMenu({
         shownApps.length === 0 &&
         !hit('Home') &&
         !hit('My work') &&
-        [...nav.folders, { name: 'Other sheets', sheets: nav.unfiled }].every(
+        [...nav.registers, ...nav.folders, { name: 'Other sheets', sheets: nav.unfiled }].every(
           (s) => !s.sheets.some((x) => hit(x.name)) && !hit(s.name),
         ) ? (
           <p className="text-muted-foreground text-copy-13 px-2.5 py-2">Nothing matches.</p>
