@@ -386,7 +386,11 @@ export function extensionUses(m: PackManifest, depKey: string): Map<string, Set<
           .filter((e) => e.pack === depKey && e.sheet === t.ref)
           .flatMap((e) => (e.fields ?? []).map((f) => f.key)),
       );
-      for (const k of [w.fieldKey, ...(w.conditions ?? []).map((c) => c.fieldKey)])
+      for (const k of [
+        w.fieldKey,
+        ...(w.conditions ?? []).map((c) => c.fieldKey),
+        ...(w.scope ?? []).map((c) => c.fieldKey),
+      ])
         if (!k || !own.has(k)) mark(t.ref, k);
     }
   // the pack's own links into the dependency's sheets, and what lookups and roll-ups read through them

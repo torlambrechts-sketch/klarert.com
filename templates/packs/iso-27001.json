@@ -1,6 +1,6 @@
 {
   "key": "iso-27001",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "title": "ISO/IEC 27001:2022 ISMS (add-on)",
   "description": "An information security management system on top of the Core registers and the ISO/IEC 27001:2022 requirement library: the ISMS scope and context and the risk treatment plan as its own sheets, and the information security risk category, Annex A links, residual risk, the ISMS documents, security incidents with a 24-hour containment clock, ISMS nonconformities, audits, reviews and training on the shared registers. Installs the Core registers (Full) first. The statement of applicability comes from the library. Reference numbers and short titles only, never the text of the standard.",
   "requires": [
@@ -2286,17 +2286,19 @@
           "type": "count",
           "title": "Open ISMS nonconformities",
           "sheetRef": "core:nc",
-          "conditions": [
-            {
-              "fieldKey": "stage",
-              "op": "is_not_done"
-            },
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
               "value": [
                 "iso27001"
               ]
+            }
+          ],
+          "conditions": [
+            {
+              "fieldKey": "stage",
+              "op": "is_not_done"
             }
           ]
         },
@@ -2306,7 +2308,7 @@
           "title": "Nonconformities past their due date",
           "sheetRef": "core:nc",
           "fieldKey": "due_date",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -2329,7 +2331,7 @@
           "title": "Information security risks by status",
           "sheetRef": "core:risk",
           "fieldKey": "status",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -2344,6 +2346,15 @@
           "type": "count",
           "title": "Risks with a residual score above 12",
           "sheetRef": "core:risk",
+          "scope": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            }
+          ],
           "conditions": [
             {
               "fieldKey": "iso27001_residual_score",
@@ -2379,7 +2390,7 @@
           "title": "Controls by health",
           "sheetRef": "core:controls",
           "fieldKey": "health",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -2411,7 +2422,7 @@
           "title": "Internal audits by status",
           "sheetRef": "core:audits",
           "fieldKey": "status",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -2427,7 +2438,7 @@
           "title": "ISMS documents due for review",
           "sheetRef": "core:documents",
           "fieldKey": "next_review",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",

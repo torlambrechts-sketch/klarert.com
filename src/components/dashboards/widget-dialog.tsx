@@ -13,6 +13,7 @@ import {
   widgetProblem,
   type WidgetConfig,
 } from '@/engine/dashboards';
+import { describeCondition } from '@/engine/automations/builder';
 import { emptySheetData, sheetCtx } from '@/engine/sheet-data';
 import type { Condition, Ctx, Person } from '@/engine/types';
 import { inputClass } from '@/components/fields/shared';
@@ -79,6 +80,8 @@ function WidgetForm({
   );
   const [fieldKey, setFieldKey] = useState<string | null>(initial?.fieldKey ?? null);
   const [conditions, setConditions] = useState<Condition[]>(initial?.conditions ?? []);
+  // a pack's widget may look only at some items (its standard's rows of a shared register): kept on its own sheet
+  const [scope, setScope] = useState<Condition[]>(initial?.scope ?? []);
   const [days, setDays] = useState<number>(initial?.days ?? DEFAULT_DAYS);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [titleTouched, setTitleTouched] = useState(!!initial);
@@ -112,6 +115,7 @@ function WidgetForm({
   const usesSheet = def.needs.sheet !== 'none';
   const effectiveSheet = usesSheet ? sheetId : null;
   const current = effectiveSheet ? lookup(effectiveSheet) : undefined;
+  const keptScope = effectiveSheet && effectiveSheet === initial?.sheetId ? scope : [];
   const choices = current ? widgetFieldChoices(type, current.fields, current.ctx) : [];
   const effectiveField = def.needs.field
     ? (choices.find((f) => f.key === fieldKey)?.key ?? choices[0]?.key ?? null)
@@ -126,6 +130,7 @@ function WidgetForm({
     ...(effectiveSheet ? { sheetId: effectiveSheet } : {}),
     ...(effectiveField ? { fieldKey: effectiveField } : {}),
     ...(def.needs.conditions && conditions.length && effectiveSheet ? { conditions } : {}),
+    ...(def.needs.conditions && keptScope.length ? { scope: keptScope } : {}),
     ...(def.needs.days ? { days } : {}),
   };
   const problem = widgetProblem(widget, lookup);
@@ -241,6 +246,22 @@ function WidgetForm({
             ))}
           </select>
         </label>
+      ) : null}
+
+      {def.needs.conditions && current && keptScope.length ? (
+        <div className="flex flex-col gap-1">
+          <p className="text-copy-13 m-0 font-medium">Only items where</p>
+          <ul className="text-copy-13 text-muted-foreground m-0 flex list-none flex-col gap-0.5 p-0">
+            {keptScope.map((c, i) => (
+              <li key={i}>{describeCondition(c, current.ctx)}</li>
+            ))}
+          </ul>
+          <div>
+            <Button type="button" size="sm" variant="outline" onClick={() => setScope([])}>
+              Look at every item
+            </Button>
+          </div>
+        </div>
       ) : null}
 
       {def.needs.conditions && current ? (

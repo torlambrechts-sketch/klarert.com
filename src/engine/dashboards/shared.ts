@@ -43,11 +43,18 @@ export function sourceOf(
   return { source };
 }
 
-/** Items of the sheet that match the widget's conditions (conditions on deleted fields are skipped). */
-export function matchingItems(w: WidgetConfig, source: SheetSource): Item[] {
-  const { valid } = splitConditions(w.conditions ?? [], source.ctx);
-  return valid.length ? source.items.filter((i) => matchesAll(valid, i, source.ctx)) : source.items;
-}
+const filtered = (items: Item[], conditions: WidgetConfig['conditions'], source: SheetSource) => {
+  const { valid } = splitConditions(conditions ?? [], source.ctx);
+  return valid.length ? items.filter((i) => matchesAll(valid, i, source.ctx)) : items;
+};
+
+/** Items of the sheet the widget looks at: those in its scope, or every item (conditions on deleted fields skipped). */
+export const scopedItems = (w: WidgetConfig, source: SheetSource): Item[] =>
+  filtered(source.items, w.scope, source);
+
+/** Items of the sheet in the widget's scope that match its conditions (conditions on deleted fields are skipped). */
+export const matchingItems = (w: WidgetConfig, source: SheetSource): Item[] =>
+  filtered(scopedItems(w, source), w.conditions, source);
 
 /** The first day of the last `days` days, today included. */
 export const sinceDay = (today: string, days: number) => addDays(today, -(days - 1));

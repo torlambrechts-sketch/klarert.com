@@ -27,8 +27,8 @@ import { previewLines } from '@/engine/packs/plan';
 const pack = packByKey('iso-9001');
 
 describe('ISO 9001 add-on', () => {
-  it('is a 2.1.0 add-on to Core on the 2026 library that meets the pack quality bar', () => {
-    expect(pack.version).toBe('2.1.0');
+  it('is a 2.2.0 add-on to Core on the 2026 library that meets the pack quality bar', () => {
+    expect(pack.version).toBe('2.2.0');
     // 2.1.0 links external providers to Core's Suppliers register (Core 1.1.0)
     expect(pack.requires).toEqual([{ pack: 'core', range: '^1.1.0' }]);
     expect(pack.standard).toEqual({ id: 'iso9001', label: 'ISO 9001', color: 'blue' });

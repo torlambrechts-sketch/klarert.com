@@ -57,7 +57,7 @@ function withCore() {
 
 describe('ISO 27001 add-on', () => {
   it('is a new major version that requires Core, stands for ISO 27001 and builds on the library', () => {
-    expect(pack.version).toBe('2.0.0');
+    expect(pack.version).toBe('2.1.0');
     expect(pack.requires).toEqual([{ pack: 'core', range: '^1.0.0' }]);
     expect(pack.standard).toMatchObject({ id: 'iso27001', label: 'ISO 27001' });
     expect(pack.frameworks).toEqual([{ key: 'iso-27001', version: '2022' }]);

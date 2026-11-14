@@ -1153,6 +1153,7 @@ export function planPackInstall(
       ...(w.library ? { sheetId: libraries.get(w.library) ?? null } : {}),
       ...(w.fieldKey ? { fieldKey: w.fieldKey } : {}),
       ...(w.conditions ? { conditions: w.conditions as Condition[] } : {}),
+      ...(w.scope ? { scope: w.scope as Condition[] } : {}),
       ...(w.days !== undefined ? { days: w.days } : {}),
     }));
     for (const [wi, w] of widgets.entries()) {

@@ -100,6 +100,34 @@ describe('widget registry', () => {
     ).toMatchObject({ kind: 'stat', value: 1 });
   });
 
+  it('scope: a count says "of N" against the items in scope, and every kind reads only those', () => {
+    // the rows of a shared register tagged with one standard: here the items in progress (i1, i2)
+    const scope = [{ fieldKey: 'status', op: 'is_any_of', value: ['opt_wip'] }];
+    const overdueOnes = [{ fieldKey: 'notes', op: 'contains', value: 'urg' }];
+    expect(computeWidget(w({ conditions: overdueOnes }), data)).toMatchObject({
+      value: 1,
+      caption: 'of 4 actions in Corrective actions',
+    });
+    expect(computeWidget(w({ scope, conditions: overdueOnes }), data)).toMatchObject({
+      value: 1,
+      caption: 'of 2 actions in Corrective actions',
+    });
+    const bars = computeWidget(w({ type: 'by_option', fieldKey: 'status', scope }), data);
+    expect(bars).toMatchObject({
+      kind: 'bars',
+      total: 2,
+      caption: '2 actions in Corrective actions',
+    });
+    expect(computeWidget(w({ type: 'overdue', fieldKey: 'due', scope }), data)).toMatchObject({
+      value: 1,
+      caption: 'of 2 open items · Due date has passed',
+    });
+    const look = (id: string) => (id === sheet.id ? { fields, ctx } : undefined);
+    expect(widgetProblem(w({ type: 'evidence_status', scope }), look)).toBe(
+      'This widget does not use conditions.',
+    );
+  });
+
   it('by_option: bars per option in order, plus "No value"', () => {
     const r = computeWidget(w({ type: 'by_option', fieldKey: 'status' }), data);
     expect(r.kind).toBe('bars');

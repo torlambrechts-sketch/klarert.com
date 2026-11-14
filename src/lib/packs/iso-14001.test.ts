@@ -24,8 +24,8 @@ import { previewLines } from '@/engine/packs/plan';
 const pack = packByKey('iso-14001');
 
 describe('ISO 14001 add-on', () => {
-  it('is a 2.0.0 add-on to Core on the 2026 library that meets the pack quality bar', () => {
-    expect(pack.version).toBe('2.0.0');
+  it('is a 2.1.0 add-on to Core on the 2026 library that meets the pack quality bar', () => {
+    expect(pack.version).toBe('2.1.0');
     expect(pack.requires).toEqual([{ pack: 'core', range: '^1.0.0' }]);
     expect(pack.frameworks).toEqual([{ key: 'iso-14001', version: '2026' }]);
     expect(extendsAgainst(pack, core)).toEqual([]);

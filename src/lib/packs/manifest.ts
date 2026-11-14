@@ -178,6 +178,11 @@ export const packWidget = z.object({
     .array(z.object({ fieldKey, op: z.string().min(1).max(40), value: json.optional() }))
     .max(10)
     .optional(),
+  /** The items the widget looks at before its conditions (a count's "of N"): an add-on's tagged rows of a register. */
+  scope: z
+    .array(z.object({ fieldKey, op: z.string().min(1).max(40), value: json.optional() }))
+    .max(10)
+    .optional(),
   days: z.number().int().min(1).max(365).optional(),
 });
 
