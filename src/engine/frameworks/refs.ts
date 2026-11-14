@@ -25,9 +25,15 @@ export function requirementLabel(shortTitle: string, ref: string): string {
 /** The framework a key belongs to, `<key>@<version>`. */
 export const frameworkId = (f: Pick<Framework, 'key' | 'version'>) => `${f.key}@${f.version}`;
 
-/** The pack a framework's library is shipped as (docs/11): `framework-<key>`, version `<edition>.<revision>.0`. */
-export function frameworkPackKey(frameworkKey: string): string {
-  return `framework-${frameworkKey}`;
+/**
+ * The pack a framework's library is shipped as (docs/11): `framework-<key>` (or the edition's own `library.packKey`,
+ * `framework-<key>-<version>`, for a later edition), version `<edition>.<revision>.0`.
+ */
+export function frameworkPackKey(
+  f: string | { key: string; library?: { packKey?: string } },
+): string {
+  if (typeof f === 'string') return `framework-${f}`;
+  return f.library?.packKey ?? `framework-${f.key}`;
 }
 
 export function frameworkPackVersion(f: Pick<Framework, 'version' | 'revision'>): string {
