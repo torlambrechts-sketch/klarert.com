@@ -78,6 +78,9 @@ export interface ItemPanelProps {
   initialTab?: string;
 }
 
+/** The element the first of a run of panels (moved through with J and K) was opened from. */
+let panelOpener: HTMLElement | null = null;
+
 export function ItemPanel(props: ItemPanelProps) {
   const { org, data, ctx, actions, item, order, canEdit, isAdmin, onClose, onNavigate } = props;
   const { subitems, parent } = props;
@@ -89,10 +92,15 @@ export function ItemPanel(props: ItemPanelProps) {
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(item.name);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  // where focus was when the panel opened (a name in the grid, a deep link: the page); restored on close
-  const [opener] = useState(() =>
-    typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null),
-  );
+  // where focus was when the panel opened (a name in the grid, a deep link: the page); restored on close. J and K
+  // replace the panel with the next item's: that one returns focus where the first panel was opened from.
+  const [opener] = useState(() => {
+    if (typeof document === 'undefined') return null;
+    const el = document.activeElement as HTMLElement | null;
+    if (el?.closest('[data-item-panel]')) return panelOpener;
+    panelOpener = el;
+    return el;
+  });
   const contentRef = useRef<HTMLDivElement>(null);
   const valueCommit = useValueCommit(data, ctx, actions, { hold: true });
 
@@ -210,6 +218,7 @@ export function ItemPanel(props: ItemPanelProps) {
       <DialogPrimitive.Portal>
         <DialogPrimitive.Content
           ref={contentRef}
+          data-item-panel
           aria-describedby={undefined}
           data-wide={wide}
           onOpenAutoFocus={(e) => {
