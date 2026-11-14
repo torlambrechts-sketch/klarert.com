@@ -154,7 +154,8 @@ export function settingProblems(m: PackManifest): { path: (string | number)[]; m
   const settings = m.settings ?? [];
   const keys = new Set<string>();
   for (const [si, s] of settings.entries()) {
-    if (keys.has(s.key)) out.push({ path: ['settings', si], message: `Duplicate setting "${s.key}".` });
+    if (keys.has(s.key))
+      out.push({ path: ['settings', si], message: `Duplicate setting "${s.key}".` });
     keys.add(s.key);
     const ids = new Set<string>();
     const valueKeys = new Set(s.values.map((v) => v.key));

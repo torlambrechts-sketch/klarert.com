@@ -1004,6 +1004,12 @@ export function planPackInstall(
         itemLabel: r.item_label as string,
         idPrefix: (r.id_prefix as string | null) ?? '',
         isLibrary: !!r.is_library,
+        // the sheet's approval workflows, so a `start_workflow` action or a workflow trigger finds them
+        ...(Array.isArray((r.settings as { workflows?: unknown } | undefined)?.workflows)
+          ? {
+              workflows: (r.settings as unknown as { workflows: Sheet['workflows'] }).workflows,
+            }
+          : {}),
       },
     ]),
   );

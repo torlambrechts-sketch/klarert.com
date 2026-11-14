@@ -225,6 +225,8 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
       itemLabel: s.itemLabel,
       idPrefix: s.idPrefix,
       isLibrary: false,
+      // approval workflows, so a `start_workflow` action or a workflow trigger of the template finds them
+      ...(s.workflows?.length ? { workflows: s.workflows } : {}),
     });
 
     const fields = s.fields.map((f, fi) => {

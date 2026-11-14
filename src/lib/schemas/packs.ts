@@ -13,7 +13,10 @@ const level = z
 
 /** Pack settings (docs/11 Pack settings): setting key → choice id, checked against the manifest by the command. */
 const settings = z
-  .record(z.string().regex(/^[a-z][a-z0-9_]{0,39}$/), z.string().regex(/^[a-z0-9][a-z0-9_-]{0,39}$/))
+  .record(
+    z.string().regex(/^[a-z][a-z0-9_]{0,39}$/),
+    z.string().regex(/^[a-z0-9][a-z0-9_-]{0,39}$/),
+  )
   .optional();
 
 export const previewPackInput = z.object({ org: slugInput, key, level });
