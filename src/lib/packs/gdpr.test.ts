@@ -12,7 +12,7 @@ import type { Field, Json } from '@/engine/types';
 import { repoPacks } from './catalogue';
 import { packQualityProblems } from './quality';
 
-// The GDPR add-on 2.0.0 (docs/11 The GDPR add-on): its own sheets in Core's Privacy and security and Suppliers
+// The GDPR add-on 2.1.0 (docs/11 The GDPR add-on): its own sheets in Core's Privacy and security and Suppliers
 // domains, the request deadline, the breach clock and its escalation, the cascades from the shared registers, the
 // approval workflows, retention rules as data and examples linked to the articles they show.
 const packs = repoPacks();
@@ -55,9 +55,10 @@ const withCore = (over: Partial<PackSnapshot> = {}): PackSnapshot => {
 const sheet = (ref: string) => pack.sheets.find((s) => s.ref === ref)!;
 
 describe('GDPR add-on', () => {
-  it('is a 2.0.0 add-on to Core Starter on the GDPR library that meets the quality bar', () => {
-    expect(pack.version).toBe('2.0.0');
-    expect(pack.requires).toEqual([{ pack: 'core', range: '^1.0.0' }]);
+  it('is a 2.1.0 add-on to Core Starter on the GDPR library that meets the quality bar', () => {
+    expect(pack.version).toBe('2.1.0');
+    // 2.1.0 links processors to Core's Suppliers register (Core 1.1.0)
+    expect(pack.requires).toEqual([{ pack: 'core', range: '^1.1.0' }]);
     expect(pack.standard).toEqual({ id: 'gdpr', label: 'GDPR', color: 'purple' });
     expect(pack.frameworks).toEqual([{ key: 'gdpr', version: '2016' }]);
     // only Starter registers of Core: a GDPR install never pulls in the Full registers
@@ -112,8 +113,11 @@ describe('GDPR add-on', () => {
       'Incidents',
       'Risk categories',
       'Risk register',
+      'Suppliers',
     ]);
     expect(ext['Risk register']!.views).toEqual(['GDPR view']);
+    // 2.1.0: each processor links to its supplier in Core's Suppliers register, both ways
+    expect(ext['Suppliers']!.adds).toEqual(['1 column']);
     expect(ext['Incidents']!.options).toContain('Personal data breach in Type');
     // personal data sheets restricted
     const restricted = plan.payload!.sheets.filter((s) => s.restricted).map((s) => s.ref);
