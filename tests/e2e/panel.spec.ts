@@ -11,6 +11,8 @@ const desktopOnly = () =>
 
 const unique = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 const grid = (page: Page) => page.getByRole('grid');
+/** The Table: the grid on desktop, item cards under 640 px (docs/05 §5). */
+const table = (page: Page) => page.getByRole('grid').or(page.getByTestId('item-cards'));
 const panel = (page: Page) => page.getByRole('dialog');
 
 async function trackerSheet(page: Page, name = `Panel ${unique()}`) {
@@ -21,7 +23,7 @@ async function trackerSheet(page: Page, name = `Panel ${unique()}`) {
   await expect(page).toHaveURL(/\/meridian\/s\/[0-9a-f-]{36}$/);
   const url = `${page.url()}?view=table`;
   await page.goto(url);
-  await expect(page.getByRole('grid')).toBeVisible();
+  await expect(table(page)).toBeVisible();
   return url;
 }
 
@@ -33,8 +35,8 @@ async function addItems(page: Page, group: string, names: string[]) {
     await input.press('Enter');
     await expect(input).toHaveValue('');
   }
-  for (const n of names) await expect(grid(page).getByText(n, { exact: true })).toBeVisible();
-  await expect(grid(page).locator('[id^="cell-temp-"]')).toHaveCount(0);
+  for (const n of names) await expect(table(page).getByText(n, { exact: true })).toBeVisible();
+  await expect(table(page).locator('[id^="cell-temp-"]')).toHaveCount(0);
 }
 
 const openByName = (page: Page, name: string) =>
@@ -42,11 +44,14 @@ const openByName = (page: Page, name: string) =>
 
 async function itemByName(page: Page, sheetUrl: string, name: string) {
   const sheetId = sheetUrl.match(/\/s\/([0-9a-f-]{36})/)![1]!;
-  const rows = await rest<{ id: string; display_id: string }[]>(
-    page,
-    `items?sheet_id=eq.${sheetId}&name=eq.${encodeURIComponent(name)}&select=id,display_id`,
-  );
-  return rows[0]!;
+  const read = () =>
+    rest<{ id: string; display_id: string }[]>(
+      page,
+      `items?sheet_id=eq.${sheetId}&name=eq.${encodeURIComponent(name)}&select=id,display_id`,
+    );
+  // phone cards show a new item before the server has saved it (the grid's temp-cell check has no card twin)
+  await expect.poll(async () => (await read()).length, { message: `item ${name}` }).toBe(1);
+  return (await read())[0]!;
 }
 
 async function addField(page: Page, search: string, label: RegExp) {

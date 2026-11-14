@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { generateNKeysBetween } from 'fractional-indexing';
+import { popoverGone } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
 // Wide tables (docs/05 §3.1): column groups defined by owners and admins (a group's columns sit together), collapsed
@@ -132,6 +133,8 @@ test.describe('desktop', () => {
     await page.getByRole('checkbox', { name: 'Show Note 8' }).click();
     await expect(page.getByRole('button', { name: 'Show Note 8' })).toBeVisible();
     await page.keyboard.press('Escape');
+    // the closing menu hands focus back to Columns when its exit animation ends: let it finish first
+    await popoverGone(page);
     await page.getByRole('button', { name: 'Hidden · 3' }).click();
     await expect(page.getByRole('heading', { name: 'Hidden · 3' })).toBeFocused();
     await page.keyboard.press('Escape');
