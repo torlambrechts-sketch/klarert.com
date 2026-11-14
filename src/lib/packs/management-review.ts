@@ -90,3 +90,18 @@ export const REVIEW_PACK_SOURCES: ReviewPackSource[] = [
     review: { source: 'reviews', groupRef: 'reviews.planned', checks: {} },
   },
 ];
+
+/**
+ * A sheet or group of a review source by ref: the pack's own (`review`), or `<pack>:<ref>` of another live install
+ * (an add-on's review over the Core registers, `core:reviews`).
+ */
+export function resolveReviewRef(
+  own: Record<string, string>,
+  installs: ReadonlyMap<string, Record<string, string>>,
+  kind: 'sheet' | 'group',
+  ref: string,
+): string | undefined {
+  const colon = ref.indexOf(':');
+  if (colon < 0) return own[`${kind}:${ref}`];
+  return installs.get(ref.slice(0, colon))?.[`${kind}:${ref.slice(colon + 1)}`];
+}
