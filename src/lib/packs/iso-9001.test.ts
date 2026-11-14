@@ -16,7 +16,7 @@ import { repoPacks } from './catalogue';
 import { REVIEW_PACK_SOURCES } from './management-review';
 import { packManifestSchema } from './manifest';
 
-// The ISO 9001:2015 pack (docs/11): Starter and Full on the 9001 requirement library, example items linked to its
+// The ISO 9001 pack (docs/11, version 1.1.0 on the 2026 edition): Starter and Full on the 9001 requirement library, example items linked to its
 // clauses, the complaint and nonconformity forms, the automations that raise nonconformities and the management review
 // inputs mapped by ref.
 const pack = repoPacks().find((p) => p.key === 'iso-9001')!;
@@ -33,7 +33,7 @@ const snapshot = (over: Partial<PackSnapshot> = {}): PackSnapshot => ({
   lastSheetPosition: null,
   lastFolderPosition: null,
   lastDashboardPosition: null,
-  libraries: [{ library: 'iso-9001@2015', sheetId: LIB }],
+  libraries: [{ library: 'iso-9001@2026', sheetId: LIB }],
   ...over,
 });
 let n = 0;
@@ -68,9 +68,9 @@ const FULL_ADDS = [
 
 describe('ISO 9001 pack', () => {
   it('ships Starter and Full and builds on the 9001 library', () => {
-    expect(pack.version).toBe('1.0.0');
+    expect(pack.version).toBe('1.1.0');
     expect(pack.levels!.map((l) => l.key)).toEqual(['starter', 'full']);
-    expect(pack.frameworks).toEqual([{ key: 'iso-9001', version: '2015' }]);
+    expect(pack.frameworks).toEqual([{ key: 'iso-9001', version: '2026' }]);
     const [starter, full] = levelSummaries(pack);
     expect(starter!.sheets).toEqual(STARTER);
     expect(full!.adds).toEqual(FULL_ADDS);
@@ -84,11 +84,11 @@ describe('ISO 9001 pack', () => {
         if (s.register !== 'documents') expect(i.name, `${s.ref}.${i.ref}`).toMatch(/^Example: /);
   });
 
-  it('names only requirements the ISO 9001:2015 library has', () => {
+  it('names only requirements the ISO 9001:2026 library has', () => {
     const fw = JSON.parse(
-      readFileSync(join(process.cwd(), 'templates/frameworks/iso-9001-2015.json'), 'utf8'),
+      readFileSync(join(process.cwd(), 'templates/frameworks/iso-9001-2026.json'), 'utf8'),
     ) as { requirements: { ref: string }[] };
-    const refs = new Set(fw.requirements.map((r) => `iso-9001@2015#${r.ref}`));
+    const refs = new Set(fw.requirements.map((r) => `iso-9001@2026#${r.ref}`));
     let count = 0;
     for (const s of pack.sheets)
       for (const i of s.items)
@@ -120,7 +120,7 @@ describe('ISO 9001 pack', () => {
       plan.payload!.dashboards[0]!.config as { widgets: { id: string; sheetId?: string }[] }
     ).widgets;
     expect(widgets.find((w) => w.id === 'w_clauses')!.sheetId).toBe(LIB);
-    expect(plan.preview.frameworks).toEqual([{ library: 'iso-9001@2015', adopted: true }]);
+    expect(plan.preview.frameworks).toEqual([{ library: 'iso-9001@2026', adopted: true }]);
     expect(previewLines(plan.preview)[0]).toMatch(/^Installs 1 folder, 7 sheets/);
     expect(plan.preview.forms).toEqual([
       {
@@ -135,7 +135,7 @@ describe('ISO 9001 pack', () => {
   it('says the framework is adopted first when the workspace has not adopted it', () => {
     const plan = planPackInstall(pack, snapshot({ libraries: [] }), env, { level: 'full' });
     expect(plan.state).toBe('ready');
-    expect(plan.preview.frameworks).toEqual([{ library: 'iso-9001@2015', adopted: false }]);
+    expect(plan.preview.frameworks).toEqual([{ library: 'iso-9001@2026', adopted: false }]);
   });
 
   it('plans Full whole, with the reminders and the automations that raise nonconformities', () => {
@@ -187,15 +187,15 @@ describe('ISO 9001 pack', () => {
         )
         .map((l) => keys[Number(l.to_item.replace('lib-item-', ''))]);
     expect(linked('complaint.clause', 'complaint.ex_late')).toEqual([
-      'iso-9001@2015#9.1.2',
-      'iso-9001@2015#8.7',
+      'iso-9001@2026#9.1.2',
+      'iso-9001@2026#8.7',
     ]);
-    expect(linked('supplier.clause', 'supplier.ex_boards')).toEqual(['iso-9001@2015#8.4']);
+    expect(linked('supplier.clause', 'supplier.ex_boards')).toEqual(['iso-9001@2026#8.4']);
     expect(linked('nc.clause', 'nc.ex_wrong_label')).toEqual([
-      'iso-9001@2015#10.2',
-      'iso-9001@2015#8.7',
+      'iso-9001@2026#10.2',
+      'iso-9001@2026#8.7',
     ]);
-    expect(linked('equipment.clause', 'equipment.ex_caliper')).toEqual(['iso-9001@2015#7.1.5']);
+    expect(linked('equipment.clause', 'equipment.ex_caliper')).toEqual(['iso-9001@2026#7.1.5']);
     // and to each other: the complaint to its nonconformity, the process to its risk
     const own = (fieldRef: string, itemRef: string) =>
       plan

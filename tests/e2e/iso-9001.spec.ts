@@ -3,12 +3,12 @@ import { finishRow } from './automation-helpers';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// The ISO 9001:2015 pack (docs/11): an owner installs Starter from Workspace admin › Packs, which adopts the 9001
+// The ISO 9001 pack (docs/11): an owner installs Starter from Workspace admin › Packs, which adopts the 9001
 // requirement library first; the example complaint links to clauses 9.1.2 and 8.7 of that library; ticking "Needs
 // corrective action" on a complaint raises a linked nonconformity; the setup checklist opens the internal form
 // "Report a complaint"; adding Full later creates only the eight sheets Starter does not have.
 
-const TITLE = 'ISO 9001:2015 QMS';
+const TITLE = 'ISO 9001 QMS';
 const STARTER = [
   'Context and interested parties',
   'Quality policy and objectives',
@@ -35,6 +35,8 @@ test('install ISO 9001 Starter, raise a nonconformity from a complaint and add F
   test.setTimeout(240_000);
   const slug = seedWorkspace('qms', { empty: true });
   await signIn(page, 'maria@example.com', `/${slug}/settings?tab=packs`);
+  // the sign-in link lands on the auth site URL: open this workspace on the server under test
+  await page.goto(`/${slug}/settings?tab=packs`);
   await expect(packRow(page)).toContainText('Starter or Full');
 
   // ── the dialog: choose a level, see what it creates and that the library is adopted first
@@ -47,7 +49,7 @@ test('install ISO 9001 Starter, raise a nonconformity from a complaint and add F
   await expect(levels).toContainText(`Creates: ${STARTER.join(', ')}`);
   await expect(levels).toContainText('Adds: External providers, Competence and training');
   await expect(dialog.getByTestId('adopts-framework')).toContainText(
-    'Adopts the ISO 9001:2015 requirement library first',
+    'Adopts the ISO 9001:2026 requirement library first',
   );
   await expect(dialog).toContainText('Installs 1 folder, 7 sheets');
   await expect(dialog.getByRole('list', { name: 'Dashboards' })).toContainText(
@@ -63,7 +65,7 @@ test('install ISO 9001 Starter, raise a nonconformity from a complaint and add F
   await expect(dialog.getByRole('status')).toContainText(`Installed ${TITLE} (Starter).`, {
     timeout: 60_000,
   });
-  await expect(dialog).toContainText('Adopted ISO 9001:2015 first.');
+  await expect(dialog).toContainText('Adopted ISO 9001:2026 first.');
   await dialog.getByRole('button', { name: 'Done' }).click();
 
   const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
@@ -73,7 +75,7 @@ test('install ISO 9001 Starter, raise a nonconformity from a complaint and add F
   );
   expect(sheets.filter((s) => !s.is_library).map((s) => s.name)).toEqual(STARTER);
   const lib = sheets.find((s) => s.is_library)!;
-  expect(lib.name).toBe('ISO 9001:2015 requirements');
+  expect(lib.name).toBe('ISO 9001:2026 requirements');
   const [install] = await rest<{ id: string; level: string }[]>(
     page,
     `pack_installs?org_id=eq.${org!.id}&pack_key=eq.iso-9001&select=id,level`,
@@ -95,8 +97,8 @@ test('install ISO 9001 Starter, raise a nonconformity from a complaint and add F
     `items?sheet_id=eq.${lib.id}&id=in.(${links.map((l) => l.to_item).join(',')})&select=requirement_ref`,
   );
   expect(clauses.map((r) => r.requirement_ref).sort()).toEqual([
-    'iso-9001@2015#8.7',
-    'iso-9001@2015#9.1.2',
+    'iso-9001@2026#8.7',
+    'iso-9001@2026#9.1.2',
   ]);
 
   // ── the setup checklist: eight steps, Starter words the supplier step its own way
