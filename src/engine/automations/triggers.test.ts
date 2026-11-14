@@ -96,6 +96,10 @@ describe('matchTrigger', () => {
         'subitem_created',
         'subitem_field_becomes',
         'all_subitems_done',
+        'workflow_step_decided',
+        'workflow_approved',
+        'workflow_rejected',
+        'approval_overdue',
       ].sort(),
     );
   });

@@ -27,6 +27,8 @@ export interface WorkflowRow {
   lifecycle: WorkflowLifecycle | null;
   /** The raw value that puts an item into each stage, by stage key ('' = no stage). */
   inputs: Record<string, Json>;
+  /** The sheet's approval workflows (docs/04 §13): name, on or off, the step names. */
+  approvals: { id: string; name: string; enabled: boolean; steps: string[] }[];
 }
 
 export interface WorkflowData {
@@ -106,7 +108,13 @@ export async function getWorkflow(
     const field = stageField(m.fields, m.sheet.id === chosen ? choice.fieldKey : null, ctx);
     const sheet = { id: m.sheet.id, name: m.sheet.name, itemLabel: m.sheet.itemLabel };
     const fields = usable.map((f) => ({ key: f.key, name: f.name }));
-    if (!field) return { sheet, fields, lifecycle: null, inputs: {} };
+    const approvals = (m.sheet.workflows ?? []).map((w) => ({
+      id: w.id,
+      name: w.name,
+      enabled: w.enabled,
+      steps: w.steps.map((st) => st.name),
+    }));
+    if (!field) return { sheet, fields, lifecycle: null, inputs: {}, approvals };
     const l = lifecycle(
       field,
       data.items,
@@ -121,6 +129,7 @@ export async function getWorkflow(
       fields,
       lifecycle: { ...l, field: { id: field.id, key: field.key, name: field.name } },
       inputs,
+      approvals,
     };
   });
   return { rows, chosen, today };

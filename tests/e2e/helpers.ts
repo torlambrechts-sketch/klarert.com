@@ -43,6 +43,23 @@ async function latestLink(email: string, after: number): Promise<string> {
  */
 const ATTEMPTS = 5;
 
+/**
+ * The link's callback names the environment's app URL (localhost:3000 locally), which on a shared machine may be
+ * another checkout's server: follow the verify step here and take the code to this server's own callback (the PKCE
+ * verifier cookie is this browser's). Anything else is opened as it is.
+ */
+async function callbackHere(link: string): Promise<string> {
+  try {
+    const res = await fetch(link, { redirect: 'manual' });
+    const to = res.headers.get('location');
+    const url = to ? new URL(to) : null;
+    if (url && url.pathname === '/auth/callback') return `${url.pathname}${url.search}`;
+    return to ?? link;
+  } catch {
+    return link;
+  }
+}
+
 export async function signIn(page: Page, email: string, next?: string) {
   for (let attempt = 1; ; attempt += 1) {
     const started = Date.now();
@@ -62,7 +79,7 @@ export async function signIn(page: Page, email: string, next?: string) {
       }
     }
     await expect(sent).toBeVisible();
-    await page.goto(await latestLink(email, started));
+    await page.goto(await callbackHere(await latestLink(email, started)));
     if (!/\/login\?error=/.test(page.url()) || attempt === ATTEMPTS) return;
     await page.waitForTimeout(500 * attempt + Math.random() * 1000);
   }

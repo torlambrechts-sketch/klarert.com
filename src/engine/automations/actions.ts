@@ -92,8 +92,8 @@ const storedField = (action: ActionJson, ctx: Ctx) => {
 };
 
 /**
- * The actions (docs/04 §5), keyed by id: 11 on the item, 3 for sub-items (subitem-actions.ts) and the requirement
- * checks sync (requirement-sync.ts). A new action is one
+ * The actions (docs/04 §5), keyed by id: 11 on the item, 3 for sub-items (subitem-actions.ts), the requirement
+ * checks sync (requirement-sync.ts) and start_workflow (approvals). A new action is one
  * entry here and one executor case.
  */
 export const ACTIONS: Record<ActionId, Planner> = {
@@ -396,6 +396,32 @@ export const ACTIONS: Record<ActionId, Planner> = {
   },
   ...SUBITEM_ACTIONS,
   sync_requirement_checks: (action, item, ctx) => planSyncAction(action, item, ctx),
+
+  /** Submit the item to an approval workflow of its sheet (docs/04 §13); the chain's person is the submitter. */
+  start_workflow: (action, item, ctx, env) => {
+    const id = str(action.workflowId);
+    const w = (ctx.sheet.workflows ?? []).find((x) => x.id === id);
+    if (!w)
+      return failed(
+        'start_workflow',
+        'Submit for approval',
+        id ? 'This approval workflow no longer exists.' : 'Choose an approval workflow.',
+      );
+    const summary = `Submit for approval: ${w.name}`;
+    if (!w.enabled) return skipped('start_workflow', summary, `${w.name} is turned off.`);
+    return {
+      action: 'start_workflow',
+      summary,
+      effects: [
+        {
+          kind: 'start_workflow',
+          itemId: item.id,
+          workflowId: w.id,
+          submittedBy: env.actor.kind === 'user' ? env.actor.id : null,
+        },
+      ],
+    };
+  },
 };
 
 export const isActionId = (id: unknown): id is ActionId =>

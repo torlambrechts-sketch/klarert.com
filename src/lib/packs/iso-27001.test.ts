@@ -42,7 +42,7 @@ const env = {
 
 describe('ISO 27001 pack', () => {
   it('ships Starter and Full and builds on the 27001 library', () => {
-    expect(pack.version).toBe('1.2.0');
+    expect(pack.version).toBe('1.3.0');
     expect(pack.levels!.map((l) => l.key)).toEqual(['starter', 'full']);
     expect(pack.frameworks).toEqual([{ key: 'iso-27001', version: '2022' }]);
     const [starter, full] = levelSummaries(pack);
@@ -314,5 +314,50 @@ describe('manifest levels', () => {
     };
     delete m.setup.steps[1]!.levels;
     expect(problems(m).join(' ')).toMatch(/"assets" uses "asset" at Starter/);
+  });
+});
+
+describe('document approval (1.3.0)', () => {
+  const documents = pack.sheets.find((s) => s.ref === 'documents')!;
+
+  it('ships an approval workflow on ISMS documents: owner review, then top management, locked when approved', () => {
+    const [w] = documents.workflows ?? [];
+    expect(w).toMatchObject({
+      id: 'document-approval',
+      name: 'Document approval',
+      lockOnApproval: true,
+      allowSelfApproval: false,
+      requiredFields: ['document_id', 'owner'],
+      statusField: { fieldKey: 'status', onSubmit: 'opt_review', onApproved: 'opt_approved' },
+    });
+    expect(w!.steps.map((s) => [s.name, s.approvers])).toEqual([
+      ['Owner review', { kind: 'field', fieldKey: 'owner' }],
+      ['Management approval', { kind: 'jobRole', roleName: 'Top management' }],
+    ]);
+    expect(w!.steps[1]!.onReject).toEqual({ to: 'step', stepId: 'owner-review' });
+    expect(documents.fields.find((f) => f.key === 'approval_step')?.type).toBe('workflowstep');
+  });
+
+  it('installs the workflow into the sheet settings', () => {
+    const plan = planPackInstall(pack, snapshot(), env, { level: 'starter' });
+    const sheet = plan.payload!.sheets.find((s) => s.ref === 'documents')!;
+    expect((sheet.settings as { workflows: { id: string }[] }).workflows.map((w) => w.id)).toEqual([
+      'document-approval',
+    ]);
+  });
+
+  it('refuses a workflow that names a field the sheet does not have, or a person', () => {
+    const m = JSON.parse(JSON.stringify(pack)) as {
+      sheets: { ref: string; workflows: { steps: { approvers: object }[] }[] }[];
+    };
+    const flows = m.sheets.find((s) => s.ref === 'documents')!.workflows;
+    flows[0]!.steps[0]!.approvers = { kind: 'field', fieldKey: 'nobody' };
+    const r = packManifestSchema.safeParse(m);
+    expect(r.success).toBe(false);
+    expect(!r.success && r.error.issues.map((i) => i.message).join(' ')).toMatch(
+      /choose a people field for the approvers/,
+    );
+    flows[0]!.steps[0]!.approvers = { kind: 'people', userIds: ['u-1'] };
+    expect(packManifestSchema.safeParse(m).success).toBe(false);
   });
 });

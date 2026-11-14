@@ -71,6 +71,7 @@ export default async function WorkflowPage({
           data={data}
           explicit={!!chosen.sheetId}
           canEdit={isEditorRole(role)}
+          canManage={isAdminRole(role)}
         />
       ) : (
         <div

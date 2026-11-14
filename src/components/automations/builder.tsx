@@ -257,6 +257,39 @@ export function AutomationBuilder(props: BuilderProps) {
                   onChange={(id) => setTrigger({ ...draft.trigger, formId: id || null })}
                 />
               ) : null}
+              {spec?.workflow ? (
+                <>
+                  <select
+                    aria-label="Approval workflow"
+                    className={selectClass}
+                    value={str(draft.trigger.workflowId)}
+                    onChange={(e) =>
+                      setTrigger({ ...draft.trigger, workflowId: e.target.value || null })
+                    }
+                  >
+                    <option value="">Any approval workflow</option>
+                    {(ctx.sheet.workflows ?? []).map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name}
+                      </option>
+                    ))}
+                  </select>
+                  {draft.trigger.type === 'workflow_step_decided' ? (
+                    <select
+                      aria-label="Decision"
+                      className={selectClass}
+                      value={str(draft.trigger.decision)}
+                      onChange={(e) =>
+                        setTrigger({ ...draft.trigger, decision: e.target.value || null })
+                      }
+                    >
+                      <option value="">approved or rejected</option>
+                      <option value="approved">approved</option>
+                      <option value="rejected">rejected</option>
+                    </select>
+                  ) : null}
+                </>
+              ) : null}
               {spec?.param === 'threshold' ? (
                 <input
                   type="number"
@@ -311,7 +344,9 @@ export function AutomationBuilder(props: BuilderProps) {
           </div>
           {spec?.scheduled ? (
             <p className="text-muted-foreground text-copy-13 m-0">
-              Date checks run on a schedule, once per item for each date.
+              {draft.trigger.type === 'approval_overdue'
+                ? 'Date checks run on a schedule, once each time an item waits at a step past its time limit.'
+                : 'Date checks run on a schedule, once per item for each date.'}
             </p>
           ) : null}
           <div id={`${ids}-trigger`}>
@@ -903,6 +938,24 @@ function ActionRow({
             })
           }
         />
+      ) : null}
+      {type === 'start_workflow' ? (
+        <select
+          aria-label={label('workflow')}
+          className={selectClass}
+          value={str(action.workflowId)}
+          onChange={(e) => set({ workflowId: e.target.value || null })}
+        >
+          {!(ctx.sheet.workflows ?? []).some((w) => w.id === action.workflowId) ? (
+            <option value="">Choose an approval workflow</option>
+          ) : null}
+          {(ctx.sheet.workflows ?? []).map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+              {w.enabled ? '' : ' (off)'}
+            </option>
+          ))}
+        </select>
       ) : null}
       {type === 'lock_item' ? (
         <input

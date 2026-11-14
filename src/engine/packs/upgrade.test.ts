@@ -457,6 +457,55 @@ describe('planPackUpgrade', () => {
     );
   });
 
+  it('adds a sheet’s approval workflows, and keeps the client’s when both changed them', () => {
+    const flow = {
+      id: 'risk-approval',
+      name: 'Risk acceptance',
+      enabled: true,
+      requiredFields: [],
+      allowSelfApproval: false,
+      lockOnApproval: true,
+      steps: [
+        {
+          id: 'sign-off',
+          name: 'Sign-off',
+          approvers: { kind: 'jobRole' as const, roleName: 'Risk owner' },
+          mode: 'any' as const,
+          onReject: { to: 'draft' as const },
+        },
+      ],
+    };
+    const v3 = (): PackManifest => {
+      const m = v1();
+      m.version = '1.2.0';
+      m.sheets[0]!.workflows = [flow];
+      return m;
+    };
+    const { state } = install();
+    const p = upgrade(state, v3());
+    expect(p.payload!.update.workflows).toEqual([
+      { sheet_id: state.refMap['sheet:risk'], workflows: [flow] },
+    ]);
+    expect(p.preview.changed).toContainEqual({
+      kind: 'sheet',
+      ref: 'risk',
+      name: 'Risk register',
+      note: 'Approval workflows',
+    });
+    // the client made its own workflow on the sheet: a conflict, theirs only when chosen
+    const ours = [{ ...flow, name: 'Our acceptance' }];
+    state.sheets.find((s) => s.ref === 'risk')!.workflows = ours;
+    const kept = upgrade(state, v3());
+    expect(kept.payload!.update.workflows ?? []).toEqual([]);
+    expect(kept.preview.conflicts).toContainEqual(
+      expect.objectContaining({ id: 'sheet:risk', attributes: ['approval workflows'] }),
+    );
+    const taken = upgrade(state, v3(), { 'sheet:risk': 'theirs' });
+    expect(taken.payload!.update.workflows).toEqual([
+      { sheet_id: state.refMap['sheet:risk'], workflows: [flow] },
+    ]);
+  });
+
   it('keeps an automation off when the client turned it off', () => {
     const { state } = install();
     state.automations.find((a) => a.ref === 'high')!.enabled = false;

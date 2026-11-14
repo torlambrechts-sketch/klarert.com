@@ -82,7 +82,7 @@ export async function loadInstalledState(
     db
       .from('sheets')
       .select(
-        'id, pack_ref, name, description, item_label, folder_id, parent_sheet_id, archived_at',
+        'id, pack_ref, name, description, item_label, folder_id, parent_sheet_id, archived_at, settings',
       )
       .eq('org_id', orgId)
       .eq('pack_install_id', install.id),
@@ -170,6 +170,7 @@ export async function loadInstalledState(
       parentSheetId: s.parent_sheet_id,
       archived: !!s.archived_at,
       clientItems: clientItems.get(s.id) ?? 0,
+      workflows: ((s.settings as { workflows?: Json } | null)?.workflows ?? []) as Json,
     })),
     fields: own(fieldRows).map((f) => ({
       id: f.id,
@@ -306,7 +307,7 @@ export async function planUpgrade(
   return { ok: true, plan, from, to };
 }
 
-/** Write a ready upgrade plan: upgrade_pack, all or nothing. */
+/** Write a ready upgrade plan: upgrade_pack and the sheets' approval workflows (apply_pack_upgrade), all or nothing. */
 export async function writeUpgrade(
   db: Db,
   plan: UpgradePlan,
@@ -315,7 +316,7 @@ export async function writeUpgrade(
   | { ok: false; error: { message: string; code?: string } }
 > {
   if (!plan.payload) return { ok: false, error: { message: 'There is nothing to update.' } };
-  const { data, error } = await db.rpc('upgrade_pack', {
+  const { data, error } = await db.rpc('apply_pack_upgrade', {
     p_install: plan.payload.install,
     p_plan: plan.payload as unknown as Json,
   });

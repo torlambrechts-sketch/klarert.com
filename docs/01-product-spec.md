@@ -21,7 +21,7 @@ Prove the core before we build compliance packs on it: a flexible spreadsheet (a
 **Out of scope (later)**
 - Compliance packs and their libraries (we only make `requirement` and `controllink` point at sheets flagged as libraries)
 - Dashboards, readiness scores, the app builder, AI proposals beyond storing a proposed value (the `ai` field stores and accepts/rejects a value; generation comes later)
-- Multi-step workflows with approvals (data model reserved; build after M10 if asked)
+- (Built after the MVP, owner-approved 14 Nov 2026: multi-step approval workflows, docs/04 §13)
 - Speak-up/whistleblowing, partner console, billing, SSO/SCIM, mobile apps (the web app must work on phones)
 
 ## 3. Concepts (use these names in code and UI)

@@ -17,6 +17,7 @@ import type {
 } from '@/engine/types';
 import { parseViewConfig, toViewType, type SavedView } from '@/engine/views/config';
 import { readSubitemSettings } from '@/engine/subitems';
+import { readWorkflows } from '@/engine/approvals/definition';
 import { parseRestriction } from '@/engine/access';
 import type { Database } from './database.types';
 
@@ -184,7 +185,9 @@ export function toSheet(r: {
     columnGroups?: unknown;
     register?: unknown;
     framework?: unknown;
+    workflows?: unknown;
   };
+  const workflows = readWorkflows(settings);
   const columnGroups = parseColumnGroups(settings.columnGroups);
   const framework = readLibraryFramework(settings.framework);
   return {
@@ -199,6 +202,7 @@ export function toSheet(r: {
     ...(columnGroups.length ? { columnGroups } : {}),
     ...(settings.register === 'documents' ? { register: 'documents' as const } : {}),
     ...(framework && r.is_library ? { framework } : {}),
+    ...(workflows.length ? { workflows } : {}),
   };
 }
 

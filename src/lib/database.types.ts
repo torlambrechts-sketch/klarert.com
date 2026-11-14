@@ -1083,6 +1083,64 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"workflow_decisions": {
+                  Row: {
+                    "comment": string | null,"decided_at": string,"decision": string,"id": string,"instance_id": string,"item_id": string,"org_id": string,"round": number,"step_id": string,"step_index": number,"step_name": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "comment"?: string | null,"decided_at"?: string,"decision": string,"id"?: string,"instance_id": string,"item_id": string,"org_id": string,"round": number,"step_id": string,"step_index": number,"step_name": string,"user_id": string
+                  }
+                  Update: {
+                    "comment"?: string | null,"decided_at"?: string,"decision"?: string,"id"?: string,"instance_id"?: string,"item_id"?: string,"org_id"?: string,"round"?: number,"step_id"?: string,"step_index"?: number,"step_name"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workflow_decisions_instance_id_fkey"
+      columns: ["instance_id"]
+isOneToOne: false
+      referencedRelation: "workflow_instances"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workflow_decisions_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"workflow_instances": {
+                  Row: {
+                    "approvers": NonNullable<Json>,"automation_id": string | null,"definition": NonNullable<Json>,"end_reason": string | null,"ended_at": string | null,"ended_by": string | null,"id": string,"item_id": string,"org_id": string,"round": number,"sheet_id": string,"status": string,"step_approvers": (string)[],"step_due_at": string | null,"step_index": number | null,"step_started_at": string | null,"submit_comment": string | null,"submitted_at": string,"submitted_by": string | null,"workflow_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approvers": NonNullable<Json>,"automation_id"?: string | null,"definition": NonNullable<Json>,"end_reason"?: string | null,"ended_at"?: string | null,"ended_by"?: string | null,"id"?: string,"item_id": string,"org_id": string,"round"?: number,"sheet_id": string,"status"?: string,"step_approvers"?: (string)[],"step_due_at"?: string | null,"step_index"?: number | null,"step_started_at"?: string | null,"submit_comment"?: string | null,"submitted_at"?: string,"submitted_by"?: string | null,"workflow_id": string
+                  }
+                  Update: {
+                    "approvers"?: NonNullable<Json>,"automation_id"?: string | null,"definition"?: NonNullable<Json>,"end_reason"?: string | null,"ended_at"?: string | null,"ended_by"?: string | null,"id"?: string,"item_id"?: string,"org_id"?: string,"round"?: number,"sheet_id"?: string,"status"?: string,"step_approvers"?: (string)[],"step_due_at"?: string | null,"step_index"?: number | null,"step_started_at"?: string | null,"submit_comment"?: string | null,"submitted_at"?: string,"submitted_by"?: string | null,"workflow_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "workflow_instances_item_id_fkey"
+      columns: ["item_id"]
+isOneToOne: false
+      referencedRelation: "items"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workflow_instances_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "workflow_instances_sheet_id_fkey"
+      columns: ["sheet_id"]
+isOneToOne: false
+      referencedRelation: "sheets"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -1719,6 +1777,18 @@ isOneToOne: false
                            },
 "verify_activity_chain":
 { Args: { "p_chain_key": string }; Returns: Json
+                           },
+"apply_pack_upgrade":
+{ Args: { "p_install": string,"p_plan": Json }; Returns: Json
+                           },
+"workflow_decide":
+{ Args: { "p_comment"?: string,"p_decision": string,"p_instance": string }; Returns: Json
+                           },
+"workflow_submit":
+{ Args: { "p_automation"?: string,"p_comment"?: string,"p_item": string,"p_submitter"?: string,"p_workflow": string }; Returns: Json
+                           },
+"workflow_withdraw":
+{ Args: { "p_comment"?: string,"p_instance": string }; Returns: Json
                            },
 "workspace_slug_available":
 { Args: { "p_slug": string }; Returns: boolean

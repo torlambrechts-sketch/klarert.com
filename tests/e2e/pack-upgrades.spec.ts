@@ -4,9 +4,9 @@ import { localSql, seedWorkspace } from './first-sheet-helpers';
 import { signIn } from './helpers';
 
 // Pack upgrades (docs/11 Upgrades, P6): a workspace on ISO/IEC 27001 1.0.0 (Full) sees "Update available
-// 1.0.0 → 1.2.0" on Workspace admin › Packs, opens the dry run (added fields, forms, an automation and a dashboard;
+// 1.0.0 → 1.3.0" on Workspace admin › Packs, opens the dry run (added fields, forms, an automation and a dashboard;
 // a changed sheet), settles the conflict on a sheet whose description it rewrote by taking the pack's, applies the
-// update and finds the install on 1.2.0 with the new rows, its own value kept and pack.upgraded in the activity.
+// update and finds the install on 1.3.0 with the new rows, its own value kept and pack.upgraded in the activity.
 
 const SHOTS = process.env.P6_SHOTS;
 
@@ -51,8 +51,8 @@ test('update an installed pack: dry run, a conflict, apply', async ({ page }, in
     .getByRole('list', { name: 'Installed packs' })
     .getByRole('listitem')
     .filter({ hasText: 'ISO/IEC 27001' });
-  await expect(row.getByTestId('update-available')).toContainText('1.0.0 → 1.2.0');
-  await row.getByRole('button', { name: /^Update .* from 1\.0\.0 to 1\.2\.0$/ }).click();
+  await expect(row.getByTestId('update-available')).toContainText('1.0.0 → 1.3.0');
+  await row.getByRole('button', { name: /^Update .* from 1\.0\.0 to 1\.3\.0$/ }).click();
 
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByTestId('upgrade-summary')).toContainText('1 conflict', {
@@ -71,16 +71,16 @@ test('update an installed pack: dry run, a conflict, apply', async ({ page }, in
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/upgrade-dialog.png`, fullPage: false });
 
   await dialog.getByRole('button', { name: 'Apply update' }).click();
-  await expect(dialog.getByRole('status')).toContainText('to 1.2.0', { timeout: 30_000 });
-  await expect(page.getByText(/Updated ISO\/IEC 27001.* to 1\.2\.0/).first()).toBeVisible();
+  await expect(dialog.getByRole('status')).toContainText('to 1.3.0', { timeout: 30_000 });
+  await expect(page.getByText(/Updated ISO\/IEC 27001.* to 1\.3\.0/).first()).toBeVisible();
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/upgrade-done.png`, fullPage: false });
   await dialog.getByRole('button', { name: 'Done' }).click();
 
-  // the install is on 1.2.0: no update left, the activity says what happened
+  // the install is on 1.3.0: no update left, the activity says what happened
   await expect(row.getByTestId('update-available')).toHaveCount(0);
-  await expect(row).toContainText('1.2.0');
+  await expect(row).toContainText('1.3.0');
   await expect(page.getByRole('list', { name: 'Pack activity' })).toContainText(
-    'from 1.0.0 to 1.2.0',
+    'from 1.0.0 to 1.3.0',
   );
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/packs-after.png`, fullPage: true });
 
@@ -155,7 +155,7 @@ test('the update dialog at 390 px', async ({ page }, info) => {
   await signIn(page, 'maria@example.com', `/${slug}/settings?tab=packs`);
   await page.goto(`/${slug}/settings?tab=packs`);
   await page
-    .getByRole('button', { name: /^Update .* from 1\.0\.0 to 1\.2\.0$/ })
+    .getByRole('button', { name: /^Update .* from 1\.0\.0 to 1\.3\.0$/ })
     .first()
     .click();
   const dialog = page.getByRole('dialog');

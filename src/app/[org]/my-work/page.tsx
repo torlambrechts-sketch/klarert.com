@@ -14,6 +14,9 @@ import { PageHeader } from '@/components/shell/page-header';
 import { cn } from '@/lib/utils';
 import { requireMember } from '@/server/auth';
 import { getMyWork } from '@/server/repositories/my-work';
+import { getMyApprovals } from '@/server/repositories/approvals';
+import { ApprovalInbox } from '@/components/approvals/approval-inbox';
+import type { InboxRow } from '@/engine/approvals';
 
 export const metadata = { title: 'My work · Compliance OS' };
 
@@ -42,9 +45,13 @@ export default async function MyWorkPage({
   const bucket = isBucket(sp.filter) ? sp.filter : null;
   const sheetId = typeof sp.sheet === 'string' && sp.sheet ? sp.sheet : null;
   let data: Awaited<ReturnType<typeof getMyWork>> = null;
+  let approvals: InboxRow[] | null = null;
   let failed = false;
   try {
-    data = await getMyWork(workspace.id, workspace.time_zone);
+    [data, approvals] = await Promise.all([
+      getMyWork(workspace.id, workspace.time_zone),
+      getMyApprovals(workspace.id),
+    ]);
   } catch {
     failed = true;
   }
@@ -61,7 +68,7 @@ export default async function MyWorkPage({
     <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
         title="My work"
-        description="Items assigned to you and requests to you, soonest first."
+        description="Approvals waiting for you, items assigned to you and requests to you, soonest first."
       />
       {failed || !data ? (
         <div
@@ -78,6 +85,7 @@ export default async function MyWorkPage({
         </div>
       ) : (
         <>
+          <ApprovalInbox org={org} rows={approvals ?? []} timeZone={workspace.time_zone} />
           <nav aria-label="My work filters" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {TILES.map(({ bucket: b, icon: Icon }) => {
               const active = bucket === b;

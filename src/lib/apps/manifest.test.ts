@@ -27,7 +27,7 @@ describe('app manifest', () => {
 
   it('the ISO 27001 pack ships its own CAPA app over Nonconformities and CAPA', () => {
     const iso = repoPacks().find((p) => p.key === 'iso-27001')!;
-    expect(iso.version).toBe('1.2.0');
+    expect(iso.version).toBe('1.3.0');
     const app = iso.apps!.find((a) => a.key === 'isms-capa')!;
     expect(appProblems(app, iso)).toEqual([]);
     expect(app.sections[0]!.screens.map((s) => s.title)).toEqual([

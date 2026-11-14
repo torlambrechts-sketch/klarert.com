@@ -1,6 +1,7 @@
 // Domain types shared by the engine, the server and the UI (docs/02 §10). Pure data: no React, no Supabase.
 
 import type { ColumnGroup } from './views/column-groups';
+import type { ApprovalWorkflow } from './approvals/definition';
 
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 
@@ -63,6 +64,8 @@ export interface Sheet {
   columnGroups?: ColumnGroup[];
   /** sheets.settings.register: 'documents' makes the sheet a documents register (docs/02 §14). */
   register?: 'documents' | null;
+  /** sheets.settings.workflows: the sheet's approval workflows (docs/04 §13), read leniently. */
+  workflows?: ApprovalWorkflow[];
   /** sheets.settings.framework: the framework a library sheet holds (docs/12). */
   framework?: {
     key: string;
@@ -250,7 +253,11 @@ export type TriggerId =
   | 'checklist_no'
   | 'subitem_created'
   | 'subitem_field_becomes'
-  | 'all_subitems_done';
+  | 'all_subitems_done'
+  | 'workflow_step_decided'
+  | 'workflow_approved'
+  | 'workflow_rejected'
+  | 'approval_overdue';
 
 export interface Automation {
   id: string;

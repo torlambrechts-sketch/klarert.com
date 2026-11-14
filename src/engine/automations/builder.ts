@@ -46,6 +46,10 @@ export const TRIGGER_IDS: TriggerId[] = [
   'subitem_created',
   'subitem_field_becomes',
   'all_subitems_done',
+  'workflow_step_decided',
+  'workflow_approved',
+  'workflow_rejected',
+  'approval_overdue',
 ];
 
 export const TRIGGER_CATALOGUE: Record<
@@ -59,6 +63,8 @@ export const TRIGGER_CATALOGUE: Record<
     itemFiles?: true;
     /** Sub-item triggers: the sheet must have sub-items; the field is a field of the sub-items. */
     subitems?: true;
+    /** Approval workflow triggers: the sheet must have an approval workflow; `workflowId` null = any. */
+    workflow?: true;
   }
 > = {
   field_becomes: { label: 'a field becomes a value', field: true, param: 'value' },
@@ -86,6 +92,31 @@ export const TRIGGER_CATALOGUE: Record<
     subitems: true,
   },
   all_subitems_done: { label: 'every sub-item is done', field: false, param: null, subitems: true },
+  workflow_step_decided: {
+    label: 'an approval step is decided',
+    field: false,
+    param: null,
+    workflow: true,
+  },
+  workflow_approved: {
+    label: 'an approval is approved',
+    field: false,
+    param: null,
+    workflow: true,
+  },
+  workflow_rejected: {
+    label: 'an approval is rejected',
+    field: false,
+    param: null,
+    workflow: true,
+  },
+  approval_overdue: {
+    label: 'an approval step is overdue',
+    field: false,
+    param: null,
+    scheduled: true,
+    workflow: true,
+  },
 };
 
 export const ACTION_CATALOGUE: Record<ActionId, { label: string }> = {
@@ -104,6 +135,7 @@ export const ACTION_CATALOGUE: Record<ActionId, { label: string }> = {
   set_parent_field: { label: 'set a field on the parent' },
   update_subitems: { label: 'update the sub-items' },
   sync_requirement_checks: { label: 'sync requirement checks' },
+  start_workflow: { label: 'submit for approval' },
 };
 
 /** Builder order of the actions (most used first). */
@@ -123,6 +155,7 @@ export const ACTION_ORDER: ActionId[] = [
   'update_subitems',
   'set_parent_field',
   'sync_requirement_checks',
+  'start_workflow',
 ];
 
 export const isTriggerId = (id: unknown): id is TriggerId =>
@@ -164,6 +197,7 @@ export function availableTriggers(ctx: Ctx): TriggerId[] {
   return TRIGGER_IDS.filter((t) => {
     const spec = TRIGGER_CATALOGUE[t];
     if (spec.subitems && !childSheetIdOf(ctx)) return false;
+    if (spec.workflow && !(ctx.sheet.workflows ?? []).length) return false;
     return !spec.field || !!spec.itemFiles || triggerFields(t, ctx).length > 0;
   });
 }
@@ -220,6 +254,7 @@ const NEEDS_FIELD = new Set<ActionId>([
 export function availableActions(ctx: Ctx): ActionId[] {
   return ACTION_ORDER.filter((a) => {
     if (a === 'create_subitems' && !childSheetIdOf(ctx)) return false;
+    if (a === 'start_workflow' && !(ctx.sheet.workflows ?? []).length) return false;
     return !NEEDS_FIELD.has(a) || actionFields(a, ctx).length > 0;
   });
 }
@@ -252,6 +287,8 @@ export function defaultTrigger(type: TriggerId, ctx: Ctx): Trigger {
   if (param === 'hoursLeft') t.hoursLeft = 24;
   if (param === 'days') t.days = 30;
   if (type === 'form_submitted') t.formId = null;
+  if (TRIGGER_CATALOGUE[type].workflow) t.workflowId = null;
+  if (type === 'workflow_step_decided') t.decision = null;
   return t;
 }
 
@@ -307,7 +344,19 @@ export function defaultAction(type: ActionId, ctx: Ctx): ActionJson {
       return { type, fieldKey: first, value: null };
     case 'sync_requirement_checks':
       return { type, sheetId: null };
+    case 'start_workflow':
+      return { type, workflowId: enabledWorkflowOf(ctx)?.id ?? null };
   }
+}
+
+const enabledWorkflowOf = (ctx: Ctx) =>
+  (ctx.sheet.workflows ?? []).find((w) => w.enabled) ?? ctx.sheet.workflows?.[0];
+
+/** The approval workflow a trigger or action names, by id, on this sheet. */
+export function workflowName(id: unknown, ctx: Ctx): string | null {
+  return typeof id === 'string'
+    ? ((ctx.sheet.workflows ?? []).find((w) => w.id === id)?.name ?? null)
+    : null;
 }
 
 /** A blank draft: the first trigger the sheet supports, no conditions, one empty slot for an action. */
@@ -442,6 +491,22 @@ export function describeTrigger(trigger: Trigger, ctx: Ctx): string {
     }
     case 'all_subitems_done':
       return `When every ${sub} is done`;
+    case 'workflow_step_decided': {
+      const w = workflowName(trigger.workflowId, ctx);
+      const what =
+        trigger.decision === 'approved'
+          ? 'is approved'
+          : trigger.decision === 'rejected'
+            ? 'is rejected'
+            : 'is decided';
+      return `When a step of ${w ?? 'an approval'} ${what}`;
+    }
+    case 'workflow_approved':
+      return `When ${workflowName(trigger.workflowId, ctx) ?? 'an approval'} is approved`;
+    case 'workflow_rejected':
+      return `When ${workflowName(trigger.workflowId, ctx) ?? 'an approval'} is rejected`;
+    case 'approval_overdue':
+      return `When a step of ${workflowName(trigger.workflowId, ctx) ?? 'an approval'} is overdue`;
   }
   return 'When something happens';
 }
@@ -568,6 +633,8 @@ export function describeAction(
       const s = str(action.sheetId);
       return `sync the requirement checks on ${(s && sheetName(s)) || '…'}`;
     }
+    case 'start_workflow':
+      return `submit for approval (${workflowName(action.workflowId, ctx) ?? '…'})`;
   }
   return 'do something';
 }
@@ -630,6 +697,16 @@ function triggerProblem(trigger: Trigger, ctx: Ctx): string | null {
   if (!isTriggerId(trigger.type)) return 'Choose a trigger.';
   const spec = TRIGGER_CATALOGUE[trigger.type];
   if (spec.subitems && !childSheetIdOf(ctx)) return 'Turn on sub-items for this sheet first.';
+  if (spec.workflow) {
+    if (!(ctx.sheet.workflows ?? []).length)
+      return 'Set up an approval workflow for this sheet first.';
+    if (
+      trigger.workflowId !== null &&
+      trigger.workflowId !== undefined &&
+      !workflowName(trigger.workflowId, ctx)
+    )
+      return 'This approval workflow no longer exists.';
+  }
   if (spec.field && !(spec.itemFiles && isItemFilesSource(trigger))) {
     const key = str(trigger.fieldKey);
     const field = triggerFieldOf(trigger, ctx);
@@ -765,6 +842,12 @@ function actionProblem(action: ActionJson, ctx: Ctx, env: ValidationEnv): string
       return subitemRows(action, ctx).length > 0 ? null : 'Add at least one sub-item with a name.';
     case 'lock_item':
       return null;
+    case 'start_workflow':
+      return workflowName(action.workflowId, ctx)
+        ? null
+        : str(action.workflowId)
+          ? 'This approval workflow no longer exists.'
+          : 'Choose an approval workflow.';
     case 'post_update':
       return str(action.message) ? null : 'Write the update to post.';
     case 'webhook': {
@@ -839,7 +922,34 @@ function eventFor(
     case 'date_arrives':
     case 'clock_warning':
     case 'evidence_expiring':
+    case 'approval_overdue':
       return { type: 'schedule', ...base, automationId: 'test', occurrence: ctx.today };
+    case 'workflow_step_decided':
+    case 'workflow_approved':
+    case 'workflow_rejected': {
+      const w =
+        (ctx.sheet.workflows ?? []).find((x) => x.id === trigger.workflowId) ??
+        ctx.sheet.workflows?.[0];
+      const decision =
+        trigger.type === 'workflow_rejected' || trigger.decision === 'rejected'
+          ? 'rejected'
+          : 'approved';
+      return {
+        type: 'workflow.event',
+        ...base,
+        kind:
+          trigger.type === 'workflow_step_decided'
+            ? 'decided'
+            : trigger.type === 'workflow_approved'
+              ? 'approved'
+              : 'rejected',
+        workflowId: w?.id ?? '',
+        instanceId: 'test',
+        stepIndex: 0,
+        stepId: w?.steps[0]?.id ?? '',
+        decision,
+      };
+    }
     case 'subitem_created':
     case 'subitem_field_becomes':
     case 'all_subitems_done': {
@@ -906,6 +1016,9 @@ function checkTrigger(trigger: Trigger, item: Item, ctx: Ctx): TestResult['trigg
     case 'item_created':
     case 'form_submitted':
     case 'button_clicked':
+    case 'workflow_step_decided':
+    case 'workflow_approved':
+    case 'workflow_rejected':
       return {
         check: 'event',
         text: `${describeTrigger(trigger, ctx)}. The test acts as if that just happened.`,
@@ -914,6 +1027,11 @@ function checkTrigger(trigger: Trigger, item: Item, ctx: Ctx): TestResult['trigg
       return {
         check: 'event',
         text: `${describeTrigger(trigger, ctx)}. The test acts as if it just changed to its current value.`,
+      };
+    case 'approval_overdue':
+      return {
+        check: 'event',
+        text: `${describeTrigger(trigger, ctx)}. Date checks run it once per step when its time limit passes.`,
       };
     case 'date_arrives':
     case 'clock_warning':

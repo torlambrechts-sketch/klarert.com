@@ -32,6 +32,7 @@ type AutomationEvent =
   | { type: 'links.changed';  sheetId; itemId; fieldId; before: string[]; after: string[]; actor }
   | { type: 'button.clicked'; sheetId; itemId; fieldId; actor }
   | { type: 'schedule';       sheetId; itemId; automationId; occurrence: string }
+  | { type: 'workflow.event'; sheetId; itemId; kind: 'decided' | 'approved' | 'rejected'; workflowId; instanceId; stepIndex; stepId; decision; actor }
   | { type: 'subitem.event';  sheetId; itemId; subitemId; event /* the sub-item's item.created | value.changed */ };
 // actor = { kind: 'user' | 'automation' | 'form' | 'system', id }
 ```
@@ -39,7 +40,7 @@ A command emits one `value.changed` per changed field. For computed number field
 
 A sub-item's `item.created` and `value.changed` are also **projected** onto its parent as `subitem.event` (parent sheet, parent item) at the **same depth**; only actions go one level deeper, so the loop guard covers child → parent → children chains. The parent's world is read again after a sub-item changes.
 
-## 3. Triggers (14)
+## 3. Triggers (18)
 
 | id | Prototype id | JSON | Fires when | Field types allowed |
 |---|---|---|---|---|
@@ -57,6 +58,10 @@ A sub-item's `item.created` and `value.changed` are also **projected** onto its 
 | `subitem_created` | — | `{ "type": "subitem_created" }` | a sub-item is added under the item | — (sheet with sub-items) |
 | `subitem_field_becomes` | — | `{ "type": "subitem_field_becomes", "fieldKey": "status", "value": "opt_stuck" }` | a sub-item's field (key of the child sheet) becomes the value | as `field_becomes`, on the sub-items' fields |
 | `all_subitems_done` | — | `{ "type": "all_subitems_done" }` | fires once, on the change that makes every sub-item done | — |
+| `workflow_step_decided` | — | `{ "type": "workflow_step_decided", "workflowId": null, "decision": null }` | a person approves or rejects a step of an approval workflow (§13). `workflowId` null = any workflow of the sheet; `decision` `approved` / `rejected` narrows it | — (sheet with an approval workflow) |
+| `workflow_approved` | — | `{ "type": "workflow_approved", "workflowId": "document-approval" }` | the last step is approved: the workflow ends approved | — |
+| `workflow_rejected` | — | `{ "type": "workflow_rejected", "workflowId": null }` | a rejection ends the workflow (back to draft or closed; a rejection that sends the item back to a step does not) | — |
+| `approval_overdue` | — | `{ "type": "approval_overdue", "workflowId": null }` | scheduled: the step an item waits at passed its time limit (SLA). Once per instance, round and step (§8) | — |
 
 Moving an item between groups emits `item.moved`. No MVP trigger listens to it; group logic uses the `__group` condition and the `move_to_group` action. An `item_moved` trigger can be added later as one registry entry, but only when asked.
 
@@ -73,7 +78,7 @@ Array, all must be true (AND). Same operators as view filters (docs/03 §4), eva
 ```
 Conditions referencing a deleted field make the automation invalid: it is switched off and its owner notified ("Field ‘Severity’ was deleted").
 
-## 5. Actions (15)
+## 5. Actions (16)
 
 Actions run in array order. Each produces a step with outcome `done`, `no_change`, `blocked`, `failed` or `skipped`.
 
@@ -94,6 +99,8 @@ Actions run in array order. Each produces a step with outcome `done`, `no_change
 | `set_parent_field` | — | `{ "type": "set_parent_field", "fieldKey": "status", "value": "opt_done" }` | on a sub-item: sets a stored field of its parent (the gate and status rules apply) |
 | `update_subitems` | — | `{ "type": "update_subitems", "fieldKey": "owner", "value": "$actor", "onlyOpen": false }` | sets a field on the item's sub-items (only those that change, open ones only on request, at most 100) |
 | `sync_requirement_checks` | — | `{ "type": "sync_requirement_checks", "sheetId": "<checks sheet>", "notifyFieldKey": "owner" }` | keeps one check item per subject (a supplier) and library requirement (see below). On a subject: adds the missing checks, flags the ones that no longer apply. On a library requirement: re-syncs that requirement across every subject, batched. Message "Added 4, flagged 1" |
+
+| `start_workflow` | — | `{ "type": "start_workflow", "workflowId": "document-approval" }` | submits the item to one of its sheet's approval workflows (§13) through `workflow_submit` as the automation. The person who started the chain is the submitter (they cannot approve it). Already waiting, turned off, a required field empty or a step without approvers = `blocked` with the reason; a workflow that no longer exists = `failed` |
 
 **`sync_requirement_checks`** (`src/engine/automations/requirement-sync.ts`, docs/11 Supplier management). The checks sheet has two link fields, to the subjects and to a library, and `settings.uniqueLinkPair` on them (0037). Field keys and option ids are settings with the supplier pack's names as defaults (`subjectLinkKey`, `requirementLinkKey`, `statusKey`, `sourceKey`, `noteKey`, `status`, `source`, `categoryKey`, `criticalityKey`, `personalDataKey`, `manualKey`, `appliesKey`, `categoriesKey`, `minCriticalityKey`, `applies`, `limit`). The planner makes one effect; the runner reads the library, the subjects and their checks and asks the pure `planRequirementSync`:
 - A requirement applies by its **Applies to**: every subject, by category (any of the listed, matched by option or by name; none = all) and minimum criticality (rank), the Art. 28 set (subjects that process personal data, whatever their category), or only when added by hand. Without a mode it is rule-based when it names a category or criticality, else by hand (requirements a workspace added before 1.1.0 never apply to everyone). Category and criticality rules wait until the subject has both; the Art. 28 set does not.
@@ -138,7 +145,8 @@ Webhook payload (generic):
 - For each enabled automation with a scheduled trigger, load candidate items (not archived, not paused), compute the trigger moment:
   - `date_arrives`: `toDate(value) + offsetDays` (00:00 in the workspace time zone); occurrence = the date value.
   - `clock_warning`: deadline − hoursLeft; occurrence = deadline ISO.
-  - `evidence_expiring`: earliest `valid_until` − days; occurrence = that date. With `source: 'item_files'` (no field) it watches the files of the item's Files tab instead of an evidence field; the builder offers it as "Item files (Files tab)" on every sheet.
+  - `evidence_expiring`: earliest `valid_until` − days; occurrence = that date.
+  - `approval_overdue`: the current step's due moment (`workflow_instances.step_due_at`, §13); occurrence = `approval:<instance>:<round>:<step>`, so the same step fires once and again only when a rejection sends the item back to it (`planApprovalFirings`, `src/engine/approvals/schedule.ts`). With `source: 'item_files'` (no field) it watches the files of the item's Files tab instead of an evidence field; the builder offers it as "Item files (Files tab)" on every sheet.
 - Fire when the moment has passed **and** is within the last 7 days (no flood of history when an automation is created), conditions are true, and `insert into scheduler_fired … on conflict do nothing` inserted a row (exactly once per occurrence).
 - Admins can press **Run date checks now** on the Automations page (same code, as the user, only for their workspace).
 - **Retention** (docs/02 §18): the same cron run checks each workspace with retention rules once a day (`retention_claim_day`) and queues due records (`retention_enqueue`); nothing is erased without a person's approval. Owners and admins have **Check now** on Workspace admin › Retention.
@@ -175,3 +183,30 @@ Sub-item recipes (roles may be `sub:<type>`, a field of the sub-items): add the 
 - Locked item: a person (editor) cannot edit; `set_field` by an automation can; both appear in the activity log with the right actor.
 - Webhook to a failing URL retries with backoff and ends in `dead_letter`; the creator is notified.
 - Paused automation does not run for that item but runs for others.
+
+## 13. Approval workflows
+
+Owner-approved (14 Nov 2026), built after the MVP. An approval workflow is **data per sheet** (`sheets.settings.workflows`, at most 10 per sheet, 10 steps each; shape and checks in `src/engine/approvals/definition.ts`). Nothing in the code knows a document, a CAPA or a pack: packs ship workflows in their manifests (docs/11).
+
+```json
+{ "id": "document-approval", "name": "Document approval", "enabled": true,
+  "requiredFields": ["document_id", "owner"], "allowSelfApproval": false, "lockOnApproval": true,
+  "stepField":   { "fieldKey": "approval_step", "draft": "opt_step_draft", "approved": "opt_step_approved", "rejected": "opt_step_rejected" },
+  "statusField": { "fieldKey": "status", "onSubmit": "opt_review", "onApproved": "opt_approved", "onRejected": "opt_draft" },
+  "steps": [
+    { "id": "owner-review", "name": "Owner review", "approvers": { "kind": "field", "fieldKey": "owner" },
+      "mode": "any", "sla": { "amount": 5, "unit": "days" }, "onReject": { "to": "draft" }, "optionId": "opt_step_review" },
+    { "id": "management-approval", "name": "Management approval",
+      "approvers": { "kind": "jobRole", "roleId": null, "roleName": "Top management" },
+      "mode": "any", "sla": { "amount": 10, "unit": "days" }, "onReject": { "to": "step", "stepId": "owner-review" } } ] }
+```
+
+- **Approvers** per step: named people (`people`, user ids), the people in a people field of the item (`field`), everyone whose job title is a job role (`jobRole`, by id with the name kept, as `notify` resolves job roles), or anyone in a team (`team`, by id with the name kept). The item owner's manager is not modelled, so it is not a rule. **Mode**: any one approves, or all must. **SLA**: hours or days (calendar). **On reject**: back to this or an earlier step (a new round there), back to draft, or close as rejected.
+- **Required fields** must be filled before submitting (stored values, links, current files). **Step field**: a `workflowstep` field shows where the item is (read-only to people: only automations and the approval RPCs write it); the editor maps each step to an option by name and adds missing ones. **Status field**: an option field the workflow sets when submitted, approved and rejected, as the person acting: the field's status rules apply (checked by the command; the decision's or the submission's comment gives a required comment), the documents register's approval rules apply (a version note, a current file, never the author: `_document_transition`), and the sub-item close gate applies. **Lock on approval** locks the item (`item.locked`, reason "Approved: <workflow>").
+- **Self-approval block**: unless `allowSelfApproval`, the person who submitted is never an approver of their own submission: they are left out of every step's approvers, and a step left with nobody is refused at submit ("Step 1, Review: you are the only approver and cannot approve your own submission."). The database checks it again on every decision.
+- **Submit** (the item panel's Submit for approval, editors; owners and admins also on a locked item; or the `start_workflow` action): one instance in progress per item. The approvers of **every** step are resolved and fixed at submit (`workflow_instances.approvers`), so who decides cannot drift during an approval; withdraw and submit again to pick up changes. An approver who cannot read the item, or an auditor, is **reported** at submit and the submission refused ("Step 2, Approval: Vic Viewer cannot open this sheet. Give them access or change the approvers."), never skipped.
+- **Decide** (people only, never automations): an approver of the current step with read access (view access is enough; approvers need not edit the sheet), once per step and round; rejecting needs a comment. Any one: the step completes. All: when every approver of the step has approved in this round. Then the next step starts (its approvers told, its SLA started) or the workflow ends approved. A rejection follows the step's `onReject`. **Withdraw**: the submitter, or an owner or admin.
+- **Writes**: `workflow_submit`, `workflow_decide` and `workflow_withdraw` (docs/02 §19) write the instance, the decision, the item's own changes (step field, status, lock) and the activity log entries in **one transaction**, so every decision is in the item's hash chain: `workflow.submitted`, `workflow.decided` (who, step, round, decision, comment as the note), `workflow.approved`, `workflow.rejected`, `workflow.withdrawn`, plus `value.changed` and `item.locked` entries as the person.
+- **Events and automations**: after the RPC commits, the command emits `workflow.event` (kind `decided` for every decision, then `approved` or `rejected` when it ended) and one `value.changed` per field the move changed, and runs the automations at depth 0 like any person's change; the loop guard and once-per-chain apply. `start_workflow`'s field changes are events one level deeper, as for every action. `approval_overdue` is fired by the scheduler.
+- **Notifications** (kind `notify`, the notifications guard applies): the approvers of a step when it starts ("Approval needed: ISD-003 Information security policy · step 2, Management approval (Document approval)"), the submitter when it ends or is sent back.
+- **The engine** (`src/engine/approvals`, pure, unit-tested) mirrors the database's rules for previews, the inbox and the timeline: `resolveApprovers`, `stepApprovers` (self-approval block), `submitCheck`, `decide`, `decisionProblem`, `slaDue`, `isApprovalOverdue`, `stepOption`, `approvalState`, `approvalTimeline`, `inboxRows`, `planApprovalFirings`. The database holds the truth.
