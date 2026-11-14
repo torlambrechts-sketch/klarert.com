@@ -9,6 +9,7 @@ import type { ActionId, ActionJson, AutomationEvent, Effect, PlannedStep } from 
 import { isWebhookPreset, webhookPayload } from './webhook';
 import { resolveValueToken, valueLabel } from './value-tokens';
 import { SUBITEM_ACTIONS } from './subitem-actions';
+import { planSyncAction } from './requirement-sync';
 
 export { resolveValueToken, valueLabel };
 
@@ -91,7 +92,8 @@ const storedField = (action: ActionJson, ctx: Ctx) => {
 };
 
 /**
- * The actions (docs/04 §5), keyed by id: 11 on the item and 3 for sub-items (subitem-actions.ts). A new action is one
+ * The actions (docs/04 §5), keyed by id: 11 on the item, 3 for sub-items (subitem-actions.ts) and the requirement
+ * checks sync (requirement-sync.ts). A new action is one
  * entry here and one executor case.
  */
 export const ACTIONS: Record<ActionId, Planner> = {
@@ -103,6 +105,9 @@ export const ACTIONS: Record<ActionId, Planner> = {
       return failed('set_field', summary, `${field.name} cannot be set by automations.`);
     const v = resolveValueToken(action.value, ctx, env.actor);
     if (!v.ok) return skipped('set_field', summary, v.message);
+    // `template: true`: a text value is a message template ("{requirement}: {requirement_guidance}"), rendered now
+    if (action.template === true && typeof v.value === 'string')
+      v.value = renderTemplate(v.value, item, ctx, env).slice(0, 10000);
     return {
       action: 'set_field',
       summary: `Set ${field.name} to ${valueLabel(field, v.value, ctx)}`,
@@ -390,6 +395,7 @@ export const ACTIONS: Record<ActionId, Planner> = {
     };
   },
   ...SUBITEM_ACTIONS,
+  sync_requirement_checks: (action, item, ctx) => planSyncAction(action, item, ctx),
 };
 
 export const isActionId = (id: unknown): id is ActionId =>

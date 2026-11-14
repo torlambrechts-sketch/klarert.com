@@ -1,7 +1,23 @@
 import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import type { AutomationEvent, Effect } from '@/engine/automations';
+import {
+  dropNotice,
+  hasProfile,
+  NOT_CHECKED_YET,
+  planRequirementSync,
+  requirementRule,
+  shareDrop,
+  subjectFacts,
+  SYNC_BATCH,
+  syncConfig,
+  syncMessage,
+  type ActionJson,
+  type AutomationEvent,
+  type Effect,
+  type ExistingCheck,
+  type SyncPlan,
+} from '@/engine/automations';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import '@/engine/fields/registry';
 import { keyBetween, keysBetween } from '@/engine/ordering';
@@ -15,6 +31,7 @@ import { env } from '@/lib/env';
 import {
   fetchAttached,
   fetchDirectory,
+  fetchItems,
   fetchItemsById,
   fetchRelated,
   fetchSheetMeta,
@@ -586,6 +603,257 @@ export function automationStore(scope: { orgId: string; userId: string | null })
     return { outcome: 'done', message, events, touched };
   }
 
+  /**
+   * Requirement checks (docs/04 sync_requirement_checks, docs/11): reads the library, the subjects and their checks,
+   * asks the pure planner what to create, flag and reopen, then writes: creates through create_link_pair_items in
+   * batches (the database keeps one check per pair), flags and reopens through writeValues (rules apply, logged).
+   */
+  async function syncRequirementChecks(
+    automation: AutomationRow,
+    e: Extract<Effect, { kind: 'sync_requirement_checks' }>,
+  ): Promise<EffectResult> {
+    const cfg = syncConfig({
+      type: 'sync_requirement_checks',
+      ...(e.config as object),
+    } as ActionJson);
+    const checks = await meta(e.checksSheetId);
+    if (!checks) return not('failed', 'The sheet that holds the checks no longer exists.');
+    const byKey = (k: string) => checks.fields.find((f) => f.key === k);
+    const isLink = (f: Field | undefined): f is Field =>
+      !!f && resolveFieldType(f.type)?.storage === 'links';
+    const subjectLink = byKey(cfg.subjectLinkKey);
+    const reqLink = byKey(cfg.requirementLinkKey);
+    const statusF = byKey(cfg.statusKey);
+    const sourceF = byKey(cfg.sourceKey);
+    const noteF = byKey(cfg.noteKey);
+    if (!isLink(subjectLink) || !isLink(reqLink) || !statusF)
+      return not('failed', `${checks.sheet.name} needs its two link fields and a status field.`);
+    const target = (f: Field) =>
+      String((f.config as { targetSheetId?: unknown }).targetSheetId ?? '');
+    const subjectSheetId = target(subjectLink);
+    const librarySheetId = target(reqLink);
+    if (e.sheetId !== (e.mode === 'subject' ? subjectSheetId : librarySheetId))
+      return not('failed', `This sheet is not linked from ${checks.sheet.name}.`);
+    const [subjectMeta, libraryMeta] = await Promise.all([
+      meta(subjectSheetId),
+      meta(librarySheetId),
+    ]);
+    if (!subjectMeta || !libraryMeta) return not('failed', 'The linked sheets no longer exist.');
+    const group = [...checks.groups].sort(byPosition)[0];
+    if (!group) return not('failed', `${checks.sheet.name} has no group.`);
+
+    // the library and the subjects, read through the field registry
+    const libraryItems = await fetchItems(db, librarySheetId);
+    const { ctx: libraryCtx } = await ctxFor(libraryMeta, libraryItems);
+    const rules = libraryItems.map((i) => requirementRule(i, libraryCtx, cfg));
+    const subjects =
+      e.mode === 'subject'
+        ? (await fetchItemsById(db, [e.itemId])).filter((i) => !i.archivedAt)
+        : (await fetchItems(db, subjectSheetId)).slice(0, 2000);
+    if (subjects.length === 0) return not('skipped', 'There is nothing to sync.');
+    const { ctx: subjectCtx } = await ctxFor(subjectMeta, subjects);
+
+    // the checks the subjects have: check → subject, check → requirement, the check's status and source
+    const subjectIds = subjects.map((s) => s.id);
+    const toSubject = new Map<string, string>();
+    for (let i = 0; i < subjectIds.length; i += 200) {
+      const rows = must(
+        await db
+          .from('item_links')
+          .select('from_item, to_item')
+          .eq('field_id', subjectLink.id)
+          .in('to_item', subjectIds.slice(i, i + 200)),
+      );
+      for (const r of rows) toSubject.set(r.from_item, r.to_item);
+    }
+    const checkItems = (await fetchItemsById(db, [...toSubject.keys()])).filter(
+      (c) => !c.archivedAt && c.sheetId === checks.sheet.id,
+    );
+    const toRequirement = new Map<string, string>();
+    const checkIds = checkItems.map((c) => c.id);
+    for (let i = 0; i < checkIds.length; i += 200) {
+      const rows = must(
+        await db
+          .from('item_links')
+          .select('from_item, to_item')
+          .eq('field_id', reqLink.id)
+          .in('from_item', checkIds.slice(i, i + 200)),
+      );
+      for (const r of rows) toRequirement.set(r.from_item, r.to_item);
+    }
+    const existing = new Map<string, ExistingCheck[]>();
+    const raw = (c: Item, f: Field | undefined) =>
+      f && typeof c.values[f.id] === 'string' ? (c.values[f.id] as string) : null;
+    for (const c of checkItems) {
+      const subject = toSubject.get(c.id)!;
+      const requirementId = toRequirement.get(c.id);
+      if (!requirementId) continue;
+      existing.set(subject, [
+        ...(existing.get(subject) ?? []),
+        { id: c.id, requirementId, status: raw(c, statusF), source: raw(c, sourceF) },
+      ]);
+    }
+
+    // plan per subject, within the run's cap
+    const only = e.mode === 'requirement' ? new Set([e.itemId]) : undefined;
+    let room = cfg.limit;
+    const plans: { subject: Item; plan: SyncPlan; checks: ExistingCheck[] }[] = [];
+    let deferred = 0;
+    let noProfile = false;
+    for (const subject of subjects) {
+      const facts = subjectFacts(subject, subjectCtx, cfg);
+      if (!hasProfile(facts)) noProfile = true;
+      const mine = existing.get(subject.id) ?? [];
+      const plan = planRequirementSync({ facts, rules, checks: mine, cfg, only, limit: room });
+      room -= plan.create.length;
+      deferred += plan.deferred;
+      if (plan.create.length || plan.flag.length || plan.reopen.length)
+        plans.push({ subject, plan, checks: mine });
+    }
+    if (plans.length === 0) {
+      if (e.mode === 'subject' && noProfile && rules.length > 0)
+        return not('skipped', NOT_CHECKED_YET);
+      return not('no_change', 'Every check is up to date.');
+    }
+
+    const events: AutomationEvent[] = [];
+    const touched = new Set<string>();
+    const problems: string[] = [];
+    let added = 0;
+    let flagged = 0;
+    let reopened = 0;
+    const actor = { kind: 'automation' as const, id: automation.id };
+    const inverseId = (subjectLink.config as { inverseFieldId?: string | null }).inverseFieldId;
+
+    // creates: batched; a pair someone else created meanwhile is skipped by the database
+    const rows = plans.flatMap(({ subject, plan }) => plan.create.map((c) => ({ subject, c })));
+    let last = must(
+      await db
+        .from('items')
+        .select('position')
+        .eq('group_id', group.id)
+        .is('archived_at', null)
+        .order('position', { ascending: false })
+        .limit(1),
+    )[0]?.position;
+    const createdBySubject = new Map<string, string[]>();
+    for (let i = 0; i < rows.length; i += SYNC_BATCH) {
+      const part = rows.slice(i, i + SYNC_BATCH);
+      const positions = keysBetween(last ?? null, null, part.length);
+      last = positions.at(-1) ?? last;
+      const payload = part.map(({ subject, c }, j) => ({
+        name: c.name.slice(0, 500),
+        position: positions[j]!,
+        values: {
+          [statusF.id]: cfg.status.notChecked,
+          ...(sourceF ? { [sourceF.id]: cfg.source[c.source] } : {}),
+        },
+        a: subject.id,
+        b: c.requirementId,
+      }));
+      const { data, error } = await db.rpc('create_link_pair_items', {
+        p_sheet: checks.sheet.id,
+        p_group: group.id,
+        p_rows: payload as unknown as Json,
+        p_automation: automation.id,
+      });
+      if (error) {
+        problems.push(dbMessage(error));
+        break;
+      }
+      const created = ((data as { created?: unknown[] } | null)?.created ?? []).map((r) =>
+        toItem(r as never),
+      );
+      added += created.length;
+      // which subject each created check belongs to (by its position; skipped pairs are missing)
+      const byPos = new Map(created.map((c) => [c.position, c.id]));
+      for (const c of created) {
+        events.push({ type: 'item.created', sheetId: c.sheetId, itemId: c.id, actor });
+        touched.add(c.id);
+      }
+      for (const r of payload) {
+        const id = byPos.get(r.position);
+        if (id) createdBySubject.set(r.a, [...(createdBySubject.get(r.a) ?? []), id]);
+      }
+    }
+
+    // flags and reopens: the check's own status (rules apply); never its evidence
+    const write = async (checkId: string, values: Record<string, Json | null>) => {
+      const w = await worldOf(checkId);
+      if (!w) return false;
+      const r = await writeValues(automation, w, values);
+      if (r.outcome !== 'done' && r.outcome !== 'no_change')
+        problems.push(`${w.item.displayId}: ${r.message}`);
+      events.push(...r.events);
+      r.touched.forEach((t) => touched.add(t));
+      return r.outcome === 'done';
+    };
+    for (const { plan } of plans) {
+      for (const f of plan.flag)
+        if (
+          await write(f.checkId, {
+            [statusF.id]: cfg.status.noLongerApplies,
+            ...(noteF ? { [noteF.id]: f.reason } : {}),
+          })
+        )
+          flagged += 1;
+      for (const o of plan.reopen)
+        if (
+          await write(o.checkId, {
+            [statusF.id]: cfg.status.notChecked,
+            ...(noteF ? { [noteF.id]: 'Applies again.' } : {}),
+          })
+        )
+          reopened += 1;
+    }
+
+    // the subjects' side of the two-way link changed (roll-ups such as "Requirements met"), and the owner hears when
+    // new checks lower the share met
+    const ownerField = cfg.notifyFieldKey
+      ? subjectMeta.fields.find((f) => f.key === cfg.notifyFieldKey)
+      : undefined;
+    for (const { subject, plan, checks: mine } of plans) {
+      const made = createdBySubject.get(subject.id) ?? [];
+      touched.add(subject.id);
+      if (made.length && inverseId) {
+        const before = subjectCtx.links(subject.id, inverseId);
+        events.push({
+          type: 'links.changed',
+          sheetId: subject.sheetId,
+          itemId: subject.id,
+          fieldId: inverseId,
+          before,
+          after: [...before, ...made],
+          actor,
+        });
+      }
+      const drop = shareDrop(mine, { ...plan, create: plan.create.slice(0, made.length) }, cfg);
+      if (made.length && drop.dropped && ownerField) {
+        const ids = [subject.values[ownerField.id]]
+          .flat()
+          .filter((x): x is string => typeof x === 'string');
+        const body = dropNotice(subject, drop, made.length);
+        if ((await notify(automation, subject.id, ids, 'notify', body)) > 0)
+          await post(subject.id, body);
+      }
+    }
+
+    const message = syncMessage({
+      added,
+      flagged,
+      reopened,
+      deferred,
+      ...(e.mode === 'requirement' ? { subjects: plans.length } : {}),
+    });
+    if (problems.length && added + flagged + reopened === 0)
+      return { outcome: 'failed', message: problems.join(' '), events, touched: [...touched] };
+    return done({
+      message: problems.length ? `${message}; ${problems.join(' ')}` : message,
+      events,
+      touched: [...touched],
+    });
+  }
+
   return {
     automations(sheetId) {
       let list = automationLists.get(sheetId);
@@ -711,6 +979,8 @@ export function automationStore(scope: { orgId: string; userId: string | null })
           return updateLinked(automation, world, effect);
         case 'create_subitems':
           return createSubitems(automation, effect);
+        case 'sync_requirement_checks':
+          return syncRequirementChecks(automation, effect);
       }
     },
 

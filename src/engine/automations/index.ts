@@ -11,6 +11,7 @@ export * from './chain';
 export * from './webhook';
 export * from './subitem-triggers';
 export * from './subitem-actions';
+export * from './requirement-sync';
 
 /** Conditions (docs/04 §4): all must hold for the item after the change. Same operators as view filters. */
 export function checkConditions(conditions: Condition[], item: Item, ctx: Ctx): boolean {

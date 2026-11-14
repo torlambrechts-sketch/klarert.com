@@ -796,14 +796,20 @@ function ActionRow({
               ))}
           </select>
         ) : null}
-        {type === 'create_item' ? (
+        {type === 'create_item' || type === 'sync_requirement_checks' ? (
           <>
             <span className="text-label-13">on</span>
             <select
               aria-label={label('sheet')}
               className={selectClass}
               value={str(action.sheetId)}
-              onChange={(e) => set({ sheetId: e.target.value, groupId: null, values: {} })}
+              onChange={(e) =>
+                set(
+                  type === 'create_item'
+                    ? { sheetId: e.target.value, groupId: null, values: {} }
+                    : { sheetId: e.target.value },
+                )
+              }
             >
               {!sheets.some((s) => s.id === action.sheetId) ? (
                 <option value="">Choose a sheet</option>

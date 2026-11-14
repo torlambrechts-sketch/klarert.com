@@ -103,6 +103,7 @@ export const ACTION_CATALOGUE: Record<ActionId, { label: string }> = {
   create_subitems: { label: 'add sub-items' },
   set_parent_field: { label: 'set a field on the parent' },
   update_subitems: { label: 'update the sub-items' },
+  sync_requirement_checks: { label: 'sync requirement checks' },
 };
 
 /** Builder order of the actions (most used first). */
@@ -121,6 +122,7 @@ export const ACTION_ORDER: ActionId[] = [
   'create_subitems',
   'update_subitems',
   'set_parent_field',
+  'sync_requirement_checks',
 ];
 
 export const isTriggerId = (id: unknown): id is TriggerId =>
@@ -303,6 +305,8 @@ export function defaultAction(type: ActionId, ctx: Ctx): ActionJson {
       return { type, fieldKey: first, value: null, onlyOpen: false };
     case 'set_parent_field':
       return { type, fieldKey: first, value: null };
+    case 'sync_requirement_checks':
+      return { type, sheetId: null };
   }
 }
 
@@ -560,6 +564,10 @@ export function describeAction(
       const f = actionFields('set_parent_field', ctx).find((x) => x.key === action.fieldKey);
       return `set ${f?.name ?? 'a field'} on the parent to ${setValueText(f, action.value, ctx)}`;
     }
+    case 'sync_requirement_checks': {
+      const s = str(action.sheetId);
+      return `sync the requirement checks on ${(s && sheetName(s)) || '…'}`;
+    }
   }
   return 'do something';
 }
@@ -746,6 +754,12 @@ function actionProblem(action: ActionJson, ctx: Ctx, env: ValidationEnv): string
     }
     case 'move_to_group':
       return ctx.groups.has(str(action.groupId) ?? '') ? null : 'Choose a group.';
+    case 'sync_requirement_checks': {
+      const s = str(action.sheetId);
+      return !s || (env.sheetIds && !env.sheetIds.includes(s))
+        ? 'Choose the sheet that holds the checks.'
+        : null;
+    }
     case 'create_subitems':
       if (!childSheetIdOf(ctx)) return 'Turn on sub-items for this sheet first.';
       return subitemRows(action, ctx).length > 0 ? null : 'Add at least one sub-item with a name.';
