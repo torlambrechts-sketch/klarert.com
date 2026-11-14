@@ -98,6 +98,8 @@ function NewItemSession({
 }) {
   const id = useId();
   const formRef = useRef<HTMLFormElement>(null);
+  /** "Create and add another" asked for this submit (Enter always means Create). */
+  const anotherRef = useRef(false);
   const nameRef = useRef<HTMLInputElement>(null);
   // the plan is fixed for this dialog: a form closed meanwhile is refused by the server, which says so
   const [plan] = useState(() =>
@@ -133,6 +135,10 @@ function NewItemSession({
   const [created, setCreated] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [focusTick, setFocusTick] = useState(0);
+  const [againTick, setAgainTick] = useState(0);
+  useEffect(() => {
+    if (againTick > 0) nameRef.current?.focus();
+  }, [againTick]);
 
   const label = data.sheet.itemLabel.toLowerCase();
   const shown = useMemo(
@@ -245,7 +251,8 @@ function NewItemSession({
       setName('');
       setStep(0);
       setCreated(`${data.sheet.itemLabel} created: ${item.displayId}. Add another.`);
-      nameRef.current?.focus();
+      // after the render that enables the fields again
+      setAgainTick((t) => t + 1);
       return;
     }
     onClose();
@@ -296,10 +303,12 @@ function NewItemSession({
             className="flex min-h-0 flex-1 flex-col"
             onSubmit={(e) => {
               e.preventDefault();
+              // Enter submits through the form's one submit button: Next, or Create
+              const another = anotherRef.current;
+              anotherRef.current = false;
               if (saving) return;
-              const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLElement | null;
               if (!last) return next();
-              void create(submitter?.dataset.another === '1');
+              void create(another);
             }}
           >
             <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
@@ -417,9 +426,9 @@ function NewItemSession({
                 {created}
               </p>
             </div>
-            <div className="border-line flex flex-col gap-3 border-t px-5 py-3 sm:flex-row sm:items-center">
+            <div className="border-line flex flex-col gap-2.5 border-t px-5 py-3">
               {last ? (
-                <label className="text-label-13 flex items-center gap-2 sm:mr-auto">
+                <label className="text-label-13 flex items-center gap-2 self-start">
                   <input
                     type="checkbox"
                     checked={openAfter}
@@ -430,9 +439,7 @@ function NewItemSession({
                   />
                   Open the item after creating
                 </label>
-              ) : (
-                <span className="sm:mr-auto" />
-              )}
+              ) : null}
               <div className="flex flex-wrap justify-end gap-2">
                 <Button type="button" variant="outline" onClick={attemptClose} disabled={saving}>
                   Cancel
@@ -453,7 +460,15 @@ function NewItemSession({
                 ) : null}
                 {last ? (
                   <>
-                    <Button type="submit" variant="outline" data-another="1" disabled={saving}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={saving}
+                      onClick={() => {
+                        anotherRef.current = true;
+                        formRef.current?.requestSubmit();
+                      }}
+                    >
                       Create and add another
                     </Button>
                     <Button type="submit" disabled={saving}>
