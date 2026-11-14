@@ -131,10 +131,7 @@ describe('ticking and unticking', () => {
 
 describe('the chosen manifest', () => {
   it('plans without the parts left out', () => {
-    const m = selectManifest(standalone(), [
-      'dashboard:overview',
-      'automation:review_due',
-    ]);
+    const m = selectManifest(standalone(), ['dashboard:overview', 'automation:review_due']);
     const plan = planPackInstall(m, snapshot, env);
     expect(plan.state).toBe('ready');
     expect(plan.payload!.dashboards).toHaveLength(0);

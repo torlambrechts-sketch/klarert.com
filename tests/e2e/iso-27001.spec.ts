@@ -130,11 +130,9 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
   );
   expect(missed).toEqual({ mode: 'test', enabled: true });
   await page.goto(`/${slug}/automations`);
-  const escalation = page
-    .getByRole('listitem')
-    .filter({
-      hasText: 'Serious security incident about to miss its 24 hours → tell top management',
-    });
+  const escalation = page.getByRole('listitem').filter({
+    hasText: 'Serious security incident about to miss its 24 hours → tell top management',
+  });
   await expect(escalation.getByTestId('automation-test-mode')).toContainText('Test mode');
 
   // ── the treatment plan's Risk acceptance workflow

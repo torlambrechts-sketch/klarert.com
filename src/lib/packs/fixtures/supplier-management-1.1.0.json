@@ -139,10 +139,7 @@
             "multiple": true,
             "inverseKey": "supplier",
             "panel": "checklist",
-            "panelFields": [
-              "evidence",
-              "evidence_expiry"
-            ],
+            "panelFields": ["evidence", "evidence_expiry"],
             "panelEmpty": "Choose a category and criticality and we will add the requirements for this supplier."
           }
         },
@@ -154,10 +151,7 @@
             "linkFieldKey": "checks",
             "targetFieldKey": "status",
             "fn": "doneOf",
-            "ignore": [
-              "opt_na",
-              "opt_no_longer"
-            ]
+            "ignore": ["opt_na", "opt_no_longer"]
           }
         },
         {
@@ -168,10 +162,7 @@
             "linkFieldKey": "checks",
             "targetFieldKey": "status",
             "fn": "pctDone",
-            "ignore": [
-              "opt_na",
-              "opt_no_longer"
-            ]
+            "ignore": ["opt_na", "opt_no_longer"]
           }
         },
         {
@@ -182,10 +173,7 @@
             "linkFieldKey": "checks",
             "targetFieldKey": "status",
             "fn": "worst",
-            "ignore": [
-              "opt_na",
-              "opt_no_longer"
-            ]
+            "ignore": ["opt_na", "opt_no_longer"]
           }
         },
         {
@@ -196,10 +184,7 @@
             "linkFieldKey": "checks",
             "targetFieldKey": "evidence_expiry",
             "fn": "countExpired",
-            "ignore": [
-              "opt_na",
-              "opt_no_longer"
-            ]
+            "ignore": ["opt_na", "opt_no_longer"]
           }
         },
         {
@@ -301,16 +286,9 @@
             "processes_personal_data": true
           },
           "links": {
-            "reviews": [
-              "cloudhost_2026"
-            ],
-            "requirements": [
-              "security_clause",
-              "breach_notice"
-            ],
-            "documents": [
-              "code_of_conduct"
-            ]
+            "reviews": ["cloudhost_2026"],
+            "requirements": ["security_clause", "breach_notice"],
+            "documents": ["code_of_conduct"]
           }
         },
         {
@@ -324,9 +302,7 @@
             "next_review": "$in:10"
           },
           "links": {
-            "requirements": [
-              "quality_certificate"
-            ]
+            "requirements": ["quality_certificate"]
           }
         }
       ]
@@ -423,9 +399,7 @@
             "result": "opt_pass"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ]
+            "supplier": ["cloudhost"]
           }
         }
       ]
@@ -548,10 +522,7 @@
             "applies_when": "opt_all"
           },
           "requirements": {
-            "framework_links": [
-              "iso-27001@2022#A.5.19",
-              "iso-27001@2022#A.5.20"
-            ]
+            "framework_links": ["iso-27001@2022#A.5.19", "iso-27001@2022#A.5.20"]
           }
         },
         {
@@ -562,15 +533,10 @@
             "guidance": "The supplier and the people who work for us have signed a confidentiality agreement before they see our information.",
             "version": "v1.0",
             "applies_when": "opt_rules",
-            "applies_categories": [
-              "opt_it",
-              "opt_services"
-            ]
+            "applies_categories": ["opt_it", "opt_services"]
           },
           "requirements": {
-            "framework_links": [
-              "iso-27001@2022#A.5.20"
-            ]
+            "framework_links": ["iso-27001@2022#A.5.20"]
           }
         },
         {
@@ -583,10 +549,7 @@
             "applies_when": "opt_processors"
           },
           "requirements": {
-            "framework_links": [
-              "gdpr@2016#Art. 28",
-              "iso-27001@2022#A.5.20"
-            ]
+            "framework_links": ["gdpr@2016#Art. 28", "iso-27001@2022#A.5.20"]
           }
         },
         {
@@ -599,9 +562,7 @@
             "applies_when": "opt_processors"
           },
           "requirements": {
-            "framework_links": [
-              "gdpr@2016#Art. 28"
-            ]
+            "framework_links": ["gdpr@2016#Art. 28"]
           }
         },
         {
@@ -614,9 +575,7 @@
             "applies_when": "opt_processors"
           },
           "requirements": {
-            "framework_links": [
-              "gdpr@2016#Art. 46"
-            ]
+            "framework_links": ["gdpr@2016#Art. 46"]
           }
         },
         {
@@ -627,16 +586,11 @@
             "guidance": "The supplier tells us about a security incident that affects us within 24 hours.",
             "version": "v1.0",
             "applies_when": "opt_rules",
-            "applies_categories": [
-              "opt_it",
-              "opt_services"
-            ],
+            "applies_categories": ["opt_it", "opt_services"],
             "min_criticality": "$option:Medium"
           },
           "requirements": {
-            "framework_links": [
-              "iso-27001@2022#A.5.20"
-            ]
+            "framework_links": ["iso-27001@2022#A.5.20"]
           }
         },
         {
@@ -647,17 +601,11 @@
             "guidance": "We may audit the supplier, or receive an independent report in its place, at least once a year.",
             "version": "v1.0",
             "applies_when": "opt_rules",
-            "applies_categories": [
-              "opt_it",
-              "opt_services"
-            ],
+            "applies_categories": ["opt_it", "opt_services"],
             "min_criticality": "$option:High"
           },
           "requirements": {
-            "framework_links": [
-              "iso-27001@2022#A.5.20",
-              "iso-27001@2022#A.5.22"
-            ]
+            "framework_links": ["iso-27001@2022#A.5.20", "iso-27001@2022#A.5.22"]
           }
         },
         {
@@ -670,10 +618,7 @@
             "applies_when": "opt_processors"
           },
           "requirements": {
-            "framework_links": [
-              "gdpr@2016#Art. 28",
-              "iso-27001@2022#A.5.20"
-            ]
+            "framework_links": ["gdpr@2016#Art. 28", "iso-27001@2022#A.5.20"]
           }
         },
         {
@@ -684,9 +629,7 @@
             "guidance": "A current certificate or report covers the service we buy. Record when it expires.",
             "version": "v1.0",
             "applies_when": "opt_rules",
-            "applies_categories": [
-              "opt_it"
-            ],
+            "applies_categories": ["opt_it"],
             "min_criticality": "$option:High"
           },
           "requirements": {
@@ -705,16 +648,11 @@
             "guidance": "The supplier has a tested plan to keep the service running, or restore it, after a disruption.",
             "version": "v1.0",
             "applies_when": "opt_rules",
-            "applies_categories": [
-              "opt_it",
-              "opt_services"
-            ],
+            "applies_categories": ["opt_it", "opt_services"],
             "min_criticality": "$option:High"
           },
           "requirements": {
-            "framework_links": [
-              "iso-27001@2022#A.5.21"
-            ]
+            "framework_links": ["iso-27001@2022#A.5.21"]
           }
         },
         {
@@ -728,9 +666,7 @@
             "min_criticality": "$option:Medium"
           },
           "requirements": {
-            "framework_links": [
-              "iso-9001@2015#8.4"
-            ]
+            "framework_links": ["iso-9001@2015#8.4"]
           }
         },
         {
@@ -741,14 +677,10 @@
             "guidance": "The supplier sends a current certificate of its quality management system each year.",
             "version": "v1.0",
             "applies_when": "opt_rules",
-            "applies_categories": [
-              "opt_parts"
-            ]
+            "applies_categories": ["opt_parts"]
           },
           "requirements": {
-            "framework_links": [
-              "iso-9001@2015#8.4"
-            ]
+            "framework_links": ["iso-9001@2015#8.4"]
           }
         },
         {
@@ -759,15 +691,11 @@
             "guidance": "We measure on-time and right-first-time delivery and review it with the supplier.",
             "version": "v1.0",
             "applies_when": "opt_rules",
-            "applies_categories": [
-              "opt_parts"
-            ],
+            "applies_categories": ["opt_parts"],
             "min_criticality": "$option:Medium"
           },
           "requirements": {
-            "framework_links": [
-              "iso-9001@2015#8.4"
-            ]
+            "framework_links": ["iso-9001@2015#8.4"]
           }
         }
       ],
@@ -863,20 +791,14 @@
             {
               "id": "approve_note",
               "whenFieldKey": "status",
-              "whenValues": [
-                "opt_approved"
-              ],
+              "whenValues": ["opt_approved"],
               "requireComment": true,
               "message": "Add a version note: what changed in this version."
             },
             {
               "id": "leave_approved",
               "whenFieldKey": "status",
-              "whenValues": [
-                "opt_draft",
-                "opt_review",
-                "opt_obsolete"
-              ],
+              "whenValues": ["opt_draft", "opt_review", "opt_obsolete"],
               "requireComment": true,
               "fromDone": true,
               "message": "Say why this approved document changes status."
@@ -940,10 +862,7 @@
       "itemLabel": "Check",
       "idPrefix": "SRC-",
       "folder": "suppliers",
-      "uniqueLinks": [
-        "supplier",
-        "requirement"
-      ],
+      "uniqueLinks": ["supplier", "requirement"],
       "groups": [
         {
           "ref": "all",
@@ -1011,13 +930,8 @@
             {
               "id": "na_needs_reason",
               "whenFieldKey": "status",
-              "whenValues": [
-                "opt_na"
-              ],
-              "require": [
-                "na_reason",
-                "na_approver"
-              ],
+              "whenValues": ["opt_na"],
+              "require": ["na_reason", "na_approver"],
               "message": "Say why it does not apply and who approved it before marking it Not applicable."
             }
           ]
@@ -1065,9 +979,7 @@
           "visibility": {
             "fieldKey": "status",
             "op": "is_any_of",
-            "value": [
-              "opt_na"
-            ]
+            "value": ["opt_na"]
           }
         },
         {
@@ -1080,9 +992,7 @@
           "visibility": {
             "fieldKey": "status",
             "op": "is_any_of",
-            "value": [
-              "opt_na"
-            ]
+            "value": ["opt_na"]
           }
         },
         {
@@ -1174,9 +1084,7 @@
               {
                 "fieldKey": "status",
                 "op": "is_any_of",
-                "value": [
-                  "opt_not_met"
-                ]
+                "value": ["opt_not_met"]
               }
             ]
           }
@@ -1194,10 +1102,7 @@
               {
                 "fieldKey": "status",
                 "op": "is_none_of",
-                "value": [
-                  "opt_na",
-                  "opt_no_longer"
-                ]
+                "value": ["opt_na", "opt_no_longer"]
               }
             ]
           }
@@ -1210,9 +1115,7 @@
               {
                 "fieldKey": "status",
                 "op": "is_any_of",
-                "value": [
-                  "opt_not_checked"
-                ]
+                "value": ["opt_not_checked"]
               }
             ]
           }
@@ -1257,12 +1160,8 @@
             "version_at_check": "v1.0"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ],
-            "requirement": [
-              "security_clause"
-            ]
+            "supplier": ["cloudhost"],
+            "requirement": ["security_clause"]
           }
         },
         {
@@ -1278,12 +1177,8 @@
             "version_at_check": "v1.0"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ],
-            "requirement": [
-              "dpa"
-            ]
+            "supplier": ["cloudhost"],
+            "requirement": ["dpa"]
           }
         },
         {
@@ -1299,12 +1194,8 @@
             "version_at_check": "v1.0"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ],
-            "requirement": [
-              "security_cert"
-            ]
+            "supplier": ["cloudhost"],
+            "requirement": ["security_cert"]
           }
         },
         {
@@ -1319,12 +1210,8 @@
             "version_at_check": "v1.0"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ],
-            "requirement": [
-              "transfers"
-            ]
+            "supplier": ["cloudhost"],
+            "requirement": ["transfers"]
           }
         }
       ]
@@ -1362,9 +1249,7 @@
       "actions": [
         {
           "type": "notify",
-          "to": [
-            "field:supplier_owner"
-          ],
+          "to": ["field:supplier_owner"],
           "message": "{name} of {supplier} failed. Decide what happens next."
         }
       ]
@@ -1562,10 +1447,7 @@
         {
           "fieldKey": "status",
           "op": "is_none_of",
-          "value": [
-            "opt_not_checked",
-            "opt_no_longer"
-          ]
+          "value": ["opt_not_checked", "opt_no_longer"]
         }
       ],
       "actions": [
@@ -1606,9 +1488,7 @@
       "actions": [
         {
           "type": "notify",
-          "to": [
-            "field:supplier_owner"
-          ],
+          "to": ["field:supplier_owner"],
           "message": "{supplier} does not meet \"{name}\" ({id}). Decide what happens next."
         }
       ]
@@ -1626,17 +1506,13 @@
         {
           "fieldKey": "status",
           "op": "is_any_of",
-          "value": [
-            "opt_met"
-          ]
+          "value": ["opt_met"]
         }
       ],
       "actions": [
         {
           "type": "notify",
-          "to": [
-            "field:supplier_owner"
-          ],
+          "to": ["field:supplier_owner"],
           "message": "Evidence for \"{name}\" ({id}) at {supplier} expires on {evidence_expiry}. Ask for new evidence."
         }
       ]
