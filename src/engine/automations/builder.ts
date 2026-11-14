@@ -511,7 +511,12 @@ export function describeTrigger(trigger: Trigger, ctx: Ctx): string {
   return 'When something happens';
 }
 
-const SPECIAL_NAMES: Record<string, string> = { __name: 'Name', __group: 'Group', __id: 'ID' };
+const SPECIAL_NAMES: Record<string, string> = {
+  __name: 'Name',
+  __group: 'Group',
+  __id: 'ID',
+  __missing: 'Missing required',
+};
 
 /** Label of one chosen value of a condition (an option, a person, a group). */
 function conditionValueLabel(key: string, id: string, ctx: Ctx): string {

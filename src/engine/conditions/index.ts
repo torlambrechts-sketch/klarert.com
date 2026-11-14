@@ -65,14 +65,42 @@ export const SPECIAL_KEYS: Record<string, ValueKind> = {
   __name: 'text',
   __group: 'option',
   __id: 'text',
+  __missing: 'boolean',
 };
 
+/** The condition key that holds when an item misses a required field ("Missing required": filters, dashboards). */
+export const MISSING_KEY = '__missing';
+
+/**
+ * The required fields an item leaves empty (docs/03 §2 required): stored fields the person may see (restricted ones
+ * they may not see are never counted), shown by their visibility rule. Rows added inline may miss them; the Table
+ * says "Missing: owner, due date" and filters on it, and `__missing` counts them on dashboards.
+ */
+export function missingRequired(item: Item, fields: Field[], ctx: Ctx): Field[] {
+  const out: Field[] = [];
+  for (const f of fields) {
+    if (!f.required || f.hidden) continue;
+    const storage = defOf(f).storage;
+    if (storage === 'computed' || storage === 'none') continue;
+    // a visibility rule on "missing required" itself would loop: such a field counts as shown
+    if (f.visibility && f.visibility.fieldKey !== MISSING_KEY && !matches(f.visibility, item, ctx))
+      continue;
+    if (isEmptyOf(item, f, ctx)) out.push(f);
+  }
+  return out;
+}
+
 type Resolved =
-  | { special: '__name' | '__id' | '__group'; field?: undefined }
+  | { special: '__name' | '__id' | '__group' | '__missing'; field?: undefined }
   | { special?: undefined; field: Field };
 
 function resolve(cond: Condition, ctx: Ctx): Resolved | null {
-  if (cond.fieldKey === '__name' || cond.fieldKey === '__id' || cond.fieldKey === '__group') {
+  if (
+    cond.fieldKey === '__name' ||
+    cond.fieldKey === '__id' ||
+    cond.fieldKey === '__group' ||
+    cond.fieldKey === MISSING_KEY
+  ) {
     return { special: cond.fieldKey };
   }
   const field = ctx.fieldsByKey.get(cond.fieldKey);
@@ -214,6 +242,12 @@ export function matches(cond: Condition, item: Item, ctx: Ctx): boolean {
   const { op, value } = cond;
 
   if (r.special) {
+    if (r.special === MISSING_KEY) {
+      const missing = missingRequired(item, ctx.fieldsOf(item.sheetId), ctx).length > 0;
+      if (op === 'is_checked') return missing;
+      if (op === 'is_not_checked') return !missing;
+      return false;
+    }
     if (r.special === '__group') {
       if (op === 'is_any_of') return list(value).includes(item.groupId);
       if (op === 'is_none_of') return !list(value).includes(item.groupId);

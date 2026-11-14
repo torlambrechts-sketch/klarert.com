@@ -66,6 +66,11 @@ export interface Sheet {
   register?: 'documents' | null;
   /** sheets.settings.workflows: the sheet's approval workflows (docs/04 §13), read leniently. */
   workflows?: ApprovalWorkflow[];
+  /**
+   * sheets.settings.newItemForm (docs/05 §3.7): the form the New item dialog asks (a form view's id), or false for the
+   * standard dialog. Absent: a pack's intake form when the sheet has one, else the standard dialog.
+   */
+  newItemForm?: string | false;
   /** sheets.settings.framework: the framework a library sheet holds (docs/12). */
   framework?: {
     key: string;

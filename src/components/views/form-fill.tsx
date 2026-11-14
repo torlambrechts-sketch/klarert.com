@@ -42,15 +42,27 @@ function blankItem(ctx: Ctx, values: Item['values']): Item {
   };
 }
 
-function Label({
+export function Label({
   htmlFor,
   children,
   required,
+  requiredWord,
 }: {
   htmlFor?: string;
   children: React.ReactNode;
   required: boolean;
+  /** Say "Required" in words after the label (the New item dialog) instead of the forms' asterisk. */
+  requiredWord?: boolean;
 }) {
+  if (requiredWord)
+    return (
+      <label htmlFor={htmlFor} className="text-label-14 font-medium">
+        {children}
+        {required ? (
+          <span className="text-muted-foreground text-label-12 ml-2 font-normal"> Required</span>
+        ) : null}
+      </label>
+    );
   return (
     <label htmlFor={htmlFor} className="text-label-14 font-medium">
       {children}
@@ -115,6 +127,7 @@ export function Question({
   error,
   disabled,
   onAnswer,
+  requiredWord,
 }: {
   q: FormQuestion;
   ctx: Ctx;
@@ -123,6 +136,7 @@ export function Question({
   error?: string;
   disabled?: boolean;
   onAnswer(v: unknown): void;
+  requiredWord?: boolean;
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -140,8 +154,8 @@ export function Question({
   const item = blankItem(ctx, values);
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} required={q.required}>
+    <div className="flex flex-col gap-1.5" data-question={q.field.id}>
+      <Label htmlFor={id} required={q.required} requiredWord={requiredWord}>
         {q.label}
       </Label>
       {q.help ? (

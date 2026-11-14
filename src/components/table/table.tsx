@@ -30,12 +30,14 @@ import {
   LockOpen,
   MoreHorizontal,
   Plus,
+  TriangleAlert,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cellColumns, copyRange, planClear, planPaste, type GridColumn } from '@/engine/clipboard';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { ownerField, ownerOf } from '@/engine/item-panel';
 import { donePercent } from '@/engine/views/group-by';
+import { missingRequired, missingText } from '@/engine/views/new-item';
 import { keysBetween } from '@/engine/ordering';
 import type { SheetData } from '@/engine/sheet-data';
 import { columnSummaries, type SummaryFn } from '@/engine/summaries';
@@ -969,7 +971,7 @@ export function Table({
         if (s.active?.itemId === tempId || s.anchor?.itemId === tempId)
           store.setState({ active: swap(s.active), anchor: swap(s.anchor) });
       },
-      { hold: true },
+      { hold: true, source: 'inline' },
     );
   };
 
@@ -1837,6 +1839,10 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
   const rowActive = p.active?.itemId === item.id;
   const ownerId = p.owner ? ownerOf(item, p.owner, ctx) : null;
   const ownerName = ownerId ? (ctx.people.get(ownerId)?.name ?? 'Former member') : null;
+  // required fields the row leaves empty (added inline, or cleared): said in words with a warning symbol
+  const missing = item.id.startsWith('temp-')
+    ? ''
+    : missingText(missingRequired(item, ctx.fieldsOf(item.sheetId), ctx));
   // the leading controls show on hover, on the active row and while anything is selected
   const reveal = cn(
     'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100',
@@ -1967,6 +1973,16 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                     {item.name}
                   </button>
                 )}
+                {missing && p.density === 'compact' ? (
+                  <span
+                    className="text-warn flex shrink-0 items-center"
+                    title={missing}
+                    data-testid="missing-required"
+                  >
+                    <TriangleAlert className="size-3.5" aria-hidden />
+                    <span className="sr-only">{missing}</span>
+                  </span>
+                ) : null}
               </span>
               {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
                 <span className="text-muted-foreground text-label-12-mono flex min-w-0 items-center gap-[7px] leading-[17px]">
@@ -1985,6 +2001,16 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                       <span aria-hidden>·</span>
                       <span className="truncate">{ownerName}</span>
                     </>
+                  ) : null}
+                  {missing && p.density !== 'compact' ? (
+                    <span
+                      className="text-warn flex min-w-0 items-center gap-1 font-sans"
+                      title={missing}
+                      data-testid="missing-required"
+                    >
+                      <TriangleAlert className="size-3 shrink-0" aria-hidden />
+                      <span className="truncate">{missing}</span>
+                    </span>
                   ) : null}
                   {item.locked ? (
                     <span

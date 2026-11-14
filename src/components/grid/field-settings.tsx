@@ -6,6 +6,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { OPERATORS } from '@/engine/conditions';
 import { FIELD_TYPE_IDS, fieldType } from '@/engine/fields/registry';
 import { resolveFieldType } from '@/engine/fields/resolve';
+import { formEligible } from '@/engine/fields/view-support';
 import { typeChangeMode, type TypeChangeMode } from '@/engine/fields/type-change';
 import type { Condition, Ctx, Field, Json, StatusRule, Validation } from '@/engine/types';
 import { kindOf } from '@/engine/values';
@@ -267,6 +268,31 @@ function FieldSettingsBody({
               />
               Required
             </label>
+          ) : null}
+          {formEligible(field) ? (
+            <div className="flex flex-col gap-1">
+              <label className="text-label-13 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={required || config.askWhenAdding === true}
+                  disabled={required}
+                  aria-describedby={`${field.id}-ask-hint`}
+                  onChange={(e) =>
+                    setConfig((c) => {
+                      const rest = { ...c };
+                      delete rest.askWhenAdding;
+                      return e.target.checked ? { ...rest, askWhenAdding: true } : rest;
+                    })
+                  }
+                />
+                Ask when adding
+              </label>
+              <p id={`${field.id}-ask-hint`} className="text-muted-foreground text-label-12">
+                {required
+                  ? 'Required fields are always asked in the New item dialog.'
+                  : 'The New item dialog asks for it with the name. Other fields are under More fields.'}
+              </p>
+            </div>
           ) : null}
           {stored ? (
             <Labelled

@@ -25,6 +25,13 @@ export const createItemInput = z.object({
   values: values.optional(),
   /** Added inline: automations wait until the person finishes the row (finishItem). */
   hold: z.boolean().optional(),
+  /**
+   * How the person added it, recorded in the item.created entry: the New item dialog (its answers are checked like a
+   * form's, docs/05 §3.7) or an inline row.
+   */
+  source: z.enum(['dialog', 'inline']).optional(),
+  /** The dialog asked the sheet's new-item form (Phase B): that form's view id. */
+  intakeFormId: uuid.optional(),
 });
 
 export const finishItemInput = z.object({ ...base, itemId: uuid });

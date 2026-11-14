@@ -32,6 +32,7 @@ import { InsightsView } from '@/components/insights/insights-view';
 import { ownerField } from '@/engine/item-panel';
 import { statusFilterField } from '@/engine/views/quick-filters';
 import { NewItemDialog, type NewItemRequest } from '@/components/views/new-item-dialog';
+import type { IntakeForm } from '@/engine/views/new-item';
 import { useOnline } from '@/components/states/use-online';
 import { useViewItems } from '@/components/views/use-view-items';
 import { useViews, type ViewsState } from '@/components/views/use-views';
@@ -52,6 +53,7 @@ import { ColumnsMenu } from '@/components/table/columns-menu';
 import { ViewBar } from '@/components/views/view-bar';
 import {
   DensityToggle,
+  MissingFilter,
   OwnerFilter,
   StatusFilter,
   TableActions,
@@ -212,8 +214,8 @@ function SheetBody(props: SheetViewProps) {
   });
   const { active, config, setConfig } = views;
   const [q, setQ] = useSearchParam();
-  const [addTick, setAddTick] = useState(0);
   const [newItem, setNewItem] = useState<NewItemRequest | null>(null);
+  const newButtonRef = useRef<HTMLButtonElement>(null);
   useDensityPreference();
 
   // hidden columns belong to the view: view → grid store, and column menu → view
@@ -268,7 +270,23 @@ function SheetBody(props: SheetViewProps) {
     }
   };
   const itemLabel = data?.sheet.itemLabel.toLowerCase() ?? 'item';
-  const addNew = () => (tabular ? setAddTick((t) => t + 1) : setNewItem({}));
+  // "+ New", Create › Entry and N open the New item dialog (docs/05 §3.7); the Table's "+ Add item" rows stay
+  const addNew = () => setNewItem({});
+  const canAdd = canEdit && active.type !== 'form' && !!data;
+  // N adds an item, unless the person is typing or working in the grid (a key there edits the cell)
+  useEffect(() => {
+    if (!canAdd) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key !== 'n' && e.key !== 'N') return;
+      if (busyTarget(e.target) || busyTarget(document.activeElement)) return;
+      if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"]')) return;
+      e.preventDefault();
+      setNewItem({});
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [canAdd]);
   // ?new=1 (Create › Entry, docs/05 §4): open the add-item flow once the sheet has loaded
   const wantsNew = useRef(false);
   useEffect(() => {
@@ -383,10 +401,13 @@ function SheetBody(props: SheetViewProps) {
             ) : null}
             {canEdit && active.type !== 'form' ? (
               <Button
+                ref={newButtonRef}
                 type="button"
                 className={cn(headerButton, 'font-semibold')}
                 onClick={addNew}
                 disabled={!data}
+                aria-keyshortcuts="N"
+                title={`New ${itemLabel} (N)`}
               >
                 <Plus aria-hidden /> New {itemLabel}
               </Button>
@@ -467,6 +488,7 @@ function SheetBody(props: SheetViewProps) {
           <>
             <StatusFilter items={inScope} ctx={ctx} />
             <OwnerFilter items={inScope} ctx={ctx} />
+            <MissingFilter items={inScope} fields={data.fields} ctx={ctx} />
             <ValueFilterChip />
           </>
         ) : null}
@@ -570,8 +592,8 @@ function SheetBody(props: SheetViewProps) {
           canEdit={canEdit}
           canComment={commentable}
           isAdmin={isAdmin}
-          addTick={addTick}
           newItem={newItem}
+          newButtonRef={newButtonRef}
           setNewItem={setNewItem}
           sub={sub}
         />
@@ -593,8 +615,8 @@ function ViewBody({
   canEdit,
   canComment,
   isAdmin,
-  addTick,
   newItem,
+  newButtonRef,
   setNewItem,
   sub,
 }: SheetViewProps & {
@@ -608,8 +630,8 @@ function ViewBody({
   canEdit: boolean;
   canComment: boolean;
   isAdmin: boolean;
-  addTick: number;
   newItem: NewItemRequest | null;
+  newButtonRef: React.RefObject<HTMLButtonElement | null>;
   setNewItem(r: NewItemRequest | null): void;
   sub: SubitemsHandle;
 }) {
@@ -726,6 +748,16 @@ function ViewBody({
     [ctx, data.fields, openView, store, tableId],
   );
   const [localAddTick, setLocalAddTick] = useState(0);
+  // the sheet's forms, for its new-item form (Phase B)
+  const intakeForms = useMemo<IntakeForm[]>(
+    () =>
+      views.tabs.forms.flatMap((f) =>
+        f.saved?.config.form
+          ? [{ id: f.saved.id, name: f.saved.name, form: f.saved.config.form }]
+          : [],
+      ),
+    [views.tabs.forms],
+  );
 
   return (
     <>
@@ -748,7 +780,7 @@ function ViewBody({
           isAdmin={isAdmin}
           onlyGroup={onlyGroup}
           narrow={narrow}
-          addFocusTick={addTick + localAddTick}
+          addFocusTick={localAddTick}
           onOpenItem={openItem}
           items={tableItems}
           compare={view.compare}
@@ -810,10 +842,12 @@ function ViewBody({
       <NewItemDialog
         request={newItem}
         onClose={() => setNewItem(null)}
-        sheet={data.sheet}
-        groups={data.groups}
-        items={data.items}
+        data={data}
+        ctx={ctx}
         actions={actions}
+        forms={intakeForms}
+        returnFocus={newButtonRef}
+        onOpenItem={openItem}
       />
       {panelItem ? (
         <ItemPanel
@@ -881,6 +915,14 @@ function ViewBody({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+/** Focus where N must not add an item: a text field, the grid (a key edits the cell), a menu or a list box. */
+function busyTarget(t: EventTarget | null): boolean {
+  if (!(t instanceof Element)) return false;
+  return !!t.closest(
+    'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="grid"], [role="textbox"], [role="combobox"], [role="listbox"], [role="menu"], [role="dialog"]',
   );
 }
 

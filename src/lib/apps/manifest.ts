@@ -29,7 +29,7 @@ const sheetRef = z
   );
 const fieldKey = z
   .string()
-  .regex(/^(?:[a-z][a-z0-9_]{0,63}|__name|__group|__id)$/, 'Use a field key.');
+  .regex(/^(?:[a-z][a-z0-9_]{0,63}|__name|__group|__id|__missing)$/, 'Use a field key.');
 const json: z.ZodType<Json> = z.lazy(() =>
   z.union([
     z.string(),
