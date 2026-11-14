@@ -9,6 +9,7 @@ import { basicCtx } from '../context';
 import { widgetProblem } from '../dashboards/registry';
 import type { WidgetConfig } from '../dashboards/types';
 import { keysBetween } from '../ordering';
+import { isOutbound, startsInTestMode } from './safety';
 import { uniqueIdPrefix } from '../ordering';
 import { planTemplateImport, type PlanPerson } from '../templates/plan';
 import type {
@@ -186,7 +187,14 @@ export interface PackPreview {
     restricted?: boolean;
   }[];
   links: { from: string; field: string; to: string; twoWay: boolean }[];
-  automations: { name: string; sheet: string; sentence: string; enabled: boolean }[];
+  /** `testMode`: installed in test mode (docs/04 §14): it logs what it would do until turned live. */
+  automations: {
+    name: string;
+    sheet: string;
+    sentence: string;
+    enabled: boolean;
+    testMode?: boolean;
+  }[];
   forms: { sheet: string; name: string; access: string }[];
   dashboards: { name: string; widgets: number }[];
   renamedPrefixes: { sheet: string; from: string; to: string }[];
@@ -315,7 +323,10 @@ export function previewLines(p: PackPreview): string[] {
     out.push(`${l.from} links to ${l.to} through ${l.field}${l.twoWay ? ', both ways' : ''}.`);
   for (const r of p.renamedPrefixes)
     out.push(`${r.sheet} uses the prefix ${r.to}: ${r.from} is taken in this workspace.`);
-  for (const a of p.automations) out.push(`${a.sheet}: ${a.sentence}${a.enabled ? '' : ' (off)'}`);
+  for (const a of p.automations)
+    out.push(
+      `${a.sheet}: ${a.sentence}${a.enabled ? '' : ' (off)'}${a.testMode ? ' (test mode)' : ''}`,
+    );
   for (const f of p.forms) out.push(`${f.sheet}: form ${f.name} (${f.access}, draft).`);
   for (const d of p.dashboards)
     out.push(`Dashboard ${d.name} with ${plural(d.widgets, 'widget')}.`);
@@ -333,6 +344,13 @@ export function planPackInstall(
     installFirst?: InstallFirst[];
     /** The install being upgraded: its own rows on other packs' sheets are planned again, not existing columns. */
     selfInstall?: string | null;
+    /**
+     * Automations that send anything out (webhook, email) install on: the person opted in at install. Off by
+     * default (docs/11 Pack quality bar).
+     */
+    allowOutbound?: boolean;
+    /** Every automation installs live, none in test mode: sample data (the seed), never a person's install. */
+    live?: boolean;
   } = {},
 ): PackPlan {
   const conflicts: string[] = [];
@@ -719,7 +737,7 @@ export function planPackInstall(
       is_library: ms.isLibrary,
       settings,
       parent_sheet_id: null,
-      ...(ms.restricted ? { restricted: true } : {}),
+      ...(ms.restricted || ms.personalData ? { restricted: true } : {}),
     });
     operations.push({ kind: 'sheet', ref: ms.ref, name: ms.name, action: 'create' });
     for (const f of ps.fields) {
@@ -869,7 +887,7 @@ export function planPackInstall(
       kind: sheetKind(ms),
       folder: ms.folder ? (m.folders.find((f) => f.ref === ms.folder)?.name ?? null) : null,
       ...(ps.subitems ? { subitems: ps.subitems.label } : {}),
-      ...(ms.restricted ? { restricted: true } : {}),
+      ...(ms.restricted || ms.personalData ? { restricted: true } : {}),
     });
   });
 
@@ -1006,15 +1024,22 @@ export function planPackInstall(
   };
 
   // ── automations with refs (and sentences for the preview)
+  // outbound ones off unless opted in, notifying ones in test mode (docs/11 Pack quality bar)
   const automationRows: Row[] = tp.automations.map((a, i) => {
     const ma = mm.automations[i]!;
     const id = env.newId();
+    const enabled = a.enabled && (opts.allowOutbound === true || !isOutbound(ma));
+    const testMode = !opts.live && startsInTestMode(ma);
     operations.push({
       kind: 'automation',
       ref: ma.ref,
       name: a.name,
       action: 'create',
-      ...(a.enabled ? {} : { note: 'Installed off.' }),
+      ...(!enabled
+        ? { note: 'Installed off.' }
+        : testMode
+          ? { note: 'Installed in test mode.' }
+          : {}),
     });
     let sentence = a.name;
     try {
@@ -1034,14 +1059,16 @@ export function planPackInstall(
       name: a.name,
       sheet: sheetName.get(a.sheet_id) ?? '',
       sentence,
-      enabled: a.enabled,
+      enabled,
+      ...(testMode ? { testMode: true } : {}),
     });
     return {
       id,
       ref: ma.ref,
       sheet_id: a.sheet_id,
       name: a.name,
-      enabled: a.enabled,
+      enabled,
+      ...(testMode ? { mode: 'test' } : {}),
       trigger: a.trigger,
       conditions: a.conditions,
       actions: a.actions,

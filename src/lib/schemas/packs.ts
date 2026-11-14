@@ -18,6 +18,14 @@ export const installPackInput = z.object({
   level,
   /** The catalogue hash the person previewed: the install refuses a pack that changed since. */
   hash: z.string().regex(/^[0-9a-f]{64}$/),
+  /** Automations that send anything out (webhook, email) install on: the person opted in. Off when not given. */
+  allowOutbound: z.boolean().optional(),
+});
+/** Turn every automation of a pack install live, or back to test mode (docs/04 §14). Owners and admins. */
+export const packAutomationsModeInput = z.object({
+  org: slugInput,
+  installId: z.uuid(),
+  mode: z.enum(['live', 'test']),
 });
 export const archivePackInput = z.object({ org: slugInput, installId: z.uuid() });
 export const packSetupsInput = z.object({ org: slugInput });

@@ -25,6 +25,15 @@ export type PackItem = Omit<TemplateItem, 'ref' | 'links'> & {
 };
 
 /**
+ * What a sheet is for (docs/11 Pack quality bar): decides the views it ships with. `register` a list of things kept
+ * up to date (risks, documents, suppliers); `actions` work with owners and due dates (CAPA, tasks); `log` dated events
+ * (incidents, meetings); `library` reference items (requirements, categories); `plan` dated work over time (audit
+ * programme, projects).
+ */
+export const SHEET_KINDS = ['register', 'actions', 'log', 'library', 'plan'] as const;
+export type SheetKind = (typeof SHEET_KINDS)[number];
+
+/**
  * A sheet of a pack: a template sheet whose folder is a folder ref, whose items have refs, and that may be a library
  * (`isLibrary`) or a documents register (`register: 'documents'`). Link fields name their target with
  * `config.targetSheetRef`: a sheet ref of this pack, or `<pack key>:<sheet ref>` for another pack's sheet.
@@ -35,6 +44,13 @@ export type PackSheet = Omit<TemplateSheet, 'folder' | 'items' | 'forms'> & {
   register?: 'documents';
   /** Restricted at install (docs/02 §16): the installer and the owners see it until people are given access. */
   restricted?: boolean;
+  /** What the sheet is for (docs/11 Pack quality bar); a library sheet (`isLibrary`) is a `library`. */
+  kind?: SheetKind;
+  /**
+   * The sheet holds personal data (docs/11 Pack quality bar): installed restricted (owners, and admins and the
+   * installer listed), whatever `restricted` says; its personal fields carry `config.personalData`.
+   */
+  personalData?: boolean;
   /**
    * The framework this library sheet holds (docs/12): stored in sheets.settings.framework. `refFieldKey` names the
    * text field that shows each item's reference number (it cannot be edited).
@@ -49,7 +65,21 @@ export type PackSheet = Omit<TemplateSheet, 'folder' | 'items' | 'forms'> & {
   forms: (TemplateSheet['forms'][number] & { level?: string })[];
 };
 
-export type PackAutomation = TemplateAutomation & { ref: string; level?: string };
+/** What a pack automation adds to a template automation (docs/11 Pack quality bar). */
+export interface PackAutomationMeta {
+  /**
+   * Installed in test mode (docs/04 §14): it runs and logs what it would do, and does nothing until an owner or
+   * admin turns it live. Default: true when it notifies anyone or sends anything out (`startsInTestMode`).
+   */
+  startInTestMode?: boolean;
+  /** An advanced automation (escalation, cascade, gate, recurring work, SLA): counted by the quality bar. */
+  advanced?: boolean;
+  /** What it does and why, in plain words (required for an advanced automation). */
+  description?: string;
+}
+
+export type PackAutomation = TemplateAutomation &
+  PackAutomationMeta & { ref: string; level?: string };
 
 /** A dashboard widget: the sheet by ref, the field by key; `ref` becomes the widget id. */
 export interface PackWidget {
@@ -72,6 +102,8 @@ export interface PackDashboard {
   name: string;
   widgets: PackWidget[];
   level?: string;
+  /** The pack's headline dashboard (docs/11 Pack quality bar): exactly one per pack. */
+  headline?: boolean;
 }
 
 /** A level of a pack (docs/11 Levels), lowest first: each level installs everything of the levels before it. */
@@ -156,7 +188,7 @@ export interface PackExtension {
   forms?: TemplateSheet['forms'];
   items?: PackItem[];
   /** Automations on the extended sheet (the sheet is implied). */
-  automations?: (Omit<TemplateAutomation, 'sheet'> & { ref: string })[];
+  automations?: (Omit<TemplateAutomation, 'sheet'> & PackAutomationMeta & { ref: string })[];
   /** Field key of the extended sheet → options added to it (by id; an id already there is left as it is). */
   options?: Record<string, ExtensionOption[]>;
 }
@@ -217,6 +249,8 @@ export interface PackManifest {
   standard?: PackStandard;
   /** What this pack adds to sheets of packs it requires (docs/11 Extends). */
   extends?: PackExtension[];
+  /** Why the pack ships no intake forms (docs/11 Pack quality bar), e.g. a pure library or add-on. */
+  formsNotApplicable?: string;
 }
 
 /** `<pack key>:<sheet ref>` or `<sheet ref>`. */

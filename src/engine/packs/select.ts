@@ -5,6 +5,7 @@
 // is flagged (forms install as drafts anyway) and an automation that sends anything out of the workspace (a webhook,
 // an email) is flagged and installed off. Pure: the manifest in, parts or the chosen manifest out.
 import type { Json } from '../types';
+import { isOutbound, OUTBOUND_ACTIONS, startsInTestMode } from './safety';
 import type { PackManifest } from './types';
 
 export type PartKind = 'sheet' | 'form' | 'automation' | 'dashboard';
@@ -33,7 +34,7 @@ export interface BundlePart {
 }
 
 /** Action types that send something out of the workspace. Installed off; turned on by a person after review. */
-export const OUTBOUND_ACTIONS = new Set(['webhook', 'send_email', 'email']);
+export { OUTBOUND_ACTIONS };
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const localSheet = (raw: unknown): string | null =>
@@ -45,9 +46,6 @@ export const partId = {
   automation: (ref: string) => `automation:${ref}`,
   dashboard: (ref: string) => `dashboard:${ref}`,
 };
-
-const isOutbound = (a: PackManifest['automations'][number]) =>
-  a.actions.some((x) => OUTBOUND_ACTIONS.has(String(x.type)));
 
 /** Every part of a manifest (already at the chosen level), sheets first, with what each needs and its flags. */
 export function bundleParts(m: PackManifest): BundlePart[] {
@@ -123,7 +121,12 @@ export function bundleParts(m: PackManifest): BundlePart[] {
       kind: 'automation',
       name: a.name,
       sheet: sheetName.get(a.sheet) ?? null,
-      detail: out || a.enabled === false ? 'Created off' : 'Created on',
+      detail:
+        out || a.enabled === false
+          ? 'Created off'
+          : startsInTestMode(a)
+            ? 'Created in test mode'
+            : 'Created on',
       fields: 0,
       requires: [...needs],
       flags: out

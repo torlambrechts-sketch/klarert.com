@@ -363,7 +363,7 @@ describe('planPackInstall', () => {
         'New folder Suppliers.',
         'Supplier register (SUP-): 3 fields, 2 example items.',
         'Supplier register links to Supplier reviews through Reviews, both ways.',
-        'Supplier register: When Status becomes Stuck, then notify Owner.',
+        'Supplier register: When Status becomes Stuck, then notify Owner. (test mode)',
         'Supplier register: form Supplier intake (internal, draft).',
         'Dashboard Supplier overview with 1 widget.',
       ]),
@@ -395,6 +395,67 @@ describe('planPackInstall', () => {
       'Supplier reviews › Acme 2026: a document starts as a draft.',
     ]);
     expect(plan.payload).toBeNull();
+  });
+
+  it('installs an automation that notifies in test mode, an outbound one off (docs/11 Pack quality bar)', () => {
+    const m = manifest();
+    const stuck = m.automations[0]!;
+    m.automations.push(
+      {
+        ...stuck,
+        ref: 'hook',
+        name: 'Stuck → tell Teams',
+        actions: [{ type: 'webhook', url: 'https://hooks.example.com/x', preset: 'teams' }],
+      },
+      {
+        ...stuck,
+        ref: 'quiet',
+        name: 'Stuck → post',
+        actions: [{ type: 'post_update', message: '{name} is stuck.' }],
+      },
+      { ...stuck, ref: 'loud', name: 'Stuck → notify now', startInTestMode: false },
+    );
+    const rows = (plan: ReturnType<typeof planPackInstall>) =>
+      plan.payload!.automations.map((a) => [a.ref, a.enabled, a.mode ?? 'live']);
+    const plan = planPackInstall(m, snapshot(), env());
+    expect(rows(plan)).toEqual([
+      ['stuck', true, 'test'],
+      ['hook', false, 'test'],
+      ['quiet', true, 'live'],
+      ['loud', true, 'live'],
+    ]);
+    expect(plan.operations.filter((o) => o.kind === 'automation').map((o) => o.note)).toEqual([
+      'Installed in test mode.',
+      'Installed off.',
+      undefined,
+      undefined,
+    ]);
+    // opted in at install: outbound on; sample data (the seed): every automation live
+    expect(rows(planPackInstall(m, snapshot(), env(), { allowOutbound: true }))[1]).toEqual([
+      'hook',
+      true,
+      'test',
+    ]);
+    expect(rows(planPackInstall(m, snapshot(), env(), { live: true })).map((r) => r[2])).toEqual([
+      'live',
+      'live',
+      'live',
+      'live',
+    ]);
+  });
+
+  it('installs a sheet with personal data restricted', () => {
+    const m = manifest();
+    m.sheets[1]!.personalData = true;
+    m.sheets[1]!.fields.push({
+      key: 'contact',
+      name: 'Contact',
+      type: 'text',
+      config: { personalData: true },
+    });
+    const plan = planPackInstall(m, snapshot(), env());
+    expect(plan.payload!.sheets.map((x) => x.restricted ?? false)).toEqual([false, true]);
+    expect(plan.preview.sheets[1]!.restricted).toBe(true);
   });
 
   it('marks libraries and documents registers', () => {

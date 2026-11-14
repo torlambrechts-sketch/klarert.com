@@ -10,7 +10,7 @@ import { MAX_WIDGETS } from '@/engine/dashboards/types';
 import { isRequirementKey, parseRequirementKey } from '@/engine/frameworks/refs';
 import { SEMVER, SEMVER_RANGE } from '@/engine/packs/semver';
 import { packToTemplate } from '@/engine/packs/template';
-import { SHEET_REF, splitSheetRef, type PackManifest } from '@/engine/packs/types';
+import { SHEET_KINDS, SHEET_REF, splitSheetRef, type PackManifest } from '@/engine/packs/types';
 import { levelProblems } from '@/engine/packs/levels';
 import { extendsProblems } from '@/engine/packs/extend';
 import {
@@ -97,6 +97,10 @@ export const packSheet = templateSheet.omit({ folder: true, items: true, forms: 
   register: z.literal('documents').optional(),
   /** Restricted (docs/02 §16): only the installer (and owners) see it until people are given access. */
   restricted: z.boolean().optional(),
+  /** What the sheet is for: decides the views it ships with (docs/11 Pack quality bar). */
+  kind: z.enum(SHEET_KINDS).optional(),
+  /** Personal data (docs/11 Pack quality bar): installed restricted; its personal fields say `personalData`. */
+  personalData: z.boolean().optional(),
   /** A framework's library sheet (docs/12): stored in sheets.settings.framework. */
   framework: z
     .object({
@@ -119,7 +123,18 @@ export const packSheet = templateSheet.omit({ folder: true, items: true, forms: 
     .default([]),
 });
 
-export const packAutomation = templateAutomation.extend({ ref, level: levelKey.optional() });
+/** What a pack automation adds (docs/11 Pack quality bar): test mode at install, advanced with a description. */
+const automationMeta = {
+  startInTestMode: z.boolean().optional(),
+  advanced: z.boolean().optional(),
+  description: z.string().trim().min(1).max(400).optional(),
+};
+
+export const packAutomation = templateAutomation.extend({
+  ref,
+  level: levelKey.optional(),
+  ...automationMeta,
+});
 
 const labelColor = templateSheet.shape.groups.element.shape.color;
 const extensionOption = z.object({
@@ -139,7 +154,7 @@ export const packExtension = z.object({
   forms: z.array(templateForm).max(10).optional(),
   items: z.array(packItem).max(100).optional(),
   automations: z
-    .array(templateAutomation.omit({ sheet: true }).extend({ ref }))
+    .array(templateAutomation.omit({ sheet: true }).extend({ ref, ...automationMeta }))
     .max(50)
     .optional(),
   options: z.record(fieldKey, z.array(extensionOption).min(1).max(50)).optional(),
@@ -202,6 +217,8 @@ export const packManifestSchema = z
           name: z.string().trim().min(1).max(80),
           widgets: z.array(packWidget).max(MAX_WIDGETS),
           level: levelKey.optional(),
+          /** The pack's headline dashboard (docs/11 Pack quality bar). */
+          headline: z.boolean().optional(),
         }),
       )
       .max(10)
@@ -260,6 +277,8 @@ export const packManifestSchema = z
       .optional(),
     /** What this pack adds to sheets of packs it requires (docs/11 Extends). */
     extends: z.array(packExtension).max(30).optional(),
+    /** Why the pack ships no intake forms (docs/11 Pack quality bar). */
+    formsNotApplicable: z.string().trim().min(1).max(200).optional(),
   })
   .superRefine((m, ctx) => {
     const problem = (path: (string | number)[], message: string) =>
@@ -311,6 +330,15 @@ export const packManifestSchema = z
         for (const k of s.uniqueLinks)
           if (!s.fields.some((f) => f.key === k && linkTypes.has(f.type)))
             problem(at('uniqueLinks'), `"${k}" is not a link field of the sheet.`);
+      }
+      if (s.personalData) {
+        if (s.restricted === false)
+          problem(at('restricted'), 'A sheet with personal data is always installed restricted.');
+        if (!s.fields.some((f) => (f.config as { personalData?: unknown })?.personalData === true))
+          problem(
+            at('personalData'),
+            'Mark the fields that hold personal data with config.personalData.',
+          );
       }
       if (s.register === 'documents' && !s.fields.some((f) => f.type === 'status'))
         problem(at('register'), 'A documents register needs a status field.');
@@ -389,6 +417,17 @@ export const packManifestSchema = z
               problem(at('items', ii), `Unknown linked item "${r}" on "${target}".`);
         }
     }
+
+    // an advanced automation says what it does in plain words
+    const allAutomations = [
+      ...m.automations.map((a, i) => ({ a, path: ['automations', i] })),
+      ...(m.extends ?? []).flatMap((e, ei) =>
+        (e.automations ?? []).map((a, i) => ({ a, path: ['extends', ei, 'automations', i] })),
+      ),
+    ];
+    for (const { a, path } of allAutomations)
+      if (a.advanced && !a.description)
+        problem(path, 'An advanced automation needs a description in plain words.');
 
     for (const [di, d] of m.dashboards.entries()) {
       unique(

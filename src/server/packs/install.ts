@@ -384,6 +384,10 @@ export async function planInstall(
     level?: string | null;
     /** Required packs the command installs first (requiredFirst). */
     installFirst?: InstallFirst[];
+    /** Automations that send anything out install on (the person opted in); off by default. */
+    allowOutbound?: boolean;
+    /** Every automation installs live (sample data only: the seed). */
+    live?: boolean;
   },
 ): Promise<PackPlan> {
   const { snapshot, timeZone } = await loadSnapshot(db, orgId, pack.manifest);
@@ -404,7 +408,12 @@ export async function planInstall(
       hash: pack.hash,
       userId: env.userId,
     },
-    { level: env.level ?? null, installFirst: env.installFirst },
+    {
+      level: env.level ?? null,
+      installFirst: env.installFirst,
+      allowOutbound: env.allowOutbound,
+      live: env.live,
+    },
   );
 }
 
