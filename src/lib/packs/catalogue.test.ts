@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { planPackInstall, previewLines, type PackSnapshot } from '@/engine/packs';
+import { neededLevel } from '@/engine/packs/extend';
 import { afterInstall } from '@/engine/packs/installed.fixture';
 import { parseTemplate } from '@/lib/templates/schema';
 import { startById } from '@/lib/starts';
@@ -50,6 +51,7 @@ describe('repository packs', () => {
       'gdpr',
       'core',
       'iso-14001',
+      'nis2',
       'start-capa',
       'start-documents',
       'start-incident',
@@ -65,7 +67,8 @@ describe('repository packs', () => {
       let snap = snapshot();
       for (const r of p.requires) {
         const dep = packs.find((x) => x.key === r.pack)!;
-        const first = planPackInstall(dep, snap, env);
+        // at the level the add-on needs (NIS2 extends the Controls library, a Full sheet of Core)
+        const first = planPackInstall(dep, snap, env, { level: neededLevel(p, dep) });
         snap = afterInstall(snap, first.payload!, `install-${dep.key}`);
       }
       const plan = planPackInstall(p, snap, env);

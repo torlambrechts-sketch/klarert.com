@@ -1,0 +1,3521 @@
+{
+  "key": "nis2",
+  "version": "1.0.0",
+  "title": "NIS2 cybersecurity (add-on)",
+  "description": "NIS2 on the Core registers and the NIS2 requirement library: a scope self-check per legal entity (essential or important) with its registration, the ten Art. 21(2) measures as controls in the shared Controls library, incident reports with the 24-hour early warning, 72-hour notification and one-month final report and their clocks, and management body approval and training (Art. 20) through an approval workflow. A country setting lists every EU and EEA country with its authority, CSIRT, registration route and notes (unverified until checked) and fills them in as defaults. Installs the Core registers (Full: the Controls library and Competence and training) first when they are missing. Own words; article headings are the official ones.",
+  "requires": [
+    {
+      "pack": "core",
+      "range": "^1.0.0"
+    }
+  ],
+  "standard": {
+    "id": "nis2",
+    "label": "NIS2",
+    "color": "navy"
+  },
+  "frameworks": [
+    {
+      "key": "nis2",
+      "version": "2022"
+    }
+  ],
+  "folders": [],
+  "settings": [
+    {
+      "key": "country",
+      "label": "Country of main establishment",
+      "description": "The EU or EEA country whose NIS2 rules you follow first. It sets the default authority, CSIRT, registration route and national notes on new scope records and incident reports. Groups with entities in several countries can change the value on each record.",
+      "values": [
+        {
+          "key": "country",
+          "label": "Country"
+        },
+        {
+          "key": "law",
+          "label": "National law and status"
+        },
+        {
+          "key": "authority",
+          "label": "Competent authority"
+        },
+        {
+          "key": "csirt",
+          "label": "CSIRT to report to"
+        },
+        {
+          "key": "registration",
+          "label": "How to register"
+        },
+        {
+          "key": "deadlines",
+          "label": "Reporting deadlines"
+        },
+        {
+          "key": "extra",
+          "label": "Also note"
+        }
+      ],
+      "choices": [
+        {
+          "id": "at",
+          "label": "Austria",
+          "group": "EU member states",
+          "values": {
+            "country": "Austria",
+            "law": "Transposition: the national NIS law (NISG) replacing the 2018 act; check whether it is in force and from when.",
+            "authority": "Federal Ministry of the Interior (cyber security authority under the NISG)",
+            "csirt": "CERT.at (national CSIRT); GovCERT Austria for public bodies",
+            "registration": "Register with the competent authority as the NISG sets out; check the authority’s portal.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "CERT.at",
+              "url": "https://www.cert.at/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "be",
+          "label": "Belgium",
+          "group": "EU member states",
+          "values": {
+            "country": "Belgium",
+            "law": "Law of 26 April 2024 establishing a framework for the cybersecurity of networks and information systems, in force since 18 October 2024.",
+            "authority": "Centre for Cybersecurity Belgium (CCB)",
+            "csirt": "CCB (CERT.be)",
+            "registration": "Register on the CCB’s Safeonweb@work platform.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law.",
+            "extra": "Essential entities are checked by regular conformity assessment (CyberFundamentals or ISO/IEC 27001 are accepted routes); check the current CCB guidance."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "Centre for Cybersecurity Belgium",
+              "url": "https://ccb.belgium.be/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "bg",
+          "label": "Bulgaria",
+          "group": "EU member states",
+          "values": {
+            "country": "Bulgaria",
+            "law": "Transposition by amending the Cybersecurity Act; check whether the amendments are in force.",
+            "authority": "The authority named in the Cybersecurity Act for your sector",
+            "csirt": "The national CSIRT (CERT Bulgaria) or the sector CSIRT",
+            "registration": "As the amended Cybersecurity Act sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "hr",
+          "label": "Croatia",
+          "group": "EU member states",
+          "values": {
+            "country": "Croatia",
+            "law": "Cybersecurity Act (Zakon o kibernetičkoj sigurnosti), 2024.",
+            "authority": "The competent authority for your sector named in the Cybersecurity Act",
+            "csirt": "The national CSIRT named in the act (CERT.hr or the national cybersecurity centre, by sector)",
+            "registration": "Entities are categorised by the competent authority; check the act for the information to submit.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "CERT.hr",
+              "url": "https://www.cert.hr/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "cy",
+          "label": "Cyprus",
+          "group": "EU member states",
+          "values": {
+            "country": "Cyprus",
+            "law": "Security of Networks and Information Systems law as amended for NIS2; check the amending law and its date.",
+            "authority": "Digital Security Authority (DSA)",
+            "csirt": "National CSIRT-CY (under the DSA)",
+            "registration": "As the DSA sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "cz",
+          "label": "Czechia",
+          "group": "EU member states",
+          "values": {
+            "country": "Czechia",
+            "law": "Act No. 264/2025 Coll. on cybersecurity, in force since 1 November 2025.",
+            "authority": "National Cyber and Information Security Agency (NÚKIB)",
+            "csirt": "NÚKIB (governmental CERT) and CSIRT.CZ (national CSIRT), as the act assigns",
+            "registration": "Register through NÚKIB’s portal within the period the act sets after falling in scope.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law.",
+            "extra": "The act sets higher and lower obligation regimes; check which applies to you."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "NÚKIB",
+              "url": "https://nukib.gov.cz/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "dk",
+          "label": "Denmark",
+          "group": "EU member states",
+          "values": {
+            "country": "Denmark",
+            "law": "NIS2 act in force since 1 July 2025, with sector rules.",
+            "authority": "The sector authority for your sector (several, coordinated nationally)",
+            "csirt": "The national CSIRT under the Danish Agency for Civil Protection (formerly the Centre for Cyber Security), or the sector CSIRT",
+            "registration": "As the sector authority sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "ee",
+          "label": "Estonia",
+          "group": "EU member states",
+          "values": {
+            "country": "Estonia",
+            "law": "Cybersecurity Act as amended for NIS2; check the amending act and its date.",
+            "authority": "Information System Authority (RIA)",
+            "csirt": "CERT-EE (part of RIA)",
+            "registration": "As RIA sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "Information System Authority (RIA)",
+              "url": "https://www.ria.ee/en"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "fi",
+          "label": "Finland",
+          "group": "EU member states",
+          "values": {
+            "country": "Finland",
+            "law": "Cybersecurity Act (124/2025), in force since 8 April 2025.",
+            "authority": "The supervisory authority for your sector; Traficom for most sectors",
+            "csirt": "National Cyber Security Centre Finland (NCSC-FI, part of Traficom)",
+            "registration": "Notify the supervisory authority of the information the act lists.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "NCSC-FI",
+              "url": "https://www.kyberturvallisuuskeskus.fi/en"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "fr",
+          "label": "France",
+          "group": "EU member states",
+          "values": {
+            "country": "France",
+            "law": "Transposition through the bill on the resilience of critical infrastructure and cybersecurity; check whether it is adopted and in force.",
+            "authority": "ANSSI (national cybersecurity agency)",
+            "csirt": "CERT-FR (part of ANSSI)",
+            "registration": "Register with ANSSI as the law and its decrees set out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "ANSSI",
+              "url": "https://cyber.gouv.fr/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "de",
+          "label": "Germany",
+          "group": "EU member states",
+          "values": {
+            "country": "Germany",
+            "law": "NIS2 Implementation and Cybersecurity Strengthening Act (NIS2UmsuCG), amending the BSI Act; check the date it came into force.",
+            "authority": "Federal Office for Information Security (BSI)",
+            "csirt": "BSI (CERT-Bund)",
+            "registration": "Register with the BSI through its portal within the period the act sets after falling in scope.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law.",
+            "extra": "The act uses its own size and sector rules (\"particularly important\" and \"important\" entities); check how they map to essential and important."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "BSI",
+              "url": "https://www.bsi.bund.de/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "gr",
+          "label": "Greece",
+          "group": "EU member states",
+          "values": {
+            "country": "Greece",
+            "law": "Law 5160/2024 transposing NIS2.",
+            "authority": "National Cybersecurity Authority",
+            "csirt": "The national CSIRT named in the law",
+            "registration": "As the National Cybersecurity Authority sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "hu",
+          "label": "Hungary",
+          "group": "EU member states",
+          "values": {
+            "country": "Hungary",
+            "law": "Act LXIX of 2023 on the cybersecurity supervision of organisations, with implementing decrees.",
+            "authority": "Supervisory Authority for Regulated Activities (SZTFH) for most entities",
+            "csirt": "National Cybersecurity Center (NKI)",
+            "registration": "Register with the SZTFH.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law.",
+            "extra": "Regular cybersecurity audits by registered auditors are required; check the decree for the timing."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "ie",
+          "label": "Ireland",
+          "group": "EU member states",
+          "values": {
+            "country": "Ireland",
+            "law": "National Cyber Security Bill; check whether it is enacted and in force.",
+            "authority": "National Cyber Security Centre and the sector competent authorities named in the act",
+            "csirt": "CSIRT-IE (part of the NCSC)",
+            "registration": "As the act sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "NCSC Ireland",
+              "url": "https://www.ncsc.gov.ie/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "it",
+          "label": "Italy",
+          "group": "EU member states",
+          "values": {
+            "country": "Italy",
+            "law": "Legislative Decree 138/2024, in force since 16 October 2024.",
+            "authority": "National Cybersecurity Agency (ACN)",
+            "csirt": "CSIRT Italia (part of ACN)",
+            "registration": "Register (and update every year in the window ACN sets) on the ACN services portal.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law.",
+            "extra": "ACN determinations set the baseline measures and the incident categories; check the current ones."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "ACN",
+              "url": "https://www.acn.gov.it/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "lv",
+          "label": "Latvia",
+          "group": "EU member states",
+          "values": {
+            "country": "Latvia",
+            "law": "National Cybersecurity Law, in force since 1 September 2024.",
+            "authority": "National Cybersecurity Centre (under the Ministry of Defence)",
+            "csirt": "CERT.LV",
+            "registration": "As the law sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "CERT.LV",
+              "url": "https://cert.lv/en"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "lt",
+          "label": "Lithuania",
+          "group": "EU member states",
+          "values": {
+            "country": "Lithuania",
+            "law": "Law on Cybersecurity as amended for NIS2, in force since 18 October 2024.",
+            "authority": "National Cyber Security Centre (NKSC)",
+            "csirt": "NKSC (national CSIRT)",
+            "registration": "Register in the national register the law sets up.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "lu",
+          "label": "Luxembourg",
+          "group": "EU member states",
+          "values": {
+            "country": "Luxembourg",
+            "law": "NIS2 bill replacing the 2019 NIS law; check whether it is adopted and in force.",
+            "authority": "Luxembourg Institute of Regulation (ILR); the CSSF for the financial sector",
+            "csirt": "GOVCERT.LU or CIRCL, by sector",
+            "registration": "As the ILR (or CSSF) sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "mt",
+          "label": "Malta",
+          "group": "EU member states",
+          "values": {
+            "country": "Malta",
+            "law": "NIS2 regulations under the Critical Infrastructure Protection framework; check the legal notice and its date.",
+            "authority": "The national competent authority named in the regulations",
+            "csirt": "CSIRTMalta",
+            "registration": "As the competent authority sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "nl",
+          "label": "Netherlands",
+          "group": "EU member states",
+          "values": {
+            "country": "Netherlands",
+            "law": "Cybersecurity Act (Cyberbeveiligingswet, Cbw); check whether it is in force.",
+            "authority": "The sector supervisor named in the Cbw (e.g. the Digital Infrastructure Inspectorate for digital sectors)",
+            "csirt": "National Cyber Security Centre (NCSC-NL), or the sector CSIRT",
+            "registration": "Register as the Cbw sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law.",
+            "extra": "A duty of care and a reporting duty, with sector supervisors; check which supervisor is yours."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "NCSC-NL",
+              "url": "https://www.ncsc.nl/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "pl",
+          "label": "Poland",
+          "group": "EU member states",
+          "values": {
+            "country": "Poland",
+            "law": "Amendment of the National Cybersecurity System Act (KSC); check whether it is adopted and in force.",
+            "authority": "The minister and sector authority named in the KSC act",
+            "csirt": "CSIRT NASK, CSIRT GOV or CSIRT MON, by the kind of entity",
+            "registration": "Register in the list of entities the KSC act sets up.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "CERT Polska (CSIRT NASK)",
+              "url": "https://cert.pl/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "pt",
+          "label": "Portugal",
+          "group": "EU member states",
+          "values": {
+            "country": "Portugal",
+            "law": "Decree-law transposing NIS2 (new cybersecurity legal regime); check the decree and its date.",
+            "authority": "National Cybersecurity Centre (CNCS)",
+            "csirt": "CERT.PT (part of CNCS)",
+            "registration": "Register with the CNCS as the decree sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "CNCS",
+              "url": "https://www.cncs.gov.pt/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "ro",
+          "label": "Romania",
+          "group": "EU member states",
+          "values": {
+            "country": "Romania",
+            "law": "Government Emergency Ordinance 155/2024 on cybersecurity.",
+            "authority": "National Cyber Security Directorate (DNSC)",
+            "csirt": "DNSC (national CSIRT)",
+            "registration": "Notify the DNSC within the period the ordinance sets after falling in scope.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law.",
+            "extra": "Risk-level assessments and measures follow DNSC orders; check the current ones."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "DNSC",
+              "url": "https://dnsc.ro/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "sk",
+          "label": "Slovakia",
+          "group": "EU member states",
+          "values": {
+            "country": "Slovakia",
+            "law": "Act 69/2018 on cybersecurity as amended for NIS2 (in force since 1 January 2025).",
+            "authority": "National Security Authority (NBÚ)",
+            "csirt": "SK-CERT (part of NBÚ)",
+            "registration": "Register with the NBÚ.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "SK-CERT",
+              "url": "https://www.sk-cert.sk/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "si",
+          "label": "Slovenia",
+          "group": "EU member states",
+          "values": {
+            "country": "Slovenia",
+            "law": "Information Security Act (ZInfV-1).",
+            "authority": "Government Information Security Office (URSIV)",
+            "csirt": "SI-CERT",
+            "registration": "Register with URSIV.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "SI-CERT",
+              "url": "https://www.cert.si/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "es",
+          "label": "Spain",
+          "group": "EU member states",
+          "values": {
+            "country": "Spain",
+            "law": "Law on the coordination and governance of cybersecurity; check whether it is adopted and in force.",
+            "authority": "The competent authority named in the law for your sector",
+            "csirt": "INCIBE-CERT for businesses and citizens; CCN-CERT for the public sector",
+            "registration": "As the law sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "INCIBE-CERT",
+              "url": "https://www.incibe.es/en/incibe-cert"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "se",
+          "label": "Sweden",
+          "group": "EU member states",
+          "values": {
+            "country": "Sweden",
+            "law": "Cybersecurity Act (cybersäkerhetslag) with its ordinance; check the date it came into force.",
+            "authority": "The supervisory authority for your sector; the civil defence agency coordinates",
+            "csirt": "CERT-SE",
+            "registration": "Register with the supervisory authority as the act sets out.",
+            "deadlines": "Directive defaults: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification. No national differences recorded here: check the national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "CERT-SE",
+              "url": "https://www.cert.se/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "is",
+          "label": "Iceland",
+          "group": "EEA countries (not EU)",
+          "values": {
+            "country": "Iceland",
+            "law": "EEA: NIS2 applies only once it is taken into the EEA Agreement and into Icelandic law. The act on the security of network and information systems of essential infrastructure (NIS1) applies until then.",
+            "authority": "The supervisory authority under the national NIS act for your sector",
+            "csirt": "CERT-IS",
+            "registration": "As the national NIS act sets out.",
+            "deadlines": "Under the NIS1-based act: report incidents to CERT-IS as the act sets out. The NIS2 deadlines apply once NIS2 is taken into Icelandic law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "CERT-IS",
+              "url": "https://www.cert.is/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "li",
+          "label": "Liechtenstein",
+          "group": "EEA countries (not EU)",
+          "values": {
+            "country": "Liechtenstein",
+            "law": "EEA: NIS2 applies only once it is taken into the EEA Agreement and into national law. The national NIS1 law applies until then.",
+            "authority": "Cyber Security Unit (Stabsstelle Cyber-Sicherheit)",
+            "csirt": "The national CSIRT named in the law",
+            "registration": "As the national law sets out.",
+            "deadlines": "Under the NIS1-based law: report incidents as the law sets out. The NIS2 deadlines apply once NIS2 is taken into national law."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        },
+        {
+          "id": "no",
+          "label": "Norway",
+          "group": "EEA countries (not EU)",
+          "values": {
+            "country": "Norway",
+            "law": "EEA: NIS2 is not yet taken into the EEA Agreement. The Digital Security Act (digitalsikkerhetsloven), which brings NIS1 into Norwegian law, is in force since 1 October 2025; a later change is expected to bring in NIS2. Plan for NIS2 now, report under the Digital Security Act today.",
+            "authority": "The sector authority named under the Digital Security Act; the Norwegian National Security Authority (NSM) coordinates",
+            "csirt": "NSM’s National Cyber Security Centre (NCSC, NorCERT)",
+            "registration": "Providers of essential services and digital service providers notify the sector authority as the Digital Security Act and its regulation set out.",
+            "deadlines": "Under the Digital Security Act: report serious incidents to the national CSIRT without undue delay, as the regulation sets out. The NIS2 stages (24 hours, 72 hours, one month) apply once NIS2 is taken into Norwegian law: using them now keeps you ready.",
+            "extra": "The Digital Security Regulation sets security and reporting duties per sector; check which sector authority is yours."
+          },
+          "verified": false,
+          "note": "Not verified: drafted from public sources up to 2026. Check the national law and the authority’s pages before relying on it.",
+          "sources": [
+            {
+              "title": "Directive (EU) 2022/2555 on EUR-Lex",
+              "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj"
+            },
+            {
+              "title": "CSIRTs Network members",
+              "url": "https://csirtsnetwork.eu/"
+            },
+            {
+              "title": "NSM",
+              "url": "https://nsm.no/"
+            },
+            {
+              "title": "European Commission: NIS2 Directive",
+              "url": "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "sheets": [
+    {
+      "ref": "scope",
+      "name": "NIS2 scope and registration",
+      "itemLabel": "Entity",
+      "idPrefix": "N2S-",
+      "folder": "core:privacy",
+      "kind": "register",
+      "description": "A self-check per legal entity: is it in scope of NIS2 (Art. 2), essential or important (Art. 3), and is it registered with the authority (Art. 3(4), Art. 27)? The suggested class is worked out from the sector, the size and any rule that applies regardless of size; a person confirms it.",
+      "groups": [
+        {
+          "ref": "checking",
+          "name": "Being checked",
+          "color": "blue"
+        },
+        {
+          "ref": "in_scope",
+          "name": "In scope",
+          "color": "red"
+        },
+        {
+          "ref": "out",
+          "name": "Not in scope",
+          "color": "grey"
+        }
+      ],
+      "fields": [
+        {
+          "key": "member_state",
+          "name": "Country of main establishment",
+          "type": "text",
+          "description": "Set from the pack setting; change it for an entity established elsewhere.",
+          "config": {
+            "default": "$setting:country.country"
+          }
+        },
+        {
+          "key": "sector",
+          "name": "Sector",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_energy",
+                "label": "Energy",
+                "color": "navy"
+              },
+              {
+                "id": "opt_transport",
+                "label": "Transport",
+                "color": "navy"
+              },
+              {
+                "id": "opt_banking",
+                "label": "Banking",
+                "color": "navy"
+              },
+              {
+                "id": "opt_fmi",
+                "label": "Financial market infrastructure",
+                "color": "navy"
+              },
+              {
+                "id": "opt_health",
+                "label": "Health",
+                "color": "navy"
+              },
+              {
+                "id": "opt_drinking_water",
+                "label": "Drinking water",
+                "color": "navy"
+              },
+              {
+                "id": "opt_waste_water",
+                "label": "Waste water",
+                "color": "navy"
+              },
+              {
+                "id": "opt_digital_infra",
+                "label": "Digital infrastructure",
+                "color": "navy"
+              },
+              {
+                "id": "opt_ict_b2b",
+                "label": "ICT service management (business to business)",
+                "color": "navy"
+              },
+              {
+                "id": "opt_public_admin",
+                "label": "Public administration",
+                "color": "navy"
+              },
+              {
+                "id": "opt_space",
+                "label": "Space",
+                "color": "navy"
+              },
+              {
+                "id": "opt_postal",
+                "label": "Postal and courier services",
+                "color": "teal"
+              },
+              {
+                "id": "opt_waste",
+                "label": "Waste management",
+                "color": "teal"
+              },
+              {
+                "id": "opt_chemicals",
+                "label": "Chemicals",
+                "color": "teal"
+              },
+              {
+                "id": "opt_food",
+                "label": "Food",
+                "color": "teal"
+              },
+              {
+                "id": "opt_manufacturing",
+                "label": "Manufacturing",
+                "color": "teal"
+              },
+              {
+                "id": "opt_digital_providers",
+                "label": "Digital providers",
+                "color": "teal"
+              },
+              {
+                "id": "opt_research",
+                "label": "Research",
+                "color": "teal"
+              },
+              {
+                "id": "opt_none",
+                "label": "None of these",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "annex",
+          "name": "Annex",
+          "type": "formula",
+          "description": "Annex I sectors are of high criticality, Annex II sectors are other critical sectors.",
+          "config": {
+            "expr": "IF(OR({sector} = \"Energy\", {sector} = \"Transport\", {sector} = \"Banking\", {sector} = \"Financial market infrastructure\", {sector} = \"Health\", {sector} = \"Drinking water\", {sector} = \"Waste water\", {sector} = \"Digital infrastructure\", {sector} = \"ICT service management (business to business)\", {sector} = \"Public administration\", {sector} = \"Space\"), \"Annex I\", IF(OR({sector} = \"Postal and courier services\", {sector} = \"Waste management\", {sector} = \"Chemicals\", {sector} = \"Food\", {sector} = \"Manufacturing\", {sector} = \"Digital providers\", {sector} = \"Research\"), \"Annex II\", \"\"))",
+            "result": "text"
+          }
+        },
+        {
+          "key": "subsector",
+          "name": "Subsector and type of entity",
+          "type": "text"
+        },
+        {
+          "key": "employees",
+          "name": "Employees (headcount)",
+          "type": "number"
+        },
+        {
+          "key": "turnover",
+          "name": "Annual turnover (EUR million)",
+          "type": "number"
+        },
+        {
+          "key": "balance",
+          "name": "Balance sheet total (EUR million)",
+          "type": "number"
+        },
+        {
+          "key": "size",
+          "name": "Size",
+          "type": "formula",
+          "description": "Medium or larger: 50 or more staff, or both turnover and balance sheet above EUR 10 million. Large: 250 or more staff, or turnover above EUR 50 million and balance sheet above EUR 43 million. Count partner and linked enterprises as the SME rules say.",
+          "config": {
+            "expr": "IF(AND(EMPTY({employees}), EMPTY({turnover})), \"\", IF(OR({employees} >= 250, AND({turnover} > 50, {balance} > 43)), \"Large\", IF(OR({employees} >= 50, AND({turnover} > 10, {balance} > 10)), \"Medium\", \"Small\")))",
+            "result": "text"
+          }
+        },
+        {
+          "key": "special_case",
+          "name": "In scope whatever the size",
+          "type": "dropdown",
+          "description": "Rules that bring an entity in scope regardless of its size (Art. 2(2) to 2(4), Art. 3(1)).",
+          "config": {
+            "options": [
+              {
+                "id": "opt_always_essential",
+                "label": "Qualified trust service provider, TLD registry or DNS service provider",
+                "color": "purple"
+              },
+              {
+                "id": "opt_ecomms",
+                "label": "Public electronic communications network or service",
+                "color": "purple"
+              },
+              {
+                "id": "opt_trust",
+                "label": "Trust service provider (not qualified)",
+                "color": "purple"
+              },
+              {
+                "id": "opt_central_gov",
+                "label": "Central government body",
+                "color": "purple"
+              },
+              {
+                "id": "opt_cer",
+                "label": "Critical entity under the CER Directive",
+                "color": "purple"
+              },
+              {
+                "id": "opt_designated",
+                "label": "Designated by the Member State",
+                "color": "purple"
+              },
+              {
+                "id": "opt_domain",
+                "label": "Domain name registration services only",
+                "color": "purple"
+              },
+              {
+                "id": "opt_none",
+                "label": "None",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "suggested",
+          "name": "Suggested class",
+          "type": "formula",
+          "description": "A first answer from the fields above, not a legal opinion. Confirm it in Classification.",
+          "config": {
+            "expr": "IF(AND(EMPTY({sector}), EMPTY({special_case})), \"\", IF(OR({special_case} = \"Qualified trust service provider, TLD registry or DNS service provider\", {special_case} = \"Central government body\", {special_case} = \"Critical entity under the CER Directive\"), \"Essential\", IF({special_case} = \"Public electronic communications network or service\", IF({size} = \"Small\", \"Important\", \"Essential\"), IF({special_case} = \"Designated by the Member State\", \"Essential or important, as designated\", IF(OR({special_case} = \"Trust service provider (not qualified)\", {special_case} = \"Domain name registration services only\"), IF(AND({size} = \"Large\", {annex} = \"Annex I\"), \"Essential\", \"Important\"), IF(AND({size} = \"Large\", {annex} = \"Annex I\"), \"Essential\", IF(AND(OR({size} = \"Large\", {size} = \"Medium\"), OR({annex} = \"Annex I\", {annex} = \"Annex II\")), \"Important\", \"Probably not in scope\")))))))",
+            "result": "text"
+          }
+        },
+        {
+          "key": "classification",
+          "name": "Classification",
+          "type": "status",
+          "description": "Confirmed by a person, with the reasoning below.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_not_assessed",
+                "label": "Not assessed",
+                "color": "grey"
+              },
+              {
+                "id": "opt_essential",
+                "label": "Essential entity",
+                "color": "red",
+                "done": true
+              },
+              {
+                "id": "opt_important",
+                "label": "Important entity",
+                "color": "orange",
+                "done": true
+              },
+              {
+                "id": "opt_out",
+                "label": "Not in scope",
+                "color": "green",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "classification_needs",
+              "whenFieldKey": "classification",
+              "whenValues": [
+                "opt_essential",
+                "opt_important",
+                "opt_out"
+              ],
+              "require": [
+                "reasoning",
+                "owner"
+              ],
+              "message": "Write why the entity is in this class and name an owner before confirming it."
+            }
+          ]
+        },
+        {
+          "key": "reasoning",
+          "name": "Reasoning and national designations",
+          "type": "longtext"
+        },
+        {
+          "key": "authority",
+          "name": "Competent authority",
+          "type": "text",
+          "config": {
+            "default": "$setting:country.authority"
+          }
+        },
+        {
+          "key": "csirt",
+          "name": "CSIRT",
+          "type": "text",
+          "config": {
+            "default": "$setting:country.csirt"
+          }
+        },
+        {
+          "key": "registration_route",
+          "name": "How to register",
+          "type": "longtext",
+          "config": {
+            "default": "$setting:country.registration"
+          }
+        },
+        {
+          "key": "registration",
+          "name": "Registration",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_not_registered",
+                "label": "Not registered",
+                "color": "red"
+              },
+              {
+                "id": "opt_submitted",
+                "label": "Submitted",
+                "color": "orange"
+              },
+              {
+                "id": "opt_registered",
+                "label": "Registered",
+                "color": "green"
+              },
+              {
+                "id": "opt_not_required",
+                "label": "Not required",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "registered_on",
+          "name": "Registered on",
+          "type": "date"
+        },
+        {
+          "key": "registration_ref",
+          "name": "Registration reference",
+          "type": "text"
+        },
+        {
+          "key": "national_notes",
+          "name": "National rules to note",
+          "type": "longtext",
+          "config": {
+            "default": "$setting:country.extra"
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "articles",
+          "name": "NIS2 articles",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        }
+      ],
+      "columnGroups": [
+        {
+          "name": "Self-check",
+          "fields": [
+            "sector",
+            "annex",
+            "subsector",
+            "employees",
+            "turnover",
+            "balance",
+            "size",
+            "special_case",
+            "suggested"
+          ]
+        },
+        {
+          "name": "Registration",
+          "fields": [
+            "authority",
+            "csirt",
+            "registration_route",
+            "registration",
+            "registered_on",
+            "registration_ref"
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By classification",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "classification"
+          }
+        },
+        {
+          "name": "By registration",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "registration"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By classification"
+        },
+        {
+          "ref": "calendar"
+        },
+        {
+          "ref": "form"
+        }
+      ],
+      "defaultView": "table",
+      "forms": [
+        {
+          "ref": "self_check",
+          "name": "NIS2 scope self-check",
+          "groupRef": "checking",
+          "access": "internal",
+          "layout": {
+            "title": "NIS2 scope self-check",
+            "description": "Answer for one legal entity. We work out a first answer to \"is it in scope, essential or important?\" and the owner confirms it. Figures are for the last closed financial year.",
+            "nameLabel": "Legal entity name",
+            "fields": [
+              {
+                "key": "sector",
+                "label": "Which sector is its main activity in?",
+                "required": true
+              },
+              {
+                "key": "subsector",
+                "label": "Subsector and type of entity (as the annexes name them)"
+              },
+              {
+                "key": "employees",
+                "label": "How many employees (headcount)?"
+              },
+              {
+                "key": "turnover",
+                "label": "Annual turnover, EUR million"
+              },
+              {
+                "key": "balance",
+                "label": "Balance sheet total, EUR million"
+              },
+              {
+                "key": "special_case",
+                "label": "Does any of these apply, whatever the size?"
+              },
+              {
+                "key": "member_state",
+                "label": "Country of main establishment"
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The owner will confirm the classification and the registration.",
+            "prefill": [
+              {
+                "key": "classification",
+                "value": "opt_not_assessed"
+              }
+            ]
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_entity",
+          "group": "in_scope",
+          "name": "Example: Northwind Logistics GmbH",
+          "values": {
+            "member_state": "$setting:country.country",
+            "sector": "opt_transport",
+            "subsector": "Road transport: operator of an intelligent transport system",
+            "employees": 320,
+            "turnover": 61,
+            "balance": 48,
+            "special_case": "opt_none",
+            "classification": "opt_essential",
+            "reasoning": "Annex I sector and large (over 250 staff). No national designation changes this. Re-check when the headcount or activities change.",
+            "authority": "$setting:country.authority",
+            "csirt": "$setting:country.csirt",
+            "registration_route": "$setting:country.registration",
+            "registration": "opt_not_registered",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "articles": [
+              "nis2@2022#Art. 2(1)",
+              "nis2@2022#Art. 3(1)",
+              "nis2@2022#Art. 3(3)"
+            ]
+          }
+        },
+        {
+          "ref": "ex_subsidiary",
+          "group": "checking",
+          "name": "Example: Northwind Parts Ltd",
+          "values": {
+            "member_state": "$setting:country.country",
+            "sector": "opt_manufacturing",
+            "subsector": "Manufacture of machinery",
+            "employees": 42,
+            "turnover": 8,
+            "balance": 6,
+            "special_case": "opt_none",
+            "classification": "opt_not_assessed",
+            "next_review": "$in:90"
+          },
+          "requirements": {
+            "articles": [
+              "nis2@2022#Art. 2(1)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "reports",
+      "name": "NIS2 incident reports",
+      "itemLabel": "Report",
+      "idPrefix": "N2R-",
+      "folder": "core:privacy",
+      "kind": "log",
+      "description": "The reporting of a significant incident to the CSIRT or authority (Art. 23) in its stages: early warning within 24 hours of becoming aware, incident notification within 72 hours, final report within one month of the notification (a progress report first if the incident is still going on). The incident itself stays in the shared Incidents register.",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "Open",
+          "color": "red"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "incident",
+          "name": "Incident",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:incidents",
+            "multiple": false,
+            "inverseKey": "nis2_report"
+          }
+        },
+        {
+          "key": "aware_at",
+          "name": "Became aware at",
+          "type": "datetime",
+          "description": "When you became aware of the significant incident: the clocks run from here."
+        },
+        {
+          "key": "significant",
+          "name": "Significant incident?",
+          "type": "dropdown",
+          "description": "Significant: it caused or can cause severe disruption of the services or financial loss for you, or considerable damage to others (Art. 23(3)). National rules and implementing acts may set thresholds.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_not_assessed",
+                "label": "Not assessed yet",
+                "color": "grey"
+              },
+              {
+                "id": "opt_significant",
+                "label": "Significant",
+                "color": "red"
+              },
+              {
+                "id": "opt_not_significant",
+                "label": "Not significant",
+                "color": "green"
+              }
+            ]
+          }
+        },
+        {
+          "key": "significance_reasoning",
+          "name": "Why",
+          "type": "longtext"
+        },
+        {
+          "key": "stage",
+          "name": "Stage",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_assessing",
+                "label": "Assessing",
+                "color": "blue"
+              },
+              {
+                "id": "opt_ew_due",
+                "label": "Early warning due",
+                "color": "red"
+              },
+              {
+                "id": "opt_notification_due",
+                "label": "Notification due",
+                "color": "orange"
+              },
+              {
+                "id": "opt_final_due",
+                "label": "Final report due",
+                "color": "yellow"
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_not_reportable",
+                "label": "Not reportable",
+                "color": "grey",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "close_needs",
+              "whenFieldKey": "stage",
+              "whenValues": [
+                "opt_closed"
+              ],
+              "require": [
+                "ew_sent_at",
+                "notified_at",
+                "final_sent_on",
+                "final_content"
+              ],
+              "message": "Record when the early warning and the notification went out and the final report before closing."
+            },
+            {
+              "id": "not_reportable_needs",
+              "whenFieldKey": "stage",
+              "whenValues": [
+                "opt_not_reportable"
+              ],
+              "require": [
+                "significance_reasoning"
+              ],
+              "message": "Write why the incident is not significant before closing it as not reportable."
+            }
+          ]
+        },
+        {
+          "key": "recipient",
+          "name": "Report to",
+          "type": "text",
+          "description": "The CSIRT or authority you report to. Set from the pack setting.",
+          "config": {
+            "default": "$setting:country.csirt"
+          }
+        },
+        {
+          "key": "deadline_notes",
+          "name": "National deadlines",
+          "type": "longtext",
+          "config": {
+            "default": "$setting:country.deadlines"
+          }
+        },
+        {
+          "key": "ew_clock",
+          "name": "24-hour early warning",
+          "type": "clock",
+          "config": {
+            "startFieldKey": "aware_at",
+            "hours": 24,
+            "stopFieldKey": "ew_sent_at"
+          }
+        },
+        {
+          "key": "ew_sent_at",
+          "name": "Early warning sent at",
+          "type": "datetime"
+        },
+        {
+          "key": "malicious",
+          "name": "Suspected unlawful or malicious",
+          "type": "yesno"
+        },
+        {
+          "key": "cross_border",
+          "name": "Could affect other countries",
+          "type": "yesno"
+        },
+        {
+          "key": "notification_clock",
+          "name": "72-hour notification",
+          "type": "clock",
+          "config": {
+            "startFieldKey": "aware_at",
+            "hours": 72,
+            "stopFieldKey": "notified_at"
+          }
+        },
+        {
+          "key": "notified_at",
+          "name": "Notification sent at",
+          "type": "datetime"
+        },
+        {
+          "key": "initial_assessment",
+          "name": "Initial assessment",
+          "type": "longtext",
+          "description": "Severity and impact, and the indicators of compromise where you have them."
+        },
+        {
+          "key": "intermediate_requested",
+          "name": "Intermediate report asked for",
+          "type": "yesno"
+        },
+        {
+          "key": "intermediate_sent_on",
+          "name": "Intermediate report sent on",
+          "type": "date"
+        },
+        {
+          "key": "final_due",
+          "name": "Final report due",
+          "type": "formula",
+          "description": "One month after the notification. If the incident is still going on then, send a progress report and the final report within a month of handling it.",
+          "config": {
+            "expr": "IF(EMPTY({notified_at}), \"\", ADDMONTHS({notified_at}, 1))",
+            "result": "date"
+          }
+        },
+        {
+          "key": "final_sent_on",
+          "name": "Final report sent on",
+          "type": "date"
+        },
+        {
+          "key": "final_content",
+          "name": "Final report",
+          "type": "longtext",
+          "description": "A detailed description with the severity and impact, the type of threat or root cause, the mitigation applied and going on, and any cross-border impact."
+        },
+        {
+          "key": "authority_ref",
+          "name": "Reference from the CSIRT or authority",
+          "type": "text"
+        },
+        {
+          "key": "recipients_told",
+          "name": "Service recipients told",
+          "type": "yesno",
+          "description": "Where the incident is likely to affect the services you provide to them (Art. 23(1))."
+        },
+        {
+          "key": "owner",
+          "name": "Reporting lead",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "articles",
+          "name": "NIS2 articles",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        }
+      ],
+      "columnGroups": [
+        {
+          "name": "24 hours",
+          "fields": [
+            "ew_clock",
+            "ew_sent_at",
+            "malicious",
+            "cross_border"
+          ]
+        },
+        {
+          "name": "72 hours",
+          "fields": [
+            "notification_clock",
+            "notified_at",
+            "initial_assessment"
+          ]
+        },
+        {
+          "name": "One month",
+          "fields": [
+            "intermediate_requested",
+            "intermediate_sent_on",
+            "final_due",
+            "final_sent_on",
+            "final_content"
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By stage",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "stage"
+          }
+        },
+        {
+          "name": "Became aware",
+          "type": "calendar",
+          "config": {
+            "dateFieldKey": "aware_at"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By stage"
+        },
+        {
+          "ref": "Became aware"
+        }
+      ],
+      "defaultView": "table",
+      "items": [
+        {
+          "ref": "ex_ransomware",
+          "group": "open",
+          "name": "Example: Ransomware on the route planning servers",
+          "values": {
+            "aware_at": "2026-11-10T07:30:00Z",
+            "ew_sent_at": "2026-11-10T19:00:00Z",
+            "notified_at": "2026-11-12T16:00:00Z",
+            "significant": "opt_significant",
+            "significance_reasoning": "Route planning down for 30 hours; deliveries in two countries late.",
+            "stage": "opt_final_due",
+            "recipient": "$setting:country.csirt",
+            "deadline_notes": "$setting:country.deadlines",
+            "malicious": "yes",
+            "cross_border": "yes",
+            "initial_assessment": "High impact on deliveries; contained to the planning cluster; indicators shared with the CSIRT.",
+            "intermediate_requested": "no",
+            "authority_ref": "Example 2026-117",
+            "recipients_told": "yes"
+          },
+          "requirements": {
+            "articles": [
+              "nis2@2022#Art. 23(1)",
+              "nis2@2022#Art. 23(4)(a)",
+              "nis2@2022#Art. 23(4)(b)",
+              "nis2@2022#Art. 23(4)(d)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "oversight",
+      "name": "NIS2 management body decisions",
+      "itemLabel": "Decision",
+      "idPrefix": "N2M-",
+      "folder": "core:management",
+      "kind": "register",
+      "description": "What the management body approves and oversees (Art. 20): the cybersecurity risk-management measures, the yearly review of how they work, and its own training. Each decision goes through the approval workflow so who approved what, and when, is on record.",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "To decide",
+          "color": "blue"
+        },
+        {
+          "ref": "decided",
+          "name": "Decided",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "decision_type",
+          "name": "Kind of decision",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_measures",
+                "label": "Approve the risk-management measures",
+                "color": "navy"
+              },
+              {
+                "id": "opt_review",
+                "label": "Oversight review of the measures",
+                "color": "blue"
+              },
+              {
+                "id": "opt_training",
+                "label": "Training of the management body",
+                "color": "teal"
+              },
+              {
+                "id": "opt_other",
+                "label": "Other decision",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "summary",
+          "name": "What is decided",
+          "type": "longtext"
+        },
+        {
+          "key": "controls",
+          "name": "Measures covered",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:controls",
+            "multiple": true,
+            "inverseKey": "nis2_approvals"
+          }
+        },
+        {
+          "key": "members",
+          "name": "Members of the management body",
+          "type": "people",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Prepared by",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "meeting_date",
+          "name": "Decided on",
+          "type": "date"
+        },
+        {
+          "key": "evidence",
+          "name": "Minutes or signed approval",
+          "type": "attachment"
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "articles",
+          "name": "NIS2 articles",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_review",
+                "label": "In review",
+                "color": "blue"
+              },
+              {
+                "id": "opt_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_superseded",
+                "label": "Superseded",
+                "color": "purple"
+              }
+            ]
+          }
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the decision is in its approval. Set by the approval workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_security",
+                "label": "Security officer review",
+                "color": "blue"
+              },
+              {
+                "id": "opt_step_body",
+                "label": "Management body approval",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Rejected",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "defaultView": "table",
+      "workflows": [
+        {
+          "id": "management-body-approval",
+          "name": "Management body approval",
+          "enabled": true,
+          "requiredFields": [
+            "decision_type",
+            "summary",
+            "owner"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": true,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_review",
+            "onApproved": "opt_approved",
+            "onRejected": "opt_draft"
+          },
+          "steps": [
+            {
+              "id": "security-review",
+              "name": "Security officer review",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Information security officer"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 5,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_security"
+            },
+            {
+              "id": "management-body",
+              "name": "Management body approval",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Top management"
+              },
+              "mode": "all",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "step",
+                "stepId": "security-review"
+              },
+              "optionId": "opt_step_body"
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_measures",
+          "group": "open",
+          "name": "Example: Approve the cybersecurity risk-management measures for 2027",
+          "values": {
+            "decision_type": "opt_measures",
+            "summary": "The management body approves the ten baseline measures in the Controls library tagged NIS2, their owners and the budget, and asks for a review of how they work in twelve months.",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "articles": [
+              "nis2@2022#Art. 20(1)",
+              "nis2@2022#Art. 21(1)"
+            ]
+          }
+        },
+        {
+          "ref": "ex_training_decision",
+          "group": "open",
+          "name": "Example: Cybersecurity training for the management body",
+          "values": {
+            "decision_type": "opt_training",
+            "summary": "Every member of the management body completes the yearly cybersecurity training; staff are offered the same.",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "articles": [
+              "nis2@2022#Art. 20(2)"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "extends": [
+    {
+      "pack": "core",
+      "sheet": "controls",
+      "fields": [
+        {
+          "key": "nis2_measure",
+          "name": "NIS2 measure",
+          "type": "dropdown",
+          "description": "The Art. 21(2) measure this control puts in place.",
+          "config": {
+            "options": [
+              {
+                "id": "nis2_a",
+                "label": "21(2)(a) Risk analysis and security policies",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_b",
+                "label": "21(2)(b) Incident handling",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_c",
+                "label": "21(2)(c) Continuity, backups and crisis management",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_d",
+                "label": "21(2)(d) Supply chain security",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_e",
+                "label": "21(2)(e) Secure buying, building and maintenance",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_f",
+                "label": "21(2)(f) Checking the measures work",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_g",
+                "label": "21(2)(g) Cyber hygiene and training",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_h",
+                "label": "21(2)(h) Cryptography and encryption",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_i",
+                "label": "21(2)(i) People, access control and assets",
+                "color": "navy"
+              },
+              {
+                "id": "nis2_j",
+                "label": "21(2)(j) Multi-factor sign-in and secured communications",
+                "color": "navy"
+              }
+            ]
+          }
+        },
+        {
+          "key": "nis2_requirements",
+          "name": "NIS2 articles",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "nis2_approvals",
+          "name": "Management body decisions",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "oversight",
+            "multiple": true,
+            "inverseKey": "controls"
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "nis2_measure_a",
+          "group": "planned",
+          "name": "Risk analysis and information system security policies (NIS2 21(2)(a))",
+          "values": {
+            "nis2_measure": "nis2_a",
+            "control_type": "opt_preventive",
+            "frequency": "opt_yearly",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "links": {
+            "nis2_approvals": [
+              "ex_measures"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(a)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_b",
+          "group": "planned",
+          "name": "Incident handling (NIS2 21(2)(b))",
+          "values": {
+            "nis2_measure": "nis2_b",
+            "control_type": "opt_corrective",
+            "frequency": "opt_continuous",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(b)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_c",
+          "group": "planned",
+          "name": "Business continuity, backups, disaster recovery and crisis management (NIS2 21(2)(c))",
+          "values": {
+            "nis2_measure": "nis2_c",
+            "control_type": "opt_corrective",
+            "frequency": "opt_quarterly",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(c)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_d",
+          "group": "planned",
+          "name": "Supply chain security, including direct suppliers (NIS2 21(2)(d))",
+          "values": {
+            "nis2_measure": "nis2_d",
+            "control_type": "opt_preventive",
+            "frequency": "opt_yearly",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(d)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_e",
+          "group": "planned",
+          "name": "Security in buying, building and maintaining systems, with vulnerability handling and disclosure (NIS2 21(2)(e))",
+          "values": {
+            "nis2_measure": "nis2_e",
+            "control_type": "opt_preventive",
+            "frequency": "opt_monthly",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(e)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_f",
+          "group": "planned",
+          "name": "Checking whether the measures work (NIS2 21(2)(f))",
+          "values": {
+            "nis2_measure": "nis2_f",
+            "control_type": "opt_detective",
+            "frequency": "opt_quarterly",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(f)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_g",
+          "group": "planned",
+          "name": "Basic cyber hygiene and cybersecurity training (NIS2 21(2)(g))",
+          "values": {
+            "nis2_measure": "nis2_g",
+            "control_type": "opt_preventive",
+            "frequency": "opt_yearly",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(g)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_h",
+          "group": "planned",
+          "name": "Use of cryptography and encryption (NIS2 21(2)(h))",
+          "values": {
+            "nis2_measure": "nis2_h",
+            "control_type": "opt_preventive",
+            "frequency": "opt_yearly",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(h)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_i",
+          "group": "planned",
+          "name": "People security, access control and asset management (NIS2 21(2)(i))",
+          "values": {
+            "nis2_measure": "nis2_i",
+            "control_type": "opt_preventive",
+            "frequency": "opt_quarterly",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(i)"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_measure_j",
+          "group": "planned",
+          "name": "Multi-factor sign-in, secured voice, video and text, and secured emergency communications (NIS2 21(2)(j))",
+          "values": {
+            "nis2_measure": "nis2_j",
+            "control_type": "opt_preventive",
+            "frequency": "opt_continuous",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "requirements": {
+            "nis2_requirements": [
+              "nis2@2022#Art. 21(2)(j)"
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "nis2_control_failing",
+          "name": "NIS2 measure failing → open a corrective action and tell the owner",
+          "trigger": {
+            "type": "field_becomes",
+            "fieldKey": "health",
+            "value": "opt_failing"
+          },
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "nis2"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "create_item",
+              "sheetRef": "core:actions",
+              "groupRef": "open",
+              "name": "Fix {name}",
+              "values": {
+                "status": "opt_not_started",
+                "due": "$in:14",
+                "origin": "NIS2 Art. 21(4): {id} {name} is failing"
+              }
+            },
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Information security officer"
+              ],
+              "message": "{id} {name} is failing. A corrective action is open with a due date in 14 days: NIS2 asks for gaps to be fixed without undue delay."
+            }
+          ],
+          "startInTestMode": true,
+          "advanced": true,
+          "description": "Cascade: when a control tagged NIS2 is marked Failing, a corrective action is opened in Actions (due in 14 days) and the owner and the security officer are told, because Art. 21(4) asks for gaps to be fixed without undue delay."
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "incidents",
+      "fields": [
+        {
+          "key": "nis2_details",
+          "name": "What happened and what it affects",
+          "type": "longtext"
+        },
+        {
+          "key": "nis2_aware_at",
+          "name": "Noticed at",
+          "type": "datetime"
+        },
+        {
+          "key": "nis2_services",
+          "name": "Services affected",
+          "type": "text"
+        },
+        {
+          "key": "nis2_malicious",
+          "name": "Suspected unlawful or malicious",
+          "type": "yesno"
+        },
+        {
+          "key": "nis2_significant",
+          "name": "NIS2 significant?",
+          "type": "dropdown",
+          "description": "Could it be a significant incident under NIS2? \"Possibly\" opens a NIS2 incident report with its clocks.",
+          "config": {
+            "options": [
+              {
+                "id": "nis2_unknown",
+                "label": "Not assessed",
+                "color": "grey"
+              },
+              {
+                "id": "nis2_possibly",
+                "label": "Possibly significant",
+                "color": "red"
+              },
+              {
+                "id": "nis2_no",
+                "label": "Not significant",
+                "color": "green"
+              }
+            ]
+          }
+        },
+        {
+          "key": "nis2_report",
+          "name": "NIS2 report",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "reports",
+            "multiple": false,
+            "inverseKey": "incident"
+          }
+        }
+      ],
+      "forms": [
+        {
+          "ref": "nis2_report_incident",
+          "name": "Report a cyber incident",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report a cyber incident",
+            "description": "Report at once anything that stops or slows our systems or services, or that may be an attack: ransomware, a hacked account, data that is gone or changed. Do not wait until you are sure: some reports to the authority are due within 24 hours.",
+            "nameLabel": "What happened, in one line",
+            "fields": [
+              {
+                "key": "nis2_details",
+                "label": "What happened and what does it affect?",
+                "required": true
+              },
+              {
+                "key": "nis2_aware_at",
+                "label": "When did you notice?",
+                "required": true
+              },
+              {
+                "key": "nis2_services",
+                "label": "Which services or systems are affected?"
+              },
+              {
+                "key": "nis2_malicious",
+                "label": "Do you think it was done on purpose?"
+              },
+              {
+                "key": "reported_by",
+                "label": "Your name"
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The security officer has your report and will contact you.",
+            "prefill": [
+              {
+                "key": "incident_type",
+                "value": "opt_security"
+              },
+              {
+                "key": "status",
+                "value": "opt_new"
+              },
+              {
+                "key": "nis2_significant",
+                "value": "nis2_unknown"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "nis2_supplier_incident",
+          "name": "Tell us about an incident at your company",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Tell us about an incident at your company",
+            "description": "For our suppliers and service providers: tell us about an incident on your side that affects, or may affect, the service you give us. We use it to protect our own services and, where needed, to report to the authority.",
+            "nameLabel": "What happened, in one line",
+            "fields": [
+              {
+                "key": "nis2_details",
+                "label": "What happened and what does it affect for us?",
+                "required": true
+              },
+              {
+                "key": "nis2_aware_at",
+                "label": "When did you become aware of it?",
+                "required": true
+              },
+              {
+                "key": "nis2_services",
+                "label": "Which services you provide to us are affected?"
+              },
+              {
+                "key": "nis2_malicious",
+                "label": "Is it suspected to be an attack?"
+              },
+              {
+                "key": "reported_by",
+                "label": "Your name and company",
+                "required": true
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. Our security officer will contact you.",
+            "prefill": [
+              {
+                "key": "incident_type",
+                "value": "opt_security"
+              },
+              {
+                "key": "status",
+                "value": "opt_new"
+              },
+              {
+                "key": "nis2_significant",
+                "value": "nis2_unknown"
+              }
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "nis2_incident_to_report",
+          "name": "Incident possibly significant → open a NIS2 report and start the clocks",
+          "trigger": {
+            "type": "field_becomes",
+            "fieldKey": "nis2_significant",
+            "value": "nis2_possibly"
+          },
+          "conditions": [
+            {
+              "fieldKey": "nis2_report",
+              "op": "has_none"
+            }
+          ],
+          "actions": [
+            {
+              "type": "create_item",
+              "sheetRef": "reports",
+              "groupRef": "open",
+              "name": "{name}",
+              "values": {
+                "stage": "opt_assessing",
+                "significant": "opt_not_assessed"
+              },
+              "link": true
+            },
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Information security officer"
+              ],
+              "message": "{id} {name} may be a significant NIS2 incident. A report is open: enter when you became aware so the 24-hour and 72-hour clocks run, and decide whether it is significant."
+            }
+          ],
+          "startInTestMode": true,
+          "advanced": true,
+          "description": "Cascade: an incident in the shared Incidents register marked \"Possibly significant\" opens a linked NIS2 incident report with its 24-hour, 72-hour and one-month stages, and tells the investigator and the security officer."
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "training",
+      "fields": [
+        {
+          "key": "nis2_management_body",
+          "name": "Management body member",
+          "type": "check",
+          "description": "The person sits on the management body: NIS2 asks them to follow cybersecurity training (Art. 20(2))."
+        }
+      ],
+      "items": [
+        {
+          "ref": "nis2_body_training",
+          "group": "planned",
+          "name": "Example: Cybersecurity training for the management body",
+          "values": {
+            "competence": "Member of the management body",
+            "course": "Cybersecurity risk-management: duties, measures and incident reporting (NIS2)",
+            "status": "opt_planned",
+            "nis2_management_body": true,
+            "standards": [
+              "$option:NIS2"
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "nis2_body_training_due",
+          "name": "Management body training expires in 30 days → tell the member and top management",
+          "trigger": {
+            "type": "date_arrives",
+            "fieldKey": "expires_on",
+            "offsetDays": -30
+          },
+          "conditions": [
+            {
+              "fieldKey": "nis2_management_body",
+              "op": "is_checked"
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:person",
+                "jobRole:Top management"
+              ],
+              "message": "{name}: the cybersecurity training of a management body member expires on {expires_on}. Book the next session."
+            }
+          ],
+          "advanced": true,
+          "description": "Recurring work: a management body member’s cybersecurity training is renewed before it expires; the member and top management are told 30 days ahead, so the body can show it keeps its knowledge current (Art. 20(2))."
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "risk_category",
+      "items": [
+        {
+          "ref": "nis2_cyber",
+          "group": "in_use",
+          "name": "Cybersecurity (NIS2)",
+          "values": {
+            "likelihood_scale": "1 Rare: no known attempts against us or our sector. 2 Unlikely: attempts seen in our sector. 3 Possible: attempts seen against us. 4 Likely: expected within a year. 5 Almost certain: happening now.",
+            "impact_scale": "1 Negligible: no effect on the services. 2 Minor: a short slowdown, no customer notices. 3 Moderate: a service down for hours, some customers affected. 4 Major: services down for a day or more, or data lost; reportable. 5 Severe: long disruption with harm to customers or society, or large financial loss.",
+            "appetite": 6,
+            "review_date": "$in:365",
+            "standards": [
+              "$option:NIS2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "risk",
+      "items": [
+        {
+          "ref": "nis2_ransomware_risk",
+          "group": "identified",
+          "name": "Example: Ransomware stops order handling for several days",
+          "values": {
+            "cause": "Phishing or an unpatched system gives an attacker a foothold",
+            "consequence": "Orders and deliveries stop; a significant incident to report within 24 hours",
+            "likelihood": 3,
+            "impact": 5,
+            "treatment": "opt_reduce",
+            "review_date": "$in:90",
+            "status": "opt_open",
+            "standards": [
+              "$option:NIS2"
+            ]
+          },
+          "links": {
+            "category": [
+              "nis2_cyber"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "documents",
+      "items": [
+        {
+          "ref": "nis2_policy",
+          "group": "draft",
+          "name": "Example: Cybersecurity risk-management policy",
+          "values": {
+            "document_id": "NIS2-POL-01",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:NIS2"
+            ]
+          }
+        },
+        {
+          "ref": "nis2_reporting_procedure",
+          "group": "draft",
+          "name": "Example: Incident reporting procedure (24 hours, 72 hours, one month)",
+          "values": {
+            "document_id": "NIS2-PRO-01",
+            "doc_type": "opt_procedure",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:NIS2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "actions"
+    }
+  ],
+  "automations": [
+    {
+      "ref": "significant_to_early_warning",
+      "sheet": "reports",
+      "name": "Incident significant → stage Early warning due",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "significant",
+        "value": "opt_significant"
+      },
+      "conditions": [
+        {
+          "fieldKey": "stage",
+          "op": "is_any_of",
+          "value": [
+            "opt_assessing"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "stage",
+          "value": "opt_ew_due"
+        }
+      ]
+    },
+    {
+      "ref": "early_warning_sent",
+      "sheet": "reports",
+      "name": "Early warning sent → stage Notification due",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "ew_sent_at"
+      },
+      "conditions": [
+        {
+          "fieldKey": "ew_sent_at",
+          "op": "is_not_empty"
+        },
+        {
+          "fieldKey": "stage",
+          "op": "is_any_of",
+          "value": [
+            "opt_assessing",
+            "opt_ew_due"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "stage",
+          "value": "opt_notification_due"
+        }
+      ],
+      "advanced": true,
+      "description": "Stages: recording when the early warning went out moves the report to \"Notification due\", so the board always shows the next deadline the reporting lead has to meet."
+    },
+    {
+      "ref": "notification_sent",
+      "sheet": "reports",
+      "name": "Notification sent → stage Final report due",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "notified_at"
+      },
+      "conditions": [
+        {
+          "fieldKey": "notified_at",
+          "op": "is_not_empty"
+        },
+        {
+          "fieldKey": "stage",
+          "op": "is_any_of",
+          "value": [
+            "opt_assessing",
+            "opt_ew_due",
+            "opt_notification_due"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "stage",
+          "value": "opt_final_due"
+        }
+      ]
+    },
+    {
+      "ref": "early_warning_clock",
+      "sheet": "reports",
+      "name": "Early warning: 8 hours left → tell the lead and the security officer",
+      "trigger": {
+        "type": "clock_warning",
+        "fieldKey": "ew_clock",
+        "hoursLeft": 8
+      },
+      "conditions": [
+        {
+          "fieldKey": "stage",
+          "op": "is_not_done"
+        },
+        {
+          "fieldKey": "significant",
+          "op": "is_none_of",
+          "value": [
+            "opt_not_significant"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner",
+            "jobRole:Information security officer"
+          ],
+          "message": "{id} {name}: 8 hours left to send the early warning to {recipient}. Send what you know now: whether it looks malicious and whether it could affect other countries."
+        }
+      ],
+      "advanced": true,
+      "description": "SLA clock: 16 hours after you became aware of a possibly significant incident, the reporting lead and the security officer are told that the 24-hour early warning is due in 8 hours."
+    },
+    {
+      "ref": "early_warning_escalation",
+      "sheet": "reports",
+      "name": "Early warning: 2 hours left → escalate to top management",
+      "trigger": {
+        "type": "clock_warning",
+        "fieldKey": "ew_clock",
+        "hoursLeft": 2
+      },
+      "conditions": [
+        {
+          "fieldKey": "stage",
+          "op": "is_not_done"
+        },
+        {
+          "fieldKey": "significant",
+          "op": "is_none_of",
+          "value": [
+            "opt_not_significant"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner",
+            "jobRole:Information security officer",
+            "jobRole:Top management"
+          ],
+          "message": "{id} {name}: the 24-hour early warning to {recipient} is due in 2 hours and has not been sent."
+        }
+      ],
+      "advanced": true,
+      "description": "Escalation ladder: with 2 hours left on the 24-hour clock, top management joins the reporting lead and the security officer, because the management body answers for reporting on time."
+    },
+    {
+      "ref": "notification_clock_warning",
+      "sheet": "reports",
+      "name": "Notification: 24 hours left → tell the lead and the security officer",
+      "trigger": {
+        "type": "clock_warning",
+        "fieldKey": "notification_clock",
+        "hoursLeft": 24
+      },
+      "conditions": [
+        {
+          "fieldKey": "stage",
+          "op": "is_not_done"
+        },
+        {
+          "fieldKey": "significant",
+          "op": "is_none_of",
+          "value": [
+            "opt_not_significant"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner",
+            "jobRole:Information security officer"
+          ],
+          "message": "{id} {name}: the 72-hour incident notification to {recipient} is due in 24 hours. Update the early warning with an initial assessment: severity, impact and indicators of compromise."
+        }
+      ],
+      "advanced": true,
+      "description": "SLA clock: 48 hours after you became aware, the reporting lead and the security officer are reminded that the incident notification with the initial assessment is due within 24 hours."
+    },
+    {
+      "ref": "final_report_due",
+      "sheet": "reports",
+      "name": "Final report due in 7 days → tell the lead",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "final_due",
+        "offsetDays": -7
+      },
+      "conditions": [
+        {
+          "fieldKey": "stage",
+          "op": "is_not_done"
+        },
+        {
+          "fieldKey": "final_sent_on",
+          "op": "is_empty"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name}: the final report to {recipient} is due on {final_due}. If the incident is still going on, send a progress report instead."
+        }
+      ]
+    },
+    {
+      "ref": "final_report_overdue",
+      "sheet": "reports",
+      "name": "Final report overdue → escalate to the security officer and top management",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "final_due",
+        "offsetDays": 1
+      },
+      "conditions": [
+        {
+          "fieldKey": "stage",
+          "op": "is_not_done"
+        },
+        {
+          "fieldKey": "final_sent_on",
+          "op": "is_empty"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner",
+            "jobRole:Information security officer",
+            "jobRole:Top management"
+          ],
+          "message": "{id} {name}: the final report was due on {final_due} and has not been sent to {recipient}."
+        }
+      ],
+      "advanced": true,
+      "description": "Escalation: a final report still missing the day after its one-month deadline goes to the reporting lead, the security officer and top management."
+    },
+    {
+      "ref": "scope_changed",
+      "sheet": "scope",
+      "name": "Classification changes → ask the owner to update the registration within two weeks",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "classification"
+      },
+      "conditions": [
+        {
+          "fieldKey": "registration",
+          "op": "is_any_of",
+          "value": [
+            "opt_registered",
+            "opt_submitted"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "request_update",
+          "fieldKey": "owner",
+          "message": "{id} {name} is now {classification}. Tell {authority} about the change within two weeks and record it here."
+        }
+      ],
+      "advanced": true,
+      "description": "Gate on the registration: when a registered entity’s classification changes, its owner is asked to tell the authority within two weeks (Art. 3(4)) and the request stays open in their My work until the record changes."
+    },
+    {
+      "ref": "scope_review_due",
+      "sheet": "scope",
+      "name": "Scope re-check in 30 days → ask the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -30
+      },
+      "actions": [
+        {
+          "type": "request_update",
+          "fieldKey": "owner",
+          "message": "Re-check {id} {name} by {next_review}: staff, turnover, activities and national designations still as recorded?"
+        }
+      ]
+    },
+    {
+      "ref": "decision_review_cycle",
+      "sheet": "oversight",
+      "name": "Decision approved → set the next review in a year",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_approved"
+      },
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "next_review",
+          "value": "$in:365"
+        },
+        {
+          "type": "set_field",
+          "fieldKey": "meeting_date",
+          "value": "$today"
+        }
+      ],
+      "advanced": true,
+      "description": "Recurring review: when the management body approves a decision, the date is recorded and the next review is set a year ahead, so the measures are approved and overseen every year."
+    },
+    {
+      "ref": "decision_review_due",
+      "sheet": "oversight",
+      "name": "Decision review in 30 days → ask who prepared it",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -30
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_none_of",
+          "value": [
+            "opt_superseded"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "request_update",
+          "fieldKey": "owner",
+          "message": "Prepare the yearly review of {id} {name} for the management body by {next_review}."
+        }
+      ]
+    }
+  ],
+  "dashboards": [
+    {
+      "ref": "nis2_overview",
+      "name": "NIS2 overview",
+      "headline": true,
+      "widgets": [
+        {
+          "ref": "w_articles",
+          "type": "by_option",
+          "title": "Compliance: NIS2 articles by implementation",
+          "library": "nis2@2022",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_scope",
+          "type": "by_option",
+          "title": "Scope: entities by classification",
+          "sheetRef": "scope",
+          "fieldKey": "classification"
+        },
+        {
+          "ref": "w_unregistered",
+          "type": "count",
+          "title": "Scope: in-scope entities not registered",
+          "sheetRef": "scope",
+          "conditions": [
+            {
+              "fieldKey": "classification",
+              "op": "is_any_of",
+              "value": [
+                "opt_essential",
+                "opt_important"
+              ]
+            },
+            {
+              "fieldKey": "registration",
+              "op": "is_none_of",
+              "value": [
+                "opt_registered",
+                "opt_not_required"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_reports_open",
+          "type": "count",
+          "title": "Incidents: open NIS2 reports",
+          "sheetRef": "reports",
+          "conditions": [
+            {
+              "fieldKey": "stage",
+              "op": "is_not_done"
+            }
+          ]
+        },
+        {
+          "ref": "w_reports_stage",
+          "type": "by_option",
+          "title": "Incidents: reports by stage",
+          "sheetRef": "reports",
+          "fieldKey": "stage"
+        },
+        {
+          "ref": "w_final_late",
+          "type": "overdue",
+          "title": "Incidents: final reports past due",
+          "sheetRef": "reports",
+          "fieldKey": "final_due"
+        },
+        {
+          "ref": "w_decisions",
+          "type": "by_option",
+          "title": "Management body: decisions by status",
+          "sheetRef": "oversight",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_decisions_due",
+          "type": "overdue",
+          "title": "Management body: reviews due",
+          "sheetRef": "oversight",
+          "fieldKey": "next_review"
+        },
+        {
+          "ref": "w_scope_due",
+          "type": "overdue",
+          "title": "Scope: re-checks due",
+          "sheetRef": "scope",
+          "fieldKey": "next_review"
+        }
+      ]
+    }
+  ],
+  "setup": {
+    "title": "NIS2 setup",
+    "description": "Six steps to show that NIS2 is in hand. Choose your country in the pack’s settings first (Workspace admin › Packs › NIS2 › Settings): it fills in the authority, CSIRT and registration route. Give the security lead the job title \"Information security officer\" and the management body \"Top management\".",
+    "steps": [
+      {
+        "ref": "scope",
+        "title": "Check each entity is in scope",
+        "body": "Run the self-check for each legal entity in the group (the form does it), then confirm essential, important or not in scope with the reasoning.",
+        "target": {
+          "sheetRef": "scope",
+          "view": "NIS2 scope self-check"
+        },
+        "rules": [
+          {
+            "sheetRef": "scope",
+            "all": [
+              {
+                "fieldKey": "classification",
+                "op": "is_done"
+              }
+            ],
+            "min": 1
+          }
+        ]
+      },
+      {
+        "ref": "register",
+        "title": "Register with the authority",
+        "body": "Each essential or important entity registers as the national law sets out. Record the date and the reference.",
+        "target": {
+          "sheetRef": "scope",
+          "view": "By registration"
+        },
+        "rules": [
+          {
+            "sheetRef": "scope",
+            "where": [
+              {
+                "fieldKey": "classification",
+                "op": "is_any_of",
+                "value": [
+                  "opt_essential",
+                  "opt_important"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "registration",
+                "op": "is_any_of",
+                "value": [
+                  "opt_registered",
+                  "opt_not_required"
+                ]
+              }
+            ],
+            "min": 1
+          }
+        ]
+      },
+      {
+        "ref": "measures",
+        "title": "Put the Art. 21 measures in place",
+        "body": "The ten measures are in the Controls library tagged NIS2. Give each an owner, test it and mark the NIS2 articles applicable with their status.",
+        "target": {
+          "library": "nis2@2022"
+        },
+        "rules": [
+          {
+            "library": "nis2@2022",
+            "all": [
+              {
+                "fieldKey": "applicable",
+                "op": "is_not_empty"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "approve",
+        "title": "Have the management body approve the measures",
+        "body": "Submit the decision to approve the measures. The security officer reviews it, then every member of the management body approves.",
+        "target": {
+          "sheetRef": "oversight"
+        },
+        "rules": [
+          {
+            "sheetRef": "oversight",
+            "where": [
+              {
+                "fieldKey": "decision_type",
+                "op": "is_any_of",
+                "value": [
+                  "opt_measures"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_any_of",
+                "value": [
+                  "opt_approved"
+                ]
+              }
+            ],
+            "min": 1
+          }
+        ]
+      },
+      {
+        "ref": "training",
+        "title": "Train the management body",
+        "body": "Record the decision on training and each member’s training in Competence and training, ticking \"Management body member\".",
+        "target": {
+          "sheetRef": "oversight"
+        },
+        "rules": [
+          {
+            "sheetRef": "oversight",
+            "where": [
+              {
+                "fieldKey": "decision_type",
+                "op": "is_any_of",
+                "value": [
+                  "opt_training"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_any_of",
+                "value": [
+                  "opt_approved"
+                ]
+              }
+            ],
+            "min": 1
+          }
+        ]
+      },
+      {
+        "ref": "reporting",
+        "title": "Be ready to report within 24 hours",
+        "body": "Check \"Report a cyber incident\" on Incidents and the CSIRT on the reports sheet, name a reporting lead and rehearse the 24-hour, 72-hour and one-month stages once.",
+        "target": {
+          "sheetRef": "reports"
+        },
+        "rules": [
+          {
+            "sheetRef": "reports",
+            "all": [
+              {
+                "fieldKey": "recipient",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "owner",
+                "op": "is_not_empty"
+              }
+            ],
+            "min": 1
+          }
+        ]
+      }
+    ]
+  }
+}
