@@ -2,10 +2,10 @@ import 'server-only';
 import { getSession } from '@/server/auth';
 
 // A system board (docs/11 Core registers, docs/05 §3): a shared register a system pack installed. The sheet header
-// says "System board · installed by Core registers 1.0.0". Read with the person's client.
+// says "System board · installed by Core registers 1.1.0". Read with the person's client.
 
 export interface SheetSystem {
-  /** "Core registers 1.0.0" */
+  /** "Core registers 1.1.0" */
   source: string;
 }
 

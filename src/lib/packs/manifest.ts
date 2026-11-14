@@ -159,6 +159,10 @@ export const packExtension = z.object({
     .max(50)
     .optional(),
   options: z.record(fieldKey, z.array(extensionOption).min(1).max(50)).optional(),
+  /** Approval workflows added to the sheet (ids `<namespace>_…`), checked against it by extendsAgainst. */
+  workflows: templateSheet.shape.workflows,
+  /** The lowest level of this pack that installs the entry (docs/11 Levels). */
+  level: levelKey.optional(),
 });
 
 export const packWidget = z.object({

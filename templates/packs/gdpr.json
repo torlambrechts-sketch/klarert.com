@@ -1,12 +1,12 @@
 {
   "key": "gdpr",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "title": "GDPR privacy (add-on)",
   "description": "A GDPR programme on the Core registers and the GDPR requirement library. Adds records of processing, data subject requests with their deadline, personal data breaches with the 72-hour clock, DPIAs and (under Suppliers) processors and DPAs; Full adds transfers outside the EEA, the retention schedule and consent records. On the shared registers it adds the Privacy risk category, links from risks to processing and DPIAs, the \"Personal data breach\" incident type that opens a breach record, example privacy documents and a GDPR view on each. Retention rules ship as suggestions. Installs the Core registers first when they are missing. Own words throughout; article headings are the official ones.",
   "requires": [
     {
       "pack": "core",
-      "range": "^1.0.0"
+      "range": "^1.1.0"
     }
   ],
   "standard": {
@@ -2103,6 +2103,17 @@
           }
         },
         {
+          "key": "core_supplier",
+          "name": "Supplier",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:suppliers",
+            "multiple": false,
+            "inverseKey": "gdpr_processors"
+          },
+          "description": "The supplier in the Core Suppliers register that acts as this processor."
+        },
+        {
           "key": "articles",
           "name": "GDPR articles",
           "type": "requirement",
@@ -3045,6 +3056,22 @@
     {
       "pack": "core",
       "sheet": "actions"
+    },
+    {
+      "pack": "core",
+      "sheet": "suppliers",
+      "fields": [
+        {
+          "key": "gdpr_processors",
+          "name": "Processor records (GDPR)",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "processor",
+            "multiple": true,
+            "inverseKey": "core_supplier"
+          }
+        }
+      ]
     }
   ],
   "automations": [

@@ -7,9 +7,10 @@
 // The planner plans an extension with the template planner, the same way as the pack's own sheets: each foreign
 // sheet the pack reaches into becomes a virtual sheet of the template (its existing columns and groups, plus what the
 // extension adds), and afterwards the virtual rows are swapped for the real ids and only the new rows are kept.
-import type { Json } from '../types';
+import type { Field, Json } from '../types';
+import { workflowProblems } from '../approvals/definition';
 import { fieldType } from '../fields/registry';
-import { levelRank } from './levels';
+import { defaultLevel, levelRank, manifestAtLevel } from './levels';
 import {
   splitSheetRef,
   type ExtensionOption,
@@ -29,6 +30,19 @@ export const namespaceOf = (packKey: string) => packKey.replace(/[^a-z0-9]/g, ''
 
 /** An id or key in a namespace: the namespace itself or `<namespace>_…`. */
 export const inNamespace = (ns: string, id: string) => id === ns || id.startsWith(`${ns}_`);
+
+/**
+ * An approval workflow id an extension adds to another pack's sheet: `<namespace>_…` (never the bare namespace, so a
+ * workflow people name after the standard is not taken for the add-on's). On a shared sheet this is how the
+ * extender's own entries are told apart: its upgrade replaces and its archive removes only those.
+ */
+export const ownWorkflowId = (ns: string, id: string) => id.startsWith(`${ns}_`);
+
+/** A sheet's workflow list as stored (`settings.workflows`), each entry with an id; anything else dropped. */
+export function workflowList(raw: unknown): (Obj & { id: string })[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((w): w is Obj & { id: string } => isObj(w) && typeof w.id === 'string');
+}
 
 /** `<pack>:<sheet>`: how a foreign sheet is named in a manifest, a snapshot and a ref. */
 export const foreignKey = (pack: string, sheet: string) => `${pack}:${sheet}`;
@@ -69,6 +83,8 @@ export interface ForeignSheet {
     color: string;
     installId: string | null;
   }[];
+  /** `settings.workflows` as the sheet holds it now (approval workflows, docs/04 §13); none when absent. */
+  workflows?: Json;
   lastFieldPosition: string | null;
   lastGroupPosition: string | null;
   lastViewPosition: string | null;
@@ -222,6 +238,16 @@ export function extendsProblems(m: PackManifest): { path: (string | number)[]; m
         );
       for (const x of a.actions) foreignOk(x.sheetRef, at('automations', ai));
     }
+    const flows = new Set<string>();
+    for (const [wi, w] of (e.workflows ?? []).entries()) {
+      if (!ownWorkflowId(ns, w.id))
+        problem(
+          at('workflows', wi),
+          `The approval workflow id "${w.id}" is not in the pack's namespace: start it with "${ns}_".`,
+        );
+      if (flows.has(w.id)) problem(at('workflows', wi), `Duplicate approval workflow "${w.id}".`);
+      flows.add(w.id);
+    }
     for (const [key, opts] of Object.entries(e.options ?? {})) {
       const ids = new Set<string>();
       for (const o of opts) {
@@ -306,6 +332,13 @@ export function extensionUses(m: PackManifest, depKey: string): Map<string, Set<
       Object.keys(i.links ?? {}).forEach(add);
     }
     for (const k of Object.keys(e.options ?? {})) add(k);
+    // approval workflows name fields of the sheet: approvers, required fields, the step and status fields
+    for (const w of e.workflows ?? []) {
+      for (const st of w.steps) if (st.approvers.kind === 'field') add(st.approvers.fieldKey);
+      w.requiredFields.forEach(add);
+      if (w.stepField) add(w.stepField.fieldKey);
+      if (w.statusField) add(w.statusField.fieldKey);
+    }
     for (const a of e.automations ?? []) {
       keysIn([a.trigger, ...a.conditions] as unknown as Json, add);
       for (const x of a.actions) {
@@ -373,10 +406,16 @@ export function extensionUses(m: PackManifest, depKey: string): Map<string, Set<
 
 /**
  * The lowest level of a required pack that installs every sheet and folder this manifest needs from it; null when it
- * has no levels (it installs whole).
+ * has no levels (it installs whole). With `level`, what the manifest needs at that level of its own (docs/11 Levels:
+ * an add-on's Starter may need only the required pack's Starter); without, what the whole manifest needs.
  */
-export function neededLevel(m: PackManifest, dep: PackManifest): string | null {
+export function neededLevel(
+  whole: PackManifest,
+  dep: PackManifest,
+  level?: string | null,
+): string | null {
   if (!dep.levels?.length) return null;
+  const m = level === undefined ? whole : manifestAtLevel(whole, level ?? defaultLevel(whole));
   let rank = 0;
   const rankOf = (l: string | undefined) => Math.max(0, levelRank(dep, l));
   for (const f of foreignSheets(m)) {
@@ -435,6 +474,34 @@ export function extendsAgainst(m: PackManifest, dep: PackManifest): string[] {
               `${s.name} › ${f.name} links to "${r}", which this pack does not add to "${target}".`,
             );
       }
+    // approval workflows: checked like a sheet's own, against its fields with the options this entry adds
+    if (e.workflows?.length) {
+      const own = new Set((s.workflows ?? []).map((w) => w.id));
+      const fields = [...s.fields, ...(e.fields ?? [])].map((f) => {
+        const more = e.options?.[f.key];
+        const cfg = { ...((f.config ?? {}) as Obj) };
+        if (more && Array.isArray(cfg.options))
+          cfg.options = [...(cfg.options as Json[]), ...(more as unknown as Json[])];
+        return {
+          id: f.key,
+          sheetId: '',
+          key: f.key,
+          name: f.name,
+          type: f.type,
+          position: '',
+          required: false,
+          locked: false,
+          config: cfg,
+          validation: {},
+          rules: [],
+        } as unknown as Field;
+      });
+      for (const w of e.workflows) {
+        if (own.has(w.id)) out.push(`${s.name} already has an approval workflow "${w.id}".`);
+        for (const msg of workflowProblems(w, fields, [...(s.workflows ?? []), ...e.workflows]))
+          out.push(`${s.name} › ${w.name}: ${msg}`);
+      }
+    }
     const groups = new Set([...s.groups.map((g) => g.ref), ...(e.groups ?? []).map((g) => g.ref)]);
     for (const i of e.items ?? [])
       if (!groups.has(i.group)) out.push(`${s.name} has no group "${i.group}".`);
@@ -610,12 +677,20 @@ export function augmentManifest(
       extensionViews: ext?.views?.length ?? 0,
       standardView,
     });
+    // approval workflows the sheet has (other packs' and people's), then this pack's: the template planner keeps them
+    // on the virtual sheet so a `start_workflow` action finds them; only this pack's are written (plan.workflows)
+    const ns = namespaceOf(m.key);
+    const flows = [
+      ...workflowList(f.workflows).filter((w) => !ownWorkflowId(ns, w.id)),
+      ...((ext?.workflows ?? []) as unknown as Obj[]),
+    ] as unknown as NonNullable<PackSheet['workflows']>;
     sheets.push({
       ref: vref,
       name: f.name,
       itemLabel: f.itemLabel,
       idPrefix: f.idPrefix || 'EXT-',
       isLibrary: false,
+      ...(flows.length ? { workflows: flows } : {}),
       fields: [...fields, ...(ext?.fields ?? [])],
       groups: [...groups, ...(ext?.groups ?? [])],
       views,
@@ -701,5 +776,6 @@ export function extensionSummary(e: PackExtension): string[] {
   if (e.forms?.length) out.push(n(e.forms.length, 'form'));
   if (e.items?.length) out.push(n(e.items.length, 'example item'));
   if (e.automations?.length) out.push(n(e.automations.length, 'automation'));
+  if (e.workflows?.length) out.push(n(e.workflows.length, 'approval workflow'));
   return out;
 }

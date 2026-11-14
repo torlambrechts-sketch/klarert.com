@@ -48,8 +48,8 @@ export function stepAt(step: SetupStep, level: string | null): SetupStepText & {
 }
 
 /**
- * The manifest as installed at a level: only the folders, sheets, forms, automations and dashboards whose lowest
- * level is at or below it. A pack without levels is returned as it is.
+ * The manifest as installed at a level: only the folders, sheets, forms, automations, dashboards and extends entries
+ * whose lowest level is at or below it. A pack without levels is returned as it is.
  */
 export function manifestAtLevel(m: PackManifest, level: string | null): PackManifest {
   if (!m.levels?.length) return m;
@@ -62,6 +62,7 @@ export function manifestAtLevel(m: PackManifest, level: string | null): PackMani
       .map((s) => ({ ...s, forms: s.forms.filter((f) => keep(f.level ?? s.level)) })),
     automations: m.automations.filter((a) => keep(a.level)),
     dashboards: m.dashboards.filter((d) => keep(d.level)),
+    ...(m.extends ? { extends: m.extends.filter((e) => keep(e.level)) } : {}),
   };
 }
 
@@ -155,6 +156,57 @@ export function levelProblems(m: PackManifest): LevelProblem[] {
         problem(
           ['sheets', si, 'forms', fi],
           `The form "${f.ref}" cannot install before its sheet.`,
+        );
+    });
+  });
+
+  // an extends entry (docs/11 Extends) uses only own sheets installed at its level; a two-way link between an own
+  // sheet and the extended sheet joins one level (its inverse is written with the entry)
+  (m.extends ?? []).forEach((e, ei) => {
+    const r = rank(e.level, ['extends', ei, 'level']);
+    const own = (raw: unknown) => {
+      if (typeof raw !== 'string' || raw.includes(':')) return undefined;
+      return sheetRank.get(raw);
+    };
+    (e.fields ?? []).forEach((f, fi) => {
+      const cfg = (f.config ?? {}) as Obj;
+      const tr = own(cfg.targetSheetRef);
+      if (tr === undefined) return;
+      if (tr > r)
+        problem(
+          ['extends', ei, 'fields', fi],
+          `"${f.key}" links to "${String(cfg.targetSheetRef)}", which is installed only from ${name(tr)}.`,
+        );
+      if (tr !== r && typeof cfg.inverseKey === 'string')
+        problem(
+          ['extends', ei, 'fields', fi],
+          `"${f.key}" links both ways to a sheet of another level. Link one way.`,
+        );
+    });
+    (e.automations ?? []).forEach((a, ai) => {
+      for (const x of a.actions) {
+        const tr = own(x.sheetRef);
+        if (tr !== undefined && tr > r)
+          problem(
+            ['extends', ei, 'automations', ai],
+            `"${a.ref}" uses "${String(x.sheetRef)}", which is installed only from ${name(tr)}.`,
+          );
+      }
+    });
+  });
+  // an own sheet's two-way link into a required pack's sheet: its inverse comes with an entry of the sheet's level
+  m.sheets.forEach((s, si) => {
+    const r = sheetRank.get(s.ref)!;
+    s.fields.forEach((f, fi) => {
+      const cfg = (f.config ?? {}) as Obj;
+      if (typeof cfg.targetSheetRef !== 'string' || typeof cfg.inverseKey !== 'string') return;
+      const [pack, sheet] = cfg.targetSheetRef.split(':');
+      if (!sheet) return;
+      const e = (m.extends ?? []).find((x) => x.pack === pack && x.sheet === sheet);
+      if (e && Math.max(0, levelRank(m, e.level)) !== r)
+        problem(
+          ['sheets', si, 'fields', fi],
+          `"${f.key}" links both ways to "${cfg.targetSheetRef}", whose extends entry installs at another level. Give them one level.`,
         );
     });
   });

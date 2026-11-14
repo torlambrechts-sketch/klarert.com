@@ -12,7 +12,7 @@ import { MIN_ADVANCED_AUTOMATIONS, packQualityProblems } from './quality';
 const DIR = join(process.cwd(), 'templates/packs');
 const files = readdirSync(DIR).filter((f) => f.endsWith('.json'));
 const packs = files.map((f) => parsePack(JSON.parse(readFileSync(join(DIR, f), 'utf8'))));
-const allowed = new Set(allowlist.packs);
+const allowed = new Set<string>(allowlist.packs as string[]);
 
 describe('pack quality bar', () => {
   it('lists only packs that exist', () => {

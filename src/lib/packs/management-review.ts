@@ -78,17 +78,38 @@ export const REVIEW_PACK_SOURCES: ReviewPackSource[] = [
     pack: 'core',
     sheets: {
       reviews: 'reviews',
+      // 1.1.0: context and interested parties (an older install has no such sheet: the input reads "no data")
+      context: 'context',
       nonconformities: 'nc',
       risks: 'risk',
       audits: 'audits',
       incidents: 'incidents',
       training: 'training',
     },
-    dateFields: { reviews: 'meeting_date', audits: 'start', incidents: 'occurred_on' },
+    dateFields: {
+      reviews: 'meeting_date',
+      audits: 'start',
+      incidents: 'occurred_on',
+      nonconformities: 'found_on',
+    },
     detailFields: { risks: 'against_appetite' },
-    partyGroups: [],
-    issueGroups: [],
-    review: { source: 'reviews', groupRef: 'reviews.planned', checks: {} },
+    partyGroups: ['context.parties'],
+    issueGroups: ['context.internal', 'context.external'],
+    review: {
+      source: 'reviews',
+      groupRef: 'reviews.planned',
+      // 1.1.0: the review inputs as checkboxes on Management reviews
+      checks: {
+        previous_actions: ['input_actions'],
+        issues: ['input_issues'],
+        parties: ['input_parties'],
+        nonconformities: ['input_nonconformities'],
+        monitoring: ['input_monitoring', 'input_objectives'],
+        audits: ['input_audits'],
+        risks: ['input_risks'],
+        opportunities: ['input_improvement'],
+      },
+    },
   },
 ];
 

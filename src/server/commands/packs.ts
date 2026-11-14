@@ -298,7 +298,13 @@ export async function previewPack(input: unknown): Promise<Result<PackPreviewRes
           newId: randomUUID,
           level: p.data.level ?? null,
           // required packs (the Core registers) are installed first: install order does not matter
-          installFirst: await requiredFirst(supabase, orgId, pack.manifest),
+          installFirst: await requiredFirst(
+            supabase,
+            orgId,
+            pack.manifest,
+            undefined,
+            p.data.level ?? null,
+          ),
         });
         const actions = { create: 0, reuse: 0, skip: 0, conflict: 0 };
         for (const o of plan.operations) actions[o.action] += 1;
@@ -363,7 +369,7 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
         settings: cleanSettings(pack.manifest, p.data.settings ?? {}),
       };
       // the packs it requires first (the Core registers, at the level it needs): install order does not matter
-      const firsts = await requiredFirst(supabase, orgId, pack.manifest);
+      const firsts = await requiredFirst(supabase, orgId, pack.manifest, undefined, env.level);
       let plan = await planInstall(supabase, orgId, pack, { ...env, installFirst: firsts });
       if (plan.state === 'installed')
         return fail('conflict', 'This pack is already installed in this workspace.');
@@ -424,7 +430,7 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
 
 /**
  * Install (or raise to a level) the packs another pack requires, each in its own transaction, before that pack
- * (docs/11 Extends). Returns what was done, in words ("Core registers 1.0.0 (Starter)").
+ * (docs/11 Extends). Returns what was done, in words ("Core registers 1.1.0 (Starter)").
  */
 export async function installRequired(
   supabase: SupabaseClient<Database>,

@@ -177,7 +177,7 @@ async function loadForeign(
   const [sheets, folders] = await Promise.all([
     db
       .from('sheets')
-      .select('id, pack_ref, pack_install_id, name, item_label, id_prefix')
+      .select('id, pack_ref, pack_install_id, name, item_label, id_prefix, settings')
       .eq('org_id', orgId)
       .in('pack_install_id', depIds)
       .is('parent_sheet_id', null)
@@ -235,6 +235,8 @@ async function loadForeign(
       name: s.name,
       itemLabel: s.item_label,
       idPrefix: s.id_prefix ?? '',
+      // approval workflows on the sheet now: an extension's are merged by id, its upgrade replaces only its own
+      workflows: ((s.settings as { workflows?: Json } | null)?.workflows ?? []) as Json,
       fields: fs
         .sort((a, b) => (a.position < b.position ? -1 : 1))
         .map((f) => ({
@@ -284,6 +286,8 @@ export async function requiredFirst(
   orgId: string,
   m: PackManifest,
   catalogue?: CataloguePack[],
+  /** The level of `m` being installed (its lowest when null): what that level needs (docs/11 Levels). */
+  level?: string | null,
 ): Promise<InstallFirst[]> {
   if (!m.requires.length) return [];
   const cat = catalogue ?? (await readCatalogue(db));
@@ -300,7 +304,7 @@ export async function requiredFirst(
   for (const r of m.requires) {
     const dep = cat.find((c) => c.key === r.pack);
     if (!dep || !satisfies(dep.version, r.range)) continue;
-    const need = neededLevel(m, dep.manifest) ?? defaultLevel(dep.manifest);
+    const need = neededLevel(m, dep.manifest, level ?? null) ?? defaultLevel(dep.manifest);
     const levelName = dep.manifest.levels?.find((l) => l.key === need)?.name ?? null;
     const sheets = Object.fromEntries(
       dep.manifest.sheets.map((s) => [
