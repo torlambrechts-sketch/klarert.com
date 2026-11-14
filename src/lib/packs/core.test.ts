@@ -6,7 +6,7 @@ import { afterInstall } from '@/engine/packs/installed.fixture';
 import { selectManifest } from '@/engine/packs/select';
 import { repoPacks } from '@/lib/packs/catalogue';
 
-// The Core registers (docs/11 Core registers) and the ISO 14001 demonstration add-on as the catalogue ships them.
+// The Core registers (docs/11 Core registers) and the ISO 14001 add-on (2.0.0) as the catalogue ships them.
 const packs = repoPacks();
 const core = packs.find((p) => p.key === 'core')!;
 const iso14001 = packs.find((p) => p.key === 'iso-14001')!;
@@ -89,8 +89,8 @@ describe('ISO 14001 add-on', () => {
     expect(extendsAgainst(iso14001, core)).toEqual([]);
   });
 
-  it('needs only the Starter level of Core', () => {
-    expect(neededLevel(iso14001, core)).toBe('starter');
+  it('needs Core at Full: compliance obligations live in the Legal register', () => {
+    expect(neededLevel(iso14001, core)).toBe('full');
   });
 
   it('puts its own sheet in the Operations domain and links it to Core both ways', () => {
@@ -104,7 +104,16 @@ describe('ISO 14001 add-on', () => {
 
   it('says which Core keys it uses, so an update of Core cannot take them away', () => {
     const uses = extensionUses(iso14001, 'core');
-    expect([...uses.keys()].sort()).toEqual(['incidents', 'objectives', 'risk', 'risk_category']);
+    expect([...uses.keys()].sort()).toEqual([
+      'actions',
+      'documents',
+      'incidents',
+      'legal',
+      'nc',
+      'objectives',
+      'risk',
+      'risk_category',
+    ]);
     expect([...uses.get('risk')!].sort()).toEqual(
       expect.arrayContaining(['category', 'score', 'standards', 'status']),
     );
@@ -133,15 +142,22 @@ describe('ISO 14001 add-on', () => {
       hash: 'h',
       userId: 'u1',
     };
-    const withCore = afterInstall(snap, planPackInstall(core, snap, env).payload!, 'inst-core');
+    const withCore = afterInstall(
+      snap,
+      planPackInstall(core, snap, env, { level: 'full' }).payload!,
+      'inst-core',
+    );
     const chosen = selectManifest(iso14001, ['sheet:aspects']);
-    expect(chosen.sheets).toEqual([]);
+    // the sheets that link to the aspects go with them
+    expect(chosen.sheets.map((s) => s.ref)).not.toContain('aspects');
+    expect(chosen.sheets.map((s) => s.ref)).not.toContain('monitoring');
     const plan = planPackInstall(chosen, withCore, env);
     expect(plan.preview.conflicts).toEqual([]);
-    expect(plan.payload!.fields.map((f) => f.key)).toEqual([]);
-    expect(plan.payload!.items.map((i) => i.name)).toEqual([
-      'Environmental',
-      'Example: Coolant spill reaches a surface drain',
-    ]);
+    const keys = plan.payload!.fields.map((f) => f.key);
+    expect(keys).not.toContain('iso14001_aspect');
+    expect(keys).not.toContain('iso14001_aspects');
+    expect(plan.payload!.items.map((i) => i.name)).toEqual(
+      expect.arrayContaining(['Environmental', 'Example: Coolant spill reaches a surface drain']),
+    );
   });
 });
