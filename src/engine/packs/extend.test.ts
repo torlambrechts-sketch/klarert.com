@@ -244,6 +244,56 @@ describe('namespaces and manifest checks', () => {
     );
   });
 
+  it('lets its own automations write into a required pack’s sheet, counted as uses', () => {
+    const m = addon();
+    m.automations = [
+      {
+        ref: 'raise',
+        sheet: 'aspects',
+        name: 'Aspect added → add a risk',
+        enabled: true,
+        trigger: { type: 'item_created' },
+        conditions: [],
+        actions: [
+          {
+            type: 'create_item',
+            sheetRef: 'core:risk',
+            name: '{name}',
+            values: { score: 1, iso14001_permit: 'x' },
+          },
+        ],
+      },
+    ];
+    expect(extendsProblems(m)).toEqual([]);
+    // its own column is not a use of Core
+    expect([...extensionUses(m, 'core').get('risk')!]).not.toContain('iso14001_permit');
+    expect([...extensionUses(m, 'core').get('risk')!]).toContain('score');
+    // before Core is installed (the preview) it waits; on Core it creates on the real risk register
+    const pending = planPackInstall(m, snapshot(), env, {
+      installFirst: [
+        {
+          key: 'core',
+          title: 'Core registers',
+          version: '1.0.0',
+          level: 'starter',
+          levelName: 'Starter',
+          raise: false,
+          sheets: { risk: { name: 'Risk register', standards: true } },
+        },
+      ],
+    });
+    expect(pending.preview.conflicts).toEqual([]);
+    const { payload: corePayload, snap } = withCore();
+    const plan = planPackInstall(m, snap, env);
+    expect(plan.preview.conflicts).toEqual([]);
+    const raise = plan.payload!.automations.find((a) => a.ref === 'raise')!;
+    expect((raise.actions as Row[])[0]!.sheetId).toBe(refMapOf(corePayload)['sheet:risk']);
+    m.automations[0]!.actions[0]!.sheetRef = 'gdpr:breach';
+    expect(extendsProblems(m).map((p) => p.message)).toEqual([
+      '"gdpr:breach" names the pack "gdpr", which is not in requires.',
+    ]);
+  });
+
   it('needs the inverse of a two-way link into another pack in that sheet’s extends', () => {
     const m = addon();
     m.extends![1]!.fields = m.extends![1]!.fields!.filter((f) => f.key !== 'iso14001_aspect');

@@ -9,18 +9,29 @@ import {
   type InstalledState,
   type PackSnapshot,
 } from '@/engine/packs';
+import { extendsAgainst, neededLevel } from '@/engine/packs/extend';
+import { afterInstall, refMapOf } from '@/engine/packs/installed.fixture';
+import { startsInTestMode } from '@/engine/packs/safety';
 import type { Json } from '@/engine/types';
 import { repoPacks } from './catalogue';
 import { packManifestSchema } from './manifest';
+import { packQualityProblems } from './quality';
 
-// Supplier management 1.1.0 (docs/11): per-supplier requirement checks, the library's Applies-to rules, soft links to
-// the 27001, 9001 and GDPR libraries, and the upgrade from 1.0.0.
+// Supplier management (docs/11): 2.0.0 is an add-on to the Core registers that keeps the per-supplier requirement
+// checks, the library's Applies-to rules, the sync and the soft links to the 27001, 9001 and GDPR libraries; the
+// 1.0.0 → 1.1.0 upgrade (P6) is kept as a test of the upgrade planner on the fixtures.
 type Row = Record<string, Json>;
-const pack = repoPacks().find((p) => p.key === 'supplier-management')!;
-const manifest = pack;
-const v1 = packManifestSchema.parse(
-  JSON.parse(readFileSync(join(__dirname, 'fixtures', 'supplier-management-1.0.0.json'), 'utf8')),
-);
+const packs = repoPacks();
+const pack = packs.find((p) => p.key === 'supplier-management')!;
+const core = packs.find((p) => p.key === 'core')!;
+const fixture = (version: string) =>
+  packManifestSchema.parse(
+    JSON.parse(
+      readFileSync(join(__dirname, 'fixtures', `supplier-management-${version}.json`), 'utf8'),
+    ),
+  );
+const v1 = fixture('1.0.0');
+const v11 = fixture('1.1.0');
 const LIB27 = '00000000-0000-4000-8000-00000000f027';
 
 const snapshot = (over: Partial<PackSnapshot> = {}): PackSnapshot => ({
@@ -46,12 +57,42 @@ const env = {
   userId: 'u-1',
 };
 
-describe('Supplier management pack 1.1.0', () => {
-  const m = manifest;
+/** Core installed at the level the add-on needs. */
+function withCore(over: Partial<PackSnapshot> = {}) {
+  const corePlan = planPackInstall(core, snapshot(), env, {
+    level: neededLevel(pack, core) ?? 'starter',
+  });
+  return {
+    snap: afterInstall(snapshot(over), corePlan.payload!, 'inst-core'),
+    coreRefs: refMapOf(corePlan.payload!),
+  };
+}
+
+describe('Supplier management add-on 2.0.0', () => {
+  const m = pack;
   const sheet = (ref: string) => m.sheets.find((s) => s.ref === ref)!;
 
+  it('requires Core, meets the quality bar and puts its sheets in the Suppliers domain', () => {
+    expect(m.version).toBe('2.0.0');
+    expect(m.requires).toEqual([{ pack: 'core', range: '^1.0.0' }]);
+    expect(packQualityProblems(m)).toEqual([]);
+    expect(extendsAgainst(m, core)).toEqual([]);
+    // only Starter sheets of Core: Documents and policies, Risk register, Nonconformities and CAPA
+    expect(neededLevel(m, core)).toBe('starter');
+    expect(
+      m.sheets.map((s) => [s.name, s.folder, s.kind ?? (s.isLibrary ? 'library' : null)]),
+    ).toEqual([
+      ['Supplier register', 'core:suppliers', 'register'],
+      ['Supplier reviews', 'core:suppliers', 'log'],
+      ['Supplier requirements', 'core:suppliers', 'library'],
+      ['Supplier requirement checks', 'core:suppliers', 'register'],
+    ]);
+    // supplier documents are Core documents now
+    expect(m.sheets.some((s) => s.register === 'documents')).toBe(false);
+    expect(m.extends!.map((e) => e.sheet)).toEqual(['documents', 'risk', 'nc']);
+  });
+
   it('ships the checks sheet with one check per supplier and requirement', () => {
-    expect(m.version).toBe('1.1.0');
     const check = sheet('check');
     expect(check.uniqueLinks).toEqual(['supplier', 'requirement']);
     expect(check.folder).toBe(sheet('supplier').folder);
@@ -63,6 +104,16 @@ describe('Supplier management pack 1.1.0', () => {
     expect(check.views.map((v) => v.name)).toEqual(
       expect.arrayContaining(['All checks', 'Not met', 'Expired evidence', 'Not checked']),
     );
+    // four tabs show; the other saved views stay as hidden tabs
+    expect(check.tabs!.filter((t) => !t.hidden).map((t) => t.ref)).toEqual([
+      'All checks',
+      'Not met',
+      'By status',
+      'calendar',
+    ]);
+    expect(check.fields.find((f) => f.key === 'evidence_documents')!.config).toMatchObject({
+      targetSheetRef: 'core:documents',
+    });
   });
 
   it('ships 13 library requirements in our own words, each with an Applies-to rule', () => {
@@ -76,16 +127,16 @@ describe('Supplier management pack 1.1.0', () => {
 
   it('links to the 27001, 9001 and GDPR libraries only where adopted (optional frameworks)', () => {
     expect(m.frameworks?.every((f) => f.optional)).toBe(true);
-    const none = planPackInstall(m, snapshot(), env);
+    const none = planPackInstall(m, withCore().snap, env);
     expect(none.state).toBe('ready');
     expect(none.preview.frameworks.every((f) => !f.adopted && f.optional)).toBe(true);
     expect(none.payload!.links.some((l) => l.to_item === 'req-a519')).toBe(false);
     const with27 = planPackInstall(
       m,
-      snapshot({
+      withCore({
         libraries: [{ library: 'iso-27001@2022', sheetId: LIB27 }],
         requirementItems: { 'iso-27001@2022#A.5.19': 'req-a519' },
-      }),
+      }).snap,
       env,
     );
     expect(with27.state).toBe('ready');
@@ -95,7 +146,7 @@ describe('Supplier management pack 1.1.0', () => {
   });
 
   it('installs the sync automations, the button and the roll-ups on the supplier register', () => {
-    const p = planPackInstall(m, snapshot(), env);
+    const p = planPackInstall(m, withCore().snap, env);
     expect(p.preview.conflicts).toEqual([]);
     const autos = p.payload!.automations;
     const sync = autos.filter((a) =>
@@ -111,6 +162,73 @@ describe('Supplier management pack 1.1.0', () => {
     expect((byKey('requirements_met').config as Row).fn).toBe('doneOf');
     expect(byKey('sync_requirements').type).toBe('button');
     expect(previewLines(p.preview).join(' ')).toMatch(/Supplier requirement checks/);
+  });
+
+  it('puts supplier documents, risks and problems on the Core registers, linked both ways', () => {
+    const { snap, coreRefs } = withCore();
+    const p = planPackInstall(m, snap, env).payload!;
+    for (const s of p.sheets.filter((x) => !x.parent_sheet_id))
+      expect(s.folder_id).toBe(coreRefs['folder:suppliers']);
+    const docs = p.items.filter((i) => i.sheet_id === coreRefs['sheet:documents']);
+    expect(docs.map((d) => d.name)).toEqual([
+      'Supplier code of conduct',
+      'Supplier onboarding procedure',
+    ]);
+    const cloud = p.items.find((i) => i.ref === 'supplier.cloudhost')!;
+    const supplierDocs = p.fields.find((f) => f.ref === 'supplier.documents')!;
+    expect(p.links).toContainEqual({
+      field_id: supplierDocs.id,
+      from_item: cloud.id,
+      to_item: docs[0]!.id,
+    });
+    expect(p.views.find((v) => v.sheet_id === coreRefs['sheet:documents'])?.name).toBe(
+      'Supplier documents',
+    );
+    expect(p.fields.filter((f) => f.sheet_id === coreRefs['sheet:nc']).map((f) => f.key)).toEqual([
+      'suppliermanagement_supplier',
+      'suppliermanagement_review',
+      'suppliermanagement_details',
+    ]);
+    // the headline dashboard reads the supplier nonconformities in Core
+    const widgets = (p.dashboards[0]!.config as { widgets: { id: string; sheetId?: string }[] })
+      .widgets;
+    expect(widgets.find((w) => w.id === 'w_nc')!.sheetId).toBe(coreRefs['sheet:nc']);
+  });
+
+  it('approves suppliers with a workflow, ships internal forms and quiet notifying automations', () => {
+    expect(
+      sheet('supplier').workflows!.map((w) => [w.id, w.steps.map((s) => s.approvers)]),
+    ).toEqual([
+      [
+        'supplier-approval',
+        [
+          { kind: 'field', fieldKey: 'owner' },
+          { kind: 'jobRole', roleName: 'Top management' },
+        ],
+      ],
+    ]);
+    const forms = [
+      ...m.sheets.flatMap((s) => s.forms.map((f) => [f.name, f.access])),
+      ...m.extends!.flatMap((e) => (e.forms ?? []).map((f) => [f.name, f.access])),
+    ];
+    expect(forms).toEqual([
+      ['Supplier self-assessment', 'internal'],
+      ['Suggest a new supplier', 'internal'],
+      ['Report a supplier problem', 'internal'],
+    ]);
+    const all = [...m.automations, ...m.extends!.flatMap((e) => e.automations ?? [])];
+    expect(all.filter((a) => a.advanced).map((a) => a.ref)).toEqual([
+      'sync_on_create',
+      'resync_on_new_requirement',
+      'review_overdue_escalate',
+      'review_failed_nc',
+      'review_next_cycle',
+    ]);
+    for (const a of all.filter((x) => x.actions.some((y) => y.type === 'notify')))
+      expect(startsInTestMode(a), a.ref).toBe(true);
+    // example items are marked as examples (the library and Core documents are not examples)
+    for (const s of m.sheets.filter((x) => !x.isLibrary))
+      for (const i of s.items) expect(i.name).toMatch(/^Example: /);
   });
 });
 
@@ -219,12 +337,12 @@ function installV1() {
   return state;
 }
 
-describe('upgrading a 1.0.0 workspace to 1.1.0 (P6)', () => {
+describe('upgrading a 1.0.0 workspace to 1.1.0 (P6, on the fixtures)', () => {
   it('adds the checks sheet, the new fields, library requirements and automations', () => {
     const state = installV1();
     const up = planPackUpgrade({
       from: { manifest: v1, hash: 'h1' },
-      to: { manifest, hash: 'h2' },
+      to: { manifest: v11, hash: 'h2' },
       state,
       snapshot: snapshot({ prefixes: ['SUP-', 'SRV-', 'SRQ-', 'SDOC-'] }),
       env: { ...env, today: '2026-11-14' },

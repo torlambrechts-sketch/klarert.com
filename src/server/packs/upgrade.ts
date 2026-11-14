@@ -3,7 +3,7 @@
 // (src/engine/packs/upgrade.ts) and write the plan with upgrade_pack, one transaction. Given a Supabase client (the
 // person's, RLS applies); no 'server-only' import so scripts can share it.
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { compareVersions } from '@/engine/packs/semver';
+import { compareVersions, parseVersion } from '@/engine/packs/semver';
 import { planPackUpgrade, type InstalledState, type UpgradePlan } from '@/engine/packs/upgrade';
 import { todayIn } from '@/engine/sheet-data';
 import type { Json } from '@/engine/types';
@@ -13,7 +13,6 @@ import {
   loadRequirementItems,
   loadSnapshot,
   manifestRequirementKeys,
-  readCatalogue,
   type CataloguePack,
 } from './install';
 
@@ -45,18 +44,44 @@ export async function readPackVersion(
   return { ...row, manifest: parsePack(row.manifest) };
 }
 
+/**
+ * The version an install updates to: the newest catalogue version of its pack with the same major version (docs/11
+ * Upgrades). A new major version is a rebuild of the pack (Phase 2: a standard rebuilt as an add-on to the Core
+ * registers) and is installed fresh, never offered as an update. Null when the install is at that version already.
+ */
+export function updateTarget(
+  install: { pack_key: string; version: string },
+  versions: readonly Pick<CataloguePack, 'key' | 'version'>[],
+): string | null {
+  const major = parseVersion(install.version)?.[0];
+  let best: string | null = null;
+  for (const c of versions) {
+    if (c.key !== install.pack_key || parseVersion(c.version)?.[0] !== major) continue;
+    if (
+      compareVersions(c.version, install.version) > 0 &&
+      (!best || compareVersions(c.version, best) > 0)
+    )
+      best = c.version;
+  }
+  return best;
+}
+
 /** The newer catalogue version of each live install, by install id (installs already at the newest are left out). */
 export function updatesFor(
   installs: { id: string; pack_key: string; version: string; status: string }[],
-  catalogue: Pick<CataloguePack, 'key' | 'version'>[],
+  versions: readonly Pick<CataloguePack, 'key' | 'version'>[],
 ): Map<string, string> {
-  const newest = new Map(catalogue.map((c) => [c.key, c.version]));
   const out = new Map<string, string>();
   for (const i of installs) {
-    const v = newest.get(i.pack_key);
-    if (i.status === 'installed' && v && compareVersions(v, i.version) > 0) out.set(i.id, v);
+    const v = i.status === 'installed' ? updateTarget(i, versions) : null;
+    if (v) out.set(i.id, v);
   }
   return out;
+}
+
+/** Every pack version in the catalogue (key and version only): updates pick theirs with updateTarget. */
+export async function readPackVersions(db: Db): Promise<{ key: string; version: string }[]> {
+  return must(await db.from('packs').select('key, version'), 'pack versions') ?? [];
 }
 
 const position = (rows: { position: string }[]) =>
@@ -265,7 +290,7 @@ export type PlannedUpgrade =
   | { ok: true; plan: UpgradePlan; from: CataloguePack; to: CataloguePack }
   | { ok: false; code: 'not_found' | 'conflict'; message: string };
 
-/** Plan the upgrade of a live install to the catalogue's newest version, as the workspace is now. */
+/** Plan the upgrade of a live install to the catalogue's newest version of its major, as the workspace is now. */
 export async function planUpgrade(
   db: Db,
   orgId: string,
@@ -288,7 +313,8 @@ export async function planUpgrade(
   );
   if (!install || install.status !== 'installed')
     return { ok: false, code: 'not_found', message: 'This pack is no longer installed.' };
-  const to = (await readCatalogue(db)).find((p) => p.key === install.pack_key);
+  const target = updateTarget(install, await readPackVersions(db));
+  const to = target ? await readPackVersion(db, install.pack_key, target) : null;
   const from = await readPackVersion(db, install.pack_key, install.version);
   if (!to || !from)
     return { ok: false, code: 'not_found', message: 'This pack is no longer in the catalogue.' };

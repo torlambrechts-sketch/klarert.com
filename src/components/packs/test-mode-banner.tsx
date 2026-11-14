@@ -62,7 +62,14 @@ export function TestModeBanner({
         <Button asChild variant="outline" size="sm">
           <Link href={`/${org}/automations?tab=runs`}>Review the run log</Link>
         </Button>
-        <Button type="button" size="sm" disabled={busy} onClick={() => void turnOn()}>
+        {/* a long pack title wraps instead of widening the page at 390 px */}
+        <Button
+          type="button"
+          size="sm"
+          className="h-auto min-h-8 max-w-full py-1.5 text-left whitespace-normal"
+          disabled={busy}
+          onClick={() => void turnOn()}
+        >
           Turn on all automations from {title}
         </Button>
       </div>

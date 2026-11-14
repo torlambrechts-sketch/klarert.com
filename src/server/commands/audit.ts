@@ -28,7 +28,11 @@ import { todayIn, type SheetData } from '@/engine/sheet-data';
 import type { Ctx, Item } from '@/engine/types';
 import { dateOf, isItemDone, isOverdueOf, visibleTextOf } from '@/engine/values';
 import { itemStatusField } from '@/engine/fields/item-status';
-import { REVIEW_PACK_SOURCES, type ReviewPackSource } from '@/lib/packs/management-review';
+import {
+  REVIEW_PACK_SOURCES,
+  resolveReviewRef,
+  type ReviewPackSource,
+} from '@/lib/packs/management-review';
 import {
   auditPackInput,
   auditScopesInput,
@@ -442,10 +446,15 @@ async function compileReview(
     .select('id, pack_key, ref_map')
     .eq('org_id', who.orgId)
     .eq('status', 'installed');
+  const refMaps = new Map(
+    (installs ?? []).map((i) => [i.pack_key, (i.ref_map ?? {}) as Record<string, string>]),
+  );
   for (const def of REVIEW_PACK_SOURCES) {
     const inst = (installs ?? []).find((i) => i.pack_key === def.pack);
     if (!inst) continue;
     const refMap = (inst.ref_map ?? {}) as Record<string, string>;
+    const id = (kind: 'sheet' | 'group', ref: string) =>
+      resolveReviewRef(refMap, refMaps, kind, ref);
     const groupRefs = new Map(
       Object.entries(refMap)
         .filter(([k]) => k.startsWith('group:'))
@@ -455,7 +464,7 @@ async function compileReview(
     issueGroupRefs.push(...def.issueGroups);
     for (const [key, ref] of Object.entries(def.sheets) as [ReviewSourceKey, string][]) {
       if (sources[key]) continue;
-      const sheetId = refMap[`sheet:${ref}`];
+      const sheetId = id('sheet', ref);
       if (!sheetId) continue;
       const loaded = await loadSheet(db, who, sheetId, timeZone, now);
       if (!loaded) continue;
@@ -474,7 +483,7 @@ async function compileReview(
         reviewSheet = {
           id: sheetId,
           name: loaded.data.sheet.name,
-          groupId: refMap[`group:${def.review.groupRef}`] ?? loaded.data.groups[0]?.id ?? null,
+          groupId: id('group', def.review.groupRef) ?? loaded.data.groups[0]?.id ?? null,
           checks: def.review.checks,
         };
       }
@@ -633,10 +642,14 @@ export async function reviewSheetsByInstall(
         .eq('status', 'installed');
       if (error) return fromDbError(error);
       const out: Record<string, string> = {};
+      const refMaps = new Map(
+        (data ?? []).map((i) => [i.pack_key, (i.ref_map ?? {}) as Record<string, string>]),
+      );
       for (const i of data ?? []) {
         const def = REVIEW_PACK_SOURCES.find((d) => d.pack === i.pack_key);
         const ref = def?.sheets[def.review.source];
-        const id = ref ? (i.ref_map as Record<string, string> | null)?.[`sheet:${ref}`] : undefined;
+        const own = (i.ref_map ?? {}) as Record<string, string>;
+        const id = ref ? resolveReviewRef(own, refMaps, 'sheet', ref) : undefined;
         if (id) out[i.id] = id;
       }
       return ok(out);

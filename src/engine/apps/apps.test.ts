@@ -105,6 +105,55 @@ describe('resolveApps', () => {
     expect(resolveApps([install({ apps: [adminsOnly] })], 'viewer')).toEqual([]);
   });
 
+  it("resolves screens on a required pack's sheet through that install, its forms and views through this one", () => {
+    const addonApp: AppManifest = {
+      key: 'isms-capa',
+      title: 'ISMS CAPA',
+      icon: 'shield-alert',
+      sections: [
+        {
+          title: 'Work',
+          screens: [
+            {
+              key: 'report',
+              kind: 'form',
+              title: 'Report',
+              sheet: 'core:nc',
+              form: 'iso27001_report',
+            },
+            {
+              key: 'all',
+              kind: 'view',
+              title: 'All',
+              sheet: 'core:nc',
+              view: 'ISMS nonconformities',
+            },
+            { key: 'mine', kind: 'item', title: 'Mine', sheet: 'core:actions', filters: [] },
+          ],
+        },
+      ],
+    };
+    const addon = install({
+      id: 'inst-iso',
+      packKey: 'iso-27001',
+      apps: [addonApp],
+      pack: { sheets: [{ ref: 'core:nc', views: [{ name: 'ISMS nonconformities' }] }] },
+      refMap: {
+        'view:core:nc.form.iso27001_report': 'v-report',
+        'view:core:nc.view.1': 'v-isms',
+      },
+      required: { core: { 'sheet:nc': 's-nc', 'sheet:actions': 's-actions' } },
+    });
+    const [a] = resolveApps([addon], 'owner');
+    expect(a!.sections[0]!.screens).toMatchObject([
+      { key: 'report', sheetId: 's-nc', viewId: 'v-report' },
+      { key: 'all', sheetId: 's-nc', viewId: 'v-isms' },
+      { key: 'mine', sheetId: 's-actions' },
+    ]);
+    // without the Core install the screens are left out
+    expect(resolveApps([{ ...addon, required: {} }], 'owner')).toEqual([]);
+  });
+
   it('the first install of an app key wins', () => {
     const two = resolveApps([install(), install({ id: 'inst-2' })], 'owner');
     expect(two.map((a) => a.installId)).toEqual(['inst-1']);

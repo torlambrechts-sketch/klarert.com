@@ -5,7 +5,8 @@ import { packManifestSchema, parsePack } from './manifest';
 const supplier = () =>
   JSON.parse(
     readFileSync(
-      new URL('../../../templates/packs/supplier-management.json', import.meta.url),
+      // 1.1.0, a standalone pack (2.0.0 is an add-on to the Core registers): the schema's own cases
+      new URL('./fixtures/supplier-management-1.1.0.json', import.meta.url),
       'utf8',
     ),
   );

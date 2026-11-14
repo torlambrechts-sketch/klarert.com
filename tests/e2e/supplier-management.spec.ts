@@ -2,39 +2,29 @@ import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// Supplier requirement checks (docs/11 Supplier management 1.1.0): an owner installs the pack; a supplier's panel
-// shows its checks as a checklist; "Sync requirements" adds the checks its category, criticality and personal data
-// call for ("Added 7, flagged 0"); a second sync changes nothing (one check per supplier and requirement); lowering
-// the criticality flags the checks that no longer apply ("No longer applies"), never deleting them.
+// Supplier management 2.0.0 (docs/11, Phase 2): an owner installs the add-on into an empty workspace; the Core
+// registers are installed first and the supplier sheets sit in the Suppliers domain, supplier documents in Documents
+// and policies (its "Supplier documents" view). A supplier's panel shows its checks as a checklist; "Sync
+// requirements" adds the checks its category, criticality and personal data call for ("Added 7, flagged 0"); a second
+// sync changes nothing; lowering the criticality flags the checks that no longer apply, never deleting them. The
+// review escalation is in test mode and the register carries the Supplier approval workflow.
 
-const TITLE = 'Supplier management';
+const TITLE = 'Supplier management (add-on)';
 const SHOTS = process.env.SUPPLIER_SHOTS;
 const shot = async (page: Page, name: string) => {
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
 };
 
-test('supplier requirement checks: install, sync from the panel, flag on a change', async ({
+test('supplier management add-on: Core first, the Suppliers domain, checks and their sync, approval', async ({
   page,
 }, info) => {
   test.skip(info.project.name === 'phone', 'desktop walkthrough');
-  test.setTimeout(240_000);
-  // local auth sends magic links to the site URL (port 3000): when this suite runs on another port, follow them here
-  const port = new URL(info.project.use.baseURL ?? 'http://localhost:3000').port;
-  if (port !== '3000')
-    await page.route('http://localhost:3000/**', (route) =>
-      route.fulfill({
-        status: 302,
-        headers: { location: route.request().url().replace('localhost:3000', `localhost:${port}`) },
-      }),
-    );
+  test.setTimeout(300_000);
   const slug = seedWorkspace('suppliers', { empty: true });
   await signIn(page, 'maria@example.com', `/${slug}/settings?tab=packs`);
-  if (port !== '3000') {
-    await page.unrouteAll();
-    await page.goto(`/${slug}/settings?tab=packs`);
-  }
+  await page.goto(`/${slug}/settings?tab=packs`);
 
-  // ── install
+  // ── install: Core first; the frameworks are optional, nothing is adopted for you
   const row = page
     .getByRole('list', { name: 'Available packs' })
     .getByRole('listitem')
@@ -44,23 +34,75 @@ test('supplier requirement checks: install, sync from the panel, flag on a chang
     await row.getByRole('button', { name: `Preview ${TITLE}` }).click();
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
-  // the frameworks are optional: nothing is adopted for you
+  await expect(dialog.getByTestId('installs-first')).toContainText(
+    'Installs Core registers 1.0.0 (Starter) first.',
+    { timeout: 30_000 },
+  );
   await expect(dialog.getByTestId('adopts-framework')).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Install' }).click();
-  await expect(dialog.getByRole('status')).toContainText(`Installed ${TITLE}`, { timeout: 60_000 });
+  await expect(dialog.getByRole('status')).toContainText(`Installed ${TITLE}`, {
+    timeout: 120_000,
+  });
   await dialog.getByRole('button', { name: 'Done' }).click();
 
   const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
-  const sheets = await rest<{ id: string; name: string }[]>(
+  const installs = await rest<{ pack_key: string }[]>(
     page,
-    `sheets?org_id=eq.${org!.id}&archived_at=is.null&select=id,name`,
+    `pack_installs?org_id=eq.${org!.id}&status=eq.installed&select=pack_key&order=installed_at`,
+  );
+  expect(installs.map((i) => i.pack_key)).toEqual(['core', 'supplier-management']);
+  const sheets = await rest<{ id: string; name: string; folder_id: string | null }[]>(
+    page,
+    `sheets?org_id=eq.${org!.id}&archived_at=is.null&parent_sheet_id=is.null&select=id,name,folder_id`,
   );
   const sheetId = (name: string) => sheets.find((s) => s.name === name)!.id;
   const suppliers = sheetId('Supplier register');
   const checks = sheetId('Supplier requirement checks');
+  expect(sheets.some((s) => s.name === 'Supplier documents')).toBe(false);
+
+  // ── the Suppliers domain in the side menu, after the Core domains
+  await page.goto(`/${slug}/home`);
+  const menu = page.getByRole('navigation', { name: 'Side menu' });
+  await expect(menu.getByTestId('menu-domain')).toHaveText([
+    'Management system',
+    'Risk and controls',
+    'Operations',
+    'Suppliers',
+  ]);
+  for (const name of [
+    'Supplier register',
+    'Supplier reviews',
+    'Supplier requirements',
+    'Supplier requirement checks',
+  ])
+    await expect(menu.getByRole('link', { name })).toBeVisible();
+  await shot(page, '05-suppliers-domain');
+
+  // ── supplier documents are Core documents, with the add-on's view
+  await menu.getByRole('link', { name: 'Documents and policies' }).click();
+  await page
+    .getByRole('tablist', { name: 'Saved views of this table' })
+    .getByRole('tab', { name: 'Supplier documents' })
+    .click();
+  await expect(
+    page.getByRole('gridcell', { name: /Supplier code of conduct/ }).first(),
+  ).toBeVisible();
+  await expect(page.getByRole('gridcell', { name: /How we control documents/ })).toHaveCount(0);
+
+  // ── the review escalation starts in test mode; the register has the approval workflow
+  const [escalation] = await rest<{ mode: string }[]>(
+    page,
+    `automations?org_id=eq.${org!.id}&pack_ref=eq.review_overdue_escalate&select=mode`,
+  );
+  expect(escalation!.mode).toBe('test');
+  await page.goto(`/${slug}/s/${suppliers}/settings#approvals`);
+  await expect(page.getByRole('list', { name: 'Approval workflows' })).toContainText(
+    'Supplier approval',
+  );
+
   const [cloud] = await rest<{ id: string; display_id: string }[]>(
     page,
-    `items?sheet_id=eq.${suppliers}&name=eq.Northwind Cloud Hosting&select=id,display_id`,
+    `items?sheet_id=eq.${suppliers}&name=eq.Example: Northwind Cloud Hosting&select=id,display_id`,
   );
   const sync = async () => {
     await page.getByRole('button', { name: 'About Sync requirements' }).click();
@@ -75,6 +117,9 @@ test('supplier requirement checks: install, sync from the panel, flag on a chang
 
   // ── the supplier's panel: the example checks as a checklist, expired evidence said in words
   await page.goto(`/${slug}/s/${suppliers}?item=${cloud!.display_id}`);
+  await expect(
+    page.getByTestId('item-approvals').getByRole('button', { name: 'Submit for approval' }),
+  ).toBeVisible();
   const list = page.getByTestId('checklist');
   await expect(list.getByRole('heading', { name: /Requirement checks/ })).toBeVisible();
   const items = list.getByRole('list', { name: 'Requirement checks' }).getByRole('listitem');
@@ -90,16 +135,9 @@ test('supplier requirement checks: install, sync from the panel, flag on a chang
     timeout: 30_000,
   });
   await expect(items).toHaveCount(11, { timeout: 15_000 });
-  if (SHOTS)
-    await page
-      .locator('[data-sonner-toast]')
-      .filter({ hasText: 'Added 7' })
-      .screenshot({ path: `${SHOTS}/02-sync-toast.png`, timeout: 3_000 })
-      .catch(() => undefined);
   expect(await countChecks()).toBe(11);
-  await list.getByRole('heading').scrollIntoViewIfNeeded();
   await list.getByRole('heading').evaluate((h) => h.scrollIntoView({ block: 'start' }));
-  await shot(page, '01-supplier-checklist');
+  await shot(page, '06-supplier-checklist');
 
   // a second sync changes nothing: one check per supplier and requirement
   await sync();
@@ -126,13 +164,24 @@ test('supplier requirement checks: install, sync from the panel, flag on a chang
   // 390 px: the rows stack as cards
   await page.setViewportSize({ width: 390, height: 844 });
   await list.getByRole('heading').evaluate((h) => h.scrollIntoView({ block: 'start' }));
-  await shot(page, '04-checklist-390');
+  await shot(page, '07-checklist-390');
   await page.setViewportSize({ width: 1280, height: 720 });
 
-  // ── the checks sheet with its saved views
+  // ── the checks sheet: four tabs
   await page.goto(`/${slug}/s/${checks}`);
   await expect(page.getByRole('heading', { name: 'Supplier requirement checks' })).toBeVisible();
-  for (const v of ['All checks', 'Not met', 'Expired evidence', 'Not checked'])
-    await expect(page.getByRole('tab', { name: v })).toBeVisible();
-  await shot(page, '03-checks-sheet');
+  await expect(page.getByRole('navigation', { name: 'Views' }).getByRole('link')).toHaveText([
+    /^Table/,
+    'Not met',
+    'By status',
+    'Calendar',
+  ]);
+  // the Table's saved views stay one click away
+  for (const v of ['All checks', 'Expired evidence', 'Not checked'])
+    await expect(
+      page
+        .getByRole('tablist', { name: 'Saved views of this table' })
+        .getByRole('tab', { name: v }),
+    ).toBeVisible();
+  await shot(page, '08-checks-sheet');
 });

@@ -2,181 +2,167 @@ import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// The ISO/IEC 27001:2022 pack (P4, docs/11): an owner installs Starter from Workspace admin › Packs, which adopts the
-// 27001 requirement library first; the setup checklist shows on the Packs tab and on Home; adding Full later creates
-// only the six sheets Starter does not have. The example risks link to Annex A controls of the adopted library, the
-// CAPA actions have their own overdue reminder and Full brings the internal form "Report a security incident".
+// The ISO/IEC 27001 add-on (docs/11, Phase 2): an owner installs it into an empty workspace; the Core registers
+// (Full, as the add-on extends the controls, assets, audits, reviews, legal and training registers) and the 27001
+// library are installed first. Its own sheets sit in Core's domains, the risk register is used by ISO 27001 with the
+// "ISO 27001 view", the example risk links to Annex A, the notifying automations are in test mode, the treatment
+// plan carries the Risk acceptance workflow and the ISMS CAPA app reads Core's nonconformities.
 
-const TITLE = 'ISO/IEC 27001:2022 ISMS';
-const STARTER = [
-  'Scope and context',
-  'Risk register',
-  'Risk treatment plan',
-  'ISMS documents',
-  'Nonconformities and CAPA',
-];
-const packRow = (page: Page) =>
-  page
-    .getByRole('list', { name: 'Available packs' })
-    .getByRole('listitem')
-    .filter({ hasText: TITLE });
+const TITLE = 'ISO/IEC 27001:2022 ISMS (add-on)';
+const SHOTS = process.env.ISO27001_SHOTS;
+const shot = async (page: Page, name: string) => {
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
+};
 
-test('install ISO 27001 Starter, follow the setup checklist and add Full', async ({
+test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode and risk acceptance', async ({
   page,
 }, info) => {
   test.skip(info.project.name === 'phone', 'desktop walkthrough');
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   const slug = seedWorkspace('iso', { empty: true });
   await signIn(page, 'maria@example.com', `/${slug}/settings?tab=packs`);
-  await expect(packRow(page)).toContainText('Starter or Full');
+  await page.goto(`/${slug}/settings?tab=packs`);
 
-  // ── the dialog: choose a level, see what it creates and that the library is adopted first
-  await packRow(page)
-    .getByRole('button', { name: `Preview ${TITLE}` })
-    .click();
+  // ── preview: Core (Full) and the library first, the notifying automations quiet
+  const row = page
+    .getByRole('list', { name: 'Available packs' })
+    .getByRole('listitem')
+    .filter({ hasText: TITLE });
   const dialog = page.getByRole('dialog');
-  const levels = dialog.getByRole('group', { name: 'Choose a level' });
-  await expect(levels.getByRole('radio', { name: 'Starter', exact: true })).toBeChecked();
-  await expect(levels).toContainText(`Creates: ${STARTER.join(', ')}`);
-  await expect(levels).toContainText('Adds: Asset register, Internal audit programme');
+  await expect(async () => {
+    await row.getByRole('button', { name: `Preview ${TITLE}` }).click();
+    await expect(dialog).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 30_000 });
+  await expect(dialog.getByTestId('installs-first')).toContainText(
+    'Installs Core registers 1.0.0 (Full) first.',
+    { timeout: 30_000 },
+  );
   await expect(dialog.getByTestId('adopts-framework')).toContainText(
     'Adopts the ISO/IEC 27001:2022 requirement library first',
   );
-  await expect(dialog).toContainText('Installs 1 folder, 5 sheets');
-  await expect(dialog.getByRole('list', { name: 'Dashboards' })).toContainText(
-    'ISMS overview with 8 widgets',
+  await expect(dialog.getByRole('list', { name: 'Automations' })).toContainText(
+    '(test mode: logs what it would do until you turn it on)',
   );
-  await dialog.getByRole('radio', { name: 'Full', exact: true }).check();
-  await expect(dialog).toContainText('Installs 1 folder, 11 sheets');
-  await dialog.getByRole('radio', { name: 'Starter', exact: true }).check();
-  await expect(dialog).toContainText('Installs 1 folder, 5 sheets');
-
+  await shot(page, '01-preview');
   await dialog.getByRole('button', { name: 'Install' }).click();
-  await expect(dialog.getByRole('status')).toContainText(`Installed ${TITLE} (Starter).`, {
-    timeout: 60_000,
+  await expect(dialog.getByRole('status')).toContainText(`Installed ${TITLE}.`, {
+    timeout: 120_000,
   });
-  await expect(dialog).toContainText('Adopted ISO/IEC 27001:2022 first.');
-
-  const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
-  const sheets = await rest<
-    { id: string; name: string; is_library: boolean; pack_install_id: string }[]
-  >(
-    page,
-    `sheets?org_id=eq.${org!.id}&parent_sheet_id=is.null&archived_at=is.null&select=id,name,is_library,pack_install_id&order=position`,
+  await expect(dialog.getByRole('status')).toContainText(
+    'Installed Core registers 1.0.0 (Full) first.',
   );
-  expect(sheets.filter((s) => !s.is_library).map((s) => s.name)).toEqual(STARTER);
-  expect(sheets.filter((s) => s.is_library).map((s) => s.name)).toEqual([
-    'ISO/IEC 27001:2022 requirements',
-  ]);
-  const [install] = await rest<{ id: string; level: string }[]>(
-    page,
-    `pack_installs?org_id=eq.${org!.id}&pack_key=eq.iso-27001&select=id,level`,
-  );
-  expect(install!.level).toBe('starter');
   await dialog.getByRole('button', { name: 'Done' }).click();
 
-  // ── the example risks link to Annex A controls of the library the install adopted
-  const lib = sheets.find((s) => s.is_library)!;
-  const riskSheet = sheets.find((s) => s.name === 'Risk register')!;
-  const risks = await rest<{ id: string; name: string }[]>(
+  const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
+  const installs = await rest<{ id: string; pack_key: string; level: string | null }[]>(
     page,
-    `items?sheet_id=eq.${riskSheet.id}&select=id,name`,
+    `pack_installs?org_id=eq.${org!.id}&status=eq.installed&select=id,pack_key,level&order=installed_at`,
   );
-  const phishing = risks.find((r) => r.name === 'Example: account taken over by phishing')!;
+  expect(installs.map((i) => i.pack_key)).toEqual(
+    expect.arrayContaining(['core', 'framework-iso-27001', 'iso-27001']),
+  );
+  expect(installs.find((i) => i.pack_key === 'core')!.level).toBe('full');
+
+  // ── its own sheets in Core's domains
+  const folders = await rest<{ id: string; name: string }[]>(
+    page,
+    `folders?org_id=eq.${org!.id}&select=id,name`,
+  );
+  const sheets = await rest<{ id: string; name: string; folder_id: string | null }[]>(
+    page,
+    `sheets?org_id=eq.${org!.id}&parent_sheet_id=is.null&archived_at=is.null&select=id,name,folder_id`,
+  );
+  const folderOf = (name: string) =>
+    folders.find((f) => f.id === sheets.find((s) => s.name === name)!.folder_id)?.name;
+  expect(folderOf('ISMS scope and context')).toBe('Management system');
+  expect(folderOf('Risk treatment plan')).toBe('Risk and controls');
+  expect(sheets.some((s) => s.name === 'ISMS documents')).toBe(false);
+
+  await page.goto(`/${slug}/home`);
+  const menu = page.getByRole('navigation', { name: 'Side menu' });
+  await expect(menu.getByTestId('menu-domain')).toHaveText([
+    'Management system',
+    'Risk and controls',
+    'Operations',
+  ]);
+  await expect(menu.getByRole('link', { name: 'ISMS scope and context' })).toBeVisible();
+  await expect(menu.getByRole('link', { name: 'Risk treatment plan' })).toBeVisible();
+  await expect(
+    page.getByRole('list', { name: 'Apps' }).getByRole('link', { name: 'ISMS CAPA' }),
+  ).toBeVisible();
+
+  // ── the risk register: used by ISO 27001, with its view; the example risk links to Annex A
+  await menu.getByRole('link', { name: 'Risk register' }).click();
+  await expect(page.getByRole('heading', { name: 'Risk register', level: 1 })).toBeVisible();
+  await expect(page.getByTestId('system-used-by')).toHaveText('Used by ISO 27001');
+  const views = page.getByRole('tablist', { name: 'Saved views of this table' });
+  await views.getByRole('tab', { name: 'ISO 27001 view' }).click();
+  await expect(
+    page.getByRole('gridcell', { name: /Example: account taken over by phishing/ }).first(),
+  ).toBeVisible();
+  // the Core example risk is not tagged ISO 27001: the view leaves it out
+  await expect(page.getByRole('gridcell', { name: /A key supplier cannot deliver/ })).toHaveCount(
+    0,
+  );
+  await shot(page, '02-risk-register-27001-view');
+  const [phishing] = await rest<{ id: string }[]>(
+    page,
+    `items?org_id=eq.${org!.id}&name=eq.Example: account taken over by phishing&select=id`,
+  );
   const links = await rest<{ to_item: string }[]>(
     page,
-    `item_links?from_item=eq.${phishing.id}&select=to_item`,
+    `item_links?from_item=eq.${phishing!.id}&select=to_item`,
   );
-  const annexA = await rest<{ id: string; requirement_ref: string }[]>(
+  const annexA = await rest<{ requirement_ref: string }[]>(
     page,
-    `items?sheet_id=eq.${lib.id}&id=in.(${links.map((l) => l.to_item).join(',')})&select=id,requirement_ref`,
+    `items?id=in.(${links.map((l) => l.to_item).join(',')})&requirement_ref=not.is.null&select=requirement_ref`,
   );
   expect(annexA.map((r) => r.requirement_ref).sort()).toEqual([
     'iso-27001@2022#A.6.3',
+    'iso-27001@2022#A.8.5',
     'iso-27001@2022#A.8.7',
   ]);
-  // the corrective actions (sub-items) have their own overdue reminder
-  const [actions] = await rest<{ id: string }[]>(
+
+  // ── an advanced automation in test mode
+  const [missed] = await rest<{ mode: string; enabled: boolean }[]>(
     page,
-    `sheets?org_id=eq.${org!.id}&parent_sheet_id=not.is.null&name=like.Nonconformities*&select=id`,
+    `automations?org_id=eq.${org!.id}&pack_ref=eq.iso27001_containment_missed&select=mode,enabled`,
   );
-  const [reminder] = await rest<{ sheet_id: string; enabled: boolean }[]>(
-    page,
-    `automations?org_id=eq.${org!.id}&pack_ref=eq.capa_action_overdue&select=sheet_id,enabled`,
-  );
-  expect(reminder).toEqual({ sheet_id: actions!.id, enabled: true });
-
-  // ── the setup checklist on the Packs tab: eight steps with their progress
-  await page.reload();
-  const steps = page.getByRole('list', { name: 'ISO 27001 setup steps' });
-  await expect(steps.getByRole('listitem')).toHaveCount(8);
-  await expect(steps.getByRole('listitem').first()).toContainText('1. Define the scope');
-  // Starter words the second step its own way: the risk register's three examples name a process each
-  await expect(steps.locator('[data-step="assets"]')).toContainText('List your processes');
-  await expect(steps.locator('[data-step="assets"]')).toContainText('In progress · 3 of 5');
-  await expect(steps.locator('[data-step="risks"]')).toContainText('To do · 0 of 5');
-  await expect(steps.locator('[data-step="treat"]')).toContainText(
-    'Open ISO/IEC 27001:2022 requirements',
-  );
-  // Starter has no incident sheet: incidents go to Nonconformities and CAPA
-  await expect(steps.locator('[data-step="incidents"]')).toContainText('Record incidents');
-
-  // ── Home: the card with the next step, dismissible
-  await page.goto(`/${slug}/home`);
-  const card = page.getByTestId('setup-card');
-  await expect(card).toContainText('ISO 27001 setup');
-  await expect(card).toContainText('Next: step 1 of 8');
-  await card.getByRole('link', { name: 'Open Scope and context' }).click();
-  await expect(page.getByRole('heading', { name: 'Scope and context' })).toBeVisible();
-  await page.goto(`/${slug}/home`);
-  await page.getByRole('button', { name: 'Dismiss ISO 27001 setup' }).click();
-  await expect(page.getByTestId('setup-card')).toHaveCount(0);
-  await page.reload();
-  await expect(
-    page.getByRole('heading', { name: /Good (morning|afternoon|evening)/ }),
-  ).toBeVisible();
-  await expect(page.getByTestId('setup-card')).toHaveCount(0);
-
-  // ── Full on top of Starter: only what is missing
-  await page.goto(`/${slug}/settings?tab=packs`);
-  await page
-    .getByRole('list', { name: 'Installed packs' })
-    .getByRole('button', { name: `Add Full ${TITLE}` })
-    .click();
-  await expect(dialog.getByRole('radio', { name: 'Full', exact: true })).toBeChecked();
-  await expect(dialog.getByTestId('extends-level')).toContainText(
-    'Starter is installed. Full adds only what is missing',
-  );
-  await expect(dialog).toContainText('Installs 6 sheets');
-  await dialog.getByRole('button', { name: 'Install' }).click();
-  await expect(dialog.getByRole('status')).toContainText(`Added Full to ${TITLE}.`, {
-    timeout: 60_000,
+  expect(missed).toEqual({ mode: 'test', enabled: true });
+  await page.goto(`/${slug}/automations`);
+  const escalation = page.getByRole('listitem').filter({
+    hasText: 'Serious security incident about to miss its 24 hours → tell top management',
   });
-  const after = await rest<{ name: string; pack_install_id: string }[]>(
-    page,
-    `sheets?org_id=eq.${org!.id}&parent_sheet_id=is.null&is_library=eq.false&archived_at=is.null&select=name,pack_install_id&order=position`,
-  );
-  expect(after).toHaveLength(11);
-  expect(new Set(after.map((s) => s.pack_install_id))).toEqual(new Set([install!.id]));
-  const [full] = await rest<{ level: string }[]>(
-    page,
-    `pack_installs?id=eq.${install!.id}&select=level`,
-  );
-  expect(full!.level).toBe('full');
+  await expect(escalation.getByTestId('automation-test-mode')).toContainText('Test mode');
 
-  // ── Full: the internal incident form, a draft, opened from the setup checklist
-  await page.reload();
-  const report = page
-    .getByRole('list', { name: 'ISO 27001 setup steps' })
-    .locator('[data-step="incidents"]');
-  await expect(report).toContainText('Make incidents easy to report');
-  await report.getByRole('link', { name: 'Open Security incidents' }).click();
-  await expect(page.getByRole('heading', { name: 'Security incidents' })).toBeVisible();
-  await expect(page).toHaveURL(/view=/);
-  await expect(page.getByLabel('Form title')).toHaveValue('Report a security incident');
-  const [form] = await rest<{ config: { form: { access: string; status: string } } }[]>(
+  // ── the treatment plan's Risk acceptance workflow
+  const treatment = sheets.find((s) => s.name === 'Risk treatment plan')!;
+  await page.goto(`/${slug}/s/${treatment.id}/settings#approvals`);
+  const flows = page.getByRole('list', { name: 'Approval workflows' });
+  await expect(flows).toContainText('Risk acceptance');
+  await shot(page, '03-risk-acceptance-workflow');
+  const [mfa] = await rest<{ display_id: string }[]>(
     page,
-    `views?org_id=eq.${org!.id}&type=eq.form&name=eq.Report a security incident&select=config`,
+    `items?sheet_id=eq.${treatment.id}&name=like.*multi-factor*&select=display_id`,
   );
-  expect(form!.config.form).toMatchObject({ access: 'internal', status: 'draft' });
+  await page.goto(`/${slug}/s/${treatment.id}?item=${mfa!.display_id}`);
+  await expect(
+    page.getByTestId('item-approvals').getByRole('button', { name: 'Submit for approval' }),
+  ).toBeVisible();
+
+  // ── the ISMS CAPA app over Core's nonconformities
+  await page.goto(`/${slug}/apps/isms-capa`);
+  await expect(
+    page.getByRole('navigation', { name: 'ISMS CAPA screens' }).getByRole('link'),
+  ).toHaveText([
+    'Report a problem',
+    'My actions',
+    'Needs my check',
+    'All nonconformities',
+    'Overview',
+    'Workflow',
+  ]);
+  await page.goto(`/${slug}/apps/isms-capa/overview`);
+  await expect(page.getByRole('heading', { name: 'Open ISMS nonconformities' })).toBeVisible();
+  await shot(page, '04-isms-overview');
 });

@@ -308,8 +308,16 @@ export function extensionUses(m: PackManifest, depKey: string): Map<string, Set<
     for (const k of Object.keys(e.options ?? {})) add(k);
     for (const a of e.automations ?? []) {
       keysIn([a.trigger, ...a.conditions] as unknown as Json, add);
-      for (const x of a.actions)
-        if (typeof x.sheetRef !== 'string') keysIn(x as unknown as Json, add);
+      for (const x of a.actions) {
+        if (typeof x.sheetRef === 'string') continue;
+        // update_linked sets a field of the linked items (another sheet): only its link field is this sheet's
+        if (x.type === 'update_linked') {
+          const link = (x.path as Obj | undefined)?.linkFieldKey;
+          if (typeof link === 'string') add(link);
+          continue;
+        }
+        keysIn(x as unknown as Json, add);
+      }
     }
     for (const f of e.fields ?? []) {
       const cfg = (f.config ?? {}) as Obj;
@@ -338,8 +346,14 @@ export function extensionUses(m: PackManifest, depKey: string): Map<string, Set<
     for (const w of d.widgets) {
       const t = w.sheetRef ? splitSheetRef(w.sheetRef, m.key) : null;
       if (!t || t.pack !== depKey) continue;
-      mark(t.ref, w.fieldKey);
-      for (const c of w.conditions ?? []) mark(t.ref, c.fieldKey);
+      // the columns this pack adds to that sheet are its own, never a use
+      const own = new Set(
+        (m.extends ?? [])
+          .filter((e) => e.pack === depKey && e.sheet === t.ref)
+          .flatMap((e) => (e.fields ?? []).map((f) => f.key)),
+      );
+      for (const k of [w.fieldKey, ...(w.conditions ?? []).map((c) => c.fieldKey)])
+        if (!k || !own.has(k)) mark(t.ref, k);
     }
   // the pack's own links into the dependency's sheets, and what lookups and roll-ups read through them
   for (const s of m.sheets)
