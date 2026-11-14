@@ -91,6 +91,9 @@
       "sharp",
       "@tailwindcss/oxide",
       "unrs-resolver"
-    ]
+    ],
+    "patchedDependencies": {
+      "next@15.5.29": "patches/next@15.5.29.patch"
+    }
   }
 }
