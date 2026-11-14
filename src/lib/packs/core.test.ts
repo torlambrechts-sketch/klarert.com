@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { extendsAgainst, extensionUses, neededLevel, STANDARDS_KEY } from '@/engine/packs/extend';
 import { manifestAtLevel } from '@/engine/packs/levels';
+import { planPackInstall, type PackSnapshot } from '@/engine/packs/plan';
+import { afterInstall } from '@/engine/packs/installed.fixture';
+import { selectManifest } from '@/engine/packs/select';
 import { repoPacks } from '@/lib/packs/catalogue';
 
 // The Core registers (docs/11 Core registers) and the ISO 14001 demonstration add-on as the catalogue ships them.
@@ -106,5 +109,39 @@ describe('ISO 14001 add-on', () => {
       expect.arrayContaining(['category', 'score', 'standards', 'status']),
     );
     expect(uses.get('incidents')!.has('incident_type')).toBe(true);
+  });
+
+  it('still plans in Create with its own sheet left out: the link to it is left out too', () => {
+    const snap: PackSnapshot = {
+      orgId: 'org',
+      prefixes: [],
+      folders: [],
+      installs: [],
+      members: [],
+      jobRoles: [],
+      teams: [],
+      lastSheetPosition: null,
+      lastFolderPosition: null,
+      lastDashboardPosition: null,
+    };
+    let n = 0;
+    const env = {
+      today: '2026-11-14',
+      now: new Date('2026-11-14T09:00:00Z'),
+      timeZone: 'Europe/Oslo',
+      newId: () => `00000000-0000-4000-8000-${String((n += 1)).padStart(12, '0')}`,
+      hash: 'h',
+      userId: 'u1',
+    };
+    const withCore = afterInstall(snap, planPackInstall(core, snap, env).payload!, 'inst-core');
+    const chosen = selectManifest(iso14001, ['sheet:aspects']);
+    expect(chosen.sheets).toEqual([]);
+    const plan = planPackInstall(chosen, withCore, env);
+    expect(plan.preview.conflicts).toEqual([]);
+    expect(plan.payload!.fields.map((f) => f.key)).toEqual([]);
+    expect(plan.payload!.items.map((i) => i.name)).toEqual([
+      'Environmental',
+      'Example: Coolant spill reaches a surface drain',
+    ]);
   });
 });

@@ -5,7 +5,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(27);
+select plan(32);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000c1', 'core-admin@a.test'),
@@ -20,6 +20,7 @@ insert into memberships (org_id, user_id, role) values
 insert into packs (key, version, title, manifest, hash) values
   ('pgtap-core', '1.0.0', 'Core', '{"system": true}', repeat('c', 64)),
   ('pgtap-addon', '1.0.0', 'Add-on', '{"requires": [{"pack": "pgtap-core", "range": "^1.0.0"}], "standard": {"id": "pgx", "label": "PGX"}}', repeat('d', 64)),
+  ('pgtap-addon', '1.1.0', 'Add-on', '{"requires": [{"pack": "pgtap-core", "range": "^1.0.0"}], "standard": {"id": "pgx", "label": "PGX"}}', repeat('e', 64)),
   ('pgtap-rogue', '1.0.0', 'Rogue', '{"requires": []}', repeat('f', 64));
 
 create temporary table plans (name text primary key, p jsonb);
@@ -56,6 +57,17 @@ insert into plans values ('core', $j${
   "automations": [], "dashboards": [],
   "options": [{ "ref": "pgtap-core:risk.standards.pgx", "field_id": "c4000000-0000-4000-8000-000000000001", "option": { "id": "pgx", "label": "PGX", "color": "green" } },
               { "ref": "pgtap-core:risk.standards.all", "field_id": "c4000000-0000-4000-8000-000000000001", "option": { "id": "all", "label": "Renamed", "color": "red" } }]
+}$j$), ('up', $j${
+  "pack": { "key": "pgtap-addon", "from_version": "1.0.0", "from_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "version": "1.1.0", "hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" },
+  "install": "",
+  "add": { "folders": [], "sheets": [], "groups": [], "views": [], "items": [], "links": [], "automations": [], "dashboards": [],
+    "fields": [{ "id": "c4000000-0000-4000-8000-000000000031", "ref": "pgtap-core:risk.pgx_volume", "sheet_id": "c2000000-0000-4000-8000-000000000001", "key": "pgx_volume", "name": "Volume", "type": "number", "position": "a4", "width": 96, "config": {}, "system": true }],
+    "options": [{ "ref": "pgtap-core:risk.standards.pgx_air", "field_id": "c4000000-0000-4000-8000-000000000001", "option": { "id": "pgx_air", "label": "Air", "color": "teal" } }] },
+  "update": { "folders": [], "sheets": [], "fields": [], "groups": [], "views": [], "items": [], "automations": [], "dashboards": [] },
+  "archive": { "folders": [], "sheets": [], "items": [], "dashboards": [] },
+  "disable": { "automations": [] },
+  "summary": { "added": 2, "changed": 0, "archived": 0, "kept": 0, "conflicts": 0, "theirs": 0 }
 }$j$), ('rogue', $j${
   "pack": { "key": "pgtap-rogue", "version": "1.0.0", "hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
   "folders": [], "sheets": [], "groups": [],
@@ -108,6 +120,19 @@ select is((select count(*)::int from item_links where field_id = 'c4000000-0000-
 select is((select display_id from items where id = 'c6000000-0000-4000-8000-000000000011'), 'CR-001',
   'they are numbered by the core sheet');
 
+-- upgrade: the add-on's new column and option reach the core sheet, in its own provenance and ref map
+select lives_ok($$ select upgrade_pack((select id from pack_installs where pack_key = 'pgtap-addon' and status = 'installed'),
+    jsonb_set((select p from plans where name = 'up'), '{install}',
+              to_jsonb((select id::text from pack_installs where pack_key = 'pgtap-addon' and status = 'installed')))) $$,
+  'the add-on upgrades onto the core sheet');
+select is((select pack_install_id from fields where id = 'c4000000-0000-4000-8000-000000000031'),
+  (select id from pack_installs where pack_key = 'pgtap-addon' and status = 'installed'), 'the new column is the add-on''s');
+select ok((select config->'options' @> '[{"id": "pgx_air"}]' from fields where id = 'c4000000-0000-4000-8000-000000000001'),
+  'the new option is merged into the core field');
+select is((select ref_map->>'option:pgtap-core:risk.standards.pgx_air' from pack_installs where pack_key = 'pgtap-addon' and status = 'installed'),
+  'c4000000-0000-4000-8000-000000000001', 'the new option joins the add-on''s ref map');
+select is((select version from pack_installs where pack_key = 'pgtap-addon' and status = 'installed'), '1.1.0', 'the install moved on');
+
 -- archive: the core cannot go while the add-on builds on it
 select throws_ok($$ select archive_pack((select id from pack_installs where pack_key = 'pgtap-core' and status = 'installed')) $$,
   'not allowed: archive Add-on first, it builds on this pack', 'a pack another install builds on is not archived');
@@ -119,7 +144,8 @@ select is((select count(*)::int from views where id = 'c5000000-0000-4000-8000-0
 select is((select array_agg(name order by name) from groups where sheet_id = 'c2000000-0000-4000-8000-000000000001'),
   array['Environment', 'Open'], 'its empty group is removed, the one with items kept');
 select is((select config->'options' from fields where id = 'c4000000-0000-4000-8000-000000000001'),
-  '[{"id": "all", "label": "All standards", "color": "grey"}]'::jsonb, 'its standard leaves the Standards field');
+  '[{"id": "all", "label": "All standards", "color": "grey"}, {"id": "pgx_air", "label": "Air", "color": "teal"}]'::jsonb,
+  'its standard leaves the Standards field; another option it added stays');
 select is((select count(*)::int from items where sheet_id = 'c2000000-0000-4000-8000-000000000001' and archived_at is null), 2,
   'every item on the core sheet is kept');
 select is((select count(*)::int from sheets where id = 'c2000000-0000-4000-8000-000000000001' and archived_at is null), 1,
