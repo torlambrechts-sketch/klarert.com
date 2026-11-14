@@ -1,4 +1,4 @@
--- 0037_create_bundles.sql · Create wizard (docs/05 §4 Create, docs/11 Bundles). A ready-made app made from the Create
+-- 0038_create_bundles.sql · Create wizard (docs/05 §4 Create, docs/11 Bundles). A ready-made app made from the Create
 -- wizard is a pack install with a name, a named owner, a review date and its origin. Until the owner marks it reviewed
 -- its sheets show "Generated from template, not yet reviewed" (the auditor's rule). create_bundle runs install_pack and
 -- stamps the install in the same transaction, then logs bundle.created on the workspace chain ("created via Create

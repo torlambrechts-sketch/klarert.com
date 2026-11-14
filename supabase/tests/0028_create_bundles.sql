@@ -1,4 +1,4 @@
--- Create wizard bundles (0037_create_bundles.sql, docs/11 Bundles): create_bundle installs a pack and stamps it with
+-- Create wizard bundles (0038_create_bundles.sql, docs/11 Bundles): create_bundle installs a pack and stamps it with
 -- a name, an owner, a review date and its origin in one transaction, logging bundle.created; only the named owner
 -- marks it reviewed (bundle.reviewed); only owners and admins create one. Run: pnpm db:test
 begin;
