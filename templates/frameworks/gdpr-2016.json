@@ -16,6 +16,9 @@
     "idPrefix": "GDPR-",
     "folder": "Frameworks"
   },
+  "status": "current",
+  "statusNote": "In force as adopted, with its corrigenda. Regulation (EU) 2025/2518 adds procedural rules for cross-border enforcement from April 2027 without changing these articles. The Digital Omnibus proposal to amend the GDPR is not law; we watch it.",
+  "statusCheckedOn": "2026-11-14",
   "requirements": [
     {
       "ref": "Ch. II",

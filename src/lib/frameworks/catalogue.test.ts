@@ -1,18 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { requirementKey } from '@/engine/frameworks/refs';
+import { STATUS_MAX_AGE_DAYS, daysBetween, statusIsStale } from '@/engine/frameworks/status';
 import { frameworkPacks, repoCrosswalks, repoFrameworks } from './catalogue';
 import { MAX_TITLE, parseFramework } from './schema';
 
 const frameworks = repoFrameworks();
 const byKey = new Map(frameworks.map((f) => [f.key, f]));
 const iso27001 = byKey.get('iso-27001')!;
+const byId = (id: string) => frameworks.find((f) => `${f.key}@${f.version}` === id)!;
 
 describe('the shipped catalogue', () => {
-  it('has the six frameworks', () => {
+  it('has the six frameworks, with both editions of ISO 9001 and ISO 14001', () => {
     expect(frameworks.map((f) => `${f.key}@${f.version}`)).toEqual([
       'iso-27001@2022',
       'iso-9001@2015',
+      'iso-9001@2026',
       'iso-14001@2015',
+      'iso-14001@2026',
       'iso-45001@2018',
       'gdpr@2016',
       'nis2@2022',
@@ -160,6 +164,8 @@ describe('the shipped catalogue', () => {
       url: 'https://example.com',
       titles: 'own-words',
       library: { name: 'X', itemLabel: 'Item', idPrefix: 'X-', folder: 'F' },
+      status: 'current',
+      statusCheckedOn: '2026-11-14',
       requirements: [
         { ref: '1', kind: 'theme', title: 'One' },
         { ref: '1.1', parent: '1', kind: 'clause', title: 'A' },
@@ -179,6 +185,71 @@ describe('the shipped catalogue', () => {
     expect(() =>
       parseFramework({ ...raw, requirements: [{ ref: '1.1', kind: 'clause', title: 'A' }] }),
     ).toThrow(/needs a parent theme/);
+    expect(() => parseFramework({ ...raw, status: 'withdrawn' })).toThrow(/names the edition/);
+    expect(() => parseFramework({ ...raw, transitionEnds: '2029-04-15' })).toThrow(
+      /Only a withdrawn/,
+    );
+    expect(() => parseFramework({ ...raw, status: 'revision-in-progress' })).toThrow(/stage/);
+    const { statusCheckedOn: _, ...unchecked } = raw;
+    expect(() => parseFramework(unchecked)).toThrow();
+  });
+});
+
+describe('edition currency (docs/12 Standards watch)', () => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  it(`every framework's edition status was checked in the last ${STATUS_MAX_AGE_DAYS} days`, () => {
+    const stale = frameworks
+      .filter((f) => statusIsStale(f, today))
+      .map(
+        (f) =>
+          `${f.key}@${f.version} (checked ${f.statusCheckedOn}, ${daysBetween(f.statusCheckedOn, today)} days ago)`,
+      );
+    expect(
+      stale,
+      'Run the Standards watch (docs/12): check each edition, update the status fields and statusCheckedOn.',
+    ).toEqual([]);
+  });
+
+  it('a replaced edition names a successor in the catalogue and a transition end after its own edition', () => {
+    const ids = new Set(frameworks.map((f) => `${f.key}@${f.version}`));
+    for (const f of frameworks.filter((x) => x.supersededBy)) {
+      expect(ids, `${f.key}@${f.version}`).toContain(f.supersededBy);
+      const [key, version] = f.supersededBy!.split('@');
+      expect(key).toBe(f.key);
+      expect(Number(version)).toBeGreaterThan(Number(f.version));
+      expect(f.transitionEnds! > `${version}-01-01`).toBe(true);
+    }
+  });
+
+  it('records the status of each edition as checked on 14 Nov 2026', () => {
+    const status = Object.fromEntries(frameworks.map((f) => [`${f.key}@${f.version}`, f.status]));
+    expect(status).toEqual({
+      'iso-27001@2022': 'current',
+      'iso-9001@2015': 'withdrawn',
+      'iso-9001@2026': 'current',
+      'iso-14001@2015': 'withdrawn',
+      'iso-14001@2026': 'current',
+      'iso-45001@2018': 'revision-in-progress',
+      'gdpr@2016': 'current',
+      'nis2@2022': 'current',
+    });
+    expect(byId('iso-14001@2015').transitionEnds).toMatch(/^2029-04/);
+    expect(byId('iso-9001@2015').transitionEnds).toBe('2029-09-30');
+    expect(byId('iso-45001@2018').revisionStage).toBe('DIS');
+  });
+
+  it('the 2026 editions carry the harmonised structure changes', () => {
+    const refs = (id: string) => byId(id).requirements.map((r) => r.ref);
+    for (const ref of ['6.1.4', '6.1.5', '6.3', '9.3.1', '9.3.2', '9.3.3', '10.1', '10.2'])
+      expect(refs('iso-14001@2026')).toContain(ref);
+    expect(refs('iso-14001@2026')).not.toContain('10.3');
+    for (const ref of ['6.1.1', '6.1.2', '6.1.3', '6.3', '10.1', '10.2'])
+      expect(refs('iso-9001@2026')).toContain(ref);
+    expect(refs('iso-9001@2026')).not.toContain('10.3');
+    expect(byId('iso-14001@2026').requirements.find((r) => r.ref === '10.1')?.title).toBe(
+      'Continual improvement',
+    );
   });
 });
 
@@ -230,6 +301,22 @@ describe('the shipped cross-walks', () => {
     expect(counts.get('equivalent')).toBeGreaterThan(50);
     expect(counts.get('related')).toBeGreaterThan(20);
   });
+
+  it('maps every requirement of the 2015 editions to the 2026 edition, and every 2026 one back', () => {
+    for (const key of ['iso-9001', 'iso-14001']) {
+      const edition = crosswalks.filter((c) => c.from.framework === key && c.to.framework === key);
+      const from = new Set(edition.map((c) => c.from.ref));
+      const to = new Set(edition.map((c) => c.to.ref));
+      for (const r of byId(`${key}@2015`).requirements.filter((x) => x.kind !== 'theme'))
+        expect(from, `${key} 2015 ${r.ref}`).toContain(r.ref);
+      for (const r of byId(`${key}@2026`).requirements.filter((x) => x.kind !== 'theme'))
+        expect(to, `${key} 2026 ${r.ref}`).toContain(r.ref);
+      for (const c of edition) {
+        expect(c.from.version).toBe('2015');
+        expect(c.to.version).toBe('2026');
+      }
+    }
+  });
 });
 
 describe('framework libraries as packs', () => {
@@ -239,7 +326,9 @@ describe('framework libraries as packs', () => {
     expect(packs.map((p) => `${p.key} ${p.version}`)).toEqual([
       'framework-iso-27001 2022.4.0',
       'framework-iso-9001 2015.4.0',
+      'framework-iso-9001-2026 2026.1.0',
       'framework-iso-14001 2015.4.0',
+      'framework-iso-14001-2026 2026.1.0',
       'framework-iso-45001 2018.4.0',
       'framework-gdpr 2016.4.0',
       'framework-nis2 2022.4.0',
@@ -254,8 +343,10 @@ describe('framework libraries as packs', () => {
     expect(packs[0]!.sheets[0]!.items).toHaveLength(93 + 34);
   });
 
-  it('ID prefixes are unique across the libraries', () => {
+  it('ID prefixes and pack keys are unique across the libraries, so editions adopt side by side', () => {
     const prefixes = packs.map((p) => p.sheets[0]!.idPrefix);
     expect(new Set(prefixes).size).toBe(prefixes.length);
+    const keys = packs.map((p) => p.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });

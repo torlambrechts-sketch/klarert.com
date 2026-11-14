@@ -16,6 +16,9 @@
     "idPrefix": "NIS2-",
     "folder": "Frameworks"
   },
+  "status": "current",
+  "statusNote": "In force; the obligations apply through each Member State's transposing law. The Commission's proposals to amend NIS2 (the Digital Omnibus of November 2025 and the targeted amendment of January 2026) are not law; we watch them.",
+  "statusCheckedOn": "2026-11-14",
   "requirements": [
     {
       "ref": "Art. 20",

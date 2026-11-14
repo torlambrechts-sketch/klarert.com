@@ -20,6 +20,9 @@
       "refStartsWith": "A."
     }
   },
+  "status": "current",
+  "statusNote": "Current edition. Amendment 1:2024 (climate action changes to clauses 4.1 and 4.2) is part of it and certification bodies audit it. No new edition of ISO/IEC 27001 has been published; ISO/IEC 27000 was revised in 2026, which does not change certificates.",
+  "statusCheckedOn": "2026-11-14",
   "requirements": [
     {
       "ref": "4",
