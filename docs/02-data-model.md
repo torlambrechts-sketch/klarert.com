@@ -78,7 +78,7 @@ UI (optimistic) ─► Server Action ─► src/server/commands/<command>.ts
 | `create_subitem(parent, name, position, values, automation?)` | inline add, item panel (§12) | `item.created` on the sub-item, `subitem.added` on the parent |
 | `create_subitems(parent, rows, automation?)` | From template, automation `create_subitems` (≤ 50) | as above, per row |
 | `move_subitem(item, parent, position, automation?)` | "Move to another item", reorder | `subitem.moved` on the sub-item, `subitem.removed` / `subitem.added` on both parents |
-| `create_link_pair_items(sheet, group, rows, automation?)` (0037) | the requirement checks sync (≤ 50 rows): items with both links of the sheet's `uniqueLinkPair` (and two-way inverses), a pair that already has a live item skipped | `item.created` and `link.changed` per created item, through `create_item` and `set_item_links` |
+| `create_link_pair_items(sheet, group, rows, automation?)` (0038) | the requirement checks sync (≤ 50 rows): items with both links of the sheet's `uniqueLinkPair` (and two-way inverses), a pair that already has a live item skipped | `item.created` and `link.changed` per created item, through `create_item` and `set_item_links` |
 | `verify_activity_chain(chain_key)` | Verify button | — |
 | `log_audit_export(org, kind, scope)` (0034) | audit exports (members, auditors too) | `audit.exported` on the workspace chain with the kind and a flat scope of known keys (docs/11 Audit outputs) |
 
@@ -165,7 +165,7 @@ One level of items under an item. A sheet with sub-items has one hidden **child 
 - **Gate** (`sheets.settings.subitems.blockClose`): `set_item_values` refuses to move the parent's status field (first `status`, else the first field with a done option) to a done option while a live sub-item is not done, with `subitems open: <Label> still open: CA-014.2 Root cause, … Close them before closing CA-014.` (people, bulk edits, imports and automations alike; the run log says `blocked`). `lockCascade`: a locked parent locks its sub-items for non-admins.
 - `sheets.settings.subitems = { label, blockClose, lockCascade, template: [{ name, values by child field key }] }`; template values keep tokens (`$in:N`, `$today`, `$actor`) until applied.
 
-### One item per pair of links (`sheets.settings.uniqueLinkPair`, 0037)
+### One item per pair of links (`sheets.settings.uniqueLinkPair`, 0038)
 
 `uniqueLinkPair = ["<link field key>", "<link field key>"]`: no two live items of the sheet link to the same pair of targets through those fields (a supplier × requirement check exists once). The trigger `item_links_unique_pair` refuses the link that would complete a second item with the same pair, whoever writes it (code 23505, "duplicate pair: SRC-004 already links these two items"); pairs are serialised with a transaction advisory lock, so two writers cannot both pass. `create_link_pair_items` skips such pairs instead of failing. Packs set it with `uniqueLinks` on a sheet (docs/11).
 

@@ -104,7 +104,7 @@ export const packSheet = templateSheet.omit({ folder: true, items: true, forms: 
   items: z.array(packItem).max(500).default([]),
   /**
    * Two link fields of the sheet (keys): one live item per pair of targets, kept by the database
-   * (sheets.settings.uniqueLinkPair, migration 0037), e.g. one check per supplier and requirement.
+   * (sheets.settings.uniqueLinkPair, migration 0038), e.g. one check per supplier and requirement.
    */
   uniqueLinks: z.tuple([fieldKey, fieldKey]).optional(),
   /** The lowest level that installs this sheet (docs/11 Levels). */

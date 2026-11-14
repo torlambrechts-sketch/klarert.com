@@ -1,4 +1,4 @@
--- Requirement checks (0037_requirement_checks.sql): a sheet's uniqueLinkPair allows one live item per pair of
+-- Requirement checks (0038_requirement_checks.sql): a sheet's uniqueLinkPair allows one live item per pair of
 -- targets, whoever links it; create_link_pair_items creates checks with both links (and two-way inverses) and
 -- skips pairs that already have one. Run: pnpm db:test
 begin;
