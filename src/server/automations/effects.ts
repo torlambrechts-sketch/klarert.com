@@ -862,7 +862,7 @@ export function automationStore(scope: { orgId: string; userId: string | null })
         list = Promise.resolve(
           db
             .from('automations')
-            .select('id, sheet_id, name, trigger, conditions, actions, created_by')
+            .select('id, sheet_id, name, trigger, conditions, actions, created_by, mode')
             .eq('org_id', orgId)
             .eq('sheet_id', sheetId)
             .eq('enabled', true)
@@ -877,6 +877,7 @@ export function automationStore(scope: { orgId: string; userId: string | null })
             conditions: (Array.isArray(a.conditions) ? a.conditions : []) as unknown as Condition[],
             actions: (Array.isArray(a.actions) ? a.actions : []) as AutomationRow['actions'],
             createdBy: a.created_by,
+            mode: a.mode === 'test' ? ('test' as const) : ('live' as const),
           })),
         );
         automationLists.set(sheetId, list);

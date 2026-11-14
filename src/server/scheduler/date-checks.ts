@@ -71,7 +71,7 @@ export async function runDateChecks(
   const [autoRows, org, sheets] = await Promise.all([
     db
       .from('automations')
-      .select('id, sheet_id, trigger, conditions')
+      .select('id, sheet_id, trigger, conditions, mode')
       .eq('org_id', orgId)
       .eq('enabled', true)
       .in('trigger->>type', SCHEDULED_TRIGGERS)
@@ -92,6 +92,8 @@ export async function runDateChecks(
       conditions: (Array.isArray(a.conditions) ? a.conditions : []) as unknown as Condition[],
     }));
   summary.automations = automations.length;
+  // test mode (docs/04 §14) claims its own occurrences: turning an automation live lets a date fire for real once
+  const testMode = new Set(autoRows.filter((a) => a.mode === 'test').map((a) => a.id));
   if (automations.length === 0) return summary;
 
   const pauses = must(
@@ -142,7 +144,7 @@ export async function runDateChecks(
       const { data: claimed, error } = await db.rpc('claim_schedule_occurrence', {
         p_automation: f.automationId,
         p_item: f.itemId,
-        p_occurrence: f.occurrence,
+        p_occurrence: testMode.has(f.automationId) ? `test:${f.occurrence}` : f.occurrence,
       });
       if (error) throw new Error(error.message);
       if (!claimed) continue;

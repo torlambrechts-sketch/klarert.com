@@ -121,14 +121,14 @@ isOneToOne: false
                   ]
                 },"automations": {
                   Row: {
-                    "actions": NonNullable<Json>,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"last_run_at": string | null,"locked": boolean,"name": string,"org_id": string,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
+                    "actions": NonNullable<Json>,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"mode": string,"id": string,"last_run_at": string | null,"locked": boolean,"name": string,"org_id": string,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "actions": NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"run_count"?: number,"sheet_id": string,"source"?: string,"trigger": NonNullable<Json>,"updated_at"?: string,"version"?: number,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "actions": NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"mode"?: string,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"name": string,"org_id": string,"run_count"?: number,"sheet_id": string,"source"?: string,"trigger": NonNullable<Json>,"updated_at"?: string,"version"?: number,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Update: {
-                    "actions"?: NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"run_count"?: number,"sheet_id"?: string,"source"?: string,"trigger"?: NonNullable<Json>,"updated_at"?: string,"version"?: number,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
+                    "actions"?: NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"mode"?: string,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"name"?: string,"org_id"?: string,"run_count"?: number,"sheet_id"?: string,"source"?: string,"trigger"?: NonNullable<Json>,"updated_at"?: string,"version"?: number,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null
                   }
                   Relationships: [
                     {
@@ -1657,6 +1657,9 @@ isOneToOne: false
                            },
 "restore_file":
 { Args: { "p_file": string }; Returns: undefined
+                           },
+"set_pack_automations_mode":
+{ Args: { "p_install": string,"p_mode": string }; Returns: number
                            },
 "set_automation_pause":
 { Args: { "p_automation": string,"p_item": string,"p_paused": boolean }; Returns: boolean

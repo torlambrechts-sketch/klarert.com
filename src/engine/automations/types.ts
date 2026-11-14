@@ -218,7 +218,8 @@ export type Effect =
   | { kind: 'post'; itemId: string; body: string }
   | { kind: 'webhook'; itemId: string; url: string; payload: Json };
 
-export type StepOutcome = 'done' | 'no_change' | 'blocked' | 'failed' | 'skipped';
+/** `test`: the automation is in test mode (docs/04 §14): the step was planned and logged, nothing was done. */
+export type StepOutcome = 'done' | 'no_change' | 'blocked' | 'failed' | 'skipped' | 'test';
 
 /** One action of a run as planned: effects to execute, or an outcome decided without executing anything. */
 export interface PlannedStep {
@@ -239,4 +240,5 @@ export interface Step {
   message: string;
 }
 
-export type RunStatus = 'done' | 'partial' | 'failed' | 'stopped';
+/** `test`: a run of an automation in test mode (docs/04 §14): logged, no effect performed. */
+export type RunStatus = 'done' | 'partial' | 'failed' | 'stopped' | 'test';

@@ -56,10 +56,15 @@ const OUTCOME_WORDS: Record<Step['outcome'], string> = {
   skipped: 'skipped',
   blocked: 'blocked',
   failed: 'failed',
+  test: 'test mode',
 };
+
+const lowerFirst = (s: string) => (s ? s[0]!.toLowerCase() + s.slice(1) : s);
 
 /** "Set Status to Done", "Create "Follow-up" (FU-003)", "Notify (skipped: No one to notify)". */
 export function stepLine(step: Step): string {
+  // test mode (docs/04 §14): what the step would have done
+  if (step.outcome === 'test') return `Would ${lowerFirst(step.summary)}`;
   if (step.outcome === 'done')
     return step.message ? `${step.summary} (${step.message})` : step.summary;
   const why = step.message ? `: ${step.message.replace(/\.$/, '')}` : '';
@@ -70,7 +75,12 @@ export function stepLine(step: Step): string {
 export function runMessage(name: string, status: RunStatus, steps: Step[], detail = ''): string {
   if (status === 'stopped' && steps.length === 0) return `${name} stopped. ${detail}.`;
   const lines = steps.map(stepLine).join(' · ');
-  const head = status === 'stopped' ? `${name} stopped (${detail})` : name;
+  const head =
+    status === 'stopped'
+      ? `${name} stopped (${detail})`
+      : status === 'test'
+        ? `${name} (test mode)`
+        : name;
   return lines ? `${head}: ${lines}` : head;
 }
 
