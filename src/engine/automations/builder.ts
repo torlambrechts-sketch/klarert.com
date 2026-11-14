@@ -143,7 +143,12 @@ export function triggerFields(type: TriggerId, ctx: Ctx): Field[] {
       ? ctx.fieldsOf(child).filter((f) => defOf(f).triggers.includes('field_becomes'))
       : [];
   }
-  return sheetFields(ctx).filter((f) => defOf(f).triggers.includes(type));
+  return sheetFields(ctx).filter(
+    (f) =>
+      defOf(f).triggers.includes(type) &&
+      // a type whose kind depends on its settings (a formula) watches a date only when it gives a date
+      (type !== 'date_arrives' || !defOf(f).effectiveKind || kindOf(f, ctx) === 'date'),
+  );
 }
 
 /** The field a trigger names: this sheet's, or a sub-item field for sub-item triggers. */

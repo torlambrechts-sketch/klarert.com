@@ -161,4 +161,65 @@ describe('activity lines', () => {
     expect(isItemEntry({ action: 'fields.update' })).toBe(false);
     expect(isItemEntry({ action: 'item.moved' })).toBe(true);
   });
+
+  it('personal data: erased values and names say so, markers never show', () => {
+    expect(
+      activityText(
+        entry({ fieldId: 'f-due', oldValue: { $erased: true }, newValue: { $personal: 'abc' } }),
+        look,
+      ),
+    ).toBe('Due date: erased → Restricted');
+    expect(
+      activityText(
+        entry({ action: 'item.renamed', oldValue: { $erased: true }, newValue: 'Access request' }),
+        look,
+      ),
+    ).toBe('Renamed: erased → “Access request”');
+    expect(
+      activityText(
+        entry({ action: 'file.added', newValue: { file_id: 'x', filename: { $erased: true } } }),
+        look,
+      ),
+    ).toBe('Files: added an erased file');
+  });
+
+  it('retention entries read as sentences, the tombstone without values', () => {
+    expect(
+      activityText(
+        entry({ action: 'retention.due', newValue: { rule: 'Requests 3 years', action: 'erase' } }),
+        look,
+      ),
+    ).toBe('Due for retention review under “Requests 3 years”: erase the personal data');
+    expect(
+      activityText(
+        entry({
+          action: 'retention.postponed',
+          newValue: { until: '2027-01-31' },
+          note: 'Open complaint',
+        }),
+        look,
+      ),
+    ).toBe('Retention postponed to 31 Jan 2027 · Reason: “Open complaint”');
+    expect(
+      activityText(
+        entry({
+          action: 'retention.erased',
+          newValue: {
+            rule: 'Requests 3 years',
+            fields: [
+              { key: 'requester', name: 'Requester' },
+              { key: 'email', name: 'Email' },
+            ],
+            files: 1,
+            comments: 2,
+            renamed: false,
+          },
+        }),
+        look,
+      ),
+    ).toBe('Personal data erased under “Requests 3 years”: Requester, Email, 1 file, 2 comments');
+    expect(activityText(entry({ action: 'retention.hold_placed', note: 'Litigation' }), look)).toBe(
+      'Legal hold placed · Reason: “Litigation”',
+    );
+  });
 });

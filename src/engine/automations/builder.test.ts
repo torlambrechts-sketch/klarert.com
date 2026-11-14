@@ -78,6 +78,17 @@ describe('compatibility filters', () => {
     expect(triggerFields('field_becomes', ctx).map((x) => x.key)).toEqual(['status', 'owner']);
     expect(triggerFields('number_above', ctx).map((x) => x.key)).toEqual(['score', 'likelihood']);
     expect(triggerFields('date_arrives', ctx).map((x) => x.key)).toEqual(['done_on']);
+    // a formula watches a date only when its result is a date
+    const deadline = makeField(
+      'formula',
+      { expr: 'ADDMONTHS({done_on}, 1)', result: 'date' },
+      { key: 'deadline', name: 'Deadline', position: 'a9' },
+    );
+    const withDeadline = makeCtx({ fields: [...Object.values(f), deadline] });
+    expect(triggerFields('date_arrives', withDeadline).map((x) => x.key)).toEqual([
+      'done_on',
+      'deadline',
+    ]);
     expect(triggerFields('button_clicked', ctx).map((x) => x.key)).toEqual(['send']);
   });
 

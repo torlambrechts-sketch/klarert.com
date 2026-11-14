@@ -11,6 +11,11 @@ import {
   workspacesWithDateChecks,
   type DateCheckSummary,
 } from '@/server/scheduler/date-checks';
+import {
+  claimRetentionDay,
+  runRetentionChecks,
+  workspacesWithRetention,
+} from '@/server/scheduler/retention-checks';
 
 // The scheduler (docs/04 §8): Vercel Cron, every 15 minutes, `GET /api/cron/scheduler` with
 // `Authorization: Bearer ${CRON_SECRET}`. One of the four places allowed the service role (CLAUDE.md rule 6): the
@@ -55,6 +60,37 @@ export async function GET(request: NextRequest) {
       );
     }
   }
+  // retention (docs/02 §18): once a day per workspace, due records go to the review queue; nothing is erased here
+  const retention = { workspaces: 0, queued: 0, failed: 0 };
+  const day = now.toISOString().slice(0, 10);
+  try {
+    for (const orgId of await workspacesWithRetention(db)) {
+      try {
+        if (!(await claimRetentionDay(db, orgId, day))) continue;
+        const r = await runRetentionChecks(db, orgId, { now });
+        retention.workspaces += 1;
+        retention.queued += r.queued;
+      } catch (e) {
+        retention.failed += 1;
+        console.error(
+          JSON.stringify({
+            level: 'error',
+            source: 'scheduler.retention',
+            org: orgId,
+            message: e instanceof Error ? e.message : String(e),
+          }),
+        );
+      }
+    }
+  } catch (e) {
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        source: 'scheduler.retention',
+        message: e instanceof Error ? e.message : String(e),
+      }),
+    );
+  }
   let releasedHolds = 0;
   try {
     releasedHolds = await releaseIdleHolds(db, now);
@@ -73,6 +109,7 @@ export async function GET(request: NextRequest) {
     ms: Date.now() - started,
     ...total,
     releasedHolds,
+    retention,
   };
   console.info(JSON.stringify({ level: 'info', source: 'scheduler', ...body }));
   return NextResponse.json(body);

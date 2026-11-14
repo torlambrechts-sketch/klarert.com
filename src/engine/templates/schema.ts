@@ -13,6 +13,7 @@ import {
 import { MAX_TABS, tabLabelSchema } from '../views/tabs';
 import { MAX_COLUMN_GROUPS } from '../views/column-groups';
 import { ID_PREFIX, LABEL_COLORS } from '../labels';
+import { templateRetentionRuleSchema } from '../retention';
 
 // Sheet templates (templates/*.json, docs/07 Part B): people, a folder, sheets with fields, groups, views and items,
 // and automations, all cross-referenced by `ref` and field `key`. The schema checks the shape and every reference so
@@ -225,6 +226,16 @@ export const templateSheet = z.object({
    * group's fields together, at its first field.
    */
   columnGroups: z.array(templateColumnGroup).max(MAX_COLUMN_GROUPS).default([]),
+  /**
+   * Retention (docs/02 §18): rules stored in sheets.settings.retention, groups by ref. Suggestions: the workspace
+   * reviews and sets its own periods. `personalNames`: item names may hold personal data.
+   */
+  retention: z
+    .object({
+      personalNames: z.boolean().optional(),
+      rules: z.array(templateRetentionRuleSchema).max(20),
+    })
+    .optional(),
 });
 
 export const templateAutomation = z.object({
@@ -359,6 +370,24 @@ export const sheetTemplateSchema = z
             problem(at('columnGroups', ci), `"${k}" is in more than one column group.`);
           grouped.add(k);
         }
+      }
+      const ruleIds = new Set<string>();
+      for (const [ri, r] of (s.retention?.rules ?? []).entries()) {
+        const where = at('retention', 'rules', ri);
+        if (ruleIds.has(r.id)) problem(where, `Duplicate retention rule "${r.id}".`);
+        ruleIds.add(r.id);
+        if (r.from.kind === 'field' && !keys.has(r.from.fieldKey))
+          problem(where, `Unknown field "${r.from.fieldKey}".`);
+        for (const k of r.fieldKeys ?? []) {
+          const f = keys.get(k);
+          if (!f) problem(where, `Unknown field "${k}".`);
+          else if ((f.config as { personalData?: unknown } | undefined)?.personalData !== true)
+            problem(where, `"${k}" is not marked personal data.`);
+        }
+        for (const g of r.groups ?? [])
+          if (!groups.has(g)) problem(where, `Unknown group "${g}".`);
+        for (const c of r.conditions ?? [])
+          if (!keys.has(c.fieldKey)) problem(where, `Unknown field "${c.fieldKey}".`);
       }
       for (const p of formProblems(s.forms, new Set(keys.keys()), (r) => groups.has(r)))
         problem(at('forms', p.index), p.message);

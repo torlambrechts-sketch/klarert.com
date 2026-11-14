@@ -46,6 +46,7 @@ describe('repository packs', () => {
       'supplier-management',
       'iso-27001',
       'iso-9001',
+      'gdpr',
       'start-capa',
       'start-documents',
     ]);

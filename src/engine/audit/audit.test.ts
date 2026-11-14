@@ -265,6 +265,9 @@ describe('audit pack tables', () => {
     expect(logValueText({ values: { f1: { $restricted: 'x' }, f2: 'open' } })).toBe(
       '{"values":{"f1":"Restricted","f2":"open"}}',
     );
+    expect(logValueText({ values: { f1: { $personal: 'x' } } })).toBe(
+      '{"values":{"f1":"Personal data"}}',
+    );
     expect(logValueText('text')).toBe('text');
     const t = activityTable(
       [

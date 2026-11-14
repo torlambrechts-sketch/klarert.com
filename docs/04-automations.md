@@ -49,7 +49,7 @@ A sub-item's `item.created` and `value.changed` are also **projected** onto its 
 | `field_becomes` | `becomes` | `{ "type": "field_becomes", "fieldKey": "status", "value": "opt_done" }` | the new value matches and the old did not (transition). multi/people: the value was **added**. check: `true`/`false`. yesno: `yes/no/na`. applicability: `applicable/not_applicable` | label types, multiselect, people, check, yesno, applicability, finding, maturity, severity, classification |
 | `number_above` | `above` | `{ "type": "number_above", "fieldKey": "residual", "threshold": 12 }` | `toNumber` crosses from ≤ threshold (or empty) to > threshold | number kinds incl. computed (formula, rollup, riskmatrix, progress, measurement, ack, checklist) |
 | `number_below` | `below` | `{ "type": "number_below", "fieldKey": "score", "threshold": 50 }` | crosses from ≥ threshold (or empty) to < threshold | same |
-| `date_arrives` | `dateis` | `{ "type": "date_arrives", "fieldKey": "review_date", "offsetDays": -30 }` | scheduled: today ≥ `toDate + offsetDays` (negative = before the date). Once per item per date value | calendar-capable types |
+| `date_arrives` | `dateis` | `{ "type": "date_arrives", "fieldKey": "review_date", "offsetDays": -30 }` | scheduled: today ≥ `toDate + offsetDays` (negative = before the date). Once per item per date value | calendar-capable types, and formulas whose result is a date (e.g. a deadline `ADDMONTHS({received_on}, 1)`) |
 | `clock_warning` | `clock` | `{ "type": "clock_warning", "fieldKey": "notify_clock", "hoursLeft": 24 }` | scheduled: a running clock has fewer than N hours left. Once per item per deadline | clock |
 | `evidence_expiring` | `evidence` | `{ "type": "evidence_expiring", "fieldKey": "evidence", "days": 30 }` | scheduled: the earliest `valid_until` is within N days. Once per item per expiry date | evidence |
 | `button_clicked` | `button` | `{ "type": "button_clicked", "fieldKey": "send_for_approval" }` | someone clicks the button on an item | button |
@@ -132,6 +132,7 @@ Webhook payload (generic):
   - `evidence_expiring`: earliest `valid_until` − days; occurrence = that date. With `source: 'item_files'` (no field) it watches the files of the item's Files tab instead of an evidence field; the builder offers it as "Item files (Files tab)" on every sheet.
 - Fire when the moment has passed **and** is within the last 7 days (no flood of history when an automation is created), conditions are true, and `insert into scheduler_fired … on conflict do nothing` inserted a row (exactly once per occurrence).
 - Admins can press **Run date checks now** on the Automations page (same code, as the user, only for their workspace).
+- **Retention** (docs/02 §18): the same cron run checks each workspace with retention rules once a day (`retention_claim_day`) and queues due records (`retention_enqueue`); nothing is erased without a person's approval. Owners and admins have **Check now** on Workspace admin › Retention.
 
 ## 9. Webhook worker
 

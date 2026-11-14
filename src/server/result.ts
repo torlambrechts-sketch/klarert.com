@@ -118,6 +118,21 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
     'A field changed. Reload the sheet.',
   ],
   [/item not found/, 'not_found', 'This item no longer exists or was archived.'],
+  // retention (0036, docs/02 §18)
+  [
+    /retention: on legal hold/,
+    'blocked',
+    'This item is on legal hold. Release the hold before erasing anything.',
+  ],
+  [/retention: already done/, 'conflict', 'This retention review was already approved.'],
+  [
+    /retention: the rule no longer exists/,
+    'conflict',
+    'The sheet no longer has this retention rule. Check the sheet settings.',
+  ],
+  [/retention: postpone to a later date/, 'invalid', 'Choose a date after today.'],
+  [/retention: say why/, 'invalid', 'Say why.'],
+  [/retention: (.*)/, 'invalid', 'The retention check did not fit the sheet. Check again.'],
   [/update too old to change/, 'forbidden', 'Updates can be changed for 15 minutes after posting.'],
   [/update not found/, 'not_found', 'This update was deleted.'],
   [/file already replaced|file not found/, 'conflict', 'That file was replaced in the meantime.'],

@@ -249,14 +249,14 @@ isOneToOne: false
                   Relationships: []
                 },"files": {
                   Row: {
-                    "approved_at": string | null,"approved_by": string | null,"archived_at": string | null,"archived_by": string | null,"category": string | null,"classification": string,"description": string | null,"personal_data": boolean,"scan_status": string,"superseded_at": string | null,"version_no": number,"version_note": string | null,"collected_at": string,"created_at": string,"field_id": string | null,"filename": string,"id": string,"item_id": string,"mime_type": string,"org_id": string,"replaced_by": string | null,"sha256": string,"size_bytes": number,"source": string,"storage_path": string,"uploaded_by": string | null,"valid_until": string | null
+                    "approved_at": string | null,"approved_by": string | null,"archived_at": string | null,"archived_by": string | null,"category": string | null,"classification": string,"description": string | null,"erased_at": string | null,"personal_data": boolean,"scan_status": string,"superseded_at": string | null,"version_no": number,"version_note": string | null,"collected_at": string,"created_at": string,"field_id": string | null,"filename": string,"id": string,"item_id": string,"mime_type": string,"org_id": string,"replaced_by": string | null,"sha256": string,"size_bytes": number,"source": string,"storage_path": string,"uploaded_by": string | null,"valid_until": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "approved_at"?: string | null,"approved_by"?: string | null,"archived_at"?: string | null,"archived_by"?: string | null,"category"?: string | null,"classification"?: string,"description"?: string | null,"personal_data"?: boolean,"scan_status"?: string,"superseded_at"?: string | null,"version_no"?: number,"version_note"?: string | null,"collected_at"?: string,"created_at"?: string,"field_id"?: string | null,"filename": string,"id"?: string,"item_id": string,"mime_type": string,"org_id": string,"replaced_by"?: string | null,"sha256": string,"size_bytes": number,"source"?: string,"storage_path": string,"uploaded_by"?: string | null,"valid_until"?: string | null
+                    "approved_at"?: string | null,"approved_by"?: string | null,"archived_at"?: string | null,"archived_by"?: string | null,"category"?: string | null,"classification"?: string,"description"?: string | null,"erased_at"?: string | null,"personal_data"?: boolean,"scan_status"?: string,"superseded_at"?: string | null,"version_no"?: number,"version_note"?: string | null,"collected_at"?: string,"created_at"?: string,"field_id"?: string | null,"filename": string,"id"?: string,"item_id": string,"mime_type": string,"org_id": string,"replaced_by"?: string | null,"sha256": string,"size_bytes": number,"source"?: string,"storage_path": string,"uploaded_by"?: string | null,"valid_until"?: string | null
                   }
                   Update: {
-                    "approved_at"?: string | null,"approved_by"?: string | null,"archived_at"?: string | null,"archived_by"?: string | null,"category"?: string | null,"classification"?: string,"description"?: string | null,"personal_data"?: boolean,"scan_status"?: string,"superseded_at"?: string | null,"version_no"?: number,"version_note"?: string | null,"collected_at"?: string,"created_at"?: string,"field_id"?: string | null,"filename"?: string,"id"?: string,"item_id"?: string,"mime_type"?: string,"org_id"?: string,"replaced_by"?: string | null,"sha256"?: string,"size_bytes"?: number,"source"?: string,"storage_path"?: string,"uploaded_by"?: string | null,"valid_until"?: string | null
+                    "approved_at"?: string | null,"approved_by"?: string | null,"archived_at"?: string | null,"archived_by"?: string | null,"category"?: string | null,"classification"?: string,"description"?: string | null,"erased_at"?: string | null,"personal_data"?: boolean,"scan_status"?: string,"superseded_at"?: string | null,"version_no"?: number,"version_note"?: string | null,"collected_at"?: string,"created_at"?: string,"field_id"?: string | null,"filename"?: string,"id"?: string,"item_id"?: string,"mime_type"?: string,"org_id"?: string,"replaced_by"?: string | null,"sha256"?: string,"size_bytes"?: number,"source"?: string,"storage_path"?: string,"uploaded_by"?: string | null,"valid_until"?: string | null
                   }
                   Relationships: [
                     {
@@ -831,6 +831,54 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"personal_activity": {
+                  Row: {
+                    "activity_id": number,"erased_at": string | null,"erased_by": string | null,"field_id": string | null,"file_id": string | null,"id": number,"item_id": string | null,"new_value": Json | null,"old_value": Json | null,"org_id": string,"salt": string | null,"sheet_id": string | null,"slot": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activity_id": number,"erased_at"?: string | null,"erased_by"?: string | null,"field_id"?: string | null,"file_id"?: string | null,"id"?: number,"item_id"?: string | null,"new_value"?: Json | null,"old_value"?: Json | null,"org_id": string,"salt"?: string | null,"sheet_id"?: string | null,"slot": string
+                  }
+                  Update: {
+                    "activity_id"?: number,"erased_at"?: string | null,"erased_by"?: string | null,"field_id"?: string | null,"file_id"?: string | null,"id"?: number,"item_id"?: string | null,"new_value"?: Json | null,"old_value"?: Json | null,"org_id"?: string,"salt"?: string | null,"sheet_id"?: string | null,"slot"?: string
+                  }
+                  Relationships: []
+                },"retention_checks": {
+                  Row: {
+                    "day": string,"org_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "day": string,"org_id": string
+                  }
+                  Update: {
+                    "day"?: string,"org_id"?: string
+                  }
+                  Relationships: []
+                },"retention_holds": {
+                  Row: {
+                    "id": string,"item_id": string,"org_id": string,"placed_at": string,"placed_by": string | null,"reason": string,"released_at": string | null,"released_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id"?: string,"item_id": string,"org_id": string,"placed_at"?: string,"placed_by"?: string | null,"reason": string,"released_at"?: string | null,"released_by"?: string | null
+                  }
+                  Update: {
+                    "id"?: string,"item_id"?: string,"org_id"?: string,"placed_at"?: string,"placed_by"?: string | null,"reason"?: string,"released_at"?: string | null,"released_by"?: string | null
+                  }
+                  Relationships: []
+                },"retention_queue": {
+                  Row: {
+                    "action": string,"created_at": string,"decided_at": string | null,"decided_by": string | null,"done_activity": number | null,"due_on": string,"id": string,"item_id": string,"org_id": string,"postponed_until": string | null,"reason": string | null,"rule_id": string,"rule_name": string,"sheet_id": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"done_activity"?: number | null,"due_on": string,"id"?: string,"item_id": string,"org_id": string,"postponed_until"?: string | null,"reason"?: string | null,"rule_id": string,"rule_name": string,"sheet_id": string,"status"?: string
+                  }
+                  Update: {
+                    "action"?: string,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"done_activity"?: number | null,"due_on"?: string,"id"?: string,"item_id"?: string,"org_id"?: string,"postponed_until"?: string | null,"reason"?: string | null,"rule_id"?: string,"rule_name"?: string,"sheet_id"?: string,"status"?: string
+                  }
+                  Relationships: []
                 },"restricted_activity": {
                   Row: {
                     "activity_id": number,"field_id": string,"new_value": Json | null,"old_value": Json | null,"org_id": string,"salt": string,"sheet_id": string | null
@@ -1418,6 +1466,23 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"retention_claim_day":
+{ Args: { "p_day": string,"p_org": string }; Returns: boolean
+                           },
+"retention_enqueue":
+{ Args: { "p_org": string,"p_rows": Json }; Returns: number
+                           },
+"retention_execute":
+{ Args: { "p_note"?: string,"p_queue": string }; Returns: Json
+                           },
+"retention_postpone":
+{ Args: { "p_queue": string,"p_reason": string,"p_until": string }; Returns: {
+              "action": string,"created_at": string,"decided_at": string | null,"decided_by": string | null,"done_activity": number | null,"due_on": string,"id": string,"item_id": string,"org_id": string,"postponed_until": string | null,"reason": string | null,"rule_id": string,"rule_name": string,"sheet_id": string,"status": string
+            }
+                           },
+"set_retention_hold":
+{ Args: { "p_item": string,"p_on": boolean,"p_reason": string }; Returns: boolean
+                           },
 "log_audit_export":
 { Args: { "p_kind": string,"p_org": string,"p_scope": Json }; Returns: number
                            },

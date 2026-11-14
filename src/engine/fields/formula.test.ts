@@ -159,7 +159,7 @@ describe('formula compute', () => {
   it('reads as a number for number triggers', () => {
     const v = compute('{likelihood} * {impact}', { likelihood: 4, impact: 4 });
     expect(formula.toNumber(v as number, formula.defaultConfig(), makeCtx())).toBe(16);
-    expect(formula.triggers).toEqual(['number_above', 'number_below']);
+    expect(formula.triggers).toEqual(['number_above', 'number_below', 'date_arrives']);
     expect(formula.formAllowed).toBe(false);
   });
 });

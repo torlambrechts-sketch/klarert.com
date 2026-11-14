@@ -2,6 +2,7 @@
 // people are injected, so the same plan is unit-tested here and written by src/server/templates/importer.ts.
 // Order: sheets (fields without links) → link fields with inverses → groups → views → items → links → automations.
 // Values go through each field type's `normalize`, as the commands do; nothing here runs automations or status rules.
+import type { RetentionSettings } from '../retention';
 import { planSubitems, type SubitemFieldSpec, type SubitemRows } from './subitems';
 import { draftProblems } from '../automations/builder';
 import { basicCtx } from '../context';
@@ -71,6 +72,8 @@ export interface PlannedSheet {
       tabsDefault?: SheetTab[];
       defaultViewId?: string;
       columnGroups?: ColumnGroup[];
+      /** Retention rules (docs/02 §18): the template's, groups by id. */
+      retention?: RetentionSettings;
     };
   };
   /** The sheet's sub-items (docs/02 §12): its child sheet, written after the parents. */
@@ -317,6 +320,18 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
       template: { id: t.id, version: t.version, ref: s.ref },
       ...(columnGroups.length ? { columnGroups } : {}),
     };
+    if (s.retention) {
+      // group refs → the new groups' ids (docs/02 §18)
+      settings.retention = {
+        ...(s.retention.personalNames ? { personalNames: true } : {}),
+        rules: s.retention.rules.map(({ groups: refs, ...r }) => ({
+          ...r,
+          ...(refs?.length
+            ? { groupIds: refs.map((g) => groupIds.get(`${s.ref}.${g}`) ?? '').filter(Boolean) }
+            : {}),
+        })),
+      };
+    }
     if (s.tabs) {
       // view names → the new views' ids (docs/02 sheets.settings.tabs)
       const tabs = resolveTemplateTabs(s.tabs, s.defaultView, views);

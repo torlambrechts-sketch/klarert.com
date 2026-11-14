@@ -90,6 +90,9 @@ describe('evaluateFormula', () => {
     ['ADDDAYS({due}, 14)', '2026-12-04'],
     ['ADDDAYS("2026-12-31", 1)', '2027-01-01'],
     ['ADDDAYS({blank}, 3)', ''],
+    ['ADDMONTHS("2026-01-31", 1)', '2026-02-28'],
+    ['ADDMONTHS("2026-11-11", 3)', '2027-02-11'],
+    ['ADDMONTHS({blank}, 1)', ''],
     ['CONCAT("a", 1, TRUE)', 'a1TRUE'],
     ['concat()', ''],
     ['LEN({title})', 9],
@@ -116,6 +119,7 @@ describe('evaluateFormula', () => {
     ['NOT(1, 2)', '#ERR'],
     ['DAYS("soon", TODAY())', '#ERR'],
     ['ADDDAYS(TODAY(), "x")', '#ERR'],
+    ['ADDMONTHS(TODAY(), "x")', '#ERR'],
     ['ABS("x")', '#ERR'],
     ['1 / 0 + {nope}', '#DIV0'],
   ])('%s → %s', (src, code) => {

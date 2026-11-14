@@ -1,5 +1,5 @@
 import { todayIn } from '@/engine/sheet-data';
-import { formatDateTime } from '@/engine/fields/helpers';
+import { formatDate, formatDateTime } from '@/engine/fields/helpers';
 import { ORGANISE_ACTIONS, organiseText } from '@/engine/organise';
 import Link from 'next/link';
 import { env } from '@/lib/env';
@@ -24,6 +24,15 @@ import { listPacks, packSetups } from '@/server/commands/packs';
 import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
 import { AdoptFramework } from './frameworks';
+import { retentionOverview } from '@/server/commands/retention';
+import { queueDueText } from '@/engine/retention';
+import {
+  CheckRetentionNow,
+  QueueActions,
+  QueueItemLink,
+  RemoveErasedFiles,
+  StateChip,
+} from './retention';
 import { listAuditOutputs, reviewSheetsByInstall } from '@/server/commands/audit';
 import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
 import { addDays, addMonths } from '@/engine/fields/helpers';
@@ -37,6 +46,7 @@ const TABS = [
   { id: 'entities', label: 'Entities and sites' },
   { id: 'packs', label: 'Packs' },
   { id: 'frameworks', label: 'Frameworks' },
+  { id: 'retention', label: 'Retention' },
   { id: 'archived', label: 'Archived' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
@@ -128,7 +138,7 @@ export default async function SettingsPage({
       <PageHeader
         crumb={workspace.name}
         title="Workspace admin"
-        description="Members and roles, teams and job roles, entities and sites, packs, frameworks, archived folders and sheets."
+        description="Members and roles, teams and job roles, entities and sites, packs, frameworks, retention, archived folders and sheets."
       />
       <PageTabs
         label="Settings sections"
@@ -152,6 +162,7 @@ export default async function SettingsPage({
       {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
       {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
       {tab === 'frameworks' ? <FrameworksTab org={org} /> : null}
+      {tab === 'retention' ? <RetentionTab org={org} today={today} /> : null}
       {tab === 'archived' ? (
         <ArchivedTab
           db={supabase}
@@ -804,6 +815,133 @@ async function FrameworksTab({ org }: { org: string }) {
 }
 
 /** Archived folders (restored with their sheets), archived sheets, and the latest folder and sheet changes. */
+async function RetentionTab({ org, today }: { org: string; today: string }) {
+  const r = await retentionOverview({ org });
+  if (!r.ok)
+    return (
+      <Card title="Retention">
+        <div role="alert" className="flex flex-col items-start gap-2">
+          <p className="m-0">The retention queue could not be loaded.</p>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/${org}/settings?tab=retention`}>Retry</Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  const { queue, sheets, lastCheck, erasedFilesLeft } = r.data;
+  const open = queue.filter((q) => q.state !== 'done');
+  const done = queue
+    .filter((q) => q.state === 'done')
+    .slice(-20)
+    .reverse();
+  return (
+    <>
+      <Card
+        title="Review queue"
+        description="Records whose retention period has ended under a sheet's rules. Nothing is erased until you approve it: approve, postpone with a reason, or place a legal hold."
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-muted-foreground text-copy-13 m-0">
+            {lastCheck
+              ? `Checked daily. Last scheduled check ${formatDate(lastCheck)}.`
+              : 'Checked daily by the scheduler.'}
+          </p>
+          <div className="flex gap-1">
+            {erasedFilesLeft > 0 ? <RemoveErasedFiles org={org} /> : null}
+            <CheckRetentionNow org={org} />
+          </div>
+        </div>
+        {open.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13 m-0">
+            Nothing waits for review.
+            {sheets.length === 0
+              ? ' Add retention rules in a sheet’s settings (Sheet settings › Retention), or install the GDPR pack.'
+              : ''}
+          </p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Records to review">
+            {open.map((q) => (
+              <li
+                key={q.id}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <QueueItemLink org={org} row={q} />
+                  <span className="text-muted-foreground text-label-13">
+                    {q.sheetName} · {q.ruleName} · {queueDueText(q)}
+                    {q.archived ? ' · archived item' : ''}
+                  </span>
+                  <span className="flex flex-wrap items-center gap-2">
+                    <StateChip state={q.state} />
+                    {q.state === 'held' && q.holdReason ? (
+                      <span className="text-label-13 text-muted-foreground">{q.holdReason}</span>
+                    ) : q.state === 'postponed' && q.reason ? (
+                      <span className="text-label-13 text-muted-foreground">{q.reason}</span>
+                    ) : null}
+                  </span>
+                </div>
+                <QueueActions org={org} row={q} today={today} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card
+        title="Retention rules"
+        description="Each sheet's rules decide when its records are due. Change them in the sheet's settings. Periods shipped by packs are suggestions: set your own."
+      >
+        {sheets.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13 m-0">
+            No sheet has a retention rule yet.
+          </p>
+        ) : (
+          <ul
+            className="divide-line flex flex-col divide-y"
+            aria-label="Sheets with retention rules"
+          >
+            {sheets.map((s) => (
+              <li key={s.sheetId} className="flex flex-col gap-1 py-3">
+                <Link
+                  href={`/${org}/s/${s.sheetId}/settings#retention`}
+                  className="font-medium hover:underline"
+                >
+                  {s.sheetName}
+                </Link>
+                {s.rules.map((rule) => (
+                  <span key={rule.id} className="text-copy-13">
+                    <span className="font-medium">{rule.name}</span>: {rule.text}
+                  </span>
+                ))}
+                <span className="text-muted-foreground text-label-13">
+                  Personal data:{' '}
+                  {s.personalFields.length ? s.personalFields.join(', ') : 'no field marked yet'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      {done.length ? (
+        <Card
+          title="Recently approved"
+          description="A record of each approval stays in the item's activity log."
+        >
+          <ul className="divide-line flex flex-col divide-y" aria-label="Recently approved">
+            {done.map((q) => (
+              <li key={q.id} className="flex flex-col gap-0.5 py-2">
+                <QueueItemLink org={org} row={q} />
+                <span className="text-muted-foreground text-label-13">
+                  {q.ruleName} · approved {q.decidedAt ? formatDate(q.decidedAt.slice(0, 10)) : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
+    </>
+  );
+}
+
 async function ArchivedTab({
   db,
   org,

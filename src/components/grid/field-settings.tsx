@@ -295,6 +295,30 @@ function FieldSettingsBody({
               />
             )}
           </Labelled>
+          {def.storage !== 'computed' ? (
+            <Labelled
+              label="Personal data"
+              hint="Values are kept out of the activity log in clear and can be erased under the sheet's retention rules (Sheet settings › Retention). Mark the field before it holds data: earlier log entries cannot change."
+            >
+              {(id) => (
+                <label htmlFor={id} className="text-label-13 flex items-center gap-2">
+                  <input
+                    id={id}
+                    type="checkbox"
+                    checked={config.personalData === true}
+                    onChange={(e) =>
+                      setConfig((c) => {
+                        const rest = { ...c };
+                        delete rest.personalData;
+                        return e.target.checked ? { ...rest, personalData: true } : rest;
+                      })
+                    }
+                  />
+                  This field holds personal data
+                </label>
+              )}
+            </Labelled>
+          ) : null}
           {isAdmin ? (
             <label className="text-label-13 flex items-center gap-2">
               <input
