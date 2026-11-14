@@ -45,7 +45,10 @@ test.describe('desktop', () => {
     await nav.getByRole('heading', { name: 'Sheets', exact: true }).hover();
     await nav.getByRole('button', { name: 'Add a sheet or folder' }).click();
     await expect(
-      page.getByText('Folders organise sheets. They do not restrict who can see them.'),
+      // folders can be restricted (Access, docs/02 §16): the note says where (docs/05 §2.1)
+      page.getByText(
+        'Folders organise sheets. To choose who sees a folder’s sheets, use Access in its menu.',
+      ),
     ).toBeVisible();
     await page.getByRole('menuitem', { name: 'New folder' }).click();
     const name = nav.getByRole('textbox', { name: 'Folder name' });

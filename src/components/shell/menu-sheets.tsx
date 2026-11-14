@@ -1379,7 +1379,7 @@ function MoveToDialog({
       <DialogContent className="gap-3">
         <DialogTitle className="text-heading-16">Move {sheet?.name} to…</DialogTitle>
         <DialogDescription className="text-muted-foreground text-copy-13">
-          Folders organise sheets. They do not restrict who can see them.
+          {NEW_FOLDER_NOTE}
         </DialogDescription>
         <input
           type="search"
