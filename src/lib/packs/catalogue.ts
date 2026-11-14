@@ -9,6 +9,7 @@ import gdpr from '../../../templates/packs/gdpr.json';
 import iso14001 from '../../../templates/packs/iso-14001.json';
 import iso27001 from '../../../templates/packs/iso-27001.json';
 import iso9001 from '../../../templates/packs/iso-9001.json';
+import nis2 from '../../../templates/packs/nis2.json';
 import supplierManagement from '../../../templates/packs/supplier-management.json';
 import type { AppFile } from '@/engine/apps/types';
 import { satisfies } from '@/engine/packs/semver';
@@ -56,6 +57,7 @@ export function repoPacks(): PackManifest[] {
       parsePack(gdpr),
       parsePack(core),
       parsePack(iso14001),
+      parsePack(nis2),
       ...START_PACKS.map((id) => parsePack(startToPack(startById(id)!))),
     ],
     repoApps(),

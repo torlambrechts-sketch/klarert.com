@@ -13,6 +13,7 @@ import { packToTemplate } from '@/engine/packs/template';
 import { SHEET_KINDS, SHEET_REF, splitSheetRef, type PackManifest } from '@/engine/packs/types';
 import { levelProblems } from '@/engine/packs/levels';
 import { extendsProblems } from '@/engine/packs/extend';
+import { applyPackSettings, settingProblems } from '@/engine/packs/settings';
 import {
   sheetTemplateSchema,
   templateAutomation,
@@ -175,6 +176,40 @@ export const packWidget = z.object({
   days: z.number().int().min(1).max(365).optional(),
 });
 
+const settingKey = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/, 'Use a short lower-case key.');
+/** A pack setting (docs/11 Pack settings): choices shipped as data that set defaults in the pack's own sheets. */
+export const packSetting = z.object({
+  key: settingKey,
+  label: z.string().trim().min(1).max(80),
+  description: z.string().trim().max(600),
+  values: z
+    .array(z.object({ key: settingKey, label: z.string().trim().min(1).max(80) }))
+    .min(1)
+    .max(20),
+  choices: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,39}$/, 'Use a short lower-case id.'),
+        label: z.string().trim().min(1).max(80),
+        group: z.string().trim().min(1).max(60).optional(),
+        values: z.record(settingKey, z.string().max(1000)),
+        verified: z.boolean().default(false),
+        checkedOn: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
+        note: z.string().trim().max(800).optional(),
+        sources: z
+          .array(z.object({ title: z.string().trim().min(1).max(200), url: z.string().url() }))
+          .max(6)
+          .default([]),
+      }),
+    )
+    .min(1)
+    .max(60),
+  default: z.string().max(40).optional(),
+});
+
 export const packManifestSchema = z
   .object({
     key: packKey,
@@ -279,6 +314,8 @@ export const packManifestSchema = z
     extends: z.array(packExtension).max(30).optional(),
     /** Why the pack ships no intake forms (docs/11 Pack quality bar). */
     formsNotApplicable: z.string().trim().min(1).max(200).optional(),
+    /** Choices a workspace makes for the pack (docs/11 Pack settings). */
+    settings: z.array(packSetting).max(5).optional(),
   })
   .superRefine((m, ctx) => {
     const problem = (path: (string | number)[], message: string) =>
@@ -466,9 +503,18 @@ export const packManifestSchema = z
       problem(['sheets'], 'A pack needs a sheet or an extends entry.');
     for (const p of extendsProblems(m as PackManifest)) problem(p.path, p.message);
 
-    // everything a template checks: field refs, rules, views, tabs, forms, column groups, items, automations
+    // settings: unique keys and choices, tokens that name a setting value, on the pack's own text fields
+    for (const p of settingProblems(m as PackManifest)) problem(p.path, p.message);
+
+    // everything a template checks: field refs, rules, views, tabs, forms, column groups, items, automations (with
+    // each setting at its first choice, so `$setting:` tokens are checked as the values they become)
     if (m.sheets.length) {
-      const asTemplate = sheetTemplateSchema.safeParse(packToTemplate(m as PackManifest));
+      const first = Object.fromEntries(
+        (m.settings ?? []).map((s) => [s.key, s.default ?? s.choices[0]!.id]),
+      );
+      const asTemplate = sheetTemplateSchema.safeParse(
+        packToTemplate(applyPackSettings(m as PackManifest, first)),
+      );
       if (!asTemplate.success)
         for (const issue of asTemplate.error.issues)
           problem(issue.path as (string | number)[], issue.message);

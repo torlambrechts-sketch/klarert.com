@@ -4,6 +4,7 @@
 // automations) is the template planner's (planTemplateImport); this file adds what a pack has on top: folders by ref,
 // stable refs on every row, ID prefixes renamed when the workspace already uses them, items and links by ref,
 // dashboards, libraries and documents registers, and the checks that an install can go ahead.
+import { applyPackSettings, type PackSettingValues } from './settings';
 import { describeAutomation } from '../automations/builder';
 import { basicCtx } from '../context';
 import { widgetProblem } from '../dashboards/registry';
@@ -335,7 +336,7 @@ export function previewLines(p: PackPreview): string[] {
 }
 
 export function planPackInstall(
-  full: PackManifest,
+  manifest: PackManifest,
   snap: PackSnapshot,
   env: PackEnv,
   opts: {
@@ -351,8 +352,14 @@ export function planPackInstall(
     allowOutbound?: boolean;
     /** Every automation installs live, none in test mode: sample data (the seed), never a person's install. */
     live?: boolean;
+    /**
+     * The workspace's choices for the pack's settings (docs/11 Pack settings): `$setting:` defaults and example
+     * values of its own sheets are resolved with them; without a choice they are left out.
+     */
+    settings?: PackSettingValues;
   } = {},
 ): PackPlan {
+  const full = applyPackSettings(manifest, opts.settings ?? {});
   const conflicts: string[] = [];
   const operations: PackOperation[] = [];
   // ── the level: the manifest as installed at it (a pack without levels installs whole)
@@ -997,6 +1004,12 @@ export function planPackInstall(
         itemLabel: r.item_label as string,
         idPrefix: (r.id_prefix as string | null) ?? '',
         isLibrary: !!r.is_library,
+        // the sheet's approval workflows, so a `start_workflow` action or a workflow trigger finds them
+        ...(Array.isArray((r.settings as { workflows?: unknown } | undefined)?.workflows)
+          ? {
+              workflows: (r.settings as unknown as { workflows: Sheet['workflows'] }).workflows,
+            }
+          : {}),
       },
     ]),
   );

@@ -3,14 +3,33 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, BookOpen, Check, Layers, Loader2, RotateCcw, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  BookOpen,
+  Check,
+  ExternalLink,
+  Layers,
+  Loader2,
+  RotateCcw,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { inputClass } from '@/components/fields/shared';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import type { LevelSummary } from '@/engine/packs/levels';
+import { chosen, choiceGroups, type PackSettingValues } from '@/engine/packs/settings';
+import type { PackSetting } from '@/engine/packs/types';
+import { cn } from '@/lib/utils';
 import type { InstallResult, PackPreviewResult } from '@/server/commands/packs';
 import type { Result } from '@/server/result';
-import { archivePackAction, installPackAction, previewPackAction } from './actions';
+import {
+  archivePackAction,
+  installPackAction,
+  previewPackAction,
+  setPackSettingsAction,
+} from './actions';
 
 // Workspace admin › Packs (docs/05 §2.1, docs/11): the preview dialog with install and its progress, and Archive
 // with an inline confirm. The words come from the planner (src/engine/packs/plan.ts); nothing is worked out here.
@@ -302,6 +321,223 @@ function LevelChoice({
   );
 }
 
+/**
+ * A pack setting (docs/11 Pack settings): a picker over its choices (grouped, e.g. EU member states and EEA countries)
+ * and what the chosen one says, with whether it was verified and where it comes from.
+ */
+export function SettingChoice({
+  setting,
+  value,
+  disabled,
+  onChange,
+}: {
+  setting: PackSetting;
+  value: string | null;
+  disabled?: boolean;
+  onChange: (id: string | null) => void;
+}) {
+  const id = `pack-setting-${setting.key}`;
+  const c = chosen(setting, value ? { [setting.key]: value } : {});
+  return (
+    <div className="flex flex-col gap-2" data-testid={`setting-${setting.key}`}>
+      <label htmlFor={id} className="text-label-13 font-medium">
+        {setting.label}
+      </label>
+      <select
+        id={id}
+        className={cn(inputClass, 'h-9 w-full sm:max-w-80')}
+        value={value ?? ''}
+        disabled={disabled}
+        aria-describedby={`${id}-what`}
+        onChange={(e) => onChange(e.target.value || null)}
+      >
+        <option value="">Not chosen yet</option>
+        {choiceGroups(setting).map((g) =>
+          g.group ? (
+            <optgroup key={g.group} label={g.group}>
+              {g.choices.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.label}
+                </option>
+              ))}
+            </optgroup>
+          ) : (
+            g.choices.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.label}
+              </option>
+            ))
+          ),
+        )}
+      </select>
+      <p id={`${id}-what`} className="text-copy-13 text-muted-foreground m-0">
+        {setting.description}
+      </p>
+      {c ? (
+        <div
+          className="border-line flex flex-col gap-2 rounded-md border p-3"
+          data-testid="setting-details"
+        >
+          {c.verified ? (
+            <p className="text-label-13 m-0 flex items-center gap-1.5">
+              <Check className="text-good size-4" aria-hidden /> Checked against the sources
+              {c.checkedOn ? ` on ${c.checkedOn}` : ''}
+            </p>
+          ) : (
+            <p
+              className="text-label-13 bg-warn-soft m-0 flex items-start gap-1.5 rounded px-2 py-1"
+              data-testid="setting-unverified"
+            >
+              <AlertTriangle className="text-warn mt-0.5 size-4 shrink-0" aria-hidden />
+              Not verified yet: check these details with the authority before you rely on them.
+            </p>
+          )}
+          <dl className="m-0 grid gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,10rem)_1fr]">
+            {setting.values.map((v) =>
+              c.values[v.key] ? (
+                <div key={v.key} className="contents">
+                  <dt className="text-label-13 text-muted-foreground">{v.label}</dt>
+                  <dd className="text-copy-13 m-0">{c.values[v.key]}</dd>
+                </div>
+              ) : null,
+            )}
+          </dl>
+          {c.note ? <p className="text-copy-13 text-muted-foreground m-0">{c.note}</p> : null}
+          {c.sources.length ? (
+            <ul
+              className="text-copy-13 m-0 flex list-none flex-col gap-0.5 p-0"
+              aria-label="Sources"
+            >
+              {c.sources.map((x) => (
+                <li key={x.url}>
+                  <a
+                    href={x.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 underline underline-offset-2"
+                  >
+                    {x.title} <ExternalLink className="size-3" aria-hidden />
+                    <span className="sr-only">(opens in a new tab)</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** "Settings" on an installed pack with settings: change the choices; the defaults they set follow. */
+export function PackSettings({
+  org,
+  installId,
+  title,
+  defs,
+  values,
+}: {
+  org: string;
+  installId: string;
+  title: string;
+  defs: PackSetting[];
+  values: PackSettingValues;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<PackSettingValues>(values);
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  function save() {
+    setError(null);
+    start(async () => {
+      let r: Awaited<ReturnType<typeof setPackSettingsAction>>;
+      try {
+        r = await setPackSettingsAction({ org, installId, settings: draft });
+      } catch {
+        setError('The settings were not saved. Try again.');
+        return;
+      }
+      if (!r.ok) {
+        setError(r.error.message);
+        return;
+      }
+      toast(
+        r.data.fields
+          ? `Saved the settings of ${title}. ${r.data.lines.join('; ')}.`
+          : `Saved the settings of ${title}.`,
+      );
+      setOpen(false);
+      router.refresh();
+    });
+  }
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (pending) return;
+        if (next) {
+          setDraft(values);
+          setError(null);
+        }
+        setOpen(next);
+      }}
+    >
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        aria-label={`Settings of ${title}`}
+        onClick={() => {
+          setDraft(values);
+          setError(null);
+          setOpen(true);
+        }}
+      >
+        <SlidersHorizontal aria-hidden /> Settings
+      </Button>
+      <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
+        <div className="flex flex-col gap-1 pr-8">
+          <DialogTitle className="text-heading-20">Settings of {title}</DialogTitle>
+          <DialogDescription className="text-copy-14 text-muted-foreground">
+            Your choices set the defaults of new items in the pack&apos;s sheets. Items you already
+            have keep their values.
+          </DialogDescription>
+        </div>
+        {defs.map((s) => (
+          <SettingChoice
+            key={s.key}
+            setting={s}
+            value={draft[s.key] ?? null}
+            disabled={pending}
+            onChange={(id) =>
+              setDraft((d) => {
+                const next = { ...d };
+                if (id) next[s.key] = id;
+                else delete next[s.key];
+                return next;
+              })
+            }
+          />
+        ))}
+        {error ? (
+          <p role="alert" className="text-crit-ink text-copy-14 m-0 flex items-center gap-1.5">
+            <X className="size-4" aria-hidden /> {error}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button type="button" variant="outline" disabled={pending} onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={pending} onClick={save}>
+            {pending ? 'Saving…' : 'Save settings'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /** "Preview" on a pack: what installing it would do here, then Install with its progress and Open. */
 export function PackPreview({
   org,
@@ -315,10 +551,14 @@ export function PackPreview({
     version: string;
     levels?: LevelSummary[];
     installedLevel?: string | null;
+    /** Settings chosen at install (docs/11 Pack settings); not offered when adding a level. */
+    settings?: PackSetting[];
   };
   /** The button's words, e.g. "Add Full" on an installed pack. */
   label?: string;
 }) {
+  const [settingValues, setSettingValues] = useState<PackSettingValues>({});
+  const settingDefs = pack.installedLevel ? [] : (pack.settings ?? []);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>({ kind: 'loading' });
@@ -351,6 +591,7 @@ export function PackPreview({
         key: pack.key,
         hash: data.hash,
         ...(level ? { level } : {}),
+        ...(Object.keys(settingValues).length ? { settings: settingValues } : {}),
       });
     } catch {
       setStep({
@@ -414,6 +655,30 @@ export function PackPreview({
               void load(k);
             }}
           />
+        ) : null}
+
+        {settingDefs.length && step.kind !== 'done' ? (
+          <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
+            <legend className="text-label-13 text-muted-foreground mb-1.5 font-medium">
+              Settings (you can change them later under Installed packs)
+            </legend>
+            {settingDefs.map((s) => (
+              <SettingChoice
+                key={s.key}
+                setting={s}
+                value={settingValues[s.key] ?? null}
+                disabled={step.kind === 'installing'}
+                onChange={(id) =>
+                  setSettingValues((d) => {
+                    const next = { ...d };
+                    if (id) next[s.key] = id;
+                    else delete next[s.key];
+                    return next;
+                  })
+                }
+              />
+            ))}
+          </fieldset>
         ) : null}
 
         {step.kind === 'loading' ? (

@@ -4,6 +4,13 @@ import { isFrameworkPack } from '@/engine/frameworks/pack';
 import { packLogText, PACK_ACTIONS } from '@/engine/packs/audit';
 import { levelRank, levelSummaries, type LevelSummary } from '@/engine/packs/levels';
 import {
+  cleanSettings,
+  settingDefaults,
+  settingsSummary,
+  type PackSettingValues,
+} from '@/engine/packs/settings';
+import type { PackSetting } from '@/engine/packs/types';
+import {
   countsText,
   manifestCounts,
   previewLines,
@@ -20,6 +27,7 @@ import {
   packSetupsInput,
   previewPackInput,
   previewUpgradeInput,
+  setPackSettingsInput,
   upgradePackInput,
 } from '@/lib/schemas/packs';
 import { upgradeLines, type UpgradePreview } from '@/engine/packs/upgrade';
@@ -37,6 +45,7 @@ import type { Database } from '@/lib/database.types';
 import { planUpgrade, updatesFor, writeUpgrade } from '@/server/packs/upgrade';
 import { readSetups, type InstalledSetup } from '@/server/packs/setup';
 import { readFrameworks } from '@/server/frameworks/catalogue';
+import { parsePack } from '@/lib/packs/manifest';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
 import { adoptForPack } from './frameworks';
@@ -66,6 +75,8 @@ export interface PackCard {
   frameworks: string[];
   /** Titles of the frameworks the pack links to only where they are adopted (optional). */
   linksTo: string[];
+  /** Choices made at install that set defaults in the pack's sheets (docs/11 Pack settings). */
+  settings: PackSetting[];
 }
 
 export interface InstalledPack {
@@ -92,6 +103,8 @@ export interface InstalledPack {
    * Archiving it takes back only what it added.
    */
   addOn: { onto: string[]; standard: string | null } | null;
+  /** The pack's settings with the workspace's choices (docs/11 Pack settings); null when it has none. */
+  settings: { defs: PackSetting[]; values: PackSettingValues; summary: string[] } | null;
 }
 
 export interface PackLogEntry {
@@ -129,7 +142,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
           supabase
             .from('pack_installs')
             .select(
-              'id, pack_key, version, status, level, installed_by, installed_at, archived_by, archived_at',
+              'id, pack_key, version, status, level, installed_by, installed_at, archived_by, archived_at, settings',
             )
             .eq('org_id', orgId)
             .order('installed_at', { ascending: false }),
@@ -202,6 +215,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
                 linksTo: (c.manifest.frameworks ?? [])
                   .filter((f) => f.optional)
                   .map((f) => fwTitle(f.key, f.version)),
+                settings: c.manifest.settings ?? [],
               };
             }),
           installed: (installs.data ?? []).map((i) => ({
@@ -229,6 +243,13 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
               if (!c?.extends?.length) return null;
               const onto = [...new Set(c.extends.map((e) => titles.get(e.pack) ?? e.pack))];
               return { onto, standard: c.standard?.label ?? null };
+            })(),
+            settings: (() => {
+              // the catalogue's newest manifest names the settings; the install keeps its choices
+              const c = byKey.get(i.pack_key)?.manifest;
+              if (!c?.settings?.length) return null;
+              const values = cleanSettings(c, (i.settings ?? {}) as PackSettingValues);
+              return { defs: c.settings, values, summary: settingsSummary(c, values) };
             })(),
           })),
           log: (log.data ?? []).map((e) => ({
@@ -337,6 +358,8 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
         newId: randomUUID,
         level: p.data.level ?? null,
         allowOutbound: p.data.allowOutbound === true,
+        // only the pack's own settings and choices (docs/11 Pack settings)
+        settings: cleanSettings(pack.manifest, p.data.settings ?? {}),
       };
       // the packs it requires first (the Core registers, at the level it needs): install order does not matter
       const firsts = await requiredFirst(supabase, orgId, pack.manifest);
@@ -370,6 +393,15 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
       }
       const written = await writeInstall(supabase, orgId, plan);
       if (!written.ok) return fromDbError(written.error);
+      // the choices are recorded on the install (the plan already wrote the defaults they set)
+      if (Object.keys(env.settings).length) {
+        const { error } = await supabase.rpc('set_pack_settings', {
+          p_install: written.data.installId,
+          p_settings: env.settings,
+          p_fields: [],
+        });
+        if (error) return fromDbError(error);
+      }
       // the first sheet this install made: for a new level, the first one that level added
       const first = plan.preview.sheets[0]?.ref ?? pack.manifest.sheets[0]?.ref;
       return ok({
@@ -447,6 +479,59 @@ export async function archivePack(
       return ok({ installId: row.id, counts: data as Record<string, number> });
     },
     'archivePack',
+  );
+}
+
+/**
+ * Change a pack install's settings (docs/11 Pack settings): the choices are recorded on the install and the defaults
+ * they set are written to the install's own fields, in one transaction (set_pack_settings). Owners and admins.
+ */
+export async function setPackSettings(
+  input: unknown,
+): Promise<Result<{ installId: string; fields: number; lines: string[] }>> {
+  const p = setPackSettingsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'admin',
+    async ({ supabase, orgId }) => {
+      const { data: row, error: e1 } = await supabase
+        .from('pack_installs')
+        .select('id, pack_key, version, status, ref_map')
+        .eq('id', p.data.installId)
+        .eq('org_id', orgId)
+        .maybeSingle();
+      if (e1) return fromDbError(e1);
+      if (!row || row.status !== 'installed')
+        return fail('not_found', 'This pack is no longer installed.');
+      const { data: pk, error: e2 } = await supabase
+        .from('packs')
+        .select('manifest')
+        .eq('key', row.pack_key)
+        .eq('version', row.version)
+        .maybeSingle();
+      if (e2) return fromDbError(e2);
+      if (!pk) return fail('not_found', 'This pack is no longer in the catalogue.');
+      const manifest = parsePack(pk.manifest);
+      if (!manifest.settings?.length) return fail('invalid', 'This pack has no settings.');
+      const values = cleanSettings(manifest, p.data.settings);
+      if (Object.keys(values).length !== Object.keys(p.data.settings).length)
+        return fail('invalid', 'Choose one of the listed options.');
+      const refMap = (row.ref_map ?? {}) as Record<string, string>;
+      const defaults = settingDefaults(manifest, values).filter((d) => refMap[d.ref]);
+      const { data, error } = await supabase.rpc('set_pack_settings', {
+        p_install: row.id,
+        p_settings: values,
+        p_fields: defaults.map((d) => ({ id: refMap[d.ref]!, default: d.default })),
+      });
+      if (error) return fromDbError(error);
+      return ok({
+        installId: row.id,
+        fields: typeof data === 'number' ? data : 0,
+        lines: defaults.map((d) => d.line),
+      });
+    },
+    'setPackSettings',
   );
 }
 

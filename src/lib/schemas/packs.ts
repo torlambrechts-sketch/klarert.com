@@ -11,6 +11,14 @@ const level = z
   .regex(/^[a-z][a-z0-9_-]{0,39}$/)
   .optional();
 
+/** Pack settings (docs/11 Pack settings): setting key → choice id, checked against the manifest by the command. */
+const settings = z
+  .record(
+    z.string().regex(/^[a-z][a-z0-9_]{0,39}$/),
+    z.string().regex(/^[a-z0-9][a-z0-9_-]{0,39}$/),
+  )
+  .optional();
+
 export const previewPackInput = z.object({ org: slugInput, key, level });
 export const installPackInput = z.object({
   org: slugInput,
@@ -20,6 +28,17 @@ export const installPackInput = z.object({
   hash: z.string().regex(/^[0-9a-f]{64}$/),
   /** Automations that send anything out (webhook, email) install on: the person opted in. Off when not given. */
   allowOutbound: z.boolean().optional(),
+  /** The pack's settings chosen in the install dialog (docs/11 Pack settings). */
+  settings,
+});
+/** Change a pack install's settings (docs/11 Pack settings). Owners and admins. */
+export const setPackSettingsInput = z.object({
+  org: slugInput,
+  installId: z.uuid(),
+  settings: z.record(
+    z.string().regex(/^[a-z][a-z0-9_]{0,39}$/),
+    z.string().regex(/^[a-z0-9][a-z0-9_-]{0,39}$/),
+  ),
 });
 /** Turn every automation of a pack install live, or back to test mode (docs/04 §14). Owners and admins. */
 export const packAutomationsModeInput = z.object({

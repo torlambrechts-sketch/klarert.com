@@ -10,6 +10,7 @@ export const PACK_ACTIONS = [
   'bundle.created',
   'bundle.reviewed',
   'pack.automations_mode',
+  'pack.settings_changed',
 ] as const;
 
 type Obj = Record<string, Json>;
@@ -83,6 +84,14 @@ export function packLogText(action: string, newValue: Json | null): string {
     return v.mode === 'test'
       ? `Put ${what} from ${title} in test mode.`
       : `Turned on ${what} from ${title}: they now notify people and change items.`;
+  }
+  if (action === 'pack.settings_changed') {
+    const title = typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack');
+    const labels = Object.entries(obj(v.labels)).map(([k, x]) => `${k}: ${String(x)}`);
+    const n = num(v.fields);
+    return `Changed the settings of ${title}${labels.length ? ` (${labels.join(', ')})` : ''}${
+      n ? `: ${n} ${n === 1 ? 'default' : 'defaults'} updated` : ''
+    }.`;
   }
   // Create wizard bundles (docs/11 Bundles): the name the person gave, the pack it came from
   const bundle = typeof v.name === 'string' ? v.name : name;

@@ -388,6 +388,8 @@ export async function planInstall(
     allowOutbound?: boolean;
     /** Every automation installs live (sample data only: the seed). */
     live?: boolean;
+    /** The pack's settings chosen at install (docs/11 Pack settings). */
+    settings?: Record<string, string>;
   },
 ): Promise<PackPlan> {
   const { snapshot, timeZone } = await loadSnapshot(db, orgId, pack.manifest);
@@ -413,6 +415,7 @@ export async function planInstall(
       installFirst: env.installFirst,
       allowOutbound: env.allowOutbound,
       live: env.live,
+      settings: env.settings,
     },
   );
 }

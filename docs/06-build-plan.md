@@ -271,13 +271,16 @@ Phase 2a (platform for the pack quality bar, owner-approved by the board):
 
 Phase 2 (open; a separate task):
 - [ ] Rewrite the standard packs as add-ons to the Core registers with the pack quality bar: ISO/IEC 27001, ISO 9001, ISO 14001 (replacing the demonstration add-on), ISO 45001, GDPR, NIS2 and Supplier management; their own sheets only where Core has none, the rest as extends
+  - [x] GDPR 2.0.0 add-on (docs/11 The GDPR add-on): own sheets in Privacy and security and Suppliers, Privacy risk category, incident-to-breach cascade, three approval workflows, retention rules kept; meets the quality bar; unit and e2e tests
+  - [x] NIS2 1.0.0 add-on (docs/11 The NIS2 add-on): scope self-check and registration, the Art. 21(2) measures in the Controls library, incident reports with the 24-hour, 72-hour and one-month stages and clocks, management body approval and training; meets the quality bar; unit and e2e tests
+  - [x] Pack settings (docs/11 Pack settings, migration 0043): the NIS2 country rules for the 27 EU and 3 EEA countries as data, chosen at install or later, setting the authority and CSIRT defaults; pgTAP 0033
 - [ ] Reset the demo workspaces onto Core plus the add-ons
 - [ ] Workspace settings › Standards in scope (the design's scope filter) over the Standards tags
 
-### NIS2 pack (not built yet)
-- Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace.
+### NIS2 pack
+- [x] Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace. Built as the general pack settings mechanism (docs/11 Pack settings); every country entry ships unverified until someone checks it.
 
-Later: NIS2, consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
+Later: consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
 
 ---
 
