@@ -170,7 +170,9 @@ test.describe('desktop', () => {
         .getByRole('main')
         .getByRole('link', { name: /^Corrective action \(CAPA\)/ })
         .click();
-      await expect(page.getByLabel('Folder').locator('option:checked')).toHaveText(option);
+      await expect(page.getByLabel('Folder', { exact: true }).locator('option:checked')).toHaveText(
+        option,
+      );
       await page.waitForLoadState('networkidle');
       await page.getByLabel('Sheet name').fill(sheet);
       await page.getByRole('button', { name: 'Create sheet' }).click();
@@ -187,7 +189,9 @@ test.describe('desktop', () => {
       .getByRole('main')
       .getByRole('link', { name: /^Internal audit/ })
       .click();
-    await expect(page.getByLabel('Folder').locator('option:checked')).toHaveText('Your sheets');
+    await expect(page.getByLabel('Folder', { exact: true }).locator('option:checked')).toHaveText(
+      'Your sheets',
+    );
   });
 
   test('an editor moves sheets but cannot change folders; a viewer sees no controls', async ({
