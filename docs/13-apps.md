@@ -27,11 +27,13 @@ Every screen has `key` (`^[a-z][a-z0-9-]{0,39}$`), `title`, an optional `descrip
 
 | Kind | Keys | Renders |
 |---|---|---|
-| `view` | `sheet` (a sheet ref of the pack), `view?` (a saved view of that sheet by name) | The sheet page itself (`SheetView`: Table and its other views, the item panel), opened on the view |
+| `view` | `sheet` (a sheet ref of the pack, or `<pack>:<sheet>` of a pack it requires, below), `view?` (a saved view of that sheet by name) | The sheet page itself (`SheetView`: Table and its other views, the item panel), opened on the view |
 | `item` | `sheet`, `subitems?` (`true`: its sub-items), `filters` (0–10), `sort?` (0–3), `show?` (0–6 field keys), `empty?` | A list of the items to act on: those that match every filter, sorted, each with the fields it shows; a row opens the item panel on its sheet (`?item=<display id>`, sub-items open on their parent sheet) |
 | `form` | `sheet`, `form` (a form ref of that sheet) | The form, filled in as on the Forms tab (`submitInternalForm`). A pack installs forms as drafts; owners and admins see "Open the form" here |
 | `dashboard` | `dashboard` (a dashboard ref of the pack) | The dashboard's widgets, read only, with "Open in Dashboards" |
 | `workflow` | `sheet`, `fieldKey?` | Workflow opened on the sheet's lifecycle by that field |
+
+**Screens over a pack it requires.** `sheet` may be `<pack>:<sheet>` of a pack in the manifest's `requires` (`core:nc`): the sheet comes from the live install of that pack (its ref map), the forms and saved views from what this pack's `extends` adds to that sheet (in this install's ref map). `appProblems` checks the pack is required and the form or view is one the extends adds; field keys are checked against the required pack's manifest by the catalogue tests (`appProblems(app, pack, [core])`). Sub-items of another pack's sheet are not available. Without that install the screen is left out.
 
 **Filters** are the condition operators (`src/engine/conditions`) by field key, the same as automations and widgets: `{ "fieldKey": "status", "op": "is_not_done" }`. The value `{me}` (alone or in a list) is the person reading the screen: "assigned to me" is `{ "fieldKey": "owner", "op": "includes_any_of", "value": ["{me}"] }`; "signed by me" is `signed_by` with `["{me}"]`. Option values are option ids (`opt_verify`), never labels. Field keys must exist on the sheet (or its sub-items); `__name`, `__group` and `__id` are allowed.
 
@@ -62,10 +64,12 @@ The app header is the app's name and its screens as underline tabs that scroll s
 
 **ISMS CAPA** (`iso-27001` 1.2.0, `apps`): the same screens over Nonconformities and CAPA. The pack adds the internal form "Report a problem" (Starter) and the "Nonconformities overview" dashboard; Needs my approval lists nonconformities you own in "Checking effectiveness". Reported problems do not get actions automatically here (the sheet's "From template" adds them).
 
+**ISMS CAPA in the 27001 add-on** (`iso-27001` 2.0.0): the screens read the Core registers (`core:nc`, `core:actions`): Report a problem (the add-on's form on Nonconformities and CAPA), My actions (Core Actions assigned to you, not done, by Due), Needs my check (nonconformities you own at the stage Verification), All nonconformities, Overview (the add-on's headline dashboard "ISMS overview") and Workflow (by Stage, owners and admins).
+
 ## Catalogue
 
 New pack versions (`start-capa` 1.1.0, `iso-27001` 1.2.0) are written by the seed's catalogue step locally; a hosted catalogue needs them loaded (`pnpm exec tsx scripts/packs-sql.ts`). Workspaces on older versions keep them and show no app until upgraded (P6).
 
 ## Later
 
-App screens over packs this one requires (`pack:sheet` refs), customer-built apps (the app builder), per-screen saved filters chosen by the person, notifications per app.
+Customer-built apps (the app builder), per-screen saved filters chosen by the person, notifications per app.
