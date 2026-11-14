@@ -24,6 +24,40 @@ export const DOCUMENT_KEYS = {
   nextReview: 'next_review',
 } as const;
 
+/**
+ * The record of an approval on a documents register: who approved the current version and when. The database fills
+ * them in when the document is approved (`_document_transition`) and refuses them from anyone else, so they are empty
+ * until then and an approval workflow can neither take its approvers from them nor require them before submitting
+ * (the people field "Approve by" names who should approve).
+ */
+export const APPROVAL_RECORD_KEYS: readonly string[] = [
+  DOCUMENT_KEYS.approver,
+  DOCUMENT_KEYS.approvedOn,
+];
+
+/** Field keys of a sheet that only an approval fills in (none outside a documents register). */
+export const approvalRecordKeys = (
+  sheet: Pick<Sheet, 'register'> | null | undefined,
+): readonly string[] => (isDocumentsRegister(sheet) ? APPROVAL_RECORD_KEYS : []);
+
+/**
+ * What approving a document writes besides its status, as the database does: the person approving as Approver and
+ * today as Approved on (by field id). Checks made before the database (a status rule that asks for an approver) then
+ * see the document as it will be saved.
+ */
+export function documentApprovalValues(
+  fields: Field[],
+  by: string,
+  today: string,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const approver = fields.find((f) => f.key === DOCUMENT_KEYS.approver && f.type === 'people');
+  if (approver) out[approver.id] = [by];
+  const on = fields.find((f) => f.key === DOCUMENT_KEYS.approvedOn && f.type === 'date');
+  if (on) out[on.id] = today;
+  return out;
+}
+
 export interface DocumentStatusInput {
   /** The status option's label ("Approved", "Draft"), or null without a status. */
   statusLabel: string | null;

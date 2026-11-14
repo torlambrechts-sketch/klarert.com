@@ -43,7 +43,7 @@ export async function installAddon(
     }),
   ).toBeChecked();
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    `Installs Core registers 1.1.0 (${opts.coreLevel}) first.`,
+    `Installs Core registers 1.2.0 (${opts.coreLevel}) first.`,
   );
   await expect(dialog.getByTestId('adopts-framework')).toContainText(
     `Adopts the ${opts.library} requirement library first`,
@@ -55,7 +55,7 @@ export async function installAddon(
   await dialog.getByRole('button', { name: 'Install' }).click();
   const status = dialog.getByRole('status');
   await expect(status).toContainText(`Installed ${opts.title} (Starter).`, { timeout: 90_000 });
-  await expect(status).toContainText(`Installed Core registers 1.1.0 (${opts.coreLevel}) first.`);
+  await expect(status).toContainText(`Installed Core registers 1.2.0 (${opts.coreLevel}) first.`);
   await expect(status).toContainText(`Adopted ${opts.library} first.`);
   await dialog.getByRole('button', { name: 'Done' }).click();
 

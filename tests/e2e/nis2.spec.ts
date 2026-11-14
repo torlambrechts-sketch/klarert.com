@@ -35,7 +35,7 @@ test('install NIS2 with the Norway country rules and change the country later', 
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.1.0 (Full) first.',
+    'Installs Core registers 1.2.0 (Full) first.',
   );
   const country = dialog.getByLabel('Country of main establishment');
   await country.selectOption({ label: 'Norway' });
@@ -50,7 +50,7 @@ test('install NIS2 with the Norway country rules and change the country later', 
     timeout: 90_000,
   });
   await expect(dialog.getByRole('status')).toContainText(
-    'Installed Core registers 1.1.0 (Full) first.',
+    'Installed Core registers 1.2.0 (Full) first.',
   );
   await dialog.getByRole('button', { name: 'Done' }).click();
 

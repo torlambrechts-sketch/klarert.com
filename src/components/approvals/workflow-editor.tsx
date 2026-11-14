@@ -78,12 +78,12 @@ function newStep(n: number, fields: Field[], taken: string[]): ApprovalStep {
   };
 }
 
-function blank(fields: Field[]): ApprovalWorkflow {
+function blank(fields: Field[], choosable: Field[]): ApprovalWorkflow {
   return {
     id: '',
     name: '',
     enabled: true,
-    steps: [newStep(1, fields, [])],
+    steps: [newStep(1, choosable, [])],
     requiredFields: [],
     allowSelfApproval: false,
     lockOnApproval: true,
@@ -132,6 +132,7 @@ export function WorkflowEditor({
   jobRoles,
   teams,
   canEdit,
+  recordKeys = [],
 }: {
   org: string;
   sheetId: string;
@@ -141,10 +142,17 @@ export function WorkflowEditor({
   jobRoles: Named[];
   teams: Named[];
   canEdit: boolean;
+  /** Fields only an approval fills in (a documents register's Approver and Approved on): never approvers. */
+  recordKeys?: readonly string[];
 }) {
   const router = useRouter();
   const ids = useId();
   const fields = useMemo(() => rawFields.map(asField), [rawFields]);
+  // the people fields a step can take its approvers from
+  const choosable = useMemo(
+    () => fields.filter((f) => !recordKeys.includes(f.key)),
+    [fields, recordKeys],
+  );
   const [list, setList] = useState<ApprovalWorkflow[]>(initial);
   const [draft, setDraft] = useState<{ index: number | null; w: ApprovalWorkflow } | null>(null);
   const [pending, start] = useTransition();
@@ -194,7 +202,7 @@ export function WorkflowEditor({
   const others = list.filter((_, i) => i !== draft?.index);
   const problems = w
     ? w.name.trim()
-      ? workflowProblems({ ...w, id: w.id || 'new' }, fields, others)
+      ? workflowProblems({ ...w, id: w.id || 'new' }, fields, others, recordKeys)
       : ['Name the workflow.']
     : [];
   // the step field's options are added when it saves
@@ -323,7 +331,7 @@ export function WorkflowEditor({
           variant="outline"
           size="sm"
           className="w-fit"
-          onClick={() => setDraft({ index: null, w: blank(fields) })}
+          onClick={() => setDraft({ index: null, w: blank(fields, choosable) })}
         >
           <Plus aria-hidden /> New approval workflow
         </Button>
@@ -430,7 +438,7 @@ export function WorkflowEditor({
                         value={s.approvers.kind}
                         onChange={(e) => {
                           const kind = e.target.value as ApproverRule['kind'];
-                          const f = approverFields(fields)[0];
+                          const f = approverFields(choosable)[0];
                           const rule: ApproverRule =
                             kind === 'field'
                               ? { kind, fieldKey: f?.key ?? '' }
@@ -460,7 +468,7 @@ export function WorkflowEditor({
                     <ApproverPicker
                       rule={s.approvers}
                       label={`Step ${i + 1} approvers`}
-                      fields={approverFields(fields)}
+                      fields={approverFields(choosable)}
                       people={people}
                       jobRoles={jobRoles}
                       teams={teams}
@@ -563,7 +571,7 @@ export function WorkflowEditor({
                     ...w.steps,
                     newStep(
                       w.steps.length + 1,
-                      fields,
+                      choosable,
                       w.steps.map((x) => x.id),
                     ),
                   ],

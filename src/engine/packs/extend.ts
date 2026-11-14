@@ -9,6 +9,7 @@
 // extension adds), and afterwards the virtual rows are swapped for the real ids and only the new rows are kept.
 import type { Field, Json } from '../types';
 import { workflowProblems } from '../approvals/definition';
+import { approvalRecordKeys } from '../documents';
 import { fieldType } from '../fields/registry';
 import { defaultLevel, levelRank, manifestAtLevel } from './levels';
 import {
@@ -498,7 +499,12 @@ export function extendsAgainst(m: PackManifest, dep: PackManifest): string[] {
       });
       for (const w of e.workflows) {
         if (own.has(w.id)) out.push(`${s.name} already has an approval workflow "${w.id}".`);
-        for (const msg of workflowProblems(w, fields, [...(s.workflows ?? []), ...e.workflows]))
+        for (const msg of workflowProblems(
+          w,
+          fields,
+          [...(s.workflows ?? []), ...e.workflows],
+          approvalRecordKeys(s),
+        ))
           out.push(`${s.name} › ${w.name}: ${msg}`);
       }
     }

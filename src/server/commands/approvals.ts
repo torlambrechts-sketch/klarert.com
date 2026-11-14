@@ -12,7 +12,12 @@ import {
   type ApprovalInstance,
   type ApprovalWorkflow,
 } from '@/engine/approvals';
-import type { Ctx, Field, Item, Json } from '@/engine/types';
+import {
+  approvalRecordKeys,
+  documentApprovalValues,
+  isDocumentsRegister,
+} from '@/engine/documents';
+import type { Ctx, Field, Item, Json, Sheet } from '@/engine/types';
 import { checkWrite, planValues } from '@/engine/writes';
 import {
   decideApprovalInput,
@@ -82,7 +87,12 @@ export async function saveApprovalWorkflows(
       for (const w of v.workflows) {
         if (ids.has(w.id)) return fail('invalid', `Two approval workflows have the id ${w.id}.`);
         ids.add(w.id);
-        const problems = workflowProblems(w, fields, v.workflows);
+        const problems = workflowProblems(
+          w,
+          fields,
+          v.workflows,
+          approvalRecordKeys(s.settings as Pick<Sheet, 'register'> | null),
+        );
         // the step field's options are filled in below; anything else is the person's to fix
         const own = problems.filter(
           (x) => !x.includes('no longer has every option the workflow shows'),
@@ -149,12 +159,20 @@ function statusRules(
   ctx: Ctx,
   w: ApprovalWorkflow,
   optionId: string | null | undefined,
+  sheet?: Pick<Sheet, 'register'>,
 ): { blocking: string | null; comment: string | null } {
   const none = { blocking: null, comment: null };
   if (!w.statusField || !optionId) return none;
   const field = fields.find((f) => f.key === w.statusField!.fieldKey);
   if (!field || field.restrictedTo) return none;
-  const plan = planValues(item, fields, { [field.id]: optionId }, ctx, sha256);
+  // approving a document also records who approved it and when (the database's documents register rules), so a
+  // status rule that asks for the approver sees the document as it will be saved
+  const done = (field.config as { options?: { id: string; done?: boolean }[] }).options?.find(
+    (o) => o.id === optionId,
+  )?.done;
+  const record =
+    isDocumentsRegister(sheet) && done ? documentApprovalValues(fields, ctx.userId, ctx.today) : {};
+  const plan = planValues(item, fields, { ...record, [field.id]: optionId }, ctx, sha256);
   if (plan.rejected.length > 0 || plan.changedKeys.length === 0) return none;
   const check = checkWrite(item, plan.next, fields, plan.changedKeys, ctx, {
     isUnique: () => true,
@@ -174,8 +192,9 @@ function statusRuleProblem(
   w: ApprovalWorkflow,
   optionId: string | null | undefined,
   comment: string | undefined,
+  sheet?: Pick<Sheet, 'register'>,
 ): string | null {
-  const r = statusRules(item, fields, ctx, w, optionId);
+  const r = statusRules(item, fields, ctx, w, optionId, sheet);
   return r.blocking ?? (r.comment && !comment?.trim() ? r.comment : null);
 }
 
@@ -347,7 +366,15 @@ export async function decideApproval(
         ]);
         const item = w?.items.get(inst.itemId);
         if (w && item) {
-          const rule = statusRuleProblem(item, w.fields, w.ctx, inst.definition, option, v.comment);
+          const rule = statusRuleProblem(
+            item,
+            w.fields,
+            w.ctx,
+            inst.definition,
+            option,
+            v.comment,
+            w.data.sheet,
+          );
           if (rule) return fail('blocked', rule);
         }
       }

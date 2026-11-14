@@ -1,5 +1,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { documentView, isDocumentsRegister, summariseDocument } from './documents';
+import {
+  approvalRecordKeys,
+  documentApprovalValues,
+  documentView,
+  isDocumentsRegister,
+  summariseDocument,
+} from './documents';
 import { FIELD_TYPES } from './fields/registry';
 import { installFieldTypes } from './fields/resolve';
 import type { FileVersionRow } from './item-files';
@@ -22,6 +28,22 @@ describe('documents register', () => {
     expect(isDocumentsRegister({ register: 'documents' })).toBe(true);
     expect(isDocumentsRegister({})).toBe(false);
     expect(isDocumentsRegister(null)).toBe(false);
+  });
+
+  it('has Approver and Approved on as the record only an approval fills in', () => {
+    expect(approvalRecordKeys({ register: 'documents' })).toEqual(['approver', 'approved_on']);
+    expect(approvalRecordKeys({})).toEqual([]);
+  });
+
+  it('records the person approving and today, as the database does when a document is approved', () => {
+    const approver = makeField('people', { multiple: false }, { key: 'approver' });
+    const on = makeField('date', {}, { key: 'approved_on' });
+    const other = makeField('people', { multiple: false }, { key: 'approve_by' });
+    expect(documentApprovalValues([other, approver, on], 'u-2', '2026-11-14')).toEqual({
+      [approver.id]: ['u-2'],
+      [on.id]: '2026-11-14',
+    });
+    expect(documentApprovalValues([other], 'u-2', '2026-11-14')).toEqual({});
   });
 });
 

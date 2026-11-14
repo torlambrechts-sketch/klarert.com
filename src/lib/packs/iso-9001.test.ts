@@ -239,6 +239,6 @@ describe('ISO 9001 add-on', () => {
     expect(plan.preview.conflicts).toEqual([]);
     expect(plan.state).toBe('ready');
     expect(plan.payload).toBeNull();
-    expect(previewLines(plan.preview)).toContain('Installs Core registers 1.1.0 (Starter) first.');
+    expect(previewLines(plan.preview)).toContain('Installs Core registers 1.2.0 (Starter) first.');
   });
 });

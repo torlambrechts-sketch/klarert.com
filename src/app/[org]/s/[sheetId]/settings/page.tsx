@@ -18,6 +18,8 @@ import { parseColumnGroups } from '@/engine/views/column-groups';
 import { SubitemSettingsSection } from '@/components/subitems/subitem-settings';
 import { WorkflowEditor } from '@/components/approvals/workflow-editor';
 import { readWorkflows } from '@/engine/approvals/definition';
+import { approvalRecordKeys } from '@/engine/documents';
+import type { Sheet } from '@/engine/types';
 import { fetchDirectory } from '@/lib/sheet-query';
 import { applyTabLayout, buildTabs, toTabRows } from '@/components/views/tabs-model';
 import { readSubitemSettings } from '@/engine/subitems';
@@ -192,6 +194,7 @@ export default async function SheetSettingsPage({
             jobRoles={directory.jobRoles.map((r) => ({ id: r.id, name: r.name }))}
             teams={directory.teams.map((t) => ({ id: t.id, name: t.name }))}
             canEdit={isAdminRole(role) && !sheet.archived_at}
+            recordKeys={approvalRecordKeys(sheet.settings as Pick<Sheet, 'register'> | null)}
           />
         </Card>
       </section>
