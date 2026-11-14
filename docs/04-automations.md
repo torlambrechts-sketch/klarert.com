@@ -132,6 +132,7 @@ Webhook payload (generic):
   - `evidence_expiring`: earliest `valid_until` − days; occurrence = that date. With `source: 'item_files'` (no field) it watches the files of the item's Files tab instead of an evidence field; the builder offers it as "Item files (Files tab)" on every sheet.
 - Fire when the moment has passed **and** is within the last 7 days (no flood of history when an automation is created), conditions are true, and `insert into scheduler_fired … on conflict do nothing` inserted a row (exactly once per occurrence).
 - Admins can press **Run date checks now** on the Automations page (same code, as the user, only for their workspace).
+- **Retention** (docs/02 §18): the same cron run checks each workspace with retention rules once a day (`retention_claim_day`) and queues due records (`retention_enqueue`); nothing is erased without a person's approval. Owners and admins have **Check now** on Workspace admin › Retention.
 
 ## 9. Webhook worker
 

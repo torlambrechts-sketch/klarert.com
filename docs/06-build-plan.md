@@ -207,7 +207,21 @@ Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, 
 - [x] `iso-9001` 1.0.0 on the 9001:2015 library: Starter (context, policy and objectives, processes, risks and opportunities, quality documents, nonconformities with sub-item actions, customer feedback and complaints) and Full (external providers, competence, measuring equipment, internal audits and findings, management review, design and development, release); 8 automations, internal forms "Report a complaint" and "Report a nonconformity", "QMS overview" dashboard, 8-step setup, example items linked to clauses; management review inputs mapped (docs/11)
 - [x] Tests: `src/lib/packs/iso-9001.test.ts`; e2e `tests/e2e/iso-9001.spec.ts` (Starter with adoption, a complaint raising a linked nonconformity, the form from the checklist, the dashboard, Full on top)
 
-Later: GDPR pack (after retention), NIS2, consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
+### Retention  [Opus]
+Owner decision: "rules + review queue".
+- [x] Migration 0036: personal-data values masked in the activity log (`personal_activity`, salted markers, erasable without touching the chain), `retention_queue` (dedupe per item, rule and due date), `retention_holds`, `retention_checks`; RPCs `retention_enqueue`, `retention_postpone`, `set_retention_hold`, `retention_execute` (one transaction, tombstone entry), `retention_claim_day` (scheduler); storage delete policy for erased files; pgTAP `0026_retention.sql` (docs/02 §18)
+- [x] Fields marked personal data (field setting `config.personalData`); per-sheet rules in Sheet settings › Retention and in pack manifests (`retention`); the daily scheduler check and "Check now"; Workspace admin › Retention (approve, postpone with a reason, legal hold; owners and admins); the activity panel and audit exports show erased and masked values as such
+- [x] Tests: `src/engine/retention/retention.test.ts`, pgTAP 0026, e2e `tests/e2e/gdpr.spec.ts`
+
+### GDPR pack  [Opus]
+- [x] `gdpr` 1.0.0 on the gdpr@2016 library: Starter (records of processing, data subject requests with the one-month deadline and extensions, personal data breaches with the 72-hour clock, DPIAs, processors and DPAs, transfers, retention schedule) and Full (consent records, DPO and training); 10 automations (request deadline in 7 days and overdue, breach alerts at 24 and 60 hours, high-risk breach, DPIA and DPA review due, form intake, closing date); internal forms "Submit a data subject request" and "Report a personal data breach" without notices (each workspace writes its own); "Privacy overview" dashboard; 8-step setup; examples linked to Art. 5, 6, 7, 12, 15, 17, 19, 25, 28, 30, 33, 34, 35, 37–39, 44–46; retention rules shipped as suggestions (docs/11)
+- [x] Management review inputs: customer feedback source (ISO 9001 complaints) and neutral incident wording
+- [x] Tests: `src/lib/packs/gdpr.test.ts`; e2e `tests/e2e/gdpr.spec.ts`
+
+### NIS2 pack (not built yet)
+- Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace.
+
+Later: NIS2, consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
 
 ---
 
