@@ -1,6 +1,6 @@
 {
   "key": "core",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "title": "Core registers",
   "description": "The shared registers every management system standard builds on, in five domains: Management system, Risk and controls, Operations, Privacy and security, and Suppliers. Standards are added as add-ons that extend these registers with their own columns, categories and views, so a risk, an incident or a document is recorded once and counts for every standard that uses it. Documents, risks and nonconformities come with approval workflows, and each record can link to the requirements of any framework you adopt.",
   "system": true,
@@ -396,12 +396,22 @@
           }
         },
         {
+          "key": "approve_by",
+          "name": "Approve by",
+          "type": "people",
+          "config": {
+            "multiple": false
+          },
+          "description": "Who should approve this version. Submitting it for approval sends it to them."
+        },
+        {
           "key": "approver",
           "name": "Approver",
           "type": "people",
           "config": {
             "multiple": false
-          }
+          },
+          "description": "Who approved the current version. Filled in when the approval finishes; nobody sets it by hand."
         },
         {
           "key": "version",
@@ -455,7 +465,8 @@
         {
           "key": "approved_on",
           "name": "Approved on",
-          "type": "date"
+          "type": "date",
+          "description": "When the current version was approved. Filled in when the approval finishes."
         },
         {
           "key": "next_review",
@@ -590,7 +601,7 @@
           "enabled": true,
           "requiredFields": [
             "owner",
-            "approver"
+            "approve_by"
           ],
           "allowSelfApproval": false,
           "lockOnApproval": false,
@@ -612,7 +623,7 @@
               "name": "Approval",
               "approvers": {
                 "kind": "field",
-                "fieldKey": "approver"
+                "fieldKey": "approve_by"
               },
               "mode": "any",
               "sla": {

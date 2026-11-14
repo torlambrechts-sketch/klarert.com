@@ -67,7 +67,7 @@ export function widgetProblem(
     if (!s || !widgetFieldChoices(w.type, s.fields, s.ctx).some((f) => f.key === w.fieldKey))
       return 'Choose a field of this sheet that the widget can use.';
   } else if (w.fieldKey) return 'This widget does not use a field.';
-  if (!def.needs.conditions && (w.conditions?.length ?? 0) > 0)
+  if (!def.needs.conditions && ((w.conditions?.length ?? 0) > 0 || (w.scope?.length ?? 0) > 0))
     return 'This widget does not use conditions.';
   if (!def.needs.days && w.days != null) return 'This widget does not use a period.';
   return null;

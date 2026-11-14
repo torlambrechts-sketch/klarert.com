@@ -20,12 +20,21 @@ const core100 = parsePack(
     readFileSync(join(process.cwd(), 'src/lib/packs/fixtures/core-1.0.0.json'), 'utf8'),
   ) as unknown,
 );
+// Supplier management 2.0.0 (its own supplier register) is what a Core 1.0.0 workspace had; 3.0.0 needs Core 1.1.0
+const suppliers200 = parsePack(
+  JSON.parse(
+    readFileSync(
+      join(process.cwd(), 'src/lib/packs/fixtures/supplier-management-2.0.0.json'),
+      'utf8',
+    ),
+  ) as unknown,
+);
 const sheet = (ref: string) => core.sheets.find((s) => s.ref === ref)!;
 const keys = (ref: string) => sheet(ref).fields.map((f) => f.key);
 
-describe('Core registers 1.1.0', () => {
+describe('Core registers 1.1.0 and later', () => {
   it('is a minor version of 1.0.0 that meets the pack quality bar', () => {
-    expect(core.version).toBe('1.1.0');
+    expect(core.version).toBe('1.2.0');
     expect(core100.version).toBe('1.0.0');
     expect(packQualityProblems(core)).toEqual([]);
     expect(packQualityProblems(core100).length).toBeGreaterThan(0);
@@ -119,15 +128,17 @@ describe('Core registers 1.1.0', () => {
     for (const p of packs.filter((x) => x.requires.some((r) => r.pack === 'core')))
       expect(extendsAgainst(p, core), p.key).toEqual([]);
     expect(neededLevel(packByKey('supplier-management'), core)).toBe('starter');
+    expect(neededLevel(suppliers200, core)).toBe('starter');
+    expect(extendsAgainst(suppliers200, core)).toEqual([]);
     expect(neededLevel(packByKey('gdpr'), core, null)).toBe('starter');
     expect(neededLevel(packByKey('iso-9001'), core, 'starter')).toBe('starter');
     expect(neededLevel(packByKey('iso-27001'), core)).toBe('full');
   });
 });
 
-describe('updating Core 1.0.0 → 1.1.0 with ISO/IEC 27001 2.0.0 and Supplier management 2.0.0 installed', () => {
+describe('updating Core 1.0.0 → 1.2.0 with ISO/IEC 27001 and Supplier management 2.0.0 installed', () => {
   const iso27001 = packByKey('iso-27001');
-  const suppliers = packByKey('supplier-management');
+  const suppliers = suppliers200;
   const libraries = (iso27001.frameworks ?? []).map((f) => ({
     library: `${f.key}@${f.version}`,
     sheetId: `lib:${f.key}@${f.version}`,
@@ -248,5 +259,121 @@ describe('updating Core 1.0.0 → 1.1.0 with ISO/IEC 27001 2.0.0 and Supplier ma
     expect(p.preview.conflicts.find((c) => c.id === 'sheet:risk')?.attributes).toEqual(['tabs']);
     expect((p.payload!.update.tabs ?? []).some((t) => t.sheet_id === risk.id)).toBe(false);
     risk.tabs = null;
+  });
+});
+
+// Core registers 1.2.0 (owner decision, Nov 2026): Document approval goes to the people in the new "Approve by"
+// field; Approver and Approved on stay the read-only record of who approved and when. A same-major update from 1.1.0.
+describe('updating Core 1.1.0 → 1.2.0 with ISO/IEC 27001 and Supplier management 3.0.0 installed', () => {
+  const core110 = parsePack(
+    JSON.parse(
+      readFileSync(join(process.cwd(), 'src/lib/packs/fixtures/core-1.1.0.json'), 'utf8'),
+    ) as unknown,
+  );
+  const iso27001 = packByKey('iso-27001');
+  const suppliers = packByKey('supplier-management');
+  const libraries = (iso27001.frameworks ?? []).map((f) => ({
+    library: `${f.key}@${f.version}`,
+    sheetId: `lib:${f.key}@${f.version}`,
+  }));
+  const coreHash = 'h-core-110';
+  const coreP = planPackInstall(
+    core110,
+    emptySnapshot({ libraries }),
+    { ...env, hash: coreHash },
+    { level: 'full' },
+  ).payload!;
+  const withCore = afterInstall(
+    emptySnapshot({
+      libraries,
+      requirementItems: Object.assign(
+        {},
+        ...(iso27001.frameworks ?? []).map((f) => libraryItems(f.key, f.version)),
+      ) as Record<string, string>,
+    }),
+    coreP,
+    'inst-core',
+  );
+  const isoP = planPackInstall(iso27001, withCore, env).payload!;
+  const withIso = afterInstall(withCore, isoP, 'inst-27001');
+  const supP = planPackInstall(suppliers, withIso, env).payload!;
+  const all = afterInstall(withIso, supP, 'inst-sup');
+  const state = installedStateOf(coreP, 'inst-core', [isoP, supP]);
+  const plan = () =>
+    planPackUpgrade({
+      from: { manifest: core110, hash: coreHash },
+      to: { manifest: core, hash: 'h-core-120' },
+      state,
+      snapshot: { ...all, foreign: {}, foreignFolders: {} },
+      env,
+      extenders: [
+        { title: iso27001.title, manifest: iso27001 },
+        { title: suppliers.title, manifest: suppliers },
+      ],
+    });
+  const docsId = state.refMap['sheet:documents']!;
+
+  it('is ready with no conflicts and changes only Documents and policies', () => {
+    const p = plan();
+    expect(p.preview.blockers).toEqual([]);
+    expect(p.state).toBe('ready');
+    expect(p.preview.conflicts).toEqual([]);
+    expect(p.preview.archived).toEqual([]);
+    expect(p.preview.added.map((a) => `${a.kind}:${a.ref}`)).toEqual([
+      'field:documents.approve_by',
+    ]);
+    expect(p.preview.changed.map((c) => `${c.kind}:${c.ref}`).sort()).toEqual([
+      'field:documents.approved_on',
+      'field:documents.approver',
+      'sheet:documents',
+    ]);
+  });
+
+  it('adds Approve by after the last column, the add-ons’ columns included', () => {
+    const p = plan();
+    const f = p.payload!.add.fields.find((x) => x.ref === 'documents.approve_by')!;
+    expect([f.sheet_id, f.type, f.name]).toEqual([docsId, 'people', 'Approve by']);
+    expect(String(f.position) > state.lastPosition.fields[docsId]!).toBe(true);
+  });
+
+  it('points Document approval at Approve by and requires it before submitting', () => {
+    const p = plan();
+    const written = p.payload!.update.workflows!.find((w) => w.sheet_id === docsId)!;
+    const [w] = written.workflows as unknown as {
+      id: string;
+      requiredFields: string[];
+      steps: { approvers: unknown }[];
+    }[];
+    expect(w!.id).toBe('document-approval');
+    expect(w!.requiredFields).toEqual(['owner', 'approve_by']);
+    expect(w!.steps[0]!.approvers).toEqual({ kind: 'field', fieldKey: 'approve_by' });
+    expect(upgradeLines(p.preview)).toContain(
+      'Changes sheet Documents and policies: Approval workflows.',
+    );
+  });
+
+  it('says Approver and Approved on are filled in when the approval finishes', () => {
+    const p = plan();
+    const byId = new Map(p.payload!.update.fields.map((f) => [f.id, f]));
+    for (const k of ['approver', 'approved_on'])
+      expect(String(byId.get(state.refMap[`field:documents.${k}`]!)?.description)).toMatch(
+        /Filled in when the approval finishes/,
+      );
+  });
+
+  it('keeps a Document approval the client changed: a conflict, kept by default', () => {
+    const docs = state.sheets.find((s) => s.ref === 'documents')!;
+    const was = docs.workflows;
+    const mine = structuredClone(
+      (core110.sheets.find((s) => s.ref === 'documents')!.workflows ?? []) as unknown as Json[],
+    );
+    (mine[0] as { name: string }).name = 'Our document approval';
+    docs.workflows = mine as unknown as Json;
+    const p = plan();
+    expect(p.preview.conflicts.find((c) => c.id === 'sheet:documents')?.attributes).toEqual([
+      'approval workflows',
+    ]);
+    expect((p.payload!.update.workflows ?? []).some((w) => w.sheet_id === docsId)).toBe(false);
+    docs.workflows = was;
   });
 });

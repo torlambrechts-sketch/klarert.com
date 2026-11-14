@@ -1,6 +1,6 @@
 {
   "key": "iso-9001",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "title": "ISO 9001 quality (add-on)",
   "description": "ISO 9001:2026 on the Core registers: quality objectives, risks and opportunities, nonconformities and documents live in the shared registers with ISO 9001 columns, views and examples, and the add-on brings what only a quality system needs: processes, customer feedback and complaints, and in Full external providers, measuring equipment, release records and design and development. Installs the Core registers first. Written in our own words; no text of the standard.",
   "requires": [
@@ -2919,7 +2919,7 @@
           "title": "Quality objectives by status",
           "sheetRef": "core:objectives",
           "fieldKey": "status",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -2991,14 +2991,16 @@
           "type": "count",
           "title": "Open ISO 9001 nonconformities",
           "sheetRef": "core:nc",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
               "value": [
                 "iso9001"
               ]
-            },
+            }
+          ],
+          "conditions": [
             {
               "fieldKey": "stage",
               "op": "is_not_done"
@@ -3011,7 +3013,7 @@
           "title": "Nonconformities past their due date",
           "sheetRef": "core:nc",
           "fieldKey": "due_date",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -3027,7 +3029,7 @@
           "title": "Quality risks and opportunities by status",
           "sheetRef": "core:risk",
           "fieldKey": "status",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -3043,7 +3045,7 @@
           "title": "Quality documents due for review",
           "sheetRef": "core:documents",
           "fieldKey": "next_review",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",

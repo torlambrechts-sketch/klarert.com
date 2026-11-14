@@ -9,6 +9,7 @@
 // extension adds), and afterwards the virtual rows are swapped for the real ids and only the new rows are kept.
 import type { Field, Json } from '../types';
 import { workflowProblems } from '../approvals/definition';
+import { approvalRecordKeys } from '../documents';
 import { fieldType } from '../fields/registry';
 import { defaultLevel, levelRank, manifestAtLevel } from './levels';
 import {
@@ -169,8 +170,15 @@ export function extendsProblems(m: PackManifest): { path: (string | number)[]; m
       foreignOk(cfg.targetSheetRef, at('fields', fi));
       if (typeof cfg.targetSheetRef === 'string' && typeof cfg.inverseKey === 'string') {
         const s = splitSheetRef(cfg.targetSheetRef, m.key);
-        const back =
-          s && !s.pack ? own.get(s.ref)?.fields.find((x) => x.key === cfg.inverseKey) : null;
+        // the inverse is on one of the pack's sheets, or on another required sheet this pack extends (a supplier's
+        // documents on Core's Suppliers, both ways with the Suppliers column it adds to Core's Documents)
+        const back = !s
+          ? null
+          : s.pack
+            ? (m.extends ?? [])
+                .find((x) => x.pack === s.pack && x.sheet === s.ref)
+                ?.fields?.find((x) => x.key === cfg.inverseKey)
+            : own.get(s.ref)?.fields.find((x) => x.key === cfg.inverseKey);
         const bc = (back?.config ?? {}) as Obj;
         if (!back || bc.targetSheetRef !== target || bc.inverseKey !== f.key)
           problem(
@@ -215,11 +223,19 @@ export function extendsProblems(m: PackManifest): { path: (string | number)[]; m
         }
         const raw = (f.config as Obj | undefined)?.targetSheetRef;
         const s = typeof raw === 'string' ? splitSheetRef(raw, m.key) : null;
-        if (!s || s.pack) {
-          problem(
-            at('items', ii),
-            `"${key}" is not a link field this entry adds to one of the pack's sheets.`,
-          );
+        if (!s) {
+          problem(at('items', ii), `"${key}" is not a link field.`);
+          continue;
+        }
+        if (s.pack) {
+          // into another required sheet: only to items this pack adds there
+          const into = (m.extends ?? []).find((x) => x.pack === s.pack && x.sheet === s.ref);
+          for (const r of refs)
+            if (!into?.items?.some((x) => x.ref === r))
+              problem(
+                at('items', ii),
+                `"${r}" is not an item this pack adds to "${s.pack}:${s.ref}".`,
+              );
           continue;
         }
         for (const r of refs)
@@ -385,9 +401,29 @@ export function extensionUses(m: PackManifest, depKey: string): Map<string, Set<
           .filter((e) => e.pack === depKey && e.sheet === t.ref)
           .flatMap((e) => (e.fields ?? []).map((f) => f.key)),
       );
-      for (const k of [w.fieldKey, ...(w.conditions ?? []).map((c) => c.fieldKey)])
+      for (const k of [
+        w.fieldKey,
+        ...(w.conditions ?? []).map((c) => c.fieldKey),
+        ...(w.scope ?? []).map((c) => c.fieldKey),
+      ])
         if (!k || !own.has(k)) mark(t.ref, k);
     }
+  // setup steps on the dependency's sheets: the fields their rules read (the columns this pack adds are its own)
+  for (const step of m.setup?.steps ?? [])
+    for (const variant of [step, ...Object.values(step.levels ?? {})])
+      for (const t of [variant.target, ...(variant.rules ?? [])]) {
+        const s = t?.sheetRef ? splitSheetRef(t.sheetRef, m.key) : null;
+        if (!s || s.pack !== depKey) continue;
+        const own = new Set(
+          (m.extends ?? [])
+            .filter((e) => e.pack === depKey && e.sheet === s.ref)
+            .flatMap((e) => (e.fields ?? []).map((f) => f.key)),
+        );
+        mark(s.ref);
+        const rule = t as { where?: { fieldKey: string }[]; all?: { fieldKey: string }[] };
+        for (const c of [...(rule.where ?? []), ...(rule.all ?? [])])
+          if (!own.has(c.fieldKey)) mark(s.ref, c.fieldKey);
+      }
   // the pack's own links into the dependency's sheets, and what lookups and roll-ups read through them
   for (const s of m.sheets)
     for (const f of s.fields) {
@@ -498,7 +534,12 @@ export function extendsAgainst(m: PackManifest, dep: PackManifest): string[] {
       });
       for (const w of e.workflows) {
         if (own.has(w.id)) out.push(`${s.name} already has an approval workflow "${w.id}".`);
-        for (const msg of workflowProblems(w, fields, [...(s.workflows ?? []), ...e.workflows]))
+        for (const msg of workflowProblems(
+          w,
+          fields,
+          [...(s.workflows ?? []), ...e.workflows],
+          approvalRecordKeys(s),
+        ))
           out.push(`${s.name} › ${w.name}: ${msg}`);
       }
     }

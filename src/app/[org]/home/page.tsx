@@ -134,15 +134,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
         </nav>
       ) : null}
 
-      {quiet.map((q) => (
-        <TestModeBanner
-          key={q.installId}
-          org={org}
-          installId={q.installId}
-          title={q.title}
-          count={q.count}
-        />
-      ))}
+      <TestModeBanner org={org} packs={quiet} />
 
       {setups.map((s) => (
         <SetupCard

@@ -76,9 +76,17 @@ export async function readSetups(
   });
   const libraryIds = new Map(libraries);
 
+  // a required pack's sheet (`core:suppliers`) through that pack's live install
+  const refMapOf = new Map(
+    installs.map((i) => [i.pack_key, (i.ref_map ?? {}) as Record<string, string>]),
+  );
   // every sheet any step reads, once
-  const sheetIdOf = (refMap: Record<string, string>, t: SetupTarget) =>
-    t.library ? libraryIds.get(t.library) : t.sheetRef ? refMap[`sheet:${t.sheetRef}`] : undefined;
+  const sheetIdOf = (refMap: Record<string, string>, t: SetupTarget) => {
+    if (t.library) return libraryIds.get(t.library);
+    if (!t.sheetRef) return undefined;
+    const [pack, sheet] = t.sheetRef.split(':');
+    return sheet ? refMapOf.get(pack!)?.[`sheet:${sheet}`] : refMap[`sheet:${t.sheetRef}`];
+  };
   const wanted = new Set<string>();
   for (const { install, manifest } of withSetup) {
     const refMap = (install.ref_map ?? {}) as Record<string, string>;

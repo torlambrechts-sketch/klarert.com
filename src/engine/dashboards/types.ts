@@ -36,10 +36,18 @@ export const widgetConfigSchema = z.object({
     .nullable()
     .optional(),
   conditions: z.array(condition).max(10).optional(),
+  /**
+   * The items the widget looks at, before its conditions: an add-on's headline dashboard reads a shared register's
+   * rows tagged with its standard. A count says "3 of 5" against these items, not the whole sheet.
+   */
+  scope: z.array(condition).max(10).optional(),
   days: z.number().int().min(1).max(MAX_DAYS).nullable().optional(),
 });
 
-export type WidgetConfig = z.infer<typeof widgetConfigSchema> & { conditions?: Condition[] };
+export type WidgetConfig = z.infer<typeof widgetConfigSchema> & {
+  conditions?: Condition[];
+  scope?: Condition[];
+};
 
 export const dashboardConfigSchema = z.object({
   widgets: z.array(widgetConfigSchema).max(MAX_WIDGETS),

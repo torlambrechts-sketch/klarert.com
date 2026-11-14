@@ -1,6 +1,6 @@
 {
   "key": "iso-14001",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "title": "ISO 14001 environment (add-on)",
   "description": "ISO 14001:2026 on the Core registers: environmental aspects and their significance, monitoring results and the concerns neighbours and others raise, with compliance obligations in the Legal register, environmental objectives, risks, incidents and documents in the shared registers, tagged ISO 14001 with their own views. Full adds emergency preparedness with tested response plans. Installs the Core registers (Full, for the Legal register) first. Written in our own words; no text of the standard.",
   "requires": [{ "pack": "core", "range": "^1.0.0" }],
@@ -1106,7 +1106,7 @@
           "title": "Compliance obligations by evaluation",
           "sheetRef": "core:legal",
           "fieldKey": "evaluation",
-          "conditions": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
         },
         {
           "ref": "w_obligations_due",
@@ -1114,7 +1114,7 @@
           "title": "Compliance evaluations overdue",
           "sheetRef": "core:legal",
           "fieldKey": "next_evaluation",
-          "conditions": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
         },
         { "ref": "w_monitoring", "type": "by_option", "title": "Monitoring results by status", "sheetRef": "monitoring", "fieldKey": "status" },
         { "ref": "w_concerns", "type": "overdue", "title": "Concerns not answered in time", "sheetRef": "communications", "fieldKey": "answer_due" },
@@ -1124,7 +1124,7 @@
           "title": "Environmental objectives by status",
           "sheetRef": "core:objectives",
           "fieldKey": "status",
-          "conditions": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
         },
         {
           "ref": "w_incidents",
@@ -1139,10 +1139,8 @@
           "type": "count",
           "title": "Open ISO 14001 nonconformities",
           "sheetRef": "core:nc",
-          "conditions": [
-            { "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] },
-            { "fieldKey": "stage", "op": "is_not_done" }
-          ]
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }],
+          "conditions": [{ "fieldKey": "stage", "op": "is_not_done" }]
         },
         {
           "ref": "w_risks",
@@ -1150,7 +1148,7 @@
           "title": "Environmental risks and opportunities by status",
           "sheetRef": "core:risk",
           "fieldKey": "status",
-          "conditions": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
+          "scope": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso14001"] }]
         }
       ]
     }

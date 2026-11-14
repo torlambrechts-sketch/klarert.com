@@ -183,6 +183,16 @@ describe('definitions', () => {
     ).toEqual(['Status no longer has every option the workflow sets.']);
   });
 
+  it('never takes approvers from, or requires, a field only the approval fills in', () => {
+    // a documents register's Approver and Approved on (approvalRecordKeys): empty until the approval finishes
+    const w = workflow({ requiredFields: ['owner'] });
+    expect(workflowProblems(w, fields, [], ['owner'])).toEqual([
+      'Step 1, Review: Owner is filled in only when the approval finishes. Choose a people field that is filled in before submitting.',
+      'Owner is filled in only when the approval finishes, so it cannot be required before submitting.',
+    ]);
+    expect(workflowProblems(w, fields, [], ['reviewers_on'])).toEqual([]);
+  });
+
   it('keeps people and ids out of pack manifests', () => {
     const w = workflow();
     expect(templateWorkflowSchema.safeParse(w).success).toBe(false); // roleId given

@@ -170,15 +170,42 @@ export const requirableFields = (fields: Field[]) =>
 const stepWords = (i: number, name: string) => `Step ${i + 1}, ${name}`;
 
 /**
+ * Fields only an approval fills in (a documents register's Approver and Approved on, `approvalRecordKeys`) are empty
+ * until the approval finishes: approvers cannot come from them and they cannot be required before submitting.
+ */
+export function approvalRecordProblems(
+  w: Pick<ApprovalWorkflow, 'steps' | 'requiredFields'>,
+  fields: Pick<Field, 'key' | 'name'>[],
+  recordKeys: readonly string[],
+): string[] {
+  if (!recordKeys.length) return [];
+  const out: string[] = [];
+  const nameOf = (k: string) => fields.find((f) => f.key === k)?.name ?? k;
+  w.steps.forEach((s, i) => {
+    if (s.approvers.kind === 'field' && recordKeys.includes(s.approvers.fieldKey))
+      out.push(
+        `${stepWords(i, s.name)}: ${nameOf(s.approvers.fieldKey)} is filled in only when the approval finishes. Choose a people field that is filled in before submitting.`,
+      );
+  });
+  for (const k of w.requiredFields)
+    if (recordKeys.includes(k))
+      out.push(
+        `${nameOf(k)} is filled in only when the approval finishes, so it cannot be required before submitting.`,
+      );
+  return out;
+}
+
+/**
  * What is wrong with a workflow on a sheet with these fields, in words (empty when it can be saved). The database
- * checks the same shape again when an item is submitted.
+ * checks the same shape again when an item is submitted. `recordKeys`: the sheet's fields only an approval fills in.
  */
 export function workflowProblems(
   w: ApprovalWorkflow,
   fields: Field[],
   others: ApprovalWorkflow[] = [],
+  recordKeys: readonly string[] = [],
 ): string[] {
-  const out: string[] = [];
+  const out: string[] = approvalRecordProblems(w, fields, recordKeys);
   const byKey = new Map(fields.map((f) => [f.key, f]));
   if (
     others.some((o) => o.id !== w.id && o.name.trim().toLowerCase() === w.name.trim().toLowerCase())

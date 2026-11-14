@@ -124,7 +124,7 @@ Since P2 every sheet-scoped read and write below is narrowed further by the pers
 | files | members | editors, as themselves, after the hash check |
 | protected_values | admins + `fields.config.allowedUserIds` | same |
 | notifications | the recipient | the recipient may set `read_at`/`done_at` |
-| dashboards | members | editors, through the dashboard commands; inserted as yourself (`created_by = auth.uid()`); workspace and creator never change (0016). `config`: `{ widgets: [{ id, type, title, sheetId?, fieldKey?, conditions?, days? }] }`, at most 24 widgets; widget types live in `src/engine/dashboards` (fields by key, sheets by id). Changes are audited by `audit_schema` as `dashboards.insert/update/delete` on the workspace chain `sheet:<org_id>` |
+| dashboards | members | editors, through the dashboard commands; inserted as yourself (`created_by = auth.uid()`); workspace and creator never change (0016). `config`: `{ widgets: [{ id, type, title, sheetId?, fieldKey?, conditions?, scope?, days? }] }`, at most 24 widgets (`scope`: conditions for the items the widget looks at before its own conditions, e.g. a standard's rows of a shared register; a count's "of N" is the items in scope); widget types live in `src/engine/dashboards` (fields by key, sheets by id). Changes are audited by `audit_schema` as `dashboards.insert/update/delete` on the workspace chain `sheet:<org_id>` |
 | scheduler_fired, outbound_webhooks | service role only | service role only |
 | workflow_instances, workflow_decisions (0040) | members who can read the item's sheet (decisions through their instance) | **only via RPCs** (no write policies); decisions are append-only (trigger), deleted only by the workspace purge |
 

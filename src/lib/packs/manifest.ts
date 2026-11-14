@@ -70,7 +70,8 @@ const setupCondition = z.object({
   value: json.optional(),
 });
 const setupTarget = z.object({
-  sheetRef: ref.optional(),
+  /** A sheet of this pack, or `<pack>:<sheet>` of a pack in `requires` (an add-on's step on a Core register). */
+  sheetRef: z.string().regex(SHEET_REF, 'Use a sheet ref.').optional(),
   library: libraryRef.optional(),
   view: z.string().trim().min(1).max(80).optional(),
 });
@@ -175,6 +176,11 @@ export const packWidget = z.object({
   library: libraryRef.optional(),
   fieldKey: fieldKey.optional(),
   conditions: z
+    .array(z.object({ fieldKey, op: z.string().min(1).max(40), value: json.optional() }))
+    .max(10)
+    .optional(),
+  /** The items the widget looks at before its conditions (a count's "of N"): an add-on's tagged rows of a register. */
+  scope: z
     .array(z.object({ fieldKey, op: z.string().min(1).max(40), value: json.optional() }))
     .max(10)
     .optional(),

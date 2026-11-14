@@ -1,7 +1,7 @@
-import { matchingItems, plural, pluralOf, sourceOf } from '../shared';
+import { matchingItems, plural, pluralOf, scopedItems, sourceOf } from '../shared';
 import type { WidgetTypeDef } from '../types';
 
-/** count: items in a sheet that match conditions. */
+/** count: items in a sheet that match conditions, of the items in the widget's scope (the whole sheet without one). */
 export const count: WidgetTypeDef = {
   id: 'count',
   label: 'Item count',
@@ -13,7 +13,7 @@ export const count: WidgetTypeDef = {
     const s = sourceOf(w, data);
     if ('problem' in s) return s.problem;
     const n = matchingItems(w, s.source).length;
-    const total = s.source.items.length;
+    const total = scopedItems(w, s.source).length;
     return {
       kind: 'stat',
       value: n,

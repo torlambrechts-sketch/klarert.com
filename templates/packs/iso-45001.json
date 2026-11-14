@@ -1,6 +1,6 @@
 {
   "key": "iso-45001",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "title": "ISO 45001 health and safety (add-on)",
   "description": "ISO 45001:2018 on the Core registers: hazard identification and risk assessment with the hierarchy of controls, and worker consultation and participation, with injuries, near misses and ill health in the shared Incidents register, OH&S objectives, risks, nonconformities and documents tagged ISO 45001 with their own views. Full adds contractors, emergency drills and health surveillance. Installs the Core registers first. A new edition of ISO 45001 is expected in 2027: this add-on will get a version on it, and you move your library over from Workspace admin › Frameworks. Written in our own words; no text of the standard.",
   "requires": [
@@ -2642,7 +2642,7 @@
           "title": "Injuries, near misses and ill health by type",
           "sheetRef": "core:incidents",
           "fieldKey": "incident_type",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -2657,14 +2657,16 @@
           "type": "count",
           "title": "OH&S incidents still open",
           "sheetRef": "core:incidents",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
               "value": [
                 "iso45001"
               ]
-            },
+            }
+          ],
+          "conditions": [
             {
               "fieldKey": "status",
               "op": "is_not_done"
@@ -2684,7 +2686,7 @@
           "title": "OH&S objectives by status",
           "sheetRef": "core:objectives",
           "fieldKey": "status",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
@@ -2699,14 +2701,16 @@
           "type": "count",
           "title": "Open ISO 45001 nonconformities",
           "sheetRef": "core:nc",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",
               "value": [
                 "iso45001"
               ]
-            },
+            }
+          ],
+          "conditions": [
             {
               "fieldKey": "stage",
               "op": "is_not_done"
@@ -2719,7 +2723,7 @@
           "title": "OH&S documents due for review",
           "sheetRef": "core:documents",
           "fieldKey": "next_review",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "standards",
               "op": "has_any_of",

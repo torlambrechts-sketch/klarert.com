@@ -887,3 +887,116 @@ describe('levels of extends entries', () => {
     expect(levelProblems(m)).toEqual([]);
   });
 });
+
+describe('links between two sheets an add-on extends (Supplier management 3.0: Core Suppliers ↔ Documents)', () => {
+  /** The add-on links Core's Risk register and Controls both ways, with an example on each linked. */
+  const joined = (): PackManifest => {
+    const m = addon();
+    m.extends![1]!.fields!.push({
+      key: 'iso14001_controls',
+      name: 'Environmental controls',
+      type: 'link',
+      config: { targetSheetRef: 'core:controls', multiple: true, inverseKey: 'iso14001_risks' },
+    });
+    m.extends!.push({
+      pack: 'core',
+      sheet: 'controls',
+      fields: [
+        {
+          key: 'iso14001_risks',
+          name: 'Environmental risks',
+          type: 'link',
+          config: { targetSheetRef: 'core:risk', multiple: true, inverseKey: 'iso14001_controls' },
+        },
+      ],
+      items: [
+        {
+          ref: 'iso14001_bund',
+          group: 'all',
+          name: 'Example: bunded storage',
+          values: {},
+          links: { iso14001_risks: ['iso14001_spill'] },
+        },
+      ],
+    });
+    return m;
+  };
+
+  it('accepts a two-way link whose inverse is on the other extended sheet, and links between its examples', () => {
+    expect(extendsProblems(joined())).toEqual([]);
+    expect(extendsAgainst(joined(), core())).toEqual([]);
+    expect(levelProblems(joined())).toEqual([]);
+  });
+
+  it('refuses an inverse that does not link back, an example it does not add, and two levels', () => {
+    const m = joined();
+    (m.extends![2]!.fields![0]!.config as Row).inverseKey = 'iso14001_permit';
+    m.extends![2]!.items![0]!.links = { iso14001_risks: ['spill_of_someone_else'] };
+    expect(extendsProblems(m).map((p) => p.message)).toEqual(
+      expect.arrayContaining([
+        'The inverse "iso14001_permit" must link back to "core:controls" through "iso14001_risks".',
+        '"spill_of_someone_else" is not an item this pack adds to "core:risk".',
+      ]),
+    );
+    const leveled = joined();
+    leveled.levels = [
+      { key: 'starter', name: 'Starter', description: '' },
+      { key: 'full', name: 'Full', description: '' },
+    ];
+    leveled.extends![2]!.level = 'full';
+    expect(levelProblems(leveled).map((p) => p.message)).toContain(
+      '"iso14001_controls" links both ways to "core:controls", whose extends entry installs at another level. Give them one level.',
+    );
+  });
+
+  it('plans both columns with each other as inverse, and the link between the two examples', () => {
+    const { payload: corePayload, snap } = withCore('full');
+    const coreRefs = refMapOf(corePayload);
+    const p = planPackInstall(joined(), snap, env).payload!;
+    const field = (ref: string) => p.fields.find((f) => f.ref === ref)!;
+    const toControls = field('core:risk.iso14001_controls');
+    const toRisks = field('core:controls.iso14001_risks');
+    expect(toControls.config).toMatchObject({
+      targetSheetId: coreRefs['sheet:controls'],
+      inverseFieldId: toRisks.id,
+    });
+    expect(toRisks.config).toMatchObject({
+      targetSheetId: coreRefs['sheet:risk'],
+      inverseFieldId: toControls.id,
+    });
+    const bund = p.items.find((i) => i.ref === 'core:controls.iso14001_bund')!;
+    const spill = p.items.find((i) => i.ref === 'core:risk.iso14001_spill')!;
+    expect(p.links).toContainEqual({ field_id: toRisks.id, from_item: bund.id, to_item: spill.id });
+  });
+});
+
+describe('setup steps on a required pack’s sheet', () => {
+  const withSetup = (sheetRef: string, fieldKey: string): PackManifest => ({
+    ...addon(),
+    setup: {
+      title: 'Setup',
+      description: '',
+      steps: [
+        {
+          ref: 'risks',
+          title: 'Rate your environmental risks',
+          body: 'Score them.',
+          target: { sheetRef },
+          rules: [{ sheetRef, all: [{ fieldKey, op: 'is_not_empty' }], min: 3 }],
+        },
+      ],
+    },
+  });
+
+  it('names a Core register as core:<sheet>, its fields counted as uses', () => {
+    const m = withSetup('core:risk', 'score');
+    expect(levelProblems(m)).toEqual([]);
+    expect([...extensionUses(m, 'core').get('risk')!]).toContain('score');
+    expect(extendsAgainst(withSetup('core:risk', 'nope'), core())).toContain(
+      'Risk register has no field "nope".',
+    );
+    expect(levelProblems(withSetup('gdpr:breach', 'score')).map((p) => p.message)).toContain(
+      '"gdpr:breach" names the pack "gdpr", which is not in requires.',
+    );
+  });
+});

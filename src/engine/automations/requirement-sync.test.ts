@@ -136,6 +136,50 @@ describe('reading the rules', () => {
     ]);
     expect(rules[2]!.minCriticality).toBe(2);
   });
+
+  it('ranks a criticality dropdown by its options in order (the Core registers’ Suppliers, Low to Critical)', () => {
+    // Supplier management 3.0 reads Core's Criticality, a dropdown, and its own fields by their namespaced keys
+    const core = {
+      criticality: makeField(
+        'dropdown',
+        {
+          options: [
+            { id: 'opt_low', label: 'Low', color: 'green' },
+            { id: 'opt_medium', label: 'Medium', color: 'yellow' },
+            { id: 'opt_high', label: 'High', color: 'orange' },
+            { id: 'opt_critical', label: 'Critical', color: 'red' },
+          ],
+        },
+        { key: 'criticality' },
+      ),
+      category: makeField('dropdown', { options: CATEGORIES }, { key: 'sm_category' }),
+      pd: makeField('check', {}, { key: 'sm_personal_data' }),
+    };
+    const coreCfg = syncConfig({
+      type: 'sync_requirement_checks',
+      categoryKey: 'sm_category',
+      personalDataKey: 'sm_personal_data',
+      manualKey: 'sm_extra',
+    });
+    const at = (crit: string | null) => {
+      const s = makeItem(
+        { [core.criticality.id]: crit, [core.category.id]: 'opt_it', [core.pd.id]: false },
+        { id: 'i-core' },
+      );
+      return subjectFacts(s, makeCtx({ fields: Object.values(core), items: [s] }), coreCfg);
+    };
+    expect(at('opt_high')).toEqual({
+      category: { id: 'opt_it', label: 'IT and cloud' },
+      criticality: 2,
+      personalData: false,
+      manual: [],
+    });
+    expect(at('opt_low').criticality).toBe(0);
+    expect(at(null).criticality).toBeNull();
+    // High meets "from High" (r-iso27001), Medium does not
+    expect(ruleMatch(rules[2]!, at('opt_high'))).toBe('rule');
+    expect(ruleMatch(rules[2]!, at('opt_medium'))).toBeNull();
+  });
 });
 
 describe('ruleMatch', () => {

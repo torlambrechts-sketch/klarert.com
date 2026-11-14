@@ -94,6 +94,8 @@ export interface PackWidget {
   library?: string;
   fieldKey?: string;
   conditions?: { fieldKey: string; op: string; value?: Json }[];
+  /** The items the widget looks at before its conditions (a count's "of N"). */
+  scope?: { fieldKey: string; op: string; value?: Json }[];
   days?: number;
 }
 
