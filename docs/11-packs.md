@@ -216,7 +216,7 @@ A pack another live install builds on (names it in `requires`) is not archived: 
 - **Install order:** `requiredFirst` lists required packs that are missing or below the level the pack needs; `installPack` (and Create) install them first, each in its own transaction (`installRequired`), then plan the pack again. The preview says "Installs Core registers 1.0.0 (Starter) first." and lists what it adds to each register.
 - **Upgrades:** an add-on's update adds new columns, groups, views, items and options to the Core sheets as for its own sheets (`upgrade_pack` accepts rows on required packs' sheets). A Core update that removes or retypes a field a live add-on uses (`extensionUses`: keys its views, forms, items, options, automations, formulas and lookups name) or drops a sheet it extends is **blocked**, naming the add-on.
 - **Archive of an add-on:** its own sheets, dashboards and automations as for any pack; on the Core sheets its columns are archived (restorable), its views removed, its groups removed when empty (kept with items), its standard's option taken out of the Standards fields (items keep the id; installing again brings the tag back). Options it added elsewhere stay (items may use them). No shared row is deleted: items it added and items tagged with its standard stay with their history. The confirm dialog says so.
-- **Hosted:** apply migration 0040, then load the catalogue (`scripts/packs-sql.ts`: `core` 1.0.0 and `iso-14001` 1.0.0).
+- **Hosted:** apply migration 0041, then load the catalogue (`scripts/packs-sql.ts`: `core` 1.0.0 and `iso-14001` 1.0.0).
 
 ## Bundles: ready-made sets from Create
 

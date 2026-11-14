@@ -1,4 +1,4 @@
--- 0040_core_registers.sql · Core registers and extends (docs/11 Extends and Core registers, docs/02 §15).
+-- 0041_core_registers.sql · Core registers and extends (docs/11 Extends and Core registers, docs/02 §15).
 -- A pack may add to the sheets of a pack it requires (an add-on to the Core registers): columns, groups, views,
 -- forms, example items, automations and options of existing option fields. Every row it adds is its own (its
 -- provenance and ref map), so upgrade and archive stay per pack. This migration:
@@ -233,7 +233,7 @@ begin
   end if;
 
   -- groups, fields, views, items and automations of the plan's sheets, or of a live sheet of a pack the manifest
-  -- requires (0040, docs/11 Extends: what an add-on adds to the Core registers)
+  -- requires (0041, docs/11 Extends: what an add-on adds to the Core registers)
   if exists (select 1 from jsonb_array_elements(coalesce(p_plan->'groups', '[]')) e where not _pack_row_sheet_ok(p_org, pk.manifest, plan_sheets, e))
      or exists (select 1 from jsonb_array_elements(coalesce(p_plan->'fields', '[]')) e where not _pack_row_sheet_ok(p_org, pk.manifest, plan_sheets, e))
      or exists (select 1 from jsonb_array_elements(coalesce(p_plan->'views', '[]')) e where not _pack_row_sheet_ok(p_org, pk.manifest, plan_sheets, e))
@@ -257,7 +257,7 @@ begin
          e->>'description', coalesce(e->'config', '{}'::jsonb), coalesce(e->'rules', '[]'::jsonb),
          nullif(e->'visibility', 'null'::jsonb), coalesce((e->>'system')::boolean, false), inst, e->>'ref', _pack_hash(e)
     from jsonb_array_elements(coalesce(p_plan->'fields', '[]')) e;
-  -- options added to option fields of a required pack's sheets, merged by id (0040)
+  -- options added to option fields of a required pack's sheets, merged by id (0041)
   perform _pack_add_options(p_org, pk.manifest, coalesce(p_plan->'options', '[]'));
   -- link fields point at sheets of this workspace
   if exists (select 1 from fields f where f.pack_install_id = inst and f.config ? 'targetSheetId'
@@ -305,7 +305,7 @@ begin
   -- (0033) or, through a requirement or control link field, a live item of one of the workspace's library sheets
   if exists (select 1 from jsonb_array_elements(coalesce(p_plan->'links', '[]')) e
               where not ((e->>'field_id')::uuid = any(plan_fields)
-                         -- a link field of a required pack's sheet, from an item this plan adds there (0040)
+                         -- a link field of a required pack's sheet, from an item this plan adds there (0041)
                          or exists (select 1 from fields x where x.id = (e->>'field_id')::uuid
                                      and _pack_extend_target(p_org, pk.manifest, x.sheet_id)))
                  or not ((e->>'from_item')::uuid = any(plan_items))
@@ -583,7 +583,7 @@ begin
        union all select e->>'sheet_id' from jsonb_array_elements(coalesce(p_plan->'add'->'automations', '[]')) e) x
       where not ((x.sid)::uuid = any(add_sheets))
         and not exists (select 1 from sheets sh where sh.id::text = x.sid and sh.pack_install_id = i.id)
-        -- or a live sheet of a pack the new version requires (0040, docs/11 Extends)
+        -- or a live sheet of a pack the new version requires (0041, docs/11 Extends)
         and not _pack_extend_target(v_org, pk.manifest, (x.sid)::uuid)) then
     raise exception 'upgrade plan: rows must belong to the install''s sheets';
   end if;
@@ -600,7 +600,7 @@ begin
          e->>'description', coalesce(e->'config', '{}'::jsonb), coalesce(e->'rules', '[]'::jsonb),
          nullif(e->'visibility', 'null'::jsonb), coalesce((e->>'system')::boolean, false), i.id, e->>'ref', _pack_hash(e)
     from jsonb_array_elements(coalesce(p_plan->'add'->'fields', '[]')) e;
-  -- options new to option fields of a required pack's sheets, merged by id (0040)
+  -- options new to option fields of a required pack's sheets, merged by id (0041)
   perform _pack_add_options(v_org, pk.manifest, coalesce(p_plan->'add'->'options', '[]'));
   if exists (select 1 from fields x where x.id = any(add_fields) and x.config ? 'targetSheetId'
                and nullif(x.config->>'targetSheetId', '') is not null

@@ -1,4 +1,4 @@
--- Core registers and extends (0040_core_registers.sql, docs/11 Extends): domain folders and system columns; an add-on
+-- Core registers and extends (0041_core_registers.sql, docs/11 Extends): domain folders and system columns; an add-on
 -- adds columns, groups, views, items, links and options to the sheets of a pack it requires, in its own provenance;
 -- only into packs it requires; a pack another install builds on is not archived; archiving the add-on archives its
 -- columns, removes its views, empty groups and standard option, and keeps every item. Run: pnpm db:test

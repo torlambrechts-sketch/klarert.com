@@ -111,7 +111,7 @@ export function toField(
     ...(restrictedTo ? { restrictedTo } : {}),
     // computed by the database for the caller (0027): their values never reach this person
     ...(restrictedTo && r.field_hidden ? { hidden: true } : {}),
-    // a system column of the Core registers (0040): hidden and renamed, never deleted, retyped or re-keyed
+    // a system column of the Core registers (0041): hidden and renamed, never deleted, retyped or re-keyed
     ...(r.system ? { system: true } : {}),
   };
 }
