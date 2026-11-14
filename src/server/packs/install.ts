@@ -2,7 +2,21 @@
 // (src/engine/packs/plan.ts) and write the plan with install_pack, one transaction. Given a Supabase client, so the
 // commands (the person's client, RLS) and the seed (service role, scripts/seed.ts) share it; no 'server-only' import.
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { planPackInstall, type PackPlan, type PackSnapshot } from '@/engine/packs/plan';
+import {
+  foreignKey,
+  foreignSheets,
+  neededLevel,
+  STANDARDS_KEY,
+  type ForeignSheet,
+} from '@/engine/packs/extend';
+import { defaultLevel, levelRank } from '@/engine/packs/levels';
+import {
+  planPackInstall,
+  type InstallFirst,
+  type PackPlan,
+  type PackSnapshot,
+} from '@/engine/packs/plan';
+import { satisfies } from '@/engine/packs/semver';
 import type { PackManifest } from '@/engine/packs/types';
 import { todayIn } from '@/engine/sheet-data';
 import type { Json } from '@/engine/types';
@@ -61,10 +75,11 @@ export async function readPack(db: Db, key: string): Promise<CataloguePack | nul
   return (await readCatalogue(db)).find((p) => p.key === key) ?? null;
 }
 
-/** What the planner needs to know about a workspace. */
+/** What the planner needs to know about a workspace (and, for `manifest`, the sheets of the packs it requires). */
 export async function loadSnapshot(
   db: Db,
   orgId: string,
+  manifest?: PackManifest,
 ): Promise<{ snapshot: PackSnapshot; timeZone: string }> {
   const [org, sheets, folders, installs, members, emails, jobRoles, teams, dashboards, libraries] =
     await Promise.all([
@@ -99,9 +114,12 @@ export async function loadSnapshot(
       .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
       .at(-1) ?? null;
   const sheetRows = must(sheets, 'sheets') ?? [];
+  const installRows = must(installs, 'pack installs') ?? [];
+  const foreign = manifest ? await loadForeign(db, orgId, manifest, installRows) : null;
   return {
     timeZone: must(org, 'workspace')?.time_zone ?? 'Europe/London',
     snapshot: {
+      ...(foreign ?? {}),
       orgId,
       prefixes: sheetRows.flatMap((s) => (s.id_prefix ? [s.id_prefix] : [])),
       folders: (must(folders, 'folders') ?? []).map((f) => ({
@@ -138,6 +156,185 @@ export async function loadSnapshot(
       lastDashboardPosition: last(must(dashboards, 'dashboards') ?? []),
     },
   };
+}
+
+/**
+ * The live sheets and folders of the installed packs a manifest requires (docs/11 Extends): the sheets it extends or
+ * links to, with their live fields, groups and last positions, and every folder of those installs by ref.
+ */
+async function loadForeign(
+  db: Db,
+  orgId: string,
+  m: PackManifest,
+  installs: { id: string; pack_key: string; status: string }[],
+): Promise<Pick<PackSnapshot, 'foreign' | 'foreignFolders'> | null> {
+  const deps = installs.filter(
+    (i) => i.status === 'installed' && m.requires.some((r) => r.pack === i.pack_key),
+  );
+  if (!deps.length) return null;
+  const depIds = deps.map((d) => d.id);
+  const keyOf = new Map(deps.map((d) => [d.id, d.pack_key]));
+  const [sheets, folders] = await Promise.all([
+    db
+      .from('sheets')
+      .select('id, pack_ref, pack_install_id, name, item_label, id_prefix')
+      .eq('org_id', orgId)
+      .in('pack_install_id', depIds)
+      .is('parent_sheet_id', null)
+      .is('archived_at', null),
+    db
+      .from('folders')
+      .select('id, pack_ref, pack_install_id')
+      .eq('org_id', orgId)
+      .in('pack_install_id', depIds)
+      .is('archived_at', null),
+  ]);
+  const wanted = new Set(foreignSheets(m).map((f) => foreignKey(f.pack, f.sheet)));
+  const targets = (must(sheets, 'sheets') ?? []).filter((s) =>
+    wanted.has(foreignKey(keyOf.get(s.pack_install_id ?? '') ?? '', s.pack_ref ?? '')),
+  );
+  const foreignFolders: Record<string, string> = {};
+  for (const f of must(folders, 'folders') ?? [])
+    foreignFolders[foreignKey(keyOf.get(f.pack_install_id ?? '') ?? '', f.pack_ref ?? '')] = f.id;
+  if (!targets.length) return { foreign: {}, foreignFolders };
+  const ids = targets.map((s) => s.id);
+  const [fields, groups, views, items] = await Promise.all([
+    db
+      .from('fields')
+      .select(
+        'id, sheet_id, key, name, type, config, required, locked, description, position, pack_install_id',
+      )
+      .in('sheet_id', ids)
+      .is('archived_at', null),
+    db
+      .from('groups')
+      .select('id, sheet_id, pack_ref, pack_install_id, name, color, position')
+      .in('sheet_id', ids),
+    db.from('views').select('sheet_id, position').in('sheet_id', ids),
+    db.from('items').select('group_id, position').in('sheet_id', ids).is('archived_at', null),
+  ]);
+  const last = (rows: { position: string }[]) =>
+    rows
+      .map((r) => r.position)
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+      .at(-1) ?? null;
+  const fieldRows = must(fields, 'fields') ?? [];
+  const groupRows = must(groups, 'groups') ?? [];
+  const viewRows = must(views, 'views') ?? [];
+  const itemRows = must(items, 'items') ?? [];
+  const foreign: Record<string, ForeignSheet> = {};
+  for (const s of targets) {
+    const pack = keyOf.get(s.pack_install_id ?? '') ?? '';
+    const ref = s.pack_ref ?? '';
+    const gs = groupRows.filter((g) => g.sheet_id === s.id);
+    const fs = fieldRows.filter((f) => f.sheet_id === s.id);
+    foreign[foreignKey(pack, ref)] = {
+      sheetId: s.id,
+      pack,
+      ref,
+      name: s.name,
+      itemLabel: s.item_label,
+      idPrefix: s.id_prefix ?? '',
+      fields: fs
+        .sort((a, b) => (a.position < b.position ? -1 : 1))
+        .map((f) => ({
+          id: f.id,
+          key: f.key,
+          name: f.name,
+          type: f.type,
+          config: f.config as Json,
+          required: f.required,
+          locked: f.locked,
+          description: f.description,
+          installId: f.pack_install_id,
+        })),
+      groups: gs
+        .sort((a, b) => (a.position < b.position ? -1 : 1))
+        .map((g) => ({
+          id: g.id,
+          // the group's ref in its sheet, for groups of the sheet's own pack (`risk.open` → `open`)
+          ref:
+            g.pack_install_id === s.pack_install_id && g.pack_ref?.startsWith(`${ref}.`)
+              ? g.pack_ref.slice(ref.length + 1)
+              : null,
+          name: g.name,
+          color: g.color,
+          installId: g.pack_install_id,
+        })),
+      lastFieldPosition: last(fs),
+      lastGroupPosition: last(gs),
+      lastViewPosition: last(viewRows.filter((v) => v.sheet_id === s.id)),
+      lastItemPosition: Object.fromEntries(
+        gs.flatMap((g) => {
+          const at = last(itemRows.filter((i) => i.group_id === g.id));
+          return at ? [[g.id, at]] : [];
+        }),
+      ),
+    };
+  }
+  return { foreign, foreignFolders };
+}
+
+/**
+ * The required packs that installing `m` installs first, or raises to the level it needs (docs/11 Extends): install
+ * order does not matter. A requirement the catalogue cannot meet is left to the planner (it says so).
+ */
+export async function requiredFirst(
+  db: Db,
+  orgId: string,
+  m: PackManifest,
+  catalogue?: CataloguePack[],
+): Promise<InstallFirst[]> {
+  if (!m.requires.length) return [];
+  const cat = catalogue ?? (await readCatalogue(db));
+  const installs =
+    must(
+      await db
+        .from('pack_installs')
+        .select('pack_key, version, level, status')
+        .eq('org_id', orgId)
+        .eq('status', 'installed'),
+      'pack installs',
+    ) ?? [];
+  const out: InstallFirst[] = [];
+  for (const r of m.requires) {
+    const dep = cat.find((c) => c.key === r.pack);
+    if (!dep || !satisfies(dep.version, r.range)) continue;
+    const need = neededLevel(m, dep.manifest) ?? defaultLevel(dep.manifest);
+    const levelName = dep.manifest.levels?.find((l) => l.key === need)?.name ?? null;
+    const sheets = Object.fromEntries(
+      dep.manifest.sheets.map((s) => [
+        s.ref,
+        { name: s.name, standards: s.fields.some((f) => f.key === STANDARDS_KEY) },
+      ]),
+    );
+    const live = installs.find((i) => i.pack_key === r.pack);
+    if (!live)
+      out.push({
+        key: dep.key,
+        title: dep.title,
+        version: dep.version,
+        level: need,
+        levelName,
+        raise: false,
+        sheets,
+      });
+    else if (
+      need &&
+      live.version === dep.version &&
+      levelRank(dep.manifest, live.level) < levelRank(dep.manifest, need)
+    )
+      out.push({
+        key: dep.key,
+        title: dep.title,
+        version: dep.version,
+        level: need,
+        levelName,
+        raise: true,
+        sheets,
+      });
+  }
+  return out;
 }
 
 /** The requirement keys a manifest's example items link to (`requirements`, docs/11 Frameworks). */
@@ -180,9 +377,16 @@ export async function planInstall(
   db: Db,
   orgId: string,
   pack: Pick<CataloguePack, 'manifest' | 'hash'>,
-  env: { userId: string; now: Date; newId: () => string; level?: string | null },
+  env: {
+    userId: string;
+    now: Date;
+    newId: () => string;
+    level?: string | null;
+    /** Required packs the command installs first (requiredFirst). */
+    installFirst?: InstallFirst[];
+  },
 ): Promise<PackPlan> {
-  const { snapshot, timeZone } = await loadSnapshot(db, orgId);
+  const { snapshot, timeZone } = await loadSnapshot(db, orgId, pack.manifest);
   snapshot.requirementItems = await loadRequirementItems(
     db,
     orgId,
@@ -200,7 +404,7 @@ export async function planInstall(
       hash: pack.hash,
       userId: env.userId,
     },
-    { level: env.level ?? null },
+    { level: env.level ?? null, installFirst: env.installFirst },
   );
 }
 

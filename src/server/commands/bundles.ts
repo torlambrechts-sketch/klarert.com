@@ -21,10 +21,11 @@ import {
 import { RECIPES } from '@/lib/recipes';
 import { STARTS } from '@/lib/starts';
 import { isAdminRole, isEditorRole } from '@/server/auth';
-import { planInstall, readCatalogue, readPack } from '@/server/packs/install';
+import { planInstall, readCatalogue, readPack, requiredFirst } from '@/server/packs/install';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
 import { adoptForPack } from './frameworks';
+import { installRequired } from './packs';
 
 // The Create wizard (docs/05 §4 Create, docs/11 Bundles). A ready-made app ("Solve a problem") is a pack install made
 // from the same manifest and planner as Workspace admin › Packs, with the parts the person left out removed
@@ -245,6 +246,7 @@ export async function bundleDetails(input: unknown): Promise<Result<BundleDetail
             now: new Date(),
             newId: randomUUID,
             level: levelKey,
+            installFirst: await requiredFirst(supabase, orgId, pack.manifest),
           });
           check = {
             state: plan.state,
@@ -337,7 +339,14 @@ export async function createBundle(input: unknown): Promise<Result<CreatedBundle
       };
       if (!chosen.manifest.sheets.length) return fail('invalid', 'Keep at least one sheet.');
       const env = { userId: user.id, now: new Date(), newId: randomUUID, level: levelKey };
-      let plan = await planInstall(supabase, orgId, chosen, env);
+      // the packs it requires (the Core registers) are installed first (docs/11 Extends)
+      const firsts = await requiredFirst(supabase, orgId, pack.manifest);
+      let plan = await planInstall(supabase, orgId, chosen, { ...env, installFirst: firsts });
+      if (plan.state === 'ready' && firsts.length) {
+        const r = await installRequired(supabase, orgId, user.id, firsts);
+        if (!r.ok) return r;
+        plan = await planInstall(supabase, orgId, chosen, env);
+      }
       if (plan.state === 'installed' || plan.preview.extendsLevel)
         return fail(
           'conflict',

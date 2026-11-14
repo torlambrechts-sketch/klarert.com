@@ -34,6 +34,7 @@ const KIND: Record<UpgradeChange['kind'], string> = {
   requirement: 'Requirement',
   automation: 'Automation',
   dashboard: 'Dashboard',
+  option: 'Option',
 };
 
 const SHOWN = 8;

@@ -6,6 +6,7 @@ import { toLevel } from '@/engine/access';
 import { requireMember } from '@/server/auth';
 import { getSheet, getSheetAccess } from '@/server/repositories/sheets';
 import { getSheetBundle } from '@/server/bundles/read';
+import { getSheetSystem } from '@/server/packs/system';
 
 function defaultViewOf(settings: unknown): string | null {
   const id =
@@ -50,6 +51,7 @@ export default async function SheetPage({
     redirect(
       `/${org}/s/${sheet.parent_sheet_id}${item ? `?item=${encodeURIComponent(item)}` : ''}`,
     );
+  const system = await getSheetSystem(workspace.id, sheet.id, sheet.settings);
   return (
     <>
       {sheet.archived_at ? (
@@ -76,6 +78,7 @@ export default async function SheetPage({
         defaultViewId={defaultViewOf(sheet.settings)}
         tabSet={readTabSettings(sheet.settings)}
         bundle={bundle}
+        system={system}
       />
     </>
   );

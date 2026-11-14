@@ -12,6 +12,7 @@ import { SEMVER, SEMVER_RANGE } from '@/engine/packs/semver';
 import { packToTemplate } from '@/engine/packs/template';
 import { SHEET_REF, splitSheetRef, type PackManifest } from '@/engine/packs/types';
 import { levelProblems } from '@/engine/packs/levels';
+import { extendsProblems } from '@/engine/packs/extend';
 import {
   sheetTemplateSchema,
   templateAutomation,
@@ -85,8 +86,11 @@ const setupText = z.object({
 });
 
 export const packSheet = templateSheet.omit({ folder: true, items: true, forms: true }).extend({
-  /** The folder by ref (the manifest's `folders`). */
-  folder: ref.optional(),
+  /** The folder by ref (the manifest's `folders`), or `<pack>:<folder ref>` of a pack in `requires` (a domain). */
+  folder: z
+    .string()
+    .regex(/^(?:[a-z0-9][a-z0-9-]{0,79}:)?[a-z][a-z0-9_]{0,39}$/, 'Use a folder ref.')
+    .optional(),
   /** A library sheet (requirement and control link fields point at libraries). */
   isLibrary: z.boolean().default(false),
   /** A documents register (docs/02 §14): its items are controlled documents. */
@@ -116,6 +120,30 @@ export const packSheet = templateSheet.omit({ folder: true, items: true, forms: 
 });
 
 export const packAutomation = templateAutomation.extend({ ref, level: levelKey.optional() });
+
+const labelColor = templateSheet.shape.groups.element.shape.color;
+const extensionOption = z.object({
+  id: z.string().regex(/^[a-z][a-z0-9_]{0,39}$/, 'Use a short lower-case option id.'),
+  label: z.string().trim().min(1).max(80),
+  color: labelColor.optional(),
+  done: z.boolean().optional(),
+});
+
+/** What a pack adds to a sheet of a pack it requires (docs/11 Extends). */
+export const packExtension = z.object({
+  pack: packKey,
+  sheet: ref,
+  fields: templateSheet.shape.fields.optional(),
+  groups: z.array(templateSheet.shape.groups.element).max(20).optional(),
+  views: z.array(templateSheet.shape.views.unwrap().element).max(20).optional(),
+  forms: z.array(templateForm).max(10).optional(),
+  items: z.array(packItem).max(100).optional(),
+  automations: z
+    .array(templateAutomation.omit({ sheet: true }).extend({ ref }))
+    .max(50)
+    .optional(),
+  options: z.record(fieldKey, z.array(extensionOption).min(1).max(50)).optional(),
+});
 
 export const packWidget = z.object({
   ref: z.string().regex(/^[A-Za-z0-9_-]{1,40}$/),
@@ -156,11 +184,16 @@ export const packManifestSchema = z
           /** Restricted (docs/02 §16): its sheets are seen by the installer (and owners) until shared. */
           restricted: z.boolean().optional(),
           level: levelKey.optional(),
+          /** A domain folder of shared registers (docs/11 Core registers): listed under Registers. */
+          domain: z
+            .string()
+            .regex(/^[a-z][a-z0-9_-]{0,39}$/, 'Use a short lower-case domain key.')
+            .optional(),
         }),
       )
       .max(20)
       .default([]),
-    sheets: z.array(packSheet).min(1).max(50),
+    sheets: z.array(packSheet).max(50),
     automations: z.array(packAutomation).max(200).default([]),
     dashboards: z
       .array(
@@ -215,6 +248,18 @@ export const packManifestSchema = z
       .optional(),
     /** Apps (docs/13): navigation over the pack's sheets, forms and dashboards. */
     apps: z.array(appManifestSchema).max(5).optional(),
+    /** A system pack (Core registers): shared registers with system columns (docs/11 Core registers). */
+    system: z.boolean().optional(),
+    /** The standard an add-on stands for: a Standards option and a saved view on the sheets it extends. */
+    standard: z
+      .object({
+        id: z.string().regex(/^[a-z][a-z0-9_]{0,39}$/, 'Use a short lower-case id.'),
+        label: z.string().trim().min(1).max(40),
+        color: labelColor.optional(),
+      })
+      .optional(),
+    /** What this pack adds to sheets of packs it requires (docs/11 Extends). */
+    extends: z.array(packExtension).max(30).optional(),
   })
   .superRefine((m, ctx) => {
     const problem = (path: (string | number)[], message: string) =>
@@ -250,7 +295,14 @@ export const packManifestSchema = z
 
     for (const [si, s] of m.sheets.entries()) {
       const at = (...p: (string | number)[]) => ['sheets', si, ...p];
-      if (s.folder && !folders.has(s.folder))
+      if (s.folder && s.folder.includes(':')) {
+        const [pack] = s.folder.split(':');
+        if (!required.has(pack!))
+          problem(
+            at('folder'),
+            `"${s.folder}" names the pack "${pack}", which is not in requires.`,
+          );
+      } else if (s.folder && !folders.has(s.folder))
         problem(at('folder'), `Unknown folder "${s.folder}".`);
       if (s.uniqueLinks) {
         const linkTypes = new Set(['link', 'requirement', 'controllink']);
@@ -370,11 +422,18 @@ export const packManifestSchema = z
     // levels, required frameworks and the setup checklist: every reference resolves, nothing needs a higher level
     for (const p of levelProblems(m as PackManifest)) problem(p.path, p.message);
 
+    // extends: into required packs only, in the pack's namespace, links and inverses that resolve
+    if (!m.sheets.length && !m.extends?.length)
+      problem(['sheets'], 'A pack needs a sheet or an extends entry.');
+    for (const p of extendsProblems(m as PackManifest)) problem(p.path, p.message);
+
     // everything a template checks: field refs, rules, views, tabs, forms, column groups, items, automations
-    const asTemplate = sheetTemplateSchema.safeParse(packToTemplate(m as PackManifest));
-    if (!asTemplate.success)
-      for (const issue of asTemplate.error.issues)
-        problem(issue.path as (string | number)[], issue.message);
+    if (m.sheets.length) {
+      const asTemplate = sheetTemplateSchema.safeParse(packToTemplate(m as PackManifest));
+      if (!asTemplate.success)
+        for (const issue of asTemplate.error.issues)
+          problem(issue.path as (string | number)[], issue.message);
+    }
   });
 
 export type PackManifestInput = z.input<typeof packManifestSchema>;

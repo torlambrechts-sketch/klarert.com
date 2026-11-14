@@ -127,6 +127,8 @@ function useCollapsed() {
 }
 
 export type MenuSheetsProps = {
+  /** "Sheets", or "Your sheets" under the Registers (docs/05 §2.1). */
+  title?: string;
   org: string;
   nav: Nav;
   activeSheet: string | null;
@@ -144,6 +146,7 @@ export type MenuSheetsProps = {
 
 export function MenuSheets(props: MenuSheetsProps) {
   const { org, nav, activeSheet, q, hit, canEdit, canManage, onNavigate } = props;
+  const title = props.title ?? 'Sheets';
   const router = useRouter();
   const [tree, setTree] = useState<Tree>(() => toTree(nav));
   useEffect(() => setTree(toTree(nav)), [nav]);
@@ -548,7 +551,7 @@ export function MenuSheets(props: MenuSheetsProps) {
       {q ? null : (
         <div className="group/row flex items-center pr-1">
           <h2 className="text-muted-foreground text-label-12 flex-1 px-2.5 pt-0.5 pb-1.5 font-medium">
-            Sheets
+            {title}
           </h2>
           {canEdit ? (
             <AddMenu
@@ -580,14 +583,16 @@ export function MenuSheets(props: MenuSheetsProps) {
       ) : null}
       {empty && !q ? (
         <div className="flex flex-col items-start gap-1 px-2.5 py-1.5">
-          <p className="text-muted-foreground text-copy-13 m-0">No sheets yet.</p>
+          <p className="text-muted-foreground text-copy-13 m-0">
+            {props.title === 'Your sheets' ? 'No sheets of your own yet.' : 'No sheets yet.'}
+          </p>
           {canEdit ? (
             <CreateSheetLink
               org={org}
               onNavigate={onNavigate}
               className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
             >
-              Create your first sheet
+              {props.title === 'Your sheets' ? 'Create a sheet' : 'Create your first sheet'}
             </CreateSheetLink>
           ) : null}
         </div>

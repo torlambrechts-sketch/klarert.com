@@ -315,6 +315,36 @@ export function selectManifest(
       .filter((a) => !ex.has(partId.automation(a.ref)))
       .map((a) => (isOutbound(a) ? { ...a, enabled: false } : a)),
     dashboards: m.dashboards.filter((d) => !ex.has(partId.dashboard(d.ref))),
+    // what it adds to other packs' sheets (docs/11 Extends) keeps no link to one of its own sheets left out
+    ...(m.extends
+      ? {
+          extends: m.extends.map((e) => {
+            const dropped = new Set(
+              (e.fields ?? [])
+                .filter((f) => {
+                  const t = (f.config as { targetSheetRef?: unknown } | undefined)?.targetSheetRef;
+                  return typeof t === 'string' && !t.includes(':') && !keptRefs.has(t);
+                })
+                .map((f) => f.key),
+            );
+            if (!dropped.size) return e;
+            return {
+              ...e,
+              fields: e.fields?.filter((f) => !dropped.has(f.key)),
+              items: e.items?.map((i) => ({
+                ...i,
+                ...(i.links
+                  ? {
+                      links: Object.fromEntries(
+                        Object.entries(i.links).filter(([k]) => !dropped.has(k)),
+                      ),
+                    }
+                  : {}),
+              })),
+            };
+          }),
+        }
+      : {}),
     ...(m.setup
       ? {
           setup: {

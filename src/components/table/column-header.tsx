@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { systemColumnText } from '@/engine/packs/system';
 
 export interface ColumnMenuActions {
   sort(dir: 'asc' | 'desc' | null): void;
@@ -138,7 +139,7 @@ export function ColumnHeader({
           className={cn(
             'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-3 text-left font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
             // the system-column mark sits right after the name
-            field.locked ? 'flex-initial pr-0' : 'flex-1 pr-[14px]',
+            field.locked || field.system ? 'flex-initial pr-0' : 'flex-1 pr-[14px]',
           )}
           aria-label={`${field.name} column menu`}
         >
@@ -225,7 +226,7 @@ export function ColumnHeader({
                   </DropdownMenuItem>
                 </>
               ) : null}
-              {!field.locked ? (
+              {!field.locked && !field.system ? (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem variant="destructive" onSelect={actions.remove}>
@@ -237,7 +238,11 @@ export function ColumnHeader({
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
-      {field.locked ? <LockedMark /> : null}
+      {field.system ? (
+        <SystemMark text={systemColumnText([...ctx.fieldsByKey.values()])} />
+      ) : field.locked ? (
+        <LockedMark />
+      ) : null}
       {editable ? (
         <div
           role="separator"
@@ -285,6 +290,31 @@ function LockedMark() {
       <span
         role="tooltip"
         className="bg-ink text-label-12 pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-52 rounded px-2 py-1 font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The lock after a system column's name (docs/11 Core registers): the standards that rely on it, on hover and focus.
+ */
+function SystemMark({ text }: { text: string }) {
+  return (
+    <span className="group/lock relative mr-auto ml-[5px] inline-flex shrink-0">
+      <span
+        role="img"
+        tabIndex={0}
+        aria-label={text}
+        data-testid="system-column"
+        className="focus-visible:outline-focus text-faint inline-flex rounded outline-offset-2 focus-visible:outline-2"
+      >
+        <Lock className="size-3" aria-hidden />
+      </span>
+      <span
+        role="tooltip"
+        className="bg-ink text-label-12 pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-56 rounded px-2 py-1 font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
       >
         {text}
       </span>

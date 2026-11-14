@@ -4,7 +4,9 @@
 // reads the table.
 import capaApp from '../../../templates/apps/capa.json';
 import firstSheet from '../../../templates/first-sheet.json';
+import core from '../../../templates/packs/core.json';
 import gdpr from '../../../templates/packs/gdpr.json';
+import iso14001 from '../../../templates/packs/iso-14001.json';
 import iso27001 from '../../../templates/packs/iso-27001.json';
 import iso9001 from '../../../templates/packs/iso-9001.json';
 import supplierManagement from '../../../templates/packs/supplier-management.json';
@@ -52,6 +54,8 @@ export function repoPacks(): PackManifest[] {
       parsePack(iso27001),
       parsePack(iso9001),
       parsePack(gdpr),
+      parsePack(core),
+      parsePack(iso14001),
       ...START_PACKS.map((id) => parsePack(startToPack(startById(id)!))),
     ],
     repoApps(),

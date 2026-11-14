@@ -306,7 +306,7 @@ describe('planPackInstall', () => {
     expect(plan.preview.conflicts).toEqual([
       'Version 1.0.0 is installed. Upgrading to 1.1.0 is not available yet: archive the installed version first.',
       'Install the pack "iso27001" (^2.0.0) first.',
-      'Supplier reviews › control links to "iso27001:annex_a". Links to another pack\'s sheets are not available yet.',
+      'This pack needs the sheet "annex_a" of "iso27001", which is not installed here.',
     ]);
     expect(plan.operations.filter((o) => o.action === 'conflict')).toHaveLength(3);
   });

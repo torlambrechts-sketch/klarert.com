@@ -573,7 +573,9 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                         to={i.updateTo}
                       />
                     ) : null}
-                    {canInstall ? <ArchivePack org={org} installId={i.id} title={i.title} /> : null}
+                    {canInstall ? (
+                      <ArchivePack org={org} installId={i.id} title={i.title} addOn={i.addOn} />
+                    ) : null}
                   </div>
                 ) : null}
               </li>

@@ -64,12 +64,17 @@ vi.mock('@/server/auth', () => ({
 }));
 
 const manifest = { key: 'suppliers', sheets: [{ ref: 'supplier', name: 'Suppliers' }] };
+/** Required packs the command installs first (docs/11 Extends). */
+const firsts: { list: unknown[] } = { list: [] };
 vi.mock('@/server/packs/install', () => ({
   readPack: async (_db: unknown, key: string) =>
     key === 'suppliers'
       ? { key, version: '1.0.0', title: 'Suppliers', description: '', hash: HASH, manifest }
-      : null,
+      : key === 'core'
+        ? { key, version: '1.0.0', title: 'Core registers', description: '', hash: HASH, manifest }
+        : null,
   readCatalogue: async () => [],
+  requiredFirst: async () => firsts.list,
   planInstall: async () => state.plan,
   writeInstall: async (_db: unknown, orgId: string, plan: unknown) => {
     state.written.push({ orgId, plan });
@@ -160,9 +165,34 @@ describe('pack commands', () => {
         adopted: [],
         level: null,
         extended: false,
+        installedFirst: [],
       },
     });
     expect(state.written).toEqual([{ orgId: ORG, plan: state.plan }]);
+  });
+
+  it('install the packs it requires first (install order does not matter)', async () => {
+    firsts.list = [
+      {
+        key: 'core',
+        title: 'Core registers',
+        version: '1.0.0',
+        level: 'starter',
+        levelName: 'Starter',
+        raise: false,
+      },
+    ];
+    try {
+      const r = await installPack({ org: 'acme', key: 'suppliers', hash: HASH });
+      expect(r).toMatchObject({
+        ok: true,
+        data: { installedFirst: ['Core registers 1.0.0 (Starter)'] },
+      });
+      // Core first, then the pack, each in its own transaction
+      expect(state.written).toHaveLength(2);
+    } finally {
+      firsts.list = [];
+    }
   });
 
   it('refuse a blocked or already installed plan without writing', async () => {

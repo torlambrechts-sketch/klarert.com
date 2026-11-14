@@ -49,7 +49,7 @@ export const ITEM_COLUMNS =
 export const SHEET_COLUMNS =
   'id, org_id, name, item_label, id_prefix, is_library, parent_sheet_id, settings';
 export const FIELD_COLUMNS =
-  'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, restricted_to, field_hidden, created_at, updated_at, archived_at';
+  'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, restricted_to, field_hidden, system, created_at, updated_at, archived_at';
 
 export function toItem(
   r: Pick<ItemDbRow, Exclude<keyof ItemDbRow, 'org_id' | 'parent_id' | 'sub_seq' | SourceColumn>> &
@@ -86,8 +86,11 @@ export function toItem(
 }
 
 export function toField(
-  r: Omit<FieldDbRow, 'org_id' | 'created_at' | 'updated_at' | 'restricted_to' | 'field_hidden'> &
-    Partial<Pick<FieldDbRow, 'restricted_to' | 'field_hidden'>>,
+  r: Omit<
+    FieldDbRow,
+    'org_id' | 'created_at' | 'updated_at' | 'restricted_to' | 'field_hidden' | 'system'
+  > &
+    Partial<Pick<FieldDbRow, 'restricted_to' | 'field_hidden' | 'system'>>,
 ): Field {
   const restrictedTo = parseRestriction((r.restricted_to ?? null) as Json | null);
   return {
@@ -108,6 +111,8 @@ export function toField(
     ...(restrictedTo ? { restrictedTo } : {}),
     // computed by the database for the caller (0027): their values never reach this person
     ...(restrictedTo && r.field_hidden ? { hidden: true } : {}),
+    // a system column of the Core registers (0041): hidden and renamed, never deleted, retyped or re-keyed
+    ...(r.system ? { system: true } : {}),
   };
 }
 
