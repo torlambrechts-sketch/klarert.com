@@ -184,7 +184,7 @@ test.describe('desktop', () => {
     await nav.getByRole('button', { name: 'More for folder Your sheets' }).click();
     await page.getByRole('menuitem', { name: 'New sheet here' }).click();
     await page
-      .getByRole('main')
+      .getByRole('dialog', { name: 'Create' })
       .getByRole('link', { name: /^Internal audit/ })
       .click();
     await expect(page.getByLabel('Folder').locator('option:checked')).toHaveText('Your sheets');

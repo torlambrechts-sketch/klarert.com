@@ -311,7 +311,11 @@ test.describe('phone', () => {
     await expect(menu.getByRole('link', { name: 'Automations' })).toBeVisible();
     await menu.getByRole('link', { name: 'New sheet', exact: true }).click();
     await expect(menu).toBeHidden();
-    await expect(page).toHaveURL(/\/meridian\/s\/new$/);
+    // Create opens at the Sheet card (docs/05 §4 Create); Esc closes it
+    const create = page.getByRole('dialog', { name: 'Create' });
+    await expect(create.getByRole('link', { name: /^Tracker/ })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(create).toBeHidden();
 
     await bar.getByRole('button', { name: 'Search' }).click();
     await expect(
