@@ -32,6 +32,17 @@ function install(slug: string, key: string, version: string, level?: string) {
 
 const one = (sql: string) => localSql(sql).trim();
 
+test('the Core registers meet the pack quality bar', ({}, info) => {
+  test.skip(info.project.name === 'phone', 'no page');
+  // scripts/pack-quality.ts exits 1 when a named pack has a problem
+  const out = execFileSync('pnpm', ['exec', 'tsx', 'scripts/pack-quality.ts', 'core'], {
+    encoding: 'utf8',
+    stdio: 'pipe',
+    timeout: 60_000,
+  });
+  expect(out).toContain('core 1.1.0: meets the bar');
+});
+
 test('update Core 1.0.0 to 1.1.0 with ISO/IEC 27001 and Supplier management installed', async ({
   page,
 }, info) => {
