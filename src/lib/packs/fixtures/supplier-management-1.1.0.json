@@ -1,0 +1,1698 @@
+{
+  "key": "supplier-management",
+  "version": "1.1.0",
+  "title": "Supplier management",
+  "description": "A supplier register with reviews, a library of supplier requirements with the rules for who they apply to, a check per supplier and requirement kept in step for you, and the supplier documents you control. Comes with automations, a self-assessment form and a dashboard.",
+  "requires": [],
+  "folders": [
+    {
+      "ref": "suppliers",
+      "name": "Suppliers"
+    }
+  ],
+  "sheets": [
+    {
+      "ref": "supplier",
+      "name": "Supplier register",
+      "description": "Suppliers you depend on, how critical they are and when they are next reviewed.",
+      "itemLabel": "Supplier",
+      "idPrefix": "SUP-",
+      "folder": "suppliers",
+      "groups": [
+        {
+          "ref": "active",
+          "name": "Active",
+          "color": "green"
+        },
+        {
+          "ref": "onboarding",
+          "name": "Onboarding",
+          "color": "blue"
+        },
+        {
+          "ref": "exited",
+          "name": "Exited",
+          "color": "grey"
+        }
+      ],
+      "fields": [
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_review",
+                "label": "Under review",
+                "color": "orange"
+              },
+              {
+                "id": "opt_blocked",
+                "label": "Blocked",
+                "color": "red"
+              }
+            ]
+          }
+        },
+        {
+          "key": "category",
+          "name": "Category",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_it",
+                "label": "IT and cloud",
+                "color": "blue"
+              },
+              {
+                "id": "opt_parts",
+                "label": "Parts and materials",
+                "color": "teal"
+              },
+              {
+                "id": "opt_services",
+                "label": "Services",
+                "color": "purple"
+              }
+            ]
+          }
+        },
+        {
+          "key": "criticality",
+          "name": "Criticality",
+          "type": "severity"
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "processes_personal_data",
+          "name": "Processes personal data",
+          "type": "check",
+          "description": "Ticked when the supplier processes personal data for you: the Art. 28 requirements apply."
+        },
+        {
+          "key": "reviews",
+          "name": "Reviews",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "review",
+            "multiple": true,
+            "inverseKey": "supplier"
+          }
+        },
+        {
+          "key": "requirements",
+          "name": "Extra requirements",
+          "type": "requirement",
+          "config": {
+            "targetSheetRef": "requirement",
+            "multiple": true
+          },
+          "description": "Requirements from the library that apply to this supplier beyond the rules. Each gets a check with the source Added manually."
+        },
+        {
+          "key": "checks",
+          "name": "Requirement checks",
+          "type": "link",
+          "description": "One check per requirement that applies, added and flagged by the sync.",
+          "config": {
+            "targetSheetRef": "check",
+            "multiple": true,
+            "inverseKey": "supplier",
+            "panel": "checklist",
+            "panelFields": [
+              "evidence",
+              "evidence_expiry"
+            ],
+            "panelEmpty": "Choose a category and criticality and we will add the requirements for this supplier."
+          }
+        },
+        {
+          "key": "requirements_met",
+          "name": "Requirements met",
+          "type": "rollup",
+          "config": {
+            "linkFieldKey": "checks",
+            "targetFieldKey": "status",
+            "fn": "doneOf",
+            "ignore": [
+              "opt_na",
+              "opt_no_longer"
+            ]
+          }
+        },
+        {
+          "key": "pct_met",
+          "name": "% met",
+          "type": "rollup",
+          "config": {
+            "linkFieldKey": "checks",
+            "targetFieldKey": "status",
+            "fn": "pctDone",
+            "ignore": [
+              "opt_na",
+              "opt_no_longer"
+            ]
+          }
+        },
+        {
+          "key": "worst_check",
+          "name": "Worst check",
+          "type": "rollup",
+          "config": {
+            "linkFieldKey": "checks",
+            "targetFieldKey": "status",
+            "fn": "worst",
+            "ignore": [
+              "opt_na",
+              "opt_no_longer"
+            ]
+          }
+        },
+        {
+          "key": "expired_evidence",
+          "name": "Expired evidence",
+          "type": "rollup",
+          "config": {
+            "linkFieldKey": "checks",
+            "targetFieldKey": "evidence_expiry",
+            "fn": "countExpired",
+            "ignore": [
+              "opt_na",
+              "opt_no_longer"
+            ]
+          }
+        },
+        {
+          "key": "sync_requirements",
+          "name": "Sync requirements",
+          "type": "button",
+          "config": {
+            "label": "Sync requirements"
+          }
+        },
+        {
+          "key": "documents",
+          "name": "Documents",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "document",
+            "multiple": true
+          }
+        },
+        {
+          "key": "notes",
+          "name": "Notes",
+          "type": "longtext"
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
+        {
+          "name": "Requirements",
+          "type": "table",
+          "config": {
+            "sort": [
+              {
+                "fieldKey": "pct_met",
+                "direction": "asc"
+              }
+            ]
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "forms": [
+        {
+          "ref": "self_assessment",
+          "name": "Supplier self-assessment",
+          "groupRef": "onboarding",
+          "access": "public",
+          "layout": {
+            "title": "Supplier self-assessment",
+            "description": "Tell us about your organisation and how you meet our requirements.",
+            "nameLabel": "Organisation name",
+            "fields": [
+              {
+                "key": "category",
+                "label": "What do you supply?"
+              },
+              {
+                "key": "notes",
+                "label": "How do you meet our requirements?",
+                "required": true
+              }
+            ]
+          },
+          "notice": {
+            "purpose": "To assess suppliers before and during our work with them.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who manage suppliers.",
+            "retention": "Kept while you are a supplier and for 3 years after.",
+            "rights": "You can ask to see, correct or delete your answers. Contact the person who shared this form."
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "cloudhost",
+          "group": "active",
+          "name": "Northwind Cloud Hosting",
+          "values": {
+            "status": "opt_approved",
+            "category": "opt_it",
+            "criticality": "$option:High",
+            "next_review": "$in:45",
+            "processes_personal_data": true
+          },
+          "links": {
+            "reviews": [
+              "cloudhost_2026"
+            ],
+            "requirements": [
+              "security_clause",
+              "breach_notice"
+            ],
+            "documents": [
+              "code_of_conduct"
+            ]
+          }
+        },
+        {
+          "ref": "fasteners",
+          "group": "onboarding",
+          "name": "Leeds Fasteners Ltd",
+          "values": {
+            "status": "opt_review",
+            "category": "opt_parts",
+            "criticality": "$option:Medium",
+            "next_review": "$in:10"
+          },
+          "links": {
+            "requirements": [
+              "quality_certificate"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "review",
+      "name": "Supplier reviews",
+      "description": "Periodic reviews of a supplier with the result and what to follow up.",
+      "itemLabel": "Review",
+      "idPrefix": "SRV-",
+      "folder": "suppliers",
+      "groups": [
+        {
+          "ref": "planned",
+          "name": "Planned",
+          "color": "blue"
+        },
+        {
+          "ref": "done",
+          "name": "Done",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "supplier",
+          "name": "Supplier",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "supplier",
+            "multiple": false,
+            "inverseKey": "reviews"
+          }
+        },
+        {
+          "key": "reviewer",
+          "name": "Reviewer",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "review_date",
+          "name": "Review date",
+          "type": "date"
+        },
+        {
+          "key": "result",
+          "name": "Result",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_pass",
+                "label": "Pass",
+                "color": "green"
+              },
+              {
+                "id": "opt_conditions",
+                "label": "Pass with conditions",
+                "color": "orange"
+              },
+              {
+                "id": "opt_fail",
+                "label": "Fail",
+                "color": "red"
+              }
+            ]
+          }
+        },
+        {
+          "key": "supplier_owner",
+          "name": "Supplier owner",
+          "type": "lookup",
+          "config": {
+            "linkFieldKey": "supplier",
+            "targetFieldKey": "owner"
+          }
+        },
+        {
+          "key": "findings",
+          "name": "Findings",
+          "type": "longtext"
+        }
+      ],
+      "items": [
+        {
+          "ref": "cloudhost_2026",
+          "group": "done",
+          "name": "Annual review 2026",
+          "values": {
+            "review_date": "$in:-20",
+            "result": "opt_pass"
+          },
+          "links": {
+            "supplier": [
+              "cloudhost"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "requirement",
+      "name": "Supplier requirements",
+      "description": "The master list of what suppliers are held to, with the rules for which suppliers each applies to. The sync adds a check per supplier and requirement.",
+      "itemLabel": "Requirement",
+      "idPrefix": "SRQ-",
+      "folder": "suppliers",
+      "isLibrary": true,
+      "groups": [
+        {
+          "ref": "all",
+          "name": "Requirements",
+          "color": "navy"
+        }
+      ],
+      "fields": [
+        {
+          "key": "guidance",
+          "name": "Guidance",
+          "type": "longtext"
+        },
+        {
+          "key": "applies_when",
+          "name": "Applies to",
+          "type": "dropdown",
+          "description": "Every supplier, by category and criticality, suppliers that process personal data (the Art. 28 set) or only when added by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_all",
+                "label": "Every supplier",
+                "color": "green"
+              },
+              {
+                "id": "opt_rules",
+                "label": "By category and criticality",
+                "color": "blue"
+              },
+              {
+                "id": "opt_processors",
+                "label": "Suppliers that process personal data (Art. 28)",
+                "color": "purple"
+              },
+              {
+                "id": "opt_manual_only",
+                "label": "Only when added by hand",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "applies_categories",
+          "name": "Applies to categories",
+          "type": "multiselect",
+          "description": "Empty: every category. Matched to the supplier’s category by option or by name.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_it",
+                "label": "IT and cloud",
+                "color": "blue"
+              },
+              {
+                "id": "opt_parts",
+                "label": "Parts and materials",
+                "color": "teal"
+              },
+              {
+                "id": "opt_services",
+                "label": "Services",
+                "color": "purple"
+              }
+            ]
+          }
+        },
+        {
+          "key": "min_criticality",
+          "name": "Applies from criticality",
+          "type": "severity",
+          "description": "The lowest criticality it applies to. Empty: every criticality."
+        },
+        {
+          "key": "framework_links",
+          "name": "Framework requirements",
+          "type": "requirement",
+          "description": "The ISO/IEC 27001, ISO 9001 or GDPR requirements this meets, where you have adopted them.",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "version",
+          "name": "Version",
+          "type": "version"
+        },
+        {
+          "key": "checks",
+          "name": "Checks",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "check",
+            "multiple": true,
+            "inverseKey": "requirement"
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "security_clause",
+          "group": "all",
+          "name": "Signed contract with information security terms",
+          "values": {
+            "guidance": "The contract says how the supplier protects our information, who may access it and that we may check it.",
+            "version": "v1.0",
+            "applies_when": "opt_all"
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-27001@2022#A.5.19",
+              "iso-27001@2022#A.5.20"
+            ]
+          }
+        },
+        {
+          "ref": "nda",
+          "group": "all",
+          "name": "Confidentiality agreement signed",
+          "values": {
+            "guidance": "The supplier and the people who work for us have signed a confidentiality agreement before they see our information.",
+            "version": "v1.0",
+            "applies_when": "opt_rules",
+            "applies_categories": [
+              "opt_it",
+              "opt_services"
+            ]
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-27001@2022#A.5.20"
+            ]
+          }
+        },
+        {
+          "ref": "dpa",
+          "group": "all",
+          "name": "Data processing agreement signed (Art. 28)",
+          "values": {
+            "guidance": "A signed agreement sets out what the supplier does with personal data on our behalf, only on our instructions.",
+            "version": "v1.0",
+            "applies_when": "opt_processors"
+          },
+          "requirements": {
+            "framework_links": [
+              "gdpr@2016#Art. 28",
+              "iso-27001@2022#A.5.20"
+            ]
+          }
+        },
+        {
+          "ref": "subprocessors",
+          "group": "all",
+          "name": "Sub-processor list received and approved",
+          "values": {
+            "guidance": "We have the list of sub-processors, approved it and are told before a new one is added.",
+            "version": "v1.0",
+            "applies_when": "opt_processors"
+          },
+          "requirements": {
+            "framework_links": [
+              "gdpr@2016#Art. 28"
+            ]
+          }
+        },
+        {
+          "ref": "transfers",
+          "group": "all",
+          "name": "Transfer mechanism for data outside the EEA",
+          "values": {
+            "guidance": "Where personal data leaves the EEA, the mechanism is named: adequacy, standard contractual clauses or binding corporate rules.",
+            "version": "v1.0",
+            "applies_when": "opt_processors"
+          },
+          "requirements": {
+            "framework_links": [
+              "gdpr@2016#Art. 46"
+            ]
+          }
+        },
+        {
+          "ref": "breach_notice",
+          "group": "all",
+          "name": "Breach notice within 24 hours",
+          "values": {
+            "guidance": "The supplier tells us about a security incident that affects us within 24 hours.",
+            "version": "v1.0",
+            "applies_when": "opt_rules",
+            "applies_categories": [
+              "opt_it",
+              "opt_services"
+            ],
+            "min_criticality": "$option:Medium"
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-27001@2022#A.5.20"
+            ]
+          }
+        },
+        {
+          "ref": "audit_rights",
+          "group": "all",
+          "name": "Right to audit",
+          "values": {
+            "guidance": "We may audit the supplier, or receive an independent report in its place, at least once a year.",
+            "version": "v1.0",
+            "applies_when": "opt_rules",
+            "applies_categories": [
+              "opt_it",
+              "opt_services"
+            ],
+            "min_criticality": "$option:High"
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-27001@2022#A.5.20",
+              "iso-27001@2022#A.5.22"
+            ]
+          }
+        },
+        {
+          "ref": "exit_return",
+          "group": "all",
+          "name": "Data returned or deleted at exit",
+          "values": {
+            "guidance": "When the contract ends, the supplier returns or deletes our data and confirms it in writing.",
+            "version": "v1.0",
+            "applies_when": "opt_processors"
+          },
+          "requirements": {
+            "framework_links": [
+              "gdpr@2016#Art. 28",
+              "iso-27001@2022#A.5.20"
+            ]
+          }
+        },
+        {
+          "ref": "security_cert",
+          "group": "all",
+          "name": "Valid ISO/IEC 27001 certificate or SOC 2 report",
+          "values": {
+            "guidance": "A current certificate or report covers the service we buy. Record when it expires.",
+            "version": "v1.0",
+            "applies_when": "opt_rules",
+            "applies_categories": [
+              "opt_it"
+            ],
+            "min_criticality": "$option:High"
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-27001@2022#A.5.19",
+              "iso-27001@2022#A.5.21",
+              "iso-27001@2022#A.5.22"
+            ]
+          }
+        },
+        {
+          "ref": "continuity",
+          "group": "all",
+          "name": "Business continuity plan for the service",
+          "values": {
+            "guidance": "The supplier has a tested plan to keep the service running, or restore it, after a disruption.",
+            "version": "v1.0",
+            "applies_when": "opt_rules",
+            "applies_categories": [
+              "opt_it",
+              "opt_services"
+            ],
+            "min_criticality": "$option:High"
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-27001@2022#A.5.21"
+            ]
+          }
+        },
+        {
+          "ref": "insurance",
+          "group": "all",
+          "name": "Liability insurance in place",
+          "values": {
+            "guidance": "The supplier holds liability insurance that fits the work. Record when the policy ends.",
+            "version": "v1.0",
+            "applies_when": "opt_rules",
+            "min_criticality": "$option:Medium"
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-9001@2015#8.4"
+            ]
+          }
+        },
+        {
+          "ref": "quality_certificate",
+          "group": "all",
+          "name": "Valid ISO 9001 certificate",
+          "values": {
+            "guidance": "The supplier sends a current certificate of its quality management system each year.",
+            "version": "v1.0",
+            "applies_when": "opt_rules",
+            "applies_categories": [
+              "opt_parts"
+            ]
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-9001@2015#8.4"
+            ]
+          }
+        },
+        {
+          "ref": "delivery_performance",
+          "group": "all",
+          "name": "Delivery performance measured",
+          "values": {
+            "guidance": "We measure on-time and right-first-time delivery and review it with the supplier.",
+            "version": "v1.0",
+            "applies_when": "opt_rules",
+            "applies_categories": [
+              "opt_parts"
+            ],
+            "min_criticality": "$option:Medium"
+          },
+          "requirements": {
+            "framework_links": [
+              "iso-9001@2015#8.4"
+            ]
+          }
+        }
+      ],
+      "views": [
+        {
+          "name": "By rule",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "applies_when"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "document",
+      "name": "Supplier documents",
+      "description": "Controlled documents for supplier management: approved by a second person, reviewed on a date.",
+      "itemLabel": "Document",
+      "idPrefix": "SDOC-",
+      "folder": "suppliers",
+      "register": "documents",
+      "groups": [
+        {
+          "ref": "draft",
+          "name": "Draft",
+          "color": "grey"
+        },
+        {
+          "ref": "in_review",
+          "name": "In review",
+          "color": "orange"
+        },
+        {
+          "ref": "approved",
+          "name": "Approved",
+          "color": "green"
+        },
+        {
+          "ref": "obsolete",
+          "name": "Obsolete",
+          "color": "dark"
+        }
+      ],
+      "fields": [
+        {
+          "key": "document_id",
+          "name": "Document ID",
+          "type": "text"
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "version",
+          "name": "Version",
+          "type": "number"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_review",
+                "label": "In review",
+                "color": "orange"
+              },
+              {
+                "id": "opt_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_obsolete",
+                "label": "Obsolete",
+                "color": "dark"
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "approve_note",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_approved"
+              ],
+              "requireComment": true,
+              "message": "Add a version note: what changed in this version."
+            },
+            {
+              "id": "leave_approved",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_draft",
+                "opt_review",
+                "opt_obsolete"
+              ],
+              "requireComment": true,
+              "fromDone": true,
+              "message": "Say why this approved document changes status."
+            }
+          ]
+        },
+        {
+          "key": "author",
+          "name": "Author",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "approver",
+          "name": "Approver",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "approved_on",
+          "name": "Approved on",
+          "type": "date"
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        }
+      ],
+      "items": [
+        {
+          "ref": "code_of_conduct",
+          "group": "draft",
+          "name": "Supplier code of conduct",
+          "values": {
+            "document_id": "SUP-POL-01",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "onboarding_procedure",
+          "group": "draft",
+          "name": "Supplier onboarding procedure",
+          "values": {
+            "document_id": "SUP-PRO-01",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "check",
+      "name": "Supplier requirement checks",
+      "description": "One check per supplier and requirement: the status, the evidence and when it expires. Added and flagged by the sync; never deleted. Access follows the supplier register (same folder).",
+      "itemLabel": "Check",
+      "idPrefix": "SRC-",
+      "folder": "suppliers",
+      "uniqueLinks": [
+        "supplier",
+        "requirement"
+      ],
+      "groups": [
+        {
+          "ref": "all",
+          "name": "Checks",
+          "color": "blue"
+        }
+      ],
+      "fields": [
+        {
+          "key": "supplier",
+          "name": "Supplier",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "supplier",
+            "multiple": false,
+            "inverseKey": "checks"
+          }
+        },
+        {
+          "key": "requirement",
+          "name": "Requirement",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "requirement",
+            "multiple": false,
+            "inverseKey": "checks"
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_not_checked",
+                "label": "Not checked",
+                "color": "grey"
+              },
+              {
+                "id": "opt_met",
+                "label": "Met",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_not_met",
+                "label": "Not met",
+                "color": "red"
+              },
+              {
+                "id": "opt_na",
+                "label": "Not applicable",
+                "color": "navy"
+              },
+              {
+                "id": "opt_no_longer",
+                "label": "No longer applies",
+                "color": "dark"
+              }
+            ],
+            "default": "opt_not_checked"
+          },
+          "rules": [
+            {
+              "id": "na_needs_reason",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_na"
+              ],
+              "require": [
+                "na_reason",
+                "na_approver"
+              ],
+              "message": "Say why it does not apply and who approved it before marking it Not applicable."
+            }
+          ]
+        },
+        {
+          "key": "evidence",
+          "name": "Evidence",
+          "type": "evidence",
+          "config": {
+            "validDays": 365,
+            "multiple": true
+          }
+        },
+        {
+          "key": "evidence_documents",
+          "name": "Evidence documents",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "document",
+            "multiple": true
+          }
+        },
+        {
+          "key": "evidence_expiry",
+          "name": "Evidence expires",
+          "type": "date"
+        },
+        {
+          "key": "checked_by",
+          "name": "Checked by",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "checked_on",
+          "name": "Checked on",
+          "type": "date"
+        },
+        {
+          "key": "na_reason",
+          "name": "Why not applicable",
+          "type": "longtext",
+          "visibility": {
+            "fieldKey": "status",
+            "op": "is_any_of",
+            "value": [
+              "opt_na"
+            ]
+          }
+        },
+        {
+          "key": "na_approver",
+          "name": "Not applicable approved by",
+          "type": "people",
+          "config": {
+            "multiple": false
+          },
+          "visibility": {
+            "fieldKey": "status",
+            "op": "is_any_of",
+            "value": [
+              "opt_na"
+            ]
+          }
+        },
+        {
+          "key": "source",
+          "name": "Source",
+          "type": "dropdown",
+          "description": "Rule and Art. 28 checks are kept in step by the sync; checks added by hand are never flagged.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_rule",
+                "label": "Rule",
+                "color": "blue"
+              },
+              {
+                "id": "opt_manual",
+                "label": "Added manually",
+                "color": "grey"
+              },
+              {
+                "id": "opt_art28",
+                "label": "Art. 28",
+                "color": "purple"
+              }
+            ],
+            "default": "opt_manual"
+          }
+        },
+        {
+          "key": "requirement_guidance",
+          "name": "Requirement wording",
+          "type": "lookup",
+          "config": {
+            "linkFieldKey": "requirement",
+            "targetFieldKey": "guidance"
+          }
+        },
+        {
+          "key": "requirement_version",
+          "name": "Library version",
+          "type": "lookup",
+          "config": {
+            "linkFieldKey": "requirement",
+            "targetFieldKey": "version"
+          }
+        },
+        {
+          "key": "wording_at_check",
+          "name": "Wording when checked",
+          "type": "longtext",
+          "locked": true,
+          "description": "The requirement as it read when the check was answered. Set by an automation."
+        },
+        {
+          "key": "version_at_check",
+          "name": "Version when checked",
+          "type": "text",
+          "locked": true,
+          "description": "The library version when the check was answered. Set by an automation."
+        },
+        {
+          "key": "sync_note",
+          "name": "Sync note",
+          "type": "text",
+          "locked": true,
+          "description": "Why the sync flagged or reopened the check."
+        },
+        {
+          "key": "supplier_owner",
+          "name": "Supplier owner",
+          "type": "lookup",
+          "config": {
+            "linkFieldKey": "supplier",
+            "targetFieldKey": "owner"
+          }
+        }
+      ],
+      "views": [
+        {
+          "name": "All checks",
+          "type": "table",
+          "config": {}
+        },
+        {
+          "name": "Not met",
+          "type": "table",
+          "config": {
+            "filters": [
+              {
+                "fieldKey": "status",
+                "op": "is_any_of",
+                "value": [
+                  "opt_not_met"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "Expired evidence",
+          "type": "table",
+          "config": {
+            "filters": [
+              {
+                "fieldKey": "evidence_expiry",
+                "op": "before",
+                "value": "today"
+              },
+              {
+                "fieldKey": "status",
+                "op": "is_none_of",
+                "value": [
+                  "opt_na",
+                  "opt_no_longer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "Not checked",
+          "type": "table",
+          "config": {
+            "filters": [
+              {
+                "fieldKey": "status",
+                "op": "is_any_of",
+                "value": [
+                  "opt_not_checked"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "All checks"
+        },
+        {
+          "ref": "Not met"
+        },
+        {
+          "ref": "Expired evidence"
+        },
+        {
+          "ref": "Not checked"
+        },
+        {
+          "ref": "By status"
+        }
+      ],
+      "defaultView": "All checks",
+      "items": [
+        {
+          "ref": "cloudhost_contract",
+          "group": "all",
+          "name": "Signed contract with information security terms",
+          "values": {
+            "status": "opt_met",
+            "source": "opt_rule",
+            "checked_on": "$in:-30",
+            "evidence_expiry": "$in:700",
+            "wording_at_check": "Signed contract with information security terms: The contract says how the supplier protects our information, who may access it and that we may check it.",
+            "version_at_check": "v1.0"
+          },
+          "links": {
+            "supplier": [
+              "cloudhost"
+            ],
+            "requirement": [
+              "security_clause"
+            ]
+          }
+        },
+        {
+          "ref": "cloudhost_dpa",
+          "group": "all",
+          "name": "Data processing agreement signed (Art. 28)",
+          "values": {
+            "status": "opt_met",
+            "source": "opt_art28",
+            "checked_on": "$in:-30",
+            "evidence_expiry": "$in:335",
+            "wording_at_check": "Data processing agreement signed (Art. 28): A signed agreement sets out what the supplier does with personal data on our behalf, only on our instructions.",
+            "version_at_check": "v1.0"
+          },
+          "links": {
+            "supplier": [
+              "cloudhost"
+            ],
+            "requirement": [
+              "dpa"
+            ]
+          }
+        },
+        {
+          "ref": "cloudhost_cert",
+          "group": "all",
+          "name": "Valid ISO/IEC 27001 certificate or SOC 2 report",
+          "values": {
+            "status": "opt_met",
+            "source": "opt_rule",
+            "checked_on": "$in:-400",
+            "evidence_expiry": "$in:-12",
+            "wording_at_check": "Valid ISO/IEC 27001 certificate or SOC 2 report: A current certificate or report covers the service we buy. Record when it expires.",
+            "version_at_check": "v1.0"
+          },
+          "links": {
+            "supplier": [
+              "cloudhost"
+            ],
+            "requirement": [
+              "security_cert"
+            ]
+          }
+        },
+        {
+          "ref": "cloudhost_transfers",
+          "group": "all",
+          "name": "Transfer mechanism for data outside the EEA",
+          "values": {
+            "status": "opt_not_met",
+            "source": "opt_art28",
+            "checked_on": "$in:-30",
+            "wording_at_check": "Transfer mechanism for data outside the EEA: Where personal data leaves the EEA, the mechanism is named: adequacy, standard contractual clauses or binding corporate rules.",
+            "version_at_check": "v1.0"
+          },
+          "links": {
+            "supplier": [
+              "cloudhost"
+            ],
+            "requirement": [
+              "transfers"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "ref": "review_due",
+      "sheet": "supplier",
+      "name": "Review due in 14 days → ask the owner for an update",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -14
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "request_update",
+          "fieldKey": "owner",
+          "message": "{id} {name} is due for review on {next_review}. Please plan it."
+        }
+      ]
+    },
+    {
+      "ref": "review_failed",
+      "sheet": "review",
+      "name": "Review failed → tell the supplier owner",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "result",
+        "value": "opt_fail"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:supplier_owner"
+          ],
+          "message": "{name} of {supplier} failed. Decide what happens next."
+        }
+      ]
+    },
+    {
+      "ref": "sync_on_create",
+      "sheet": "supplier",
+      "name": "Supplier added → sync its requirement checks",
+      "trigger": {
+        "type": "item_created"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check",
+          "notifyFieldKey": "owner"
+        }
+      ]
+    },
+    {
+      "ref": "sync_on_category",
+      "sheet": "supplier",
+      "name": "Category changed → sync the requirement checks",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "category"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check",
+          "notifyFieldKey": "owner"
+        }
+      ]
+    },
+    {
+      "ref": "sync_on_criticality",
+      "sheet": "supplier",
+      "name": "Criticality changed → sync the requirement checks",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "criticality"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check",
+          "notifyFieldKey": "owner"
+        }
+      ]
+    },
+    {
+      "ref": "sync_on_personal_data",
+      "sheet": "supplier",
+      "name": "Processes personal data changed → sync the requirement checks",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "processes_personal_data"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check",
+          "notifyFieldKey": "owner"
+        }
+      ]
+    },
+    {
+      "ref": "sync_on_extra",
+      "sheet": "supplier",
+      "name": "Extra requirements changed → sync the requirement checks",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "requirements"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check",
+          "notifyFieldKey": "owner"
+        }
+      ]
+    },
+    {
+      "ref": "sync_button",
+      "sheet": "supplier",
+      "name": "Sync requirements button → sync the requirement checks",
+      "trigger": {
+        "type": "button_clicked",
+        "fieldKey": "sync_requirements"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check",
+          "notifyFieldKey": "owner"
+        }
+      ]
+    },
+    {
+      "ref": "resync_on_new_requirement",
+      "sheet": "requirement",
+      "name": "Requirement added → add its checks to the suppliers it applies to",
+      "trigger": {
+        "type": "item_created"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check"
+        }
+      ]
+    },
+    {
+      "ref": "resync_on_applies",
+      "sheet": "requirement",
+      "name": "Applies to changed → re-sync the suppliers",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "applies_when"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check"
+        }
+      ]
+    },
+    {
+      "ref": "resync_on_categories",
+      "sheet": "requirement",
+      "name": "Applies to categories changed → re-sync the suppliers",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "applies_categories"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check"
+        }
+      ]
+    },
+    {
+      "ref": "resync_on_criticality",
+      "sheet": "requirement",
+      "name": "Applies from criticality changed → re-sync the suppliers",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "min_criticality"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "sync_requirement_checks",
+          "sheetRef": "check"
+        }
+      ]
+    },
+    {
+      "ref": "requirement_reworded",
+      "sheet": "requirement",
+      "name": "Guidance changed → raise the version",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "guidance"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "raise_version",
+          "fieldKey": "version",
+          "kind": "minor"
+        }
+      ]
+    },
+    {
+      "ref": "check_answered",
+      "sheet": "check",
+      "name": "Check answered → record who, when and the wording it was checked against",
+      "trigger": {
+        "type": "field_changed",
+        "fieldKey": "status"
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_none_of",
+          "value": [
+            "opt_not_checked",
+            "opt_no_longer"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "wording_at_check",
+          "template": true,
+          "value": "{requirement} {name}: {requirement_guidance}"
+        },
+        {
+          "type": "set_field",
+          "fieldKey": "version_at_check",
+          "template": true,
+          "value": "{requirement_version}"
+        },
+        {
+          "type": "set_field",
+          "fieldKey": "checked_on",
+          "value": "$today"
+        },
+        {
+          "type": "set_field",
+          "fieldKey": "checked_by",
+          "value": "$actor"
+        }
+      ]
+    },
+    {
+      "ref": "check_not_met",
+      "sheet": "check",
+      "name": "Check not met → tell the supplier owner",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_not_met"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:supplier_owner"
+          ],
+          "message": "{supplier} does not meet \"{name}\" ({id}). Decide what happens next."
+        }
+      ]
+    },
+    {
+      "ref": "evidence_expiring",
+      "sheet": "check",
+      "name": "Evidence expires in 30 days → tell the supplier owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "evidence_expiry",
+        "offsetDays": -30
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_any_of",
+          "value": [
+            "opt_met"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:supplier_owner"
+          ],
+          "message": "Evidence for \"{name}\" ({id}) at {supplier} expires on {evidence_expiry}. Ask for new evidence."
+        }
+      ]
+    }
+  ],
+  "dashboards": [
+    {
+      "ref": "overview",
+      "name": "Supplier overview",
+      "widgets": [
+        {
+          "ref": "w_status",
+          "type": "by_option",
+          "title": "Suppliers by status",
+          "sheetRef": "supplier",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_criticality",
+          "type": "by_option",
+          "title": "Suppliers by criticality",
+          "sheetRef": "supplier",
+          "fieldKey": "criticality"
+        },
+        {
+          "ref": "w_overdue",
+          "type": "overdue",
+          "title": "Overdue reviews",
+          "sheetRef": "supplier",
+          "fieldKey": "next_review"
+        },
+        {
+          "ref": "w_checks",
+          "type": "by_option",
+          "title": "Requirement checks by status",
+          "sheetRef": "check",
+          "fieldKey": "status"
+        }
+      ]
+    }
+  ],
+  "frameworks": [
+    {
+      "key": "iso-27001",
+      "version": "2022",
+      "optional": true
+    },
+    {
+      "key": "iso-9001",
+      "version": "2015",
+      "optional": true
+    },
+    {
+      "key": "gdpr",
+      "version": "2016",
+      "optional": true
+    }
+  ]
+}

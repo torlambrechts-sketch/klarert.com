@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { repoPacks } from './catalogue';
+import { parsePack } from './manifest';
 import { packLogText } from '@/engine/packs/audit';
 import { manifestAtLevel } from '@/engine/packs/levels';
 import { planPackInstall, type PackSnapshot } from '@/engine/packs/plan';
@@ -16,6 +18,13 @@ import {
 import type { PackManifest } from '@/engine/packs/types';
 
 const pack = (key: string) => repoPacks().find((p) => p.key === key)!;
+/** Supplier management 1.1.0, a standalone pack with a documents register, a library and a public form. */
+const standalone = () =>
+  parsePack(
+    JSON.parse(
+      readFileSync(new URL('./fixtures/supplier-management-1.1.0.json', import.meta.url), 'utf8'),
+    ),
+  );
 
 const snapshot: PackSnapshot = {
   orgId: 'org-1',
@@ -40,7 +49,7 @@ const env = {
 
 describe('bundle parts', () => {
   it('lists sheets, forms, automations and dashboards with what they need', () => {
-    const parts = bundleParts(pack('supplier-management'));
+    const parts = bundleParts(standalone());
     const byId = new Map(parts.map((p) => [p.id, p]));
     expect(parts.filter((p) => p.kind === 'sheet')).not.toHaveLength(0);
     expect(byId.get('sheet:supplier')!.requires).toEqual(
@@ -122,7 +131,7 @@ describe('ticking and unticking', () => {
 
 describe('the chosen manifest', () => {
   it('plans without the parts left out', () => {
-    const m = selectManifest(pack('supplier-management'), [
+    const m = selectManifest(standalone(), [
       'dashboard:overview',
       'automation:review_due',
     ]);
