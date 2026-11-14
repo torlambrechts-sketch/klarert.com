@@ -187,3 +187,39 @@ test.describe('desktop', () => {
     await shot(page, '05-after-archive');
   });
 });
+
+test('phone · Core alone installs and the Registers menu fits 390 px', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'phone layout');
+  test.setTimeout(180_000);
+  const slug = seedWorkspace('core-ph', { empty: true });
+  await signIn(page, 'maria@example.com', `/${slug}/settings?tab=packs`);
+  await page.goto(`/${slug}/settings?tab=packs`);
+  const row = page
+    .getByRole('list', { name: 'Available packs' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Core registers' });
+  await row.getByRole('button', { name: 'Preview Core registers' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Install' }).click();
+  await expect(dialog.getByRole('status')).toContainText('Installed Core registers (Starter).', {
+    timeout: 60_000,
+  });
+
+  await page.goto(`/${slug}/home`);
+  const bar = page.getByRole('navigation', { name: 'Bottom bar' });
+  await bar.getByRole('button', { name: 'Menu' }).click();
+  const menu = page.getByRole('dialog', { name: 'Menu' });
+  await expect(menu.getByRole('heading', { name: 'Registers' })).toBeVisible();
+  await expect(menu.getByTestId('menu-domain')).toHaveText([
+    'Management system',
+    'Risk and controls',
+    'Operations',
+  ]);
+  await expect(menu.getByRole('heading', { name: 'Your sheets', level: 2 })).toBeAttached();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await shot(page, '06-phone-registers');
+  await menu.getByRole('link', { name: 'Risk register' }).click();
+  await expect(page.getByTestId('system-board')).toContainText('System board');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await shot(page, '07-phone-risk-register');
+});
