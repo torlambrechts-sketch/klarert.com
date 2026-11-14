@@ -1,4 +1,5 @@
-// Where management review inputs come from (docs/11 Audit outputs): the ISO/IEC 27001 and ISO 9001 packs' sheets,
+// Where management review inputs come from (docs/11 Audit outputs): the ISO/IEC 27001 pack's sheets, the ISO 9001
+// add-on's customer feedback and the Core registers,
 // named by pack ref so renaming a sheet or a field changes nothing. When both are installed, each input comes from the
 // first pack listed that has it. Data, not code: another pack can be added here as one more entry.
 // The compilation itself is the pure compileManagementReview (src/engine/audit/management-review.ts).
@@ -60,39 +61,32 @@ export const REVIEW_PACK_SOURCES: ReviewPackSource[] = [
     },
   },
   {
+    // ISO 9001 2.0.0 is an add-on to the Core registers: its own sheet feeds customer feedback; reviews,
+    // nonconformities, risks, audits and training come from the Core entry below
     pack: 'iso-9001',
+    sheets: { feedback: 'complaint' },
+    dateFields: { feedback: 'received_on' },
+    detailFields: { feedback: 'kind' },
+    partyGroups: [],
+    issueGroups: [],
+    review: { source: 'reviews', groupRef: 'review.planned', checks: {} },
+  },
+  {
+    // the Core registers (docs/11 Core registers): the shared registers every add-on builds on, listed last so a
+    // standard pack's own sheet wins where it has one
+    pack: 'core',
     sheets: {
-      reviews: 'review',
-      context: 'context',
+      reviews: 'reviews',
       nonconformities: 'nc',
       risks: 'risk',
-      audits: 'audit',
-      findings: 'finding',
-      training: 'competence',
-      feedback: 'complaint',
+      audits: 'audits',
+      incidents: 'incidents',
+      training: 'training',
     },
-    dateFields: {
-      reviews: 'meeting_date',
-      audits: 'audit_date',
-      nonconformities: 'found_on',
-      feedback: 'received_on',
-    },
-    detailFields: { risks: 'level', feedback: 'kind' },
-    partyGroups: ['context.parties'],
-    issueGroups: ['context.internal', 'context.external'],
-    review: {
-      source: 'reviews',
-      groupRef: 'review.planned',
-      checks: {
-        previous_actions: ['in_actions'],
-        issues: ['in_changes'],
-        parties: ['in_feedback'],
-        nonconformities: ['in_nc'],
-        monitoring: ['in_monitoring'],
-        audits: ['in_audits'],
-        risks: ['in_risks'],
-        opportunities: ['in_improve'],
-      },
-    },
+    dateFields: { reviews: 'meeting_date', audits: 'start', incidents: 'occurred_on' },
+    detailFields: { risks: 'against_appetite' },
+    partyGroups: [],
+    issueGroups: [],
+    review: { source: 'reviews', groupRef: 'reviews.planned', checks: {} },
   },
 ];
