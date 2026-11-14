@@ -102,6 +102,11 @@ export const packSheet = templateSheet.omit({ folder: true, items: true, forms: 
     })
     .optional(),
   items: z.array(packItem).max(500).default([]),
+  /**
+   * Two link fields of the sheet (keys): one live item per pair of targets, kept by the database
+   * (sheets.settings.uniqueLinkPair, migration 0037), e.g. one check per supplier and requirement.
+   */
+  uniqueLinks: z.tuple([fieldKey, fieldKey]).optional(),
   /** The lowest level that installs this sheet (docs/11 Levels). */
   level: levelKey.optional(),
   forms: z
@@ -184,6 +189,11 @@ export const packManifestSchema = z
         z.object({
           key: z.string().regex(/^[a-z0-9][a-z0-9-]{0,39}$/),
           version: z.string().regex(/^[0-9A-Za-z.-]{1,20}$/),
+          /**
+           * Soft: never adopted for you. Example links into it are written only where the workspace has adopted
+           * it; widgets and setup steps may not read it.
+           */
+          optional: z.boolean().optional(),
         }),
       )
       .max(5)
@@ -242,6 +252,14 @@ export const packManifestSchema = z
       const at = (...p: (string | number)[]) => ['sheets', si, ...p];
       if (s.folder && !folders.has(s.folder))
         problem(at('folder'), `Unknown folder "${s.folder}".`);
+      if (s.uniqueLinks) {
+        const linkTypes = new Set(['link', 'requirement', 'controllink']);
+        if (s.uniqueLinks[0] === s.uniqueLinks[1])
+          problem(at('uniqueLinks'), 'Name two different link fields.');
+        for (const k of s.uniqueLinks)
+          if (!s.fields.some((f) => f.key === k && linkTypes.has(f.type)))
+            problem(at('uniqueLinks'), `"${k}" is not a link field of the sheet.`);
+      }
       if (s.register === 'documents' && !s.fields.some((f) => f.type === 'status'))
         problem(at('register'), 'A documents register needs a status field.');
       if (s.framework) {

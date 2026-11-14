@@ -471,6 +471,12 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                       install if this workspace has not adopted it.
                     </span>
                   ) : null}
+                  {p.linksTo.length ? (
+                    <span className="text-label-13 text-muted-foreground">
+                      Links to the {p.linksTo.join(', ')} requirement library where this workspace
+                      has adopted it.
+                    </span>
+                  ) : null}
                 </div>
                 {canInstall ? (
                   <div className="shrink-0">

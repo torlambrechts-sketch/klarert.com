@@ -123,7 +123,8 @@ export function levelProblems(m: PackManifest): LevelProblem[] {
   const folderRank = new Map(m.folders.map((f, i) => [f.ref, rank(f.level, ['folders', i])]));
   const sheetRank = new Map<string, number>();
   m.sheets.forEach((s, si) => sheetRank.set(s.ref, rank(s.level, ['sheets', si])));
-  const libraries = new Set((m.frameworks ?? []).map(libraryKey));
+  // widgets and setup steps read only libraries the pack adopts (an optional one may be missing)
+  const libraries = new Set((m.frameworks ?? []).filter((f) => !f.optional).map(libraryKey));
 
   // a sheet only uses what is installed at its level: its folder and the sheets its links point at
   m.sheets.forEach((s, si) => {

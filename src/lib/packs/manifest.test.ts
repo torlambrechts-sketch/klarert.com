@@ -22,6 +22,7 @@ describe('pack manifest', () => {
       ['review', false, null],
       ['requirement', true, null],
       ['document', false, 'documents'],
+      ['check', false, null],
     ]);
     expect(m.requires).toEqual([]);
     expect(m.sheets[1]!.views).toEqual([]);
@@ -86,7 +87,7 @@ describe('pack manifest', () => {
       config: { targetSheetRef: 'iso27001:annex_a', multiple: true },
     });
     expect(problems(raw)).toContain(
-      'sheets.0.fields.9: "iso27001:annex_a" names the pack "iso27001", which is not in requires.',
+      'sheets.0.fields.16: "iso27001:annex_a" names the pack "iso27001", which is not in requires.',
     );
     raw.requires = [{ pack: 'iso27001', range: '^1.0.0' }];
     expect(problems(raw)).toEqual([]);
@@ -125,9 +126,9 @@ describe('pack manifest', () => {
     expect(problems(raw)).toEqual(
       expect.arrayContaining([
         'dashboards.0.widgets: Duplicate widget ref "w_x".',
-        'dashboards.0.widgets.3: Unknown widget "sparkle".',
-        'dashboards.0.widgets.4: Unknown sheet "gone".',
-        'dashboards.0.widgets.5: Unknown field "colour" on "supplier".',
+        'dashboards.0.widgets.4: Unknown widget "sparkle".',
+        'dashboards.0.widgets.5: Unknown sheet "gone".',
+        'dashboards.0.widgets.6: Unknown field "colour" on "supplier".',
       ]),
     );
   });
@@ -149,15 +150,16 @@ describe('pack manifest', () => {
   it('puts an automation on sub-items only of a sheet that has them, naming their fields', () => {
     const raw = supplier();
     raw.automations.push({ ...raw.automations[0], ref: 'on_actions', subitems: true });
-    expect(problems(raw)).toEqual(['automations.2: "supplier" has no sub-items.']);
+    const ai = raw.automations.length - 1;
+    expect(problems(raw)).toEqual([`automations.${ai}: "supplier" has no sub-items.`]);
     raw.sheets[0].subitems = {
       label: 'Actions',
       fields: [{ key: 'due_date', name: 'Due date', type: 'date' }],
     };
-    raw.automations[2].trigger = { type: 'date_arrives', fieldKey: 'due_date', offsetDays: 1 };
-    raw.automations[2].conditions = [{ fieldKey: 'status', op: 'is_not_done' }];
-    expect(problems(raw)).toEqual(['automations.2: Unknown sub-item field "status".']);
-    raw.automations[2].conditions = [];
+    raw.automations[ai].trigger = { type: 'date_arrives', fieldKey: 'due_date', offsetDays: 1 };
+    raw.automations[ai].conditions = [{ fieldKey: 'status', op: 'is_not_done' }];
+    expect(problems(raw)).toEqual([`automations.${ai}: Unknown sub-item field "status".`]);
+    raw.automations[ai].conditions = [];
     expect(problems(raw)).toEqual([]);
   });
 
@@ -169,6 +171,7 @@ describe('pack manifest', () => {
       type: 'requirement',
       config: { multiple: true },
     });
+    delete raw.frameworks;
     raw.sheets[0].items[0].requirements = { controls: ['iso-27001@2022#A.5.19'], owner: [] };
     expect(problems(raw)).toEqual(
       expect.arrayContaining([
@@ -176,7 +179,11 @@ describe('pack manifest', () => {
         'sheets.0.items.0: "owner" is not a requirement field.',
       ]),
     );
-    raw.frameworks = [{ key: 'iso-27001', version: '2022' }];
+    raw.frameworks = [
+      { key: 'iso-27001', version: '2022' },
+      { key: 'iso-9001', version: '2015', optional: true },
+      { key: 'gdpr', version: '2016', optional: true },
+    ];
     delete raw.sheets[0].items[0].requirements.owner;
     expect(problems(raw)).toEqual([]);
     raw.sheets[0].items[0].requirements.controls = ['A.5.19'];
