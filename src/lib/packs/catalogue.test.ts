@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { planPackInstall, previewLines, type PackSnapshot } from '@/engine/packs';
+import { afterInstall } from '@/engine/packs/installed.fixture';
 import { parseTemplate } from '@/lib/templates/schema';
 import { startById } from '@/lib/starts';
 import { repoPacks } from './catalogue';
@@ -47,6 +48,8 @@ describe('repository packs', () => {
       'iso-27001',
       'iso-9001',
       'gdpr',
+      'core',
+      'iso-14001',
       'start-capa',
       'start-documents',
       'start-incident',
@@ -56,11 +59,19 @@ describe('repository packs', () => {
     expect(canonicalJson({ b: 1, a: [{ d: 2, c: null }] })).toBe('{"a":[{"c":null,"d":2}],"b":1}');
   });
 
-  it('every one plans into an empty workspace', () => {
-    for (const p of repoPacks()) {
-      const plan = planPackInstall(p, snapshot(), env);
+  it('every one plans into an empty workspace (with the packs it requires installed first)', () => {
+    const packs = repoPacks();
+    for (const p of packs) {
+      let snap = snapshot();
+      for (const r of p.requires) {
+        const dep = packs.find((x) => x.key === r.pack)!;
+        const first = planPackInstall(dep, snap, env);
+        snap = afterInstall(snap, first.payload!, `install-${dep.key}`);
+      }
+      const plan = planPackInstall(p, snap, env);
       expect(plan.preview.conflicts, p.key).toEqual([]);
       expect(plan.state).toBe('ready');
+      expect(plan.payload, p.key).not.toBeNull();
     }
   });
 });

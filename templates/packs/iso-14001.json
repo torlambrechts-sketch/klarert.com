@@ -1,0 +1,309 @@
+{
+  "key": "iso-14001",
+  "version": "1.0.0",
+  "title": "ISO 14001 environment (add-on)",
+  "description": "A small add-on that shows how a standard builds on the Core registers: it adds the Environmental risk category, an Environmental incident type, ISO 14001 tags and views on the shared registers, and an Environmental aspects register under Operations. Installs the Core registers first when they are missing. Written in our own words; no text of the standard.",
+  "requires": [
+    {
+      "pack": "core",
+      "range": "^1.0.0"
+    }
+  ],
+  "standard": {
+    "id": "iso14001",
+    "label": "ISO 14001",
+    "color": "green"
+  },
+  "sheets": [
+    {
+      "ref": "aspects",
+      "name": "Environmental aspects",
+      "itemLabel": "Aspect",
+      "idPrefix": "ASP-",
+      "folder": "core:operations",
+      "description": "What your activities, products and services do to the environment, under normal and abnormal conditions and in an emergency, and which of those effects are significant.",
+      "groups": [
+        {
+          "ref": "identified",
+          "name": "Identified",
+          "color": "blue"
+        },
+        {
+          "ref": "assessed",
+          "name": "Assessed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "activity",
+          "name": "Activity, product or service",
+          "type": "text"
+        },
+        {
+          "key": "aspect",
+          "name": "Environmental aspect",
+          "type": "text",
+          "description": "The part of the activity that interacts with the environment: a discharge, a use of energy, a waste."
+        },
+        {
+          "key": "impact",
+          "name": "Environmental impact",
+          "type": "text",
+          "description": "The change it causes: water pollution, emissions, landfill."
+        },
+        {
+          "key": "condition",
+          "name": "Condition",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_normal",
+                "label": "Normal",
+                "color": "green"
+              },
+              {
+                "id": "opt_abnormal",
+                "label": "Abnormal",
+                "color": "orange"
+              },
+              {
+                "id": "opt_emergency",
+                "label": "Emergency",
+                "color": "red"
+              }
+            ]
+          }
+        },
+        {
+          "key": "significance",
+          "name": "Significance",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_not_assessed",
+                "label": "Not assessed",
+                "color": "grey"
+              },
+              {
+                "id": "opt_significant",
+                "label": "Significant",
+                "color": "red"
+              },
+              {
+                "id": "opt_not_significant",
+                "label": "Not significant",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "risks",
+          "name": "Risks",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:risk",
+            "multiple": true,
+            "inverseKey": "iso14001_aspect"
+          }
+        },
+        {
+          "key": "objectives",
+          "name": "Objectives",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:objectives",
+            "multiple": true
+          }
+        },
+        {
+          "key": "review_date",
+          "name": "Next review",
+          "type": "date"
+        }
+      ],
+      "views": [
+        {
+          "name": "By significance",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "significance"
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "coolant",
+          "group": "assessed",
+          "name": "Example: Coolant use and disposal",
+          "values": {
+            "activity": "Machining",
+            "aspect": "Used coolant",
+            "impact": "Water and soil contamination",
+            "condition": "opt_normal",
+            "significance": "opt_significant",
+            "review_date": "$in:180"
+          }
+        },
+        {
+          "ref": "electricity",
+          "group": "identified",
+          "name": "Example: Electricity use",
+          "values": {
+            "activity": "Press lines",
+            "aspect": "Electricity use",
+            "impact": "Greenhouse gas emissions",
+            "condition": "opt_normal",
+            "significance": "opt_not_assessed",
+            "review_date": "$in:90"
+          }
+        }
+      ]
+    }
+  ],
+  "extends": [
+    {
+      "pack": "core",
+      "sheet": "risk_category",
+      "items": [
+        {
+          "ref": "iso14001_environmental",
+          "group": "in_use",
+          "name": "Environmental",
+          "values": {
+            "likelihood_scale": "1 Rare: never happened here or at similar sites. 2 Unlikely: happened at a similar site. 3 Possible: happened here before. 4 Likely: happens most years. 5 Almost certain: happens several times a year.",
+            "impact_scale": "1 Negligible: contained on site, no lasting effect. 2 Minor: cleaned up within a day. 3 Moderate: reported to the authority or a neighbour complains. 4 Major: harm outside the site that takes months to put right. 5 Severe: lasting harm to the environment or a prosecution.",
+            "appetite": 6,
+            "standards": [
+              "$option:ISO 14001"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "risk",
+      "fields": [
+        {
+          "key": "iso14001_aspect",
+          "name": "Environmental aspect",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "aspects",
+            "multiple": true,
+            "inverseKey": "risks"
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "iso14001_spill",
+          "group": "identified",
+          "name": "Example: Coolant spill reaches a surface drain",
+          "values": {
+            "cause": "Worn hose clamp on a grinder",
+            "consequence": "Water pollution and a report to the authority",
+            "likelihood": 2,
+            "impact": 4,
+            "treatment": "opt_reduce",
+            "review_date": "$in:90",
+            "status": "opt_open",
+            "standards": [
+              "$option:ISO 14001"
+            ]
+          },
+          "links": {
+            "category": [
+              "iso14001_environmental"
+            ],
+            "iso14001_aspect": [
+              "coolant"
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso14001_above_appetite",
+          "name": "Environmental risk scores 12 or more → tell the risk owner",
+          "trigger": {
+            "type": "number_above",
+            "fieldKey": "score",
+            "threshold": 11
+          },
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso14001"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner"
+              ],
+              "message": "{id} {name} scores {score}. Decide how to treat it."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "incidents",
+      "options": {
+        "incident_type": [
+          {
+            "id": "iso14001_environmental",
+            "label": "Environmental",
+            "color": "green"
+          }
+        ]
+      }
+    },
+    {
+      "pack": "core",
+      "sheet": "objectives"
+    }
+  ],
+  "automations": [
+    {
+      "ref": "aspect_review_due",
+      "sheet": "aspects",
+      "name": "Aspect review in 14 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "review_date",
+        "offsetDays": -14
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "Review {id} {name} and its significance by {review_date}."
+        }
+      ]
+    }
+  ],
+  "dashboards": []
+}
