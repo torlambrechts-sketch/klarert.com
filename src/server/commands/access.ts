@@ -290,7 +290,8 @@ export async function setAccessGrant(raw: unknown): Promise<Result<{ level: Gran
         p_kind: p.data.kind,
         p_target: p.data.targetId,
         p_user: p.data.userId,
-        p_level: p.data.level,
+        // null takes the grant away; generated types cannot mark an argument without a default as nullable
+        p_level: p.data.level as string,
       });
       return error ? fromDbError(error) : ok({ level: p.data.level });
     },
@@ -325,8 +326,9 @@ export async function setFieldRestriction(
       const { data, error } = await supabase.rpc('set_field_restriction', {
         p_field: p.data.fieldId,
         p_restricted: p.data.restricted,
-        p_user_ids: p.data.restricted ? p.data.userIds : null,
-        p_roles: p.data.restricted ? p.data.roles : null,
+        // null when the restriction is lifted (the function takes null; generated types cannot say so)
+        p_user_ids: (p.data.restricted ? p.data.userIds : null) as string[],
+        p_roles: (p.data.restricted ? p.data.roles : null) as string[],
       });
       if (error) return fromDbError(error);
       return ok({ restrictedTo: (data as { userIds: string[]; roles: Role[] } | null) ?? null });

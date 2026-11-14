@@ -554,8 +554,11 @@ export function PackPreview({
     /** Settings chosen at install (docs/11 Pack settings); not offered when adding a level. */
     settings?: PackSetting[];
   };
-  /** The button's words, e.g. "Add Full" on an installed pack. */
-  label?: string;
+  /**
+   * The button's words, e.g. "Add Full" on an installed pack. Null: no button (the pack is at its highest level), kept
+   * mounted so the dialog that just added the last level stays open with its result while the page refreshes.
+   */
+  label?: string | null;
 }) {
   const [settingValues, setSettingValues] = useState<PackSettingValues>({});
   const settingDefs = pack.installedLevel ? [] : (pack.settings ?? []);
@@ -617,20 +620,22 @@ export function PackPreview({
         setOpen(next);
       }}
     >
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        aria-label={`${label} ${pack.title}`}
-        onClick={() => {
-          const l = firstOpen();
-          setLevel(l);
-          setOpen(true);
-          void load(l);
-        }}
-      >
-        {label}
-      </Button>
+      {label === null ? null : (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label={`${label} ${pack.title}`}
+          onClick={() => {
+            const l = firstOpen();
+            setLevel(l);
+            setOpen(true);
+            void load(l);
+          }}
+        >
+          {label}
+        </Button>
+      )}
       <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
           <DialogTitle className="text-heading-20">

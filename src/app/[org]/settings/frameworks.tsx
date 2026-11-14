@@ -93,6 +93,7 @@ export function AdoptFramework({
   framework,
   controls,
   replaced = null,
+  adopted = false,
 }: {
   org: string;
   framework: { key: string; version: string; title: string };
@@ -102,6 +103,11 @@ export function AdoptFramework({
    * edition we recommend instead. The words come from the engine (replacedWarning).
    */
   replaced?: { warning: string; recommended: string | null } | null;
+  /**
+   * Adopted already: no Adopt button. The component stays mounted after adopting, because the page refreshes with
+   * the framework adopted while the dialog still shows the result.
+   */
+  adopted?: boolean;
 }) {
   const router = useRouter();
   const selectId = useId();
@@ -158,19 +164,21 @@ export function AdoptFramework({
   const busy = step.kind === 'adopting';
   return (
     <Dialog open={open} onOpenChange={(next) => (busy ? undefined : setOpen(next))}>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        aria-label={`Adopt ${framework.title}`}
-        onClick={() => {
-          setOpen(true);
-          setConfirmed(false);
-          void load();
-        }}
-      >
-        Adopt
-      </Button>
+      {adopted ? null : (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          aria-label={`Adopt ${framework.title}`}
+          onClick={() => {
+            setOpen(true);
+            setConfirmed(false);
+            void load();
+          }}
+        >
+          Adopt
+        </Button>
+      )}
       <DialogContent className="flex max-h-[85vh] w-[min(600px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
           <DialogTitle className="text-heading-20">Adopt {framework.title}</DialogTitle>

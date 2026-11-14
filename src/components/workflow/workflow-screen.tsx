@@ -31,6 +31,7 @@ import {
   RowDrawer,
   RowIcon,
 } from '@/components/shell/data-list';
+import { WindowList } from '@/components/shell/window-list';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { WorkflowData, WorkflowRow } from '@/server/repositories/workflow';
@@ -237,7 +238,7 @@ export function WorkflowScreen({
           </li>
         ) : null}
       </ListFrame>
-      <RunningNow org={org} rows={data.rows} canEdit={canEdit} mover={mover} />
+      <RunningNow org={org} rows={rows} query={q.trim()} canEdit={canEdit} mover={mover} />
       {mover.dialog}
     </div>
   );
@@ -644,42 +645,46 @@ function StageItems({
       </p>
     );
   return (
-    <ul
-      aria-label={`Items in ${stage.label}`}
-      className="border-soft bg-subtle m-0 flex list-none flex-col border-t p-0 md:pl-[38px]"
-    >
-      {stage.items.map((it) => (
-        <li
-          key={it.id}
-          className="border-soft flex flex-wrap items-center gap-2 border-b px-3 py-1.5 last:border-b-0"
-        >
-          <Link
-            href={itemHref(org, { sheetId: row.sheet.id, displayId: it.displayId })}
-            className="flex min-w-0 flex-[1_1_180px] items-baseline gap-2 underline-offset-4 hover:underline"
-          >
-            <span className="text-muted-foreground text-label-12-mono">{it.displayId}</span>
-            <span className="text-label-14 truncate">{it.name}</span>
-          </Link>
-          {it.overdue ? (
-            <ToneBadge tone="crit" icon={AlertTriangle}>
-              Overdue
-            </ToneBadge>
-          ) : null}
-          {canEdit ? <MoveSelect row={row} item={it} stageKey={stage.key} mover={mover} /> : null}
-        </li>
-      ))}
-    </ul>
+    <div className="border-soft bg-subtle border-t md:pl-[38px]">
+      <WindowList
+        aria-label={`Items in ${stage.label}`}
+        itemClassName={(_, last) => cn('border-soft', !last && 'border-b')}
+        items={stage.items}
+        getKey={(it) => it.id}
+        estimateSize={45}
+        renderItem={(it) => (
+          <div className="flex flex-wrap items-center gap-2 px-3 py-1.5">
+            <Link
+              href={itemHref(org, { sheetId: row.sheet.id, displayId: it.displayId })}
+              className="flex min-w-0 flex-[1_1_180px] items-baseline gap-2 underline-offset-4 hover:underline"
+            >
+              <span className="text-muted-foreground text-label-12-mono">{it.displayId}</span>
+              <span className="text-label-14 truncate">{it.name}</span>
+            </Link>
+            {it.overdue ? (
+              <ToneBadge tone="crit" icon={AlertTriangle}>
+                Overdue
+              </ToneBadge>
+            ) : null}
+            {canEdit ? <MoveSelect row={row} item={it} stageKey={stage.key} mover={mover} /> : null}
+          </div>
+        )}
+      />
+    </div>
   );
 }
 
 function RunningNow({
   org,
   rows,
+  query,
   canEdit,
   mover,
 }: {
   org: string;
+  /** The workflows the search keeps (all of them without a search). */
   rows: WorkflowRow[];
+  query: string;
   canEdit: boolean;
   mover: Move;
 }) {
@@ -691,45 +696,59 @@ function RunningNow({
       ),
     [rows],
   );
+  const scope = query ? `Workflows matching “${query}”` : 'All workflows';
   return (
-    <PanelCard title="Running now" aside="All workflows · items not done" headingId={heading}>
+    <PanelCard
+      title="Running now"
+      aside={`${scope} · ${plural(running.length, 'item')} not done`}
+      headingId={heading}
+    >
       {running.length === 0 ? (
         <p className="text-muted-foreground text-copy-14 m-0 px-4 py-6">
-          Nothing is running. Items that are not done show here with their stage.
+          {query
+            ? `Nothing is running in the workflows matching “${query}”.`
+            : 'Nothing is running. Items that are not done show here with their stage.'}
         </p>
       ) : (
-        <ul aria-labelledby={heading} className="m-0 flex list-none flex-col gap-0.5 p-2">
-          {running.map(({ row, it }) => (
-            <li
-              key={it.id}
-              className="hover:bg-soft flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-md px-2.5 py-2"
-            >
-              <span className="text-ink text-label-13-mono w-[72px] shrink-0">{it.displayId}</span>
-              <span className="flex min-w-0 flex-[1_1_200px] flex-col">
-                <span className="text-label-14 truncate">{it.name}</span>
-                <span className="text-muted-foreground text-label-12 truncate">
-                  {row.sheet.name} · {it.stageLabel}
+        // a workspace can have tens of thousands of open items: only the rows near the viewport are in the page
+        <div className="p-2">
+          <WindowList
+            aria-labelledby={heading}
+            items={running}
+            getKey={({ it }) => it.id}
+            estimateSize={54}
+            itemClassName="pb-0.5"
+            renderItem={({ row, it }) => (
+              <div className="hover:bg-soft flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-md px-2.5 py-2">
+                <span className="text-ink text-label-13-mono w-[72px] shrink-0">
+                  {it.displayId}
                 </span>
-              </span>
-              {it.overdue ? (
-                <ToneBadge tone="crit" icon={AlertTriangle}>
-                  Overdue
-                </ToneBadge>
-              ) : null}
-              {canEdit ? (
-                <MoveSelect row={row} item={it} stageKey={it.stageKey} mover={mover} />
-              ) : null}
-              <Button asChild variant="outline" size="sm">
-                <Link
-                  href={itemHref(org, { sheetId: row.sheet.id, displayId: it.displayId })}
-                  aria-label={`Open ${it.displayId} ${it.name}`}
-                >
-                  Open
-                </Link>
-              </Button>
-            </li>
-          ))}
-        </ul>
+                <span className="flex min-w-0 flex-[1_1_200px] flex-col">
+                  <span className="text-label-14 truncate">{it.name}</span>
+                  <span className="text-muted-foreground text-label-12 truncate">
+                    {row.sheet.name} · {it.stageLabel}
+                  </span>
+                </span>
+                {it.overdue ? (
+                  <ToneBadge tone="crit" icon={AlertTriangle}>
+                    Overdue
+                  </ToneBadge>
+                ) : null}
+                {canEdit ? (
+                  <MoveSelect row={row} item={it} stageKey={it.stageKey} mover={mover} />
+                ) : null}
+                <Button asChild variant="outline" size="sm">
+                  <Link
+                    href={itemHref(org, { sheetId: row.sheet.id, displayId: it.displayId })}
+                    aria-label={`Open ${it.displayId} ${it.name}`}
+                  >
+                    Open
+                  </Link>
+                </Button>
+              </div>
+            )}
+          />
+        </div>
       )}
     </PanelCard>
   );

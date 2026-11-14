@@ -347,3 +347,8 @@ Multi-step approvals (docs/04 §13), owner-approved after the MVP. Definitions a
 | `workflow_withdraw(instance, comment?)` | the submitter, owners and admins who can read the item | Ends it withdrawn, `workflow.withdrawn`, the step field back to draft |
 
 The item's own changes (and, in a documents register, the approved file) are written with `app.workflow_op = 'on'` for those writes only, which `items_access_guard` and `item_rows_access_guard` let through: approvers may hold only view access, and the RPC has checked who may act. The `workflowstep` field stays unwritable for people through `set_item_values`. Upgrades are written by `apply_pack_upgrade(install, plan)` (0040, granted to `authenticated`): `upgrade_pack` (whichever definition is current) and then `p_plan.update.workflows` (`[{ sheet_id, workflows }]`, sheets of the install; since 0044 also a required pack's sheet, where only the pack's own namespaced entries may change), which replaces a sheet's workflows, in one transaction; `upgrade_pack` keeps its contract. Add-ons add workflows to a required pack's sheet through `install_pack` (0044). Grants: the three RPCs to `authenticated` (`workflow_submit` also to `service_role`), the `_wf_` helpers and the guards to nobody. pgTAP: `supabase/tests/0030_approval_workflows.sql`.
+
+### An index on a sheet's fields (0045)
+
+`fields_sheet_all_idx` on `fields(sheet_id)`, without a predicate. `activity_a_mask` reads a sheet's restricted and personal-data fields (archived ones included) for every created item; the other `sheet_id` indexes are partial, so that read scanned every field of every workspace and item creation slowed as the database grew. pgTAP `supabase/tests/0035_fields_sheet_index.sql`.
+

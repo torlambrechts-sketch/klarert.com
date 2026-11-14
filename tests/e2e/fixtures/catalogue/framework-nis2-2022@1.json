@@ -1,0 +1,47 @@
+{
+  "key": "nis2",
+  "version": "2022",
+  "revision": 1,
+  "title": "NIS2 (Directive (EU) 2022/2555)",
+  "shortTitle": "NIS2",
+  "publisher": "European Union",
+  "kind": "law",
+  "source": "Directive (EU) 2022/2555, as published on EUR-Lex; national transposition may add to it",
+  "licence": "EU law. Titles are short summaries in our own words with the article numbers; read the official text on EUR-Lex and your national law.",
+  "url": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+  "titles": "own-words",
+  "library": {
+    "name": "NIS2 requirements",
+    "itemLabel": "Requirement",
+    "idPrefix": "NIS2-",
+    "folder": "Frameworks"
+  },
+  "requirements": [
+    { "ref": "Art. 20", "kind": "theme", "title": "Article 20 · Governance" },
+    { "ref": "Art. 20(1)", "parent": "Art. 20", "kind": "paragraph", "title": "Management approves the measures and oversees them" },
+    { "ref": "Art. 20(2)", "parent": "Art. 20", "kind": "paragraph", "title": "Management and staff take cybersecurity training", "tags": ["training"] },
+
+    { "ref": "Art. 21", "kind": "theme", "title": "Article 21 · Cybersecurity risk-management measures" },
+    { "ref": "Art. 21(1)", "parent": "Art. 21", "kind": "paragraph", "title": "Measures that fit the risk", "tags": ["risk"] },
+    { "ref": "Art. 21(2)(a)", "parent": "Art. 21", "kind": "paragraph", "title": "Risk analysis and security policies for systems", "tags": ["risk"] },
+    { "ref": "Art. 21(2)(b)", "parent": "Art. 21", "kind": "paragraph", "title": "Handling incidents", "tags": ["incidents"] },
+    { "ref": "Art. 21(2)(c)", "parent": "Art. 21", "kind": "paragraph", "title": "Continuity, backups, disaster recovery and crisis handling", "tags": ["continuity"] },
+    { "ref": "Art. 21(2)(d)", "parent": "Art. 21", "kind": "paragraph", "title": "Security of the supply chain and direct suppliers", "tags": ["suppliers"] },
+    { "ref": "Art. 21(2)(e)", "parent": "Art. 21", "kind": "paragraph", "title": "Secure buying, building and upkeep of systems, with vulnerability handling", "tags": ["development"] },
+    { "ref": "Art. 21(2)(f)", "parent": "Art. 21", "kind": "paragraph", "title": "Checking whether the measures work" },
+    { "ref": "Art. 21(2)(g)", "parent": "Art. 21", "kind": "paragraph", "title": "Basic cyber hygiene and training", "tags": ["training"] },
+    { "ref": "Art. 21(2)(h)", "parent": "Art. 21", "kind": "paragraph", "title": "Use of cryptography and encryption" },
+    { "ref": "Art. 21(2)(i)", "parent": "Art. 21", "kind": "paragraph", "title": "People security, access control and asset management" },
+    { "ref": "Art. 21(2)(j)", "parent": "Art. 21", "kind": "paragraph", "title": "Multi-factor sign-in and secured communications" },
+    { "ref": "Art. 21(3)", "parent": "Art. 21", "kind": "paragraph", "title": "Considering each supplier's weaknesses and practices", "tags": ["suppliers"] },
+    { "ref": "Art. 21(4)", "parent": "Art. 21", "kind": "paragraph", "title": "Fixing gaps in the measures without undue delay" },
+
+    { "ref": "Art. 23", "kind": "theme", "title": "Article 23 · Reporting obligations" },
+    { "ref": "Art. 23(1)", "parent": "Art. 23", "kind": "paragraph", "title": "Report significant incidents to the CSIRT or authority", "tags": ["incidents"] },
+    { "ref": "Art. 23(3)", "parent": "Art. 23", "kind": "paragraph", "title": "What makes an incident significant", "tags": ["incidents"] },
+    { "ref": "Art. 23(4)(a)", "parent": "Art. 23", "kind": "paragraph", "title": "Early warning within 24 hours", "tags": ["incidents"] },
+    { "ref": "Art. 23(4)(b)", "parent": "Art. 23", "kind": "paragraph", "title": "Incident notification within 72 hours", "tags": ["incidents"] },
+    { "ref": "Art. 23(4)(c)", "parent": "Art. 23", "kind": "paragraph", "title": "Intermediate report when asked", "tags": ["incidents"] },
+    { "ref": "Art. 23(4)(d)", "parent": "Art. 23", "kind": "paragraph", "title": "Final report within one month", "tags": ["incidents"] }
+  ]
+}

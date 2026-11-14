@@ -38,6 +38,7 @@ const MAX_RUNS = 5000;
 /** Earlier values (activity log) read at most per dashboard for trends (the newest first). */
 const MAX_CHANGES = 20000;
 const PAGE = 1000;
+const FIELDS_PER_QUERY = 100;
 
 export async function listDashboards(db: Db, orgId: string): Promise<Dashboard[]> {
   const rows = must(
@@ -226,29 +227,33 @@ async function fetchChanges(
   const out: DashboardData['changes'] = [];
   const from = new Date(`${since}T00:00:00Z`);
   from.setUTCDate(from.getUTCDate() - 1);
-  for (let at = 0; at < MAX_CHANGES; at += PAGE) {
-    const rows = must(
-      await db
-        .from('activity_log')
-        .select('item_id, field_id, old_value, at')
-        .eq('org_id', orgId)
-        .eq('action', 'value.changed')
-        .in('field_id', fieldIds)
-        .gte('at', from.toISOString())
-        .order('id', { ascending: false })
-        .range(at, at + PAGE - 1),
-    );
-    for (const r of rows)
-      if (r.item_id && r.field_id)
-        out.push({
-          itemId: r.item_id,
-          fieldId: r.field_id,
-          old: (r.old_value ?? null) as Json,
-          date: isoDateInZone(r.at, timeZone),
-        });
-    if (rows.length < PAGE) break;
+  // the field ids go in the URL: a workspace with hundreds of sheets asks in parts ("URI too long" otherwise)
+  for (let part = 0; part < fieldIds.length; part += FIELDS_PER_QUERY) {
+    const ids = fieldIds.slice(part, part + FIELDS_PER_QUERY);
+    for (let at = 0; out.length < MAX_CHANGES; at += PAGE) {
+      const rows = must(
+        await db
+          .from('activity_log')
+          .select('item_id, field_id, old_value, at')
+          .eq('org_id', orgId)
+          .eq('action', 'value.changed')
+          .in('field_id', ids)
+          .gte('at', from.toISOString())
+          .order('id', { ascending: false })
+          .range(at, at + PAGE - 1),
+      );
+      for (const r of rows)
+        if (r.item_id && r.field_id)
+          out.push({
+            itemId: r.item_id,
+            fieldId: r.field_id,
+            old: (r.old_value ?? null) as Json,
+            date: isoDateInZone(r.at, timeZone),
+          });
+      if (rows.length < PAGE) break;
+    }
   }
-  return out;
+  return out.slice(0, MAX_CHANGES);
 }
 
 async function fetchRuns(db: Db, orgId: string, now: Date, days: number) {

@@ -2,6 +2,7 @@
 // realtime refetches, the server client for commands. Every query runs under the caller's RLS.
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { resolveFieldType } from '@/engine/fields/resolve';
+import { byPosition } from '@/engine/organise';
 import '@/engine/fields/registry';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Field, Item, Json, Person } from '@/engine/types';
@@ -160,7 +161,9 @@ export async function fetchItems(db: Db, sheetId: string): Promise<Item[]> {
       .order('id')
       .range(from, to),
   );
-  return mergeRestricted(rows.map(toItem), await restrictedRows(db, { sheetId }));
+  const items = await mergeRestricted(rows.map(toItem), await restrictedRows(db, { sheetId }));
+  // the database orders text by its locale (aV next to av); fractional keys compare by code unit
+  return items.sort(byPosition);
 }
 
 /** Every live item of the given sheets in one paged read, by sheet (workspace-wide pages such as Workflow). */
@@ -190,6 +193,8 @@ export async function fetchItemsOfSheets(
   );
   const items = await mergeRestricted(rows.map(toItem), await restrictedRows(db, { orgId }));
   for (const it of items) out.get(it.sheetId)?.push(it);
+  // the database orders text by its locale (aV next to av); fractional keys compare by code unit
+  for (const list of out.values()) list.sort(byPosition);
   return out;
 }
 

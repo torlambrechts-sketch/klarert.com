@@ -82,3 +82,58 @@ test('a sheet opens to its steps; Running now moves items, asks for a comment an
   );
   expect(row!.values[sheet.field('status')]).toBe('opt_stuck');
 });
+
+// A workspace can have tens of thousands of open items (docs/05 §4): Running now and a stage's items keep only the
+// rows near the viewport in the page, each row knows its place in the whole list, and the keyboard still reaches
+// every row (tabbing scrolls the next rows into the page).
+test('Running now with hundreds of items: only nearby rows are in the page; Tab reaches the rest', async ({
+  page,
+}) => {
+  await signIn(page, 'james@example.com');
+  const name = `Backlog ${randomUUID().slice(0, 6)}`;
+  const sheet = await makeSheet(page, name, [
+    { key: 'status', name: 'Status', type: 'status', config: STATUS },
+  ]);
+  const count = 400;
+  await seedItems(
+    page,
+    sheet,
+    Array.from({ length: count }, (_, i) => ({
+      name: `Task ${i + 1}`,
+      values: { [sheet.field('status')]: 'opt_todo' },
+    })),
+  );
+
+  await page.goto(`/meridian/workflow?sheet=${sheet.id}`);
+  await page.getByLabel('Search workflows').fill(name);
+  await expect(page.getByTestId('workflow-row')).toHaveCount(1);
+  await expect(page.getByRole('region', { name: 'Running now' })).toContainText(
+    `Workflows matching “${name}” · ${count} items not done`,
+  );
+  const running = page.getByRole('list', { name: 'Running now' });
+  const rows = running.getByRole('listitem');
+  await expect(rows.first()).toHaveAttribute('aria-posinset', '1');
+  await expect(rows.first()).toHaveAttribute('aria-setsize', String(count));
+  const shown = await rows.count();
+  expect(shown).toBeGreaterThan(5);
+  expect(shown).toBeLessThan(80);
+
+  // the keyboard: each row has its stage picker and Open; Tab from the first row's Open walks down the list
+  await running.getByRole('link', { name: /^Open .+-001 Task 1$/ }).focus();
+  for (let i = 0; i < 2 * 60; i += 1) await page.keyboard.press('Tab');
+  await expect(running.getByRole('link', { name: /^Open .+-061 Task 61$/ })).toBeFocused();
+  expect(await rows.count()).toBeLessThan(count);
+
+  // the end of the list is in the page once it is scrolled to
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(running.getByRole('link', { name: /^Open .+-400 Task 400$/ })).toBeVisible();
+
+  // a stage's own item list is just as light
+  await page
+    .getByRole('list', { name: `${name} steps` })
+    .getByRole('button', { name: 'Items in Not started' })
+    .click();
+  const stage = page.getByRole('list', { name: 'Items in Not started' });
+  await expect(stage.getByRole('listitem').first()).toHaveAttribute('aria-setsize', String(count));
+  expect(await stage.getByRole('listitem').count()).toBeLessThan(80);
+});
