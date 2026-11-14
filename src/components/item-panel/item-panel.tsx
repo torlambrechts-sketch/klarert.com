@@ -45,7 +45,7 @@ import { SubitemsTab } from '@/components/subitems/subitems-tab';
 import type { SubitemsHandle } from '@/components/subitems/use-subitems';
 import { subitemLabel, subitemProgress } from '@/engine/subitems';
 
-// The item panel (docs/05 §3.4, FR-27…FR-29): a 470 px drawer from the right (Expand: min(1080px, 100vw − 100px),
+// The item panel (docs/05 §3.4, FR-27…FR-29): a 580 px drawer from the right (Expand: min(1080px, 100vw − 100px),
 // full screen above the bottom bar on phones). A modal dialog: focus stays inside while it is open and returns to
 // where it was on close; Esc closes (after leaving a text field); J and K move to the next and previous item.
 
@@ -243,7 +243,7 @@ export function ItemPanel(props: ItemPanelProps) {
             }
           }}
           className={cn(
-            'group/panel border-line bg-background-100 shadow-fullscreen fixed top-0 right-0 bottom-0 z-40 flex w-[min(470px,100vw)] flex-col border-l outline-none',
+            'group/panel border-line bg-background-100 shadow-fullscreen fixed top-0 right-0 bottom-0 z-40 flex w-[min(580px,100vw)] flex-col border-l outline-none',
             'data-[wide=true]:w-[min(1080px,calc(100vw-100px))]',
             'max-[759px]:bottom-[64px] max-[759px]:w-full max-[759px]:data-[wide=true]:w-full',
           )}
