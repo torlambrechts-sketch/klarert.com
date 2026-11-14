@@ -565,13 +565,14 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                         </Link>
                       </Button>
                     ) : null}
-                    {canInstall && i.nextLevel
+                    {/* mounted at the highest level too: the dialog that added it outlives the refresh */}
+                    {canInstall && i.level
                       ? (() => {
                           const card = available.find((a) => a.key === i.key);
                           return card ? (
                             <PackPreview
                               org={org}
-                              label={`Add ${i.nextLevel.name}`}
+                              label={i.nextLevel ? `Add ${i.nextLevel.name}` : null}
                               pack={{
                                 key: card.key,
                                 title: card.title,
@@ -583,13 +584,14 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                           ) : null;
                         })()
                       : null}
-                    {canInstall && i.updateTo ? (
+                    {/* mounted while there is nothing to update too: its dialog outlives the update */}
+                    {canInstall ? (
                       <PackUpgrade
                         org={org}
                         installId={i.id}
                         title={i.title}
                         from={i.version}
-                        to={i.updateTo}
+                        to={i.updateTo ?? null}
                       />
                     ) : null}
                     {canInstall && i.settings ? (
@@ -755,21 +757,23 @@ async function FrameworksTab({ org }: { org: string }) {
                   ) : null}
                 </div>
                 <span className="flex flex-wrap gap-2 self-start sm:self-center">
-                  {canAdopt && f.adopted!.canMove && f.successor ? (
+                  {/* these stay mounted once done: their dialogs outlive the change they make */}
+                  {canAdopt && f.successor ? (
                     <MoveToEdition
                       org={org}
                       fromSheetId={f.adopted!.sheetId}
                       title={f.title}
                       toTitle={f.successor.title}
+                      canMove={f.adopted!.canMove}
                     />
                   ) : null}
-                  {canAdopt && f.adopted!.install?.updateTo ? (
+                  {canAdopt && f.adopted!.install ? (
                     <PackUpgrade
                       org={org}
                       installId={f.adopted!.install.id}
                       title={f.title}
                       from={f.adopted!.install.version}
-                      to={f.adopted!.install.updateTo}
+                      to={f.adopted!.install.updateTo ?? null}
                     />
                   ) : null}
                   <Button asChild variant="outline" size="sm">
@@ -869,9 +873,11 @@ async function FrameworksTab({ org }: { org: string }) {
                     <span className="sr-only">(opens in a new tab)</span>
                   </a>
                 </div>
-                {canAdopt && !f.adopted ? (
-                  <div className="shrink-0">
+                {/* stays mounted once adopted: the dialog shows the result after the page updates */}
+                {canAdopt ? (
+                  <div className={f.adopted ? 'contents' : 'shrink-0'}>
                     <AdoptFramework
+                      adopted={!!f.adopted}
                       org={org}
                       framework={{ key: f.key, version: f.version, title: f.title }}
                       controls={controlsSheets}

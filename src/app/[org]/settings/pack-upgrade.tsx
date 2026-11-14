@@ -205,7 +205,11 @@ function Body({
   );
 }
 
-/** "Update available x → y" and its dialog. Owners and admins. */
+/**
+ * "Update available x → y" and its dialog. Owners and admins. Rendered with `to: null` when there is nothing to
+ * update, so the dialog that just applied an update stays open with its result while the page refreshes; the dialog
+ * keeps the versions it was opened with.
+ */
 export function PackUpgrade({
   org,
   installId,
@@ -217,10 +221,11 @@ export function PackUpgrade({
   installId: string;
   title: string;
   from: string;
-  to: string;
+  to: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [versions, setVersions] = useState({ from, to: to ?? '' });
   const [step, setStep] = useState<Step>({ kind: 'loading' });
   const [choices, setChoices] = useState<Record<string, 'mine' | 'theirs'>>({});
 
@@ -269,24 +274,27 @@ export function PackUpgrade({
         setOpen(next);
       }}
     >
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        aria-label={`Update ${title} from ${from} to ${to}`}
-        onClick={() => {
-          setOpen(true);
-          void load();
-        }}
-      >
-        <ArrowUpCircle aria-hidden /> Update to {to}
-      </Button>
+      {to ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label={`Update ${title} from ${from} to ${to}`}
+          onClick={() => {
+            setVersions({ from, to });
+            setOpen(true);
+            void load();
+          }}
+        >
+          <ArrowUpCircle aria-hidden /> Update to {to}
+        </Button>
+      ) : null}
       <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
           <DialogTitle className="text-heading-20">
             Update {title}{' '}
             <span className="text-label-13-mono text-muted-foreground align-middle">
-              {from} → {to}
+              {versions.from} → {versions.to}
             </span>
           </DialogTitle>
           <DialogDescription className="text-copy-14 text-muted-foreground">

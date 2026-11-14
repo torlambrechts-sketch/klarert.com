@@ -92,17 +92,22 @@ function Body({ data }: { data: EditionMovePreview }) {
   );
 }
 
-/** "Move to the new edition" on an adopted, replaced library. */
+/**
+ * "Move to the new edition" on an adopted, replaced library. Stays mounted when the library cannot move (any more):
+ * the page refreshes with the library moved while the dialog still shows the result.
+ */
 export function MoveToEdition({
   org,
   fromSheetId,
   title,
   toTitle,
+  canMove = true,
 }: {
   org: string;
   fromSheetId: string;
   title: string;
   toTitle: string;
+  canMove?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -140,17 +145,19 @@ export function MoveToEdition({
   const busy = step.kind === 'moving';
   return (
     <Dialog open={open} onOpenChange={(next) => (busy ? undefined : setOpen(next))}>
-      <Button
-        type="button"
-        size="sm"
-        aria-label={`Move ${title} to ${toTitle}`}
-        onClick={() => {
-          setOpen(true);
-          void load();
-        }}
-      >
-        <ArrowRightCircle aria-hidden /> Move to {toTitle}
-      </Button>
+      {canMove ? (
+        <Button
+          type="button"
+          size="sm"
+          aria-label={`Move ${title} to ${toTitle}`}
+          onClick={() => {
+            setOpen(true);
+            void load();
+          }}
+        >
+          <ArrowRightCircle aria-hidden /> Move to {toTitle}
+        </Button>
+      ) : null}
       <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
           <DialogTitle className="text-heading-20">Move to {toTitle}</DialogTitle>
