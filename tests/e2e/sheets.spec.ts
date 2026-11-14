@@ -322,8 +322,12 @@ test.describe('phone', () => {
       page.getByRole('combobox', { name: 'Search sheets, items and people' }),
     ).toBeFocused();
     await bar.getByRole('button', { name: 'Inbox' }).click();
-    await expect(page.getByRole('dialog').getByRole('heading', { name: 'Inbox' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Open My work' })).toBeVisible();
+    const inbox = page
+      .getByRole('dialog')
+      .filter({ has: page.getByRole('heading', { name: 'Inbox' }) });
+    await expect(inbox).toBeVisible();
+    // Home's "Needs you" has its own "Open My work" behind the Inbox: this is the Inbox's
+    await expect(inbox.getByRole('link', { name: 'Open My work' })).toBeVisible();
 
     // no horizontal scrolling at 390 px
     const overflow = await page.evaluate(
