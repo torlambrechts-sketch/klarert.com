@@ -82,7 +82,7 @@ export async function loadInstalledState(
     db
       .from('sheets')
       .select(
-        'id, pack_ref, name, description, item_label, folder_id, parent_sheet_id, archived_at',
+        'id, pack_ref, name, description, item_label, folder_id, parent_sheet_id, archived_at, settings',
       )
       .eq('org_id', orgId)
       .eq('pack_install_id', install.id),
@@ -170,6 +170,7 @@ export async function loadInstalledState(
       parentSheetId: s.parent_sheet_id,
       archived: !!s.archived_at,
       clientItems: clientItems.get(s.id) ?? 0,
+      workflows: ((s.settings as { workflows?: Json } | null)?.workflows ?? []) as Json,
     })),
     fields: own(fieldRows).map((f) => ({
       id: f.id,

@@ -14,6 +14,8 @@ import { MAX_TABS, tabLabelSchema } from '../views/tabs';
 import { MAX_COLUMN_GROUPS } from '../views/column-groups';
 import { ID_PREFIX, LABEL_COLORS } from '../labels';
 import { templateRetentionRuleSchema } from '../retention';
+import { MAX_WORKFLOWS, templateWorkflowSchema, workflowProblems } from '../approvals/definition';
+import type { Field } from '../types';
 
 // Sheet templates (templates/*.json, docs/07 Part B): people, a folder, sheets with fields, groups, views and items,
 // and automations, all cross-referenced by `ref` and field `key`. The schema checks the shape and every reference so
@@ -236,6 +238,11 @@ export const templateSheet = z.object({
       rules: z.array(templateRetentionRuleSchema).max(20),
     })
     .optional(),
+  /**
+   * Approval workflows (docs/04 §13), stored in sheets.settings.workflows: steps with approvers by a people field,
+   * a job role or a team (by name), modes, time limits and what a rejection does; option ids of the sheet's fields.
+   */
+  workflows: z.array(templateWorkflowSchema).max(MAX_WORKFLOWS).optional(),
 });
 
 export const templateAutomation = z.object({
@@ -370,6 +377,28 @@ export const sheetTemplateSchema = z
             problem(at('columnGroups', ci), `"${k}" is in more than one column group.`);
           grouped.add(k);
         }
+      }
+      const asFields = [...keys.values()].map(
+        (f) =>
+          ({
+            id: f.key,
+            sheetId: '',
+            key: f.key,
+            name: f.name,
+            type: f.type,
+            position: '',
+            required: false,
+            locked: false,
+            config: f.config ?? {},
+            validation: {},
+            rules: [],
+          }) as unknown as Field,
+      );
+      const workflowIds = new Set<string>();
+      for (const [wi, w] of (s.workflows ?? []).entries()) {
+        if (workflowIds.has(w.id)) problem(at('workflows', wi), `Duplicate approval workflow "${w.id}".`);
+        workflowIds.add(w.id);
+        for (const m of workflowProblems(w, asFields, s.workflows ?? [])) problem(at('workflows', wi), m);
       }
       const ruleIds = new Set<string>();
       for (const [ri, r] of (s.retention?.rules ?? []).entries()) {

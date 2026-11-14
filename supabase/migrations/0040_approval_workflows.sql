@@ -573,3 +573,35 @@ grant execute on function workflow_submit(uuid, text, text, uuid, uuid), workflo
 grant execute on function workflow_submit(uuid, text, text, uuid, uuid) to service_role;
 grant select on workflow_instances, workflow_decisions to authenticated, service_role;
 grant insert, update, delete on workflow_instances, workflow_decisions to service_role;
+
+-- ───────────────────────── packs: approval workflows in manifests ─────────────────────────
+-- install_pack writes a sheet's settings as the plan gives them, workflows included. upgrade_pack (0035) updates only
+-- the columns it names, so this wrapper applies p_plan.update.workflows ([{ sheet_id, workflows }], a sheet's list
+-- replaced as a whole, chosen by the three-way diff in src/engine/packs/upgrade.ts) after it, in the same
+-- transaction, to sheets of the install only. A later migration that redefines upgrade_pack must keep this step.
+alter function upgrade_pack(uuid, jsonb) rename to _upgrade_pack_0035;
+revoke all on function _upgrade_pack_0035(uuid, jsonb) from public, anon, authenticated;
+create or replace function upgrade_pack(p_install uuid, p_plan jsonb) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare r jsonb; e jsonb; n int := 0;
+begin
+  r := _upgrade_pack_0035(p_install, p_plan);
+  for e in select x from jsonb_array_elements(case when jsonb_typeof(p_plan->'update'->'workflows') = 'array'
+                                                   then p_plan->'update'->'workflows' else '[]'::jsonb end) x loop
+    if jsonb_typeof(e->'workflows') is distinct from 'array' then
+      raise exception 'upgrade plan: approval workflows must be a list';
+    end if;
+    perform set_config('app.pack_op', 'upgrade', true);
+    update sheets set settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{workflows}', e->'workflows'),
+                      updated_at = now()
+     where id = (e->>'sheet_id')::uuid and pack_install_id = p_install;
+    if not found then
+      raise exception 'upgrade plan: a sheet that is not the install''s own (%)', e->>'sheet_id';
+    end if;
+    n := n + 1;
+  end loop;
+  perform set_config('app.pack_op', '', true);
+  return r || jsonb_build_object('workflows', n);
+end $$;
+revoke all on function upgrade_pack(uuid, jsonb) from public, anon;
+grant execute on function upgrade_pack(uuid, jsonb) to authenticated;

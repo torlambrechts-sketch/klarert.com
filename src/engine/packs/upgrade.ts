@@ -40,6 +40,8 @@ export interface InstalledState {
     archived: boolean;
     /** Live items the client added (no pack provenance). */
     clientItems: number;
+    /** sheets.settings.workflows as the workspace holds it (approval workflows, docs/04 §13). */
+    workflows?: Json;
   }[];
   fields: {
     id: string;
@@ -162,6 +164,8 @@ export interface UpgradePayload {
     items: Row[];
     automations: Row[];
     dashboards: Row[];
+    /** A sheet's approval workflows (sheets.settings.workflows), replaced as a whole. */
+    workflows?: { sheet_id: string; workflows: Json }[];
   };
   archive: { folders: string[]; sheets: string[]; items: string[]; dashboards: string[] };
   /** Automations the new version no longer ships: turned off. */
@@ -548,7 +552,7 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   // ── existing objects the new version still ships: three-way per attribute
   const simple = (
     kind: UpgradeObjectKind,
-    list: keyof UpgradePayload['update'],
+    list: Exclude<keyof UpgradePayload['update'], 'workflows'>,
     ref: string,
     name: string,
     id: string,
@@ -577,6 +581,31 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
       description: mine.description,
       item_label: mine.itemLabel,
     });
+    // approval workflows (docs/04 §13): the sheet's list as one value, three ways like any attribute
+    const flows = (r: Row | undefined): Json =>
+      ((r?.settings as { workflows?: Json } | undefined)?.workflows ?? []) as Json;
+    const b = { workflows: flows(B.sheets.get(ref)) };
+    const tw = { workflows: flows(t) };
+    const apply = settle(
+      'sheet',
+      ref,
+      String(t.name),
+      threeWay(b, b, { workflows: mine.workflows ?? [] }, tw, ['workflows']),
+      tw,
+      () => 'approval workflows',
+    );
+    if ('workflows' in apply) {
+      (payload.update.workflows ??= []).push({
+        sheet_id: mine.id,
+        workflows: apply.workflows ?? [],
+      });
+      preview.changed.push({
+        kind: 'sheet',
+        ref,
+        name: String(t.name),
+        note: 'Approval workflows',
+      });
+    }
   }
   for (const [ref, t] of T.groups) {
     const mine = mineGroups.get(ref);

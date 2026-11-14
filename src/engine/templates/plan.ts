@@ -3,6 +3,7 @@
 // Order: sheets (fields without links) → link fields with inverses → groups → views → items → links → automations.
 // Values go through each field type's `normalize`, as the commands do; nothing here runs automations or status rules.
 import type { RetentionSettings } from '../retention';
+import type { ApprovalWorkflow } from '../approvals/definition';
 import { planSubitems, type SubitemFieldSpec, type SubitemRows } from './subitems';
 import { draftProblems } from '../automations/builder';
 import { basicCtx } from '../context';
@@ -74,6 +75,8 @@ export interface PlannedSheet {
       columnGroups?: ColumnGroup[];
       /** Retention rules (docs/02 §18): the template's, groups by id. */
       retention?: RetentionSettings;
+      /** Approval workflows (docs/04 §13): as the template gives them (fields by key, roles and teams by name). */
+      workflows?: ApprovalWorkflow[];
     };
   };
   /** The sheet's sub-items (docs/02 §12): its child sheet, written after the parents. */
@@ -332,6 +335,7 @@ export function planTemplateImport(t: SheetTemplate, env: PlanEnv): ImportPlan {
         })),
       };
     }
+    if (s.workflows?.length) settings.workflows = s.workflows;
     if (s.tabs) {
       // view names → the new views' ids (docs/02 sheets.settings.tabs)
       const tabs = resolveTemplateTabs(s.tabs, s.defaultView, views);
