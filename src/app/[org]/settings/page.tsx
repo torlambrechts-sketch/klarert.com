@@ -429,15 +429,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
   const { available, installed, log, canInstall } = r.data;
   return (
     <>
-      {quiet.map((q) => (
-        <TestModeBanner
-          key={q.installId}
-          org={org}
-          installId={q.installId}
-          title={q.title}
-          count={q.count}
-        />
-      ))}
+      <TestModeBanner org={org} packs={quiet} />
       <Card
         title="Available packs"
         description="Ready-made sheets, links, forms, automations and dashboards. Preview a pack to see exactly what it creates here before you install it."
