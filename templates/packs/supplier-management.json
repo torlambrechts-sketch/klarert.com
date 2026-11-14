@@ -1573,7 +1573,7 @@
           "type": "set_field",
           "fieldKey": "wording_at_check",
           "template": true,
-          "value": "{requirement}: {requirement_guidance}"
+          "value": "{requirement} {name}: {requirement_guidance}"
         },
         {
           "type": "set_field",
@@ -1609,7 +1609,7 @@
           "to": [
             "field:supplier_owner"
           ],
-          "message": "{supplier} does not meet \"{requirement}\". Decide what happens next."
+          "message": "{supplier} does not meet \"{name}\" ({id}). Decide what happens next."
         }
       ]
     },
@@ -1637,7 +1637,7 @@
           "to": [
             "field:supplier_owner"
           ],
-          "message": "Evidence for \"{requirement}\" at {supplier} expires on {evidence_expiry}. Ask for new evidence."
+          "message": "Evidence for \"{name}\" ({id}) at {supplier} expires on {evidence_expiry}. Ask for new evidence."
         }
       ]
     }
