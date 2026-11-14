@@ -23,6 +23,7 @@ import { withOrg } from './context';
 
 const org = z.string().min(1).max(64);
 const uuid = z.string().uuid();
+const orgInput = z.object({ org });
 
 export interface RetentionQueueRow {
   id: string;
@@ -59,7 +60,7 @@ export interface RetentionOverview {
 
 /** The queue (not done first, then the latest done), the rules per sheet and the last scheduled check. */
 export async function retentionOverview(input: unknown): Promise<Result<RetentionOverview>> {
-  const p = z.object({ org }).safeParse(input);
+  const p = orgInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   return withOrg(
     p.data.org,
@@ -165,7 +166,7 @@ export async function retentionOverview(input: unknown): Promise<Result<Retentio
 
 /** "Check now": the scheduler's retention check for this workspace, as the owner or admin. */
 export async function checkRetentionNow(input: unknown): Promise<Result<{ message: string }>> {
-  const p = z.object({ org }).safeParse(input);
+  const p = orgInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   return withOrg(
     p.data.org,
@@ -263,7 +264,7 @@ async function removeObjects(supabase: Supa, paths: string[]): Promise<number> {
 
 /** Try again to remove the stored objects of erased files (owners and admins). */
 export async function removeErasedFiles(input: unknown): Promise<Result<{ message: string }>> {
-  const p = z.object({ org }).safeParse(input);
+  const p = orgInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   return withOrg(
     p.data.org,
