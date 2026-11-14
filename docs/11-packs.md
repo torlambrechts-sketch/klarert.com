@@ -49,6 +49,7 @@ Validated by `packManifestSchema` (`src/lib/packs/manifest.ts`), which extends t
 | `sheets[].folder` | Also `<pack>:<folder ref>`: a folder of a pack in `requires` (an add-on's sheet in a Core domain) |
 | `standard` | `{ id, label, color? }`: the standard an add-on stands for. Its option is added to the Standards field of every sheet it extends, with a saved Table view "<label> view" filtering Standards has any of it. The id is in the pack's namespace |
 | `extends` | `[{ pack, sheet, fields?, groups?, views?, forms?, items?, automations?, options? }]`: what the pack adds to a sheet of a pack in `requires` (Extends below) |
+| `sheets[].kind`, `sheets[].personalData`, `automations[].startInTestMode`, `automations[].advanced`, `automations[].description`, `dashboards[].headline`, `formsNotApplicable` | The pack quality bar's keys (Pack quality bar below) |
 
 ID prefixes are unique inside a pack. When the workspace already uses one, the planner renames it with a number (`SUP-` → `SUP2-`, cutting the stem to stay within 6 characters) and the preview says so.
 
@@ -258,6 +259,41 @@ Per attribute: the pack did not change it → nothing; the client did not change
 New objects are added as an install would add them (new sheets with their folder, fields, groups, views, forms, items and links; positions after what the workspace has; a taken ID prefix is renamed and said). Links are added only from an item or through a field the update adds; links the client made or removed stay as they are. Sub-items are not added to a sheet that already exists (said, with the automations that need them). Client-added objects (no provenance) are never touched.
 
 **Dry run and apply.** `previewPackUpgrade` plans on the server and returns the preview: added, changed, archived or turned off, kept (with why), conflicts and warnings, and the counts. The dialog shows each conflict with **Keep mine** (the default) or **Take the pack's**. `upgradePack` plans again from the catalogue and the workspace as they are now with those choices (the browser sends only the install, the new version's hash and the choices; a changed catalogue is refused) and calls `upgrade_pack(install, plan)` (0035): owners and admins, the plan for the version and hash installed now, only the install's own rows updated (only the columns the plan names; an option removed or a sheet with client items archived is refused), added rows with the install's provenance, new library items stamped with their requirement key (checked against the catalogue and the item's Ref), every item change logged on the item's chain (note "Pack update"), structure changes by the schema audit, and `pack.upgraded` on the workspace chain with the old and new version, the counts and the summary of conflicts. The install moves to the new version and hash and its ref map grows. One transaction: any failure leaves the workspace as it was. The result toast says how many objects were added, changed and archived and how many conflicts were kept.
+
+## Pack quality bar
+
+Owner-approved (board, Nov 2026). Every native pack in `templates/packs` meets it; `packQualityProblems` (`src/lib/packs/quality.ts`) checks it and `src/lib/packs/quality.test.ts` runs it over every pack file (framework libraries and wizard starts are not native packs). Packs not upgraded yet are listed in `src/lib/packs/quality-allowlist.json`; the test fails while a listed pack passes, so a rewrite that makes a pack pass removes its key from the list in the same commit. `pnpm exec tsx scripts/pack-quality.ts [key …]` prints the problems.
+
+**Keys for pack authors**
+
+| Key | Where | Meaning |
+|---|---|---|
+| `kind` | `sheets[]` | What the sheet is for: `register` (things kept up to date: risks, documents, suppliers), `actions` (work with an owner and a due date: CAPA, tasks), `log` (dated events: incidents, meetings), `library` (reference items; an `isLibrary` sheet is one), `plan` (dated work over time: an audit programme) |
+| `personalData` | `sheets[]` | `true`: the sheet holds personal data. It installs **restricted** (docs/02 §16: owners always, admins and the person installing listed), whatever `restricted` says (`restricted: false` is refused), and at least one of its fields must say `config.personalData: true` |
+| `startInTestMode` | `automations[]`, `extends[].automations[]` | `true` / `false`: installed in test mode or live (docs/04 §14). Not set: test mode when the automation notifies anyone or sends anything out |
+| `advanced`, `description` | `automations[]`, `extends[].automations[]` | An advanced automation (escalation, cascade, gate, recurring work, SLA), with what it does and why in plain words (≤ 400 characters; required when `advanced`) |
+| `headline` | `dashboards[]` | The pack's headline dashboard |
+| `formsNotApplicable` | the manifest | Why the pack ships no intake forms (a pure library or add-on), in a sentence |
+
+**Safety at install** (every pack, whatever the bar):
+
+- **Quiet first week:** automations that notify or send out install in test mode (above; docs/04 §14). The install preview says "(test mode: logs what it would do until you turn it on)"; the Create wizard says "Created in test mode".
+- **Outbound off:** an automation with a `webhook` or `email` action installs **off** unless the person installing opts in (`installPack` `allowOutbound: true`; the Create wizard always installs them off and flags them). They turn it on after checking where it sends.
+- **Personal data restricted:** `personalData` sheets install restricted. Dashboard widgets read through the person's own access: a widget on a sheet they cannot open shows "No access" and nothing of its data (`computeDashboard` with the person's client and `sheet_levels`).
+
+**The rules** (rule id · what passes):
+
+| Rule | Passes when |
+|---|---|
+| `sheet-kind` | Every sheet has a `kind` (`isLibrary` counts as `library`) |
+| `tabs` | At most **4** visible tabs per sheet. A sheet without `tabs` shows all five built-in views, so every sheet needs a tab set (hide the rest) |
+| `views` | Per kind, among the visible tabs: **register** → Table, a Board by status (a saved kanban view whose `labelFieldKey` is the status field; any Board when the sheet has no status field), and a Calendar when it has a review or expiry date field (a date field whose key or name says review, expiry, valid or renew). **actions** → Table, a Board, a due date field (key or name says due or deadline) and a Calendar on it (a saved calendar view whose `dateFieldKey` is that field, or the built-in Calendar). **log** → Table and Calendar. **library** → Table. **plan** → Table and a Timeline once that view type exists, a Calendar until then |
+| `advanced-automations` | At least **4** automations (own and in `extends`) with `advanced: true` and a `description` |
+| `headline-dashboard` | Exactly **one** dashboard with `headline: true` |
+| `intake-forms` | At least **2** forms (own sheets and `extends`), or `formsNotApplicable` with the reason |
+| `approvals` | An approval workflow (`sheets[].workflows`, docs/04 §13) on every documents register (document approval), every `register` sheet whose ref or name says risk (risk acceptance) and every `register` or `actions` sheet whose ref or name says nonconformity, corrective, CAPA or is `nc` (CAPA closure) |
+| `starter-size` | The lowest level (the whole pack when it has no levels) installs at most **5** sheets and **1** dashboard |
+| `standard-text` | Never a standard's text (docs/12 Licensing): in a pack building on an ISO framework, example items of sheets other than documents registers and libraries are named "Example: …"; no string anywhere says "the organization shall" |
 
 ## Frameworks
 

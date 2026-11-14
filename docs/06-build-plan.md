@@ -263,6 +263,12 @@ Phase 1 (platform and the Core pack):
 - [x] Demonstration add-on `iso-14001` 1.0.0: the Environmental risk category (its own scales and appetite), the Environmental incident type, ISO 14001 tags and views on the registers it uses, an aspect column on the risk register linked both ways to its own Environmental aspects sheet under Operations, one automation
 - [x] Tests: `src/engine/packs/extend.test.ts`, `system.test.ts`, `src/lib/packs/core.test.ts`, the catalogue planning every pack on top of what it requires, `src/server/commands/packs.test.ts` (Core first), pgTAP 0031, e2e `tests/e2e/core-registers.spec.ts`
 
+Phase 2a (platform for the pack quality bar, owner-approved by the board):
+- [x] Automation test mode (docs/04 §14): `automations.mode`, test runs in the run log ("Would notify Maria"), no effects; migration 0042 with `set_pack_automations_mode` and the admin-only guard; the Live switch on the Automations page, "Turn on all automations from <pack>" and the test mode banner on Home and Workspace admin › Packs; pgTAP 0032
+- [x] Manifest keys `startInTestMode` (default: automations that notify or send out start in test mode), `advanced` + `description`, `kind`, `personalData` (installed restricted, personal fields required), `headline`, `formsNotApplicable`
+- [x] Outbound off by default on every install path (`installPack` opts in with `allowOutbound`); personal data sheets restricted; dashboard widgets on sheets a person cannot read show "No access" (verified: read with the person's client)
+- [x] Pack quality lint (`src/lib/packs/quality.ts`, docs/11 Pack quality bar) over every pack in `templates/packs`, with `quality-allowlist.json` for packs not upgraded yet (each phase 2 rewrite removes itself); `scripts/pack-quality.ts`
+
 Phase 2 (open; a separate task):
 - [ ] Rewrite the standard packs as add-ons to the Core registers with the pack quality bar: ISO/IEC 27001, ISO 9001, ISO 14001 (replacing the demonstration add-on), ISO 45001, GDPR, NIS2 and Supplier management; their own sheets only where Core has none, the rest as extends
 - [ ] Reset the demo workspaces onto Core plus the add-ons

@@ -224,6 +224,12 @@ Packs are installable bundles of the core as data (docs/11): folders, sheets, fi
 
 The plan (`p_plan`) is built by the pure planner `src/engine/packs/plan.ts` on the server from the catalogue manifest and a snapshot of the workspace (`src/server/packs/install.ts`); the browser never sends rows. Grants: the three functions to `authenticated` (`install_pack` and `pack_member_emails` also to `service_role`), `_pack_hash` and the guard to nobody.
 
+### Automation test mode (0042)
+
+- **`automations.mode`** (`live` default | `test`, checked): a test automation runs and logs, performs nothing (docs/04 §14). `automations_mode_guard` (BEFORE UPDATE) lets only owners and admins change it (people only; the service role and the definer installs pass). `automation_runs.status` also allows `test`.
+- **`install_pack`** and **`upgrade_pack`** (as 0041) write a plan automation's `mode` (`test` when the plan says so, else `live`); the planner decides it from the manifest (docs/11 Pack quality bar). A pack sheet with `personalData` is planned `restricted`.
+- **`set_pack_automations_mode(install, mode)`** (SECURITY DEFINER): owners and admins of the install's workspace set every automation of the install on a sheet they can edit to `mode`; logs `pack.automations_mode` (`install_id`, `pack_key`, `title`, `mode`, `count`) on the workspace chain when any changed; each automation is also logged by the audit trigger. Returns the count. Granted to `authenticated`; the guard to nobody. pgTAP `0032_automation_test_mode.sql`.
+
 ### Core registers and extends (0041)
 
 A pack may add to the sheets of a pack it requires (docs/11 Extends): an add-on to the Core registers adds columns, groups, views, forms, example items, automations and options to their sheets. Every row it adds carries **its own** provenance, so upgrade and archive stay per pack.
