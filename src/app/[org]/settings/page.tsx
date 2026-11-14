@@ -24,6 +24,9 @@ import { listPacks, packSetups } from '@/server/commands/packs';
 import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
 import { AdoptFramework } from './frameworks';
+import { MoveToEdition } from './edition-move';
+import { EditionBadge } from '@/components/frameworks/edition-badge';
+import { replacedWarning, statusCheckedText } from '@/engine/frameworks/status';
 import { retentionOverview } from '@/server/commands/retention';
 import { queueDueText } from '@/engine/retention';
 import {
@@ -36,7 +39,7 @@ import {
 import { listAuditOutputs, reviewSheetsByInstall } from '@/server/commands/audit';
 import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
 import { addDays, addMonths } from '@/engine/fields/helpers';
-import { ArrowUpCircle, Check, ExternalLink } from 'lucide-react';
+import { ArrowUpCircle, Check, ExternalLink, Lock } from 'lucide-react';
 
 export const metadata = { title: 'Settings · Compliance OS' };
 
@@ -673,7 +676,7 @@ async function FrameworksTab({ org }: { org: string }) {
           <ul className="divide-line flex flex-col divide-y" aria-label="Adopted frameworks">
             {adopted.map((f) => (
               <li
-                key={f.key}
+                key={`${f.key}@${f.version}`}
                 className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
               >
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -682,6 +685,7 @@ async function FrameworksTab({ org }: { org: string }) {
                     <span className="text-muted-foreground text-label-13">
                       {f.adopted!.sheetName}
                     </span>
+                    <EditionBadge badge={f.badge} />
                     {f.adopted!.install?.updateTo ? (
                       <span
                         className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5"
@@ -698,8 +702,31 @@ async function FrameworksTab({ org }: { org: string }) {
                     percent={f.adopted!.coverage.percent}
                     label={f.adopted!.coverageText}
                   />
+                  {f.adopted!.movedTo ? (
+                    <span className="text-label-13 text-muted-foreground flex flex-wrap items-center gap-1">
+                      <Lock className="size-3" aria-hidden /> Read-only: moved to{' '}
+                      <Link
+                        href={`/${org}/s/${f.adopted!.movedTo.sheetId}`}
+                        className="text-ink font-medium underline-offset-2 hover:underline"
+                      >
+                        {f.adopted!.movedTo.title}
+                      </Link>
+                    </span>
+                  ) : f.badge?.tone === 'replaced' && f.successor && !f.successor.adopted ? (
+                    <span className="text-label-13 text-muted-foreground">
+                      Adopt {f.successor.title} from the catalogue below, then move your work to it.
+                    </span>
+                  ) : null}
                 </div>
                 <span className="flex flex-wrap gap-2 self-start sm:self-center">
+                  {canAdopt && f.adopted!.canMove && f.successor ? (
+                    <MoveToEdition
+                      org={org}
+                      fromSheetId={f.adopted!.sheetId}
+                      title={f.title}
+                      toTitle={f.successor.title}
+                    />
+                  ) : null}
                   {canAdopt && f.adopted!.install?.updateTo ? (
                     <PackUpgrade
                       org={org}
@@ -782,10 +809,20 @@ async function FrameworksTab({ org }: { org: string }) {
                       </span>
                     ) : null}
                   </span>
+                  <EditionBadge badge={f.badge} />
                   <span className="text-label-13">
                     {f.requirements} requirements · {f.publisher}
                   </span>
+                  {f.statusNote ? <span className="text-copy-13">{f.statusNote}</span> : null}
                   <span className="text-copy-13 text-muted-foreground">{f.licence}</span>
+                  {f.statusCheckedOn ? (
+                    <span className="text-label-12 text-muted-foreground">
+                      {statusCheckedText({ statusCheckedOn: f.statusCheckedOn })}
+                      {f.transitionEnds
+                        ? '. Transition dates are set by the accreditation bodies; your certification body confirms yours.'
+                        : ''}
+                    </span>
+                  ) : null}
                   <a
                     href={f.url}
                     target="_blank"
@@ -802,6 +839,19 @@ async function FrameworksTab({ org }: { org: string }) {
                       org={org}
                       framework={{ key: f.key, version: f.version, title: f.title }}
                       controls={controlsSheets}
+                      replaced={(() => {
+                        const warning = replacedWarning(
+                          f,
+                          f.successor ? { title: f.successor.title, inCatalogue: true } : null,
+                        );
+                        return warning
+                          ? {
+                              warning,
+                              recommended:
+                                f.successor && !f.successor.adopted ? f.successor.title : null,
+                            }
+                          : null;
+                      })()}
                     />
                   </div>
                 ) : null}

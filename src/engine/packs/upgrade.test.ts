@@ -626,6 +626,27 @@ describe('planPackUpgrade', () => {
     expect(gone.preview.kept.some((k) => k.kind === 'requirement')).toBe(true);
   });
 
+  it('says when a new version builds on an edition not adopted here, and goes ahead', () => {
+    const { state } = install();
+    const p = planPackUpgrade({
+      from: {
+        manifest: { ...v1(), frameworks: [{ key: 'iso-9001', version: '2015' }] },
+        hash: 'h1',
+      },
+      to: { manifest: { ...v2(), frameworks: [{ key: 'iso-9001', version: '2026' }] }, hash: 'h2' },
+      state,
+      snapshot: {
+        ...snapshot({ prefixes: ['RSK-', 'RET-'] }),
+        libraries: [{ library: 'iso-9001@2015', sheetId: 'lib-2015' }],
+      },
+      env: env(),
+    });
+    expect(p.state).toBe('ready');
+    expect(p.preview.warnings.join(' ')).toMatch(
+      /builds on the iso-9001@2026 requirement library, which is not adopted here\. Your iso-9001@2015 library stays as it is\./,
+    );
+  });
+
   it('is blocked when the new version cannot be planned', () => {
     const { state } = install();
     const m2 = v2();

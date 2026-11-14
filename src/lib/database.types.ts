@@ -745,14 +745,14 @@ isOneToOne: false
                   ]
                 },"frameworks": {
                   Row: {
-                    "created_at": string,"hash": string,"key": string,"kind": string,"licence": string,"pack_key": string,"pack_version": string,"publisher": string,"revision": number,"short_title": string,"source": string,"title": string,"titles": string,"url": string,"version": string
+                    "created_at": string,"hash": string,"key": string,"kind": string,"licence": string,"pack_key": string,"pack_version": string,"publisher": string,"revision": number,"short_title": string,"source": string,"title": string,"titles": string,"url": string,"version": string,"status": string,"superseded_by": string | null,"transition_ends": string | null,"revision_stage": string | null,"revision_expected": string | null,"status_note": string | null,"status_checked_on": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"hash": string,"key": string,"kind": string,"licence": string,"pack_key": string,"pack_version": string,"publisher": string,"revision"?: number,"short_title": string,"source": string,"title": string,"titles"?: string,"url": string,"version": string
+                    "created_at"?: string,"hash": string,"key": string,"kind": string,"licence": string,"pack_key": string,"pack_version": string,"publisher": string,"revision"?: number,"short_title": string,"source": string,"title": string,"titles"?: string,"url": string,"version": string,"status"?: string,"superseded_by"?: string | null,"transition_ends"?: string | null,"revision_stage"?: string | null,"revision_expected"?: string | null,"status_note"?: string | null,"status_checked_on"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"hash"?: string,"key"?: string,"kind"?: string,"licence"?: string,"pack_key"?: string,"pack_version"?: string,"publisher"?: string,"revision"?: number,"short_title"?: string,"source"?: string,"title"?: string,"titles"?: string,"url"?: string,"version"?: string
+                    "created_at"?: string,"hash"?: string,"key"?: string,"kind"?: string,"licence"?: string,"pack_key"?: string,"pack_version"?: string,"publisher"?: string,"revision"?: number,"short_title"?: string,"source"?: string,"title"?: string,"titles"?: string,"url"?: string,"version"?: string,"status"?: string,"superseded_by"?: string | null,"transition_ends"?: string | null,"revision_stage"?: string | null,"revision_expected"?: string | null,"status_note"?: string | null,"status_checked_on"?: string | null
                   }
                   Relationships: [
                     
@@ -1420,6 +1420,9 @@ isOneToOne: false
                            },
 "adopt_framework":
 { Args: { "p_framework": string,"p_org": string,"p_plan": Json,"p_version": string }; Returns: Json
+                           },
+"move_framework_edition":
+{ Args: { "p_copies": Json,"p_from_sheet": string,"p_links": Json,"p_org": string,"p_to_sheet": string }; Returns: Json
                            },
 "install_pack":
 { Args: { "p_org": string,"p_plan": Json }; Returns: Json

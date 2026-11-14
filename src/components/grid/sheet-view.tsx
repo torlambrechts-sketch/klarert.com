@@ -352,6 +352,22 @@ function SheetBody(props: SheetViewProps) {
           </>
         }
       />
+      {data?.sheet.framework?.movedTo ? (
+        <p
+          role="note"
+          data-testid="library-moved"
+          className="border-line bg-soft text-copy-13 m-0 flex flex-wrap items-center gap-1 rounded-md border px-3 py-2"
+        >
+          <Lock className="size-4 shrink-0" aria-hidden /> Read-only: this library moved to{' '}
+          <Link
+            href={`/${org}/s/${data.sheet.framework.movedTo.sheetId}`}
+            className="font-medium underline-offset-2 hover:underline"
+          >
+            {data.sheet.framework.movedTo.title}
+          </Link>
+          . Its items are locked; the history stays here.
+        </p>
+      ) : null}
       <ViewTabs
         className="-mx-4 px-4 sm:-mx-[28px] sm:px-[28px]"
         views={views}

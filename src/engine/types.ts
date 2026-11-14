@@ -64,7 +64,13 @@ export interface Sheet {
   /** sheets.settings.register: 'documents' makes the sheet a documents register (docs/02 §14). */
   register?: 'documents' | null;
   /** sheets.settings.framework: the framework a library sheet holds (docs/12). */
-  framework?: { key: string; version: string; refFieldKey: string } | null;
+  framework?: {
+    key: string;
+    version: string;
+    refFieldKey: string;
+    /** Moved to a new edition (docs/12): the new edition's library; this one is read-only (items locked). */
+    movedTo?: { sheetId: string; version: string; title: string };
+  } | null;
 }
 
 /** sheets.settings.subitems (docs/02 §12). */

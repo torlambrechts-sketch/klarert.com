@@ -16,6 +16,11 @@
     "idPrefix": "14K-",
     "folder": "Frameworks"
   },
+  "status": "withdrawn",
+  "supersededBy": "iso-14001@2026",
+  "transitionEnds": "2029-04-15",
+  "statusNote": "ISO 14001:2026 was published on 15 April 2026 and replaces this edition and its Amendment 1:2024. Certificates to the 2015 edition stay valid during a three-year transition, expected to end in April 2029; your certification body confirms the date. Adopt ISO 14001:2026 for new work.",
+  "statusCheckedOn": "2026-11-14",
   "requirements": [
     {
       "ref": "4",

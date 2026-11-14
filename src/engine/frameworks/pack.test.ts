@@ -23,6 +23,13 @@ const framework: Framework = {
     folder: 'Frameworks',
     soa: { name: 'Statement of applicability', refStartsWith: 'A.' },
   },
+  status: 'current',
+  supersededBy: null,
+  transitionEnds: null,
+  revisionStage: null,
+  revisionExpected: null,
+  statusNote: null,
+  statusCheckedOn: '2026-11-14',
   requirements: [
     {
       ref: '4',

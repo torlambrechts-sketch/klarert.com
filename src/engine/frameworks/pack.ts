@@ -251,7 +251,7 @@ export function frameworkToPack(f: Framework): PackManifest {
   };
 
   return {
-    key: frameworkPackKey(f.key),
+    key: frameworkPackKey(f),
     version: frameworkPackVersion(f),
     title: f.title,
     description:

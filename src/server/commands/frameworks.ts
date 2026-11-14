@@ -9,12 +9,25 @@ import {
   suggestEquivalents,
   type AdoptedRequirement,
 } from '@/engine/frameworks/crosswalks';
+import {
+  planEditionMove,
+  REVIEW_REASON_TEXT,
+  type EditionMovePlan,
+  type ReviewReason,
+} from '@/engine/frameworks/edition';
 import { frameworkPackKey, parseRequirementKey } from '@/engine/frameworks/refs';
+import {
+  editionBadge,
+  isReplaced,
+  successorId,
+  type EditionBadge,
+} from '@/engine/frameworks/status';
 import type { FrameworkKind, Relation } from '@/engine/frameworks/types';
 import { previewLines, type PackPreview } from '@/engine/packs/plan';
 import { todayIn } from '@/engine/sheet-data';
 import {
   adoptFrameworkInput,
+  editionMoveInput,
   listFrameworksInput,
   previewAdoptionInput,
   requirementContextInput,
@@ -29,6 +42,7 @@ import {
 } from '@/server/frameworks/catalogue';
 import {
   adoptedRequirements,
+  evidenceCounts,
   linksAround,
   readFields,
   readLibraries,
@@ -62,10 +76,18 @@ export interface AdoptedFramework {
   coverageText: string;
   /** The library's install and a newer revision in the catalogue (docs/11 Upgrades), if any. */
   install: { id: string; version: string; updateTo: string | null } | null;
+  /** Moved to a new edition: that edition's library (this one is read-only). */
+  movedTo: { sheetId: string; version: string; title: string } | null;
+  /** The edition that replaces this one is adopted too and nothing was moved yet: "Move to the new edition". */
+  canMove: boolean;
 }
 
 export interface FrameworkCard extends CatalogueFramework {
   adopted: AdoptedFramework | null;
+  /** Edition status words for the badge (docs/12 Standards watch); null for a current edition. */
+  badge: EditionBadge | null;
+  /** The edition that replaces this one, when the catalogue has it. */
+  successor: { key: string; version: string; title: string; adopted: boolean } | null;
 }
 
 export interface FrameworkList {
@@ -118,13 +140,16 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
         ]);
         if (installs.error) throw new Error(installs.error.message);
         const updates = updatesFor(installs.data ?? [], packs);
+        const byId = new Map(catalogue.map((f) => [fwId(f), f]));
+        const adoptedIds = new Set(libraries.map((l) => fwId(l.framework)));
         const adopted = new Map<string, AdoptedFramework>();
         for (const lib of libraries) {
           const { coverage } = await readLibraryCoverage(supabase, lib, env);
-          const inst = (installs.data ?? []).find(
-            (i) => i.pack_key === frameworkPackKey(lib.framework.key),
-          );
-          adopted.set(lib.framework.key, {
+          const cat = byId.get(fwId(lib.framework));
+          const packKey = cat?.packKey ?? frameworkPackKey(lib.framework.key);
+          const inst = (installs.data ?? []).find((i) => i.pack_key === packKey);
+          const movedTo = lib.framework.movedTo ?? null;
+          adopted.set(fwId(lib.framework), {
             sheetId: lib.sheet.id,
             sheetName: lib.sheet.name,
             version: lib.framework.version,
@@ -133,11 +158,34 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
             install: inst
               ? { id: inst.id, version: inst.version, updateTo: updates.get(inst.id) ?? null }
               : null,
+            movedTo,
+            canMove:
+              !movedTo &&
+              !!cat &&
+              isReplaced(cat) &&
+              !!cat.supersededBy &&
+              adoptedIds.has(cat.supersededBy),
           });
         }
         return ok({
           canAdopt: isAdminRole(role),
-          frameworks: catalogue.map((f) => ({ ...f, adopted: adopted.get(f.key) ?? null })),
+          frameworks: catalogue.map((f) => {
+            const next = successorId(f);
+            const succ = next ? byId.get(`${next.key}@${next.version}`) : undefined;
+            return {
+              ...f,
+              adopted: adopted.get(fwId(f)) ?? null,
+              badge: editionBadge(f, succ?.title ?? null),
+              successor: succ
+                ? {
+                    key: succ.key,
+                    version: succ.version,
+                    title: succ.title,
+                    adopted: adoptedIds.has(fwId(succ)),
+                  }
+                : null,
+            };
+          }),
           controlsSheets: controls,
         });
       } catch (e) {
@@ -287,6 +335,169 @@ export async function adoptForPack(
     return fromDbError(error);
   }
   return ok({ title: fw.title, adopted: true });
+}
+
+// ───────────────────────── moving to a new edition ─────────────────────────
+
+export interface EditionMovePreview {
+  from: { title: string; sheetId: string };
+  to: { title: string; sheetId: string };
+  /** Requirements whose answers are copied (the same requirement, one to one). */
+  copies: { fromRef: string; toRef: string; fields: number }[];
+  /** Control links repeated on the new requirements. */
+  links: number;
+  /** New requirements to review, with why. */
+  review: { toRef: string; name: string; reason: ReviewReason; text: string; from: string[] }[];
+  /** Old refs whose evidence files stay on the old library. */
+  evidenceStays: string[];
+  /** Items of the old library that become read-only. */
+  locked: number;
+}
+
+async function planMove(
+  db: Db,
+  orgId: string,
+  fromSheetId: string,
+): Promise<
+  Result<{ preview: EditionMovePreview; plan: EditionMovePlan; fromId: string; toId: string }>
+> {
+  const now = new Date();
+  const timeZone = await timeZoneOf(db, orgId);
+  const today = todayIn(now, timeZone);
+  const [catalogue, libraries] = await Promise.all([
+    readFrameworks(db),
+    readLibraries(db, orgId, { items: true }),
+  ]);
+  const from = libraries.find((l) => l.sheet.id === fromSheetId);
+  if (!from) return fail('not_found', 'This library no longer exists.');
+  if (from.framework.movedTo)
+    return fail('conflict', `This library was already moved to ${from.framework.movedTo.title}.`);
+  const fw = catalogue.find((f) => fwId(f) === fwId(from.framework));
+  if (!fw || !isReplaced(fw) || !fw.supersededBy)
+    return fail('invalid', 'This edition is current: there is no newer edition to move to.');
+  const succ = catalogue.find((f) => fwId(f) === fw.supersededBy);
+  const to = libraries.find((l) => fwId(l.framework) === fw.supersededBy);
+  if (!succ || !to)
+    return fail('invalid', `Adopt ${succ?.title ?? fw.supersededBy} first, then move to it.`);
+  const ids = from.items.map((i) => i.id);
+  const [crosswalks, around, evidence] = await Promise.all([
+    readCrosswalks(db, [fwId(fw), fwId(succ)]),
+    linksAround(db, ids),
+    evidenceCounts(db, from.fields, ids, today),
+  ]);
+  const plan = planEditionMove({
+    from: {
+      sheetId: from.sheet.id,
+      framework: from.framework,
+      fields: from.fields,
+      items: from.items,
+    },
+    to: { sheetId: to.sheet.id, framework: to.framework, fields: to.fields, items: to.items },
+    crosswalks,
+    links: around.links,
+    linkFields: around.others.flatMap((o) => o.sheet.fields),
+    evidence,
+  });
+  return ok({
+    plan,
+    fromId: from.sheet.id,
+    toId: to.sheet.id,
+    preview: {
+      from: { title: fw.title, sheetId: from.sheet.id },
+      to: { title: succ.title, sheetId: to.sheet.id },
+      copies: plan.copies.map((c) => ({
+        fromRef: c.fromRef,
+        toRef: c.toRef,
+        fields: Object.keys(c.patch).length,
+      })),
+      links: plan.links.length,
+      review: plan.review.map((r) => ({
+        toRef: r.toRef,
+        name: r.toName,
+        reason: r.reason,
+        text: REVIEW_REASON_TEXT[r.reason],
+        from: r.from.map((x) => x.ref),
+      })),
+      evidenceStays: plan.evidenceStays,
+      locked: from.items.filter((i) => !i.archivedAt && !i.locked).length,
+    },
+  });
+}
+
+/** What moving a library to the edition that replaces it would do. Owners and admins. */
+export async function previewEditionMove(input: unknown): Promise<Result<EditionMovePreview>> {
+  const p = editionMoveInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'admin',
+    async ({ supabase, orgId }) => {
+      try {
+        const r = await planMove(supabase, orgId, p.data.fromSheetId);
+        return r.ok ? ok(r.data.preview) : r;
+      } catch (e) {
+        console.error(JSON.stringify({ level: 'error', source: 'frameworks', error: String(e) }));
+        return fail('failed', 'The move could not be planned. Try again.');
+      }
+    },
+    'previewEditionMove',
+  );
+}
+
+export interface EditionMoveResult {
+  copied: number;
+  links: number;
+  locked: number;
+  review: number;
+  toSheetId: string;
+  toTitle: string;
+}
+
+/**
+ * Move a library to the new edition (docs/12): planned again from the workspace as it is now, written by
+ * move_framework_edition in one transaction (answers copied where the requirement is the same, control links
+ * repeated, the old library locked and marked as moved).
+ */
+export async function moveToEdition(input: unknown): Promise<Result<EditionMoveResult>> {
+  const p = editionMoveInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'admin',
+    async ({ supabase, orgId }) => {
+      const r = await planMove(supabase, orgId, p.data.fromSheetId);
+      if (!r.ok) return r;
+      const { plan, preview, fromId, toId } = r.data;
+      const { data, error } = await supabase.rpc('move_framework_edition', {
+        p_org: orgId,
+        p_from_sheet: fromId,
+        p_to_sheet: toId,
+        p_copies: plan.copies.map((c) => ({
+          from_item: c.fromItemId,
+          to_item: c.toItemId,
+          patch: c.patch,
+        })) as never,
+        p_links: plan.links.map((l) => ({
+          field_id: l.fieldId,
+          from_item: l.from,
+          to_item: l.to,
+        })) as never,
+      });
+      if (error) {
+        if (/already moved/.test(error.message))
+          return fail('conflict', `${preview.from.title} was already moved.`);
+        return fromDbError(error);
+      }
+      const out = data as { copied: number; links: number; locked: number };
+      return ok({
+        ...out,
+        review: preview.review.length,
+        toSheetId: toId,
+        toTitle: preview.to.title,
+      });
+    },
+    'moveToEdition',
+  );
 }
 
 // ───────────────────────── the item panel ─────────────────────────

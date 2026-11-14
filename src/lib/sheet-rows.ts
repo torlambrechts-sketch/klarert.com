@@ -203,16 +203,24 @@ export function toSheet(r: {
 }
 
 /** sheets.settings.framework of a library sheet (docs/12), read leniently. */
-export function readLibraryFramework(
-  raw: unknown,
-): { key: string; version: string; refFieldKey: string } | null {
+export function readLibraryFramework(raw: unknown): NonNullable<Sheet['framework']> | null {
   if (!raw || typeof raw !== 'object') return null;
   const o = raw as Record<string, unknown>;
+  const moved = o.movedTo as Record<string, unknown> | undefined;
   return typeof o.key === 'string' && typeof o.version === 'string'
     ? {
         key: o.key,
         version: o.version,
         refFieldKey: typeof o.refFieldKey === 'string' ? o.refFieldKey : 'ref',
+        ...(moved && typeof moved.sheetId === 'string' && typeof moved.version === 'string'
+          ? {
+              movedTo: {
+                sheetId: moved.sheetId,
+                version: moved.version,
+                title: typeof moved.title === 'string' ? moved.title : moved.version,
+              },
+            }
+          : {}),
       }
     : null;
 }

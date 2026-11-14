@@ -22,3 +22,9 @@ export const requirementContextInput = z.object({
   sheetId: z.uuid(),
   itemId: z.uuid(),
 });
+
+/** Move an adopted library to the new edition that replaces it (docs/12): the old library's sheet. */
+export const editionMoveInput = z.object({
+  org: slugInput,
+  fromSheetId: z.uuid(),
+});

@@ -16,6 +16,11 @@
     "idPrefix": "45K-",
     "folder": "Frameworks"
   },
+  "status": "revision-in-progress",
+  "revisionStage": "DIS",
+  "revisionExpected": "2027",
+  "statusNote": "Current edition, with Amendment 1:2024 (climate action changes). A revision reached the Draft International Standard stage in 2026; publication is expected in 2027, followed by a transition period. Nothing changes for certificates until then.",
+  "statusCheckedOn": "2026-11-14",
   "requirements": [
     {
       "ref": "4",

@@ -3,7 +3,9 @@
 // the packs catalogue (frameworkToPack); the app reads the tables.
 import iso27001 from '../../../templates/frameworks/iso-27001-2022.json';
 import iso9001 from '../../../templates/frameworks/iso-9001-2015.json';
+import iso9001v2026 from '../../../templates/frameworks/iso-9001-2026.json';
 import iso14001 from '../../../templates/frameworks/iso-14001-2015.json';
+import iso14001v2026 from '../../../templates/frameworks/iso-14001-2026.json';
 import iso45001 from '../../../templates/frameworks/iso-45001-2018.json';
 import gdpr from '../../../templates/frameworks/gdpr-2016.json';
 import nis2 from '../../../templates/frameworks/nis2-2022.json';
@@ -16,7 +18,9 @@ import { parsePack } from '@/lib/packs/manifest';
 import { parseCrosswalkFile, parseFramework } from './schema';
 
 export function repoFrameworks(): Framework[] {
-  return [iso27001, iso9001, iso14001, iso45001, gdpr, nis2].map(parseFramework);
+  return [iso27001, iso9001, iso9001v2026, iso14001, iso14001v2026, iso45001, gdpr, nis2].map(
+    parseFramework,
+  );
 }
 
 export function repoCrosswalks(): Crosswalk[] {

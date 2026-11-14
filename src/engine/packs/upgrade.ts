@@ -402,6 +402,20 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
     blockers: [],
     counts: { added: 0, changed: 0, archived: 0, kept: 0, conflicts: 0 },
   };
+  // a new version may build on another edition of a framework (docs/11 Frameworks a pack builds on): an update
+  // never adopts it and never moves the workspace's library; it says so
+  const adoptedLibraries = new Set((input.snapshot.libraries ?? []).map((l) => l.library));
+  const before = new Set((from.manifest.frameworks ?? []).map((f) => `${f.key}@${f.version}`));
+  for (const f of m.frameworks ?? []) {
+    const id = `${f.key}@${f.version}`;
+    if (before.has(id) || adoptedLibraries.has(id)) continue;
+    const kept = [...before].filter((b) => b.startsWith(`${f.key}@`));
+    preview.warnings.push(
+      `This version builds on the ${id} requirement library, which is not adopted here.${
+        kept.length ? ` Your ${kept.join(', ')} library stays as it is.` : ''
+      } Until you adopt it from Workspace admin › Frameworks, the dashboard and setup steps that read it show nothing; Move to the new edition then carries your answers over. Links your examples already have stay on the old library.`,
+    );
+  }
   const done = (state: UpgradePreview['state'], payload: UpgradePayload | null): UpgradePlan => {
     preview.state = state;
     preview.counts = {

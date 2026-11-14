@@ -3,7 +3,7 @@
 import { useId, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, Loader2, RotateCcw, X } from 'lucide-react';
+import { AlertTriangle, Check, Loader2, RotateCcw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import type { ControlsSheet } from '@/engine/frameworks/adopt';
@@ -92,14 +92,22 @@ export function AdoptFramework({
   org,
   framework,
   controls,
+  replaced = null,
 }: {
   org: string;
   framework: { key: string; version: string; title: string };
   controls: ControlsSheet[];
+  /**
+   * A withdrawn or superseded edition (docs/12 Standards watch): the warning to confirm before adopting it, and the
+   * edition we recommend instead. The words come from the engine (replacedWarning).
+   */
+  replaced?: { warning: string; recommended: string | null } | null;
 }) {
   const router = useRouter();
   const selectId = useId();
+  const confirmId = useId();
   const [open, setOpen] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   const [controlsSheetId, setControlsSheetId] = useState<string>(controls[0]?.sheetId ?? '');
   const [step, setStep] = useState<Step>({ kind: 'loading' });
 
@@ -157,6 +165,7 @@ export function AdoptFramework({
         aria-label={`Adopt ${framework.title}`}
         onClick={() => {
           setOpen(true);
+          setConfirmed(false);
           void load();
         }}
       >
@@ -169,6 +178,36 @@ export function AdoptFramework({
             What adopting this framework creates in this workspace.
           </DialogDescription>
         </div>
+
+        {replaced ? (
+          <div
+            role="alert"
+            data-testid="replaced-warning"
+            className="border-warn/40 bg-warn-soft flex flex-col gap-2 rounded-md border p-3"
+          >
+            <p className="text-label-14 text-warn m-0 flex items-center gap-1.5 font-medium">
+              <AlertTriangle className="size-4 shrink-0" aria-hidden /> This edition is replaced
+            </p>
+            <p className="text-copy-14 m-0">{replaced.warning}</p>
+            {replaced.recommended ? (
+              <p className="text-copy-13 text-muted-foreground m-0">
+                Close this and choose Adopt on {replaced.recommended} in the catalogue. Both
+                editions can be adopted side by side.
+              </p>
+            ) : null}
+            <label htmlFor={confirmId} className="text-label-13 flex items-start gap-2">
+              <input
+                id={confirmId}
+                type="checkbox"
+                className="mt-0.5 size-4"
+                checked={confirmed}
+                disabled={busy || step.kind === 'done'}
+                onChange={(e) => setConfirmed(e.target.checked)}
+              />
+              I need {framework.title} anyway, for example for an audit during the transition.
+            </label>
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-1">
           <label htmlFor={selectId} className="text-label-13 font-medium">
@@ -258,6 +297,7 @@ export function AdoptFramework({
                 type="button"
                 disabled={
                   busy ||
+                  (replaced !== null && !confirmed) ||
                   !(step.kind === 'ready' || step.kind === 'failed') ||
                   step.data.preview.state !== 'ready'
                 }
@@ -267,7 +307,13 @@ export function AdoptFramework({
                     : undefined
                 }
               >
-                {busy ? 'Adopting…' : step.kind === 'failed' ? 'Try again' : 'Adopt'}
+                {busy
+                  ? 'Adopting…'
+                  : step.kind === 'failed'
+                    ? 'Try again'
+                    : replaced
+                      ? 'Adopt this edition'
+                      : 'Adopt'}
               </Button>
             </>
           )}

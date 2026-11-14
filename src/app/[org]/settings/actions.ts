@@ -92,6 +92,17 @@ export async function adoptFrameworkAction(input: {
   return result;
 }
 
+// Moving a library to a new edition (docs/12): copies answers and locks the old library.
+export async function previewEditionMoveAction(input: { org: string; fromSheetId: string }) {
+  return frameworks.previewEditionMove(input);
+}
+
+export async function moveToEditionAction(input: { org: string; fromSheetId: string }) {
+  const result = await frameworks.moveToEdition(input);
+  if (result.ok) revalidatePath(`/${input.org}`, 'layout');
+  return result;
+}
+
 // Retention (docs/02 §18): object inputs; the commands validate with Zod and authorise (owners and admins).
 async function retentionCall<T>(
   command: (input: unknown) => Promise<Result<T>>,

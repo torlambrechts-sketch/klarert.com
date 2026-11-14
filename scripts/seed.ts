@@ -209,8 +209,9 @@ async function main() {
       `${roleNames.length} job roles, 1 entity, ${ENTITY.sites.length} sites, folder "${template.folder}", ` +
       `${sheetsLine}. Packs in the catalogue: ${[...catalogue.added, ...catalogue.unchanged].length}` +
       `${catalogue.added.length ? ` (${catalogue.added.length} new)` : ''}. Frameworks: ` +
-      `${library.added.length + library.revised.length + library.unchanged.length}` +
-      `${library.added.length ? ` (${library.added.length} new)` : ''}, ${library.crosswalks} cross-walks.`,
+      `${library.added.length + library.revised.length + library.unchanged.length + library.statusUpdated.length}` +
+      `${library.added.length ? ` (${library.added.length} new)` : ''}` +
+      `${library.statusUpdated.length ? ` (${library.statusUpdated.length} with a new edition status)` : ''}, ${library.crosswalks} cross-walks.`,
   );
   console.log(
     `Sign in as ${people.map((p) => `${p.email} (${p.role})`).join(', ')} — magic links arrive in Mailpit.`,

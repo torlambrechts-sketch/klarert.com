@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { CrosswalkFile } from '@/engine/frameworks/crosswalks';
 import { isRequirementKey } from '@/engine/frameworks/refs';
 import {
+  EDITION_STATUSES,
   FRAMEWORK_KINDS,
   RELATIONS,
   REQUIREMENT_KINDS,
@@ -15,6 +16,9 @@ import { ID_PREFIX } from '@/engine/labels';
 
 /** Longest title we ship: a short heading, never a sentence of the standard. */
 export const MAX_TITLE = 80;
+
+/** A calendar date, "2026-11-14". */
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD.');
 
 const requirementSchema = z.object({
   ref: z
@@ -54,6 +58,10 @@ export const frameworkSchema = z
       itemLabel: z.string().trim().min(1).max(60),
       idPrefix: z.string().regex(ID_PREFIX),
       folder: z.string().trim().min(1).max(80),
+      packKey: z
+        .string()
+        .regex(/^framework-[a-z0-9][a-z0-9-]{0,60}$/, 'Use framework-<key>-<version>.')
+        .optional(),
       soa: z
         .object({
           name: z.string().trim().min(1).max(80),
@@ -61,6 +69,18 @@ export const frameworkSchema = z
         })
         .optional(),
     }),
+    // edition status (docs/12 Standards watch): catalogue metadata, not library content
+    status: z.enum(EDITION_STATUSES),
+    supersededBy: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9-]{0,39}@\d{1,4}$/, 'Use <key>@<version>.')
+      .nullable()
+      .default(null),
+    transitionEnds: isoDate.nullable().default(null),
+    revisionStage: z.string().trim().min(1).max(20).nullable().default(null),
+    revisionExpected: z.string().trim().min(1).max(20).nullable().default(null),
+    statusNote: z.string().trim().min(1).max(500).nullable().default(null),
+    statusCheckedOn: isoDate,
     requirements: z
       .array(requirementSchema)
       .min(1)
@@ -86,6 +106,21 @@ export const frameworkSchema = z
     });
     if (!f.requirements.some((r) => r.kind === 'theme'))
       problem(['requirements'], 'A framework needs at least one theme.');
+    const replaced = f.status === 'withdrawn' || f.status === 'superseded-in-transition';
+    if (replaced && !f.supersededBy)
+      problem(
+        ['supersededBy'],
+        'A withdrawn or superseded edition names the edition that replaces it.',
+      );
+    if (!replaced && (f.supersededBy || f.transitionEnds))
+      problem(
+        ['status'],
+        'Only a withdrawn or superseded edition has supersededBy or transitionEnds.',
+      );
+    if (f.supersededBy === `${f.key}@${f.version}`)
+      problem(['supersededBy'], 'An edition cannot replace itself.');
+    if (f.status === 'revision-in-progress' && !f.revisionStage)
+      problem(['revisionStage'], 'Say the stage of the revision (DIS, FDIS).');
   });
 
 /** Parse a framework file; throws with every problem listed. */

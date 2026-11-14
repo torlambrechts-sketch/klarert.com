@@ -22,6 +22,49 @@ export const RELATION_LABEL: Record<Relation, string> = {
 export const TITLES_POLICIES = ['own-words', 'official-short'] as const;
 export type TitlesPolicy = (typeof TITLES_POLICIES)[number];
 
+/**
+ * Where an edition stands at its publisher (docs/12 Standards watch): still the edition to use, withdrawn and
+ * replaced, replaced but certificates still valid during a transition, or current with a revision on the way.
+ */
+export const EDITION_STATUSES = [
+  'current',
+  'withdrawn',
+  'superseded-in-transition',
+  'revision-in-progress',
+] as const;
+export type EditionStatus = (typeof EDITION_STATUSES)[number];
+
+/**
+ * The edition status of a framework version: catalogue metadata, checked monthly (docs/12 Standards watch). Not
+ * part of the library's content: changing it never needs a new revision and never offers an update.
+ */
+export interface EditionInfo {
+  status: EditionStatus;
+  /** The edition that replaces this one, `<key>@<version>` ("iso-14001@2026"). */
+  supersededBy: string | null;
+  /** When certificates to this edition stop being valid (ISO date); certification bodies confirm the exact date. */
+  transitionEnds: string | null;
+  /** The stage of a revision in progress ("DIS", "FDIS"). */
+  revisionStage: string | null;
+  /** When the next edition is expected ("2027"). */
+  revisionExpected: string | null;
+  /** What the status means for a workspace, our own words. */
+  statusNote: string | null;
+  /** When someone last checked the status against the publisher and certification bodies (ISO date). */
+  statusCheckedOn: string;
+}
+
+/** The keys of EditionInfo: left out of a framework's content hash. */
+export const EDITION_KEYS = [
+  'status',
+  'supersededBy',
+  'transitionEnds',
+  'revisionStage',
+  'revisionExpected',
+  'statusNote',
+  'statusCheckedOn',
+] as const satisfies readonly (keyof EditionInfo)[];
+
 export interface Requirement {
   /** The reference number as the framework prints it: "A.5.1", "6.1.2", "Art. 33", "Art. 21(2)(a)". */
   ref: string;
@@ -51,11 +94,16 @@ export interface FrameworkLibrary {
   idPrefix: string;
   /** The side-menu folder the library sheet goes in (an active folder with this name is reused). */
   folder: string;
+  /**
+   * The library pack's key when it is not `framework-<key>`: a second edition of a framework needs its own
+   * (`framework-<key>-<version>`), so both editions can be adopted side by side.
+   */
+  packKey?: string;
   /** A statement of applicability: a saved Table view of the refs that start with `refStartsWith`. */
   soa?: { name: string; refStartsWith: string };
 }
 
-export interface Framework {
+export interface Framework extends EditionInfo {
   key: string;
   /** The edition: "2022", "2015". A changed edition is a new framework version. */
   version: string;

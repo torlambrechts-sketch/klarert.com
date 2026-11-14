@@ -1,0 +1,1050 @@
+{
+  "key": "iso-9001",
+  "version": "2026",
+  "revision": 1,
+  "title": "ISO 9001:2026",
+  "shortTitle": "9001:2026",
+  "publisher": "ISO",
+  "kind": "standard",
+  "source": "ISO 9001:2026, clauses 4 to 10 (reference numbers and official short titles, from public sources; check them against the purchased standard)",
+  "licence": "Reference numbers with the official short titles only; not the text of the standard. Purpose, guidance, audit questions and typical evidence are our own words. Buy the standard for the requirements.",
+  "url": "https://www.iso.org/standard/9001",
+  "titles": "official-short",
+  "library": {
+    "name": "ISO 9001:2026 requirements",
+    "itemLabel": "Requirement",
+    "idPrefix": "9K26-",
+    "folder": "Frameworks",
+    "packKey": "framework-iso-9001-2026"
+  },
+  "status": "current",
+  "statusNote": "Published on 16 September 2026 (edition 6), replacing ISO 9001:2015. Certified organisations move to it during a three-year transition; your certification body sets the audit.",
+  "statusCheckedOn": "2026-11-14",
+  "requirements": [
+    {
+      "ref": "4",
+      "kind": "theme",
+      "title": "Clause 4 · Context of the organization",
+      "purpose": "Sets the foundation: what shapes the business, who cares about it and what the quality system covers."
+    },
+    {
+      "ref": "4.1",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Understanding the organization and its context",
+      "purpose": "Makes sure the business understands the outside and inside factors that bear on its purpose, strategic direction and ability to deliver quality results.",
+      "guidance": "Hold a short, honest session with senior people and list the factors that matter: market, regulation, technology, suppliers, finances, culture, skills. Record them in a simple register with an owner and a review date, and link the important ones to your risks and objectives. A frequent finding is a one-off SWOT done for the first audit and never revisited. Auditors want to see the list change when the business does, for example after a new product, a lost customer or a regulatory change. The 2026 edition builds in the climate change question: decide and record whether climate change is a relevant issue for you, and keep the reasoning even when the answer is no.",
+      "questions": [
+        "How did you identify the factors that affect your ability to meet customer needs?",
+        "When did you last review these issues and what changed?",
+        "Which of these issues fed into your risk assessment or objectives?",
+        "How do you learn about changes in regulation or the market?",
+        "Have you decided whether climate change is a relevant issue, and where is that decision recorded?"
+      ],
+      "evidence": [
+        "Context register or analysis with owner and review date",
+        "Minutes of the meeting where issues were identified or updated",
+        "Cross-reference from context items to risks or objectives",
+        "Change history of the register showing entries added or retired",
+        "Horizon-scanning sources used, such as trade body or regulator updates"
+      ]
+    },
+    {
+      "ref": "4.2",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Understanding the needs and expectations of interested parties",
+      "purpose": "Identifies who has a stake in the business, what they require and which of those requirements the quality system will address.",
+      "guidance": "List customers, regulators, owners, employees, key suppliers, insurers and any others who can affect or be affected by what you do. For each, note what they require or expect and which of those needs you have chosen to treat as binding, such as contract terms or legal duties. Keep it short and set a review rhythm that suits your pace of change, for example yearly and after major events. A common weakness is a generic list of parties with no link to actual requirements or to how you monitor them. The 2026 edition asks you to decide which of the relevant requirements you will address through the quality system, so record that decision for each. Note climate-related expectations too, such as customer or lender reporting requests.",
+      "questions": [
+        "Who are your interested parties and how did you decide they are relevant?",
+        "Which of their requirements will the quality system address, and why those?",
+        "Which of their requirements are legal or contractual obligations?",
+        "How do you hear about changes in what they need?"
+      ],
+      "evidence": [
+        "Interested parties register with requirements and the decision taken on each",
+        "Customer contracts or specifications referenced",
+        "Regulatory requirements list",
+        "Date and owner of the last review"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "4.3",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Determining the scope of the quality management system",
+      "purpose": "Draws a clear boundary around what the quality system covers so everyone knows what is in and out.",
+      "guidance": "Write a scope statement naming the products and services, sites and activities covered, taking account of your context and interested parties. If a requirement of the standard cannot apply to you, for example design, say so and explain why leaving it out does not weaken your ability to deliver conforming output or keep customers satisfied. Keep the scope as a controlled document and keep it consistent with your website, certificate wording and contracts. Pitfalls include excluding something you actually do, or a scope that lags behind new sites or services.",
+      "questions": [
+        "What is covered by your quality system and what is excluded?",
+        "Why do you consider any requirement not applicable?",
+        "Does the scope match what you tell customers you do?",
+        "When was the scope last reviewed?"
+      ],
+      "evidence": [
+        "Scope statement approved by top management",
+        "Justification for any non-applicable requirement",
+        "List of sites and services in scope",
+        "Review record showing the scope is current"
+      ]
+    },
+    {
+      "ref": "4.4",
+      "parent": "4",
+      "kind": "clause",
+      "title": "Quality management system and its processes",
+      "purpose": "Ensures the business runs on defined, connected processes that are owned, measured and improved.",
+      "guidance": "Identify your main processes, from sales through delivery and support, and show how they connect, using a simple process map. For each, define the inputs and outputs, owner, resources, controls and measures, and the risks that matter. Keep documentation proportionate: a one-page process description beats a long manual nobody reads. Auditors often find maps that do not match reality, processes without owners or measures, and no evidence that processes are reviewed.",
+      "questions": [
+        "Show me your process map and how the processes interact.",
+        "Who owns this process and how do you know it is working?",
+        "What indicators do you track for it?",
+        "How do you update processes when the way of working changes?"
+      ],
+      "evidence": [
+        "Process map or inventory",
+        "Process descriptions with owner, inputs, outputs and measures",
+        "Process performance data",
+        "Records of process reviews or changes"
+      ]
+    },
+    {
+      "ref": "5",
+      "kind": "theme",
+      "title": "Clause 5 · Leadership",
+      "purpose": "Makes senior people personally accountable for the quality system rather than leaving it to a quality manager."
+    },
+    {
+      "ref": "5.1",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Leadership and commitment",
+      "purpose": "Requires senior management to take real ownership of the quality system and its results, including keeping customers at the centre of decisions.",
+      "guidance": "This clause is judged by what leaders do, not what documents say, and it covers both general leadership (5.1.1) and customer focus (5.1.2). Auditors will talk to the top team, so each person should be able to explain the policy, the objectives, the main customer risks and how quality is resourced and reviewed. Show leadership through decisions: budget approvals, chairing reviews, following up actions. Pitfall: delegating everything to a quality manager and being unable to describe the system when asked.",
+      "questions": [
+        "How does top management demonstrate it owns the quality system?",
+        "What decisions has leadership made in the last year to support quality or customers?",
+        "How do you make sure the system fits the business direction?",
+        "Which customer or quality issues has the top team personally followed up?"
+      ],
+      "evidence": [
+        "Management review minutes showing leadership decisions",
+        "Budget or resource approvals for quality work",
+        "Communications from leaders about quality",
+        "Attendance of top management at reviews and key meetings",
+        "Action logs showing leaders following up quality or customer issues"
+      ]
+    },
+    {
+      "ref": "5.1.1",
+      "parent": "5.1",
+      "kind": "clause",
+      "title": "Leading the quality system",
+      "purpose": "Spells out what leaders must do to steer the quality system and keep it effective.",
+      "guidance": "Leaders should set direction through policy and objectives, make sure processes are integrated into daily business, and provide the people and resources needed. The 2026 edition adds two things auditors will ask about: leaders promote a quality culture and ethical behaviour, and they encourage thinking about risks and opportunities in decisions. Show it through what leaders do: how mistakes are raised without blame, how quality is weighed against cost and speed, how ethical concerns are handled. Keep evidence simple: dated decisions, meeting minutes and visible messages. A typical gap is objectives that are set but never discussed again until the next audit.",
+      "questions": [
+        "How are quality objectives aligned with business strategy?",
+        "How do leaders promote a quality culture and ethical behaviour, and how do you know it works?",
+        "How do leaders bring risks and opportunities into their decisions?",
+        "What resources were added or changed because of quality needs?"
+      ],
+      "evidence": [
+        "Policy and objectives approved by leadership",
+        "Management meeting agendas covering quality, culture and ethics",
+        "Staff survey or speak-up records showing how concerns are raised",
+        "Resource decisions linked to system needs"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "5.1.2",
+      "parent": "5.1",
+      "kind": "clause",
+      "title": "Customer focus",
+      "purpose": "Ensures leaders keep customer requirements, legal duties and customer satisfaction at the centre of decisions.",
+      "guidance": "Show how the business learns what customers need, how requirements are met consistently and how risks to satisfaction are spotted early. Typical evidence includes complaint trends, on-time delivery, survey results and actions taken. Leaders should be able to say what the key customer risks are. Auditors often see data collected but not used, so make sure customer results reach management review and trigger action.",
+      "questions": [
+        "How do you know what customers need and expect?",
+        "Which risks could reduce customer satisfaction and how are they managed?",
+        "How are legal and customer requirements identified and kept up to date?",
+        "What did you change recently because of customer feedback?"
+      ],
+      "evidence": [
+        "Customer feedback and complaint analysis",
+        "Customer satisfaction or delivery performance data",
+        "Register of applicable legal and customer requirements",
+        "Actions taken from customer results"
+      ]
+    },
+    {
+      "ref": "5.2",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Policy",
+      "purpose": "Gives the organisation a clear, communicated statement of intent for quality that guides objectives.",
+      "guidance": "Write a short policy that fits your business, commits to meeting requirements and to improving the system, and gives a frame for objectives. Approve it at top level, keep it controlled, and make sure staff can find it and say what it means for their job. Share it with interested parties where relevant. Common findings are copied generic wording, policies with no link to objectives, and staff who have never seen it.",
+      "questions": [
+        "Where is the policy displayed and communicated?",
+        "How is it appropriate to your business purpose?",
+        "What do staff understand it to mean for their own work?",
+        "When was it last reviewed?"
+      ],
+      "evidence": [
+        "Signed and dated quality policy",
+        "Evidence of communication, for example intranet, induction, noticeboard",
+        "Staff awareness checks or interview results",
+        "Review record at management review"
+      ]
+    },
+    {
+      "ref": "5.3",
+      "parent": "5",
+      "kind": "clause",
+      "title": "Roles, responsibilities and authorities",
+      "purpose": "Ensures it is clear who is responsible for what in the system and who can make decisions.",
+      "guidance": "Define roles for the key process owners and for system tasks such as keeping the system in line with the standard, making sure processes deliver what they should, reporting on performance, promoting customer focus and keeping the system sound during changes. Capture them in role descriptions, an organisation chart or a responsibility matrix, and make sure the people know. Check cover for absences. Pitfalls include roles that exist only on paper, unclear ownership of processes, and out of date charts after reorganisations. The 2026 edition separates reporting on system performance from reporting on opportunities for improvement, so name who does each.",
+      "questions": [
+        "Who is responsible for each process and how do they know?",
+        "Who reports on system performance to top management?",
+        "How do you handle cover for key roles?",
+        "How are changes to responsibilities communicated?"
+      ],
+      "evidence": [
+        "Organisation chart with dates",
+        "Role descriptions or responsibility matrix",
+        "Appointment of process owners",
+        "Communication of role changes"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "6",
+      "kind": "theme",
+      "title": "Clause 6 · Planning",
+      "purpose": "Turns risks, opportunities and ambitions into planned, owned actions before problems happen."
+    },
+    {
+      "ref": "6.1",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Actions to address risks and opportunities",
+      "purpose": "Makes the business think ahead about what could go wrong or help, and plan proportionate action.",
+      "guidance": "In the 2026 edition this clause has three sub-clauses: determining risks and opportunities (6.1.1), acting on risks (6.1.2) and acting on opportunities (6.1.3). Use this parent to check they connect: one register or two, owners and dates, actions built into processes and a check of whether they worked. The standard does not require a formal risk method, so choose something people will actually use. Auditors often find a risk register written once and never updated, or opportunities that are listed but never pursued.",
+      "questions": [
+        "How did you identify the risks and opportunities in your processes?",
+        "How do you decide which ones to act on?",
+        "Show an action you took and how you checked it worked.",
+        "How often is the register reviewed?"
+      ],
+      "evidence": [
+        "Risk and opportunity register with owners and dates",
+        "Risk assessment method description",
+        "Action plans and completion evidence",
+        "Review records or management review inputs"
+      ],
+      "tags": [
+        "risk",
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "6.1.1",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Determining risks and opportunities",
+      "tags": [
+        "risk",
+        "new-2026"
+      ],
+      "purpose": "Identifies the risks and opportunities that could affect the results of the quality system or customer satisfaction.",
+      "guidance": "Use the context (4.1) and interested parties (4.2) work to list what could go wrong and what could go better, for each process or for the business as a whole. Keep risks and opportunities apart: an opportunity is not just the absence of a risk. Record the source of each entry and review the list when the business changes. Pitfalls are a register copied from a template and opportunities left out altogether.",
+      "questions": [
+        "How did you identify the risks and opportunities, and from which inputs?",
+        "Show the current list of risks and the separate list of opportunities.",
+        "When was the list last reviewed and what changed?"
+      ],
+      "evidence": [
+        "Risk and opportunity register with sources",
+        "Notes of the session where risks and opportunities were identified",
+        "Review history of the register"
+      ]
+    },
+    {
+      "ref": "6.1.2",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Actions to address risks",
+      "tags": [
+        "risk",
+        "new-2026"
+      ],
+      "purpose": "Analyses and evaluates the risks found and plans proportionate action on them.",
+      "guidance": "Analyse each risk simply, for example likelihood and impact, decide which need action, and plan actions with owners and dates that are built into the normal processes. Decide how you will judge whether each action worked. Actions should be proportionate to the effect on products, services and customers. Auditors look for risks with no evaluation, actions that never happened and no check of effectiveness.",
+      "questions": [
+        "How do you analyse and evaluate risks, and who decides which to act on?",
+        "Show an action taken on a risk and how you checked it worked.",
+        "Which process carries each action?"
+      ],
+      "evidence": [
+        "Risk assessment method and scored register",
+        "Action plans with owners and dates",
+        "Effectiveness reviews of completed actions"
+      ]
+    },
+    {
+      "ref": "6.1.3",
+      "parent": "6.1",
+      "kind": "clause",
+      "title": "Actions to address opportunities",
+      "tags": [
+        "new-2026"
+      ],
+      "purpose": "Makes sure worthwhile opportunities are evaluated and pursued rather than only noted.",
+      "guidance": "For each opportunity, such as a new market, a new technology, a better supplier or a simpler process, judge whether it is worth pursuing and plan how, with an owner, resources and a date. Feed the chosen ones into objectives, projects or improvement work and review the outcome. Auditors look for opportunities that appear in the register year after year with no decision.",
+      "questions": [
+        "Which opportunities did you decide to pursue, and why?",
+        "Show an opportunity that turned into an objective, project or change.",
+        "How do you review the outcome?"
+      ],
+      "evidence": [
+        "Opportunity list with decisions",
+        "Project or objective records started from an opportunity",
+        "Review of outcomes in management meetings"
+      ]
+    },
+    {
+      "ref": "6.2",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Quality objectives and planning to achieve them",
+      "purpose": "Sets measurable goals for quality and a plan to reach them.",
+      "guidance": "Choose a small number of objectives that support the policy and customer satisfaction, such as on-time delivery, defect rate or complaint response time. Make each measurable, give it an owner, a deadline and a plan for resources and checking progress. Tell the people who influence each objective about it, track results regularly and review them in management meetings. Pitfalls include vague aims, objectives with no baseline or data, staff who do not know the objectives and no follow-up when targets are missed.",
+      "questions": [
+        "What are your quality objectives and how are they measured?",
+        "Who is responsible for each and what is the plan?",
+        "How are you performing against them?",
+        "What happens when an objective is off track?"
+      ],
+      "evidence": [
+        "Objectives register with targets, owners and dates",
+        "Action plans for each objective",
+        "Performance data and trend reports",
+        "Management review records on objectives"
+      ]
+    },
+    {
+      "ref": "6.3",
+      "parent": "6",
+      "kind": "clause",
+      "title": "Planning of changes",
+      "purpose": "Ensures changes to the quality system are planned deliberately so the system keeps working as a whole while they happen.",
+      "guidance": "When you change a process, structure, system or site, consider why, what could go wrong, whether the system stays intact during the change, which resources are needed and who is responsible. The 2026 edition also asks you to plan how the change is communicated, how you will monitor and evaluate whether it worked, and when you will review the results. Use a simple change request or checklist with those points and record the decision. Make sure documents and training are updated afterwards. Auditors find changes made informally, such as a new tool or supplier, with no thought to the effect on the quality system.",
+      "questions": [
+        "How do you plan and approve changes that affect the system?",
+        "Give an example of a recent change and how its risks were considered.",
+        "How was the change communicated, and how did you check afterwards that it worked?",
+        "How do you keep the system working during the change?"
+      ],
+      "evidence": [
+        "Change requests or change log",
+        "Impact assessments or checklists covering communication and follow-up",
+        "Approval records",
+        "Post-change review records"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "7",
+      "kind": "theme",
+      "title": "Clause 7 · Support",
+      "purpose": "Covers the people, equipment, knowledge and records the system depends on to work day to day."
+    },
+    {
+      "ref": "7.1",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Resources",
+      "purpose": "Makes sure the system has all the resources it depends on: people, infrastructure, work environment, measuring equipment and knowledge.",
+      "guidance": "Treat this clause as the umbrella for 7.1.1 to 7.1.6 and check each resource type in turn rather than only budget. A simple resource review, done at management review, can cover staffing, premises and equipment, working conditions, calibrated equipment and critical know-how in one table with gaps and owners. A common gap is that each area is handled in isolation and nobody sees the overall picture, for example a new contract won without checking staff, equipment and knowledge together.",
+      "questions": [
+        "How do you get an overall view of whether resources are adequate?",
+        "Which resource type is your biggest current weakness and what is being done?",
+        "How did you check resources before taking on your most recent large order or change?"
+      ],
+      "evidence": [
+        "Resource review covering all resource types",
+        "Management review output on resource adequacy",
+        "Capacity or workload analysis for a recent new contract or change",
+        "Gap list with owners and target dates"
+      ]
+    },
+    {
+      "ref": "7.1.1",
+      "parent": "7.1",
+      "kind": "clause",
+      "title": "Providing what the system needs",
+      "purpose": "Confirms that the business has identified and provided what the system needs, with attention to limits.",
+      "guidance": "Look at what exists in house and what must come from outside, and note where capacity or capability is a limit. Keep a brief record linking resource needs to processes and objectives. Review at intervals you set; many organisations review yearly, and whenever demand changes. Pitfall: treating this clause as paperwork when the real evidence is decisions, such as hiring or replacing equipment, taken for quality reasons.",
+      "questions": [
+        "What internal limits affect your ability to deliver?",
+        "What do you need from external providers?",
+        "How are resource needs reviewed?"
+      ],
+      "evidence": [
+        "Resource plan or budget",
+        "Hiring or investment decisions with quality rationale",
+        "List of outsourced activities",
+        "Management review minutes"
+      ]
+    },
+    {
+      "ref": "7.1.2",
+      "parent": "7.1",
+      "kind": "clause",
+      "title": "People",
+      "purpose": "Ensures enough competent people are available to run the system and deliver the service.",
+      "guidance": "Work out staffing needs for each process, including peaks and holidays, and check that numbers and skills match. Keep an organisation chart, a skills overview and a plan for gaps, with temps or contractors covered by the same expectations. Auditors often spot single points of failure and teams relying on one expert with no cover.",
+      "questions": [
+        "How do you decide how many people each process needs?",
+        "What happens when someone key is absent?",
+        "How do you manage contractors and temporary staff?"
+      ],
+      "evidence": [
+        "Staffing plan or resourcing records",
+        "Skills matrix showing cover",
+        "Recruitment or contractor records",
+        "Workload reports"
+      ]
+    },
+    {
+      "ref": "7.1.3",
+      "parent": "7.1",
+      "kind": "clause",
+      "title": "Infrastructure",
+      "purpose": "Keeps buildings, equipment, software and transport fit for the work they support.",
+      "guidance": "Identify the infrastructure that affects product or service quality: premises, machines, IT systems, vehicles and communications. Plan maintenance or replacement based on risk, and record faults and repairs. For small firms, a simple asset list with service dates and an issue log is enough. Typical findings are missed maintenance, unknown equipment ownership and unsupported software.",
+      "questions": [
+        "What infrastructure is critical to quality and how is it maintained?",
+        "Show me maintenance records for a key item.",
+        "How are breakdowns handled and learned from?"
+      ],
+      "evidence": [
+        "Asset register with owners",
+        "Maintenance schedule and completed records",
+        "Breakdown or fault log",
+        "IT support or patching records"
+      ]
+    },
+    {
+      "ref": "7.1.4",
+      "parent": "7.1",
+      "kind": "clause",
+      "title": "Environment for the operation of processes",
+      "purpose": "Ensures the physical and social conditions of work do not harm the quality of outputs.",
+      "guidance": "Consider factors such as temperature, cleanliness, noise, lighting, ergonomics, safe working and a respectful, low-stress workplace where they affect results. Decide what matters for your processes, define limits and check them. For office or service businesses this may be about workload, remote working set-up and culture. Pitfall: ignoring this clause as irrelevant without checking whether conditions affect output. The 2026 edition links this to quality culture and ethical behaviour, so consider whether the way people are treated helps them do the work right.",
+      "questions": [
+        "Which environmental factors affect the quality of your work?",
+        "How do you monitor them?",
+        "What is done when conditions are not suitable?"
+      ],
+      "evidence": [
+        "Defined environmental requirements",
+        "Inspection or monitoring records",
+        "Health and safety or workplace assessments",
+        "Action logs for issues"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "7.1.5",
+      "parent": "7.1",
+      "kind": "clause",
+      "title": "Monitoring and measuring resources",
+      "purpose": "Gives confidence that measurements used to judge conformity are valid and traceable.",
+      "guidance": "List every device or method used to show products or services meet requirements, such as scales, gauges, test software or survey tools, and check each is suitable and kept in good condition. Where measurement traceability is needed, calibrate or verify at set intervals or before use against references traceable to national or international standards; where none exists, record what basis you used. Show calibration status, protect devices from adjustments or damage that would invalidate results, and assess what earlier output was affected when something is found out of tolerance. Common issues are overdue calibrations and no follow-up on previous results.",
+      "questions": [
+        "Which equipment gives you results you rely on for acceptance?",
+        "How do you know it is accurate and traceable?",
+        "What do you do if a device is found out of tolerance?",
+        "How are devices protected from being adjusted by users?"
+      ],
+      "evidence": [
+        "Equipment register with calibration due dates",
+        "Calibration certificates showing traceability",
+        "Out of tolerance impact assessments",
+        "Procedure for verification of software or methods"
+      ]
+    },
+    {
+      "ref": "7.1.6",
+      "parent": "7.1",
+      "kind": "clause",
+      "title": "Organizational knowledge",
+      "purpose": "Protects and uses the knowledge the business needs to run the quality system and deliver consistently.",
+      "guidance": "Identify critical knowledge such as technical know-how, customer history, lessons learned and supplier insight, for the whole quality system and not only for products. Decide how it is retained, applied and shared: documentation, mentoring, shared drives, communities of practice or training. Plan how knowledge is kept when people leave and how new knowledge is obtained from customers, experts or the market. Pitfalls include know-how living in one head and lessons learned never being shared.",
+      "questions": [
+        "What knowledge is essential and where is it held?",
+        "How is knowledge shared and applied across teams?",
+        "What happens to that knowledge when someone leaves?",
+        "How do you gain new knowledge when needs or trends change?"
+      ],
+      "evidence": [
+        "Knowledge or skills inventory",
+        "Lessons learned records",
+        "Handover or succession plans",
+        "Training or external learning records"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "7.2",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Competence",
+      "purpose": "Ensures people doing work that affects quality are able to do it, based on education, training or experience.",
+      "guidance": "Define the competence needed for each role, check it at hiring, and close gaps with training, coaching or supervision. Then evaluate whether the training worked. Keep records of qualifications, training and sign-off proportionate to risk. Auditors often find training delivered but not assessed for effectiveness, or role requirements that were never written.",
+      "questions": [
+        "How do you decide what competence each role needs?",
+        "How do you check someone is competent?",
+        "Show how you evaluated a recent training.",
+        "How are gaps tracked and closed?"
+      ],
+      "evidence": [
+        "Role competence requirements",
+        "Training matrix and records",
+        "Training effectiveness evaluations",
+        "CVs, certificates or sign-off records"
+      ]
+    },
+    {
+      "ref": "7.3",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Awareness",
+      "purpose": "Makes sure people know the policy, their contribution, the quality culture expected of them and the effect of not following requirements.",
+      "guidance": "Staff should be able to say, in their own words, what the quality policy means for them, which objectives they influence and what happens if requirements are not met. Build this into induction, team talks and visible reminders. Auditors test it by asking staff directly, so a prepared answer is not the same as understanding. Include contractors who work under your control. The 2026 edition adds awareness of the quality culture and ethical behaviour, so ask people what they would do if they saw a quality or ethics problem.",
+      "questions": [
+        "What is the quality policy and how does your job affect it?",
+        "Which objectives relate to your work?",
+        "What would you do if you saw a quality or ethics problem?",
+        "What are the consequences of not following procedures?"
+      ],
+      "evidence": [
+        "Induction materials and attendance",
+        "Toolbox talks or briefings",
+        "Staff awareness survey results",
+        "Posters or intranet communications"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "7.4",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Communication",
+      "purpose": "Plans what is communicated about the system, to whom, when and how, inside and outside the business.",
+      "guidance": "Decide the topics, audiences, timing, methods and responsible people for important communication, such as performance results, changes, customer updates and supplier requirements. A simple communications matrix works well. Check that messages reach people and that feedback is possible. Pitfalls include relying on ad hoc emails and having no clear way to tell staff about changes in procedures.",
+      "questions": [
+        "How do you decide what to communicate and to whom?",
+        "How do staff hear about system changes?",
+        "How is external communication, for example with customers, controlled?"
+      ],
+      "evidence": [
+        "Communication plan or matrix",
+        "Meeting records and newsletters",
+        "Customer communication templates",
+        "Feedback or acknowledgement records"
+      ]
+    },
+    {
+      "ref": "7.5",
+      "parent": "7",
+      "kind": "clause",
+      "title": "Documented information",
+      "purpose": "Sets the overall approach to the documents and records that support and prove the system, sized to the business.",
+      "guidance": "Treat this as the umbrella for 7.5.1 to 7.5.3: what you document, how you create and change it, and how you control it. Keep what the standard asks for plus what your business needs to be effective, and no more, and decide where documents live, for example one document system rather than scattered drives. Think about who uses them and in what format. Auditors usually see two problems: too much documentation nobody follows, or key records missing.",
+      "questions": [
+        "How is your documentation structured and where does it live?",
+        "How did you decide how much to document for a business of your size?",
+        "Which records would you rely on to prove a typical order was done right?"
+      ],
+      "evidence": [
+        "Document and record register",
+        "Document control procedure or rules",
+        "Overview of the document system, such as folder structure or tool configuration",
+        "Sample set of records for one completed order"
+      ]
+    },
+    {
+      "ref": "7.5.1",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "What must be documented",
+      "purpose": "Defines the minimum documented information and allows more where the business benefits.",
+      "guidance": "Check your system includes the documents and records the standard calls for, such as scope, policy, objectives and evidence of results, and add only what adds value for your size, complexity and staff competence. A table mapping requirements to your documents helps audits. Pitfall: copying a large template set that does not match how you really work.",
+      "questions": [
+        "Which documents are required and which did you add yourself?",
+        "How do you decide the extent of documentation for a process?",
+        "Show me where your process for handling a customer order is documented.",
+        "Which records prove that the standard's required records are kept?"
+      ],
+      "evidence": [
+        "Documented information list or map to the standard",
+        "Procedures or work instructions",
+        "Records of results",
+        "Rationale for documentation level"
+      ]
+    },
+    {
+      "ref": "7.5.2",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Creating and updating",
+      "purpose": "Ensures documents are identifiable, in a suitable format and approved before use.",
+      "guidance": "Give each document a title, owner, version and date, and use a consistent template and review route. Approve before release and keep a change history so people know what changed. Use media that suit users, such as short checklists or video. Auditors often find unsigned documents, missing version numbers and approvals done informally in email with nothing recorded.",
+      "questions": [
+        "How are documents identified and approved?",
+        "Who reviews and signs off changes?",
+        "How do you know a document is still suitable?"
+      ],
+      "evidence": [
+        "Document headers with version, date and author",
+        "Approval records or workflow history",
+        "Revision history",
+        "Review schedule"
+      ]
+    },
+    {
+      "ref": "7.5.3",
+      "parent": "7.5",
+      "kind": "clause",
+      "title": "Control of documented information",
+      "purpose": "Keeps documents and records available, protected and under control throughout their life.",
+      "guidance": "Make sure the right version is accessible where work happens, restrict editing, protect against loss, misuse and loss of confidentiality, and manage distribution, storage, retention and disposal. Protect records from being altered after the event. Mark external documents such as customer specifications and control them as well. Back up electronic records and test restores. Common failures are obsolete copies still in use, uncontrolled spreadsheets, editable records with no change trail and records kept longer or shorter than needed.",
+      "questions": [
+        "How do you prevent use of out of date documents?",
+        "How are access and changes controlled?",
+        "How long are records retained and how are they disposed of?",
+        "How are external documents handled?"
+      ],
+      "evidence": [
+        "Master document list with current versions",
+        "Access permissions and backup evidence",
+        "Retention and disposal schedule",
+        "Register of external documents"
+      ]
+    },
+    {
+      "ref": "8",
+      "kind": "theme",
+      "title": "Clause 8 · Operation",
+      "purpose": "Controls how work is planned, designed, bought, delivered and checked so customers get what was promised."
+    },
+    {
+      "ref": "8.1",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Operational planning and control",
+      "purpose": "Ensures the processes that deliver products and services are planned, controlled and kept in step with requirements.",
+      "guidance": "For each product or service, define requirements, acceptance criteria, process controls, resources and the records needed to show conformity. Control planned changes and review the effects of unplanned ones. Make sure externally provided processes are also under control. The 2026 edition separates criteria for the processes from acceptance criteria for the outputs, so set both. Pitfalls include relying on tacit knowledge, not retaining records that show work met criteria, and changes made on the shop floor with no review.",
+      "questions": [
+        "How do you plan the delivery of a typical order or project?",
+        "What criteria apply to the processes, and what acceptance criteria to the outputs?",
+        "How do you control changes that happen during delivery?",
+        "How are externally provided processes controlled?"
+      ],
+      "evidence": [
+        "Process or project plans and checklists",
+        "Acceptance criteria and specifications",
+        "Records showing process control",
+        "Change records and reviews"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "8.2",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Requirements for products and services",
+      "purpose": "Ensures the business understands what customers need, can meet it, and agrees changes clearly.",
+      "guidance": "Set out how you communicate with customers before, during and after sale: product information, enquiries, orders, contracts and changes, feedback and complaints, handling of their property and, where relevant, contingency arrangements. Collect requirements, including legal ones and those not stated but needed for the intended use, and make sure you can back up claims you make about your offer. Before committing, check you can deliver and resolve differences. Keep records of reviews and changes and tell staff when requirements change. Typical findings are verbal orders without confirmation and contract reviews that are not recorded.",
+      "questions": [
+        "How do you capture and confirm customer requirements?",
+        "How do you check you can deliver before accepting an order?",
+        "What happens when a customer changes their order?",
+        "How do you handle customer property and complaints?"
+      ],
+      "evidence": [
+        "Quotes, orders and contracts with review evidence",
+        "Customer requirement checklists",
+        "Change confirmations and amended order documents",
+        "Customer communication records, such as order acknowledgements",
+        "Contingency arrangements communicated to customers where relevant"
+      ]
+    },
+    {
+      "ref": "8.3",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Design and development of products and services",
+      "purpose": "Controls how new or changed products and services are created so they meet needs and can be delivered.",
+      "guidance": "If you design anything, even bespoke solutions, define stages, inputs, reviews, verification and validation, responsibilities and how changes are handled. Record why decisions were made and keep evidence that outputs meet the inputs. Where you do not design, state and justify it in the scope. Pitfalls include unclear input requirements, reviews only held informally and design changes not authorised or traced.",
+      "questions": [
+        "Walk me through a recent design project from brief to release.",
+        "How did you verify and validate the result?",
+        "How are design changes controlled?",
+        "What records show who approved what?"
+      ],
+      "evidence": [
+        "Design plan with stages and responsibilities",
+        "Design input and output records",
+        "Review, verification and validation records",
+        "Design change log with approval"
+      ]
+    },
+    {
+      "ref": "8.4",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Control of externally provided processes, products and services",
+      "purpose": "Ensures that what suppliers provide meets requirements and is controlled in proportion to the risk.",
+      "guidance": "Apply this to bought-in materials and parts, services delivered directly to your customers by others, and processes you outsource; outsourced work stays your responsibility. Decide criteria to select, evaluate, monitor and re-evaluate suppliers, and set controls according to their impact on your output. Tell suppliers clearly what you need, including approvals, competence, how you will monitor them and any checks at their premises, then check goods or services on receipt. Keep an approved supplier list with performance records. Common findings are suppliers never re-evaluated, vague purchasing requirements and no action on poor performance.",
+      "questions": [
+        "How do you select and approve suppliers?",
+        "How do you monitor and re-evaluate supplier performance?",
+        "How do you tell suppliers what you need?",
+        "Which processes are outsourced and how do you control them?",
+        "What did you do about a poor performing supplier?"
+      ],
+      "evidence": [
+        "Approved supplier list with evaluation criteria",
+        "Supplier performance reviews",
+        "Purchase orders with specifications",
+        "Receiving inspection records"
+      ],
+      "tags": [
+        "suppliers"
+      ]
+    },
+    {
+      "ref": "8.5",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Production and service provision",
+      "purpose": "Keeps delivery of products and services under controlled conditions that give consistent results.",
+      "guidance": "Ensure information on what to deliver, suitable equipment, monitoring at the right stages and competent people are in place, and build in steps that reduce human error, such as checklists or mistake-proofing. Handle identification, traceability, property of customers and external providers, preservation and post-delivery duties such as warranty or support. Where results cannot be fully checked afterwards, validate the process and revalidate it periodically. Review and record changes to production or delivery. Typical pitfalls are missing traceability, customer property lost with no report to the owner and no plan for post-delivery obligations.",
+      "questions": [
+        "How do you make sure work is carried out under controlled conditions?",
+        "What have you done to prevent human error in key steps?",
+        "How do you identify and trace outputs?",
+        "How do you look after customer property and report problems with it?",
+        "What post-delivery activities do you provide?"
+      ],
+      "evidence": [
+        "Work instructions and checklists",
+        "Traceability records",
+        "Customer property register with any loss or damage reports",
+        "Process validation records for processes that cannot be fully checked afterwards",
+        "Production or service change records with approval",
+        "Service or warranty records"
+      ]
+    },
+    {
+      "ref": "8.6",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Release of products and services",
+      "purpose": "Ensures nothing reaches the customer until planned checks have been completed and recorded.",
+      "guidance": "Define what must be verified before release, such as inspection, testing or sign-off, at which stage and who is authorised to release. Keep evidence that acceptance criteria were met and traceable to the person who authorised release. Releasing before planned checks are complete needs approval from an authorised person and, where applicable, the customer. Pitfalls include release based on habit, no record of who authorised and gaps when the usual checker is away.",
+      "questions": [
+        "What checks occur before delivery or handover?",
+        "Who is authorised to release output?",
+        "How is evidence of conformity kept?",
+        "What happens if a check has not been completed?"
+      ],
+      "evidence": [
+        "Inspection and test records",
+        "Release or sign-off records",
+        "List of authorised releasers",
+        "Concession or deviation approvals"
+      ]
+    },
+    {
+      "ref": "8.7",
+      "parent": "8",
+      "kind": "clause",
+      "title": "Control of nonconforming outputs",
+      "purpose": "Prevents defective outputs from being used or delivered by mistake and ensures they are dealt with.",
+      "guidance": "Identify and segregate outputs that do not meet requirements, including problems found after delivery or during a service, and decide what to do, such as correct, contain, return, suspend the service or accept under concession with approval. Check corrected work again. Tell customers where needed and keep a record of the issue, the action taken, any concession and who decided. Feed repeated issues into corrective action. Common findings are nonconformities fixed quietly with no record and no look at causes.",
+      "questions": [
+        "How are nonconforming items identified and kept from use?",
+        "Who decides what happens to them?",
+        "How is rework re-checked?",
+        "What happens when a problem is found after delivery?",
+        "How do you learn from recurring problems?"
+      ],
+      "evidence": [
+        "Nonconformity log",
+        "Disposition and concession records",
+        "Re-inspection results",
+        "Customer notifications where relevant"
+      ]
+    },
+    {
+      "ref": "9",
+      "kind": "theme",
+      "title": "Clause 9 · Performance evaluation",
+      "purpose": "Checks, with data, whether the system and the business are performing as intended."
+    },
+    {
+      "ref": "9.1",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Monitoring, measurement, analysis and evaluation",
+      "purpose": "Makes the business measure what matters, check customer views and analyse the results to judge how the system is performing.",
+      "guidance": "Treat this as the umbrella for 9.1.1 to 9.1.3: deciding what to measure, monitoring customer satisfaction and analysing the results. The test is whether the data leads somewhere, so trace a few indicators from collection through analysis to a decision or action. A common finding is lots of data collected but no analysis or decisions drawn from it, or measures that do not cover the main processes.",
+      "questions": [
+        "How does your measurement cover your main processes and objectives?",
+        "Give an example of an indicator that led to a decision.",
+        "Which measures have you dropped or added and why?"
+      ],
+      "evidence": [
+        "Overview of indicators mapped to processes and objectives",
+        "Example of an indicator traced from data to decision",
+        "Management review section on performance",
+        "Records of changes to the measurement set"
+      ]
+    },
+    {
+      "ref": "9.1.1",
+      "parent": "9.1",
+      "kind": "clause",
+      "title": "What to monitor and measure",
+      "purpose": "Defines what is monitored, the methods used, and when results are analysed and evaluated.",
+      "guidance": "For each process or objective, record what is measured, how, how often, who does it and when the results are reviewed. Choose methods that give valid results, such as consistent sampling or defined formulae. Evaluate performance and effectiveness, not only collect numbers. Pitfalls include indicators nobody owns and changing methods so trends cannot be compared.",
+      "questions": [
+        "Which measures matter most to the system?",
+        "How do you make sure measurements are valid?",
+        "How do you judge the effectiveness of the system?"
+      ],
+      "evidence": [
+        "Measurement plan with owner and frequency",
+        "Raw data and calculations",
+        "Trend reports",
+        "Evaluation notes or conclusions"
+      ]
+    },
+    {
+      "ref": "9.1.2",
+      "parent": "9.1",
+      "kind": "clause",
+      "title": "Customer satisfaction",
+      "purpose": "Checks whether customers feel their needs and expectations have been met.",
+      "guidance": "Gather views by methods that fit your business: surveys, reviews, complaints, repeat orders, account meetings or compliments. Decide how you collect, review and act on the information, and avoid relying on one weak signal. Use trends over time. Auditors look for evidence that the information is analysed and acted on rather than filed.",
+      "questions": [
+        "How do you find out whether customers are satisfied?",
+        "What did the latest results show?",
+        "What actions did you take as a result?",
+        "How do you follow up with unhappy customers?"
+      ],
+      "evidence": [
+        "Survey results or feedback summaries",
+        "Complaint and compliment logs",
+        "Account review notes",
+        "Actions arising from customer feedback"
+      ]
+    },
+    {
+      "ref": "9.1.3",
+      "parent": "9.1",
+      "kind": "clause",
+      "title": "Analysis and evaluation",
+      "purpose": "Turns collected data into judgements about conformity, customer satisfaction, system performance and improvement needs.",
+      "guidance": "Analyse data to consider whether products meet requirements, how satisfied customers are, how well planning worked, whether actions on risks and, separately, on opportunities were effective, how suppliers perform and whether the system needs improving. Present it simply with trends and comparisons. Feed conclusions into management review. Pitfall: reports that describe numbers but never state what they mean or what to do.",
+      "questions": [
+        "Show how you analyse your data to find trends.",
+        "What conclusions did you draw about supplier performance?",
+        "How did analysis lead to improvement?"
+      ],
+      "evidence": [
+        "Analysis reports with conclusions",
+        "Supplier performance analysis",
+        "Risk action effectiveness review",
+        "Improvement actions raised from analysis"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "9.2",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Internal audit",
+      "purpose": "Provides regular, impartial checks that the system conforms to requirements and is effectively implemented.",
+      "guidance": "Create an audit programme that covers all processes over a cycle, setting frequency by the importance of each process, recent changes and past results. Use auditors who are competent and not auditing their own work, define objectives, criteria and scope for each audit (the 2026 edition adds the objectives), report findings to the managers concerned and make sure corrections and corrective actions follow without undue delay. For a small company, a trained colleague from another team or an external auditor works. Pitfalls: audits that only tick boxes, findings with no follow-up and auditing own work.",
+      "questions": [
+        "Show me your audit programme and how you set it.",
+        "How do you make sure auditors are impartial?",
+        "What did the last audit find and what happened next?",
+        "How do audit results feed management review?"
+      ],
+      "evidence": [
+        "Audit programme or schedule",
+        "Audit plans, checklists and reports",
+        "Auditor competence records",
+        "Corrective action records from audits"
+      ],
+      "tags": [
+        "audit",
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "9.3",
+      "parent": "9",
+      "kind": "clause",
+      "title": "Management review",
+      "purpose": "Makes top management step back regularly to judge whether the system is suitable, adequate, effective and aligned with business direction.",
+      "guidance": "Treat this as the umbrella for 9.3.1 to 9.3.3: when reviews happen, what goes in and what comes out. Look at the review as a cycle over at least two meetings: actions from one review should appear as inputs to the next and be closed or escalated. The format can be one meeting or several management meetings, as long as all inputs are covered and decisions recorded. Typical findings are reviews that only note information and the same actions rolling forward unresolved.",
+      "questions": [
+        "How is management review organised in your business?",
+        "Show me how actions from the previous review were picked up in the latest one.",
+        "What overall conclusion did top management reach about the system?"
+      ],
+      "evidence": [
+        "Management review procedure or terms of reference",
+        "Minutes of the last two reviews",
+        "Action list showing carry-over and closure between reviews",
+        "Top management conclusion on suitability and effectiveness"
+      ]
+    },
+    {
+      "ref": "9.3.1",
+      "parent": "9.3",
+      "kind": "clause",
+      "title": "Reviews at planned intervals",
+      "purpose": "Requires top management to review the quality system at planned intervals to confirm it is still suitable, adequate, effective and aligned with strategy.",
+      "guidance": "Plan the review dates in advance and treat them as a decision meeting, not a status report. Include top management in person and invite process owners who can contribute. Check alignment with strategy and context changes. Pitfall: a single annual meeting held days before the audit with prepared minutes.",
+      "questions": [
+        "When are reviews scheduled and who must attend?",
+        "How does the review link to business strategy?",
+        "What happened if a planned review was missed?"
+      ],
+      "evidence": [
+        "Review calendar or schedule",
+        "Attendance records",
+        "Minutes linked to strategy discussions",
+        "Prior action follow-up"
+      ]
+    },
+    {
+      "ref": "9.3.2",
+      "parent": "9.3",
+      "kind": "clause",
+      "title": "Management review inputs",
+      "purpose": "Defines the information that must be brought to the review so decisions are well informed.",
+      "guidance": "Prepare a pack covering the status of previous actions, changes in internal and external issues, performance and effectiveness data with trends, adequacy of resources, changes in the needs and expectations of interested parties, the effectiveness of actions on risks and, separately, on opportunities, and improvement opportunities. Performance data should include customer satisfaction and feedback from relevant interested parties, objectives, process results and product conformity, nonconformities and corrective actions, monitoring results, audits and supplier performance. A checklist avoids gaps. Auditors often find several inputs absent, or data presented as single figures with no trend.",
+      "questions": [
+        "Show me the inputs you used in the last review.",
+        "How did you cover customer feedback and audit results?",
+        "How did you assess resource adequacy?"
+      ],
+      "evidence": [
+        "Management review input pack",
+        "Performance dashboards",
+        "Audit and customer summaries",
+        "Previous actions status"
+      ],
+      "tags": [
+        "changed-2026"
+      ]
+    },
+    {
+      "ref": "9.3.3",
+      "parent": "9.3",
+      "kind": "clause",
+      "title": "Management review results",
+      "purpose": "Ensures reviews end in recorded decisions on improvement, system changes and resources.",
+      "guidance": "Record conclusions on whether the system is suitable and effective, opportunities for improvement, any need for change and the resources required. Each decision should have an owner and date, be added to an action list and be followed up. Keep minutes as evidence. Pitfall: minutes that record discussion but no decisions, or decisions that disappear afterwards.",
+      "questions": [
+        "What decisions did the last review make?",
+        "Who owns the resulting actions and are they complete?",
+        "Did the review change resources or objectives?"
+      ],
+      "evidence": [
+        "Minutes with decisions and owners",
+        "Action tracker with completion status",
+        "Updated objectives or plans",
+        "Resource approvals"
+      ]
+    },
+    {
+      "ref": "10",
+      "kind": "theme",
+      "title": "Clause 10 · Improvement",
+      "purpose": "Ensures problems are fixed at the root and the system keeps getting better."
+    },
+    {
+      "ref": "10.1",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Continual improvement",
+      "tags": [
+        "changed-2026"
+      ],
+      "purpose": "Commits the business to keep improving its products, services and quality system, choosing improvements from data and acting on them.",
+      "guidance": "In the 2026 edition this one sub-clause covers what 10.1 and 10.3 covered in 2015. Think about improvement in three directions: products and services, including future customer needs; correcting, preventing or reducing unwanted effects; and the performance of the system. Improvement can take many forms: correction, corrective action, step-by-step improvement, breakthrough change, innovation or reorganisation. Keep a simple improvement log with source, owner and outcome. Auditors like to see small, real changes that came from data rather than generic statements. Use the outputs of analysis, evaluation and management review to identify needs or opportunities, and act on them. Show a trend of better results over time, for example fewer complaints or faster delivery. Make improvement part of normal management meetings, not only an audit preparation task. Pitfall: stating commitment without evidence of any measured gain.",
+      "questions": [
+        "What improvements have you made in the last year and where did they come from?",
+        "How do you choose which improvements to pursue?",
+        "Show me results that have improved over time.",
+        "How do analysis and management review feed improvement?"
+      ],
+      "evidence": [
+        "Improvement log with source, owner and outcome",
+        "Trend charts showing improvement",
+        "Improvement actions from management reviews",
+        "Before and after data"
+      ]
+    },
+    {
+      "ref": "10.2",
+      "parent": "10",
+      "kind": "clause",
+      "title": "Nonconformity and corrective action",
+      "purpose": "Ensures problems are contained, root causes found and fixes checked so they do not return.",
+      "guidance": "When something goes wrong, from a complaint or audit finding, react to control and correct it, work out the cause, check whether it could happen elsewhere, act, and review whether the action worked. Match effort to impact. Record the nonconformity, actions and results. Frequent findings are fixes that treat the symptom only, no effectiveness check and actions closed late without evidence.",
+      "questions": [
+        "Walk me through a recent corrective action.",
+        "How did you determine the root cause?",
+        "How did you check it was effective?",
+        "Do you look for similar issues elsewhere?"
+      ],
+      "evidence": [
+        "Corrective action register",
+        "Root cause analysis records",
+        "Effectiveness review evidence",
+        "Updates to risks or documents after actions"
+      ]
+    }
+  ]
+}
