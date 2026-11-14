@@ -32,7 +32,13 @@ import {
 } from './levels';
 import { parseRequirementKey } from '../frameworks/refs';
 import { satisfies } from './semver';
-import { augmentManifest, extensionSummary, foreignKey, type ForeignSheet } from './extend';
+import {
+  augmentManifest,
+  extensionSummary,
+  foreignKey,
+  standardViewName,
+  type ForeignSheet,
+} from './extend';
 import { packToTemplate } from './template';
 import { splitSheetRef, type PackManifest } from './types';
 
@@ -83,6 +89,8 @@ export interface InstallFirst {
   levelName: string | null;
   /** Installed already at a lower level: raised to `level`. */
   raise: boolean;
+  /** Its sheets by ref, so the preview names what this pack adds to before they exist. */
+  sheets?: Record<string, { name: string; standards: boolean }>;
 }
 
 export interface PackEnv {
@@ -897,7 +905,12 @@ export function planPackInstall(
         base.links.push({
           from: ms.name,
           field: f.name,
-          to: fs?.name ?? `${foreignTarget.pack}:${foreignTarget.ref}`,
+          to:
+            fs?.name ??
+            base.installsFirst.find((d) => d.key === foreignTarget.pack)?.sheets?.[
+              foreignTarget.ref
+            ]?.name ??
+            `${foreignTarget.pack}:${foreignTarget.ref}`,
           twoWay: typeof cfg.inverseKey === 'string',
         });
         continue;
@@ -1159,6 +1172,27 @@ export function planPackInstall(
     });
   }
 
+  // what it adds to a required pack installed first: said from the manifest (the install plans it again then)
+  for (const e of m.extends ?? []) {
+    if (!aug.pending.includes(foreignKey(e.pack, e.sheet))) continue;
+    const target = base.installsFirst.find((d) => d.key === e.pack)?.sheets?.[e.sheet];
+    const standard = m.standard && target?.standards ? m.standard : null;
+    base.extends.push({
+      pack: e.pack,
+      sheet: target?.name ?? `${e.pack}:${e.sheet}`,
+      adds: extensionSummary({ ...e, views: [], forms: [] }),
+      views: [
+        ...(e.views ?? []).map((v) => v.name),
+        ...(standard ? [standardViewName(standard.label)] : []),
+      ],
+      options: [
+        ...Object.values(e.options ?? {})
+          .flat()
+          .map((o) => o.label),
+        ...(standard ? [`${standard.label} in Standards`] : []),
+      ],
+    });
+  }
   const state = conflicts.length ? 'blocked' : 'ready';
   // required packs installed first: the install plans again once they are there
   const waiting = base.installsFirst.length > 0 || aug.pending.length > 0;

@@ -2,7 +2,13 @@
 // (src/engine/packs/plan.ts) and write the plan with install_pack, one transaction. Given a Supabase client, so the
 // commands (the person's client, RLS) and the seed (service role, scripts/seed.ts) share it; no 'server-only' import.
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { foreignKey, foreignSheets, neededLevel, type ForeignSheet } from '@/engine/packs/extend';
+import {
+  foreignKey,
+  foreignSheets,
+  neededLevel,
+  STANDARDS_KEY,
+  type ForeignSheet,
+} from '@/engine/packs/extend';
 import { defaultLevel, levelRank } from '@/engine/packs/levels';
 import {
   planPackInstall,
@@ -296,6 +302,12 @@ export async function requiredFirst(
     if (!dep || !satisfies(dep.version, r.range)) continue;
     const need = neededLevel(m, dep.manifest) ?? defaultLevel(dep.manifest);
     const levelName = dep.manifest.levels?.find((l) => l.key === need)?.name ?? null;
+    const sheets = Object.fromEntries(
+      dep.manifest.sheets.map((s) => [
+        s.ref,
+        { name: s.name, standards: s.fields.some((f) => f.key === STANDARDS_KEY) },
+      ]),
+    );
     const live = installs.find((i) => i.pack_key === r.pack);
     if (!live)
       out.push({
@@ -305,6 +317,7 @@ export async function requiredFirst(
         level: need,
         levelName,
         raise: false,
+        sheets,
       });
     else if (
       need &&
@@ -318,6 +331,7 @@ export async function requiredFirst(
         level: need,
         levelName,
         raise: true,
+        sheets,
       });
   }
   return out;

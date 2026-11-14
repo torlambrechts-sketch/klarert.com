@@ -278,12 +278,23 @@ describe('planning an add-on on top of Core', () => {
           level: 'starter',
           levelName: 'Starter',
           raise: false,
+          sheets: {
+            risk: { name: 'Risk register', standards: true },
+            cat: { name: 'Risk categories', standards: false },
+          },
         },
       ],
     });
     expect(plan.state).toBe('ready');
     expect(plan.payload).toBeNull();
-    expect(previewLines(plan.preview)).toContain('Installs Core registers 1.0.0 (Starter) first.');
+    expect(previewLines(plan.preview)).toEqual(
+      expect.arrayContaining([
+        'Installs Core registers 1.0.0 (Starter) first.',
+        // said from the manifest until Core is there
+        'Adds to Risk register: 2 columns, 1 group, 1 example item, 1 automation, the view Spills, the view ISO 14001 view, the option Environmental and the option ISO 14001 in Standards.',
+        'Environmental aspects links to Risk register through Risks, both ways.',
+      ]),
+    );
   });
 
   it('marks Core sheets and fields as system and its domain folders as domains', () => {

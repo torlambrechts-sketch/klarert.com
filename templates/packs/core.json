@@ -212,6 +212,11 @@
       ],
       "views": [
         {
+          "name": "All documents",
+          "type": "table",
+          "config": {}
+        },
+        {
           "name": "By status",
           "type": "kanban",
           "config": {
@@ -370,6 +375,11 @@
         }
       ],
       "views": [
+        {
+          "name": "All objectives",
+          "type": "table",
+          "config": {}
+        },
         {
           "name": "By status",
           "type": "kanban",
@@ -534,6 +544,11 @@
       ],
       "views": [
         {
+          "name": "All obligations",
+          "type": "table",
+          "config": {}
+        },
+        {
           "name": "By evaluation",
           "type": "kanban",
           "config": {
@@ -651,6 +666,11 @@
         }
       ],
       "views": [
+        {
+          "name": "All records",
+          "type": "table",
+          "config": {}
+        },
         {
           "name": "By status",
           "type": "kanban",
@@ -770,6 +790,11 @@
       ],
       "views": [
         {
+          "name": "All audits",
+          "type": "table",
+          "config": {}
+        },
+        {
           "name": "By status",
           "type": "kanban",
           "config": {
@@ -872,6 +897,11 @@
         }
       ],
       "views": [
+        {
+          "name": "All reviews",
+          "type": "table",
+          "config": {}
+        },
         {
           "name": "By status",
           "type": "kanban",
@@ -1097,6 +1127,11 @@
       ],
       "views": [
         {
+          "name": "All risks",
+          "type": "table",
+          "config": {}
+        },
+        {
           "name": "By status",
           "type": "kanban",
           "config": {
@@ -1225,7 +1260,13 @@
           "description": "The standards this record counts for. Each standard you add puts its own option here. It never decides who can see a record."
         }
       ],
-      "views": [],
+      "views": [
+        {
+          "name": "All categories",
+          "type": "table",
+          "config": {}
+        }
+      ],
       "items": [
         {
           "ref": "general",
@@ -1397,6 +1438,11 @@
       ],
       "views": [
         {
+          "name": "All controls",
+          "type": "table",
+          "config": {}
+        },
+        {
           "name": "By health",
           "type": "kanban",
           "config": {
@@ -1567,6 +1613,11 @@
         }
       ],
       "views": [
+        {
+          "name": "All assets",
+          "type": "table",
+          "config": {}
+        },
         {
           "name": "By status",
           "type": "kanban",
@@ -1742,6 +1793,11 @@
         }
       ],
       "views": [
+        {
+          "name": "All incidents",
+          "type": "table",
+          "config": {}
+        },
         {
           "name": "By status",
           "type": "kanban",
@@ -1952,6 +2008,11 @@
       ],
       "views": [
         {
+          "name": "All nonconformities",
+          "type": "table",
+          "config": {}
+        },
+        {
           "name": "By stage",
           "type": "kanban",
           "config": {
@@ -2063,6 +2124,11 @@
         }
       ],
       "views": [
+        {
+          "name": "All actions",
+          "type": "table",
+          "config": {}
+        },
         {
           "name": "By status",
           "type": "kanban",
