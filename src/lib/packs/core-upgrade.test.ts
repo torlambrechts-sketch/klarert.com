@@ -20,6 +20,15 @@ const core100 = parsePack(
     readFileSync(join(process.cwd(), 'src/lib/packs/fixtures/core-1.0.0.json'), 'utf8'),
   ) as unknown,
 );
+// Supplier management 2.0.0 (its own supplier register) is what a Core 1.0.0 workspace had; 3.0.0 needs Core 1.1.0
+const suppliers200 = parsePack(
+  JSON.parse(
+    readFileSync(
+      join(process.cwd(), 'src/lib/packs/fixtures/supplier-management-2.0.0.json'),
+      'utf8',
+    ),
+  ) as unknown,
+);
 const sheet = (ref: string) => core.sheets.find((s) => s.ref === ref)!;
 const keys = (ref: string) => sheet(ref).fields.map((f) => f.key);
 
@@ -119,15 +128,17 @@ describe('Core registers 1.1.0 and later', () => {
     for (const p of packs.filter((x) => x.requires.some((r) => r.pack === 'core')))
       expect(extendsAgainst(p, core), p.key).toEqual([]);
     expect(neededLevel(packByKey('supplier-management'), core)).toBe('starter');
+    expect(neededLevel(suppliers200, core)).toBe('starter');
+    expect(extendsAgainst(suppliers200, core)).toEqual([]);
     expect(neededLevel(packByKey('gdpr'), core, null)).toBe('starter');
     expect(neededLevel(packByKey('iso-9001'), core, 'starter')).toBe('starter');
     expect(neededLevel(packByKey('iso-27001'), core)).toBe('full');
   });
 });
 
-describe('updating Core 1.0.0 → 1.2.0 with ISO/IEC 27001 2.0.0 and Supplier management 2.0.0 installed', () => {
+describe('updating Core 1.0.0 → 1.2.0 with ISO/IEC 27001 and Supplier management 2.0.0 installed', () => {
   const iso27001 = packByKey('iso-27001');
-  const suppliers = packByKey('supplier-management');
+  const suppliers = suppliers200;
   const libraries = (iso27001.frameworks ?? []).map((f) => ({
     library: `${f.key}@${f.version}`,
     sheetId: `lib:${f.key}@${f.version}`,
@@ -253,7 +264,7 @@ describe('updating Core 1.0.0 → 1.2.0 with ISO/IEC 27001 2.0.0 and Supplier ma
 
 // Core registers 1.2.0 (owner decision, Nov 2026): Document approval goes to the people in the new "Approve by"
 // field; Approver and Approved on stay the read-only record of who approved and when. A same-major update from 1.1.0.
-describe('updating Core 1.1.0 → 1.2.0 with ISO/IEC 27001 and Supplier management installed', () => {
+describe('updating Core 1.1.0 → 1.2.0 with ISO/IEC 27001 and Supplier management 3.0.0 installed', () => {
   const core110 = parsePack(
     JSON.parse(
       readFileSync(join(process.cwd(), 'src/lib/packs/fixtures/core-1.1.0.json'), 'utf8'),

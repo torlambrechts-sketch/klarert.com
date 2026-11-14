@@ -1,12 +1,12 @@
 {
   "key": "supplier-management",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "title": "Supplier management (add-on)",
-  "description": "A supplier register with approval, reviews, a library of supplier requirements with the rules for who they apply to, and a check per supplier and requirement kept in step for you, in the Suppliers domain of the Core registers. Supplier documents go in Documents and policies, supplier risks in the Risk register and supplier problems in Nonconformities and CAPA. Installs the Core registers first.",
+  "description": "Supplier approval, reviews, a library of supplier requirements with the rules for who they apply to, and a check per supplier and requirement kept in step for you, on the shared Suppliers register of the Core registers. Supplier documents go in Documents and policies, supplier risks in the Risk register and supplier problems in Nonconformities and CAPA. Installs the Core registers first.",
   "requires": [
     {
       "pack": "core",
-      "range": "^1.0.0"
+      "range": "^1.1.0"
     }
   ],
   "frameworks": [
@@ -28,498 +28,6 @@
   ],
   "folders": [],
   "sheets": [
-    {
-      "ref": "supplier",
-      "name": "Supplier register",
-      "description": "Suppliers you depend on, how critical they are, the requirements each must meet and when they are next reviewed. A new supplier is approved by its owner, then top management, with the Supplier approval workflow.",
-      "itemLabel": "Supplier",
-      "idPrefix": "SUP-",
-      "folder": "core:suppliers",
-      "groups": [
-        {
-          "ref": "active",
-          "name": "Active",
-          "color": "green"
-        },
-        {
-          "ref": "onboarding",
-          "name": "Onboarding",
-          "color": "blue"
-        },
-        {
-          "ref": "exited",
-          "name": "Exited",
-          "color": "grey"
-        }
-      ],
-      "fields": [
-        {
-          "key": "owner",
-          "name": "Owner",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
-              {
-                "id": "opt_new",
-                "label": "New",
-                "color": "grey"
-              },
-              {
-                "id": "opt_review",
-                "label": "Under review",
-                "color": "orange"
-              },
-              {
-                "id": "opt_approved",
-                "label": "Approved",
-                "color": "green",
-                "done": true
-              },
-              {
-                "id": "opt_blocked",
-                "label": "Blocked",
-                "color": "red"
-              }
-            ]
-          }
-        },
-        {
-          "key": "approval_step",
-          "name": "Approval step",
-          "type": "workflowstep",
-          "description": "Where the supplier is in its approval. Set by the Supplier approval workflow, never by hand.",
-          "config": {
-            "options": [
-              {
-                "id": "opt_step_draft",
-                "label": "Not submitted",
-                "color": "grey"
-              },
-              {
-                "id": "opt_step_owner",
-                "label": "Supplier owner",
-                "color": "blue"
-              },
-              {
-                "id": "opt_step_management",
-                "label": "Top management",
-                "color": "purple"
-              },
-              {
-                "id": "opt_step_rejected",
-                "label": "Not approved",
-                "color": "red"
-              },
-              {
-                "id": "opt_step_approved",
-                "label": "Approved",
-                "color": "green",
-                "done": true
-              }
-            ]
-          }
-        },
-        {
-          "key": "category",
-          "name": "Category",
-          "type": "dropdown",
-          "config": {
-            "options": [
-              {
-                "id": "opt_it",
-                "label": "IT and cloud",
-                "color": "blue"
-              },
-              {
-                "id": "opt_parts",
-                "label": "Parts and materials",
-                "color": "teal"
-              },
-              {
-                "id": "opt_services",
-                "label": "Services",
-                "color": "purple"
-              }
-            ]
-          }
-        },
-        {
-          "key": "criticality",
-          "name": "Criticality",
-          "type": "severity"
-        },
-        {
-          "key": "next_review",
-          "name": "Next review",
-          "type": "date"
-        },
-        {
-          "key": "processes_personal_data",
-          "name": "Processes personal data",
-          "type": "check",
-          "description": "Ticked when the supplier processes personal data for you: the Art. 28 requirements apply."
-        },
-        {
-          "key": "reviews",
-          "name": "Reviews",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "review",
-            "multiple": true,
-            "inverseKey": "supplier"
-          }
-        },
-        {
-          "key": "requirements",
-          "name": "Extra requirements",
-          "type": "requirement",
-          "config": {
-            "targetSheetRef": "requirement",
-            "multiple": true
-          },
-          "description": "Requirements from the library that apply to this supplier beyond the rules. Each gets a check with the source Added manually."
-        },
-        {
-          "key": "checks",
-          "name": "Requirement checks",
-          "type": "link",
-          "description": "One check per requirement that applies, added and flagged by the sync.",
-          "config": {
-            "targetSheetRef": "check",
-            "multiple": true,
-            "inverseKey": "supplier",
-            "panel": "checklist",
-            "panelFields": [
-              "evidence",
-              "evidence_expiry"
-            ],
-            "panelEmpty": "Choose a category and criticality and we will add the requirements for this supplier."
-          }
-        },
-        {
-          "key": "requirements_met",
-          "name": "Requirements met",
-          "type": "rollup",
-          "config": {
-            "linkFieldKey": "checks",
-            "targetFieldKey": "status",
-            "fn": "doneOf",
-            "ignore": [
-              "opt_na",
-              "opt_no_longer"
-            ]
-          }
-        },
-        {
-          "key": "pct_met",
-          "name": "% met",
-          "type": "rollup",
-          "config": {
-            "linkFieldKey": "checks",
-            "targetFieldKey": "status",
-            "fn": "pctDone",
-            "ignore": [
-              "opt_na",
-              "opt_no_longer"
-            ]
-          }
-        },
-        {
-          "key": "worst_check",
-          "name": "Worst check",
-          "type": "rollup",
-          "config": {
-            "linkFieldKey": "checks",
-            "targetFieldKey": "status",
-            "fn": "worst",
-            "ignore": [
-              "opt_na",
-              "opt_no_longer"
-            ]
-          }
-        },
-        {
-          "key": "expired_evidence",
-          "name": "Expired evidence",
-          "type": "rollup",
-          "config": {
-            "linkFieldKey": "checks",
-            "targetFieldKey": "evidence_expiry",
-            "fn": "countExpired",
-            "ignore": [
-              "opt_na",
-              "opt_no_longer"
-            ]
-          }
-        },
-        {
-          "key": "sync_requirements",
-          "name": "Sync requirements",
-          "type": "button",
-          "config": {
-            "label": "Sync requirements"
-          }
-        },
-        {
-          "key": "documents",
-          "name": "Documents",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "core:documents",
-            "multiple": true,
-            "inverseKey": "suppliermanagement_suppliers"
-          }
-        },
-        {
-          "key": "risks",
-          "name": "Risks",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "core:risk",
-            "multiple": true,
-            "inverseKey": "suppliermanagement_supplier"
-          }
-        },
-        {
-          "key": "nonconformities",
-          "name": "Nonconformities",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "core:nc",
-            "multiple": true,
-            "inverseKey": "suppliermanagement_supplier"
-          }
-        },
-        {
-          "key": "notes",
-          "name": "Notes",
-          "type": "longtext"
-        }
-      ],
-      "views": [
-        {
-          "name": "By status",
-          "type": "kanban",
-          "config": {
-            "labelFieldKey": "status"
-          }
-        },
-        {
-          "name": "Requirements",
-          "type": "table",
-          "config": {
-            "sort": [
-              {
-                "fieldKey": "pct_met",
-                "direction": "asc"
-              }
-            ]
-          }
-        }
-      ],
-      "tabs": [
-        {
-          "ref": "table"
-        },
-        {
-          "ref": "By status"
-        },
-        {
-          "ref": "calendar"
-        },
-        {
-          "ref": "Requirements"
-        }
-      ],
-      "forms": [
-        {
-          "ref": "self_assessment",
-          "name": "Supplier self-assessment",
-          "groupRef": "onboarding",
-          "access": "internal",
-          "layout": {
-            "title": "Supplier self-assessment",
-            "description": "Tell us about your organisation and how you meet our requirements.",
-            "nameLabel": "Organisation name",
-            "fields": [
-              {
-                "key": "category",
-                "label": "What do you supply?"
-              },
-              {
-                "key": "notes",
-                "label": "How do you meet our requirements?",
-                "required": true
-              }
-            ]
-          },
-          "notice": {
-            "purpose": "To assess suppliers before and during our work with them.",
-            "legalBasis": "legitimate_interests",
-            "recipients": "The people in this workspace who manage suppliers.",
-            "retention": "Kept while you are a supplier and for 3 years after.",
-            "rights": "You can ask to see, correct or delete your answers. Contact the person who shared this form."
-          },
-          "settings": {
-            "confirmation": "Thank you. The supplier owner has your answers and will contact you if they need more.",
-            "prefill": [
-              {
-                "key": "status",
-                "value": "opt_new"
-              }
-            ]
-          }
-        },
-        {
-          "ref": "suggest",
-          "name": "Suggest a new supplier",
-          "groupRef": "onboarding",
-          "access": "internal",
-          "layout": {
-            "title": "Suggest a new supplier",
-            "description": "Tell us about a supplier you want to start using. We check them against our requirements before the first order.",
-            "nameLabel": "Supplier name",
-            "fields": [
-              {
-                "key": "category",
-                "label": "What will they supply?",
-                "required": true
-              },
-              {
-                "key": "notes",
-                "label": "What do we need them for, and why this supplier?",
-                "required": true
-              },
-              {
-                "key": "processes_personal_data",
-                "label": "Will they handle personal data for us?",
-                "help": "For example customer or staff data in their system."
-              }
-            ]
-          },
-          "settings": {
-            "confirmation": "Thank you. The supplier owner will check this supplier before anyone orders from them.",
-            "prefill": [
-              {
-                "key": "status",
-                "value": "opt_new"
-              }
-            ]
-          }
-        }
-      ],
-      "items": [
-        {
-          "ref": "cloudhost",
-          "group": "active",
-          "name": "Example: Northwind Cloud Hosting",
-          "values": {
-            "status": "opt_approved",
-            "category": "opt_it",
-            "criticality": "$option:High",
-            "next_review": "$in:45",
-            "processes_personal_data": true
-          },
-          "links": {
-            "reviews": [
-              "cloudhost_2026"
-            ],
-            "requirements": [
-              "security_clause",
-              "breach_notice"
-            ]
-          }
-        },
-        {
-          "ref": "fasteners",
-          "group": "onboarding",
-          "name": "Example: Leeds Fasteners Ltd",
-          "values": {
-            "status": "opt_review",
-            "category": "opt_parts",
-            "criticality": "$option:Medium",
-            "next_review": "$in:10"
-          },
-          "links": {
-            "requirements": [
-              "quality_certificate"
-            ]
-          }
-        }
-      ],
-      "kind": "register",
-      "workflows": [
-        {
-          "id": "supplier-approval",
-          "name": "Supplier approval",
-          "enabled": true,
-          "requiredFields": [
-            "owner",
-            "category",
-            "criticality"
-          ],
-          "allowSelfApproval": false,
-          "lockOnApproval": false,
-          "stepField": {
-            "fieldKey": "approval_step",
-            "draft": "opt_step_draft",
-            "approved": "opt_step_approved",
-            "rejected": "opt_step_rejected"
-          },
-          "statusField": {
-            "fieldKey": "status",
-            "onSubmit": "opt_review",
-            "onApproved": "opt_approved",
-            "onRejected": "opt_blocked"
-          },
-          "steps": [
-            {
-              "id": "owner",
-              "name": "Supplier owner",
-              "approvers": {
-                "kind": "field",
-                "fieldKey": "owner"
-              },
-              "mode": "any",
-              "sla": {
-                "amount": 5,
-                "unit": "days"
-              },
-              "onReject": {
-                "to": "draft"
-              },
-              "optionId": "opt_step_owner"
-            },
-            {
-              "id": "management",
-              "name": "Top management",
-              "approvers": {
-                "kind": "jobRole",
-                "roleName": "Top management"
-              },
-              "mode": "any",
-              "sla": {
-                "amount": 10,
-                "unit": "days"
-              },
-              "onReject": {
-                "to": "step",
-                "stepId": "owner"
-              },
-              "optionId": "opt_step_management"
-            }
-          ]
-        }
-      ]
-    },
     {
       "ref": "review",
       "name": "Supplier reviews",
@@ -545,9 +53,9 @@
           "name": "Supplier",
           "type": "link",
           "config": {
-            "targetSheetRef": "supplier",
+            "targetSheetRef": "core:suppliers",
             "multiple": false,
-            "inverseKey": "reviews"
+            "inverseKey": "suppliermanagement_reviews"
           }
         },
         {
@@ -620,11 +128,6 @@
           "values": {
             "review_date": "$in:-20",
             "result": "opt_pass"
-          },
-          "links": {
-            "supplier": [
-              "cloudhost"
-            ]
           }
         }
       ],
@@ -1034,9 +537,9 @@
           "name": "Supplier",
           "type": "link",
           "config": {
-            "targetSheetRef": "supplier",
+            "targetSheetRef": "core:suppliers",
             "multiple": false,
-            "inverseKey": "checks"
+            "inverseKey": "suppliermanagement_checks"
           }
         },
         {
@@ -1339,9 +842,6 @@
             "version_at_check": "v1.0"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ],
             "requirement": [
               "security_clause"
             ]
@@ -1360,9 +860,6 @@
             "version_at_check": "v1.0"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ],
             "requirement": [
               "dpa"
             ]
@@ -1381,9 +878,6 @@
             "version_at_check": "v1.0"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ],
             "requirement": [
               "security_cert"
             ]
@@ -1401,9 +895,6 @@
             "version_at_check": "v1.0"
           },
           "links": {
-            "supplier": [
-              "cloudhost"
-            ],
             "requirement": [
               "transfers"
             ]
@@ -1416,6 +907,580 @@
   "extends": [
     {
       "pack": "core",
+      "sheet": "suppliers",
+      "fields": [
+        {
+          "key": "suppliermanagement_approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the supplier is in its Supplier approval. Set by the workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Not submitted",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_owner",
+                "label": "Supplier owner",
+                "color": "blue"
+              },
+              {
+                "id": "opt_step_management",
+                "label": "Top management",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Not approved",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "suppliermanagement_category",
+          "name": "Category",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_it",
+                "label": "IT and cloud",
+                "color": "blue"
+              },
+              {
+                "id": "opt_parts",
+                "label": "Parts and materials",
+                "color": "teal"
+              },
+              {
+                "id": "opt_services",
+                "label": "Services",
+                "color": "purple"
+              }
+            ]
+          },
+          "description": "What kind of supplier this is. With the criticality it decides which requirements apply."
+        },
+        {
+          "key": "suppliermanagement_personal_data",
+          "name": "Processes personal data",
+          "type": "check",
+          "description": "Ticked when the supplier processes personal data for you: the Art. 28 requirements apply."
+        },
+        {
+          "key": "suppliermanagement_reviews",
+          "name": "Reviews",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "review",
+            "multiple": true,
+            "inverseKey": "supplier"
+          }
+        },
+        {
+          "key": "suppliermanagement_extra",
+          "name": "Extra requirements",
+          "type": "requirement",
+          "config": {
+            "targetSheetRef": "requirement",
+            "multiple": true
+          },
+          "description": "Requirements from the library that apply to this supplier beyond the rules. Each gets a check with the source Added manually."
+        },
+        {
+          "key": "suppliermanagement_checks",
+          "name": "Requirement checks",
+          "type": "link",
+          "description": "One check per requirement that applies, added and flagged by the sync.",
+          "config": {
+            "targetSheetRef": "check",
+            "multiple": true,
+            "inverseKey": "supplier",
+            "panel": "checklist",
+            "panelFields": [
+              "evidence",
+              "evidence_expiry"
+            ],
+            "panelEmpty": "Choose a category and criticality and we will add the requirements for this supplier."
+          }
+        },
+        {
+          "key": "suppliermanagement_met",
+          "name": "Requirements met",
+          "type": "rollup",
+          "config": {
+            "linkFieldKey": "suppliermanagement_checks",
+            "targetFieldKey": "status",
+            "fn": "doneOf",
+            "ignore": [
+              "opt_na",
+              "opt_no_longer"
+            ]
+          }
+        },
+        {
+          "key": "suppliermanagement_pct_met",
+          "name": "% met",
+          "type": "rollup",
+          "config": {
+            "linkFieldKey": "suppliermanagement_checks",
+            "targetFieldKey": "status",
+            "fn": "pctDone",
+            "ignore": [
+              "opt_na",
+              "opt_no_longer"
+            ]
+          }
+        },
+        {
+          "key": "suppliermanagement_worst",
+          "name": "Worst check",
+          "type": "rollup",
+          "config": {
+            "linkFieldKey": "suppliermanagement_checks",
+            "targetFieldKey": "status",
+            "fn": "worst",
+            "ignore": [
+              "opt_na",
+              "opt_no_longer"
+            ]
+          }
+        },
+        {
+          "key": "suppliermanagement_expired",
+          "name": "Expired evidence",
+          "type": "rollup",
+          "config": {
+            "linkFieldKey": "suppliermanagement_checks",
+            "targetFieldKey": "evidence_expiry",
+            "fn": "countExpired",
+            "ignore": [
+              "opt_na",
+              "opt_no_longer"
+            ]
+          }
+        },
+        {
+          "key": "suppliermanagement_sync",
+          "name": "Sync requirements",
+          "type": "button",
+          "config": {
+            "label": "Sync requirements"
+          }
+        },
+        {
+          "key": "suppliermanagement_documents",
+          "name": "Documents",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:documents",
+            "multiple": true,
+            "inverseKey": "suppliermanagement_suppliers"
+          }
+        },
+        {
+          "key": "suppliermanagement_risks",
+          "name": "Risks",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:risk",
+            "multiple": true,
+            "inverseKey": "suppliermanagement_supplier"
+          }
+        },
+        {
+          "key": "suppliermanagement_nonconformities",
+          "name": "Nonconformities",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:nc",
+            "multiple": true,
+            "inverseKey": "suppliermanagement_supplier"
+          }
+        },
+        {
+          "key": "suppliermanagement_notes",
+          "name": "Notes",
+          "type": "longtext"
+        }
+      ],
+      "views": [
+        {
+          "name": "Requirements",
+          "type": "table",
+          "config": {
+            "sort": [
+              {
+                "fieldKey": "suppliermanagement_pct_met",
+                "direction": "asc"
+              }
+            ]
+          }
+        }
+      ],
+      "forms": [
+        {
+          "ref": "suppliermanagement_self_assessment",
+          "name": "Supplier self-assessment",
+          "groupRef": "onboarding",
+          "access": "internal",
+          "layout": {
+            "title": "Supplier self-assessment",
+            "description": "Tell us about your organisation and how you meet our requirements.",
+            "nameLabel": "Organisation name",
+            "fields": [
+              {
+                "key": "suppliermanagement_category",
+                "label": "What do you supply?"
+              },
+              {
+                "key": "suppliermanagement_notes",
+                "label": "How do you meet our requirements?",
+                "required": true
+              }
+            ]
+          },
+          "notice": {
+            "purpose": "To assess suppliers before and during our work with them.",
+            "legalBasis": "legitimate_interests",
+            "recipients": "The people in this workspace who manage suppliers.",
+            "retention": "Kept while you are a supplier and for 3 years after.",
+            "rights": "You can ask to see, correct or delete your answers. Contact the person who shared this form."
+          },
+          "settings": {
+            "confirmation": "Thank you. The supplier owner has your answers and will contact you if they need more.",
+            "prefill": [
+              {
+                "key": "status",
+                "value": "opt_new"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "suppliermanagement_suggest",
+          "name": "Suggest a new supplier",
+          "groupRef": "onboarding",
+          "access": "internal",
+          "layout": {
+            "title": "Suggest a new supplier",
+            "description": "Tell us about a supplier you want to start using. We check them against our requirements before the first order.",
+            "nameLabel": "Supplier name",
+            "fields": [
+              {
+                "key": "suppliermanagement_category",
+                "label": "What will they supply?",
+                "required": true
+              },
+              {
+                "key": "suppliermanagement_notes",
+                "label": "What do we need them for, and why this supplier?",
+                "required": true
+              },
+              {
+                "key": "suppliermanagement_personal_data",
+                "label": "Will they handle personal data for us?",
+                "help": "For example customer or staff data in their system."
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The supplier owner will check this supplier before anyone orders from them.",
+            "prefill": [
+              {
+                "key": "status",
+                "value": "opt_new"
+              }
+            ]
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "suppliermanagement_cloudhost",
+          "group": "active",
+          "name": "Example: Northwind Cloud Hosting",
+          "values": {
+            "supplies": "Cloud hosting for the customer platform",
+            "status": "opt_approved",
+            "suppliermanagement_category": "opt_it",
+            "criticality": "opt_high",
+            "next_review": "$in:45",
+            "suppliermanagement_personal_data": true
+          },
+          "links": {
+            "suppliermanagement_reviews": [
+              "cloudhost_2026"
+            ],
+            "suppliermanagement_extra": [
+              "security_clause",
+              "breach_notice"
+            ],
+            "suppliermanagement_checks": [
+              "cloudhost_contract",
+              "cloudhost_dpa",
+              "cloudhost_cert",
+              "cloudhost_transfers"
+            ]
+          }
+        },
+        {
+          "ref": "suppliermanagement_fasteners",
+          "group": "onboarding",
+          "name": "Example: Leeds Fasteners Ltd",
+          "values": {
+            "supplies": "Fasteners and fixings",
+            "status": "opt_review",
+            "suppliermanagement_category": "opt_parts",
+            "criticality": "opt_medium",
+            "next_review": "$in:10"
+          },
+          "links": {
+            "suppliermanagement_extra": [
+              "quality_certificate"
+            ]
+          }
+        }
+      ],
+      "workflows": [
+        {
+          "id": "suppliermanagement_supplier_approval",
+          "name": "Supplier approval",
+          "enabled": true,
+          "requiredFields": [
+            "owner",
+            "suppliermanagement_category",
+            "criticality"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "suppliermanagement_approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_review",
+            "onApproved": "opt_approved",
+            "onRejected": "opt_blocked"
+          },
+          "steps": [
+            {
+              "id": "owner",
+              "name": "Supplier owner",
+              "approvers": {
+                "kind": "field",
+                "fieldKey": "owner"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 5,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_owner"
+            },
+            {
+              "id": "management",
+              "name": "Top management",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Top management"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "step",
+                "stepId": "owner"
+              },
+              "optionId": "opt_step_management"
+            }
+          ]
+        }
+      ],
+      "automations": [
+        {
+          "ref": "review_due",
+          "name": "Review due in 14 days → ask the owner for an update",
+          "trigger": {
+            "type": "date_arrives",
+            "fieldKey": "next_review",
+            "offsetDays": -14
+          },
+          "conditions": [],
+          "actions": [
+            {
+              "type": "request_update",
+              "fieldKey": "owner",
+              "message": "{id} {name} is due for review on {next_review}. Please plan it."
+            }
+          ]
+        },
+        {
+          "ref": "sync_on_create",
+          "name": "Supplier added → sync its requirement checks",
+          "trigger": {
+            "type": "item_created"
+          },
+          "conditions": [],
+          "actions": [
+            {
+              "type": "sync_requirement_checks",
+              "sheetRef": "check",
+              "notifyFieldKey": "owner",
+              "categoryKey": "suppliermanagement_category",
+              "personalDataKey": "suppliermanagement_personal_data",
+              "manualKey": "suppliermanagement_extra"
+            }
+          ],
+          "advanced": true,
+          "description": "Cascade: a new supplier gets one check for every library requirement that applies to its category, criticality and personal data, so nobody has to work out which requirements apply by hand. The owner is told when the new checks lower the share met."
+        },
+        {
+          "ref": "sync_on_category",
+          "name": "Category changed → sync the requirement checks",
+          "trigger": {
+            "type": "field_changed",
+            "fieldKey": "suppliermanagement_category"
+          },
+          "conditions": [],
+          "actions": [
+            {
+              "type": "sync_requirement_checks",
+              "sheetRef": "check",
+              "notifyFieldKey": "owner",
+              "categoryKey": "suppliermanagement_category",
+              "personalDataKey": "suppliermanagement_personal_data",
+              "manualKey": "suppliermanagement_extra"
+            }
+          ]
+        },
+        {
+          "ref": "sync_on_criticality",
+          "name": "Criticality changed → sync the requirement checks",
+          "trigger": {
+            "type": "field_changed",
+            "fieldKey": "criticality"
+          },
+          "conditions": [],
+          "actions": [
+            {
+              "type": "sync_requirement_checks",
+              "sheetRef": "check",
+              "notifyFieldKey": "owner",
+              "categoryKey": "suppliermanagement_category",
+              "personalDataKey": "suppliermanagement_personal_data",
+              "manualKey": "suppliermanagement_extra"
+            }
+          ]
+        },
+        {
+          "ref": "sync_on_personal_data",
+          "name": "Processes personal data changed → sync the requirement checks",
+          "trigger": {
+            "type": "field_changed",
+            "fieldKey": "suppliermanagement_personal_data"
+          },
+          "conditions": [],
+          "actions": [
+            {
+              "type": "sync_requirement_checks",
+              "sheetRef": "check",
+              "notifyFieldKey": "owner",
+              "categoryKey": "suppliermanagement_category",
+              "personalDataKey": "suppliermanagement_personal_data",
+              "manualKey": "suppliermanagement_extra"
+            }
+          ]
+        },
+        {
+          "ref": "sync_on_extra",
+          "name": "Extra requirements changed → sync the requirement checks",
+          "trigger": {
+            "type": "field_changed",
+            "fieldKey": "suppliermanagement_extra"
+          },
+          "conditions": [],
+          "actions": [
+            {
+              "type": "sync_requirement_checks",
+              "sheetRef": "check",
+              "notifyFieldKey": "owner",
+              "categoryKey": "suppliermanagement_category",
+              "personalDataKey": "suppliermanagement_personal_data",
+              "manualKey": "suppliermanagement_extra"
+            }
+          ]
+        },
+        {
+          "ref": "sync_button",
+          "name": "Sync requirements button → sync the requirement checks",
+          "trigger": {
+            "type": "button_clicked",
+            "fieldKey": "suppliermanagement_sync"
+          },
+          "conditions": [],
+          "actions": [
+            {
+              "type": "sync_requirement_checks",
+              "sheetRef": "check",
+              "notifyFieldKey": "owner",
+              "categoryKey": "suppliermanagement_category",
+              "personalDataKey": "suppliermanagement_personal_data",
+              "manualKey": "suppliermanagement_extra"
+            }
+          ]
+        },
+        {
+          "ref": "review_overdue_escalate",
+          "name": "Supplier review 14 days late → tell the owner and top management",
+          "advanced": true,
+          "description": "Escalation ladder: the owner is asked 14 days before the review date. A supplier still not reviewed 14 days after it goes to top management with the owner, because an unreviewed supplier is a gap in supplier control.",
+          "trigger": {
+            "type": "date_arrives",
+            "fieldKey": "next_review",
+            "offsetDays": 14
+          },
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_none_of",
+              "value": [
+                "opt_blocked"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Top management"
+              ],
+              "message": "{id} {name} was due for review on {next_review} and has not been reviewed."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
       "sheet": "documents",
       "fields": [
         {
@@ -1423,9 +1488,9 @@
           "name": "Suppliers",
           "type": "link",
           "config": {
-            "targetSheetRef": "supplier",
+            "targetSheetRef": "core:suppliers",
             "multiple": true,
-            "inverseKey": "documents"
+            "inverseKey": "suppliermanagement_documents"
           }
         }
       ],
@@ -1457,8 +1522,8 @@
           },
           "links": {
             "suppliermanagement_suppliers": [
-              "cloudhost",
-              "fasteners"
+              "suppliermanagement_cloudhost",
+              "suppliermanagement_fasteners"
             ]
           }
         },
@@ -1475,8 +1540,8 @@
           },
           "links": {
             "suppliermanagement_suppliers": [
-              "cloudhost",
-              "fasteners"
+              "suppliermanagement_cloudhost",
+              "suppliermanagement_fasteners"
             ]
           }
         }
@@ -1491,9 +1556,9 @@
           "name": "Supplier",
           "type": "link",
           "config": {
-            "targetSheetRef": "supplier",
+            "targetSheetRef": "core:suppliers",
             "multiple": true,
-            "inverseKey": "risks"
+            "inverseKey": "suppliermanagement_risks"
           }
         }
       ],
@@ -1513,7 +1578,7 @@
           },
           "links": {
             "suppliermanagement_supplier": [
-              "cloudhost"
+              "suppliermanagement_cloudhost"
             ]
           }
         }
@@ -1528,9 +1593,9 @@
           "name": "Supplier",
           "type": "link",
           "config": {
-            "targetSheetRef": "supplier",
+            "targetSheetRef": "core:suppliers",
             "multiple": true,
-            "inverseKey": "nonconformities"
+            "inverseKey": "suppliermanagement_nonconformities"
           }
         },
         {
@@ -1624,24 +1689,6 @@
   ],
   "automations": [
     {
-      "ref": "review_due",
-      "sheet": "supplier",
-      "name": "Review due in 14 days → ask the owner for an update",
-      "trigger": {
-        "type": "date_arrives",
-        "fieldKey": "next_review",
-        "offsetDays": -14
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "request_update",
-          "fieldKey": "owner",
-          "message": "{id} {name} is due for review on {next_review}. Please plan it."
-        }
-      ]
-    },
-    {
       "ref": "review_failed",
       "sheet": "review",
       "name": "Review failed → tell the supplier owner",
@@ -1662,109 +1709,6 @@
       ]
     },
     {
-      "ref": "sync_on_create",
-      "sheet": "supplier",
-      "name": "Supplier added → sync its requirement checks",
-      "trigger": {
-        "type": "item_created"
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "sync_requirement_checks",
-          "sheetRef": "check",
-          "notifyFieldKey": "owner"
-        }
-      ],
-      "advanced": true,
-      "description": "Cascade: a new supplier gets one check for every library requirement that applies to its category, criticality and personal data, so nobody has to work out which requirements apply by hand. The owner is told when the new checks lower the share met."
-    },
-    {
-      "ref": "sync_on_category",
-      "sheet": "supplier",
-      "name": "Category changed → sync the requirement checks",
-      "trigger": {
-        "type": "field_changed",
-        "fieldKey": "category"
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "sync_requirement_checks",
-          "sheetRef": "check",
-          "notifyFieldKey": "owner"
-        }
-      ]
-    },
-    {
-      "ref": "sync_on_criticality",
-      "sheet": "supplier",
-      "name": "Criticality changed → sync the requirement checks",
-      "trigger": {
-        "type": "field_changed",
-        "fieldKey": "criticality"
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "sync_requirement_checks",
-          "sheetRef": "check",
-          "notifyFieldKey": "owner"
-        }
-      ]
-    },
-    {
-      "ref": "sync_on_personal_data",
-      "sheet": "supplier",
-      "name": "Processes personal data changed → sync the requirement checks",
-      "trigger": {
-        "type": "field_changed",
-        "fieldKey": "processes_personal_data"
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "sync_requirement_checks",
-          "sheetRef": "check",
-          "notifyFieldKey": "owner"
-        }
-      ]
-    },
-    {
-      "ref": "sync_on_extra",
-      "sheet": "supplier",
-      "name": "Extra requirements changed → sync the requirement checks",
-      "trigger": {
-        "type": "field_changed",
-        "fieldKey": "requirements"
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "sync_requirement_checks",
-          "sheetRef": "check",
-          "notifyFieldKey": "owner"
-        }
-      ]
-    },
-    {
-      "ref": "sync_button",
-      "sheet": "supplier",
-      "name": "Sync requirements button → sync the requirement checks",
-      "trigger": {
-        "type": "button_clicked",
-        "fieldKey": "sync_requirements"
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "sync_requirement_checks",
-          "sheetRef": "check",
-          "notifyFieldKey": "owner"
-        }
-      ]
-    },
-    {
       "ref": "resync_on_new_requirement",
       "sheet": "requirement",
       "name": "Requirement added → add its checks to the suppliers it applies to",
@@ -1775,7 +1719,10 @@
       "actions": [
         {
           "type": "sync_requirement_checks",
-          "sheetRef": "check"
+          "sheetRef": "check",
+          "categoryKey": "suppliermanagement_category",
+          "personalDataKey": "suppliermanagement_personal_data",
+          "manualKey": "suppliermanagement_extra"
         }
       ],
       "advanced": true,
@@ -1793,7 +1740,10 @@
       "actions": [
         {
           "type": "sync_requirement_checks",
-          "sheetRef": "check"
+          "sheetRef": "check",
+          "categoryKey": "suppliermanagement_category",
+          "personalDataKey": "suppliermanagement_personal_data",
+          "manualKey": "suppliermanagement_extra"
         }
       ]
     },
@@ -1809,7 +1759,10 @@
       "actions": [
         {
           "type": "sync_requirement_checks",
-          "sheetRef": "check"
+          "sheetRef": "check",
+          "categoryKey": "suppliermanagement_category",
+          "personalDataKey": "suppliermanagement_personal_data",
+          "manualKey": "suppliermanagement_extra"
         }
       ]
     },
@@ -1825,7 +1778,10 @@
       "actions": [
         {
           "type": "sync_requirement_checks",
-          "sheetRef": "check"
+          "sheetRef": "check",
+          "categoryKey": "suppliermanagement_category",
+          "personalDataKey": "suppliermanagement_personal_data",
+          "manualKey": "suppliermanagement_extra"
         }
       ]
     },
@@ -1938,37 +1894,6 @@
       ]
     },
     {
-      "ref": "review_overdue_escalate",
-      "sheet": "supplier",
-      "name": "Supplier review 14 days late → tell the owner and top management",
-      "advanced": true,
-      "description": "Escalation ladder: the owner is asked 14 days before the review date. A supplier still not reviewed 14 days after it goes to top management with the owner, because an unreviewed supplier is a gap in supplier control.",
-      "trigger": {
-        "type": "date_arrives",
-        "fieldKey": "next_review",
-        "offsetDays": 14
-      },
-      "conditions": [
-        {
-          "fieldKey": "status",
-          "op": "is_none_of",
-          "value": [
-            "opt_blocked"
-          ]
-        }
-      ],
-      "actions": [
-        {
-          "type": "notify",
-          "to": [
-            "field:owner",
-            "jobRole:Top management"
-          ],
-          "message": "{id} {name} was due for review on {next_review} and has not been reviewed."
-        }
-      ]
-    },
-    {
       "ref": "review_failed_nc",
       "sheet": "review",
       "name": "Review failed → raise a nonconformity and link it",
@@ -2043,21 +1968,21 @@
           "ref": "w_status",
           "type": "by_option",
           "title": "Suppliers by status",
-          "sheetRef": "supplier",
+          "sheetRef": "core:suppliers",
           "fieldKey": "status"
         },
         {
           "ref": "w_criticality",
           "type": "by_option",
           "title": "Suppliers by criticality",
-          "sheetRef": "supplier",
+          "sheetRef": "core:suppliers",
           "fieldKey": "criticality"
         },
         {
           "ref": "w_overdue",
           "type": "overdue",
           "title": "Overdue reviews",
-          "sheetRef": "supplier",
+          "sheetRef": "core:suppliers",
           "fieldKey": "next_review"
         },
         {
@@ -2095,14 +2020,16 @@
           "type": "count",
           "title": "Open supplier nonconformities",
           "sheetRef": "core:nc",
-          "conditions": [
+          "scope": [
             {
               "fieldKey": "source",
               "op": "is_any_of",
               "value": [
                 "opt_supplier"
               ]
-            },
+            }
+          ],
+          "conditions": [
             {
               "fieldKey": "stage",
               "op": "is_not_done"
@@ -2121,18 +2048,18 @@
         "title": "List your suppliers",
         "body": "Add the suppliers you depend on, each with an owner, a category and a criticality. Their requirement checks are added for you.",
         "target": {
-          "sheetRef": "supplier"
+          "sheetRef": "core:suppliers"
         },
         "rules": [
           {
-            "sheetRef": "supplier",
+            "sheetRef": "core:suppliers",
             "all": [
               {
                 "fieldKey": "owner",
                 "op": "is_not_empty"
               },
               {
-                "fieldKey": "category",
+                "fieldKey": "suppliermanagement_category",
                 "op": "is_not_empty"
               },
               {
@@ -2200,16 +2127,19 @@
         "title": "Approve your suppliers",
         "body": "Submit each supplier for approval: its owner, then top management. Give someone the job title Top management so the approval has someone to ask.",
         "target": {
-          "sheetRef": "supplier",
+          "sheetRef": "core:suppliers",
           "view": "By status"
         },
         "rules": [
           {
-            "sheetRef": "supplier",
+            "sheetRef": "core:suppliers",
             "all": [
               {
                 "fieldKey": "status",
-                "op": "is_done"
+                "op": "is_any_of",
+                "value": [
+                  "opt_approved"
+                ]
               }
             ],
             "min": 2

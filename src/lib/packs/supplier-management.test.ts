@@ -17,9 +17,11 @@ import { repoPacks } from './catalogue';
 import { packManifestSchema } from './manifest';
 import { packQualityProblems } from './quality';
 
-// Supplier management (docs/11): 2.0.0 is an add-on to the Core registers that keeps the per-supplier requirement
-// checks, the library's Applies-to rules, the sync and the soft links to the 27001, 9001 and GDPR libraries; the
-// 1.0.0 → 1.1.0 upgrade (P6) is kept as a test of the upgrade planner on the fixtures.
+// Supplier management (docs/11): 3.0.0 is an add-on that extends the Core registers' shared Suppliers register instead
+// of shipping its own, and keeps the per-supplier requirement checks, the library's Applies-to rules, the sync and the
+// soft links to the 27001, 9001 and GDPR libraries. 2.0.0 (its own Supplier register in Core's Suppliers domain) stays
+// in the catalogue for the workspaces that have it and is tested on its fixture; the 1.0.0 → 1.1.0 upgrade (P6) is
+// kept as a test of the upgrade planner on the fixtures.
 type Row = Record<string, Json>;
 const packs = repoPacks();
 const pack = packs.find((p) => p.key === 'supplier-management')!;
@@ -32,6 +34,7 @@ const fixture = (version: string) =>
   );
 const v1 = fixture('1.0.0');
 const v11 = fixture('1.1.0');
+const v20 = fixture('2.0.0');
 const LIB27 = '00000000-0000-4000-8000-00000000f027';
 
 const snapshot = (over: Partial<PackSnapshot> = {}): PackSnapshot => ({
@@ -57,7 +60,7 @@ const env = {
   userId: 'u-1',
 };
 
-/** Core installed at the level the add-on needs. */
+/** Core installed at the level the add-on needs (Starter for 2.0.0 and 3.0.0 alike). */
 function withCore(over: Partial<PackSnapshot> = {}) {
   const corePlan = planPackInstall(core, snapshot(), env, {
     level: neededLevel(pack, core) ?? 'starter',
@@ -68,8 +71,8 @@ function withCore(over: Partial<PackSnapshot> = {}) {
   };
 }
 
-describe('Supplier management add-on 2.0.0', () => {
-  const m = pack;
+describe('Supplier management add-on 2.0.0 (catalogue only, on its fixture)', () => {
+  const m = v20;
   const sheet = (ref: string) => m.sheets.find((s) => s.ref === ref)!;
 
   it('requires Core, meets the quality bar and puts its sheets in the Suppliers domain', () => {
@@ -229,6 +232,240 @@ describe('Supplier management add-on 2.0.0', () => {
     // example items are marked as examples (the library and Core documents are not examples)
     for (const s of m.sheets.filter((x) => !x.isLibrary))
       for (const i of s.items) expect(i.name).toMatch(/^Example: /);
+  });
+});
+
+describe('Supplier management add-on 3.0.0 on the Core Suppliers register', () => {
+  const m = pack;
+  const sheet = (ref: string) => m.sheets.find((s) => s.ref === ref)!;
+  const onSuppliers = m.extends!.find((e) => e.sheet === 'suppliers')!;
+  const plan = () => {
+    const { snap, coreRefs } = withCore();
+    const p = planPackInstall(m, snap, env);
+    return { p, coreRefs, payload: p.payload! };
+  };
+
+  it('is a new major that extends Core Suppliers instead of shipping a supplier register', () => {
+    expect(m.version).toBe('3.0.0');
+    // Core's Suppliers register came with 1.1.0
+    expect(m.requires).toEqual([{ pack: 'core', range: '^1.1.0' }]);
+    expect(packQualityProblems(m)).toEqual([]);
+    expect(extendsAgainst(m, core)).toEqual([]);
+    expect(neededLevel(m, core)).toBe('starter');
+    expect(m.sheets.map((s) => [s.ref, s.folder, s.kind])).toEqual([
+      ['review', 'core:suppliers', 'log'],
+      ['requirement', 'core:suppliers', 'library'],
+      ['check', 'core:suppliers', 'register'],
+    ]);
+    expect(m.extends!.map((e) => e.sheet)).toEqual(['suppliers', 'documents', 'risk', 'nc']);
+    // Core's Owner, Status, Criticality and Next review are used, never added again
+    expect(onSuppliers.fields!.map((f) => f.key)).toEqual([
+      'suppliermanagement_approval_step',
+      'suppliermanagement_category',
+      'suppliermanagement_personal_data',
+      'suppliermanagement_reviews',
+      'suppliermanagement_extra',
+      'suppliermanagement_checks',
+      'suppliermanagement_met',
+      'suppliermanagement_pct_met',
+      'suppliermanagement_worst',
+      'suppliermanagement_expired',
+      'suppliermanagement_sync',
+      'suppliermanagement_documents',
+      'suppliermanagement_risks',
+      'suppliermanagement_nonconformities',
+      'suppliermanagement_notes',
+    ]);
+    // no framework column of its own: Core's shared Requirements column is on Suppliers already
+    expect(
+      onSuppliers.fields!.some((f) => f.type === 'requirement' && !f.config?.targetSheetRef),
+    ).toBe(false);
+  });
+
+  it('installs on Core: the checks, reviews and columns join Core’s Suppliers, both ways', () => {
+    const { p, coreRefs, payload } = plan();
+    expect(p.state).toBe('ready');
+    expect(p.preview.conflicts).toEqual([]);
+    const suppliers = coreRefs['sheet:suppliers']!;
+    for (const s of payload.sheets.filter((x) => !x.parent_sheet_id))
+      expect(s.folder_id).toBe(coreRefs['folder:suppliers']);
+    expect(payload.sheets.some((s) => s.ref === 'supplier')).toBe(false);
+    const field = (ref: string) => payload.fields.find((f) => f.ref === ref)!;
+    const cfg = (ref: string) => field(ref).config as Row;
+    // the checks and reviews link to Core's suppliers, their inverses on Core's Suppliers
+    expect(cfg('check.supplier').targetSheetId).toBe(suppliers);
+    expect(cfg('check.supplier').inverseFieldId).toBe(
+      field('core:suppliers.suppliermanagement_checks').id,
+    );
+    expect(cfg('core:suppliers.suppliermanagement_checks').inverseFieldId).toBe(
+      field('check.supplier').id,
+    );
+    expect(cfg('review.supplier').targetSheetId).toBe(suppliers);
+    expect(field('core:suppliers.suppliermanagement_checks').sheet_id).toBe(suppliers);
+    // two Core registers joined by this add-on, both ways: a supplier's documents and a document's suppliers
+    const docs = field('core:documents.suppliermanagement_suppliers');
+    const supDocs = field('core:suppliers.suppliermanagement_documents');
+    expect([(docs.config as Row).targetSheetId, (docs.config as Row).inverseFieldId]).toEqual([
+      suppliers,
+      supDocs.id,
+    ]);
+    expect([(supDocs.config as Row).targetSheetId, (supDocs.config as Row).inverseFieldId]).toEqual(
+      [coreRefs['sheet:documents'], docs.id],
+    );
+    expect((cfg('core:suppliers.suppliermanagement_met') as Row).linkFieldKey).toBe(
+      'suppliermanagement_checks',
+    );
+  });
+
+  it('adds the example suppliers to Core with their checks, review, documents and risk', () => {
+    const { coreRefs, payload } = plan();
+    const item = (ref: string) => payload.items.find((i) => i.ref === ref)!;
+    const cloud = item('core:suppliers.suppliermanagement_cloudhost');
+    expect([cloud.sheet_id, cloud.name]).toEqual([
+      coreRefs['sheet:suppliers'],
+      'Example: Northwind Cloud Hosting',
+    ]);
+    const field = (ref: string) => payload.fields.find((f) => f.ref === ref)!.id;
+    const linked = (fieldRef: string, from: string) =>
+      payload.links
+        .filter((l) => l.field_id === field(fieldRef) && l.from_item === item(from).id)
+        .map((l) => payload.items.find((i) => i.id === l.to_item)?.ref)
+        .sort();
+    expect(
+      linked(
+        'core:suppliers.suppliermanagement_checks',
+        'core:suppliers.suppliermanagement_cloudhost',
+      ),
+    ).toEqual([
+      'check.cloudhost_cert',
+      'check.cloudhost_contract',
+      'check.cloudhost_dpa',
+      'check.cloudhost_transfers',
+    ]);
+    expect(
+      linked(
+        'core:suppliers.suppliermanagement_reviews',
+        'core:suppliers.suppliermanagement_cloudhost',
+      ),
+    ).toEqual(['review.cloudhost_2026']);
+    expect(
+      linked(
+        'core:documents.suppliermanagement_suppliers',
+        'core:documents.suppliermanagement_code_of_conduct',
+      ),
+    ).toEqual([
+      'core:suppliers.suppliermanagement_cloudhost',
+      'core:suppliers.suppliermanagement_fasteners',
+    ]);
+    expect(
+      linked(
+        'core:risk.suppliermanagement_supplier',
+        'core:risk.suppliermanagement_hosting_outage',
+      ),
+    ).toEqual(['core:suppliers.suppliermanagement_cloudhost']);
+    // Core's own columns carry the example's status and criticality; they are not added again
+    const values = cloud.values as Row;
+    expect(values[coreRefs['field:suppliers.criticality']!]).toBe('opt_high');
+    expect(values[coreRefs['field:suppliers.status']!]).toBe('opt_approved');
+    expect(
+      payload.fields.filter(
+        (f) =>
+          f.sheet_id === coreRefs['sheet:suppliers'] &&
+          ['owner', 'status', 'criticality', 'next_review'].includes(String(f.key)),
+      ),
+    ).toEqual([]);
+  });
+
+  it('keeps the requirement checks in step on Core’s suppliers, reading the add-on’s columns', () => {
+    const { coreRefs, payload } = plan();
+    const checks = payload.sheets.find((s) => s.ref === 'check')!;
+    expect((checks.settings as Row).uniqueLinkPair).toEqual(['supplier', 'requirement']);
+    const sync = payload.automations.filter((a) =>
+      (a.actions as Row[]).some((x) => x.type === 'sync_requirement_checks'),
+    );
+    expect(sync).toHaveLength(10);
+    for (const a of sync)
+      expect((a.actions as Row[])[0]).toMatchObject({
+        sheetId: checks.id,
+        categoryKey: 'suppliermanagement_category',
+        personalDataKey: 'suppliermanagement_personal_data',
+        manualKey: 'suppliermanagement_extra',
+      });
+    // six on the supplier (Core's Suppliers), four on the library
+    expect(sync.filter((a) => a.sheet_id === coreRefs['sheet:suppliers'])).toHaveLength(6);
+    const onCriticality = sync.find((a) => a.ref === 'sync_on_criticality')!;
+    expect(onCriticality.trigger).toMatchObject({ fieldKey: 'criticality' });
+  });
+
+  it('approves suppliers on Core’s Suppliers with its own workflow, Core’s Status and an owner who can be named', () => {
+    const { coreRefs, payload } = plan();
+    const w = onSuppliers.workflows![0]!;
+    expect(w.id).toBe('suppliermanagement_supplier_approval');
+    expect(w.requiredFields).toEqual(['owner', 'suppliermanagement_category', 'criticality']);
+    expect(w.steps.map((s) => s.approvers)).toEqual([
+      { kind: 'field', fieldKey: 'owner' },
+      { kind: 'jobRole', roleName: 'Top management' },
+    ]);
+    expect(w.statusField).toMatchObject({
+      fieldKey: 'status',
+      onSubmit: 'opt_review',
+      onApproved: 'opt_approved',
+      onRejected: 'opt_blocked',
+    });
+    expect(payload.workflows?.map((x) => [x.sheet_id, (x.workflow as Row).id])).toEqual([
+      [coreRefs['sheet:suppliers'], 'suppliermanagement_supplier_approval'],
+    ]);
+  });
+
+  it('reads Core’s Suppliers on the dashboard and in the setup checklist', () => {
+    const { coreRefs, payload } = plan();
+    const widgets = (payload.dashboards[0]!.config as { widgets: Row[] }).widgets;
+    const w = (id: string) => widgets.find((x) => x.id === id)!;
+    expect(w('w_status').sheetId).toBe(coreRefs['sheet:suppliers']);
+    expect(w('w_criticality').sheetId).toBe(coreRefs['sheet:suppliers']);
+    // open supplier nonconformities, of the supplier nonconformities
+    expect(w('w_nc')).toMatchObject({
+      sheetId: coreRefs['sheet:nc'],
+      scope: [{ fieldKey: 'source', op: 'is_any_of', value: ['opt_supplier'] }],
+      conditions: [{ fieldKey: 'stage', op: 'is_not_done' }],
+    });
+    expect(m.setup!.steps.map((s) => s.target.sheetRef)).toEqual([
+      'core:suppliers',
+      'requirement',
+      'check',
+      'core:suppliers',
+    ]);
+  });
+
+  it('ships its forms on Core’s Suppliers and Nonconformities, internal, and quiet notifying automations', () => {
+    const forms = m.extends!.flatMap((e) =>
+      (e.forms ?? []).map((f) => [e.sheet, f.name, f.access]),
+    );
+    expect(forms).toEqual([
+      ['suppliers', 'Supplier self-assessment', 'internal'],
+      ['suppliers', 'Suggest a new supplier', 'internal'],
+      ['nc', 'Report a supplier problem', 'internal'],
+    ]);
+    const all = [...m.automations, ...m.extends!.flatMap((e) => e.automations ?? [])];
+    expect(
+      all
+        .filter((a) => a.advanced)
+        .map((a) => a.ref)
+        .sort(),
+    ).toEqual(
+      [
+        'review_failed_nc',
+        'review_next_cycle',
+        'review_overdue_escalate',
+        'resync_on_new_requirement',
+        'sync_on_create',
+      ].sort(),
+    );
+    for (const a of all.filter((x) => x.actions.some((y) => y.type === 'notify')))
+      expect(startsInTestMode(a), a.ref).toBe(true);
+    for (const s of m.sheets.filter((x) => !x.isLibrary))
+      for (const i of s.items) expect(i.name).toMatch(/^Example: /);
+    for (const i of onSuppliers.items ?? []) expect(i.name).toMatch(/^Example: /);
   });
 });
 
