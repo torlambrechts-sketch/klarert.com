@@ -19,6 +19,7 @@ export const SCHEDULED_TRIGGERS: TriggerId[] = [
   'date_arrives',
   'clock_warning',
   'evidence_expiring',
+  'approval_overdue',
 ];
 
 export const isScheduledTrigger = (type: string): boolean =>

@@ -3,6 +3,7 @@ import { resolveFieldType } from '../fields/resolve';
 import type { Automation, Ctx, Field, Item, TriggerId } from '../types';
 import { defOf, keysOfValue, valueOf } from '../values';
 import { SUBITEM_TRIGGERS } from './subitem-triggers';
+import { WORKFLOW_TRIGGERS } from './workflow-triggers';
 import { ctxBefore, itemBefore } from './triggers-base';
 import { TRIGGER_EVENTS, type AutomationEvent } from './types';
 
@@ -71,7 +72,8 @@ const scheduled: Matcher = (_t, event, _ctx, automationId) =>
   event.type === 'schedule' && automationId !== undefined && event.automationId === automationId;
 
 /**
- * The triggers (docs/04 §3), keyed by id: 11 on the item and 3 on its sub-items (subitem-triggers.ts). A new trigger is one entry here plus its events in TRIGGER_EVENTS.
+ * The triggers (docs/04 §3), keyed by id: 11 on the item, 3 on its sub-items (subitem-triggers.ts) and 4 on approval
+ * workflows (workflow-triggers.ts). A new trigger is one entry here plus its events in TRIGGER_EVENTS.
  * Scheduled triggers match the scheduler's events for their own automation; the scheduler (M9) decides the moment.
  */
 export const TRIGGERS: Record<TriggerId, Matcher> = {
@@ -110,6 +112,7 @@ export const TRIGGERS: Record<TriggerId, Matcher> = {
     );
   },
   ...SUBITEM_TRIGGERS,
+  ...WORKFLOW_TRIGGERS,
 };
 
 /** Does this event fire the trigger? `automationId` is needed for scheduled triggers only. */

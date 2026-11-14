@@ -53,6 +53,22 @@ export type AutomationEvent =
       actor: Actor;
     }
   | {
+      /**
+       * An approval workflow moved (docs/04 §13): a step was decided, or the workflow ended approved or rejected.
+       * Emitted by the approval commands after workflow_decide commits; people decide, never automations.
+       */
+      type: 'workflow.event';
+      sheetId: string;
+      itemId: string;
+      kind: 'decided' | 'approved' | 'rejected';
+      workflowId: string;
+      instanceId: string;
+      stepIndex: number;
+      stepId: string;
+      decision: 'approved' | 'rejected' | null;
+      actor: Actor;
+    }
+  | {
       type: 'schedule';
       sheetId: string;
       itemId: string;
@@ -79,6 +95,10 @@ export const TRIGGER_EVENTS: Record<TriggerId, EventType[]> = {
   subitem_created: ['subitem.event'],
   subitem_field_becomes: ['subitem.event'],
   all_subitems_done: ['subitem.event'],
+  workflow_step_decided: ['workflow.event'],
+  workflow_approved: ['workflow.event'],
+  workflow_rejected: ['workflow.event'],
+  approval_overdue: ['schedule'],
 };
 
 export type ActionId =
@@ -96,7 +116,8 @@ export type ActionId =
   | 'create_subitems'
   | 'set_parent_field'
   | 'update_subitems'
-  | 'sync_requirement_checks';
+  | 'sync_requirement_checks'
+  | 'start_workflow';
 
 export const ACTION_IDS: ActionId[] = [
   'set_field',
@@ -114,6 +135,7 @@ export const ACTION_IDS: ActionId[] = [
   'set_parent_field',
   'update_subitems',
   'sync_requirement_checks',
+  'start_workflow',
 ];
 
 export type ActionJson = Automation['actions'][number];
@@ -182,6 +204,14 @@ export type Effect =
       mode: 'subject' | 'requirement';
       /** SyncConfig (requirement-sync.ts). */
       config: Json;
+    }
+  | {
+      /** Submit the item to one of its sheet's approval workflows (workflow_submit as the automation). */
+      kind: 'start_workflow';
+      itemId: string;
+      workflowId: string;
+      /** The person who started the chain: the submitter, who cannot approve their own submission. */
+      submittedBy: string | null;
     }
   | { kind: 'move'; itemId: string; groupId: string }
   | { kind: 'lock'; itemId: string; reason: string | null }
