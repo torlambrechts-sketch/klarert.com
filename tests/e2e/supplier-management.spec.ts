@@ -23,14 +23,30 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
   test.skip(info.project.name === 'phone', 'desktop walkthrough');
   test.setTimeout(300_000);
   const slug = seedWorkspace('suppliers', { empty: true });
-  await signIn(page, 'maria@example.com', `/${slug}/settings?tab=packs`);
-  await page.goto(`/${slug}/settings?tab=packs`);
+  await signIn(page, 'maria@example.com', `/${slug}/home`);
+  await page.goto(`/${slug}/home`);
 
-  // ── install: Core first; the frameworks are optional, nothing is adopted for you
+  // ── Create offers 3.0.0 for "Supplier onboarding" (a new major: a fresh install)
+  const wizard = page.getByRole('dialog', { name: 'Create' });
+  await expect(async () => {
+    await page.keyboard.press('Control+k');
+    await expect(wizard).toBeVisible({ timeout: 1_000 });
+  }).toPass();
+  await wizard.getByTestId('create-goal').fill('supplier onboarding');
+  await wizard.getByTestId('create-matches').getByRole('button').filter({ hasText: TITLE }).click();
+  const preview = wizard.getByTestId('create-preview');
+  await expect(preview.getByRole('heading', { name: TITLE })).toBeVisible();
+  await expect(preview).toContainText('3.0.0');
+  await page.keyboard.press('Escape');
+  await expect(wizard).toBeHidden();
+
+  // ── install from Workspace admin › Packs: Core first; the frameworks are optional, nothing is adopted for you
+  await page.goto(`/${slug}/settings?tab=packs`);
   const row = page
     .getByRole('list', { name: 'Available packs' })
     .getByRole('listitem')
     .filter({ hasText: TITLE });
+  await expect(row).toContainText('3.0.0');
   const dialog = page.getByRole('dialog');
   await expect(async () => {
     await row.getByRole('button', { name: `Preview ${TITLE}` }).click();
