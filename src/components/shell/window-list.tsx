@@ -28,7 +28,8 @@ export function WindowList<T>({
   estimateSize: number;
   overscan?: number;
   className?: string;
-  itemClassName?: string;
+  /** Classes of each row; a function gets the row's index and whether it is the last row of the whole list. */
+  itemClassName?: string | ((index: number, last: boolean) => string);
   'aria-label'?: string;
   'aria-labelledby'?: string;
 }) {
@@ -57,7 +58,12 @@ export function WindowList<T>({
           data-index={row.index}
           aria-setsize={items.length}
           aria-posinset={row.index + 1}
-          className={cn('absolute top-0 left-0 w-full', itemClassName)}
+          className={cn(
+            'absolute top-0 left-0 w-full',
+            typeof itemClassName === 'function'
+              ? itemClassName(row.index, row.index === items.length - 1)
+              : itemClassName,
+          )}
           style={{ transform: `translateY(${row.start - v.options.scrollMargin}px)` }}
         >
           {renderItem(items[row.index]!, row.index)}

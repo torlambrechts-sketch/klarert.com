@@ -645,31 +645,32 @@ function StageItems({
       </p>
     );
   return (
-    <WindowList
-      aria-label={`Items in ${stage.label}`}
-      className="border-soft bg-subtle border-t md:ml-[38px]"
-      itemClassName="border-soft border-b"
-      items={stage.items}
-      getKey={(it) => it.id}
-      estimateSize={45}
-      renderItem={(it) => (
-        <div className="flex flex-wrap items-center gap-2 px-3 py-1.5">
-          <Link
-            href={itemHref(org, { sheetId: row.sheet.id, displayId: it.displayId })}
-            className="flex min-w-0 flex-[1_1_180px] items-baseline gap-2 underline-offset-4 hover:underline"
-          >
-            <span className="text-muted-foreground text-label-12-mono">{it.displayId}</span>
-            <span className="text-label-14 truncate">{it.name}</span>
-          </Link>
-          {it.overdue ? (
-            <ToneBadge tone="crit" icon={AlertTriangle}>
-              Overdue
-            </ToneBadge>
-          ) : null}
-          {canEdit ? <MoveSelect row={row} item={it} stageKey={stage.key} mover={mover} /> : null}
-        </div>
-      )}
-    />
+    <div className="border-soft bg-subtle border-t md:pl-[38px]">
+      <WindowList
+        aria-label={`Items in ${stage.label}`}
+        itemClassName={(_, last) => cn('border-soft', !last && 'border-b')}
+        items={stage.items}
+        getKey={(it) => it.id}
+        estimateSize={45}
+        renderItem={(it) => (
+          <div className="flex flex-wrap items-center gap-2 px-3 py-1.5">
+            <Link
+              href={itemHref(org, { sheetId: row.sheet.id, displayId: it.displayId })}
+              className="flex min-w-0 flex-[1_1_180px] items-baseline gap-2 underline-offset-4 hover:underline"
+            >
+              <span className="text-muted-foreground text-label-12-mono">{it.displayId}</span>
+              <span className="text-label-14 truncate">{it.name}</span>
+            </Link>
+            {it.overdue ? (
+              <ToneBadge tone="crit" icon={AlertTriangle}>
+                Overdue
+              </ToneBadge>
+            ) : null}
+            {canEdit ? <MoveSelect row={row} item={it} stageKey={stage.key} mover={mover} /> : null}
+          </div>
+        )}
+      />
+    </div>
   );
 }
 
