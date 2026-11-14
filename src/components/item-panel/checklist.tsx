@@ -28,8 +28,11 @@ export function ChecklistSection({
   onOpen(target: { id: string; sheetId: string; displayId: string }): void;
 }) {
   const cfg = field.config as Partial<LinkConfig>;
-  // refetch when the links change (a sync added checks, a check was opened and changed)
-  const linkSig = ctx.links(item.id, field.id).join(',');
+  // refetch when the links change (a sync added checks) or a linked item changed (the sheet follows linked items live)
+  const linkSig = ctx
+    .links(item.id, field.id)
+    .map((id) => `${id}@${ctx.item(id)?.updatedAt ?? ''}`)
+    .join(',');
   const q = useQuery({
     queryKey: ['checklist', org, item.id, field.id, linkSig, item.updatedAt],
     queryFn: async (): Promise<ChecklistRow[]> => {
