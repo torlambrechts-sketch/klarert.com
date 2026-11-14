@@ -268,6 +268,26 @@ describe('namespaces and manifest checks', () => {
     // its own column is not a use of Core
     expect([...extensionUses(m, 'core').get('risk')!]).not.toContain('iso14001_permit');
     expect([...extensionUses(m, 'core').get('risk')!]).toContain('score');
+    // before Core is installed (the preview) it waits; on Core it creates on the real risk register
+    const pending = planPackInstall(m, snapshot(), env, {
+      installFirst: [
+        {
+          key: 'core',
+          title: 'Core registers',
+          version: '1.0.0',
+          level: 'starter',
+          levelName: 'Starter',
+          raise: false,
+          sheets: { risk: { name: 'Risk register', standards: true } },
+        },
+      ],
+    });
+    expect(pending.preview.conflicts).toEqual([]);
+    const { payload: corePayload, snap } = withCore();
+    const plan = planPackInstall(m, snap, env);
+    expect(plan.preview.conflicts).toEqual([]);
+    const raise = plan.payload!.automations.find((a) => a.ref === 'raise')!;
+    expect((raise.actions as Row[])[0]!.sheetId).toBe(refMapOf(corePayload)['sheet:risk']);
     m.automations[0]!.actions[0]!.sheetRef = 'gdpr:breach';
     expect(extendsProblems(m).map((p) => p.message)).toEqual([
       '"gdpr:breach" names the pack "gdpr", which is not in requires.',
