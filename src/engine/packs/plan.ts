@@ -166,7 +166,7 @@ export interface PackPreview {
   /** The level already installed when this preview adds a higher one: only what is missing is created. */
   extendsLevel: { key: string; name: string } | null;
   /** Framework libraries the pack builds on; `adopted: false` ones are adopted first at install (docs/12). */
-  frameworks: { library: string; adopted: boolean }[];
+  frameworks: { library: string; adopted: boolean; optional?: boolean }[];
 }
 
 export interface PackPlan {
@@ -294,6 +294,7 @@ export function planPackInstall(
     frameworks: (full.frameworks ?? []).map((f) => ({
       library: libraryKey(f),
       adopted: libraries.has(libraryKey(f)),
+      ...(f.optional ? { optional: true } : {}),
     })),
     counts: manifestCounts(m),
     folders: [],
@@ -464,6 +465,7 @@ export function planPackInstall(
       ...ps.row.settings,
       ...(ms.register ? { register: ms.register } : {}),
       ...(ms.framework ? { framework: ms.framework } : {}),
+      ...(ms.uniqueLinks ? { uniqueLinkPair: ms.uniqueLinks } : {}),
     } as unknown as Row;
     sheetRows.push({
       ...(ps.row as unknown as Row),

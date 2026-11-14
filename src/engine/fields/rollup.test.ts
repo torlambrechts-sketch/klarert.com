@@ -7,12 +7,14 @@ import { installFieldTypes } from './resolve';
 import { rollup, type RollupConfig } from './rollup';
 import { status } from './status';
 import { text } from './text';
+import { date } from './date';
 
-installFieldTypes([link, number, status, text, rollup]);
+installFieldTypes([link, number, status, text, rollup, date]);
 
 const state = makeField('status', status.defaultConfig(), { key: 'state', sheetId: 's-ctl' });
 const score = makeField('number', { unit: '', decimals: 2 }, { key: 'score', sheetId: 's-ctl' });
 const title = makeField('text', {}, { key: 'title', sheetId: 's-ctl' });
+const expiry = makeField('date', date.defaultConfig(), { key: 'expiry', sheetId: 's-ctl' });
 const controls = makeField(
   'link',
   { targetSheetId: 's-ctl', multiple: true, inverseFieldId: null },
@@ -20,7 +22,7 @@ const controls = makeField(
 );
 
 const c1 = makeItem(
-  { [state.id]: 'opt_done', [score.id]: 3, [title.id]: 'Access' },
+  { [state.id]: 'opt_done', [score.id]: 3, [title.id]: 'Access', [expiry.id]: '2000-01-01' },
   { id: 'i-c1', sheetId: 's-ctl' },
 );
 const c2 = makeItem({ [state.id]: 'opt_wip', [score.id]: 5 }, { id: 'i-c2', sheetId: 's-ctl' });
@@ -29,7 +31,7 @@ const a = makeItem({}, { id: 'i-a' });
 const none = makeItem({}, { id: 'i-none' });
 const ctx = makeCtx({
   fields: [controls],
-  otherFields: { 's-ctl': [title, state, score] },
+  otherFields: { 's-ctl': [title, state, score, expiry] },
   items: [c1, c2, c3, a, none],
   links: { 'i-a:f-controls': ['i-c1', 'i-c2', 'i-c3'] },
 });
@@ -110,6 +112,21 @@ describe('rollup', () => {
       2,
     );
     expect(run({ fn: 'countWhere', targetFieldKey: 'title' })).toBeNull();
+  });
+
+  it('says done out of total ("1 of 3") and leaves out items by their status', () => {
+    expect(run({ fn: 'doneOf' })).toBe('1 of 3');
+    expect(run({ fn: 'doneOf', ignore: ['opt_wip'] })).toBe('1 of 2');
+    expect(run({ fn: 'pctDone', ignore: ['Working on it'] })).toBe(50);
+    expect(run({ fn: 'count', ignore: ['opt_done'] })).toBe(2);
+    const cfg = { linkFieldKey: 'controls', targetFieldKey: null, fn: 'doneOf' as const };
+    expect(rollup.toText('1 of 3', cfg, ctx)).toBe('1 of 3');
+    expect(rollup.effectiveKind!(makeField<RollupConfig>('rollup', cfg), ctx)).toBe('text');
+  });
+
+  it('counts dates before today as expired', () => {
+    expect(run({ fn: 'countExpired', targetFieldKey: 'expiry' })).toBe(1);
+    expect(run({ fn: 'countExpired', targetFieldKey: 'expiry', ignore: ['opt_done'] })).toBe(0);
   });
 
   it('gives 0 for a count and empty for the rest when nothing is linked', () => {

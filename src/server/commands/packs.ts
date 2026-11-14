@@ -54,6 +54,8 @@ export interface PackCard {
   installedLevel: string | null;
   /** Titles of the frameworks the pack builds on, adopted at install when missing. */
   frameworks: string[];
+  /** Titles of the frameworks the pack links to only where they are adopted (optional). */
+  linksTo: string[];
 }
 
 export interface InstalledPack {
@@ -179,7 +181,12 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
                 installedVersion: live.get(c.key) ?? null,
                 levels: levelSummaries(c.manifest),
                 installedLevel: liveLevel.get(c.key) ?? null,
-                frameworks: (c.manifest.frameworks ?? []).map((f) => fwTitle(f.key, f.version)),
+                frameworks: (c.manifest.frameworks ?? [])
+                  .filter((f) => !f.optional)
+                  .map((f) => fwTitle(f.key, f.version)),
+                linksTo: (c.manifest.frameworks ?? [])
+                  .filter((f) => f.optional)
+                  .map((f) => fwTitle(f.key, f.version)),
               };
             }),
           installed: (installs.data ?? []).map((i) => ({
@@ -313,7 +320,8 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
       // the frameworks it builds on are adopted first (each its own transaction), then the pack is planned again so
       // its sheets and widgets find the libraries
       const adopted: string[] = [];
-      for (const f of plan.preview.frameworks.filter((x) => !x.adopted)) {
+      // optional frameworks are never adopted for you: their links are written only where they are adopted
+      for (const f of plan.preview.frameworks.filter((x) => !x.adopted && !x.optional)) {
         const [key, version] = f.library.split('@') as [string, string];
         const r = await adoptForPack(supabase, orgId, user.id, { key, version });
         if (!r.ok)

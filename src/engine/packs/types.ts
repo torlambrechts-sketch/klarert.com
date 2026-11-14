@@ -41,6 +41,8 @@ export type PackSheet = Omit<TemplateSheet, 'folder' | 'items' | 'forms'> & {
    */
   framework?: { key: string; version: string; refFieldKey: string };
   items: PackItem[];
+  /** Two link field keys: one live item per pair of targets (sheets.settings.uniqueLinkPair, 0038). */
+  uniqueLinks?: [string, string];
   /** The lowest level that installs this sheet (docs/11 Levels); every level when not set. */
   level?: string;
   /** Forms may name their lowest level too (forms of a sheet never install before the sheet). */
@@ -83,6 +85,8 @@ export interface PackLevel {
 export interface PackFramework {
   key: string;
   version: string;
+  /** Soft (docs/11): never adopted for you; example links into it only where the workspace adopted it. */
+  optional?: boolean;
 }
 
 /**

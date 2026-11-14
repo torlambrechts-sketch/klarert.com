@@ -95,7 +95,8 @@ export type ActionId =
   | 'raise_version'
   | 'create_subitems'
   | 'set_parent_field'
-  | 'update_subitems';
+  | 'update_subitems'
+  | 'sync_requirement_checks';
 
 export const ACTION_IDS: ActionId[] = [
   'set_field',
@@ -112,6 +113,7 @@ export const ACTION_IDS: ActionId[] = [
   'create_subitems',
   'set_parent_field',
   'update_subitems',
+  'sync_requirement_checks',
 ];
 
 export type ActionJson = Automation['actions'][number];
@@ -167,6 +169,19 @@ export type Effect =
       parentId: string;
       /** Child field key → raw value, per sub-item, in order. */
       items: { name: string; values: Record<string, Json | null> }[];
+    }
+  | {
+      /**
+       * Requirement checks (requirement-sync.ts): `subject` syncs the checks of one subject (a supplier); `requirement`
+       * re-syncs one library requirement across the subjects, batched and capped.
+       */
+      kind: 'sync_requirement_checks';
+      sheetId: string;
+      itemId: string;
+      checksSheetId: string;
+      mode: 'subject' | 'requirement';
+      /** SyncConfig (requirement-sync.ts). */
+      config: Json;
     }
   | { kind: 'move'; itemId: string; groupId: string }
   | { kind: 'lock'; itemId: string; reason: string | null }

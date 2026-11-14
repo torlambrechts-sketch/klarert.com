@@ -46,7 +46,8 @@ function List({ label, items }: { label: string; items: React.ReactNode[] }) {
 
 function PreviewBody({ data }: { data: PackPreviewResult }) {
   const p = data.preview;
-  const toAdopt = p.frameworks.filter((f) => !f.adopted);
+  const toAdopt = p.frameworks.filter((f) => !f.adopted && !f.optional);
+  const linked = p.frameworks.filter((f) => f.optional && f.adopted);
   return (
     <div className="flex flex-col gap-4">
       {p.state === 'ready' && p.extendsLevel && p.level ? (
@@ -66,6 +67,13 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
             requirement library first: one item per requirement, the statement of applicability and
             the Applicability view. The pack&apos;s sheets link to it.
           </span>
+        </p>
+      ) : null}
+      {p.state !== 'installed' && linked.length ? (
+        <p className="text-copy-14 text-muted-foreground m-0" data-testid="links-framework">
+          Links its items to the{' '}
+          {linked.map((f) => data.frameworkTitles[f.library] ?? f.library).join(', ')} requirement
+          library you have adopted.
         </p>
       ) : null}
       {p.state === 'blocked' ? (

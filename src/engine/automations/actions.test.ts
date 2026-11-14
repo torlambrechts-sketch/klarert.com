@@ -84,8 +84,8 @@ describe('resolveValueToken', () => {
 });
 
 describe('planActions', () => {
-  it('has a planner for each of the 14 actions (11 on the item, 3 for sub-items)', () => {
-    expect(ACTION_IDS).toHaveLength(14);
+  it('has a planner for each of the 15 actions (11 on the item, 3 for sub-items, the requirement sync)', () => {
+    expect(ACTION_IDS).toHaveLength(15);
     expect(Object.keys(ACTIONS).sort()).toEqual([...ACTION_IDS].sort());
   });
 
@@ -106,6 +106,14 @@ describe('planActions', () => {
     ).toMatchObject({
       values: { [f.owner.id]: 'u-james' },
     });
+  });
+
+  it('set_field renders a text value as a template only when asked (template: true)', () => {
+    const raw = { type: 'set_field', fieldKey: 'version', value: '{id} {name}' };
+    expect(plan({ ...raw, template: true }).effects[0]).toMatchObject({
+      values: { [f.version.id]: 'CA-014 Fix guard on press 3' },
+    });
+    expect(plan(raw).effects[0]).toMatchObject({ values: { [f.version.id]: '{id} {name}' } });
   });
 
   it('set_field fails for missing and computed fields, and skips $actor without a person', () => {

@@ -1,12 +1,16 @@
 import 'server-only';
+import type { LinkConfig } from '@/engine/fields/link';
+import { checklistRows, isChecklistField, type ChecklistRow } from '@/engine/item-panel';
 import type { Item } from '@/engine/types';
-import { searchItemsInput, verifyActivityInput } from '@/lib/schemas/panel';
+import { checklistInput, searchItemsInput, verifyActivityInput } from '@/lib/schemas/panel';
 import { likePattern } from '@/engine/search';
-import { ITEM_COLUMNS, toItem } from '@/lib/sheet-rows';
+import { FIELD_COLUMNS, ITEM_COLUMNS, toField, toItem } from '@/lib/sheet-rows';
+import { loadWriteContext } from '@/server/sheet-context';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
 
-// Reads the item panel asks the server for: the audit check (FR-40) and the link picker's search (docs/03 link).
+// Reads the item panel asks the server for: the audit check (FR-40), the link picker's search (docs/03 link) and
+// checklist sections (docs/05 §3.4).
 
 export type VerifyResult =
   | { ok: true; entries: number; lastHash: string | null }
@@ -42,6 +46,51 @@ export async function verifyActivity(input: unknown): Promise<Result<VerifyResul
       );
     },
     'verifyActivity',
+  );
+}
+
+/**
+ * A link field's checklist section (docs/05 §3.4, `config.panel: 'checklist'`): the linked items with their status and
+ * the fields the link field names, read with the person's own client (what they cannot read is left out).
+ */
+export async function checklist(input: unknown): Promise<Result<{ rows: ChecklistRow[] }>> {
+  const p = checklistInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'member',
+    async ({ supabase, orgId, user, role }) => {
+      const { data: f, error } = await supabase
+        .from('fields')
+        .select(FIELD_COLUMNS)
+        .eq('id', v.fieldId)
+        .is('archived_at', null)
+        .maybeSingle();
+      if (error) return fromDbError(error);
+      const field = f ? toField(f) : null;
+      if (!field || !isChecklistField(field))
+        return fail('not_found', 'This checklist no longer exists.');
+      const { data: links, error: e2 } = await supabase
+        .from('item_links')
+        .select('to_item')
+        .eq('field_id', field.id)
+        .eq('from_item', v.itemId)
+        .order('position');
+      if (e2) return fromDbError(e2);
+      const ids = (links ?? []).map((l) => l.to_item);
+      const cfg = field.config as Partial<LinkConfig>;
+      if (ids.length === 0 || !cfg.targetSheetId) return ok({ rows: [] });
+      const w = await loadWriteContext(
+        supabase,
+        { orgId, userId: user.id, role },
+        cfg.targetSheetId,
+        ids,
+      );
+      if (!w) return ok({ rows: [] });
+      return ok({ rows: checklistRows(ids, cfg.panelFields ?? [], w.ctx) });
+    },
+    'checklist',
   );
 }
 

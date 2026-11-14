@@ -1246,6 +1246,8 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_link_pair_items":
+{ Args: { "p_automation"?: string,"p_group": string,"p_rows": Json,"p_sheet": string }; Returns: Json },
 "create_subitems":
 { Args: { "p_automation"?: string,"p_parent": string,"p_rows": Json }; Returns: ({
               "archived_at": string | null,

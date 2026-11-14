@@ -80,6 +80,8 @@ export const addDocumentsFieldInput = z.object({
 });
 export const setRegisterInput = z.object({ org: slugInput, sheetId: uuid, documents: z.boolean() });
 export const verifyActivityInput = z.object({ org: slugInput, itemId: uuid });
+/** A link field's checklist section on an item (docs/05 §3.4). */
+export const checklistInput = z.object({ org: slugInput, itemId: uuid, fieldId: uuid });
 export const searchItemsInput = z
   .object({
     org: slugInput,

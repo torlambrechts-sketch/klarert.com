@@ -8,6 +8,15 @@ export interface LinkConfig {
   targetSheetId: string;
   multiple: boolean;
   inverseFieldId: string | null;
+  /**
+   * `checklist`: the item panel shows the linked items as a checklist section (status with its symbol, name, the
+   * fields in `panelFields`), e.g. a supplier's requirement checks (docs/03 §3.4, docs/05 §3.4).
+   */
+  panel?: 'checklist';
+  /** Field keys of the target sheet shown on each checklist row after the status (at most 4). */
+  panelFields?: string[];
+  /** What the checklist says when nothing is linked. */
+  panelEmpty?: string;
 }
 
 // ───────────── reading other fields (shared by lookup, rollup, progress) ─────────────
@@ -113,6 +122,9 @@ export const link: FieldTypeDef<string[], LinkConfig> = base<string[], LinkConfi
     targetSheetId: z.string(),
     multiple: z.boolean(),
     inverseFieldId: z.string().min(1).nullable(),
+    panel: z.literal('checklist').optional(),
+    panelFields: z.array(z.string().min(1).max(64)).max(4).optional(),
+    panelEmpty: z.string().max(300).optional(),
   }),
   defaultConfig: () => ({ targetSheetId: '', multiple: true, inverseFieldId: null }),
   defaultWidth: 180,

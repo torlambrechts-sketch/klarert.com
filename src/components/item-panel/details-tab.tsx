@@ -4,7 +4,13 @@ import { hiddenFor } from '@/engine/values';
 import { RestrictedValue } from '@/components/fields/registry';
 import { useMemo } from 'react';
 import { formatDate } from '@/engine/fields/helpers';
-import { linkEdges, itemSummary, statusFieldOf, type LinkEdge } from '@/engine/item-panel';
+import {
+  isChecklistField,
+  linkEdges,
+  itemSummary,
+  statusFieldOf,
+  type LinkEdge,
+} from '@/engine/item-panel';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Field, FileRow, Item } from '@/engine/types';
@@ -17,6 +23,7 @@ import type { EditorProps } from '@/components/fields/types';
 import { FieldRow } from './field-row';
 import { RequirementLinks, showsRequirements } from './requirements';
 import { FilesField } from './files-field';
+import { ChecklistSection } from './checklist';
 import type { FileVersion } from './queries';
 
 // Details (docs/05 §3.4, FR-28): the summary strip, linked items in both directions, the automations with per-item pause and every
@@ -231,18 +238,26 @@ export function DetailsTab({
     for (const f of [...data.related.fields, ...data.fields]) m.set(f.id, f);
     return (id: string) => m.get(id);
   }, [data.fields, data.related.fields]);
-  const edges = useMemo(
-    () =>
-      linkEdges({
-        itemId: item.id,
-        outgoing: data.fields
-          .filter((f) => resolveFieldType(f.type)?.storage === 'links')
-          .map((f) => ({ field: f, targetIds: ctx.links(item.id, f.id) })),
-        incoming,
-        fieldById,
-      }),
-    [ctx, data.fields, fieldById, incoming, item.id],
-  );
+  // link fields shown as their own checklist section are left out of Linked items (with their mirror rows)
+  const checklists = useMemo(() => data.fields.filter(isChecklistField), [data.fields]);
+  const edges = useMemo(() => {
+    const skip = new Set(
+      checklists.flatMap((f) => [
+        f.id,
+        ...((f.config as { inverseFieldId?: string | null }).inverseFieldId
+          ? [(f.config as { inverseFieldId: string }).inverseFieldId]
+          : []),
+      ]),
+    );
+    return linkEdges({
+      itemId: item.id,
+      outgoing: data.fields
+        .filter((f) => resolveFieldType(f.type)?.storage === 'links')
+        .map((f) => ({ field: f, targetIds: ctx.links(item.id, f.id) })),
+      incoming,
+      fieldById,
+    }).filter((e) => !skip.has(e.fieldId));
+  }, [checklists, ctx, data.fields, fieldById, incoming, item.id]);
   const visible = data.fields.filter((f) => isVisible(f, item, ctx));
 
   return (
@@ -256,6 +271,20 @@ export function DetailsTab({
         loading={incomingLoading}
         onOpen={onOpenLinked}
       />
+      {checklists.map((f) => (
+        <ChecklistSection
+          key={f.id}
+          org={org}
+          item={item}
+          field={f}
+          ctx={ctx}
+          onOpen={(t) =>
+            onOpenLinked(
+              ctx.item(t.id) ?? ({ id: t.id, sheetId: t.sheetId, displayId: t.displayId } as Item),
+            )
+          }
+        />
+      ))}
       {showsRequirements(data.sheet, data.fields) ? (
         <RequirementLinks
           org={org}
