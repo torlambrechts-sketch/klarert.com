@@ -5,6 +5,7 @@ import { NoAccess } from '@/components/access/no-access';
 import { toLevel } from '@/engine/access';
 import { requireMember } from '@/server/auth';
 import { getSheet, getSheetAccess } from '@/server/repositories/sheets';
+import { getSheetBundle } from '@/server/bundles/read';
 
 function defaultViewOf(settings: unknown): string | null {
   const id =
@@ -36,9 +37,10 @@ export default async function SheetPage({
   const { org, sheetId } = await params;
   const { group, item } = await searchParams;
   const { workspace, role, user } = await requireMember(org);
-  const [sheet, access] = await Promise.all([
+  const [sheet, access, bundle] = await Promise.all([
     getSheet(workspace.id, sheetId),
     getSheetAccess(workspace.id, sheetId),
+    getSheetBundle(workspace.id, sheetId),
   ]);
   // a restricted sheet the person cannot open: owners and admins see that it exists (docs/02 §16)
   if (!sheet && access?.level === 'none') return <NoAccess org={org} name={access.name} />;
@@ -73,6 +75,7 @@ export default async function SheetPage({
         onlyGroup={group ?? null}
         defaultViewId={defaultViewOf(sheet.settings)}
         tabSet={readTabSettings(sheet.settings)}
+        bundle={bundle}
       />
     </>
   );

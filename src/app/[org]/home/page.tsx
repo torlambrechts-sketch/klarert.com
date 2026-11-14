@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CreateSheetLink } from '@/components/create/create-provider';
 import {
   AlertTriangle,
   CalendarClock,
@@ -88,9 +89,9 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
         actions={
           canEdit ? (
             <Button asChild>
-              <Link href={`/${org}/s/new`}>
+              <CreateSheetLink org={org}>
                 <Plus aria-hidden /> New sheet
-              </Link>
+              </CreateSheetLink>
             </Button>
           ) : null
         }
@@ -158,7 +159,11 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
                     {s.label}
                   </span>
                   <span className="sr-only">{s.done ? ', done' : ', to do'}</span>
-                  {link ? (
+                  {link && s.id === 'sheet' ? (
+                    <CreateSheetLink org={org} className={`${textLink} ml-auto`}>
+                      {link.label}
+                    </CreateSheetLink>
+                  ) : link ? (
                     <Link href={link.href} className={`${textLink} ml-auto`}>
                       {link.label}
                     </Link>

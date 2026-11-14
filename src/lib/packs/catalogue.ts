@@ -18,7 +18,7 @@ import { parsePack } from './manifest';
 import { startToPack, templateToPack } from './wrap';
 
 /** Wizard starts shipped as one-sheet packs too (the wizard keeps making them its own way). */
-export const START_PACKS = ['capa', 'documents'] as const;
+export const START_PACKS = ['capa', 'documents', 'incident', 'audit'] as const;
 
 /** The app files of the repository (templates/apps/*.json). */
 export const repoApps = (): AppFile[] => [parseAppFile(capaApp)];

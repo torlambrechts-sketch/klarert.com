@@ -2,6 +2,7 @@ import { Eye } from 'lucide-react';
 import { PhoneNav } from '@/components/shell/phone-nav';
 import { auditorBanner } from '@/engine/access';
 import { ShellProvider } from '@/components/shell/shell-context';
+import { CreateProvider } from '@/components/create/create-provider';
 import { SideMenu } from '@/components/shell/side-menu';
 import { TopBar } from '@/components/shell/top-bar';
 import { getMyWorkspaces, isAdminRole, isEditorRole, requireMember } from '@/server/auth';
@@ -37,37 +38,39 @@ export default async function OrgLayout({
   };
   return (
     <ShellProvider>
-      <div className="app-shell">
-        <aside className="side-col" aria-label="Workspace">
-          <SideMenu {...menuProps} />
-        </aside>
-        <div className="flex min-w-0 flex-col">
-          <TopBar
-            current={workspace}
-            canManage={isAdminRole(role)}
-            timeZone={workspace.time_zone}
-            me={{
-              id: user.id,
-              displayName: profile.display_name,
-              initials: profile.initials,
-              color: profile.color,
-              email: user.email ?? '',
-            }}
-          />
-          {role === 'auditor' && workspace.expiresAt ? (
-            <p
-              role="status"
-              data-testid="auditor-banner"
-              className="border-line bg-subtle text-copy-13 flex items-center gap-2 border-b px-4 py-2 sm:px-[28px]"
-            >
-              <Eye className="size-4 shrink-0" aria-hidden />
-              {auditorBanner(workspace.expiresAt, workspace.time_zone)}.
-            </p>
-          ) : null}
-          <div className="min-w-0 flex-1">{children}</div>
+      <CreateProvider org={org} canEdit={isEditorRole(role)}>
+        <div className="app-shell">
+          <aside className="side-col" aria-label="Workspace">
+            <SideMenu {...menuProps} />
+          </aside>
+          <div className="flex min-w-0 flex-col">
+            <TopBar
+              current={workspace}
+              canManage={isAdminRole(role)}
+              timeZone={workspace.time_zone}
+              me={{
+                id: user.id,
+                displayName: profile.display_name,
+                initials: profile.initials,
+                color: profile.color,
+                email: user.email ?? '',
+              }}
+            />
+            {role === 'auditor' && workspace.expiresAt ? (
+              <p
+                role="status"
+                data-testid="auditor-banner"
+                className="border-line bg-subtle text-copy-13 flex items-center gap-2 border-b px-4 py-2 sm:px-[28px]"
+              >
+                <Eye className="size-4 shrink-0" aria-hidden />
+                {auditorBanner(workspace.expiresAt, workspace.time_zone)}.
+              </p>
+            ) : null}
+            <div className="min-w-0 flex-1">{children}</div>
+          </div>
         </div>
-      </div>
-      <PhoneNav {...menuProps} />
+        <PhoneNav {...menuProps} />
+      </CreateProvider>
     </ShellProvider>
   );
 }

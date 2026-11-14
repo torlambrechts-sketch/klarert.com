@@ -49,6 +49,8 @@ describe('repository packs', () => {
       'gdpr',
       'start-capa',
       'start-documents',
+      'start-incident',
+      'start-audit',
     ]);
     for (const p of packs) expect(packHash(p)).toBe(packHash(JSON.parse(JSON.stringify(p))));
     expect(canonicalJson({ b: 1, a: [{ d: 2, c: null }] })).toBe('{"a":[{"c":null,"d":2}],"b":1}');

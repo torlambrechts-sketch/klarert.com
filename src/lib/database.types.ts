@@ -693,14 +693,14 @@ isOneToOne: false
                   ]
                 },"pack_installs": {
                   Row: {
-                    "archived_at": string | null,"archived_by": string | null,"id": string,"installed_at": string,"installed_by": string | null,"level": string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map": NonNullable<Json>,"status": string,"version": string
+                    "archived_at": string | null,"archived_by": string | null,"bundle_name": string | null,"id": string,"installed_at": string,"installed_by": string | null,"level": string | null,"manifest_hash": string,"origin": string | null,"owner_id": string | null,"review_by": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"org_id": string,"pack_key": string,"ref_map": NonNullable<Json>,"status": string,"version": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived_at"?: string | null,"archived_by"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"level"?: string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map"?: NonNullable<Json>,"status"?: string,"version": string
+                    "archived_at"?: string | null,"archived_by"?: string | null,"bundle_name"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"level"?: string | null,"origin"?: string | null,"owner_id"?: string | null,"review_by"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"manifest_hash": string,"org_id": string,"pack_key": string,"ref_map"?: NonNullable<Json>,"status"?: string,"version": string
                   }
                   Update: {
-                    "archived_at"?: string | null,"archived_by"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"level"?: string | null,"manifest_hash"?: string,"org_id"?: string,"pack_key"?: string,"ref_map"?: NonNullable<Json>,"status"?: string,"version"?: string
+                    "archived_at"?: string | null,"archived_by"?: string | null,"bundle_name"?: string | null,"id"?: string,"installed_at"?: string,"installed_by"?: string | null,"level"?: string | null,"origin"?: string | null,"owner_id"?: string | null,"review_by"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"manifest_hash"?: string,"org_id"?: string,"pack_key"?: string,"ref_map"?: NonNullable<Json>,"status"?: string,"version"?: string
                   }
                   Relationships: [
                     {
@@ -1166,6 +1166,9 @@ isOneToOne: false
 "archive_pack":
 { Args: { "p_install": string }; Returns: Json
                            },
+"create_bundle":
+{ Args: { "p_bundle": Json,"p_org": string,"p_plan": Json }; Returns: Json
+                           },
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean
                            },
@@ -1425,6 +1428,9 @@ isOneToOne: false
                            },
 "move_framework_edition":
 { Args: { "p_copies": Json,"p_from_sheet": string,"p_links": Json,"p_org": string,"p_to_sheet": string }; Returns: Json
+                           },
+"mark_bundle_reviewed":
+{ Args: { "p_install": string }; Returns: Json
                            },
 "install_pack":
 { Args: { "p_org": string,"p_plan": Json }; Returns: Json
