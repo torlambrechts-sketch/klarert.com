@@ -3,13 +3,16 @@
 // so the seed and the commands share it; no 'server-only' import.
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { frameworkPackKey, frameworkPackVersion, requirementKey } from '@/engine/frameworks/refs';
-import type {
-  Crosswalk,
-  Framework,
-  FrameworkKind,
-  Relation,
-  Requirement,
-  RequirementKind,
+import {
+  EDITION_KEYS,
+  type Crosswalk,
+  type EditionInfo,
+  type EditionStatus,
+  type Framework,
+  type FrameworkKind,
+  type Relation,
+  type Requirement,
+  type RequirementKind,
 } from '@/engine/frameworks/types';
 import type { Database } from '@/lib/database.types';
 import { packHash } from '@/lib/packs/hash';
@@ -21,8 +24,28 @@ function must<T>(r: { data: T; error: { message: string } | null }, what: string
   return r.data;
 }
 
-/** The catalogue hash of a framework: its content as shipped (frameworks.hash). */
-export const frameworkHash = (f: Framework) => packHash(f);
+/**
+ * The catalogue hash of a framework: its content as shipped (frameworks.hash). The edition status is left out: it is
+ * checked monthly (docs/12 Standards watch) and updated in place, without a new revision.
+ */
+export function frameworkHash(f: Framework): string {
+  const content: Record<string, unknown> = { ...f };
+  for (const k of EDITION_KEYS) delete content[k];
+  return packHash(content);
+}
+
+/** The edition status columns of a framework row (0037). */
+export function editionRow(e: EditionInfo) {
+  return {
+    status: e.status,
+    superseded_by: e.supersededBy,
+    transition_ends: e.transitionEnds,
+    revision_stage: e.revisionStage,
+    revision_expected: e.revisionExpected,
+    status_note: e.statusNote,
+    status_checked_on: e.statusCheckedOn,
+  };
+}
 
 export function frameworkRow(f: Framework) {
   return {
@@ -37,9 +60,10 @@ export function frameworkRow(f: Framework) {
     licence: f.licence,
     url: f.url,
     titles: f.titles,
-    pack_key: frameworkPackKey(f.key),
+    pack_key: frameworkPackKey(f),
     pack_version: frameworkPackVersion(f),
     hash: frameworkHash(f),
+    ...editionRow(f),
   };
 }
 
@@ -83,24 +107,45 @@ export async function syncFrameworks(
   db: Db,
   frameworks: Framework[],
   crosswalks: Crosswalk[],
-): Promise<{ added: string[]; revised: string[]; unchanged: string[]; crosswalks: number }> {
+): Promise<{
+  added: string[];
+  revised: string[];
+  unchanged: string[];
+  /** Only the edition status changed (written in place, no new revision). */
+  statusUpdated: string[];
+  crosswalks: number;
+}> {
   const added: string[] = [];
   const revised: string[] = [];
   const unchanged: string[] = [];
+  const statusUpdated: string[] = [];
   for (const f of frameworks) {
     const row = frameworkRow(f);
     const id = `${f.key}@${f.version}`;
     const existing = must(
       await db
         .from('frameworks')
-        .select('hash, revision')
+        .select(
+          'hash, revision, status, superseded_by, transition_ends, revision_stage, revision_expected, status_note, status_checked_on',
+        )
         .eq('key', f.key)
         .eq('version', f.version)
         .maybeSingle(),
       `framework ${id}`,
     );
     if (existing && existing.hash === row.hash) {
-      unchanged.push(id);
+      const status = editionRow(f);
+      const same = (Object.keys(status) as (keyof typeof status)[]).every(
+        (k) => (existing[k] ?? null) === status[k],
+      );
+      if (same) unchanged.push(id);
+      else {
+        must(
+          await db.from('frameworks').update(status).eq('key', f.key).eq('version', f.version),
+          `framework ${id}`,
+        );
+        statusUpdated.push(id);
+      }
       continue;
     }
     if (existing && existing.revision >= f.revision)
@@ -146,10 +191,12 @@ export async function syncFrameworks(
       }),
       'crosswalks',
     );
-  return { added, revised, unchanged, crosswalks: rows.length };
+  return { added, revised, unchanged, statusUpdated, crosswalks: rows.length };
 }
 
-export interface CatalogueFramework {
+export interface CatalogueFramework extends Omit<EditionInfo, 'statusCheckedOn'> {
+  /** Null for a row written before the edition status existed (0037). */
+  statusCheckedOn: string | null;
   key: string;
   version: string;
   revision: number;
@@ -172,7 +219,7 @@ export async function readFrameworks(db: Db): Promise<CatalogueFramework[]> {
     db
       .from('frameworks')
       .select(
-        'key, version, revision, title, short_title, publisher, kind, source, licence, url, pack_key, pack_version',
+        'key, version, revision, title, short_title, publisher, kind, source, licence, url, pack_key, pack_version, status, superseded_by, transition_ends, revision_stage, revision_expected, status_note, status_checked_on',
       ),
     db.from('requirements').select('framework_key, framework_version, kind'),
   ]);
@@ -200,11 +247,19 @@ export async function readFrameworks(db: Db): Promise<CatalogueFramework[]> {
       packKey: f.pack_key,
       packVersion: f.pack_version,
       requirements: count.get(`${f.key}@${f.version}`) ?? 0,
+      status: f.status as EditionStatus,
+      supersededBy: f.superseded_by,
+      transitionEnds: f.transition_ends,
+      revisionStage: f.revision_stage,
+      revisionExpected: f.revision_expected,
+      statusNote: f.status_note,
+      statusCheckedOn: f.status_checked_on,
     }))
     .sort(
       (a, b) =>
         order.indexOf(a.kind) - order.indexOf(b.kind) ||
-        a.shortTitle.localeCompare(b.shortTitle, 'en', { numeric: true }),
+        a.key.localeCompare(b.key, 'en', { numeric: true }) ||
+        b.version.localeCompare(a.version, 'en', { numeric: true }),
     );
 }
 

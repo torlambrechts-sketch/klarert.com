@@ -190,8 +190,7 @@ describe('the shipped catalogue', () => {
       /Only a withdrawn/,
     );
     expect(() => parseFramework({ ...raw, status: 'revision-in-progress' })).toThrow(/stage/);
-    const { statusCheckedOn: _, ...unchecked } = raw;
-    expect(() => parseFramework(unchecked)).toThrow();
+    expect(() => parseFramework({ ...raw, statusCheckedOn: undefined })).toThrow();
   });
 });
 
