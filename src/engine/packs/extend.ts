@@ -91,6 +91,8 @@ export function foreignSheets(m: PackManifest): { pack: string; sheet: string }[
   }
   for (const s of m.sheets)
     for (const f of s.fields) add((f.config as Obj | undefined)?.targetSheetRef);
+  // the pack's own automations may create items on a required pack's sheet
+  for (const a of m.automations) for (const x of a.actions) add(x.sheetRef);
   // an add-on's dashboard widgets may read a required pack's sheets (its tagged rows of a Core register)
   for (const d of m.dashboards) for (const w of d.widgets) add(w.sheetRef);
   return [...out.values()];
@@ -230,6 +232,10 @@ export function extendsProblems(m: PackManifest): { path: (string | number)[]; m
     }
   }
 
+  // the pack's own automations may create items on a required pack's sheet
+  for (const [ai, a] of m.automations.entries())
+    for (const x of a.actions) foreignOk(x.sheetRef, ['automations', ai]);
+
   // own sheets: a link into a required pack's sheet that goes both ways needs its inverse in that sheet's extends
   for (const [si, s] of m.sheets.entries())
     for (const [fi, f] of s.fields.entries()) {
@@ -313,6 +319,20 @@ export function extensionUses(m: PackManifest, depKey: string): Map<string, Set<
       keysIn([f.rules ?? [], f.visibility ?? null] as unknown as Json, add);
     }
   }
+  // the pack's own automations that write to the dependency's sheets: the keys they set there
+  for (const a of m.automations)
+    for (const x of a.actions) {
+      const t = typeof x.sheetRef === 'string' ? splitSheetRef(x.sheetRef, m.key) : null;
+      if (!t || t.pack !== depKey) continue;
+      const added = new Set(
+        (m.extends ?? [])
+          .filter((e) => e.pack === depKey && e.sheet === t.ref)
+          .flatMap((e) => (e.fields ?? []).map((f) => f.key)),
+      );
+      mark(t.ref);
+      const values = x.values;
+      if (isObj(values)) for (const k of Object.keys(values)) if (!added.has(k)) mark(t.ref, k);
+    }
   // dashboard widgets on the dependency's sheets: the field they show and the fields their conditions name
   for (const d of m.dashboards)
     for (const w of d.widgets) {
