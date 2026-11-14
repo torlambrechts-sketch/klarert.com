@@ -10,6 +10,7 @@ import type { Ctx, Json } from '@/engine/types';
 import { FIELD_COLUMNS, toField } from '@/lib/sheet-rows';
 import type { Db } from '@/lib/sheet-query';
 import {
+  automationModeInput,
   automationRefInput,
   createAutomationInput,
   pauseAutomationInput,
@@ -191,6 +192,35 @@ export async function toggleAutomation(input: unknown): Promise<Result<{ enabled
       return ok({ enabled: v.enabled });
     },
     'toggleAutomation',
+  );
+}
+
+/**
+ * Test mode (docs/04 §14): an automation in test mode runs and logs what it would do; live, it performs its actions.
+ * Owners and admins only (a guard trigger holds the database to it); the audit trigger logs the change.
+ */
+export async function setAutomationMode(
+  input: unknown,
+): Promise<Result<{ mode: 'live' | 'test' }>> {
+  const p = automationModeInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'admin',
+    async ({ supabase, orgId }) => {
+      const row = await loadRow(supabase, orgId, v.automationId);
+      if (!row) return notFound();
+      const { error } = await supabase
+        .from('automations')
+        .update({ mode: v.mode, updated_at: new Date().toISOString() })
+        .eq('id', row.id)
+        .select('id')
+        .single();
+      if (error) return fromDbError(error);
+      return ok({ mode: v.mode });
+    },
+    'setAutomationMode',
   );
 }
 

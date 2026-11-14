@@ -9,6 +9,8 @@ import * as scheduler from '@/server/commands/scheduler';
 export const createAutomationAction = async (input: unknown) => automations.createAutomation(input);
 export const updateAutomationAction = async (input: unknown) => automations.updateAutomation(input);
 export const toggleAutomationAction = async (input: unknown) => automations.toggleAutomation(input);
+export const setAutomationModeAction = async (input: unknown) =>
+  automations.setAutomationMode(input);
 export const duplicateAutomationAction = async (input: unknown) =>
   automations.duplicateAutomation(input);
 export const deleteAutomationAction = async (input: unknown) => automations.deleteAutomation(input);

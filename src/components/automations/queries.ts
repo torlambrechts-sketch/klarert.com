@@ -15,6 +15,8 @@ export interface AutomationSummary {
   sheetId: string;
   name: string;
   enabled: boolean;
+  /** Test mode (docs/04 §14): runs and logs what it would do, performs nothing. */
+  mode: 'live' | 'test';
   trigger: Automation['trigger'];
   conditions: Condition[];
   actions: Automation['actions'];
@@ -29,7 +31,7 @@ export interface AutomationSummary {
 export const automationsKey = (orgId: string) => ['automations', orgId] as const;
 
 const COLUMNS =
-  'id, sheet_id, name, enabled, trigger, conditions, actions, source, version, locked, run_count, last_run_at, created_at';
+  'id, sheet_id, name, enabled, mode, trigger, conditions, actions, source, version, locked, run_count, last_run_at, created_at';
 
 /** Every automation of the workspace, oldest first (the order they run in). Filter by sheet in the caller. */
 export function useAutomations(orgId: string | undefined) {
@@ -49,6 +51,7 @@ export function useAutomations(orgId: string | undefined) {
         sheetId: r.sheet_id,
         name: r.name,
         enabled: r.enabled,
+        mode: r.mode === 'test' ? ('test' as const) : ('live' as const),
         trigger: r.trigger as Automation['trigger'],
         conditions: (r.conditions ?? []) as unknown as Condition[],
         actions: (r.actions ?? []) as Automation['actions'],
@@ -151,8 +154,8 @@ export function usePauses(itemId: string) {
   });
 }
 
-export type RunOutcome = 'done' | 'partial' | 'failed' | 'stopped';
-export const RUN_OUTCOMES: RunOutcome[] = ['done', 'partial', 'failed', 'stopped'];
+export type RunOutcome = 'done' | 'partial' | 'failed' | 'stopped' | 'test';
+export const RUN_OUTCOMES: RunOutcome[] = ['done', 'partial', 'failed', 'stopped', 'test'];
 
 export interface RunRow {
   id: number;

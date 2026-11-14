@@ -55,6 +55,13 @@ export const toggleAutomationInput = z.object({
   enabled: z.boolean(),
 });
 
+/** Test mode (docs/04 §14): `live` performs the actions, `test` only logs what it would do. Owners and admins. */
+export const automationModeInput = z.object({
+  org: slugInput,
+  automationId: uuid,
+  mode: z.enum(['live', 'test']),
+});
+
 export const automationRefInput = z.object({ org: slugInput, automationId: uuid });
 
 export const pauseAutomationInput = z.object({

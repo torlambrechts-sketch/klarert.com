@@ -9,6 +9,7 @@ export const PACK_ACTIONS = [
   'pack.archived',
   'bundle.created',
   'bundle.reviewed',
+  'pack.automations_mode',
 ] as const;
 
 type Obj = Record<string, Json>;
@@ -74,6 +75,14 @@ export function packLogText(action: string, newValue: Json | null): string {
         : '',
     ].filter(Boolean);
     return `Archived ${name}: ${parts.join(', ')}. Items and the activity log are kept.`;
+  }
+  if (action === 'pack.automations_mode') {
+    const title = typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack');
+    const n = num(v.count);
+    const what = `${n} ${n === 1 ? 'automation' : 'automations'}`;
+    return v.mode === 'test'
+      ? `Put ${what} from ${title} in test mode.`
+      : `Turned on ${what} from ${title}: they now notify people and change items.`;
   }
   // Create wizard bundles (docs/11 Bundles): the name the person gave, the pack it came from
   const bundle = typeof v.name === 'string' ? v.name : name;

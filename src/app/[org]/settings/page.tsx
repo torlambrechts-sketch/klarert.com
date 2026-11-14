@@ -20,7 +20,8 @@ import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
 import { ArchivePack, PackPreview } from './packs';
 import { PackUpgrade } from './pack-upgrade';
-import { listPacks, packSetups } from '@/server/commands/packs';
+import { listPacks, packSetups, testModePacks } from '@/server/commands/packs';
+import { TestModeBanner } from '@/components/packs/test-mode-banner';
 import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
 import { AdoptFramework } from './frameworks';
@@ -402,10 +403,11 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
 
 /** Packs (docs/11): the catalogue, what is installed here and the pack entries of the activity log. */
 async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
-  const [r, setupsResult, reviewSheets] = await Promise.all([
+  const [r, setupsResult, reviewSheets, quiet] = await Promise.all([
     listPacks({ org }),
     packSetups({ org }),
     reviewSheetsByInstall({ org }),
+    testModePacks({ org }).then((x) => (x.ok ? x.data : [])),
   ]);
   const reviewLinks = (installId: string): Record<string, { href: string; label: string }> => {
     const sheetId = reviewSheets.ok ? reviewSheets.data[installId] : undefined;
@@ -427,6 +429,15 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
   const { available, installed, log, canInstall } = r.data;
   return (
     <>
+      {quiet.map((q) => (
+        <TestModeBanner
+          key={q.installId}
+          org={org}
+          installId={q.installId}
+          title={q.title}
+          count={q.count}
+        />
+      ))}
       <Card
         title="Available packs"
         description="Ready-made sheets, links, forms, automations and dashboards. Preview a pack to see exactly what it creates here before you install it."

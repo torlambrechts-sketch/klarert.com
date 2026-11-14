@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, Minus, SkipForward } from 'lucide-react';
+import { AlertTriangle, Check, FlaskConical, Minus, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Run and step outcomes as chips with text and a symbol (colour is never the only signal; done and action-needed
@@ -12,6 +12,7 @@ const LABEL: Record<string, string> = {
   blocked: 'Blocked',
   skipped: 'Skipped',
   no_change: 'No change',
+  test: 'Test mode',
 };
 
 export const outcomeLabel = (o: string) => LABEL[o] ?? o;
@@ -26,7 +27,9 @@ export function OutcomeChip({ outcome, className }: { outcome: string; className
         ? AlertTriangle
         : outcome === 'skipped'
           ? SkipForward
-          : Minus;
+          : outcome === 'test'
+            ? FlaskConical
+            : Minus;
   return (
     <span
       className={cn(
