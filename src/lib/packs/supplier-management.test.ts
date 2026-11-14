@@ -237,7 +237,6 @@ describe('Supplier management add-on 2.0.0 (catalogue only, on its fixture)', ()
 
 describe('Supplier management add-on 3.0.0 on the Core Suppliers register', () => {
   const m = pack;
-  const sheet = (ref: string) => m.sheets.find((s) => s.ref === ref)!;
   const onSuppliers = m.extends!.find((e) => e.sheet === 'suppliers')!;
   const plan = () => {
     const { snap, coreRefs } = withCore();

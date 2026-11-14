@@ -574,8 +574,32 @@ export function planPackInstall(
     typeof raw === 'string' &&
     raw.includes(':') &&
     pendingPacks.has(splitSheetRef(raw, m.key)?.pack ?? '');
+  // so are automations that read a sheet's links into such a pack, or lookups and roll-ups through them (a check's
+  // Supplier owner, looked up on Core's Suppliers): what those fields hold is known once that sheet is there
+  const waitingKeys = new Map<string, Set<string>>(); // sheet ref → keys
+  for (const s of mm.sheets) {
+    const links = new Set(
+      s.fields
+        .filter((f) => waitingOn((f.config as Record<string, unknown> | undefined)?.targetSheetRef))
+        .map((f) => f.key),
+    );
+    if (!links.size) continue;
+    const through = s.fields
+      .filter((f) => {
+        const k = (f.config as Record<string, unknown> | undefined)?.linkFieldKey;
+        return typeof k === 'string' && links.has(k);
+      })
+      .map((f) => f.key);
+    waitingKeys.set(s.ref, new Set([...links, ...through]));
+  }
+  const readsWaiting = (a: (typeof mm.automations)[number]) => {
+    const keys = waitingKeys.get(a.sheet);
+    if (!keys) return false;
+    const text = JSON.stringify([a.trigger, a.conditions, a.actions]);
+    return [...keys].some((k) => text.includes(`"${k}"`) || text.includes(`"field:${k}"`));
+  };
   const waitingAutomations = mm.automations
-    .filter((a) => a.actions.some((x) => waitingOn(x.sheetRef)))
+    .filter((a) => a.actions.some((x) => waitingOn(x.sheetRef)) || readsWaiting(a))
     .map((a) => `Automation "${a.name}"`);
   conflicts.push(
     ...tp.problems.filter(

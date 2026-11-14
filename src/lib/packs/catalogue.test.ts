@@ -78,6 +78,36 @@ describe('repository packs', () => {
       expect(plan.payload, p.key).not.toBeNull();
     }
   });
+
+  it('every add-on previews before the packs it requires are there: they install first, nothing blocks', () => {
+    // the install dialog in an empty workspace: what reads a required pack's sheets is checked once it is there
+    // (Supplier management 3.0.0's checks look the owner up on Core's Suppliers)
+    const packs = repoPacks();
+    for (const p of packs.filter((x) => x.requires.length)) {
+      const plan = planPackInstall(p, snapshot(), env, {
+        installFirst: p.requires.map((r) => {
+          const dep = packs.find((x) => x.key === r.pack)!;
+          const level = neededLevel(p, dep);
+          return {
+            key: dep.key,
+            title: dep.title,
+            version: dep.version,
+            level,
+            levelName: dep.levels?.find((l) => l.key === level)?.name ?? null,
+            raise: false,
+            sheets: Object.fromEntries(
+              dep.sheets.map((s) => [
+                s.ref,
+                { name: s.name, standards: s.fields.some((f) => f.key === 'standards') },
+              ]),
+            ),
+          };
+        }),
+      });
+      expect(plan.preview.conflicts, p.key).toEqual([]);
+      expect(plan.state, p.key).toBe('ready');
+    }
+  });
 });
 
 describe('templateToPack', () => {
