@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
 import { signIn } from './helpers';
@@ -13,6 +14,17 @@ import { signIn } from './helpers';
 const SHOTS = process.env.APPROVAL_SHOTS;
 
 const id = (email: string) => localSql(`select id from auth.users where email = '${email}'`).trim();
+
+/** No serious or critical WCAG 2.1 AA issue (axe), as tests/e2e/accessibility.spec.ts. */
+async function axe(page: Page, what: string) {
+  const result = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze();
+  const bad = result.violations
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    .map((v) => `${v.impact} ${v.id}: ${v.nodes.map((n) => n.html.slice(0, 160)).join(' | ')}`);
+  expect(bad, `${what}: serious or critical axe violations`).toEqual([]);
+}
 
 async function as(browser: Browser, email: string, next: string): Promise<Page> {
   const context = await browser.newContext();
@@ -98,6 +110,7 @@ test('define, submit, approve from My work, a rejection back to step 1, locked',
     await form.screenshot({ path: `${SHOTS}/editor.png` });
     await page.setViewportSize({ width: 1280, height: 720 });
   }
+  await axe(page, 'Approval workflow editor');
   await form.getByRole('button', { name: 'Save workflow' }).click();
   const list = page.getByRole('list', { name: 'Approval workflows' });
   await expect(list).toContainText('Procedure approval');
@@ -122,6 +135,7 @@ test('define, submit, approve from My work, a rejection back to step 1, locked',
     ).trim();
   expect(status()).toBe('opt_review|opt_s_review|false');
   if (SHOTS) await panel.screenshot({ path: `${SHOTS}/panel-waiting.png` });
+  await axe(page, 'Item panel with an approval waiting');
 
   // ── the reviewer approves from My work ──
   const jamesPage = await as(browser, 'james@example.com', `/${slug}/my-work`);
@@ -169,6 +183,7 @@ test('define, submit, approve from My work, a rejection back to step 1, locked',
   );
   await vicPage.reload();
   await expect(vicPage.getByTestId('approval-row')).toHaveCount(1);
+  await axe(vicPage, 'My work with Needs my approval');
   if (SHOTS) {
     await vicPage.getByTestId('approval-inbox').screenshot({ path: `${SHOTS}/inbox.png` });
     await vicPage.setViewportSize({ width: 390, height: 844 });
