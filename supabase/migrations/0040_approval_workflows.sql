@@ -99,13 +99,26 @@ end $$;
 create trigger sheets_workflows_guard before insert or update on sheets
   for each row execute function sheets_workflows_guard();
 
--- the approval RPCs write the item for approvers who may only view it (they checked who may act)
+-- the approval RPCs write the item (and, for a documents register, the approved file) for approvers who may only
+-- view it: they have checked who may act, and set app.workflow_op for exactly those writes
 create or replace function items_access_guard() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   if coalesce(current_setting('app.workflow_op', true), '') = 'on' then return new; end if;
   perform _need_sheet(new.sheet_id, 'editor');
   return new;
+end $$;
+
+create or replace function item_rows_access_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare r jsonb := to_jsonb(coalesce(new, old)); s uuid;
+begin
+  if not _is_person() or coalesce(current_setting('app.workflow_op', true), '') = 'on' then
+    return coalesce(new, old);
+  end if;
+  select sheet_id into s from items where id = (r->>'item_id')::uuid;
+  perform _need_sheet(s, tg_argv[0]);
+  return coalesce(new, old);
 end $$;
 
 -- ───────────────────────── helpers (internal) ─────────────────────────
@@ -226,6 +239,7 @@ declare it items; before jsonb; sf fields; settings jsonb; open text[]; label te
 begin
   select * into it from items where id = p_item for update;
   before := it."values";
+  perform set_config('app.workflow_op', 'on', true);
   it := _wf_set_option(it, p_def->'stepField'->>'fieldKey', p_step_option, p_actor_kind, p_actor, null);
   it := _wf_set_option(it, p_def->'statusField'->>'fieldKey', p_status_option, p_actor_kind, p_actor, p_note);
   -- the sub-item close gate (0020), as set_item_values
@@ -260,12 +274,11 @@ begin
     values (it.org_id, it.sheet_id, it.id, '', p_actor_kind, p_actor, 'item.locked', reason);
   end if;
   if jsonb_array_length(changes) > 0 or p_lock then
-    perform set_config('app.workflow_op', 'on', true);
     update items set "values" = it."values", locked = it.locked, lock_reason = it.lock_reason,
                      updated_at = now(), updated_by = coalesce(auth.uid(), updated_by)
      where id = it.id;
-    perform set_config('app.workflow_op', '', true);
   end if;
+  perform set_config('app.workflow_op', '', true);
   return changes;
 end $$;
 
@@ -559,8 +572,8 @@ begin
 end $$;
 
 -- ───────────────────────── grants ─────────────────────────
-revoke all on function sheets_workflows_guard(), workflow_decisions_append_only(), items_access_guard()
-  from public, anon, authenticated;
+revoke all on function sheets_workflows_guard(), workflow_decisions_append_only(), items_access_guard(),
+  item_rows_access_guard() from public, anon, authenticated;
 revoke all on function _wf_definition(uuid, text), _wf_valid(jsonb), _wf_resolve(items, jsonb),
   _wf_filled(items, fields), _wf_set_option(items, text, text, text, uuid, text),
   _wf_apply(uuid, jsonb, text, text, boolean, text, uuid, uuid, text), _wf_step_option(jsonb, int),

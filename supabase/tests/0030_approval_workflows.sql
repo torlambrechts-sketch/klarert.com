@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(52);
+select plan(57);
 
 -- people: owner (o), editor who submits (e), second editor (e2), viewer (v), outsider (x), auditor (a)
 insert into auth.users (id, email) values
@@ -243,6 +243,50 @@ select is((select workflow_decide((select id from workflow_instances where item_
                                                                        and status = 'in_progress'),
                                   'rejected', 'Liability cap missing')->>'outcome'), 'rejected',
   'a rejection that closes ends it rejected');
+
+-- ───────────── a documents register: the last approval approves the document as the person ─────────────
+reset role;
+insert into sheets (id, org_id, name, id_prefix, position, settings) values
+  ('a9a9a9a9-1111-0000-0000-000000000003', 'a9a9a9a9-0000-0000-0000-000000000000', 'Policies', 'POL-', 'a3',
+   '{"register":"documents"}');
+insert into groups (id, org_id, sheet_id, name, position) values
+  ('a9a9a9a9-2222-0000-0000-000000000003', 'a9a9a9a9-0000-0000-0000-000000000000', 'a9a9a9a9-1111-0000-0000-000000000003', 'Draft', 'a0');
+insert into fields (id, org_id, sheet_id, key, name, type, position, config) values
+  ('a9a9a9a9-3333-0000-0000-000000000011', 'a9a9a9a9-0000-0000-0000-000000000000', 'a9a9a9a9-1111-0000-0000-000000000003',
+   'status', 'Status', 'status', 'a0',
+   '{"options":[{"id":"d_draft","label":"Draft","color":"grey"},{"id":"d_review","label":"In review","color":"orange"},{"id":"d_ok","label":"Approved","color":"green","done":true}]}'),
+  ('a9a9a9a9-3333-0000-0000-000000000012', 'a9a9a9a9-0000-0000-0000-000000000000', 'a9a9a9a9-1111-0000-0000-000000000003',
+   'approver', 'Approver', 'people', 'a1', '{"multiple":false}'),
+  ('a9a9a9a9-3333-0000-0000-000000000013', 'a9a9a9a9-0000-0000-0000-000000000000', 'a9a9a9a9-1111-0000-0000-000000000003',
+   'approved_on', 'Approved on', 'date', 'a2', '{}');
+update sheets set settings = settings || jsonb_build_object('workflows', jsonb_build_array(jsonb_build_object(
+  'id', 'policy', 'name', 'Policy approval', 'enabled', true, 'lockOnApproval', true,
+  'statusField', jsonb_build_object('fieldKey', 'status', 'onSubmit', 'd_review', 'onApproved', 'd_ok', 'onRejected', 'd_draft'),
+  'steps', jsonb_build_array(jsonb_build_object('id', 'mgmt', 'name', 'Management approval',
+    'approvers', jsonb_build_object('kind', 'jobRole', 'roleName', 'Quality lead'),
+    'mode', 'any', 'onReject', jsonb_build_object('to', 'draft'))))))
+ where id = 'a9a9a9a9-1111-0000-0000-000000000003';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000a9002","role":"authenticated"}', true);
+create temp table it3 as select * from create_item('a9a9a9a9-1111-0000-0000-000000000003', 'a9a9a9a9-2222-0000-0000-000000000003', 'Access policy', 'a0');
+reset role;
+insert into files (org_id, item_id, field_id, storage_path, filename, mime_type, size_bytes, sha256, source, category)
+values ('a9a9a9a9-0000-0000-0000-000000000000', (select id from it3), null, 'org/x/policy.pdf', 'policy.pdf',
+        'application/pdf', 10, repeat('a', 64), 'upload', 'document');
+set local role authenticated;
+select lives_ok($$ select workflow_submit((select id from it3), 'policy') $$, 'the author submits the policy');
+-- the viewer holds the job title: view access is enough to approve, the register's rules apply as for a person
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000a9004","role":"authenticated"}', true);
+select throws_like($$ select workflow_decide((select id from workflow_instances where item_id = (select id from it3)), 'approved') $$,
+  'document: add a version note to approve.', 'approving a document needs a version note');
+select is((select workflow_decide((select id from workflow_instances where item_id = (select id from it3)), 'approved',
+                                  'Version 1')->>'outcome'), 'approved', 'a viewer approver approves the document');
+select results_eq($$ select "values"->>'a9a9a9a9-3333-0000-0000-000000000011', "values"->'a9a9a9a9-3333-0000-0000-000000000012', locked
+                       from items where id = (select id from it3) $$,
+  $$ values ('d_ok'::text, '["00000000-0000-0000-0000-0000000a9004"]'::jsonb, true) $$,
+  'Approved, the approver filled in by the register, locked');
+select is((select count(*)::int from activity_log where item_id = (select id from it3) and action = 'file.approved'), 1,
+  'the file is approved as the document''s version');
 
 -- ───────────── grants ─────────────
 reset role;
