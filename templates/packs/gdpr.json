@@ -1,18 +1,29 @@
 {
   "key": "gdpr",
-  "version": "1.0.0",
-  "title": "GDPR privacy programme",
-  "description": "A GDPR programme on the GDPR requirement library: records of processing, data subject requests with their deadlines, personal data breaches with the 72-hour clock, DPIAs, processors and DPAs, transfers outside the EEA and a retention schedule with retention rules; Full adds consent records and the DPO and training. Example items start with \"Example:\". Retention periods are suggestions: each workspace sets its own.",
+  "version": "2.0.0",
+  "title": "GDPR privacy (add-on)",
+  "description": "A GDPR programme on the Core registers and the GDPR requirement library. Adds records of processing, data subject requests with their deadline, personal data breaches with the 72-hour clock, DPIAs and (under Suppliers) processors and DPAs; Full adds transfers outside the EEA, the retention schedule and consent records. On the shared registers it adds the Privacy risk category, links from risks to processing and DPIAs, the \"Personal data breach\" incident type that opens a breach record, example privacy documents and a GDPR view on each. Retention rules ship as suggestions. Installs the Core registers first when they are missing. Own words throughout; article headings are the official ones.",
+  "requires": [
+    {
+      "pack": "core",
+      "range": "^1.0.0"
+    }
+  ],
+  "standard": {
+    "id": "gdpr",
+    "label": "GDPR",
+    "color": "purple"
+  },
   "levels": [
     {
       "key": "starter",
       "name": "Starter",
-      "description": "Records of processing, data subject requests, personal data breaches, DPIAs, processors and DPAs, transfers and the retention schedule."
+      "description": "Records of processing, data subject requests, personal data breaches, DPIAs and processors and DPAs, with the GDPR additions to the shared registers."
     },
     {
       "key": "full",
       "name": "Full",
-      "description": "Everything in Starter plus consent records and the DPO and training."
+      "description": "Everything in Starter plus transfers outside the EEA, the retention schedule and consent records."
     }
   ],
   "frameworks": [
@@ -21,20 +32,15 @@
       "version": "2016"
     }
   ],
-  "folders": [
-    {
-      "ref": "privacy",
-      "name": "Data protection"
-    }
-  ],
+  "folders": [],
   "sheets": [
     {
       "ref": "ropa",
       "name": "Records of processing",
       "itemLabel": "Processing activity",
       "idPrefix": "ROP-",
-      "folder": "privacy",
-      "description": "Your record of processing activities: one item per purpose for which you use personal data, whether you are the controller or a processor for someone else. Keep it current: it is the first thing a supervisory authority asks for.",
+      "folder": "core:privacy",
+      "description": "One record per purpose for which you use personal data (Art. 30): your role, the purpose, the lawful basis, whose data and which kinds, who receives it, how long you keep it and how it is protected.",
       "groups": [
         {
           "ref": "active",
@@ -211,24 +217,10 @@
           }
         },
         {
-          "key": "transfers",
-          "name": "Transfers outside the EEA",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "transfer",
-            "multiple": true,
-            "inverseKey": "processing"
-          }
-        },
-        {
-          "key": "retention_entry",
-          "name": "Retention schedule",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "retention",
-            "multiple": true,
-            "inverseKey": "processing"
-          }
+          "key": "retention_period",
+          "name": "How long we keep it",
+          "type": "text",
+          "description": "The period in words, e.g. \"6 years after the tax year\". The retention schedule (Full) holds the detail."
         },
         {
           "key": "security",
@@ -265,6 +257,16 @@
             "targetSheetRef": "dpia",
             "multiple": true,
             "inverseKey": "processing"
+          }
+        },
+        {
+          "key": "risks",
+          "name": "Privacy risks",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:risk",
+            "multiple": true,
+            "inverseKey": "gdpr_processing"
           }
         },
         {
@@ -322,9 +324,52 @@
               "message": "Add the purpose, the lawful basis and the business owner before approving."
             }
           ]
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the record is in its approval. Set by the approval workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_owner",
+                "label": "Business owner",
+                "color": "blue"
+              },
+              {
+                "id": "opt_step_dpo",
+                "label": "DPO review",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Rejected",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
         }
       ],
       "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
         {
           "name": "By lawful basis",
           "type": "kanban",
@@ -357,8 +402,9 @@
           "name": "Where it goes",
           "fields": [
             "processors",
-            "transfers",
-            "retention_entry"
+            "retention_period",
+            "risks",
+            "dpias"
           ]
         }
       ],
@@ -386,14 +432,12 @@
             "systems": "Payroll portal",
             "dpia_needed": "no",
             "status": "opt_approved",
-            "next_review": "$in:180"
+            "next_review": "$in:180",
+            "retention_period": "Set by tax and employment law where you operate"
           },
           "links": {
             "processors": [
               "ex_payroll_provider"
-            ],
-            "retention_entry": [
-              "ex_payroll_records"
             ]
           },
           "requirements": {
@@ -425,12 +469,8 @@
             "systems": "Email service",
             "dpia_needed": "no",
             "status": "opt_review",
-            "next_review": "$in:90"
-          },
-          "links": {
-            "transfers": [
-              "ex_support_us"
-            ]
+            "next_review": "$in:90",
+            "retention_period": "Until the person unsubscribes, then 2 years as proof of consent"
           },
           "requirements": {
             "articles": [
@@ -472,6 +512,85 @@
             ]
           }
         }
+      ],
+      "kind": "register",
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "By lawful basis"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "defaultView": "table",
+      "workflows": [
+        {
+          "id": "processing-approval",
+          "name": "Processing record approval",
+          "enabled": true,
+          "requiredFields": [
+            "purpose",
+            "lawful_basis",
+            "owner"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_review",
+            "onApproved": "opt_approved",
+            "onRejected": "opt_draft"
+          },
+          "steps": [
+            {
+              "id": "owner",
+              "name": "Business owner",
+              "approvers": {
+                "kind": "field",
+                "fieldKey": "owner"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 5,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_owner"
+            },
+            {
+              "id": "dpo",
+              "name": "DPO review",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Data protection officer"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "step",
+                "stepId": "owner"
+              },
+              "optionId": "opt_step_dpo"
+            }
+          ]
+        }
       ]
     },
     {
@@ -479,8 +598,8 @@
       "name": "Data subject requests",
       "itemLabel": "Request",
       "idPrefix": "DSR-",
-      "folder": "privacy",
-      "description": "Requests from people to see, correct, delete, restrict, move or object to the use of their data. Answer within one month of receiving the request; you may extend by up to two further months for complex or numerous requests if you tell the person within the first month and say why. The deadline is calculated for you. Log new requests through the form \"Submit a data subject request\" (Forms tab).",
+      "folder": "core:privacy",
+      "description": "Requests from people about their data (Art. 12 to 22). The deadline is one month from receipt, plus an extension when the request is complex and you told the person why.",
       "groups": [
         {
           "ref": "new",
@@ -791,6 +910,9 @@
           "ref": "By status"
         },
         {
+          "ref": "calendar"
+        },
+        {
           "ref": "form"
         }
       ],
@@ -910,15 +1032,18 @@
             ]
           }
         }
-      ]
+      ],
+      "kind": "log",
+      "personalData": true,
+      "defaultView": "table"
     },
     {
       "ref": "breach",
       "name": "Personal data breaches",
       "itemLabel": "Breach",
       "idPrefix": "PDB-",
-      "folder": "privacy",
-      "description": "Every personal data breach, also the ones you decide not to report: the record of what happened, its effects and what you did is required either way. Report to the supervisory authority within 72 hours of becoming aware unless the breach is unlikely to result in a risk to people; tell the people affected without undue delay when the risk to them is high. The clock starts at \"We became aware at\" and stops at \"Reported to the authority at\". Report new breaches through the form \"Report a personal data breach\" (Forms tab).",
+      "folder": "core:privacy",
+      "description": "Every personal data breach, reported to the authority or not (Art. 33(5)): what happened, the risk to people, the decisions to report and to tell them, and the 72-hour clock from the moment you became aware.",
       "groups": [
         {
           "ref": "open",
@@ -1166,6 +1291,17 @@
           "type": "longtext"
         },
         {
+          "key": "incident",
+          "name": "Incident",
+          "type": "link",
+          "description": "The incident in the shared Incidents register, when the breach started there.",
+          "config": {
+            "targetSheetRef": "core:incidents",
+            "multiple": false,
+            "inverseKey": "gdpr_breach"
+          }
+        },
+        {
           "key": "articles",
           "name": "GDPR articles",
           "type": "requirement",
@@ -1219,6 +1355,37 @@
               "message": "Record the containment, the risk and why, and the decisions to report and to tell people before closing."
             }
           ]
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the record is in its approval. Set by the approval workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_dpo",
+                "label": "DPO sign-off",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Rejected",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
         }
       ],
       "views": [
@@ -1228,6 +1395,13 @@
           "config": {
             "labelFieldKey": "status"
           }
+        },
+        {
+          "name": "By risk",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "risk"
+          }
         }
       ],
       "tabs": [
@@ -1236,6 +1410,9 @@
         },
         {
           "ref": "By status"
+        },
+        {
+          "ref": "calendar"
         },
         {
           "ref": "form"
@@ -1328,6 +1505,50 @@
             ]
           }
         }
+      ],
+      "kind": "log",
+      "personalData": true,
+      "defaultView": "table",
+      "workflows": [
+        {
+          "id": "breach-decisions",
+          "name": "Breach decisions sign-off",
+          "enabled": true,
+          "requiredFields": [
+            "risk",
+            "risk_reasoning",
+            "report_authority",
+            "tell_people"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": null,
+          "steps": [
+            {
+              "id": "dpo",
+              "name": "DPO sign-off",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Data protection officer"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 12,
+                "unit": "hours"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_dpo"
+            }
+          ]
+        }
       ]
     },
     {
@@ -1335,8 +1556,8 @@
       "name": "DPIAs",
       "itemLabel": "DPIA",
       "idPrefix": "DPIA-",
-      "folder": "privacy",
-      "description": "Data protection impact assessments for processing likely to result in a high risk to people: describe the processing, why it is needed, the risks and the measures, ask the DPO for advice, and consult the supervisory authority first when a high risk remains.",
+      "folder": "core:privacy",
+      "description": "Data protection impact assessments for processing likely to be high risk to people (Art. 35): the processing, why it is needed, the risks, the measures, the DPO’s advice and the decision.",
       "groups": [
         {
           "ref": "open",
@@ -1428,6 +1649,16 @@
           "key": "measures",
           "name": "Measures to address the risks",
           "type": "longtext"
+        },
+        {
+          "key": "risks_register",
+          "name": "Risks in the risk register",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:risk",
+            "multiple": true,
+            "inverseKey": "gdpr_dpia"
+          }
         },
         {
           "key": "residual",
@@ -1572,6 +1803,42 @@
               "message": "Add the risks, the measures, the risk that remains, the DPO's advice and the decision before approving."
             }
           ]
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the record is in its approval. Set by the approval workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_dpo",
+                "label": "DPO advice",
+                "color": "blue"
+              },
+              {
+                "id": "opt_step_mgmt",
+                "label": "Management decision",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Rejected",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
         }
       ],
       "items": [
@@ -1603,6 +1870,100 @@
             ]
           }
         }
+      ],
+      "kind": "register",
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
+        {
+          "name": "By risk that remains",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "residual"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "defaultView": "table",
+      "workflows": [
+        {
+          "id": "dpia-sign-off",
+          "name": "DPIA sign-off",
+          "enabled": true,
+          "requiredFields": [
+            "risks",
+            "measures",
+            "residual",
+            "decision",
+            "owner"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": true,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_dpo",
+            "onApproved": "opt_approved",
+            "onRejected": "opt_draft"
+          },
+          "steps": [
+            {
+              "id": "dpo",
+              "name": "DPO advice",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Data protection officer"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_dpo"
+            },
+            {
+              "id": "management",
+              "name": "Management decision",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Top management"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "step",
+                "stepId": "dpo"
+              },
+              "optionId": "opt_step_mgmt"
+            }
+          ]
+        }
       ]
     },
     {
@@ -1610,8 +1971,8 @@
       "name": "Processors and DPAs",
       "itemLabel": "Processor",
       "idPrefix": "DPA-",
-      "folder": "privacy",
-      "description": "Everyone who handles personal data on your behalf, with the data processing agreement that binds them. Tick what the agreement covers: anything missing is a gap to close with the processor.",
+      "folder": "core:suppliers",
+      "description": "Suppliers that process personal data for you (Art. 28), with what their agreement covers, their sub-processors and whether the data leaves the EEA. Kept with your other supplier sheets.",
       "groups": [
         {
           "ref": "active",
@@ -1726,16 +2087,6 @@
           }
         },
         {
-          "key": "transfers",
-          "name": "Transfers",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "transfer",
-            "multiple": true,
-            "inverseKey": "processor"
-          }
-        },
-        {
           "key": "owner",
           "name": "Owner",
           "type": "people",
@@ -1833,14 +2184,36 @@
             ]
           }
         }
-      ]
+      ],
+      "kind": "register",
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "defaultView": "table"
     },
     {
       "ref": "transfer",
       "name": "Transfers outside the EEA",
       "itemLabel": "Transfer",
       "idPrefix": "TRF-",
-      "folder": "privacy",
+      "folder": "core:privacy",
       "description": "Personal data sent to, or reachable from, countries outside the EEA, with the mechanism that makes each transfer lawful and your assessment of the destination.",
       "groups": [
         {
@@ -1922,8 +2295,7 @@
           "type": "link",
           "config": {
             "targetSheetRef": "ropa",
-            "multiple": true,
-            "inverseKey": "transfers"
+            "multiple": true
           }
         },
         {
@@ -1932,8 +2304,7 @@
           "type": "link",
           "config": {
             "targetSheetRef": "processor",
-            "multiple": true,
-            "inverseKey": "transfers"
+            "multiple": true
           }
         },
         {
@@ -2027,14 +2398,44 @@
             ]
           }
         }
-      ]
+      ],
+      "kind": "register",
+      "level": "full",
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
+        {
+          "name": "By mechanism",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "mechanism"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "defaultView": "table"
     },
     {
       "ref": "retention",
       "name": "Retention schedule",
       "itemLabel": "Record type",
       "idPrefix": "RET-",
-      "folder": "privacy",
+      "folder": "core:privacy",
       "description": "How long you keep each kind of record and why. The schedule says the policy; the retention rules in each sheet's settings (Sheet settings › Retention) apply it: due records go to Workspace admin › Retention, where an owner or admin approves the erasure. Periods shipped here are suggestions: set your own.",
       "groups": [
         {
@@ -2055,8 +2456,7 @@
           "type": "link",
           "config": {
             "targetSheetRef": "ropa",
-            "multiple": true,
-            "inverseKey": "retention_entry"
+            "multiple": true
           }
         },
         {
@@ -2195,14 +2595,37 @@
             ]
           }
         }
-      ]
+      ],
+      "kind": "register",
+      "level": "full",
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "defaultView": "table"
     },
     {
       "ref": "consent",
       "name": "Consent records",
       "itemLabel": "Consent",
       "idPrefix": "CNS-",
-      "folder": "privacy",
+      "folder": "core:privacy",
       "level": "full",
       "description": "Proof of consent where consent is your lawful basis: who agreed, to what, when, how and with which wording, and when they withdrew. Withdrawing must be as easy as giving consent.",
       "groups": [
@@ -2368,199 +2791,267 @@
             ]
           }
         }
+      ],
+      "kind": "log",
+      "personalData": true,
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "defaultView": "table"
+    }
+  ],
+  "extends": [
+    {
+      "pack": "core",
+      "sheet": "risk_category",
+      "items": [
+        {
+          "ref": "gdpr_privacy",
+          "group": "in_use",
+          "name": "Privacy",
+          "values": {
+            "likelihood_scale": "1 Rare: no sign it could happen with the measures in place. 2 Unlikely: has happened elsewhere. 3 Possible: has happened here or to a similar organisation. 4 Likely: expected within a year. 5 Almost certain: happening now or several times a year.",
+            "impact_scale": "1 Negligible: people are not affected or only briefly inconvenienced. 2 Minor: small inconvenience they get over easily. 3 Moderate: real problems for some people, such as costs or stress. 4 Major: serious harm such as fraud, discrimination or loss of a job. 5 Severe: lasting or irreversible harm to many people, or to vulnerable people.",
+            "appetite": 6,
+            "review_date": "$in:365",
+            "standards": [
+              "$option:GDPR"
+            ]
+          }
+        }
       ]
     },
     {
-      "ref": "dpo",
-      "name": "DPO and training",
-      "itemLabel": "Entry",
-      "idPrefix": "PDT-",
-      "folder": "privacy",
-      "level": "full",
-      "description": "Who your data protection officer or privacy contact is, how to reach them and that they report to the highest level of management, and the privacy training people have had and are due.",
-      "groups": [
-        {
-          "ref": "dpo",
-          "name": "DPO and contacts",
-          "color": "blue"
-        },
-        {
-          "ref": "training",
-          "name": "Training",
-          "color": "teal"
-        }
-      ],
+      "pack": "core",
+      "sheet": "risk",
       "fields": [
         {
-          "key": "kind",
-          "name": "Kind",
-          "type": "dropdown",
+          "key": "gdpr_processing",
+          "name": "Processing activities",
+          "type": "link",
+          "description": "The records of processing this privacy risk is about.",
           "config": {
-            "options": [
-              {
-                "id": "opt_dpo",
-                "label": "DPO appointment",
-                "color": "blue"
-              },
-              {
-                "id": "opt_contact",
-                "label": "Privacy contact",
-                "color": "teal"
-              },
-              {
-                "id": "opt_training",
-                "label": "Training",
-                "color": "purple"
-              },
-              {
-                "id": "opt_awareness",
-                "label": "Awareness campaign",
-                "color": "orange"
-              }
-            ]
-          }
-        },
-        {
-          "key": "person",
-          "name": "Person",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "contact",
-          "name": "Published contact",
-          "type": "text",
-          "description": "The address people and the authority use to reach the DPO."
-        },
-        {
-          "key": "authority_told_on",
-          "name": "Authority told on",
-          "type": "date",
-          "config": {
-            "relative": false
-          }
-        },
-        {
-          "key": "audience",
-          "name": "Audience",
-          "type": "text"
-        },
-        {
-          "key": "delivered_on",
-          "name": "Delivered on",
-          "type": "date",
-          "config": {
-            "relative": false
-          }
-        },
-        {
-          "key": "due_on",
-          "name": "Next due",
-          "type": "date",
-          "config": {
-            "relative": false
-          }
-        },
-        {
-          "key": "completed",
-          "name": "People who completed it",
-          "type": "number",
-          "config": {
-            "unit": "",
-            "decimals": 0
-          }
-        },
-        {
-          "key": "evidence",
-          "name": "Evidence",
-          "type": "attachment",
-          "config": {
+            "targetSheetRef": "ropa",
             "multiple": true,
-            "accept": []
+            "inverseKey": "risks"
           }
         },
         {
-          "key": "owner",
-          "name": "Owner",
-          "type": "people",
+          "key": "gdpr_dpia",
+          "name": "DPIAs",
+          "type": "link",
           "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "articles",
-          "name": "GDPR articles",
-          "type": "requirement",
-          "config": {
-            "multiple": true
-          }
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
-              {
-                "id": "opt_planned",
-                "label": "Planned",
-                "color": "orange"
-              },
-              {
-                "id": "opt_done",
-                "label": "Done",
-                "color": "green",
-                "done": true
-              }
-            ]
+            "targetSheetRef": "dpia",
+            "multiple": true,
+            "inverseKey": "risks_register"
           }
         }
       ],
       "items": [
         {
-          "ref": "ex_dpo",
-          "group": "dpo",
-          "name": "Example: DPO appointed",
+          "ref": "gdpr_export",
+          "group": "identified",
+          "name": "Example: Customer list exposed through a shared export link",
           "values": {
-            "kind": "opt_dpo",
-            "contact": "privacy@example.com",
-            "status": "opt_done"
+            "cause": "Exports from the newsletter tool can be shared by a public link",
+            "consequence": "Names and email addresses of subscribers seen by people outside; phishing aimed at them",
+            "likelihood": 3,
+            "impact": 3,
+            "treatment": "opt_reduce",
+            "review_date": "$in:90",
+            "status": "opt_open",
+            "standards": [
+              "$option:GDPR"
+            ]
           },
-          "requirements": {
-            "articles": [
-              "gdpr@2016#Art. 37",
-              "gdpr@2016#Art. 38"
+          "links": {
+            "category": [
+              "gdpr_privacy"
+            ],
+            "gdpr_processing": [
+              "ex_newsletter"
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "gdpr_risk_above_appetite",
+          "name": "Privacy risk above appetite → tell the risk owner and the DPO",
+          "trigger": {
+            "type": "number_above",
+            "fieldKey": "score",
+            "threshold": 6
+          },
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "gdpr"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Data protection officer"
+              ],
+              "message": "{id} {name} scores {score}, above the privacy appetite. Decide how to treat it; if the processing is new or changing, check whether it needs a DPIA."
+            }
+          ],
+          "advanced": true,
+          "description": "Escalation: when a risk tagged GDPR scores above the Privacy category’s appetite (6), the risk owner and the data protection officer are told, so treatment and a possible DPIA are decided together."
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "incidents",
+      "options": {
+        "incident_type": [
+          {
+            "id": "gdpr_personal_data",
+            "label": "Personal data breach",
+            "color": "purple"
+          }
+        ]
+      },
+      "fields": [
+        {
+          "key": "gdpr_breach",
+          "name": "Personal data breach",
+          "type": "link",
+          "description": "The breach record (GDPR) where the 72-hour clock and the decisions are kept.",
+          "config": {
+            "targetSheetRef": "breach",
+            "multiple": false,
+            "inverseKey": "incident"
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "gdpr_incident_to_breach",
+          "name": "Incident is a personal data breach → open a linked breach record and tell the DPO",
+          "trigger": {
+            "type": "field_becomes",
+            "fieldKey": "incident_type",
+            "value": "gdpr_personal_data"
+          },
+          "conditions": [
+            {
+              "fieldKey": "gdpr_breach",
+              "op": "has_none"
+            }
+          ],
+          "actions": [
+            {
+              "type": "create_item",
+              "sheetRef": "breach",
+              "groupRef": "open",
+              "name": "{name}",
+              "values": {
+                "status": "opt_new",
+                "description": "Opened from incident {id}: {name}"
+              },
+              "link": true
+            },
+            {
+              "type": "notify",
+              "to": [
+                "jobRole:Data protection officer",
+                "field:owner"
+              ],
+              "message": "{id} {name} involves personal data. A breach record is open: enter when you became aware so the 72-hour clock runs, and assess the risk."
+            }
+          ],
+          "startInTestMode": true,
+          "advanced": true,
+          "description": "Cascade: an incident in the shared Incidents register marked as a personal data breach opens a linked breach record, so the event is recorded once and the GDPR clock, risk assessment and decisions live on the breach."
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "documents",
+      "items": [
+        {
+          "ref": "gdpr_privacy_notice",
+          "group": "draft",
+          "name": "Example: Privacy notice for customers",
+          "values": {
+            "document_id": "GDPR-NOT-01",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:GDPR"
             ]
           }
         },
         {
-          "ref": "ex_training",
-          "group": "training",
-          "name": "Example: annual privacy training",
+          "ref": "gdpr_policy",
+          "group": "draft",
+          "name": "Example: Data protection policy",
           "values": {
-            "kind": "opt_training",
-            "audience": "Everyone with access to customer or staff data",
-            "delivered_on": "$in:-200",
-            "due_on": "$in:165",
-            "completed": 42,
-            "status": "opt_done"
-          },
-          "requirements": {
-            "articles": [
-              "gdpr@2016#Art. 39"
+            "document_id": "GDPR-POL-01",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:GDPR"
+            ]
+          }
+        },
+        {
+          "ref": "gdpr_dpo_record",
+          "group": "draft",
+          "name": "Example: DPO appointment and published contact details",
+          "values": {
+            "document_id": "GDPR-REC-01",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:GDPR"
             ]
           }
         }
       ]
+    },
+    {
+      "pack": "core",
+      "sheet": "actions"
     }
   ],
   "automations": [
     {
       "ref": "dsr_deadline_soon",
       "sheet": "dsr",
-      "name": "Request deadline in 7 days → tell the handler and the DPO",
+      "name": "Request deadline in 7 days → tell the handler",
       "trigger": {
         "type": "date_arrives",
         "fieldKey": "deadline",
@@ -2576,17 +3067,18 @@
         {
           "type": "notify",
           "to": [
-            "field:owner",
-            "jobRole:Data protection officer"
+            "field:owner"
           ],
           "message": "{id} {request_type} request is due on {deadline}. Answer it, or extend it now if it is complex and tell the person why."
         }
-      ]
+      ],
+      "advanced": true,
+      "description": "SLA clock, step 1: seven days before a request’s deadline (one month from receipt, plus any extension), the handler is reminded to answer or to extend in time."
     },
     {
       "ref": "dsr_overdue",
       "sheet": "dsr",
-      "name": "Request past its deadline → tell the handler and the DPO",
+      "name": "Request past its deadline → escalate to the DPO and top management",
       "trigger": {
         "type": "date_arrives",
         "fieldKey": "deadline",
@@ -2603,11 +3095,14 @@
           "type": "notify",
           "to": [
             "field:owner",
-            "jobRole:Data protection officer"
+            "jobRole:Data protection officer",
+            "jobRole:Top management"
           ],
-          "message": "{id} {request_type} request was due on {deadline} and is not closed."
+          "message": "{id} {request_type} request was due on {deadline} and is not closed. The person may complain to the supervisory authority: answer now."
         }
-      ]
+      ],
+      "advanced": true,
+      "description": "Escalation ladder, step 2: a request still open the day after its deadline goes to the handler, the data protection officer and top management, because a late answer is a breach of the person’s rights."
     },
     {
       "ref": "dsr_new",
@@ -2653,7 +3148,7 @@
     {
       "ref": "breach_24h",
       "sheet": "breach",
-      "name": "Breach: 24 hours since aware → tell the lead and the DPO",
+      "name": "Breach: 48 hours left on the 72-hour clock → tell the lead and the DPO",
       "trigger": {
         "type": "clock_warning",
         "fieldKey": "authority_clock",
@@ -2682,12 +3177,14 @@
           ],
           "message": "{id} {name}: 48 hours left to report to the supervisory authority. Assess the risk and decide now."
         }
-      ]
+      ],
+      "advanced": true,
+      "description": "SLA clock: 24 hours after you became aware, unless you decided not to report, the breach lead and the DPO are told that 48 hours are left to report to the supervisory authority."
     },
     {
       "ref": "breach_60h",
       "sheet": "breach",
-      "name": "Breach: 60 hours since aware → tell the lead and the DPO",
+      "name": "Breach: 12 hours left → escalate to top management",
       "trigger": {
         "type": "clock_warning",
         "fieldKey": "authority_clock",
@@ -2712,11 +3209,14 @@
           "to": [
             "field:owner",
             "field:dpo",
-            "jobRole:Data protection officer"
+            "jobRole:Data protection officer",
+            "jobRole:Top management"
           ],
           "message": "{id} {name}: 12 hours left to report to the supervisory authority. Report what you know now; you may add the rest later."
         }
-      ]
+      ],
+      "advanced": true,
+      "description": "Escalation: with 12 hours left on the 72-hour clock, top management joins the lead and the DPO, so the report goes out in time even when details are missing."
     },
     {
       "ref": "breach_reported",
@@ -2758,25 +3258,6 @@
       ]
     },
     {
-      "ref": "dpia_review_due",
-      "sheet": "dpia",
-      "name": "DPIA review in 30 days → tell the owner",
-      "trigger": {
-        "type": "date_arrives",
-        "fieldKey": "next_review",
-        "offsetDays": -30
-      },
-      "actions": [
-        {
-          "type": "notify",
-          "to": [
-            "field:owner"
-          ],
-          "message": "{id} {name} is due for review on {next_review}. Check that the processing and the risks have not changed."
-        }
-      ]
-    },
-    {
       "ref": "dpa_review_due",
       "sheet": "processor",
       "name": "DPA review in 30 days → tell the owner",
@@ -2803,17 +3284,145 @@
           "message": "{id} {name}: review the DPA, the sub-processors and any transfers by {next_review}."
         }
       ]
+    },
+    {
+      "ref": "breach_not_reporting",
+      "sheet": "breach",
+      "name": "Breach decided not reportable → ask the DPO to sign off the decision",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "report_authority",
+        "value": "no"
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "start_workflow",
+          "workflowId": "breach-decisions"
+        }
+      ],
+      "startInTestMode": true,
+      "advanced": true,
+      "description": "Gate: deciding not to report a breach to the authority sends the decision and its reasons to the DPO for sign-off (12-hour limit), so the decision is never one person’s alone and the reasons are kept."
+    },
+    {
+      "ref": "ropa_dpia_needed",
+      "sheet": "ropa",
+      "name": "Processing needs a DPIA → open a linked DPIA",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "dpia_needed",
+        "value": "yes"
+      },
+      "conditions": [
+        {
+          "fieldKey": "dpias",
+          "op": "has_none"
+        }
+      ],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "dpia",
+          "groupRef": "open",
+          "name": "DPIA: {name}",
+          "values": {
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          },
+          "link": true
+        }
+      ],
+      "startInTestMode": true,
+      "advanced": true,
+      "description": "Cascade: marking a processing record \"DPIA needed\" opens a draft DPIA linked to it, so high-risk processing cannot start without an assessment on record."
+    },
+    {
+      "ref": "ropa_review_cycle",
+      "sheet": "ropa",
+      "name": "Processing record approved → set the next review in a year",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_approved"
+      },
+      "actions": [
+        {
+          "type": "set_field",
+          "fieldKey": "next_review",
+          "value": "$in:365"
+        }
+      ],
+      "startInTestMode": false,
+      "advanced": true,
+      "description": "Recurring review: each time a record of processing is approved, its next review is set a year ahead, and the review reminder below asks the business owner to check it again then."
+    },
+    {
+      "ref": "ropa_review_due",
+      "sheet": "ropa",
+      "name": "Processing review in 30 days → ask the business owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -30
+      },
+      "actions": [
+        {
+          "type": "request_update",
+          "fieldKey": "owner",
+          "message": "Check {id} {name} by {next_review}: purpose, lawful basis, recipients, retention and security still as recorded? Then submit it for approval again."
+        }
+      ]
+    },
+    {
+      "ref": "dpia_review_due",
+      "sheet": "dpia",
+      "name": "DPIA review in 30 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -30
+      },
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} is due for review on {next_review}. Check that the processing and the risks have not changed."
+        }
+      ]
     }
   ],
   "dashboards": [
     {
       "ref": "privacy_overview",
       "name": "Privacy overview",
+      "headline": true,
       "widgets": [
+        {
+          "ref": "w_articles",
+          "type": "by_option",
+          "title": "Compliance: GDPR articles by implementation",
+          "library": "gdpr@2016",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_ropa",
+          "type": "by_option",
+          "title": "Records of processing by status",
+          "sheetRef": "ropa",
+          "fieldKey": "status"
+        },
         {
           "ref": "w_dsr_open",
           "type": "count",
-          "title": "Open requests",
+          "title": "Performance: open requests",
           "sheetRef": "dsr",
           "conditions": [
             {
@@ -2825,21 +3434,14 @@
         {
           "ref": "w_dsr_late",
           "type": "overdue",
-          "title": "Requests past their deadline",
+          "title": "Performance: requests past their deadline",
           "sheetRef": "dsr",
           "fieldKey": "deadline"
         },
         {
-          "ref": "w_dsr_type",
-          "type": "by_option",
-          "title": "Requests by type",
-          "sheetRef": "dsr",
-          "fieldKey": "request_type"
-        },
-        {
           "ref": "w_breach_open",
           "type": "count",
-          "title": "Open breaches",
+          "title": "Incidents: open breaches",
           "sheetRef": "breach",
           "conditions": [
             {
@@ -2851,28 +3453,21 @@
         {
           "ref": "w_breach_risk",
           "type": "by_option",
-          "title": "Breaches by risk",
+          "title": "Incidents: breaches by risk to people",
           "sheetRef": "breach",
           "fieldKey": "risk"
         },
         {
-          "ref": "w_ropa",
-          "type": "by_option",
-          "title": "Processing by lawful basis",
-          "sheetRef": "ropa",
-          "fieldKey": "lawful_basis"
-        },
-        {
           "ref": "w_dpia",
           "type": "by_option",
-          "title": "DPIAs by status",
+          "title": "Risks: DPIAs by status",
           "sheetRef": "dpia",
           "fieldKey": "status"
         },
         {
           "ref": "w_dpa_missing",
           "type": "count",
-          "title": "Processors without a signed DPA",
+          "title": "Suppliers: processors without a signed DPA",
           "sheetRef": "processor",
           "conditions": [
             {
@@ -2891,23 +3486,23 @@
         {
           "ref": "w_dpa_due",
           "type": "overdue",
-          "title": "DPAs due for review",
+          "title": "Suppliers: DPAs due for review",
           "sheetRef": "processor",
           "fieldKey": "next_review"
         },
         {
-          "ref": "w_articles",
-          "type": "by_option",
-          "title": "GDPR articles by implementation",
-          "library": "gdpr@2016",
-          "fieldKey": "status"
+          "ref": "w_ropa_due",
+          "type": "overdue",
+          "title": "Records of processing due for review",
+          "sheetRef": "ropa",
+          "fieldKey": "next_review"
         }
       ]
     }
   ],
   "setup": {
     "title": "GDPR setup",
-    "description": "Eight steps to a privacy programme you can show to a supervisory authority. Each step's progress comes from your sheets.",
+    "description": "Eight steps to a privacy programme you can show to a supervisory authority. Each step’s progress comes from your sheets. Give a member the job title \"Data protection officer\" so alerts and approvals reach them.",
     "steps": [
       {
         "ref": "ropa",
@@ -2995,7 +3590,28 @@
               }
             ]
           }
-        ]
+        ],
+        "levels": {
+          "starter": {
+            "title": "Check data that leaves the EEA",
+            "body": "Mark each processor whose data leaves the EEA. Full adds a transfers sheet for the country, the mechanism and your assessment.",
+            "target": {
+              "sheetRef": "processor"
+            },
+            "rules": [
+              {
+                "sheetRef": "processor",
+                "all": [
+                  {
+                    "fieldKey": "outside_eea",
+                    "op": "is_not_empty"
+                  }
+                ],
+                "min": 1
+              }
+            ]
+          }
+        }
       },
       {
         "ref": "retention",
@@ -3019,7 +3635,28 @@
             ],
             "min": 3
           }
-        ]
+        ],
+        "levels": {
+          "starter": {
+            "title": "Decide how long you keep data",
+            "body": "Write the retention period on each record of processing, then set the matching retention rules in each sheet’s settings. Full adds a retention schedule.",
+            "target": {
+              "sheetRef": "ropa"
+            },
+            "rules": [
+              {
+                "sheetRef": "ropa",
+                "all": [
+                  {
+                    "fieldKey": "retention_period",
+                    "op": "is_not_empty"
+                  }
+                ],
+                "min": 3
+              }
+            ]
+          }
+        }
       },
       {
         "ref": "requests",
