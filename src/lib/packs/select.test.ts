@@ -174,6 +174,20 @@ describe('the chosen manifest', () => {
     expect(appsAfter(capa, ['dashboard:capa_overview'])).toEqual([{ title: 'CAPA', screens: 5 }]);
     expect(appsAfter(capa, ['sheet:capa'])).toEqual([]);
   });
+
+  it('counts an add-on app’s screens over the Core registers (they read Core’s install)', () => {
+    const iso = pack('iso-27001');
+    const app = iso.apps!.find((a) => a.key === 'isms-capa')!;
+    const all = app.sections.flatMap((s) => s.screens).length;
+    expect(appsAfter(iso, [])).toEqual([{ title: app.title, screens: all }]);
+    // leaving out its own dashboard hides only that screen
+    const dash = app.sections.flatMap((s) => s.screens).find((s) => s.kind === 'dashboard') as {
+      dashboard: string;
+    };
+    expect(appsAfter(iso, [`dashboard:${dash.dashboard}`])).toEqual([
+      { title: app.title, screens: all - 1 },
+    ]);
+  });
 });
 
 describe('Supplier management 3.0.0 from Create (an add-on on Core’s Suppliers)', () => {

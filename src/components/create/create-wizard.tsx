@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import { toast } from 'sonner';
 import {
+  AppWindow,
   ArrowLeft,
   ArrowRight,
   FileText,
@@ -21,6 +22,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { goalChips, rankGoal, type Candidate, type GoalMatch } from '@/engine/create/match';
+import { appsFor } from '@/engine/packs/select';
+import type { PackSettingValues } from '@/engine/packs/settings';
 import { INTENTS } from '@/lib/create/intents';
 import { cn } from '@/lib/utils';
 import {
@@ -29,17 +32,19 @@ import {
   createOptionsAction,
 } from '@/app/[org]/create-actions';
 import type { BundleDetails, CreateOptions, CreatePack } from '@/server/commands/bundles';
+import { AppList, AppSummary } from './app-step';
 import { BundlePreview } from './bundle-preview';
 import { BundleDetailsForm, defaultReviewDate, type DetailsState } from './bundle-details-form';
 import type { CreateRequest } from './create-provider';
 
 // The Create wizard (docs/05 §4 Create): a full-screen picker in the shell, at most three steps with a stepper.
-// (1) the goal box and the cards; (2) a starting point (a ready-made set with its preview, a sheet start, a sheet to
-// add to, a recipe); (3) a ready-made set's name, owner, review date, folder and level, then Create. Sheets, entries,
-// automations, forms and dashboards hand over to the screens that already make them, so there is one code path each.
-// Nothing is written before Create.
+// (1) the goal box and the cards; (2) a starting point (a ready-made set with its preview, an app and the set that
+// brings it, a sheet start, a sheet to add to, a recipe); (3) a ready-made set's name, owner, review date, folder,
+// settings (when its pack declares any) and level, then Create. Sheets, entries, automations, forms and dashboards hand
+// over to the screens that already make them, and an app is created as the set that carries it, so there is one code
+// path each. Nothing is written before Create.
 
-export type CardId = 'solve' | 'sheet' | 'entry' | 'automation' | 'form' | 'dashboard';
+export type CardId = 'solve' | 'app' | 'sheet' | 'entry' | 'automation' | 'form' | 'dashboard';
 
 const CARDS: { id: CardId; title: string; outcome: string; icon: React.ReactNode }[] = [
   {
@@ -47,6 +52,12 @@ const CARDS: { id: CardId; title: string; outcome: string; icon: React.ReactNode
     title: 'Solve a problem',
     outcome: 'A ready-made set of sheets, forms, automations and a dashboard that work together.',
     icon: <Sparkles aria-hidden />,
+  },
+  {
+    id: 'app',
+    title: 'App',
+    outcome: 'Screens for one job, such as reporting a problem or working on your actions.',
+    icon: <AppWindow aria-hidden />,
   },
   {
     id: 'sheet',
@@ -100,6 +111,8 @@ export function CreateWizard({
   const [card, setCard] = useState<CardId | null>(request.card ?? null);
   const [goal, setGoal] = useState(request.goal ?? '');
   const [packKey, setPackKey] = useState<string | null>(null);
+  const [appKey, setAppKey] = useState<string | null>(null);
+  const [settings, setSettings] = useState<PackSettingValues | null>(null);
   const [recipeId, setRecipeId] = useState<string>('');
   const [details, setDetails] = useState<Load<BundleDetails> | null>(null);
   const [level, setLevel] = useState<string | null>(null);
@@ -129,6 +142,7 @@ export function CreateWizard({
 
   const opts = options.state === 'ready' ? options.data : null;
   const pack: CreatePack | null = opts?.packs.find((p) => p.key === packKey) ?? null;
+  const app = opts?.apps.find((a) => a.key === appKey) ?? null;
 
   const loadDetails = useCallback(
     async (key: string, lvl: string | null) => {
@@ -163,14 +177,12 @@ export function CreateWizard({
         title: p.title,
         description: p.description,
       })),
-      ...opts.packs.flatMap((p) =>
-        p.apps.map((a) => ({
-          kind: 'app' as const,
-          id: a,
-          title: p.title,
-          description: p.description,
-        })),
-      ),
+      ...opts.apps.map((a) => ({
+        kind: 'app' as const,
+        id: a.key,
+        title: a.title,
+        description: a.description,
+      })),
       ...opts.starts.map((s) => ({
         kind: 'start' as const,
         id: s.id,
@@ -188,19 +200,10 @@ export function CreateWizard({
   const matches: GoalMatch[] = useMemo(() => {
     if (!opts) return [];
     const ranked = rankGoal(goal, INTENTS, candidates, 8);
-    // an app is offered as the set that carries it
+    // an app is offered as itself (the App card), next to the set that carries it
     const seen = new Set<string>();
     return (
       ranked
-        .map((m) =>
-          m.kind === 'app'
-            ? {
-                ...m,
-                kind: 'pack' as const,
-                id: opts.packs.find((p) => p.apps.includes(m.id))?.key ?? m.id,
-              }
-            : m,
-        )
         // a start shipped as a ready-made set is offered once, as the set
         .filter((m) => !(m.kind === 'start' && opts.packs.some((p) => p.key === `start-${m.id}`)))
         .filter((m) => {
@@ -224,8 +227,15 @@ export function CreateWizard({
       setExcluded([]);
       setNote(null);
       setForm(null);
+      setSettings(null);
       setCreateError(null);
     }
+  };
+  // an app not set up here is created as the set that brings it (the same preview and planner as Solve a problem)
+  const chooseApp = (key: string) => {
+    setAppKey(key);
+    const a = opts?.apps.find((x) => x.key === key);
+    if (a?.state === 'new') choosePack(a.packKey);
   };
   const pickCard = (id: CardId) => {
     if (id === 'dashboard') return go(`/${org}/dashboards?new=1`);
@@ -236,6 +246,10 @@ export function CreateWizard({
     if (m.kind === 'pack') {
       setCard('solve');
       choosePack(m.id);
+      setStep(2);
+    } else if (m.kind === 'app') {
+      setCard('app');
+      chooseApp(m.id);
       setStep(2);
     } else if (m.kind === 'start') go(sheetHref(m.id));
     else if (m.kind === 'recipe') {
@@ -258,6 +272,15 @@ export function CreateWizard({
 
   const toDetails = () => {
     if (!pack || !opts) return;
+    // the pack's settings start at their defaults (docs/11 Pack settings); a choice made before is kept
+    if (details?.state === 'ready')
+      setSettings(
+        (cur) =>
+          cur ??
+          Object.fromEntries(
+            details.data.settings.flatMap((x) => (x.default ? [[x.key, x.default]] : [])),
+          ),
+      );
     setForm(
       (f) =>
         f ?? {
@@ -290,6 +313,7 @@ export function CreateWizard({
         name: form.name,
         ownerId: form.ownerId,
         reviewBy: form.reviewBy,
+        ...(settings && Object.keys(settings).length ? { settings } : {}),
       });
       if (!r.ok) {
         setCreateError(
@@ -298,7 +322,14 @@ export function CreateWizard({
         return;
       }
       toast(`Created ${r.data.name}: ${r.data.made.join(', ')}.`, { duration: 6000 });
-      go(r.data.sheetId ? `/${org}/s/${r.data.sheetId}?created=1` : `/${org}/home`);
+      // an app lands on the app itself (its first screen); a set on its first sheet
+      go(
+        card === 'app' && app?.forYou
+          ? `/${org}/apps/${app.key}`
+          : r.data.sheetId
+            ? `/${org}/s/${r.data.sheetId}?created=1`
+            : `/${org}/home`,
+      );
     } catch {
       setCreateError('Nothing was created. Check your connection and try again.');
     } finally {
@@ -313,8 +344,13 @@ export function CreateWizard({
   const keptSheets = ready
     ? ready.parts.filter((p) => p.kind === 'sheet' && !excluded.includes(p.id)).length
     : 0;
+  // the chosen app's screens that stay with the parts ticked (docs/13: a screen without its objects is hidden)
+  const appNeeds = ready && app ? ready.apps.find((a) => a.key === app.key) : undefined;
+  const keptScreens = appNeeds ? (appsFor([appNeeds], excluded)[0]?.screens ?? 0) : null;
+  const setFlow = card === 'solve' || (card === 'app' && app?.state === 'new');
   const canNext =
-    card === 'solve' &&
+    setFlow &&
+    (card !== 'app' || (keptScreens ?? 0) > 0) &&
     step === 2 &&
     !!pack &&
     !pack.installed &&
@@ -324,11 +360,11 @@ export function CreateWizard({
     keptSheets > 0;
 
   const primary =
-    step === 1 ? null : card === 'solve' && step === 2 ? (
+    step === 1 ? null : setFlow && step === 2 ? (
       <Button type="button" onClick={toDetails} disabled={!canNext} data-testid="create-next">
         Next <ArrowRight aria-hidden />
       </Button>
-    ) : card === 'solve' && step === 3 ? (
+    ) : setFlow && step === 3 ? (
       <Button
         type="button"
         onClick={() => void create()}
@@ -411,6 +447,7 @@ export function CreateWizard({
                 setGoal={setGoal}
                 matches={matches}
                 packs={opts!.packs}
+                apps={opts!.apps}
                 onMatch={pickMatch}
                 onCard={pickCard}
                 canEdit={opts!.canEdit}
@@ -430,9 +467,44 @@ export function CreateWizard({
                 note={note}
                 onOpen={(sheetId) => go(sheetId ? `/${org}/s/${sheetId}` : `/${org}/home`)}
               />
-            ) : card === 'solve' && step === 3 && !(ready && form && pack) ? (
+            ) : card === 'app' && step === 2 ? (
+              <div className="grid gap-6 min-[1000px]:grid-cols-[320px_minmax(0,1fr)]">
+                <AppList apps={opts!.apps} appKey={appKey} onPick={chooseApp} />
+                <section
+                  aria-label="What you get"
+                  className={cn('min-w-0', app && 'max-[999px]:order-first')}
+                >
+                  {!app ? (
+                    <div className="border-line text-copy-14 text-muted-foreground flex min-h-[200px] items-center justify-center rounded-lg border border-dashed p-6 text-center">
+                      Pick an app to see its screens and what it needs.
+                    </div>
+                  ) : (
+                    <AppSummary
+                      org={org}
+                      app={app}
+                      canInstall={opts!.canInstall}
+                      onOpen={go}
+                      keptScreens={keptScreens}
+                      installsFirst={ready?.check?.installsFirst ?? []}
+                    >
+                      <SetPreview
+                        details={details}
+                        onRetry={() => packKey && void loadDetails(packKey, level)}
+                        excluded={excluded}
+                        setExcluded={(ex, n) => {
+                          setExcluded(ex);
+                          setNote(n);
+                        }}
+                        note={note}
+                        canInstall={opts!.canInstall}
+                      />
+                    </AppSummary>
+                  )}
+                </section>
+              </div>
+            ) : setFlow && step === 3 && !(ready && form && pack) ? (
               <Skeleton />
-            ) : card === 'solve' && step === 3 && ready && form && pack ? (
+            ) : setFlow && step === 3 && ready && form && pack ? (
               <BundleDetailsForm
                 details={ready}
                 pack={pack}
@@ -447,6 +519,8 @@ export function CreateWizard({
                 }}
                 excluded={excluded}
                 error={createError}
+                settings={settings ?? {}}
+                onSettings={setSettings}
               />
             ) : card === 'sheet' ? (
               <PickList
@@ -558,6 +632,7 @@ function GoalStep({
   setGoal,
   matches,
   packs,
+  apps,
   onMatch,
   onCard,
   canEdit,
@@ -566,11 +641,13 @@ function GoalStep({
   setGoal: (g: string) => void;
   matches: GoalMatch[];
   packs: CreatePack[];
+  apps: CreateOptions['apps'];
   onMatch: (m: GoalMatch) => void;
   onCard: (c: CardId) => void;
   canEdit: boolean;
 }) {
   const kindWord = { pack: 'Ready-made set', start: 'Sheet', recipe: 'Automation', app: 'App' };
+  const readyApps = new Set(apps.filter((a) => a.state === 'ready').map((a) => a.key));
   return (
     <div className="flex flex-col gap-6">
       <section aria-labelledby="create-goal" className="flex flex-col gap-3">
@@ -623,6 +700,7 @@ function GoalStep({
                 {matches.map((m) => {
                   const installed =
                     m.kind === 'pack' && packs.find((p) => p.key === m.id)?.installed;
+                  const appReady = m.kind === 'app' && readyApps.has(m.id);
                   return (
                     <li key={`${m.kind}:${m.id}`}>
                       <button
@@ -637,7 +715,7 @@ function GoalStep({
                           </span>
                         </span>
                         <span className="bg-soft text-label-12 text-muted-foreground shrink-0 rounded-full px-2 py-0.5">
-                          {installed ? 'Set up' : kindWord[m.kind]}
+                          {installed ? 'Set up' : appReady ? 'Ready' : kindWord[m.kind]}
                         </span>
                       </button>
                     </li>
@@ -658,7 +736,8 @@ function GoalStep({
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {CARDS.map((c) => {
-            const off = !canEdit && c.id !== 'solve';
+            // a set and an app are previewed by everyone; creating them is for owners and admins
+            const off = !canEdit && c.id !== 'solve' && c.id !== 'app';
             return (
               <li key={c.id}>
                 <button
@@ -774,29 +853,61 @@ function SolveStep({
               Open {pack.installed.name}
             </Button>
           </div>
-        ) : !details || details.state === 'loading' ? (
-          <div aria-busy="true" aria-label="Loading the preview" className="flex flex-col gap-3">
-            <div className="bg-soft h-[72px] animate-pulse rounded-lg" />
-            <div className="bg-soft h-[240px] animate-pulse rounded-lg" />
-          </div>
-        ) : details.state === 'error' ? (
-          <div role="alert" className="flex flex-col items-start gap-3">
-            <p className="text-copy-14">{details.message}</p>
-            <Button type="button" variant="outline" onClick={onRetry}>
-              <RotateCcw aria-hidden /> Retry
-            </Button>
-          </div>
         ) : (
-          <BundlePreview
-            details={details.data}
+          <SetPreview
+            details={details}
+            onRetry={onRetry}
             excluded={excluded}
-            onChange={setExcluded}
+            setExcluded={setExcluded}
             note={note}
             canInstall={opts.canInstall}
           />
         )}
       </section>
     </div>
+  );
+}
+
+/** A set's preview as it loads: Solve a problem's and the App card's (for an app not set up yet). */
+function SetPreview({
+  details,
+  onRetry,
+  excluded,
+  setExcluded,
+  note,
+  canInstall,
+}: {
+  details: Load<BundleDetails> | null;
+  onRetry: () => void;
+  excluded: string[];
+  setExcluded: (ex: string[], note: string | null) => void;
+  note: string | null;
+  canInstall: boolean;
+}) {
+  if (!details || details.state === 'loading')
+    return (
+      <div aria-busy="true" aria-label="Loading the preview" className="flex flex-col gap-3">
+        <div className="bg-soft h-[72px] animate-pulse rounded-lg" />
+        <div className="bg-soft h-[240px] animate-pulse rounded-lg" />
+      </div>
+    );
+  if (details.state === 'error')
+    return (
+      <div role="alert" className="flex flex-col items-start gap-3">
+        <p className="text-copy-14">{details.message}</p>
+        <Button type="button" variant="outline" onClick={onRetry}>
+          <RotateCcw aria-hidden /> Retry
+        </Button>
+      </div>
+    );
+  return (
+    <BundlePreview
+      details={details.data}
+      excluded={excluded}
+      onChange={setExcluded}
+      note={note}
+      canInstall={canInstall}
+    />
   );
 }
 

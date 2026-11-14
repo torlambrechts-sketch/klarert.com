@@ -418,6 +418,8 @@ export interface AppPreview {
 }
 
 export interface AppNeeds {
+  /** The app's key (docs/13): the App card in Create follows one app. */
+  key: string;
   title: string;
   /** Per screen, the part ids it shows (all of them must be created for the screen to show). */
   screens: string[][];
@@ -426,10 +428,15 @@ export interface AppNeeds {
 /** The apps of a manifest and, per screen, the parts it needs (docs/13: a screen without its objects is hidden). */
 export function appNeeds(m: PackManifest): AppNeeds[] {
   return (m.apps ?? []).map((app) => ({
+    key: app.key,
     title: app.title,
     screens: app.sections.flatMap((sec) =>
       sec.screens.flatMap((sc) => {
         const s = sc as { kind: string; sheet?: string; form?: string; dashboard?: string };
+        // a screen over a required pack's sheet (`core:nc`, docs/13) reads that pack's live install, installed or
+        // raised first: none of this pack's own parts can leave it out
+        const other = s.sheet?.includes(':') ? s.sheet.split(':')[0] : null;
+        if (other) return m.requires.some((r) => r.pack === other) ? [[]] : [];
         if (s.kind === 'dashboard')
           return s.dashboard && m.dashboards.some((d) => d.ref === s.dashboard)
             ? [[partId.dashboard(s.dashboard)]]

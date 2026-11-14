@@ -31,6 +31,16 @@ export const createBundleInput = z.object({
   ownerId: z.uuid({ message: 'Choose an owner.' }),
   /** Required: a ready-made process is reviewed by its owner by this date. */
   reviewBy: z.iso.date({ message: 'Choose a review date.' }),
+  /**
+   * The pack's settings chosen in the Details step (docs/11 Pack settings): setting key → choice id, checked against
+   * the manifest by the command and again by create_bundle. None chosen: the defaults stay empty until Packs.
+   */
+  settings: z
+    .record(
+      z.string().regex(/^[a-z][a-z0-9_]{0,39}$/),
+      z.string().regex(/^[a-z0-9][a-z0-9_-]{0,39}$/),
+    )
+    .optional(),
 });
 
 export const markReviewedInput = z.object({ org: slugInput, installId: z.uuid() });

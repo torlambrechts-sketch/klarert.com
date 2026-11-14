@@ -2,12 +2,16 @@
 
 import { useId, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { SettingChoice } from '@/components/packs/setting-choice';
 import { selectionCounts } from '@/engine/packs/select';
+import type { PackSettingValues } from '@/engine/packs/settings';
 import { cn } from '@/lib/utils';
 import type { BundleDetails, CreateOptions, CreatePack } from '@/server/commands/bundles';
 
 // Step 3 of a ready-made set (docs/05 §4 Create): its name, the owner who reviews it (required), the review date
-// (required), the folder and, under More options, the level (Starter by default).
+// (required), the folder, the pack's settings when it declares any (NIS2's country: the same picker, unverified notice
+// and checks as Workspace admin › Packs › Settings, optional, editable there later) and, under More options, the level
+// (Starter by default). The settings are a section of this step, so Create keeps its three steps.
 
 export interface DetailsState {
   name: string;
@@ -38,6 +42,8 @@ export function BundleDetailsForm({
   onLevel,
   excluded,
   error,
+  settings,
+  onSettings,
 }: {
   details: BundleDetails;
   pack: CreatePack;
@@ -48,6 +54,9 @@ export function BundleDetailsForm({
   onLevel: (l: string) => void;
   excluded: string[];
   error: string | null;
+  /** The choices for the pack's settings (details.settings); setting key → choice id. */
+  settings: PackSettingValues;
+  onSettings: (v: PackSettingValues) => void;
 }) {
   const id = useId();
   const [more, setMore] = useState(level !== null && level !== details.levels[0]?.key);
@@ -160,6 +169,31 @@ export function BundleDetailsForm({
           </p>
         )}
       </div>
+      {details.settings.length ? (
+        <fieldset
+          className="border-line m-0 flex flex-col gap-4 rounded-lg border p-3 sm:p-4"
+          data-testid="create-settings"
+        >
+          <legend className="text-label-14 px-1 font-medium">Settings</legend>
+          <p className="text-copy-13 text-muted-foreground -mt-1">
+            They fill in defaults on {pack.title}&rsquo;s own sheets. Optional: you can choose or
+            change them later in Workspace admin, Packs.
+          </p>
+          {details.settings.map((s) => (
+            <SettingChoice
+              key={s.key}
+              setting={s}
+              value={settings[s.key] ?? null}
+              onChange={(choice) => {
+                const next = { ...settings };
+                if (choice) next[s.key] = choice;
+                else delete next[s.key];
+                onSettings(next);
+              }}
+            />
+          ))}
+        </fieldset>
+      ) : null}
       {details.levels.length ? (
         <div className="border-line rounded-lg border">
           <button
