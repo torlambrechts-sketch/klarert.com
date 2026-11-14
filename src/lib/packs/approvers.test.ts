@@ -66,7 +66,7 @@ describe('approval workflows can be submitted', () => {
 
   it('ships workflows in Core and the add-ons', () => {
     expect(all.length).toBeGreaterThan(15);
-    expect(all.map((x) => x.where)).toContain('core@1.2.0 documents › document-approval');
+    expect(all.map((x) => x.where)).toContain('core@1.3.0 documents › document-approval');
   });
 
   it.each(all.map((x) => [x.where, x] as const))(

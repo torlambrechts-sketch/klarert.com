@@ -24,8 +24,8 @@ import { previewLines } from '@/engine/packs/plan';
 const pack = packByKey('iso-45001');
 
 describe('ISO 45001 add-on', () => {
-  it('is a 1.2.0 add-on to Core Starter on the 2018 library that meets the pack quality bar', () => {
-    expect(pack.version).toBe('1.2.0');
+  it('is a 1.3.0 add-on to Core Starter on the 2018 library that meets the pack quality bar', () => {
+    expect(pack.version).toBe('1.3.0');
     // 1.1.0 links contractors to Core's Suppliers register (Core 1.1.0), from Full
     expect(pack.requires).toEqual([{ pack: 'core', range: '^1.1.0' }]);
     expect(pack.extends!.find((e) => e.sheet === 'suppliers')!.level).toBe('full');
@@ -161,6 +161,6 @@ describe('ISO 45001 add-on', () => {
     expect(plan.preview.conflicts).toEqual([]);
     expect(plan.state).toBe('ready');
     expect(plan.payload).toBeNull();
-    expect(previewLines(plan.preview)).toContain('Installs Core registers 1.2.0 (Starter) first.');
+    expect(previewLines(plan.preview)).toContain('Installs Core registers 1.3.0 (Starter) first.');
   });
 });

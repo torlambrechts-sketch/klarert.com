@@ -1,6 +1,6 @@
 {
   "key": "iso-9001",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "title": "ISO 9001 quality (add-on)",
   "description": "ISO 9001:2026 on the Core registers: quality objectives, risks and opportunities, nonconformities and documents live in the shared registers with ISO 9001 columns, views and examples, and the add-on brings what only a quality system needs: processes, customer feedback and complaints, and in Full external providers, measuring equipment, release records and design and development. Installs the Core registers first. Written in our own words; no text of the standard.",
   "requires": [
@@ -384,13 +384,17 @@
                 "label": "Survey result",
                 "color": "purple"
               }
-            ]
+            ],
+            "askWhenAdding": true
           }
         },
         {
           "key": "customer",
           "name": "Customer",
-          "type": "text"
+          "type": "text",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "customer_email",
@@ -404,7 +408,10 @@
         {
           "key": "received_on",
           "name": "Received on",
-          "type": "date"
+          "type": "date",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "answer_due",
@@ -458,7 +465,10 @@
         {
           "key": "description",
           "name": "What the customer said",
-          "type": "longtext"
+          "type": "longtext",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "seriousness",
@@ -489,7 +499,8 @@
           "name": "Handled by",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
@@ -836,7 +847,10 @@
         {
           "key": "provides",
           "name": "What they provide",
-          "type": "longtext"
+          "type": "longtext",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "criticality",
@@ -859,7 +873,8 @@
                 "label": "Low",
                 "color": "green"
               }
-            ]
+            ],
+            "askWhenAdding": true
           }
         },
         {
@@ -867,7 +882,8 @@
           "name": "Owner",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {

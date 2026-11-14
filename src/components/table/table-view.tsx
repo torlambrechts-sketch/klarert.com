@@ -5,6 +5,7 @@ import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Item } from '@/engine/types';
 import type { ViewConfig } from '@/engine/views/config';
 import { filterByKeys, quickFilter } from '@/engine/views/quick-filters';
+import { missingRequired } from '@/engine/views/new-item';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
@@ -71,13 +72,17 @@ export function TableView(p: TableViewProps) {
   const people = useGrid((s) => s.people);
   const statuses = useGrid((s) => s.statuses);
   const valueFilter = useGrid((s) => s.valueFilter);
+  const missingOnly = useGrid((s) => s.missingOnly);
   const store = useGridStore();
   const updateCounts = useUpdateSummaries(p.data.sheet.id, p.data.sheet.orgId);
   const items = useMemo(() => {
     const quick = quickFilter(p.items, people, statuses, p.ctx);
     const field = valueFilter && p.data.fields.find((f) => f.id === valueFilter.fieldId);
-    return field ? filterByKeys(quick, field, new Set([valueFilter.key]), p.ctx) : quick;
-  }, [p.items, people, statuses, valueFilter, p.data.fields, p.ctx]);
+    const byValue = field ? filterByKeys(quick, field, new Set([valueFilter.key]), p.ctx) : quick;
+    return missingOnly
+      ? byValue.filter((i) => missingRequired(i, p.data.fields, p.ctx).length > 0)
+      : byValue;
+  }, [p.items, people, statuses, valueFilter, missingOnly, p.data.fields, p.ctx]);
   const filtered = p.filtered || items.length !== p.items.length;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -102,6 +107,7 @@ export function TableView(p: TableViewProps) {
               store.getState().clearPeople();
               store.getState().clearStatuses();
               store.getState().setValueFilter(null);
+              store.getState().setMissingOnly(false);
             }}
           >
             Clear filters

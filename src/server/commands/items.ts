@@ -6,6 +6,17 @@ import { needsLibraryTarget } from '@/engine/fields/type-change';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { Ctx, Field, Item, Json } from '@/engine/types';
 import { checkCreate, checkWrite, defaultValues, planValues } from '@/engine/writes';
+import { manualApprovalValues } from '@/engine/documents';
+import { parseViewConfig } from '@/engine/views/config';
+import {
+  answerableOnNew,
+  checkNewItem,
+  intakePlan,
+  intakeUsable,
+  planQuestions,
+  standardPlan,
+  type IntakeForm,
+} from '@/engine/views/new-item';
 import {
   archiveItemsInput,
   bulkSetValuesInput,
@@ -128,7 +139,13 @@ async function writeValues(
     w.fields,
     plan.patch,
   );
-  const check = checkWrite(item, plan.next, w.fields, plan.changedKeys, w.ctx, {
+  // approving a document by hand: the database records the approver and the date as it saves the status, as for an
+  // approval workflow, so the status rules see the document as it will be saved (src/engine/documents.ts)
+  const record = manualApprovalValues(w.data.sheet, w.fields, item, plan.next, w.ctx);
+  const seen = Object.keys(record).length
+    ? planValues(item, w.fields, { ...values, ...record }, w.ctx, sha256)
+    : plan;
+  const check = checkWrite(item, seen.next, w.fields, seen.changedKeys, w.ctx, {
     isUnique: (f) => !conflicts.has(f.id),
   });
   if (check.blocking.length > 0) {
@@ -211,6 +228,8 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
   const p = createItemInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   const v = p.data;
+  if (v.intakeFormId && v.source !== 'dialog')
+    return fail('invalid', 'A new-item form is asked only by the New item dialog.');
   return withOrg(
     v.org,
     'editor',
@@ -220,6 +239,13 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       if (!w.data.groups.some((g) => g.id === v.groupId))
         return fail('not_found', 'This group no longer exists.');
       const now = w.ctx.now.toISOString();
+      let raw: Record<string, unknown> = { ...(v.values ?? {}) };
+      if (v.source === 'dialog') {
+        // the dialog's answers are checked as the dialog checked them (src/engine/views/new-item.ts)
+        const asked = await dialogAnswers(supabase, w, v.intakeFormId ?? null, v.name, raw);
+        if (!asked.ok) return asked;
+        raw = asked.data;
+      }
       const blank: Item = {
         id: '00000000-0000-0000-0000-000000000000',
         sheetId: v.sheetId,
@@ -233,9 +259,14 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
         createdAt: now,
         updatedAt: now,
       };
-      const { values } = splitInputs(w.fields, v.values ?? {});
+      const { values } = splitInputs(w.fields, raw);
       const plan = planValues(blank, w.fields, values, w.ctx, sha256);
-      if (plan.rejected.length > 0) return fail('invalid', plan.rejected[0]!.reason);
+      if (plan.rejected.length > 0)
+        return fail(
+          'invalid',
+          plan.rejected[0]!.reason,
+          Object.fromEntries(plan.rejected.map((r) => [r.fieldId, r.reason])),
+        );
       const conflicts = await uniqueConflicts(
         supabase,
         v.sheetId,
@@ -246,19 +277,30 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       const check = checkCreate(plan.next, w.fields, w.ctx, {
         isUnique: (f) => !conflicts.has(f.id),
       });
-      if (check.blocking.length > 0)
-        return fail('blocked', check.blocking.map((i) => i.message).join(' '));
+      if (check.blocking.length > 0) {
+        const idOf = new Map(w.fields.map((f) => [f.key, f.id]));
+        return fail(
+          'blocked',
+          check.blocking.map((i) => i.message).join(' '),
+          Object.fromEntries(
+            check.blocking.map((i) => [idOf.get(i.fieldKey) ?? i.fieldKey, i.message]),
+          ),
+        );
+      }
       const { data, error } = await supabase.rpc('create_item', {
         p_sheet: v.sheetId,
         p_group: v.groupId,
         p_name: v.name,
         p_position: v.position,
         p_values: plan.next.values as Json,
+        ...(v.source ? { p_via: v.source } : {}),
+        ...(v.intakeFormId ? { p_intake: v.intakeFormId } : {}),
       });
       if (error) return fromDbError(error);
-      const item = toItem(data);
+      // restricted values the person may read come back from their own store (docs/02 §16)
+      const item = await withRestrictedValues(supabase, toItem(data));
       const actor = userActor(user.id);
-      if (v.hold && (await sheetHolds(supabase, v.sheetId))) {
+      if (v.hold && v.source !== 'dialog' && (await sheetHolds(supabase, v.sheetId))) {
         // the person is still filling the row: automations run when they finish it (finishItem)
         const { error: holdError } = await supabase.rpc('hold_item', {
           p_item: item.id,
@@ -275,6 +317,60 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
     },
     'createItem',
   );
+}
+
+/**
+ * The New item dialog's answers, checked on the server with the dialog's own rules: only fields the person may answer
+ * (never a restricted field they cannot see, never a computed or file field), the questions of the sheet's new-item
+ * form or the standard dialog, required ones answered. A form's hidden values are added. Returns the values to write.
+ */
+async function dialogAnswers(
+  db: Db,
+  w: WriteContext,
+  intakeFormId: string | null,
+  name: string,
+  raw: Record<string, unknown>,
+): Promise<Result<Record<string, unknown>>> {
+  const byId = new Map(w.fields.map((f) => [f.id, f]));
+  for (const id of Object.keys(raw)) {
+    const f = byId.get(id);
+    if (!f || !answerableOnNew(f))
+      return fail('invalid', `${f?.name ?? 'This field'} cannot be set when adding an item.`, {
+        [id]: 'This field cannot be set here.',
+      });
+  }
+  let intake: IntakeForm | null = null;
+  if (intakeFormId) {
+    const { data: view } = await db
+      .from('views')
+      .select('id, name, config')
+      .eq('id', intakeFormId)
+      .eq('sheet_id', w.data.sheet.id)
+      .eq('type', 'form')
+      .maybeSingle();
+    const form = view ? parseViewConfig(view.config).form : undefined;
+    intake = view && form ? { id: view.id, name: view.name, form } : null;
+    if (!intakeUsable(intake, w.ctx.now))
+      return fail(
+        'conflict',
+        'This sheet’s new-item form was closed or deleted. Close the dialog and add the item again.',
+      );
+  }
+  const plan = intake ? intakePlan(intake, w.fields) : standardPlan(w.fields);
+  const check = checkNewItem(planQuestions(plan), name, raw, w.ctx, plan.nameLabel);
+  if (Object.keys(check.errors).length > 0)
+    return fail(
+      'invalid',
+      Object.values(check.errors)[0] ?? 'Check the highlighted answers.',
+      check.errors,
+    );
+  const out = { ...raw };
+  // the form's hidden values (docs/05 §3.3), on fields the person did not answer
+  for (const p of intake?.form.prefill ?? []) {
+    const f = w.fields.find((x) => x.key === p.key);
+    if (f && answerableOnNew(f) && !(f.id in out)) out[f.id] = p.value;
+  }
+  return ok(out);
 }
 
 /** The sheet holds automations until a row is finished (sheets.settings.holdAutomations, on unless false). */

@@ -65,6 +65,22 @@ describe('template forms', () => {
     ]);
   });
 
+  it('allows one intake form per sheet, with steps after the first question (docs/05 §3.7)', () => {
+    const intake = {
+      ...report,
+      ref: 'intake',
+      access: 'internal',
+      layout: { fields: [{ key: keys[0] }, { key: keys[1], step: 'Then' }], intake: true },
+    };
+    expect(issues(withForms([report, intake]))).toEqual([]);
+    expect(issues(withForms([intake, { ...intake, ref: 'intake2' }]))).toEqual([
+      'A sheet has at most one intake form.',
+    ]);
+    expect(
+      issues(withForms([{ ...intake, layout: { fields: [{ key: keys[0], step: 'First' }] } }])),
+    ).toEqual(['The first question is always in the first step.']);
+  });
+
   it('form_submitted.formId must name a form of the same sheet', () => {
     const auto = (formId: unknown) => ({
       sheet: sheet0.ref,

@@ -188,7 +188,7 @@ describe('Supplier management 3.0.0 from Create (an add-on on Core’s Suppliers
 
   it('offers the whole add-on with its setup on Core’s Suppliers', () => {
     const chosen = parsePack(selectManifest(m(), []));
-    expect(chosen.version).toBe('3.0.0');
+    expect(chosen.version).toBe('3.1.0');
     expect(chosen.setup!.steps.map((s) => s.ref)).toEqual([
       'suppliers',
       'requirements',

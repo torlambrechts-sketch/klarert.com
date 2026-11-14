@@ -11,6 +11,7 @@ import {
   LockOpen,
   PenSquare,
   Rows3,
+  TriangleAlert,
   Rows4,
   UserRound,
   X,
@@ -20,6 +21,7 @@ import { resolveFieldType } from '@/engine/fields/resolve';
 import type { Ctx, Field, Item } from '@/engine/types';
 import { groupableFields } from '@/engine/views/group-by';
 import { ownersOf, statusChoices } from '@/engine/views/quick-filters';
+import { missingRequired } from '@/engine/views/new-item';
 import { fieldUI } from '@/components/fields/registry';
 import { Avatar, solidVar } from '@/components/fields/shared';
 import type { ConfigEnv } from '@/components/fields/types';
@@ -44,7 +46,7 @@ import {
 import { cn } from '@/lib/utils';
 import { LockDialog } from './lock-dialog';
 import { positionsAtEnd } from './table-model';
-import { toolbarButton, toolbarSelect } from '@/components/table/toolbar-styles';
+import { toolbarButton, toolbarCount, toolbarSelect } from '@/components/table/toolbar-styles';
 
 // The Table's toolbar controls (docs/05 §3.1), one row under the view tabs: "Actions" (bulk actions on the selected
 // rows and Group by), the status and owner filters, Columns and the row density. Filters and density are UI state;
@@ -177,6 +179,43 @@ export function StatusFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/**
+ * "Missing required" (docs/05 §3.1): a toggle that shows only the items leaving a required field empty, with how
+ * many do. Shown while the sheet has a required field the person may see.
+ */
+export function MissingFilter({
+  items,
+  fields,
+  ctx,
+}: {
+  items: Item[];
+  fields: Field[];
+  ctx: Ctx;
+}) {
+  const store = useGridStore();
+  const on = useGrid((s) => s.missingOnly);
+  const required = fields.some((f) => f.required && !f.hidden);
+  const count = useMemo(
+    () => (required ? items.filter((i) => missingRequired(i, fields, ctx).length > 0).length : 0),
+    [required, items, fields, ctx],
+  );
+  if (!required) return null;
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      aria-pressed={on}
+      data-testid="missing-filter"
+      className={cn(toolbarButton, on && 'border-faint bg-soft')}
+      onClick={() => store.getState().setMissingOnly(!on)}
+    >
+      <TriangleAlert className="text-warn" aria-hidden />
+      Missing required
+      <span className={toolbarCount}>{count}</span>
+    </Button>
   );
 }
 

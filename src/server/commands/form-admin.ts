@@ -32,6 +32,7 @@ import {
   formLinkInput,
   internalSubmitInput,
   saveFormInput,
+  setNewItemFormInput,
 } from '@/lib/schemas/views';
 import { runAutomations } from '@/server/automations';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
@@ -324,6 +325,49 @@ export async function changeFormLink(input: unknown): Promise<Result<{ link: For
       return ok({ link: { id: data.id, token: data.token, enabled: data.enabled } });
     },
     'changeFormLink',
+  );
+}
+
+// ───────────────────────── new-item form ─────────────────────────
+
+/**
+ * Choose the form the sheet's New item dialog asks (docs/05 §3.7, Phase B), stored in sheets.settings.newItemForm:
+ * a form of this sheet, false for the standard dialog, or nothing (null) to follow the pack's intake form. Owners and
+ * admins, as for the sheet's forms and tabs. Pack updates never change it (sheet settings other than workflows and
+ * tabs are not part of an update).
+ */
+export async function setNewItemForm(
+  input: unknown,
+): Promise<Result<{ sheetId: string; formId: string | false | null }>> {
+  const p = setNewItemFormInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'admin',
+    async ({ supabase, orgId }) => {
+      const { data: sheet } = await supabase
+        .from('sheets')
+        .select('id, org_id, settings, parent_sheet_id')
+        .eq('id', v.sheetId)
+        .maybeSingle();
+      if (!sheet || sheet.org_id !== orgId || sheet.parent_sheet_id)
+        return fail('not_found', 'This sheet no longer exists.');
+      if (typeof v.formId === 'string') {
+        const found = await loadForm(supabase, orgId, v.formId);
+        if (!found || found.row.sheet_id !== sheet.id) return notFound();
+      }
+      const settings = { ...((sheet.settings ?? {}) as Record<string, Json>) };
+      if (v.formId === null) delete settings.newItemForm;
+      else settings.newItemForm = v.formId;
+      const { error } = await supabase
+        .from('sheets')
+        .update({ settings: settings as NonNullable<Json>, updated_at: new Date().toISOString() })
+        .eq('id', sheet.id)
+        .eq('org_id', orgId);
+      return error ? fromDbError(error) : ok({ sheetId: sheet.id, formId: v.formId });
+    },
+    'setNewItemForm',
   );
 }
 

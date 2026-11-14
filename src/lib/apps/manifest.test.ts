@@ -28,7 +28,7 @@ describe('app manifest', () => {
   it('the ISO 27001 add-on ships its own CAPA app over the Core registers', () => {
     const iso = repoPacks().find((p) => p.key === 'iso-27001')!;
     const core = repoPacks().find((p) => p.key === 'core')!;
-    expect(iso.version).toBe('2.1.0');
+    expect(iso.version).toBe('2.2.0');
     const app = iso.apps!.find((a) => a.key === 'isms-capa')!;
     expect(appProblems(app, iso)).toEqual([]);
     expect(appProblems(app, iso, [core])).toEqual([]);

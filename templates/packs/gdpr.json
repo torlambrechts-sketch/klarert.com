@@ -1,6 +1,6 @@
 {
   "key": "gdpr",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "title": "GDPR privacy (add-on)",
   "description": "A GDPR programme on the Core registers and the GDPR requirement library. Adds records of processing, data subject requests with their deadline, personal data breaches with the 72-hour clock, DPIAs and (under Suppliers) processors and DPAs; Full adds transfers outside the EEA, the retention schedule and consent records. On the shared registers it adds the Privacy risk category, links from risks to processing and DPIAs, the \"Personal data breach\" incident type that opens a breach record, example privacy documents and a GDPR view on each. Retention rules ship as suggestions. Installs the Core registers first when they are missing. Own words throughout; article headings are the official ones.",
   "requires": [
@@ -664,7 +664,8 @@
                 "label": "Withdrawing consent",
                 "color": "green"
               }
-            ]
+            ],
+            "askWhenAdding": true
           }
         },
         {
@@ -672,7 +673,8 @@
           "name": "Requester",
           "type": "text",
           "config": {
-            "personalData": true
+            "personalData": true,
+            "askWhenAdding": true
           }
         },
         {
@@ -698,7 +700,8 @@
           "type": "date",
           "config": {
             "relative": false,
-            "default": "$today"
+            "default": "$today",
+            "askWhenAdding": true
           }
         },
         {
@@ -782,7 +785,8 @@
           "name": "Handled by",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
@@ -1061,12 +1065,17 @@
           "key": "aware_at",
           "name": "We became aware at",
           "type": "datetime",
-          "config": {}
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "description",
           "name": "What happened",
-          "type": "longtext"
+          "type": "longtext",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "cause",
@@ -1266,7 +1275,8 @@
           "name": "Breach lead",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
@@ -1633,7 +1643,10 @@
         {
           "key": "description",
           "name": "The processing",
-          "type": "longtext"
+          "type": "longtext",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "necessity",
@@ -1743,7 +1756,8 @@
           "name": "Owner",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
@@ -1994,7 +2008,10 @@
         {
           "key": "service",
           "name": "Service they provide",
-          "type": "text"
+          "type": "text",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "processing",
@@ -2091,7 +2108,8 @@
           "name": "Owner",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {

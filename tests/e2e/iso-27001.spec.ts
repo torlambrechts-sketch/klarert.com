@@ -35,7 +35,7 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.2.0 (Full) first.',
+    'Installs Core registers 1.3.0 (Full) first.',
     { timeout: 30_000 },
   );
   await expect(dialog.getByTestId('adopts-framework')).toContainText(
@@ -50,7 +50,7 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
     timeout: 120_000,
   });
   await expect(dialog.getByRole('status')).toContainText(
-    'Installed Core registers 1.2.0 (Full) first.',
+    'Installed Core registers 1.3.0 (Full) first.',
   );
   await dialog.getByRole('button', { name: 'Done' }).click();
 

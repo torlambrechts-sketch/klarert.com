@@ -560,8 +560,17 @@ export function useSheetActions(org: string, sheetId: string) {
       name: string,
       position: string,
       onSaved?: (tempId: string, item: Item) => void,
-      /** Values to start with (calendar day, kanban lane). */
-      extra: { values?: Record<string, unknown>; hold?: boolean } = {},
+      /** Values to start with (calendar day, kanban lane, the New item dialog's answers). */
+      extra: {
+        values?: Record<string, unknown>;
+        hold?: boolean;
+        /** How it was added (recorded in its activity entry): the New item dialog or an inline row. */
+        source?: 'dialog' | 'inline';
+        /** The sheet's new-item form the dialog asked (Phase B). */
+        intakeFormId?: string;
+        /** Handle a refusal (the dialog shows it at its answers) instead of the toast. */
+        onError?: (error: CommandError) => void;
+      } = {},
     ): Promise<Item | null> => {
       const tempId = `temp-${newMutationId()}`;
       const now = new Date().toISOString();
@@ -590,11 +599,14 @@ export function useSheetActions(org: string, sheetId: string) {
             mutationId: tempId,
             ...(extra.values ? { values: extra.values } : {}),
             ...(extra.hold ? { hold: true } : {}),
+            ...(extra.source ? { source: extra.source } : {}),
+            ...(extra.intakeFormId ? { intakeFormId: extra.intakeFormId } : {}),
           }),
         );
         patch((d) => removeItems(d, [tempId]));
         if (!r.ok) {
-          showError(r.error);
+          if (extra.onError) extra.onError(r.error);
+          else showError(r.error);
           return null;
         }
         patch((d) => upsertItem(d, r.data.item));
@@ -604,7 +616,9 @@ export function useSheetActions(org: string, sheetId: string) {
         return r.data.item;
       } catch {
         patch((d) => removeItems(d, [tempId]));
-        toast.error('The item was not added. Check your connection and try again.');
+        const message = 'The item was not added. Check your connection and try again.';
+        if (extra.onError) extra.onError({ code: 'failed', message });
+        else toast.error(message);
         return null;
       }
     },

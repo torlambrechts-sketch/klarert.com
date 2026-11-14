@@ -41,7 +41,12 @@ const LIST_OPS = new Set([
   'excludes',
 ]);
 
-const SPECIAL_NAMES: Record<string, string> = { __name: 'Name', __group: 'Group', __id: 'ID' };
+const SPECIAL_NAMES: Record<string, string> = {
+  __name: 'Name',
+  __group: 'Group',
+  __id: 'ID',
+  __missing: 'Missing required',
+};
 
 export function keyLabel(key: string, ctx: Ctx) {
   return SPECIAL_NAMES[key] ?? ctx.fieldsByKey.get(key)?.name ?? key;

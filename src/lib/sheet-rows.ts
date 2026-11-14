@@ -191,6 +191,7 @@ export function toSheet(r: {
     register?: unknown;
     framework?: unknown;
     workflows?: unknown;
+    newItemForm?: unknown;
   };
   const workflows = readWorkflows(settings);
   const columnGroups = parseColumnGroups(settings.columnGroups);
@@ -208,6 +209,9 @@ export function toSheet(r: {
     ...(settings.register === 'documents' ? { register: 'documents' as const } : {}),
     ...(framework && r.is_library ? { framework } : {}),
     ...(workflows.length ? { workflows } : {}),
+    ...(settings.newItemForm === false || typeof settings.newItemForm === 'string'
+      ? { newItemForm: settings.newItemForm }
+      : {}),
   };
 }
 

@@ -193,8 +193,9 @@ export async function updateField(input: unknown): Promise<Result<{ field: Field
         patch.rules = v.rules as DbJson;
       }
       if (v.config !== undefined) {
-        // personalData is a setting of every field (docs/02 §18), not of the type: kept outside the type's schema
-        const { default: dflt, twoWay, personalData, ...rest } = v.config;
+        // personalData (docs/02 §18) and askWhenAdding (the New item dialog, docs/05 §3.7) are settings of every
+        // field, not of the type: kept outside the type's schema
+        const { default: dflt, twoWay, personalData, askWhenAdding, ...rest } = v.config;
         if (isLinkType(row.type)) {
           // inverseFieldId is the app's to keep: only the two-way switch changes it
           const stored =
@@ -220,6 +221,7 @@ export async function updateField(input: unknown): Promise<Result<{ field: Field
           ...(parsed.data as object),
           ...(dflt !== undefined && dflt !== null && dflt !== '' ? { default: dflt } : {}),
           ...(personalData === true ? { personalData: true } : {}),
+          ...(askWhenAdding === true ? { askWhenAdding: true } : {}),
         } as DbJson;
       }
       if (Object.keys(patch).length === 0) return ok({ field: toField(row) });
@@ -237,10 +239,14 @@ export async function updateField(input: unknown): Promise<Result<{ field: Field
   );
 }
 
-/** A type change keeps the personal-data marker (docs/02 §18). */
+/** A type change keeps the personal-data marker (docs/02 §18) and "Ask when adding" (docs/05 §3.7). */
 function keepPersonal(before: unknown, after: unknown): DbJson {
-  const personal = (before as { personalData?: unknown } | null)?.personalData === true;
-  return { ...(after as object), ...(personal ? { personalData: true } : {}) } as DbJson;
+  const b = before as { personalData?: unknown; askWhenAdding?: unknown } | null;
+  return {
+    ...(after as object),
+    ...(b?.personalData === true ? { personalData: true } : {}),
+    ...(b?.askWhenAdding === true ? { askWhenAdding: true } : {}),
+  } as DbJson;
 }
 
 export type AddOptionResult = { field: Field; option: LabelOption; mutationId?: string };

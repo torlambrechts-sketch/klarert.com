@@ -4,6 +4,7 @@ import {
   documentApprovalValues,
   documentView,
   isDocumentsRegister,
+  manualApprovalValues,
   summariseDocument,
 } from './documents';
 import { FIELD_TYPES } from './fields/registry';
@@ -44,6 +45,36 @@ describe('documents register', () => {
       [on.id]: '2026-11-14',
     });
     expect(documentApprovalValues([other], 'u-2', '2026-11-14')).toEqual({});
+  });
+
+  it('records them when a person sets the status to Approved by hand, as the approval workflow does', () => {
+    const status = makeField(
+      'status',
+      {
+        options: [
+          { id: 'opt_draft', label: 'Draft', color: 'grey' },
+          { id: 'opt_review', label: 'In review', color: 'orange' },
+          { id: 'opt_approved', label: 'Approved', color: 'green', done: true },
+        ],
+      },
+      { key: 'status', position: 'a1' },
+    );
+    const approver = makeField('people', { multiple: false }, { key: 'approver', position: 'a2' });
+    const on = makeField('date', {}, { key: 'approved_on', position: 'a3' });
+    const fields = [status, approver, on];
+    const ctx = makeCtx({ fields });
+    const docs = { register: 'documents' as const };
+    const draft = makeItem({ [status.id]: 'opt_review' });
+    const approved = { ...draft, values: { ...draft.values, [status.id]: 'opt_approved' } };
+    expect(manualApprovalValues(docs, fields, draft, approved, ctx)).toEqual({
+      [approver.id]: ['u-maria'],
+      [on.id]: '2026-11-11',
+    });
+    // nothing when it does not approve: already approved, another status, or not a documents register
+    expect(manualApprovalValues(docs, fields, approved, approved, ctx)).toEqual({});
+    expect(manualApprovalValues(docs, fields, draft, draft, ctx)).toEqual({});
+    expect(manualApprovalValues({}, fields, draft, approved, ctx)).toEqual({});
+    expect(manualApprovalValues(null, fields, draft, approved, ctx)).toEqual({});
   });
 });
 

@@ -242,8 +242,8 @@ test('Kanban: dragging a card changes its status, a status rule snaps it back', 
 
   // "+ Add" in a lane creates the item in that lane
   await page.getByRole('button', { name: 'Add an item to Stuck' }).click();
-  await page.getByRole('dialog').getByLabel('Name').fill('Order new gauges');
-  await page.getByRole('dialog').getByRole('button', { name: 'Add task' }).click();
+  await page.getByRole('dialog').getByRole('textbox', { name: /^Name/ }).fill('Order new gauges');
+  await page.getByRole('dialog').getByRole('button', { name: 'Create', exact: true }).click();
   await expect(
     lane('Stuck').getByTestId('kanban-card').filter({ hasText: 'Order new gauges' }),
   ).toBeVisible();
@@ -273,8 +273,8 @@ test('Calendar: items on their dates, clicking a day adds an item with that date
     .click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toContainText('Due date:');
-  await dialog.getByLabel('Name').fill('Toolbox talk');
-  await dialog.getByRole('button', { name: 'Add task' }).click();
+  await dialog.getByRole('textbox', { name: /^Name/ }).fill('Toolbox talk');
+  await dialog.getByRole('button', { name: 'Create', exact: true }).click();
   await expect(page.locator(`td[data-date="${ym}-20"]`)).toContainText('Toolbox talk');
   await expect
     .poll(async () => {

@@ -1,6 +1,6 @@
 {
   "key": "nis2",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "NIS2 cybersecurity (add-on)",
   "description": "NIS2 on the Core registers and the NIS2 requirement library: a scope self-check per legal entity (essential or important) with its registration, the ten Art. 21(2) measures as controls in the shared Controls library, incident reports with the 24-hour early warning, 72-hour notification and one-month final report and their clocks, and management body approval and training (Art. 20) through an approval workflow. A country setting lists every EU and EEA country with its authority, CSIRT, registration route and notes (unverified until checked) and fills them in as defaults. Installs the Core registers (Full: the Controls library and Competence and training) first when they are missing. Own words; article headings are the official ones.",
   "requires": [
@@ -1607,7 +1607,10 @@
           "key": "aware_at",
           "name": "Became aware at",
           "type": "datetime",
-          "description": "When you became aware of the significant incident: the clocks run from here."
+          "description": "When you became aware of the significant incident: the clocks run from here.",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "significant",
@@ -1631,7 +1634,8 @@
                 "label": "Not significant",
                 "color": "green"
               }
-            ]
+            ],
+            "askWhenAdding": true
           }
         },
         {
@@ -1817,7 +1821,8 @@
           "name": "Reporting lead",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {

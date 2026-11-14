@@ -66,6 +66,51 @@ describe('activity lines', () => {
       { action: 'item.created', newValue: { name: 'X', group_id: 'g-open', values: {} } },
       'Created in Open',
     ],
+    [
+      {
+        action: 'item.created',
+        newValue: { name: 'X', group_id: 'g-open', values: {}, source: { via: 'dialog' } },
+      },
+      'Created in Open with the New item dialog',
+    ],
+    [
+      {
+        action: 'item.created',
+        newValue: {
+          name: 'X',
+          group_id: 'g-open',
+          values: {},
+          source: { via: 'dialog', intake_form_id: 'v-1', intake_form: 'Report a nonconformity' },
+        },
+      },
+      'Created in Open with the New item dialog (form “Report a nonconformity”)',
+    ],
+    [
+      {
+        action: 'item.created',
+        newValue: { name: 'X', group_id: 'g-open', values: {}, source: { via: 'inline' } },
+      },
+      'Created in Open in a table row',
+    ],
+    [
+      {
+        action: 'item.created',
+        newValue: {
+          name: 'X',
+          group_id: 'g-open',
+          values: {},
+          source: { form_id: 'v-2', form_version: 3, channel: 'public' },
+        },
+      },
+      'Created in Open from a public form',
+    ],
+    [
+      {
+        action: 'item.created',
+        newValue: { name: 'X', values: {}, source: { channel: 'internal' } },
+      },
+      'Created from a form',
+    ],
     [{ fieldId: 'f-due', oldValue: null, newValue: '2026-11-20' }, 'Due date set to 20 Nov 2026'],
     [
       { fieldId: 'f-due', oldValue: '2026-11-20', newValue: null },

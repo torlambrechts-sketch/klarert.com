@@ -137,6 +137,8 @@ export const templateForm = z.object({
     description: z.string().trim().max(2000).optional(),
     nameLabel: z.string().trim().max(200).optional(),
     fields: z.array(formFieldSchema).max(100),
+    /** The sheet's intake form: its New item dialog asks this form (docs/05 §3.7), until the sheet chooses. */
+    intake: z.boolean().optional(),
   }),
   settings: z
     .object({
@@ -162,8 +164,15 @@ export function formProblems(
 ): { index: number; message: string }[] {
   const out: { index: number; message: string }[] = [];
   const seen = new Set<string>();
+  let intake = false;
   for (const [i, f] of forms.entries()) {
     if (seen.has(f.ref)) out.push({ index: i, message: `Duplicate form ref "${f.ref}".` });
+    if (f.layout.intake) {
+      if (intake) out.push({ index: i, message: 'A sheet has at most one intake form.' });
+      intake = true;
+    }
+    if (f.layout.fields[0]?.step !== undefined)
+      out.push({ index: i, message: 'The first question is always in the first step.' });
     seen.add(f.ref);
     if (f.groupRef !== undefined && !groupOk(f.groupRef))
       out.push({ index: i, message: `Unknown group "${f.groupRef}".` });

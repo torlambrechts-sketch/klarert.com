@@ -1,6 +1,6 @@
 {
   "key": "core",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "title": "Core registers",
   "description": "The shared registers every management system standard builds on, in five domains: Management system, Risk and controls, Operations, Privacy and security, and Suppliers. Standards are added as add-ons that extend these registers with their own columns, categories and views, so a risk, an incident or a document is recorded once and counts for every standard that uses it. Documents, risks and nonconformities come with approval workflows, and each record can link to the requirements of any framework you adopt.",
   "system": true,
@@ -1504,13 +1504,17 @@
           "name": "Risk owner",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
           "key": "cause",
           "name": "Cause",
-          "type": "text"
+          "type": "text",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "consequence",
@@ -1522,7 +1526,8 @@
           "name": "Likelihood",
           "type": "rating",
           "config": {
-            "scale": 5
+            "scale": 5,
+            "askWhenAdding": true
           },
           "description": "On the category’s likelihood scale."
         },
@@ -1531,7 +1536,8 @@
           "name": "Impact",
           "type": "rating",
           "config": {
-            "scale": 5
+            "scale": 5,
+            "askWhenAdding": true
           },
           "description": "On the category’s impact scale."
         },
@@ -2414,13 +2420,19 @@
           "key": "what_happened",
           "name": "What happened",
           "type": "longtext",
-          "description": "What happened, in plain words: where, who or what was affected and what was done straight away."
+          "description": "What happened, in plain words: where, who or what was affected and what was done straight away.",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "noticed_at",
           "name": "Noticed at",
           "type": "datetime",
-          "description": "When someone first noticed it. Deadlines for telling customers or authorities often run from this moment."
+          "description": "When someone first noticed it. Deadlines for telling customers or authorities often run from this moment.",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "incident_type",
@@ -2487,7 +2499,8 @@
                 "label": "High",
                 "color": "red"
               }
-            ]
+            ],
+            "askWhenAdding": true
           }
         },
         {
@@ -2495,7 +2508,8 @@
           "name": "Investigator",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
@@ -2659,6 +2673,59 @@
             "retention": "Kept as long as the incident record is kept.",
             "rights": "You can ask to see, correct or delete what was recorded about you. Contact the person who shared this form."
           }
+        },
+        {
+          "ref": "intake",
+          "level": "starter",
+          "name": "New incident",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Record an incident",
+            "description": "Two short steps: what happened and when, then how serious it is and who looks into it. Record it now, even if you do not know everything yet.",
+            "nameLabel": "What happened, in one line",
+            "fields": [
+              {
+                "key": "what_happened",
+                "label": "What happened?",
+                "help": "Where, who or what was affected, and what was done straight away.",
+                "required": true
+              },
+              {
+                "key": "noticed_at",
+                "label": "When was it noticed?",
+                "required": true
+              },
+              {
+                "key": "occurred_on",
+                "label": "When did it happen, if earlier?"
+              },
+              {
+                "key": "incident_type",
+                "label": "What kind of incident is it?",
+                "step": "How serious"
+              },
+              {
+                "key": "severity",
+                "label": "How serious is it?",
+                "help": "Your best guess. The investigator decides."
+              },
+              {
+                "key": "owner",
+                "label": "Who looks into it?",
+                "required": true
+              }
+            ],
+            "intake": true
+          },
+          "settings": {
+            "prefill": [
+              {
+                "key": "status",
+                "value": "opt_new"
+              }
+            ]
+          }
         }
       ]
     },
@@ -2686,12 +2753,18 @@
           "key": "details",
           "name": "What was found",
           "type": "longtext",
-          "description": "What is wrong, in plain words, and the evidence: what was seen, where, and what it should have been."
+          "description": "What is wrong, in plain words, and the evidence: what was seen, where, and what it should have been.",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "found_on",
           "name": "Found on",
-          "type": "date"
+          "type": "date",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "source",
@@ -2753,7 +2826,8 @@
                 "label": "Observation",
                 "color": "grey"
               }
-            ]
+            ],
+            "askWhenAdding": true
           }
         },
         {
@@ -2761,7 +2835,8 @@
           "name": "Owner",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
@@ -2816,7 +2891,10 @@
         {
           "key": "due_date",
           "name": "Due",
-          "type": "date"
+          "type": "date",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "root_cause",
@@ -3038,6 +3116,61 @@
               }
             ]
           }
+        },
+        {
+          "ref": "intake",
+          "level": "starter",
+          "name": "New nonconformity",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Record a nonconformity",
+            "description": "Three short steps: what you found, where it came from and how serious it is, then who takes it on. Write down facts, not blame.",
+            "nameLabel": "The problem, in one line",
+            "fields": [
+              {
+                "key": "details",
+                "label": "What did you find?",
+                "help": "What you saw, where, and what it should have been.",
+                "required": true
+              },
+              {
+                "key": "found_on",
+                "label": "When did you find it?",
+                "required": true
+              },
+              {
+                "key": "source",
+                "label": "Where did it come from?",
+                "step": "Where it came from"
+              },
+              {
+                "key": "grade",
+                "label": "How serious is it?",
+                "help": "Your best guess. The owner can change it."
+              },
+              {
+                "key": "owner",
+                "label": "Who takes it on?",
+                "step": "Who takes it on",
+                "required": true
+              },
+              {
+                "key": "due_date",
+                "label": "Contained by",
+                "help": "When the immediate fix should be in place."
+              }
+            ],
+            "intake": true
+          },
+          "settings": {
+            "prefill": [
+              {
+                "key": "stage",
+                "value": "opt_containment"
+              }
+            ]
+          }
         }
       ]
     },
@@ -3066,7 +3199,8 @@
           "name": "Owner",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           }
         },
         {
@@ -3102,7 +3236,10 @@
         {
           "key": "due",
           "name": "Due",
-          "type": "date"
+          "type": "date",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "origin",
@@ -3201,14 +3338,18 @@
         {
           "key": "supplies",
           "name": "What they supply",
-          "type": "text"
+          "type": "text",
+          "config": {
+            "askWhenAdding": true
+          }
         },
         {
           "key": "owner",
           "name": "Owner",
           "type": "people",
           "config": {
-            "multiple": false
+            "multiple": false,
+            "askWhenAdding": true
           },
           "description": "Who looks after the relationship with this supplier."
         },
@@ -3238,7 +3379,8 @@
                 "label": "Critical",
                 "color": "purple"
               }
-            ]
+            ],
+            "askWhenAdding": true
           },
           "description": "How much you depend on this supplier: what happens if it fails to deliver."
         },

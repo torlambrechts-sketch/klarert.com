@@ -174,6 +174,42 @@ function approvalText(e: ActivityEntry): string {
   }
 }
 
+// ───────────────────────── where an item came from ─────────────────────────
+
+/** How an item was added, as its item.created entry records it (`source`). */
+export type CreatedVia = 'dialog' | 'inline' | 'form';
+
+/** The source of an item.created entry: the dialog, an inline row, or a form (public or internal). */
+export function createdVia(newValue: unknown): {
+  via: CreatedVia;
+  form?: string;
+  channel?: string;
+} | null {
+  const o = newValue && typeof newValue === 'object' && !Array.isArray(newValue) ? newValue : null;
+  const s = o && (o as { source?: unknown }).source;
+  if (!s || typeof s !== 'object' || Array.isArray(s)) return null;
+  const src = s as Record<string, unknown>;
+  if (typeof src.form_id === 'string' || src.channel === 'public' || src.channel === 'internal')
+    return { via: 'form', channel: typeof src.channel === 'string' ? src.channel : undefined };
+  if (src.via === 'dialog')
+    return {
+      via: 'dialog',
+      form: typeof src.intake_form === 'string' ? src.intake_form : undefined,
+    };
+  if (src.via === 'inline') return { via: 'inline' };
+  return null;
+}
+
+/** The words for the source: "with the New item dialog", "in a table row", "from a public form". */
+export function createdViaText(newValue: unknown): string | null {
+  const s = createdVia(newValue);
+  if (!s) return null;
+  if (s.via === 'dialog')
+    return s.form ? `with the New item dialog (form “${s.form}”)` : 'with the New item dialog';
+  if (s.via === 'inline') return 'in a table row';
+  return s.channel === 'public' ? 'from a public form' : 'from a form';
+}
+
 /** The sentence for one entry: "Status: Working on it → Done", "Moved from Open to Done", … */
 export function activityText(e: ActivityEntry, look: ActivityLookup): string {
   const field = e.fieldId ? look.field(e.fieldId) : undefined;
@@ -197,7 +233,9 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
           : null;
       if (o && typeof o.parent === 'string') return `Created under ${o.parent}`;
       const g = o ? look.groupName(String(o.group_id ?? '')) : undefined;
-      return g ? `Created in ${g}` : 'Created';
+      // where it was added (0046): the New item dialog, a table row or a form
+      const via = createdViaText(o);
+      return `${g ? `Created in ${g}` : 'Created'}${via ? ` ${via}` : ''}`;
     }
     // sub-items (docs/02 §12): the pointer entries on the parent, and a sub-item moving between parents
     case 'subitem.added':

@@ -34,7 +34,7 @@ const keys = (ref: string) => sheet(ref).fields.map((f) => f.key);
 
 describe('Core registers 1.1.0 and later', () => {
   it('is a minor version of 1.0.0 that meets the pack quality bar', () => {
-    expect(core.version).toBe('1.2.0');
+    expect(core.version).toBe('1.3.0');
     expect(core100.version).toBe('1.0.0');
     expect(packQualityProblems(core)).toEqual([]);
     expect(packQualityProblems(core100).length).toBeGreaterThan(0);
@@ -270,6 +270,12 @@ describe('updating Core 1.1.0 → 1.2.0 with ISO/IEC 27001 and Supplier manageme
       readFileSync(join(process.cwd(), 'src/lib/packs/fixtures/core-1.1.0.json'), 'utf8'),
     ) as unknown,
   );
+  // 1.2.0 as it shipped (1.3.0 adds "Ask when adding": src/lib/packs/ask-when-adding.test.ts)
+  const core120 = parsePack(
+    JSON.parse(
+      readFileSync(join(process.cwd(), 'tests/e2e/fixtures/catalogue/core@1.2.0.json'), 'utf8'),
+    ) as unknown,
+  );
   const iso27001 = packByKey('iso-27001');
   const suppliers = packByKey('supplier-management');
   const libraries = (iso27001.frameworks ?? []).map((f) => ({
@@ -302,7 +308,7 @@ describe('updating Core 1.1.0 → 1.2.0 with ISO/IEC 27001 and Supplier manageme
   const plan = () =>
     planPackUpgrade({
       from: { manifest: core110, hash: coreHash },
-      to: { manifest: core, hash: 'h-core-120' },
+      to: { manifest: core120, hash: 'h-core-120' },
       state,
       snapshot: { ...all, foreign: {}, foreignFolders: {} },
       env,

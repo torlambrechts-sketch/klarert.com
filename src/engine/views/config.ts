@@ -81,6 +81,11 @@ export const formFieldSchema = z.object({
   label: z.string().trim().max(200).optional(),
   help: z.string().trim().max(1000).optional(),
   required: z.boolean().optional(),
+  /**
+   * A new step starts at this question, with this title ("" for an untitled step). The New item dialog asks a
+   * stepped form one step at a time ("Step 2 of 3"); a form filled in on one page shows every question.
+   */
+  step: z.string().trim().max(120).optional(),
 });
 export type FormFieldLayout = z.infer<typeof formFieldSchema>;
 
@@ -163,6 +168,11 @@ export const formLayoutSchema = z.object({
   /** Hidden values set on every answer by the database, never sent by the person filling it in. */
   prefill: z.array(formPrefillSchema).max(50).optional(),
   notice: privacyNoticeSchema.optional(),
+  /**
+   * A pack's intake form: the sheet's New item dialog asks this form's questions unless the sheet chose otherwise
+   * (`sheets.settings.newItemForm`, docs/05 §3.7).
+   */
+  intake: z.boolean().optional(),
 });
 export type FormLayout = z.infer<typeof formLayoutSchema>;
 

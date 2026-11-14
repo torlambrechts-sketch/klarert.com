@@ -33,6 +33,8 @@ export interface GridState {
    * chip in the toolbar). `label` names it: "Severity: High".
    */
   valueFilter: { fieldId: string; key: string; label: string } | null;
+  /** Table filter "Missing required": only items that leave a required field empty (UI state). */
+  missingOnly: boolean;
   /** Table row height (kept per browser by the sheet page). */
   density: 'comfortable' | 'compact';
   /** The item whose row actions menu is open (keyboard: Shift+F10 on the grid). */
@@ -58,6 +60,7 @@ export interface GridState {
   toggleStatus(optionId: string): void;
   clearStatuses(): void;
   setValueFilter(f: GridState['valueFilter']): void;
+  setMissingOnly(on: boolean): void;
   setDensity(d: GridState['density']): void;
   openRowMenu(itemId: string | null): void;
   openAddField(at: GridState['addFieldAt']): void;
@@ -81,6 +84,7 @@ export function createGridStore(): StoreApi<GridState> {
     people: new Set(),
     statuses: new Set(),
     valueFilter: null,
+    missingOnly: false,
     density: 'comfortable',
     rowMenu: null,
     addFieldAt: null,
@@ -106,6 +110,7 @@ export function createGridStore(): StoreApi<GridState> {
     },
     clearStatuses: () => set({ statuses: new Set() }),
     setValueFilter: (valueFilter) => set({ valueFilter }),
+    setMissingOnly: (missingOnly) => set({ missingOnly }),
     setDensity: (density) => set({ density }),
     openRowMenu: (itemId) => set({ rowMenu: itemId }),
     toggleCollapsed: (groupId) => {

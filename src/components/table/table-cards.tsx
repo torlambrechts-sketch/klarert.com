@@ -3,7 +3,7 @@
 import { itemRequirementRef } from '@/engine/frameworks/refs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
-import { Lock } from 'lucide-react';
+import { Lock, TriangleAlert } from 'lucide-react';
 import { formatDate } from '@/engine/fields/helpers';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { itemSummary, ownerField, ownerOf } from '@/engine/item-panel';
@@ -20,6 +20,7 @@ import { GroupTitle } from './group-title';
 import { useDocumentTop } from './use-document-top';
 import { useTableGroups } from './use-table-groups';
 import { donePercent } from '@/engine/views/group-by';
+import { missingRequired, missingText } from '@/engine/views/new-item';
 import { buildLayout, byPosition, cardFields, positionsAtEnd, type TableRow } from './table-model';
 import { CardSubitems } from '@/components/subitems/card-list';
 import type { SubitemsState } from '@/components/subitems/use-subitems';
@@ -115,7 +116,7 @@ export function TableCards({
   const addItem = async (group: Group, name: string) => {
     const list = data.items.filter((i) => i.groupId === group.id).sort(byPosition);
     const [position] = positionsAtEnd(list, 1);
-    await actions.createItem(group.id, name, position!);
+    await actions.createItem(group.id, name, position!, undefined, { source: 'inline' });
   };
 
   const firstAddRef = useRef<HTMLInputElement | null>(null);
@@ -229,6 +230,10 @@ function ItemCard({
   const filled = fields.filter(
     (f) => !resolveFieldType(f.type)!.isEmpty(cellValue(item, f, ctx) as never),
   );
+  // required fields the item leaves empty, in words with a warning symbol
+  const missing = item.id.startsWith('temp-')
+    ? ''
+    : missingText(missingRequired(item, ctx.fieldsOf(item.sheetId), ctx));
   return (
     <article
       data-testid="item-card"
@@ -270,6 +275,15 @@ function ItemCard({
         ) : null}
         <CommentBubble summary={comments} ctx={ctx} className="ml-auto" />
       </span>
+      {missing ? (
+        <span
+          className="text-warn text-label-12 flex items-start gap-1"
+          data-testid="missing-required"
+        >
+          <TriangleAlert className="mt-px size-3.5 shrink-0" aria-hidden />
+          <span>{missing}</span>
+        </span>
+      ) : null}
       {filled.length ? (
         <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1">
           {filled.map((f) => {

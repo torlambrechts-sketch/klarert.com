@@ -35,7 +35,7 @@ test.describe('desktop', () => {
     await row.getByRole('button', { name: `Preview ${ADDON}` }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByTestId('installs-first')).toContainText(
-      'Installs Core registers 1.2.0 (Full) first.',
+      'Installs Core registers 1.3.0 (Full) first.',
     );
     await shot(page, '01-preview');
     await dialog.getByRole('button', { name: 'Install' }).click();
@@ -43,7 +43,7 @@ test.describe('desktop', () => {
       timeout: 90_000,
     });
     await expect(dialog.getByRole('status')).toContainText(
-      'Installed Core registers 1.2.0 (Full) first.',
+      'Installed Core registers 1.3.0 (Full) first.',
     );
 
     const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
@@ -76,7 +76,7 @@ test.describe('desktop', () => {
     await menu.getByRole('link', { name: 'Risk register' }).click();
     await expect(page.getByRole('heading', { name: 'Risk register', level: 1 })).toBeVisible();
     await expect(page.getByTestId('system-board')).toContainText('System board');
-    await expect(page.getByTestId('system-board')).toContainText('Core registers 1.2.0');
+    await expect(page.getByTestId('system-board')).toContainText('Core registers 1.3.0');
     await expect(page.getByTestId('system-used-by')).toHaveText('Used by ISO 14001');
     const spill = page.getByRole('gridcell', { name: /Coolant spill reaches a surface drain/ });
     await expect(spill.first()).toBeVisible();

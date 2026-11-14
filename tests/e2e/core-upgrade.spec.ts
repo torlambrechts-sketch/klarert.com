@@ -5,12 +5,12 @@ import { localSql, seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
 // Core registers updates (docs/11 Core registers, Upgrades), from versions kept in tests/e2e/fixtures/catalogue.
-// 1.0.0 → 1.2.0: a workspace has Core 1.0.0 (Full) with the ISO/IEC 27001 2.0.0 and Supplier management 2.0.0 add-ons
-// on it. Workspace admin › Packs offers "Update available 1.0.0 → 1.2.0" for Core; the dry run adds Context and
+// 1.0.0 → 1.3.0: a workspace has Core 1.0.0 (Full) with the ISO/IEC 27001 2.0.0 and Supplier management 2.0.0 add-ons
+// on it. Workspace admin › Packs offers "Update available 1.0.0 → 1.3.0" for Core; the dry run adds Context and
 // interested parties and Suppliers, the shared Requirements column and the approval workflows with no conflict;
 // after the update Documents and policies carries the Document approval workflow, the add-ons' columns are still on
 // the Core sheets and both add-ons are still installed.
-// 1.1.0 → 1.2.0 (owner decision, Nov 2026): the update adds "Approve by" and points Document approval at it; a
+// 1.1.0 → 1.3.0 (1.2.0, owner decision, Nov 2026): the update adds "Approve by" and points Document approval at it; a
 // document is submitted to the person in Approve by, who approves it, and the approval fills in Approver and
 // Approved on, which nobody sets by hand.
 
@@ -60,10 +60,10 @@ test('the Core registers meet the pack quality bar', ({}, info) => {
     stdio: 'pipe',
     timeout: 60_000,
   });
-  expect(out).toContain('core 1.2.0: meets the bar');
+  expect(out).toContain('core 1.3.0: meets the bar');
 });
 
-test('update Core 1.0.0 to 1.2.0 with ISO/IEC 27001 and Supplier management installed', async ({
+test('update Core 1.0.0 to 1.3.0 with ISO/IEC 27001 and Supplier management installed', async ({
   page,
 }, info) => {
   test.setTimeout(240_000);
@@ -97,8 +97,8 @@ test('update Core 1.0.0 to 1.2.0 with ISO/IEC 27001 and Supplier management inst
     .getByRole('list', { name: 'Installed packs' })
     .getByRole('listitem')
     .filter({ hasText: 'Core registers' });
-  await expect(row.getByTestId('update-available')).toContainText('1.0.0 → 1.2.0');
-  await row.getByRole('button', { name: /^Update .* from 1\.0\.0 to 1\.2\.0$/ }).click();
+  await expect(row.getByTestId('update-available')).toContainText('1.0.0 → 1.3.0');
+  await row.getByRole('button', { name: /^Update .* from 1\.0\.0 to 1\.3\.0$/ }).click();
 
   // ── the dry run: new registers, the shared column, the workflows; nothing in conflict, nothing archived
   const dialog = page.getByRole('dialog');
@@ -119,10 +119,10 @@ test('update Core 1.0.0 to 1.2.0 with ISO/IEC 27001 and Supplier management inst
     );
 
   await dialog.getByRole('button', { name: 'Apply update' }).click();
-  await expect(dialog.getByRole('status')).toContainText('to 1.2.0', { timeout: 60_000 });
+  await expect(dialog.getByRole('status')).toContainText('to 1.3.0', { timeout: 60_000 });
   await dialog.getByRole('button', { name: 'Done' }).click();
   await expect(row.getByTestId('update-available')).toHaveCount(0);
-  await expect(row).toContainText('1.2.0');
+  await expect(row).toContainText('1.3.0');
 
   // ── after: the add-ons and their columns are where they were, Core has its new registers and workflows
   expect(
@@ -130,7 +130,7 @@ test('update Core 1.0.0 to 1.2.0 with ISO/IEC 27001 and Supplier management inst
       `select string_agg(pack_key || ' ' || version, ', ' order by pack_key) from pack_installs
         where org_id = '${org}' and status = 'installed'`,
     ),
-  ).toBe('core 1.2.0, iso-27001 2.0.0, supplier-management 2.0.0');
+  ).toBe('core 1.3.0, iso-27001 2.0.0, supplier-management 2.0.0');
   expect(addonColumns()).toBe(before);
   expect(coreSheet('context')).not.toBe('');
   expect(coreSheet('suppliers')).not.toBe('');
@@ -163,7 +163,7 @@ test('update Core 1.0.0 to 1.2.0 with ISO/IEC 27001 and Supplier management inst
   await expect(tabs).not.toContainText('Insights');
 });
 
-test('update Core 1.1.0 to 1.2.0: Document approval goes to Approve by, the approval fills in Approver', async ({
+test('update Core 1.1.0 to 1.3.0: Document approval goes to Approve by, the approval fills in Approver', async ({
   page,
   browser,
 }, info) => {
@@ -186,8 +186,8 @@ test('update Core 1.1.0 to 1.2.0: Document approval goes to Approve by, the appr
     .getByRole('list', { name: 'Installed packs' })
     .getByRole('listitem')
     .filter({ hasText: 'Core registers' });
-  await expect(row.getByTestId('update-available')).toContainText('1.1.0 → 1.2.0');
-  await row.getByRole('button', { name: /^Update .* from 1\.1\.0 to 1\.2\.0$/ }).click();
+  await expect(row.getByTestId('update-available')).toContainText('1.1.0 → 1.3.0');
+  await row.getByRole('button', { name: /^Update .* from 1\.1\.0 to 1\.3\.0$/ }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByTestId('upgrade-summary')).toContainText('0 conflicts', {
     timeout: 60_000,
@@ -197,9 +197,9 @@ test('update Core 1.1.0 to 1.2.0: Document approval goes to Approve by, the appr
   );
   await expect(dialog.getByRole('list', { name: 'Changed' })).toContainText('Approval workflows');
   await dialog.getByRole('button', { name: 'Apply update' }).click();
-  await expect(dialog.getByRole('status')).toContainText('to 1.2.0', { timeout: 60_000 });
+  await expect(dialog.getByRole('status')).toContainText('to 1.3.0', { timeout: 60_000 });
   await dialog.getByRole('button', { name: 'Done' }).click();
-  await expect(row).toContainText('1.2.0');
+  await expect(row).toContainText('1.3.0');
 
   // the workflow takes its approvers from Approve by and needs it before submitting
   const workflow = JSON.parse(

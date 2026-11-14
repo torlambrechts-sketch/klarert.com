@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// The NIS2 add-on 1.0.0 (docs/11 The NIS2 add-on, Pack settings): an owner picks Norway in the install dialog (EEA,
+// The NIS2 add-on 1.1.0 (docs/11 The NIS2 add-on, Pack settings): an owner picks Norway in the install dialog (EEA,
 // unverified, with its note on the Digital Security Act) and installs; the Core registers are installed first at
 // Full (the Controls library and training); the NIS2 sheets sit in the Privacy and security and Management system
 // domains; the Controls library has the NIS2 view and the ten measures; an SLA automation waits in test mode; the
@@ -35,7 +35,7 @@ test('install NIS2 with the Norway country rules and change the country later', 
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.2.0 (Full) first.',
+    'Installs Core registers 1.3.0 (Full) first.',
   );
   const country = dialog.getByLabel('Country of main establishment');
   await country.selectOption({ label: 'Norway' });
@@ -50,7 +50,7 @@ test('install NIS2 with the Norway country rules and change the country later', 
     timeout: 90_000,
   });
   await expect(dialog.getByRole('status')).toContainText(
-    'Installed Core registers 1.2.0 (Full) first.',
+    'Installed Core registers 1.3.0 (Full) first.',
   );
   await dialog.getByRole('button', { name: 'Done' }).click();
 
