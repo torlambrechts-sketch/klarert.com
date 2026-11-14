@@ -615,6 +615,16 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   };
   const noteOf = (keys: string[], words: (k: string) => string = (k) => ATTR_WORDS[k] ?? k) =>
     capital(sentenceList([...new Set(keys.map(words))]));
+  /** One line per changed sheet: what else changes on it joins the line ("Description, approval workflows and tabs"). */
+  const sheetNotes = new Map<string, string[]>();
+  const changedSheet = (ref: string, name: string, what: string) => {
+    const line = preview.changed.find((c) => c.kind === 'sheet' && c.ref === ref);
+    const words = sheetNotes.get(ref) ?? (line?.note ? [line.note.toLowerCase()] : []);
+    words.push(what);
+    sheetNotes.set(ref, words);
+    if (line) line.note = capital(sentenceList(words));
+    else preview.changed.push({ kind: 'sheet', ref, name, note: capital(what) });
+  };
 
   // ── existing objects the new version still ships: three-way per attribute
   const simple = (
@@ -683,12 +693,7 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
           ...(theirsOnSheet as unknown as Json[]),
         ],
       });
-      preview.changed.push({
-        kind: 'sheet',
-        ref,
-        name: String(t.name),
-        note: 'Approval workflows',
-      });
+      changedSheet(ref, String(t.name), 'approval workflows');
     }
     // the tab set (docs/02 sheets.settings.tabs): one value, three ways; the new version's tabs name its views by
     // the ids this upgrade gives them (or the install's, for views it has)
@@ -714,7 +719,7 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
         tabsDefault: st.tabsDefault ?? st.tabs ?? null,
         defaultViewId: st.defaultViewId ?? null,
       });
-      preview.changed.push({ kind: 'sheet', ref, name: String(t.name), note: 'Tabs' });
+      changedSheet(ref, String(t.name), 'tabs');
     }
   }
 
@@ -753,7 +758,7 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
           ...(Array.isArray(apply.workflows) ? apply.workflows : []),
         ],
       });
-      preview.changed.push({ kind: 'sheet', ref: key, name: f.name, note: 'Approval workflows' });
+      changedSheet(key, f.name, 'approval workflows');
     }
   }
   for (const [ref, t] of T.groups) {

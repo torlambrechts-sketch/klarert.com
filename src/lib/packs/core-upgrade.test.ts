@@ -220,7 +220,7 @@ describe('updating Core 1.0.0 → 1.1.0 with ISO/IEC 27001 2.0.0 and Supplier ma
     expect(tabs).toContain(state.refMap['sheet:documents']);
     expect(tabs).toHaveLength(core100.sheets.length);
     expect(upgradeLines(p.preview)).toContain(
-      'Changes sheet Documents and policies: Approval workflows.',
+      'Changes sheet Documents and policies: Description, approval workflows and tabs.',
     );
   });
 
