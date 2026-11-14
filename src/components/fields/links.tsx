@@ -6,12 +6,14 @@ import { X } from 'lucide-react';
 import { searchItemsAction } from '@/app/[org]/s/panel-actions';
 import type { Item } from '@/engine/types';
 import { Button } from '@/components/ui/button';
-import { Empty, Muted } from './kit';
+import { Muted } from './kit';
 import { EditorFrame, inputClass, SaveCancel } from './shared';
-import type { CellProps, EditorProps } from './types';
+import type { EditorProps } from './types';
 
-// Link, requirement and control link cells and editors (docs/03 §3.3, §3.4). Links live in item_links; the editor
-// searches the target sheet through the search command and returns the chosen item ids.
+export { LinkCell } from './link-cell';
+
+// Link, requirement and control link editors (docs/03 §3.3, §3.4; the cell is ./link-cell.tsx). Links live in
+// item_links; the editor searches the target sheet through the search command and returns the chosen item ids.
 
 type Target = { id: string; displayId: string; name: string; sheetName?: string };
 
@@ -19,32 +21,6 @@ type Target = { id: string; displayId: string; name: string; sheetName?: string 
 const anyLibrary = (field: { type: string; config: unknown }) =>
   (field.type === 'requirement' || field.type === 'controllink') &&
   !(field.config as { targetSheetId?: string | null }).targetSheetId;
-
-export function LinkCell({ item, field, ctx }: CellProps) {
-  const ids = ctx.links(item.id, field.id);
-  if (ids.length === 0) return <Empty />;
-  const targets = ids.map((id) => ctx.item(id));
-  const shown = targets.slice(0, 2);
-  return (
-    <span className="flex min-w-0 items-center gap-1 overflow-hidden">
-      {shown.map((t, i) => (
-        <span
-          key={ids[i]}
-          className="border-line bg-soft text-label-12 inline-flex max-w-[11rem] min-w-0 shrink-0 items-center gap-1 rounded-full border px-2 py-0.5"
-          title={t ? `${t.displayId} ${t.name}` : 'Archived or hidden item'}
-        >
-          <span className="text-label-12-mono shrink-0 font-medium whitespace-nowrap">
-            {t?.displayId ?? '—'}
-          </span>
-          {t ? <span className="truncate">{t.name}</span> : null}
-        </span>
-      ))}
-      {ids.length > 2 ? (
-        <span className="text-muted-foreground text-label-12 font-semibold">+{ids.length - 2}</span>
-      ) : null}
-    </span>
-  );
-}
 
 /**
  * Items of the target sheet matching the query, from the search command (debounced, display id or name); with
