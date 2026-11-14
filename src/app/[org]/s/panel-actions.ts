@@ -17,6 +17,7 @@ export const confirmUploadAction = async (input: unknown) => files.confirmUpload
 export const downloadFileAction = async (input: unknown) => files.downloadFile(input);
 export const verifyActivityAction = async (input: unknown) => panel.verifyActivity(input);
 export const searchItemsAction = async (input: unknown) => panel.searchItems(input);
+export const checklistAction = async (input: unknown) => panel.checklist(input);
 export const setFileDetailsAction = async (input: unknown) => files.setFileDetails(input);
 export const archiveFileAction = async (input: unknown) => files.archiveFile(input);
 export const itemDocumentsAction = async (input: unknown) => documents.itemDocuments(input);

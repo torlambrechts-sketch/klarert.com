@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import './fields/registry';
 import { status } from './fields/status';
-import { itemSummary, linkEdges, neighbours, ownerField, ownerOf } from './item-panel';
+import {
+  checklistRows,
+  isChecklistField,
+  itemSummary,
+  linkEdges,
+  neighbours,
+  ownerField,
+  ownerOf,
+} from './item-panel';
 import { makeCtx, makeField, makeItem } from './testing/fixtures';
 
 const statusField = makeField('status', status.defaultConfig(), { id: 'f-status', position: 'a0' });
@@ -138,5 +146,34 @@ describe('status and expiry helpers', () => {
       true,
     );
     expect(filesExpire(makeField('attachment', { multiple: true, accept: [] }))).toBe(false);
+  });
+});
+
+describe('checklist sections', () => {
+  it('is a link field with panel: checklist', () => {
+    const link = makeField('link', { targetSheetId: 's-x', multiple: true, inverseFieldId: null });
+    expect(isChecklistField(link)).toBe(false);
+    expect(isChecklistField({ ...link, config: { ...link.config, panel: 'checklist' } })).toBe(
+      true,
+    );
+    expect(isChecklistField({ ...statusField, config: { panel: 'checklist' } })).toBe(false);
+  });
+
+  it('lists each linked item with its status option and the named fields, marking past dates', () => {
+    const met = makeItem(
+      { 'f-status': 'opt_done', 'f-due': '2026-11-01' },
+      { id: 'c-1', name: 'DPA signed' },
+    );
+    const open = makeItem({ 'f-status': 'opt_wip', 'f-due': '2027-01-01' }, { id: 'c-2' });
+    const gone = makeItem({}, { id: 'c-3', archivedAt: '2026-11-01T00:00:00Z' });
+    const ctx = makeCtx({ fields, items: [met, open, gone] });
+    const rows = checklistRows(['c-1', 'c-2', 'c-3', 'c-missing'], [due.key, 'nope'], ctx);
+    expect(rows.map((r) => r.id)).toEqual(['c-1', 'c-2']);
+    expect(rows[0]).toMatchObject({
+      name: 'DPA signed',
+      status: { id: 'opt_done', done: true },
+      cells: [{ key: due.key, text: '1 Nov 2026', expired: true }],
+    });
+    expect(rows[1]!.cells[0]!.expired).toBe(false);
   });
 });

@@ -4,7 +4,17 @@ import { relativeDue } from './fields/date';
 import { itemStatusField } from './fields/item-status';
 import type { LinkConfig } from './fields/link';
 import { resolveFieldType } from './fields/resolve';
-import { dateOf, isDoneOf, kindOf, valueOf } from './values';
+import type { LabelOption } from './fields/types';
+import {
+  dateOf,
+  hiddenFor,
+  isDoneOf,
+  keysOf,
+  kindOf,
+  RESTRICTED_TEXT,
+  textOf,
+  valueOf,
+} from './values';
 import type { Ctx, Field, Item } from './types';
 
 export interface ItemSummary {
@@ -121,3 +131,68 @@ export const statusFieldOf = (sheetId: string, ctx: Ctx): Field | null =>
 /** File fields whose files expire (evidence): the panel shows freshness for these. */
 export const filesExpire = (field: Field): boolean =>
   resolveFieldType(field.type)?.triggers.includes('evidence_expiring') ?? false;
+
+// ───────────────────────── checklist sections ─────────────────────────
+
+/** Link fields shown as a checklist section in the panel (`config.panel: 'checklist'`, docs/03 §3.4). */
+export const isChecklistField = (field: Field): boolean =>
+  resolveFieldType(field.type)?.storage === 'links' &&
+  (field.config as Partial<LinkConfig>).panel === 'checklist';
+
+export interface ChecklistRow {
+  id: string;
+  sheetId: string;
+  displayId: string;
+  name: string;
+  /** The linked item's status option (text, colour, done), or null when it has none or it is empty. */
+  status: LabelOption | null;
+  /** The fields named in `panelFields`, as text ("Restricted" where hidden), and whether its date has passed. */
+  cells: { key: string; name: string; text: string; expired: boolean }[];
+}
+
+/**
+ * The rows of a checklist section: each linked item with its status and the fields the link field names, read
+ * through the field registry. `ctx` is the linked sheet's (its items, files and links loaded).
+ */
+export function checklistRows(
+  ids: readonly string[],
+  fieldKeys: readonly string[],
+  ctx: Ctx,
+): ChecklistRow[] {
+  const rows: ChecklistRow[] = [];
+  for (const id of ids) {
+    const item = ctx.item(id);
+    if (!item || item.archivedAt) continue;
+    const fields = ctx.fieldsOf(item.sheetId);
+    const statusField = itemStatusField(ctx, fields);
+    let status: LabelOption | null = null;
+    if (statusField && !hiddenFor(statusField, ctx)) {
+      const def = resolveFieldType(statusField.type);
+      const key = keysOf(item, statusField, ctx)[0];
+      status = def?.options?.(statusField.config, ctx).find((o) => o.id === key) ?? null;
+    }
+    const cells = fieldKeys.flatMap((k) => {
+      const f = fields.find((x) => x.key === k);
+      if (!f) return [];
+      const hidden = hiddenFor(f, ctx);
+      const date = hidden || kindOf(f, ctx) !== 'date' ? null : dateOf(item, f, ctx);
+      return [
+        {
+          key: f.key,
+          name: f.name,
+          text: hidden ? RESTRICTED_TEXT : textOf(item, f, ctx),
+          expired: !!date && date < ctx.today,
+        },
+      ];
+    });
+    rows.push({
+      id: item.id,
+      sheetId: item.sheetId,
+      displayId: item.displayId,
+      name: item.name,
+      status,
+      cells,
+    });
+  }
+  return rows;
+}
