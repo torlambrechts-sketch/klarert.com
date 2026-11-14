@@ -8,6 +8,7 @@ import core from '../../../templates/packs/core.json';
 import gdpr from '../../../templates/packs/gdpr.json';
 import iso14001 from '../../../templates/packs/iso-14001.json';
 import iso27001 from '../../../templates/packs/iso-27001.json';
+import iso45001 from '../../../templates/packs/iso-45001.json';
 import iso9001 from '../../../templates/packs/iso-9001.json';
 import nis2 from '../../../templates/packs/nis2.json';
 import supplierManagement from '../../../templates/packs/supplier-management.json';
@@ -58,6 +59,7 @@ export function repoPacks(): PackManifest[] {
       parsePack(core),
       parsePack(iso14001),
       parsePack(nis2),
+      parsePack(iso45001),
       ...START_PACKS.map((id) => parsePack(startToPack(startById(id)!))),
     ],
     repoApps(),

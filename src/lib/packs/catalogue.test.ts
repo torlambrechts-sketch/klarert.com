@@ -52,6 +52,7 @@ describe('repository packs', () => {
       'core',
       'iso-14001',
       'nis2',
+      'iso-45001',
       'start-capa',
       'start-documents',
       'start-incident',
