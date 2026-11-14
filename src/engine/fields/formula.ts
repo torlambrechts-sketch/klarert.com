@@ -150,7 +150,8 @@ export const formula = base<FormulaFieldValue, FormulaConfig>({
   formAllowed: false,
   kanbanCapable: false,
   calendarCapable: false,
-  triggers: ['number_above', 'number_below'],
+  // date_arrives fires on a formula whose result is a date (a deadline computed from other dates)
+  triggers: ['number_above', 'number_below', 'date_arrives'],
   normalize,
   parseText,
   readsHidden: (field, ctx) => readsHidden(field, ctx),
