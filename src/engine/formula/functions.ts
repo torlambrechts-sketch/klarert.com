@@ -1,5 +1,5 @@
 // Built-in formula functions (docs/03 §7). Names are matched case-insensitively.
-import { addDays, daysBetween, isIsoDate } from '../fields/helpers';
+import { addDays, addMonths, daysBetween, isIsoDate } from '../fields/helpers';
 
 export type FormulaValue = number | string | boolean;
 export type FormulaErrorCode = '#REF' | '#LOOP' | '#ERR' | '#DIV0';
@@ -145,6 +145,18 @@ export const FUNCTIONS: Record<string, FormulaFunction> = {
       const days = toNum(n!);
       if (isFormulaError(days)) return days;
       return date === '' ? '' : addDays(date, Math.trunc(days));
+    },
+  },
+  /** Calendar months; a day past the target month's end clamps to its last day (31 Jan + 1 → 28 Feb). */
+  ADDMONTHS: {
+    minArgs: 2,
+    maxArgs: 2,
+    call: ([d, n]) => {
+      const date = dateArg(d!);
+      if (isFormulaError(date)) return date;
+      const months = toNum(n!);
+      if (isFormulaError(months)) return months;
+      return date === '' ? '' : addMonths(date, Math.trunc(months));
     },
   },
   CONCAT: { minArgs: 0, maxArgs: Infinity, call: (args) => args.map(textOf).join('') },

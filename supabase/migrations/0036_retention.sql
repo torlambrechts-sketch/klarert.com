@@ -438,7 +438,10 @@ begin
   if q.status = 'done' then raise exception 'retention: already done'; end if;
   select * into it from items where id = q.item_id for update;
   select * into s from sheets where id = q.sheet_id;
-  if exists (select 1 from retention_holds where item_id = it.id and released_at is null) then
+  -- a hold from the queue, or the item's own Retention field set to Legal hold
+  if exists (select 1 from retention_holds where item_id = it.id and released_at is null)
+     or exists (select 1 from fields f where f.sheet_id = it.sheet_id and f.type = 'retention'
+                   and it."values" -> f.id::text -> 'hold' = 'true'::jsonb) then
     raise exception 'retention: on legal hold';
   end if;
   rule := _retention_rule(q.sheet_id, q.rule_id);

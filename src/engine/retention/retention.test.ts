@@ -96,6 +96,13 @@ describe('retention rules', () => {
     expect(retentionDue([rule({ action: 'archive' })], [gone], ctx)).toHaveLength(0);
   });
 
+  it('an item whose Retention field says Legal hold is never due', () => {
+    const hold = makeField('retention', { years: 3, fromFieldKey: null }, { key: 'keep', name: 'Keep' });
+    const held = makeItem({ [closedOn.id]: '2020-01-01', [hold.id]: { hold: true, holdReason: 'Claim' } });
+    const ctx = makeCtx({ fields: [...fields, hold], items: [held] });
+    expect(retentionDue([rule()], [held], ctx)).toEqual([]);
+  });
+
   it('erases the personal-data fields, all or the ones named', () => {
     expect(erasedFields(rule(), fields).map((f) => f.key)).toEqual(['requester', 'email']);
     expect(erasedFields(rule({ fieldKeys: ['email', 'outcome'] }), fields).map((f) => f.key)).toEqual([

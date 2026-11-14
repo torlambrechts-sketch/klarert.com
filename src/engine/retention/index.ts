@@ -137,6 +137,17 @@ export function ruleApplies(rule: RetentionRule, item: Item, ctx: Ctx): boolean 
   return true;
 }
 
+/** The item's own Retention field says Legal hold (the queue's holds live in the database). */
+export function onHold(item: Item, ctx: Ctx): boolean {
+  for (const f of ctx.fieldsByKey.values()) {
+    if (f.type !== 'retention') continue;
+    const v = item.values[f.id];
+    if (v && typeof v === 'object' && !Array.isArray(v) && (v as { hold?: unknown }).hold === true)
+      return true;
+  }
+  return false;
+}
+
 export interface RetentionDue {
   sheetId: string;
   itemId: string;
@@ -154,6 +165,7 @@ export function retentionDue(rules: readonly RetentionRule[], items: readonly It
   for (const rule of rules) {
     for (const item of items) {
       if (rule.action === 'archive' && item.archivedAt) continue;
+      if (onHold(item, ctx)) continue;
       if (!ruleApplies(rule, item, ctx)) continue;
       const anchor = retentionAnchor(rule, item, ctx);
       if (!anchor) continue;

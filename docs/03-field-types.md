@@ -231,7 +231,7 @@ Everything else: "Create a new field and copy values" (same preview). Computed t
 - References: `{field_key}`, plus `{name}`, `{id}` (display id), `{group}` (group name).
 - Literals: numbers `12.5`, strings `"text"`, `TRUE`, `FALSE`.
 - Operators: `+ - * / %`, `&` (concatenate), `= <> < > <= >=`, parentheses. `+` adds numbers, concatenates if either side is text.
-- Functions: `IF(cond, a, b)`, `AND(…)`, `OR(…)`, `NOT(x)`, `ROUND(x, d)`, `ABS(x)`, `MIN(…)`, `MAX(…)`, `TODAY()`, `DAYS(a, b)` (a − b in days), `ADDDAYS(date, n)`, `CONCAT(…)`, `LEN(x)`, `EMPTY(x)`.
+- Functions: `IF(cond, a, b)`, `AND(…)`, `OR(…)`, `NOT(x)`, `ROUND(x, d)`, `ABS(x)`, `MIN(…)`, `MAX(…)`, `TODAY()`, `DAYS(a, b)` (a − b in days), `ADDDAYS(date, n)`, `ADDMONTHS(date, n)` (calendar months, the day clamped to the month's end), `CONCAT(…)`, `LEN(x)`, `EMPTY(x)`.
 - A reference becomes: `toNumber` for number kinds, `toDate` (ISO) for date kinds, nested formula result for formulas, `toText` for everything else. Empty → `""`.
 - Result type `auto`: number if numeric, date if `^\d{4}-\d\d-\d\d$`, boolean if boolean, else text. Can be pinned in config.
 - Errors (shown in grey italics with a tooltip): `#REF` unknown field, `#LOOP` cycle or depth > 4, `#ERR` syntax or runtime, `#DIV0`.
