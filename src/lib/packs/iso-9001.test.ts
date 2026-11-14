@@ -12,11 +12,13 @@ import {
   linkedRequirements,
   packByKey,
   planAddon,
+  previewBeforeCore,
   requirementKeysOf,
 } from './addon.fixture';
 import { REVIEW_PACK_SOURCES } from './management-review';
 import { packManifestSchema } from './manifest';
 import { packQualityProblems } from './quality';
+import { previewLines } from '@/engine/packs/plan';
 
 // The ISO 9001 add-on (docs/11 The ISO 9001 add-on, 2.0.0 on ISO 9001:2026): its own sheets for what only a quality
 // system needs, in the Core domains; everything else added to the shared Core registers: columns, the Quality risk
@@ -225,5 +227,13 @@ describe('ISO 9001 add-on', () => {
       formula.compute!(makeItem(received ? { 'f-received_on': received } : {}), due as never, ctx);
     expect(of('2026-11-02')).toBe('2026-11-12');
     expect(of()).toBeNull();
+  });
+
+  it('previews before Core is there: Core is installed first, nothing blocks', () => {
+    const plan = previewBeforeCore(pack);
+    expect(plan.preview.conflicts).toEqual([]);
+    expect(plan.state).toBe('ready');
+    expect(plan.payload).toBeNull();
+    expect(previewLines(plan.preview)).toContain('Installs Core registers 1.0.0 (Starter) first.');
   });
 });

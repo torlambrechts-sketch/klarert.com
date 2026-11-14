@@ -36,7 +36,7 @@
       "fields": [
         { "key": "task", "name": "Task or activity", "type": "text" },
         { "key": "location", "name": "Where", "type": "text" },
-        { "key": "hazard", "name": "Hazard", "type": "longtext", "description": "What could cause harm: a moving part, a chemical, a load, working alone, time pressure." },
+        { "key": "hazard", "name": "What could cause harm", "type": "longtext", "description": "What could cause harm: a moving part, a chemical, a load, working alone, time pressure." },
         {
           "key": "hazard_type",
           "name": "Type of hazard",

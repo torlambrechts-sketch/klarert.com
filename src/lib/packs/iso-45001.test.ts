@@ -12,9 +12,11 @@ import {
   linkedRequirements,
   packByKey,
   planAddon,
+  previewBeforeCore,
   requirementKeysOf,
 } from './addon.fixture';
 import { packQualityProblems } from './quality';
+import { previewLines } from '@/engine/packs/plan';
 
 // The ISO 45001 add-on (docs/11 The ISO 45001 add-on, 1.0.0 on ISO 45001:2018, a new edition expected in 2027):
 // hazards (HIRA) with the hierarchy of controls and worker consultation of its own; injuries, near misses and ill
@@ -150,5 +152,13 @@ describe('ISO 45001 add-on', () => {
     expect(mode('iso45001_reportable')).toBe('test');
     expect(mode('concern_action')).toBe('live');
     expect(mode('drill_next')).toBe('live');
+  });
+
+  it('previews before Core is there: Core is installed first, nothing blocks', () => {
+    const plan = previewBeforeCore(pack);
+    expect(plan.preview.conflicts).toEqual([]);
+    expect(plan.state).toBe('ready');
+    expect(plan.payload).toBeNull();
+    expect(previewLines(plan.preview)).toContain('Installs Core registers 1.0.0 (Starter) first.');
   });
 });

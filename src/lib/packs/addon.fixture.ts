@@ -94,3 +94,26 @@ export function linkedRequirements(
     .map((l) => l.to_item.replace(/^req:/, ''))
     .sort();
 }
+
+/** The preview before Core is installed: Core is installed first (the command plans again then). */
+export function previewBeforeCore(addon: PackManifest) {
+  const level = neededLevel(addon, core);
+  return planPackInstall(addon, emptySnapshot(), env, {
+    installFirst: [
+      {
+        key: 'core',
+        title: core.title,
+        version: core.version,
+        level,
+        levelName: core.levels?.find((l) => l.key === level)?.name ?? null,
+        raise: false,
+        sheets: Object.fromEntries(
+          core.sheets.map((s) => [
+            s.ref,
+            { name: s.name, standards: s.fields.some((f) => f.key === 'standards') },
+          ]),
+        ),
+      },
+    ],
+  });
+}

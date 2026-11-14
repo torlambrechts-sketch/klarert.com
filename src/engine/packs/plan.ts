@@ -562,7 +562,21 @@ export function planPackInstall(
         : [];
     }),
   );
-  conflicts.push(...tp.problems.filter((p) => ![...existingSettings].some((x) => p.startsWith(x))));
+  // automations that create on a required pack's sheet installed first are checked when the install plans again
+  const waitingOn = (raw: unknown) =>
+    typeof raw === 'string' &&
+    raw.includes(':') &&
+    pendingPacks.has(splitSheetRef(raw, m.key)?.pack ?? '');
+  const waitingAutomations = mm.automations
+    .filter((a) => a.actions.some((x) => waitingOn(x.sheetRef)))
+    .map((a) => `Automation "${a.name}"`);
+  conflicts.push(
+    ...tp.problems.filter(
+      (p) =>
+        ![...existingSettings].some((x) => p.startsWith(x)) &&
+        !waitingAutomations.some((x) => p.startsWith(x)),
+    ),
+  );
 
   const sheetRows: Row[] = [];
   const fieldRows: Row[] = [];
@@ -1114,6 +1128,8 @@ export function planPackInstall(
     for (const [wi, w] of widgets.entries()) {
       // the library's fields are the framework's (docs/12); the manifest names them by key
       if (d.widgets[wi]!.library) continue;
+      // a required pack's sheet installed first: checked when the install plans again
+      if (waitingOn(d.widgets[wi]!.sheetRef)) continue;
       const problem = widgetProblem(w, (id) => {
         if (!sheetsById.has(id)) return undefined;
         return { fields: engineFields.get(id) ?? [], ctx: ctxFor(id) };

@@ -12,9 +12,11 @@ import {
   linkedRequirements,
   packByKey,
   planAddon,
+  previewBeforeCore,
   requirementKeysOf,
 } from './addon.fixture';
 import { packQualityProblems } from './quality';
+import { previewLines } from '@/engine/packs/plan';
 
 // The ISO 14001 add-on (docs/11 The ISO 14001 add-on, 2.0.0 on ISO 14001:2026): aspects with significance,
 // monitoring and environmental communications of its own; compliance obligations in Core's Legal register (so Core
@@ -145,5 +147,13 @@ describe('ISO 14001 add-on', () => {
     ).widgets;
     expect(widgets.find((w) => w.id === 'w_obligations')!.sheetId).toBe(refs['sheet:legal']);
     expect(widgets.find((w) => w.id === 'w_incidents')!.sheetId).toBe(refs['sheet:incidents']);
+  });
+
+  it('previews before Core is there: Core is installed first, nothing blocks', () => {
+    const plan = previewBeforeCore(pack);
+    expect(plan.preview.conflicts).toEqual([]);
+    expect(plan.state).toBe('ready');
+    expect(plan.payload).toBeNull();
+    expect(previewLines(plan.preview)).toContain('Installs Core registers 1.0.0 (Full) first.');
   });
 });
