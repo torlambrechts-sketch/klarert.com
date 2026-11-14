@@ -170,6 +170,18 @@ export function levelProblems(m: PackManifest): LevelProblem[] {
     };
     (e.fields ?? []).forEach((f, fi) => {
       const cfg = (f.config ?? {}) as Obj;
+      // both ways between two extended sheets: both entries install at one level
+      if (typeof cfg.targetSheetRef === 'string' && typeof cfg.inverseKey === 'string') {
+        const [pack, sheet] = cfg.targetSheetRef.split(':');
+        const other = sheet
+          ? (m.extends ?? []).find((x) => x.pack === pack && x.sheet === sheet)
+          : undefined;
+        if (other && Math.max(0, levelRank(m, other.level)) !== r)
+          problem(
+            ['extends', ei, 'fields', fi],
+            `"${f.key}" links both ways to "${cfg.targetSheetRef}", whose extends entry installs at another level. Give them one level.`,
+          );
+      }
       const tr = own(cfg.targetSheetRef);
       if (tr === undefined) return;
       if (tr > r)
@@ -266,6 +278,20 @@ export function levelProblems(m: PackManifest): LevelProblem[] {
           if (t.library) {
             if (!libraries.has(t.library))
               problem(at, `"${t.library}" is not one of the pack's frameworks.`);
+            continue;
+          }
+          // a required pack's sheet (an add-on's step on a Core register): its fields are checked against that
+          // pack's manifest (extendsAgainst); a view is one of that sheet's or one this pack adds to it
+          const [fpack, fsheet] = t.sheetRef!.split(':');
+          if (fsheet) {
+            if (!m.requires.some((x) => x.pack === fpack))
+              problem(at, `"${t.sheetRef}" names the pack "${fpack}", which is not in requires.`);
+            const e = (m.extends ?? []).find((x) => x.pack === fpack && x.sheet === fsheet);
+            if (e && Math.max(0, levelRank(m, e.level)) > r)
+              problem(
+                at,
+                `"${step.ref}" uses "${t.sheetRef}"${where}, which is not extended there.`,
+              );
             continue;
           }
           const sheet = m.sheets.find((x) => x.ref === t.sheetRef);

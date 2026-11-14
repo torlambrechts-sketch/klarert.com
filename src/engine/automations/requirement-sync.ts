@@ -151,11 +151,19 @@ function optionsOf(item: Item, field: Field | undefined, ctx: Ctx): Option[] {
   }));
 }
 
+/**
+ * A criticality's rank (0 = lowest): an ordered field's own rank (severity), else the option's place in the field's
+ * list as people see it (the Core registers' Criticality dropdown, Low to Critical).
+ */
 function rankOf(item: Item, field: Field | undefined, ctx: Ctx): number | null {
   if (!field) return null;
   const v = valueOf(item, field, ctx);
   if (v === null || v === undefined || v === '') return null;
-  return defOf(field).rank?.(v, field.config) ?? null;
+  const def = defOf(field);
+  if (def.rank) return def.rank(v, field.config) ?? null;
+  const key = keysOf(item, field, ctx)[0];
+  const at = (def.options?.(field.config, ctx) ?? []).findIndex((o) => o.id === key);
+  return at >= 0 ? at : null;
 }
 
 /** The subject's facts, read through the field registry. */

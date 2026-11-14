@@ -70,7 +70,8 @@ const setupCondition = z.object({
   value: json.optional(),
 });
 const setupTarget = z.object({
-  sheetRef: ref.optional(),
+  /** A sheet of this pack, or `<pack>:<sheet>` of a pack in `requires` (an add-on's step on a Core register). */
+  sheetRef: z.string().regex(SHEET_REF, 'Use a sheet ref.').optional(),
   library: libraryRef.optional(),
   view: z.string().trim().min(1).max(80).optional(),
 });
