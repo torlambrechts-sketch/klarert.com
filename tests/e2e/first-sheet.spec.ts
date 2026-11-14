@@ -207,10 +207,12 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
     .getByRole('dialog', { name: 'Create' })
     .getByRole('link', { name: /^Blank/ })
     .click();
-  await page.getByLabel('Sheet name').fill('Actions');
-  await page.getByLabel('ID prefix').fill('ACT-');
-  await page.getByLabel('Groups').fill('To do, Done');
-  await page.getByRole('button', { name: 'Create sheet' }).click();
+  // Sheet settings (still on screen while New sheet loads) has a "Sheet name" too: fill the wizard's form
+  const details = page.getByRole('form', { name: 'Sheet details' });
+  await details.getByLabel('Sheet name').fill('Actions');
+  await details.getByLabel('ID prefix').fill('ACT-');
+  await details.getByLabel('Groups').fill('To do, Done');
+  await details.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Actions' })).toBeVisible();
   const actUrl = page.url().replace(/\?.*$/, '');
   await page.goto(`${caUrl}?view=table`);
