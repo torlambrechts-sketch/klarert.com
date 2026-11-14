@@ -165,7 +165,8 @@ export const packWidget = z.object({
   ref: z.string().regex(/^[A-Za-z0-9_-]{1,40}$/),
   type: z.string().min(1).max(40),
   title: z.string().trim().min(1).max(80),
-  sheetRef: ref.optional(),
+  /** A sheet of this pack, or `<pack>:<sheet>` of a pack in `requires` (an add-on's widget on a Core register). */
+  sheetRef: z.string().regex(SHEET_REF, 'Use a sheet ref.').optional(),
   /** A required framework's library (`<framework>@<version>`) in place of sheetRef. */
   library: libraryRef.optional(),
   fieldKey: fieldKey.optional(),
@@ -455,6 +456,23 @@ export const packManifestSchema = z
         }
     }
 
+    // example links of extension items into a required library: through a requirement field the entry adds
+    for (const [ei, e] of (m.extends ?? []).entries())
+      for (const [ii, item] of (e.items ?? []).entries())
+        for (const [key, keys] of Object.entries(item.requirements ?? {})) {
+          const at = ['extends', ei, 'items', ii];
+          const f = (e.fields ?? []).find((x) => x.key === key);
+          if (!f || (f.type !== 'requirement' && f.type !== 'controllink')) {
+            problem(at, `"${key}" is not a requirement field this entry adds.`);
+            continue;
+          }
+          for (const k of keys) {
+            const id = parseRequirementKey(k);
+            if (!id || !libraries.has(`${id.framework}@${id.version}`))
+              problem(at, `"${k}" is not in a framework the pack builds on (frameworks).`);
+          }
+        }
+
     // an advanced automation says what it does in plain words
     const allAutomations = [
       ...m.automations.map((a, i) => ({ a, path: ['automations', i] })),
@@ -475,8 +493,11 @@ export const packManifestSchema = z
       for (const [wi, w] of d.widgets.entries()) {
         const at = ['dashboards', di, 'widgets', wi];
         if (!widgetType(w.type)) problem(at, `Unknown widget "${w.type}".`);
-        const s = w.sheetRef ? sheets.get(w.sheetRef) : undefined;
-        if (w.sheetRef && !s) problem(at, `Unknown sheet "${w.sheetRef}".`);
+        const split = w.sheetRef ? splitSheetRef(w.sheetRef, m.key) : null;
+        const s = split && !split.pack ? sheets.get(split.ref) : undefined;
+        if (split?.pack && !required.has(split.pack))
+          problem(at, `"${w.sheetRef}" names the pack "${split.pack}", which is not in requires.`);
+        else if (w.sheetRef && !split?.pack && !s) problem(at, `Unknown sheet "${w.sheetRef}".`);
         if (w.sheetRef && w.library) problem(at, 'Name a sheetRef or a library, not both.');
         if (w.fieldKey && s && !s.fields.some((f) => f.key === w.fieldKey))
           problem(at, `Unknown field "${w.fieldKey}" on "${w.sheetRef}".`);

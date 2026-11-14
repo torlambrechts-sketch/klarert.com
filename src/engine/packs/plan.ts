@@ -39,6 +39,7 @@ import {
   extensionSummary,
   foreignKey,
   standardViewName,
+  virtualRef,
   type ForeignSheet,
 } from './extend';
 import { packToTemplate } from './template';
@@ -966,10 +967,12 @@ export function planPackInstall(
   // it first and plans again; a key the library does not have is left out and said.
   const libraryLinkWarnings: string[] = [];
   const reqItems = snap.requirementItems ?? {};
-  for (const ms of m.sheets)
+  // (an extension item links through a requirement field its entry adds to the other pack's sheet)
+  for (const ms of mm.sheets)
     for (const i of ms.items)
       for (const [key, keys] of Object.entries(i.requirements ?? {})) {
-        const fieldId = fieldRows.find((f) => f.ref === `${ms.ref}.${key}`)?.id;
+        const fieldRef = `${aug.virtual.get(ms.ref)?.key ?? ms.ref}.${key}`;
+        const fieldId = fieldRows.find((f) => f.ref === fieldRef)?.id;
         const from = itemIds.get(`${ms.ref}.${i.ref}`);
         if (typeof fieldId !== 'string' || !from) continue;
         for (const k of keys) {
@@ -1090,12 +1093,18 @@ export function planPackInstall(
 
   // ── dashboards: sheets by ref, fields by key, checked against the widget registry
   const dashKeys = keysBetween(snap.lastDashboardPosition, null, Math.max(1, m.dashboards.length));
+  // a widget on a required pack's sheet (`core:nc`) reads the virtual sheet planned for it, then the real one
+  const widgetSheet = (raw: string): string | null => {
+    const s = splitSheetRef(raw, m.key);
+    if (!s) return null;
+    return sheetIdOf.get(s.pack ? virtualRef(s.pack, s.ref) : s.ref) ?? null;
+  };
   const dashboardRows: Row[] = m.dashboards.map((d, di) => {
     const widgets: WidgetConfig[] = d.widgets.map((w) => ({
       id: w.ref,
       type: w.type,
       title: w.title,
-      ...(w.sheetRef ? { sheetId: sheetIdOf.get(w.sheetRef) ?? null } : {}),
+      ...(w.sheetRef ? { sheetId: widgetSheet(w.sheetRef) } : {}),
       // a required framework's library: adopted before the install when missing (the command plans again then)
       ...(w.library ? { sheetId: libraries.get(w.library) ?? null } : {}),
       ...(w.fieldKey ? { fieldKey: w.fieldKey } : {}),
@@ -1113,12 +1122,16 @@ export function planPackInstall(
     }
     operations.push({ kind: 'dashboard', ref: d.ref, name: d.name, action: 'create' });
     base.dashboards.push({ name: d.name, widgets: widgets.length });
+    // checked against the planned sheets; written with the real id of another pack's sheet
+    const written = widgets.map((w) =>
+      w.sheetId && real.has(w.sheetId) ? { ...w, sheetId: real.get(w.sheetId)! } : w,
+    );
     return {
       id: env.newId(),
       ref: d.ref,
       name: d.name,
       position: dashKeys[di]!,
-      config: { widgets } as unknown as Json,
+      config: { widgets: written } as unknown as Json,
     };
   });
 

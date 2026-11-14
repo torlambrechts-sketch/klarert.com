@@ -91,6 +91,8 @@ export function foreignSheets(m: PackManifest): { pack: string; sheet: string }[
   }
   for (const s of m.sheets)
     for (const f of s.fields) add((f.config as Obj | undefined)?.targetSheetRef);
+  // an add-on's dashboard widgets may read a required pack's sheets (its tagged rows of a Core register)
+  for (const d of m.dashboards) for (const w of d.widgets) add(w.sheetRef);
   return [...out.values()];
 }
 
@@ -311,6 +313,14 @@ export function extensionUses(m: PackManifest, depKey: string): Map<string, Set<
       keysIn([f.rules ?? [], f.visibility ?? null] as unknown as Json, add);
     }
   }
+  // dashboard widgets on the dependency's sheets: the field they show and the fields their conditions name
+  for (const d of m.dashboards)
+    for (const w of d.widgets) {
+      const t = w.sheetRef ? splitSheetRef(w.sheetRef, m.key) : null;
+      if (!t || t.pack !== depKey) continue;
+      mark(t.ref, w.fieldKey);
+      for (const c of w.conditions ?? []) mark(t.ref, c.fieldKey);
+    }
   // the pack's own links into the dependency's sheets, and what lookups and roll-ups read through them
   for (const s of m.sheets)
     for (const f of s.fields) {
