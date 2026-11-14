@@ -1,7 +1,7 @@
 // Packs (docs/11): installable bundles of the core as data. These are the manifest's types as the engine reads them;
 // the Zod schema that checks a manifest file is src/lib/packs/manifest.ts (it produces exactly these types). Pure.
 import type { AppManifest } from '../apps/types';
-import type { Json } from '../types';
+import type { Json, LabelColor } from '../types';
 import type { SheetTemplate, TemplateAutomation, TemplateSheet } from '../templates/schema';
 
 type TemplateItem = TemplateSheet['items'][number];
@@ -131,6 +131,46 @@ export interface PackSetup {
   steps: SetupStep[];
 }
 
+/** An option an extension adds to an option field of another pack's sheet (merged by id, docs/11 Extends). */
+export interface ExtensionOption {
+  id: string;
+  label: string;
+  color?: LabelColor;
+  done?: boolean;
+}
+
+/**
+ * What a pack adds to a sheet of a pack it requires (docs/11 Extends): columns, groups, views, forms, example items,
+ * automations and options of existing option fields. Field keys, group, item and form refs and option ids are in the
+ * pack's namespace (`namespaceOf`); every row is the extender's own (its provenance and ref map), so upgrade and
+ * archive stay per pack.
+ */
+export interface PackExtension {
+  /** The pack whose sheet this extends: one of `requires`. */
+  pack: string;
+  /** The sheet's ref in that pack. */
+  sheet: string;
+  fields?: TemplateSheet['fields'];
+  groups?: TemplateSheet['groups'];
+  views?: TemplateSheet['views'];
+  forms?: TemplateSheet['forms'];
+  items?: PackItem[];
+  /** Automations on the extended sheet (the sheet is implied). */
+  automations?: (Omit<TemplateAutomation, 'sheet'> & { ref: string })[];
+  /** Field key of the extended sheet → options added to it (by id; an id already there is left as it is). */
+  options?: Record<string, ExtensionOption[]>;
+}
+
+/**
+ * The standard an add-on stands for (docs/11 Core registers): its option in the shared "Standards" field of every
+ * sheet it extends, and the saved view "<label> view" there.
+ */
+export interface PackStandard {
+  id: string;
+  label: string;
+  color?: LabelColor;
+}
+
 export interface PackRequirement {
   pack: string;
   /** A semver range: 1.2.3, ^1.2.0, ~1.2.0, >=1.2.0 or *. */
@@ -146,7 +186,17 @@ export interface PackManifest {
   requires: PackRequirement[];
   /** People named by example values (`$person:<ref>`), matched to the workspace's members by email. */
   people: SheetTemplate['people'];
-  folders: { ref: string; name: string; restricted?: boolean; level?: string }[];
+  folders: {
+    ref: string;
+    name: string;
+    restricted?: boolean;
+    level?: string;
+    /**
+     * A domain folder of shared registers (docs/11 Core registers): shown under Registers in the side menu, in the
+     * manifest's order, hidden while it has no live sheets. Never reuses a folder of the same name.
+     */
+    domain?: string;
+  }[];
   sheets: PackSheet[];
   automations: PackAutomation[];
   dashboards: PackDashboard[];
@@ -158,6 +208,15 @@ export interface PackManifest {
   setup?: PackSetup;
   /** Apps over the pack's sheets, forms and dashboards (docs/13), shown once the pack is installed. */
   apps?: AppManifest[];
+  /**
+   * A system pack (Core registers): its sheets are shared registers ("System board") and its fields system columns
+   * (hidden but never deleted, retyped or re-keyed).
+   */
+  system?: boolean;
+  /** The standard this add-on stands for (docs/11 Core registers). */
+  standard?: PackStandard;
+  /** What this pack adds to sheets of packs it requires (docs/11 Extends). */
+  extends?: PackExtension[];
 }
 
 /** `<pack key>:<sheet ref>` or `<sheet ref>`. */

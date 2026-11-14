@@ -32,8 +32,9 @@ import {
 } from './levels';
 import { parseRequirementKey } from '../frameworks/refs';
 import { satisfies } from './semver';
-import { foreignLinks, packToTemplate } from './template';
-import type { PackManifest } from './types';
+import { augmentManifest, extensionSummary, foreignKey, type ForeignSheet } from './extend';
+import { packToTemplate } from './template';
+import { splitSheetRef, type PackManifest } from './types';
 
 export interface PackSnapshot {
   orgId: string;
@@ -63,6 +64,25 @@ export interface PackSnapshot {
   lastSheetPosition: string | null;
   lastFolderPosition: string | null;
   lastDashboardPosition: string | null;
+  /**
+   * Live sheets of the installed packs the manifest requires, by `<pack>:<sheet ref>` (docs/11 Extends): what an
+   * extension adds to and what links into another pack point at.
+   */
+  foreign?: Record<string, ForeignSheet>;
+  /** Folders of the installed packs the manifest requires, `<pack>:<folder ref>` → id (domain folders). */
+  foreignFolders?: Record<string, string>;
+}
+
+/** A required pack the install command installs (or raises to a level) before this one (docs/11 Extends). */
+export interface InstallFirst {
+  key: string;
+  title: string;
+  version: string;
+  /** The level it is installed at (or raised to); null for a pack without levels. */
+  level: string | null;
+  levelName: string | null;
+  /** Installed already at a lower level: raised to `level`. */
+  raise: boolean;
 }
 
 export interface PackEnv {
@@ -88,6 +108,7 @@ export type PackObjectKind =
   | 'link'
   | 'automation'
   | 'dashboard'
+  | 'option'
   | 'pack';
 
 export interface PackOperation {
@@ -114,6 +135,11 @@ export interface InstallPayload {
   links: { field_id: string; from_item: string; to_item: string }[];
   automations: Row[];
   dashboards: Row[];
+  /**
+   * Options added to option fields of another pack's sheets (docs/11 Extends), merged by id: `ref` is
+   * `<pack>:<sheet>.<field key>.<option id>` (ref map `option:<ref>` → the field's id).
+   */
+  options?: { ref: string; field_id: string; option: Json }[];
 }
 
 export interface PackCounts {
@@ -167,6 +193,17 @@ export interface PackPreview {
   extendsLevel: { key: string; name: string } | null;
   /** Framework libraries the pack builds on; `adopted: false` ones are adopted first at install (docs/12). */
   frameworks: { library: string; adopted: boolean; optional?: boolean }[];
+  /** What the pack adds to other packs' sheets (docs/11 Extends). */
+  extends: {
+    pack: string;
+    sheet: string;
+    /** "2 columns, 1 example item" */
+    adds: string[];
+    views: string[];
+    options: string[];
+  }[];
+  /** Required packs installed (or raised to a level) first; the install plans again after them. */
+  installsFirst: InstallFirst[];
 }
 
 export interface PackPlan {
@@ -178,6 +215,8 @@ export interface PackPlan {
 }
 
 const lower = (s: string) => s.trim().toLowerCase();
+const listWords = (xs: string[]) =>
+  xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** What a manifest holds, without a workspace (catalogue cards). */
@@ -240,6 +279,20 @@ export function previewLines(p: PackPreview): string[] {
   else if (p.state === 'blocked')
     out.push(`${p.title} ${p.version} cannot be installed.`, ...p.conflicts);
   else out.push(`Installs ${countsText(p.counts)}.`);
+  for (const d of p.installsFirst ?? [])
+    out.push(
+      d.raise
+        ? `Adds ${d.levelName ?? d.level} to ${d.title} first.`
+        : `Installs ${d.title} ${d.version}${d.levelName ? ` (${d.levelName})` : ''} first.`,
+    );
+  for (const e of p.extends ?? []) {
+    const parts = [
+      ...e.adds,
+      ...e.views.map((v) => `the view ${v}`),
+      ...e.options.map((o) => `the option ${o}`),
+    ];
+    if (parts.length) out.push(`Adds to ${e.sheet}: ${listWords(parts)}.`);
+  }
   for (const f of p.folders)
     out.push(
       f.action === 'create'
@@ -266,7 +319,13 @@ export function planPackInstall(
   full: PackManifest,
   snap: PackSnapshot,
   env: PackEnv,
-  opts: { level?: string | null } = {},
+  opts: {
+    level?: string | null;
+    /** Required packs the command installs first (docs/11 Extends): not a conflict; the payload waits for them. */
+    installFirst?: InstallFirst[];
+    /** The install being upgraded: its own rows on other packs' sheets are planned again, not existing columns. */
+    selfInstall?: string | null;
+  } = {},
 ): PackPlan {
   const conflicts: string[] = [];
   const operations: PackOperation[] = [];
@@ -304,7 +363,10 @@ export function planPackInstall(
     forms: [],
     dashboards: [],
     renamedPrefixes: [],
+    extends: [],
+    installsFirst: opts.installFirst ?? [],
   };
+  const pendingPacks = new Set((opts.installFirst ?? []).map((d) => d.key));
 
   // ── already installed, or something this pack needs is missing
   const live = snap.installs.find((i) => i.packKey === m.key && i.status === 'installed');
@@ -348,22 +410,31 @@ export function planPackInstall(
       `Version ${live.version} is installed. Upgrading to ${m.version} is not available yet: archive the installed version first.`,
     );
   for (const r of m.requires) {
+    if (pendingPacks.has(r.pack)) continue; // the command installs it (or raises its level) first
     const dep = snap.installs.find((i) => i.packKey === r.pack && i.status === 'installed');
     if (!dep) conflicts.push(`Install the pack "${r.pack}" (${r.range}) first.`);
     else if (!satisfies(dep.version, r.range))
       conflicts.push(`The pack "${r.pack}" is at ${dep.version}; this pack needs ${r.range}.`);
   }
-  for (const l of foreignLinks(m))
-    conflicts.push(
-      `${m.sheets.find((s) => s.ref === l.sheet)?.name ?? l.sheet} › ${l.fieldKey} links to "${l.pack}:${l.ref}". Links to another pack's sheets are not available yet.`,
-    );
+  // other packs' sheets this one extends or links to (docs/11 Extends): virtual sheets of the template
+  const aug = augmentManifest(m, snap.foreign ?? {}, {
+    selfInstall: opts.selfInstall ?? extend?.id ?? null,
+    pending: pendingPacks,
+  });
+  conflicts.push(...aug.problems);
+  const mm = aug.manifest;
+  const isVirtual = (ref: string) => aug.virtual.has(ref);
   for (const c of conflicts)
     operations.push({ kind: 'pack', ref: m.key, name: m.title, action: 'conflict', note: c });
 
   // ── ID prefixes: renamed with a number when the workspace already uses them
   const taken = new Set(snap.prefixes);
   const prefixes: Record<string, string> = {};
-  for (const s of m.sheets) {
+  for (const s of mm.sheets) {
+    if (isVirtual(s.ref)) {
+      prefixes[s.ref] = s.idPrefix;
+      continue;
+    }
     if (has('sheet', s.ref)) {
       prefixes[s.ref] = s.idPrefix;
       continue;
@@ -391,7 +462,10 @@ export function planPackInstall(
       });
       return;
     }
-    const existingFolder = snap.folders.find((x) => !x.archived && lower(x.name) === lower(f.name));
+    // a domain folder of shared registers is always the pack's own (docs/11 Core registers)
+    const existingFolder = f.domain
+      ? undefined
+      : snap.folders.find((x) => !x.archived && lower(x.name) === lower(f.name));
     if (existingFolder) {
       const existing = existingFolder;
       folderIds.set(f.ref, existing.id);
@@ -413,6 +487,7 @@ export function planPackInstall(
       name: f.name,
       position: folderKeys[i]!,
       ...(f.restricted ? { restricted: true } : {}),
+      ...(f.domain ? { domain: f.domain } : {}),
     });
     base.folders.push({
       name: f.name,
@@ -428,7 +503,7 @@ export function planPackInstall(
     const hit = byEmail.get(lower(p.email));
     return hit ? [{ ...hit, ref: p.ref }] : [];
   });
-  const t = packToTemplate(m, prefixes);
+  const t = packToTemplate(mm, prefixes);
   const tp = planTemplateImport(t, {
     orgId: snap.orgId,
     folderId: null,
@@ -442,7 +517,18 @@ export function planPackInstall(
     teams: snap.teams,
     lenient: true,
   });
-  conflicts.push(...tp.problems);
+  // the settings of a foreign sheet's existing columns are that pack's business, not this plan's
+  const existingSettings = new Set(
+    mm.sheets.flatMap((s) => {
+      const v = aug.virtual.get(s.ref);
+      return v
+        ? s.fields
+            .filter((f) => v.existingFields.has(f.key))
+            .map((f) => `${s.name} › ${f.name}: settings do not fit`)
+        : [];
+    }),
+  );
+  conflicts.push(...tp.problems.filter((p) => ![...existingSettings].some((x) => p.startsWith(x))));
 
   const sheetRows: Row[] = [];
   const fieldRows: Row[] = [];
@@ -454,15 +540,166 @@ export function planPackInstall(
   const engineGroups = new Map<string, Group[]>();
   const sheetIdOf = new Map<string, string>(); // ref → id
   const itemIds = new Map<string, string>(); // `${sheetRef}.${itemRef}` → id
+  // the virtual sheets' planned ids → the foreign sheet's real ones (sheet, existing fields and groups)
+  const real = new Map<string, string>();
+  const virtualSheetRows: Row[] = [];
+  const optionRows: NonNullable<InstallPayload['options']> = aug.options.map((o) => ({
+    ref: o.ref,
+    field_id: o.fieldId,
+    option: o.option as unknown as Json,
+  }));
+  for (const o of aug.options)
+    operations.push({
+      kind: 'option',
+      ref: o.ref,
+      name: `${o.sheetName} › ${o.fieldName} › ${o.option.label}`,
+      action: 'create',
+    });
 
   tp.sheets.forEach((ps, si) => {
-    const ms = m.sheets[si]!;
-    const folderId = ms.folder ? (folderIds.get(ms.folder) ?? null) : null;
+    const ms = mm.sheets[si]!;
+    const v = aug.virtual.get(ms.ref);
+    if (v) {
+      // ── another pack's sheet: only what the extension adds is written, after what the sheet has
+      const sheetId = ps.row.id;
+      real.set(sheetId, v.foreign.sheetId);
+      sheetIdOf.set(ms.ref, sheetId);
+      sheetName.set(sheetId, ms.name);
+      virtualSheetRows.push({
+        id: sheetId,
+        name: ms.name,
+        item_label: ms.itemLabel,
+        id_prefix: ms.idPrefix,
+        is_library: false,
+      });
+      const added = ps.fields.filter((f) => !v.existingFields.has(f.key));
+      const fieldKeys = keysBetween(v.foreign.lastFieldPosition, null, Math.max(1, added.length));
+      for (const f of ps.fields) {
+        const was = v.existingFields.get(f.key);
+        if (was) real.set(f.id, was);
+      }
+      added.forEach((f, i) => {
+        const ref = `${v.key}.${f.key}`;
+        fieldRows.push({ ...(f as unknown as Row), ref, position: fieldKeys[i]!, system: true });
+        operations.push({ kind: 'field', ref, name: `${ms.name} › ${f.name}`, action: 'create' });
+      });
+      engineFields.set(
+        sheetId,
+        ps.fields.map((f) => ({
+          id: f.id,
+          sheetId,
+          key: f.key,
+          name: f.name,
+          type: f.type,
+          position: f.position,
+          width: f.width,
+          required: f.required,
+          locked: f.locked,
+          description: f.description,
+          config: f.config,
+          validation: {},
+          rules: f.rules as unknown as Field['rules'],
+          visibility: f.visibility as unknown as Condition | null,
+        })),
+      );
+      const newGroups = ps.groups.filter((_g, gi) => !v.existingGroups.has(ms.groups[gi]!.ref));
+      const groupKeys = keysBetween(
+        v.foreign.lastGroupPosition,
+        null,
+        Math.max(1, newGroups.length),
+      );
+      let gn = 0;
+      ps.groups.forEach((g, gi) => {
+        const gref = ms.groups[gi]!.ref;
+        const was = v.existingGroups.get(gref);
+        if (was) {
+          real.set(g.id, was);
+          return;
+        }
+        const ref = `${v.key}.${gref}`;
+        groupRows.push({ ...(g as unknown as Row), ref, position: groupKeys[gn++]! });
+        operations.push({ kind: 'group', ref, name: `${ms.name} › ${g.name}`, action: 'create' });
+      });
+      engineGroups.set(
+        sheetId,
+        ps.groups.map((g) => ({
+          id: g.id,
+          sheetId,
+          name: g.name,
+          color: g.color as LabelColor,
+          position: g.position,
+        })),
+      );
+      const viewKeys = keysBetween(v.foreign.lastViewPosition, null, Math.max(1, ps.views.length));
+      const viewNames: string[] = [];
+      ps.views.forEach((vw, vi) => {
+        const form = vi >= ms.views.length ? ms.forms[vi - ms.views.length] : undefined;
+        const ref = form
+          ? `${v.key}.form.${form.ref}`
+          : vi < v.extensionViews
+            ? `${v.key}.view.${vi + 1}`
+            : `${v.key}.view.standard`;
+        viewRows.push({ ...(vw as unknown as Row), ref, position: viewKeys[vi]! });
+        operations.push({
+          kind: form ? 'form' : 'view',
+          ref,
+          name: `${ms.name} › ${vw.name}`,
+          action: 'create',
+        });
+        if (form) base.forms.push({ sheet: ms.name, name: form.name, access: form.access });
+        else viewNames.push(vw.name);
+      });
+      for (const g of ps.items) {
+        const realGroup = real.get(g.groupId);
+        const keys = realGroup
+          ? keysBetween(v.foreign.lastItemPosition[realGroup] || null, null, g.rows.length)
+          : g.rows.map((r) => r.position);
+        g.rows.forEach((r, ri) => {
+          const id = env.newId();
+          const ref = `${v.key}.${r.ref}`;
+          itemIds.set(`${ms.ref}.${r.ref}`, id);
+          itemRows.push({
+            id,
+            ref,
+            sheet_id: sheetId,
+            group_id: g.groupId,
+            name: r.name,
+            position: keys[ri]!,
+            values: r.values,
+          });
+          operations.push({ kind: 'item', ref, name: `${ms.name} › ${r.name}`, action: 'create' });
+        });
+      }
+      const ext = (m.extends ?? []).find((e) => e.pack === v.pack && e.sheet === v.sheet);
+      const opts = aug.options.filter((o) => o.ref.startsWith(`${v.key}.`));
+      if (ext || opts.length)
+        base.extends.push({
+          pack: v.pack,
+          sheet: ms.name,
+          adds: ext ? extensionSummary({ ...ext, views: [], forms: [] }) : [],
+          views: viewNames,
+          options: opts.map((o) => `${o.option.label} in ${o.fieldName}`),
+        });
+      return;
+    }
+    const folder = ms.folder;
+    const foreignFolder = folder?.includes(':') ? folder : null;
+    const folderId = folder
+      ? foreignFolder
+        ? (snap.foreignFolders?.[foreignFolder] ?? null)
+        : (folderIds.get(folder) ?? null)
+      : null;
+    if (foreignFolder && !folderId && !pendingPacks.has(foreignFolder.split(':')[0]!))
+      conflicts.push(
+        `${ms.name} goes in the folder "${foreignFolder}", which is not installed here.`,
+      );
     const sheetId = ps.row.id;
     sheetIdOf.set(ms.ref, sheetId);
     sheetName.set(sheetId, ms.name);
     const settings = {
       ...ps.row.settings,
+      // a system pack's sheets are shared registers (docs/11 Core registers): the header says "System board"
+      ...(m.system ? { system: true } : {}),
       ...(ms.register ? { register: ms.register } : {}),
       ...(ms.framework ? { framework: ms.framework } : {}),
       ...(ms.uniqueLinks ? { uniqueLinkPair: ms.uniqueLinks } : {}),
@@ -479,7 +716,8 @@ export function planPackInstall(
     operations.push({ kind: 'sheet', ref: ms.ref, name: ms.name, action: 'create' });
     for (const f of ps.fields) {
       const ref = `${ms.ref}.${f.key}`;
-      fieldRows.push({ ...(f as unknown as Row), ref });
+      // a system pack's fields are system columns: hidden, renamed, never deleted, retyped or re-keyed
+      fieldRows.push({ ...(f as unknown as Row), ref, ...(m.system ? { system: true } : {}) });
       operations.push({ kind: 'field', ref, name: `${ms.name} › ${f.name}`, action: 'create' });
     }
     engineFields.set(
@@ -650,6 +888,20 @@ export function planPackInstall(
               (s) => s.ref === cfg.targetSheetRef || `${m.key}:${s.ref}` === cfg.targetSheetRef,
             )
           : undefined;
+      const foreignTarget =
+        !target && typeof cfg.targetSheetRef === 'string'
+          ? splitSheetRef(cfg.targetSheetRef, m.key)
+          : null;
+      if (foreignTarget?.pack) {
+        const fs = snap.foreign?.[foreignKey(foreignTarget.pack, foreignTarget.ref)];
+        base.links.push({
+          from: ms.name,
+          field: f.name,
+          to: fs?.name ?? `${foreignTarget.pack}:${foreignTarget.ref}`,
+          twoWay: typeof cfg.inverseKey === 'string',
+        });
+        continue;
+      }
       if (!target) continue;
       // a two-way pair is shown once, from the sheet that comes first
       if (typeof cfg.inverseKey === 'string' && m.sheets.indexOf(target) < m.sheets.indexOf(ms))
@@ -705,7 +957,7 @@ export function planPackInstall(
 
   // ── a Ctx per sheet for sentences and widget checks
   const sheetsById = new Map<string, Sheet>(
-    sheetRows.map((r) => [
+    [...sheetRows, ...virtualSheetRows].map((r) => [
       r.id as string,
       {
         id: r.id as string,
@@ -742,7 +994,7 @@ export function planPackInstall(
 
   // ── automations with refs (and sentences for the preview)
   const automationRows: Row[] = tp.automations.map((a, i) => {
-    const ma = m.automations[i]!;
+    const ma = mm.automations[i]!;
     const id = env.newId();
     operations.push({
       kind: 'automation',
@@ -817,17 +1069,29 @@ export function planPackInstall(
     };
   });
 
+  // ── rows on other packs' sheets: the virtual sheet's ids swapped for the real ones
+  const swapReal = (v: Json): Json => {
+    if (typeof v === 'string') return real.get(v) ?? v;
+    if (Array.isArray(v)) return v.map(swapReal);
+    if (v && typeof v === 'object')
+      return Object.fromEntries(Object.entries(v).map(([k, x]) => [real.get(k) ?? k, swapReal(x)]));
+    return v;
+  };
+  const onReal = <T>(list: T[]): T[] =>
+    real.size ? list.map((r) => swapReal(r as unknown as Json) as unknown as T) : list;
+
   // ── a higher level: what the install already made is left out, and the new rows point at its ids
   let rows = {
     sheets: sheetRows,
-    fields: fieldRows,
-    groups: groupRows,
-    views: viewRows,
-    items: itemRows,
-    links: linkRows,
-    automations: automationRows,
+    fields: onReal(fieldRows),
+    groups: onReal(groupRows),
+    views: onReal(viewRows),
+    items: onReal(itemRows),
+    links: onReal(linkRows),
+    automations: onReal(automationRows),
     dashboards: dashboardRows,
   };
+  let options = optionRows;
   if (extend) {
     const kinds: [keyof typeof rows, string][] = [
       ['sheets', 'sheet'],
@@ -843,6 +1107,7 @@ export function planPackInstall(
       for (const r of rows[list] as Row[])
         if (has(kind, String(r.ref)))
           remap.set(String(r.id), existing[`${kind}:${String(r.ref)}`]!);
+    options = optionRows.filter((o) => !has('option', o.ref));
     const swap = (v: Json): Json => {
       if (typeof v === 'string') return remap.get(v) ?? v;
       if (Array.isArray(v)) return v.map(swap);
@@ -854,18 +1119,20 @@ export function planPackInstall(
       list.filter((r) => !remap.has(String(r.id))).map((r) => swap(r) as Row);
     const before = new Set(remap.keys());
     rows = {
-      sheets: fresh(sheetRows),
-      fields: fresh(fieldRows),
-      groups: fresh(groupRows),
-      views: fresh(viewRows),
-      items: fresh(itemRows),
+      sheets: fresh(rows.sheets),
+      fields: fresh(rows.fields),
+      groups: fresh(rows.groups),
+      views: fresh(rows.views),
+      items: fresh(rows.items),
       // links the install already has (both ends and the field made before) are not written again
-      links: linkRows
+      links: rows.links
         .filter((l) => !(before.has(l.field_id) && before.has(l.from_item)))
         .map((l) => swap(l as unknown as Json) as unknown as InstallPayload['links'][number]),
-      automations: fresh(automationRows),
-      dashboards: fresh(dashboardRows),
+      automations: fresh(rows.automations),
+      dashboards: fresh(rows.dashboards),
     };
+    // what a lower level already added to other packs' sheets is not said again
+    base.extends = [];
     for (const o of operations)
       if (o.action === 'create' && has(o.kind, o.ref)) {
         o.action = 'skip';
@@ -893,6 +1160,8 @@ export function planPackInstall(
   }
 
   const state = conflicts.length ? 'blocked' : 'ready';
+  // required packs installed first: the install plans again once they are there
+  const waiting = base.installsFirst.length > 0 || aug.pending.length > 0;
   const preview: PackPreview = {
     ...base,
     // folders the workspace already has are used, not counted as new
@@ -906,12 +1175,13 @@ export function planPackInstall(
       if (!operations.some((o) => o.action === 'conflict' && o.note === c))
         operations.push({ kind: 'pack', ref: m.key, name: m.title, action: 'conflict', note: c });
   const payload: InstallPayload | null =
-    state === 'ready'
+    state === 'ready' && !waiting
       ? {
           pack: { key: m.key, version: m.version, hash: env.hash, ...(level ? { level } : {}) },
           ...(extend ? { extend_install: extend.id } : {}),
           folders: folderRows,
           ...rows,
+          ...(options.length ? { options } : {}),
         }
       : null;
   return { state, operations, preview, payload };

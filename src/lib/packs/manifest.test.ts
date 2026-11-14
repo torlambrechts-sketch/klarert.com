@@ -194,7 +194,7 @@ describe('pack manifest', () => {
 
   it('throws with every problem listed', () => {
     expect(() => parsePack({ ...supplier(), sheets: [] })).toThrow(
-      /Pack is not valid:\n {2}sheets: /,
+      /Pack is not valid:\n[\s\S]* {2}sheets: A pack needs a sheet or an extends entry\./,
     );
   });
 });

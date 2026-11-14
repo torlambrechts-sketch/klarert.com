@@ -14,7 +14,8 @@
 // against the values the install logged (item.created), so `$today` and `$in:N` do not read as changes.
 import { keysBetween } from '../ordering';
 import type { Json } from '../types';
-import { defaultLevel, levelRank } from './levels';
+import { extensionUses } from './extend';
+import { defaultLevel, levelRank, manifestAtLevel } from './levels';
 import { planPackInstall, type PackEnv, type PackSnapshot } from './plan';
 import { compareVersions } from './semver';
 import type { PackManifest } from './types';
@@ -100,7 +101,8 @@ export type UpgradeObjectKind =
   | 'item'
   | 'requirement'
   | 'automation'
-  | 'dashboard';
+  | 'dashboard'
+  | 'option';
 
 export interface UpgradeChange {
   kind: UpgradeObjectKind;
@@ -153,6 +155,8 @@ export interface UpgradePayload {
     links: { field_id: string; from_item: string; to_item: string }[];
     automations: Row[];
     dashboards: Row[];
+    /** Options added to other packs' option fields (docs/11 Extends), merged by id. */
+    options?: { ref: string; field_id: string; option: Json }[];
   };
   /** Rows of the install with the columns to set (only those present change). Item `values` is a patch. */
   update: {
@@ -197,6 +201,11 @@ export interface UpgradeInput {
   env: Omit<PackEnv, 'hash'>;
   /** Conflict id → the person's choice; keep mine when not given. */
   choices?: Record<string, 'mine' | 'theirs'>;
+  /**
+   * Live installs that build on this pack (docs/11 Extends): their manifests, so an update that removes or retypes a
+   * field they use, or a sheet they extend, is blocked.
+   */
+  extenders?: { title: string; manifest: PackManifest }[];
 }
 
 // ───────────────────────── helpers ─────────────────────────
@@ -313,6 +322,7 @@ interface Planned {
   automations: Map<string, Row>;
   dashboards: Map<string, Row>;
   links: { field_id: string; from_item: string; to_item: string }[];
+  options: Map<string, { ref: string; field_id: string; option: Json }>;
 }
 
 const KINDS: [keyof Omit<Planned, 'links'>, string][] = [
@@ -347,7 +357,8 @@ function planAsInstalled(
       folders: snapshot.folders.filter((f) => !ownFolders.has(f.id)),
     },
     { ...env, hash },
-    { level },
+    // its own rows on other packs' sheets are planned again, not taken for that pack's columns
+    { level, selfInstall: state.installId },
   );
   if (!plan.payload) return { planned: null, problems: plan.preview.conflicts, renamed: [] };
   const p = plan.payload;
@@ -376,6 +387,7 @@ function planAsInstalled(
       automations: byRef(p.automations),
       dashboards: byRef(p.dashboards),
       links: p.links.map((l) => swap(l as unknown as Json) as unknown as Planned['links'][number]),
+      options: new Map((p.options ?? []).map((o) => [o.ref, o])),
     },
     problems: [],
     renamed: plan.preview.renamedPrefixes,
@@ -438,6 +450,38 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   }
   if (compareVersions(m.version, state.version) <= 0) return done('current', null);
 
+  // packs that build on this one (docs/11 Extends): a field they use is never removed or retyped, a sheet they extend
+  // never dropped
+  {
+    const before = manifestAtLevel(from.manifest, state.level);
+    const after = manifestAtLevel(
+      m,
+      state.level && levelRank(m, state.level) >= 0 ? state.level : defaultLevel(m),
+    );
+    for (const ext of input.extenders ?? [])
+      for (const [sheetRef, keys] of extensionUses(ext.manifest, m.key)) {
+        const b = before.sheets.find((s) => s.ref === sheetRef);
+        if (!b) continue;
+        const t = after.sheets.find((s) => s.ref === sheetRef);
+        if (!t) {
+          preview.blockers.push(
+            `${ext.title} builds on ${b.name}, which this version no longer has. It cannot be updated while ${ext.title} is installed.`,
+          );
+          continue;
+        }
+        for (const k of keys) {
+          const bf = b.fields.find((f) => f.key === k);
+          if (!bf) continue;
+          const tf = t.fields.find((f) => f.key === k);
+          if (!tf || tf.type !== bf.type)
+            preview.blockers.push(
+              `${ext.title} uses ${b.name} › ${bf.name}, which this version ${tf ? 'changes to another type' : 'removes'}. It cannot be updated while ${ext.title} is installed.`,
+            );
+        }
+      }
+    if (preview.blockers.length) return done('blocked', null);
+  }
+
   // the level installed; a level the new version dropped falls back to its lowest
   const levelFrom = state.level;
   const levelTo = state.level && levelRank(m, state.level) >= 0 ? state.level : defaultLevel(m);
@@ -468,12 +512,20 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   const installed = (kind: string, ref: string) =>
     typeof state.refMap[`${kind}:${ref}`] === 'string';
 
+  // other packs' sheets this install extends (docs/11 Extends): rows go after what they have, never archived
+  const foreign = Object.values(input.snapshot.foreign ?? {});
+  const foreignIds = new Set(foreign.map((f) => f.sheetId));
   const sheetName = (sheetId: Json | undefined): string => {
     const id = String(sheetId ?? '');
     const s =
       [...T.sheets.values()].find((r) => r.id === id) ??
       [...B.sheets.values()].find((r) => r.id === id);
-    return String(s?.name ?? state.sheets.find((x) => x.id === id)?.name ?? '');
+    return String(
+      s?.name ??
+        state.sheets.find((x) => x.id === id)?.name ??
+        foreign.find((f) => f.sheetId === id)?.name ??
+        '',
+    );
   };
   const fieldName = (fieldId: string): string =>
     String(
@@ -501,6 +553,7 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
       links: [],
       automations: [],
       dashboards: [],
+      options: [],
     },
     update: {
       folders: [],
@@ -806,7 +859,10 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   // ── objects the new version adds
   const addedIds = new Set<string>();
   const existingSheetIds = new Set(state.sheets.filter((s) => !s.archived).map((s) => s.id));
-  const existingGroupIds = new Set(state.groups.map((g) => g.id));
+  const existingGroupIds = new Set([
+    ...state.groups.map((g) => g.id),
+    ...foreign.flatMap((f) => f.groups.map((g) => g.id)),
+  ]);
   const newSheet = (r: Row) => !installed('sheet', String(r.ref));
   // a sub-item sheet joins only with its parent: sub-items are not added to a sheet that is already installed
   const addedSheets = [...T.sheets.values()].filter((r) => {
@@ -825,7 +881,9 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   });
   for (const r of addedSheets) addedIds.add(String(r.id));
   const sheetOk = (id: Json | undefined) =>
-    existingSheetIds.has(String(id)) || addedIds.has(String(id));
+    existingSheetIds.has(String(id)) || addedIds.has(String(id)) || foreignIds.has(String(id));
+  const onExisting = (id: Json | undefined) =>
+    existingSheetIds.has(String(id)) || foreignIds.has(String(id));
 
   for (const r of T.folders.values())
     if (!installed('folder', String(r.ref))) {
@@ -853,6 +911,12 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
     for (const r of rows) byParent.set(keyOf(r), [...(byParent.get(keyOf(r)) ?? []), r]);
     const out: Row[] = [];
     for (const [parent, list] of byParent) {
+      // another pack's sheet: the plan already put the rows after what it has
+      const foreignGroup = foreign.some((f) => f.groups.some((g) => g.id === parent));
+      if (foreignIds.has(parent) || foreignGroup) {
+        out.push(...list);
+        continue;
+      }
       if (!last[parent] && !existingSheetIds.has(parent) && !existingGroupIds.has(parent)) {
         out.push(...list); // a new sheet or group: the plan's own positions
         continue;
@@ -869,7 +933,7 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   payload.add.groups = appendAt(newGroups, (r) => String(r.sheet_id), state.lastPosition.groups);
   const newFields = [...T.fields.values()].filter((r) => {
     if (installed('field', String(r.ref)) || !sheetOk(r.sheet_id)) return false;
-    if (existingSheetIds.has(String(r.sheet_id)) && r.type === 'subitems') return false;
+    if (onExisting(r.sheet_id) && r.type === 'subitems') return false;
     return true;
   });
   payload.add.fields = appendAt(newFields, (r) => String(r.sheet_id), state.lastPosition.fields);
@@ -887,21 +951,21 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   payload.add.items = appendAt(newItems, (r) => String(r.group_id), state.lastPosition.items);
   for (const r of payload.add.items) addedIds.add(String(r.id));
   for (const r of newGroups)
-    if (existingSheetIds.has(String(r.sheet_id)))
+    if (onExisting(r.sheet_id))
       preview.added.push({
         kind: 'group',
         ref: String(r.ref),
         name: `${sheetName(r.sheet_id)} › ${String(r.name)}`,
       });
   for (const r of newFields)
-    if (existingSheetIds.has(String(r.sheet_id)))
+    if (onExisting(r.sheet_id))
       preview.added.push({
         kind: 'field',
         ref: String(r.ref),
         name: `${sheetName(r.sheet_id)} › ${String(r.name)}`,
       });
   for (const r of newViews)
-    if (existingSheetIds.has(String(r.sheet_id)))
+    if (onExisting(r.sheet_id))
       preview.added.push({
         kind: r.type === 'form' ? 'form' : 'view',
         ref: String(r.ref),
@@ -918,7 +982,11 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
   // The target is an item added now, an item the install has, or an item outside the pack (a library's requirement).
   const plannedItemIds = new Set([...T.items.values()].map((r) => String(r.id)));
   const stateItemIds = new Set(state.items.map((i) => i.id));
-  const stateFieldIds = new Set(state.fields.map((f) => f.id));
+  const stateFieldIds = new Set([
+    ...state.fields.map((f) => f.id),
+    // links between items this install adds to other packs' sheets go through those sheets' link fields
+    ...foreign.flatMap((f) => f.fields.map((x) => x.id)),
+  ]);
   payload.add.links = T.links.filter(
     (l) =>
       (addedIds.has(l.from_item) || addedIds.has(l.field_id)) &&
@@ -951,6 +1019,22 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
       payload.add.dashboards.push(r);
       preview.added.push({ kind: 'dashboard', ref: String(r.ref), name: String(r.name) });
     }
+  // options new to other packs' option fields: merged by id, never removed (docs/11 Extends)
+  for (const o of T.options.values())
+    if (!installed('option', o.ref)) {
+      payload.add.options!.push(o);
+      const field = foreign.flatMap((f) => f.fields).find((f) => f.id === o.field_id);
+      const sheet = foreign.find((f) => f.fields.some((x) => x.id === o.field_id));
+      const label = (o.option as { label?: string } | null)?.label ?? o.ref;
+      preview.added.push({
+        kind: 'option',
+        ref: o.ref,
+        name: `${sheet?.name ?? ''} › ${field?.name ?? ''} › ${label}`,
+      });
+    }
+  for (const ref of B.options.keys())
+    if (!T.options.has(ref) && installed('option', ref))
+      preview.kept.push({ kind: 'option', ref, name: ref, note: 'Options are never removed.' });
 
   // ── objects the new version no longer ships (in the installed version, not in the new one)
   const archivedSheets = new Set<string>();
