@@ -7,6 +7,8 @@ export const PACK_ACTIONS = [
   'pack.extended',
   'pack.upgraded',
   'pack.archived',
+  'bundle.created',
+  'bundle.reviewed',
 ] as const;
 
 type Obj = Record<string, Json>;
@@ -73,5 +75,9 @@ export function packLogText(action: string, newValue: Json | null): string {
     ].filter(Boolean);
     return `Archived ${name}: ${parts.join(', ')}. Items and the activity log are kept.`;
   }
+  // Create wizard bundles (docs/11 Bundles): the name the person gave, the pack it came from
+  const bundle = typeof v.name === 'string' ? v.name : name;
+  if (action === 'bundle.created') return `Created ${bundle} via Create from ${name}.`;
+  if (action === 'bundle.reviewed') return `Marked ${bundle} reviewed.`;
   return action;
 }

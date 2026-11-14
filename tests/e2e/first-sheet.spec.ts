@@ -75,8 +75,9 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
     .getByRole('navigation', { name: 'Side menu' })
     .getByRole('link', { name: 'New sheet', exact: true })
     .click();
+  // "New sheet" opens Create at the Sheet card (docs/05 §4 Create)
   await page
-    .getByRole('main')
+    .getByRole('dialog', { name: 'Create' })
     .getByRole('link', { name: /^Tracker/ })
     .click();
   await page.getByLabel('Sheet name').fill('Corrective actions');
@@ -203,7 +204,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   // ── 4. Blank sheet "Actions", then a two-way Link to items from Corrective actions
   await rail.getByRole('link', { name: 'New sheet', exact: true }).click();
   await page
-    .getByRole('main')
+    .getByRole('dialog', { name: 'Create' })
     .getByRole('link', { name: /^Blank/ })
     .click();
   await page.getByLabel('Sheet name').fill('Actions');

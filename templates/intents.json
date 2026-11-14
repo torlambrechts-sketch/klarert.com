@@ -1,0 +1,146 @@
+{
+  "notes": "Goal matching for the Create wizard (docs/05 §4 Create). Keyword ranking only: nothing is sent anywhere. A target is a pack key (the catalogue, docs/11), a wizard start id (templates/starts.json), an app key (docs/13, matched to the pack that carries it) or an automation recipe id (templates/automation-recipes.json). Targets are listed best first.",
+  "intents": [
+    {
+      "id": "complaints",
+      "label": "Complaints",
+      "chip": true,
+      "keywords": ["complaint", "complaints", "customer complaint", "customer feedback", "feedback", "grievance", "unhappy customer", "claim"],
+      "targets": [
+        { "kind": "pack", "id": "start-capa" },
+        { "kind": "start", "id": "log" },
+        { "kind": "recipe", "id": "form-alert" }
+      ]
+    },
+    {
+      "id": "supplier-onboarding",
+      "label": "Supplier onboarding",
+      "chip": true,
+      "keywords": ["supplier", "suppliers", "supplier onboarding", "vendor", "vendors", "third party", "third parties", "onboarding", "procurement", "due diligence", "outsourcing", "subcontractor"],
+      "targets": [
+        { "kind": "pack", "id": "supplier-management" },
+        { "kind": "start", "id": "register" }
+      ]
+    },
+    {
+      "id": "incidents",
+      "label": "Incidents",
+      "chip": true,
+      "keywords": ["incident", "incidents", "security incident", "breach", "data breach", "accident", "near miss", "outage", "injury", "event"],
+      "targets": [
+        { "kind": "pack", "id": "start-incident" },
+        { "kind": "pack", "id": "iso-27001" },
+        { "kind": "start", "id": "log" }
+      ]
+    },
+    {
+      "id": "corrective-actions",
+      "label": "Corrective actions",
+      "chip": true,
+      "keywords": ["corrective action", "corrective actions", "capa", "nonconformity", "nonconformities", "non-conformity", "root cause", "deviation", "problem", "fix"],
+      "targets": [
+        { "kind": "app", "id": "capa" },
+        { "kind": "pack", "id": "first-sheet-corrective-actions" },
+        { "kind": "recipe", "id": "checklist-no" }
+      ]
+    },
+    {
+      "id": "data-subject-requests",
+      "label": "Data subject requests",
+      "chip": true,
+      "keywords": ["data subject request", "data subject requests", "dsar", "dsr", "subject access", "gdpr", "privacy", "privacy request", "erasure", "right to be forgotten", "personal data", "ropa", "processing activities"],
+      "targets": [{ "kind": "pack", "id": "gdpr" }]
+    },
+    {
+      "id": "risks",
+      "label": "Risks",
+      "chip": true,
+      "keywords": ["risk", "risks", "risk register", "risk assessment", "threat", "threats", "risk treatment", "mitigation", "controls"],
+      "targets": [
+        { "kind": "pack", "id": "iso-27001" },
+        { "kind": "start", "id": "treatment" },
+        { "kind": "start", "id": "control" }
+      ]
+    },
+    {
+      "id": "audits",
+      "label": "Internal audits",
+      "chip": true,
+      "keywords": ["audit", "audits", "internal audit", "audit programme", "audit program", "findings", "clause"],
+      "targets": [
+        { "kind": "pack", "id": "start-audit" },
+        { "kind": "pack", "id": "iso-9001" },
+        { "kind": "start", "id": "inspection" }
+      ]
+    },
+    {
+      "id": "documents",
+      "label": "Policies and documents",
+      "chip": false,
+      "keywords": ["policy", "policies", "document", "documents", "document control", "procedure", "procedures", "sop", "manual", "approval"],
+      "targets": [{ "kind": "pack", "id": "start-documents" }]
+    },
+    {
+      "id": "quality",
+      "label": "Quality management",
+      "chip": false,
+      "keywords": ["iso 9001", "9001", "quality", "quality management", "qms", "management review", "customer satisfaction"],
+      "targets": [{ "kind": "pack", "id": "iso-9001" }]
+    },
+    {
+      "id": "information-security",
+      "label": "Information security",
+      "chip": false,
+      "keywords": ["iso 27001", "27001", "isms", "information security", "security", "statement of applicability", "soa", "assets", "access control"],
+      "targets": [{ "kind": "pack", "id": "iso-27001" }]
+    },
+    {
+      "id": "inspections",
+      "label": "Inspections",
+      "chip": false,
+      "keywords": ["inspection", "inspections", "checklist", "site visit", "walkround", "safety check"],
+      "targets": [
+        { "kind": "start", "id": "inspection" },
+        { "kind": "recipe", "id": "checklist-no" }
+      ]
+    },
+    {
+      "id": "tasks",
+      "label": "Tasks and actions",
+      "chip": false,
+      "keywords": ["task", "tasks", "action", "actions", "to do", "todo", "tracker", "requests", "follow up"],
+      "targets": [
+        { "kind": "start", "id": "tracker" },
+        { "kind": "recipe", "id": "due-request" }
+      ]
+    },
+    {
+      "id": "reminders",
+      "label": "Reminders",
+      "chip": false,
+      "keywords": ["reminder", "reminders", "remind", "deadline", "deadlines", "due date", "overdue", "notify", "notification"],
+      "targets": [
+        { "kind": "recipe", "id": "due-request" },
+        { "kind": "recipe", "id": "overdue-stuck" },
+        { "kind": "recipe", "id": "status-notify" }
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Expiring evidence",
+      "chip": false,
+      "keywords": ["evidence", "certificate", "certificates", "expiry", "expiring", "renewal", "insurance"],
+      "targets": [
+        { "kind": "recipe", "id": "evidence-expiring" },
+        { "kind": "start", "id": "register" }
+      ]
+    },
+    {
+      "id": "assets",
+      "label": "Registers",
+      "chip": false,
+      "keywords": ["register", "inventory", "asset", "asset register", "obligations", "contracts", "equipment"],
+      "targets": [{ "kind": "start", "id": "register" }]
+    }
+  ]
+}

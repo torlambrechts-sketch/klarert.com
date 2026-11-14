@@ -229,6 +229,17 @@ Owner decision: "rules + review queue".
 - [x] Management review inputs: customer feedback source (ISO 9001 complaints) and neutral incident wording
 - [x] Tests: `src/lib/packs/gdpr.test.ts`; e2e `tests/e2e/gdpr.spec.ts`
 
+### Create wizard  [Opus + Sonnet]
+Owner-approved design (advisory board, all seven agreed, 14 Nov 2026). docs/05 §4 Create, docs/11 Bundles.
+- [x] One Create button at the top of the side menu (and the phone menu), Ctrl/Cmd+K and the empty states; "New sheet" and "New sheet here" open Create at the Sheet card
+- [x] Goal box "What do you need to handle?" with example chips, keyword matching over `templates/intents.json` (Zod-checked; nothing sent anywhere), 3–5 closest matches; cards Solve a problem, Sheet, Entry, Automation, Form, Dashboard
+- [x] At most three steps with a stepper; a ready-made set's preview from the same manifest the install plans, with tick boxes (dependencies left out or brought back with a note), public forms and outbound automations flagged and off, who can see it; name, owner, review date, folder, level (Starter by default, Full under More options)
+- [x] Migration 0038: `pack_installs` bundle name, owner, review date, origin, reviewed by/at; `create_bundle` (install and stamp in one transaction, `bundle.created` "created via Create from …") and `mark_bundle_reviewed` (the named owner only, `bundle.reviewed`); granted to `authenticated`
+- [x] Sheets of a set show "Created by …" and "Generated from template, not yet reviewed" until the owner marks it reviewed; owners and admins archive the whole set (archive_pack); after Create the sheet opens with "Add your first …" and a toast of what was made
+- [x] Entry → a sheet (recently used first) and the add-item flow; Automation → a recipe and a sheet in the builder; Form → the sheet's Forms tab with New form; Dashboard → New dashboard
+- [x] Incident and Internal audit starts ship as packs too (`start-incident`, `start-audit` 1.0.0)
+- [x] Tests: `src/engine/create/match.test.ts`, `src/lib/create/intents.test.ts`, `src/lib/packs/select.test.ts`, pgTAP 0028, e2e `tests/e2e/create-wizard.spec.ts`
+
 ### NIS2 pack (not built yet)
 - Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace.
 

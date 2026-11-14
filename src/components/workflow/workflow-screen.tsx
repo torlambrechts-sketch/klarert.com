@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { CreateSheetLink } from '@/components/create/create-provider';
 import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
@@ -178,12 +179,9 @@ export function WorkflowScreen({
           No sheets yet. Create a sheet with a status field to see its workflow.
         </p>
         {canEdit ? (
-          <Link
-            href={`/${org}/s/new`}
-            className="text-ink font-medium underline underline-offset-4"
-          >
+          <CreateSheetLink org={org} className="text-ink font-medium underline underline-offset-4">
             New sheet
-          </Link>
+          </CreateSheetLink>
         ) : null}
       </div>
     );
