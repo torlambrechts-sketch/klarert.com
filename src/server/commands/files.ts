@@ -198,14 +198,15 @@ export async function confirmUpload(input: unknown): Promise<Result<ConfirmedUpl
           addFile: async () => {
             const { data, error } = await supabase.rpc('add_file', {
               p_item: v.itemId,
-              p_field: v.fieldId,
+              // null for a file on the item itself (generated types cannot mark the argument nullable)
+              p_field: v.fieldId as string,
               p_file: v.fileId,
               p_path: path,
               p_filename: filename,
               p_mime: v.mime,
               p_size: v.size,
               p_sha256: v.sha256,
-              p_replaces: v.replaces ?? null,
+              p_replaces: v.replaces ?? undefined,
               p_meta: meta as Json,
             });
             if (error) return fromDbError(error);
@@ -349,7 +350,7 @@ export async function archiveFile(input: unknown): Promise<Result<{ fileId: stri
         .maybeSingle();
       if (!row || row.org_id !== orgId) return fail('not_found', 'This file no longer exists.');
       const { error } = v.archived
-        ? await supabase.rpc('archive_file', { p_file: v.fileId, p_note: v.note ?? null })
+        ? await supabase.rpc('archive_file', { p_file: v.fileId, p_note: v.note ?? undefined })
         : await supabase.rpc('restore_file', { p_file: v.fileId });
       if (error) return fromDbError(error);
       return ok({ fileId: v.fileId });
