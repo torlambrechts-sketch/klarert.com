@@ -250,6 +250,24 @@ Owner-approved (14 Nov 2026), moved here from After the MVP. docs/04 §13, docs/
 - [x] Tests: `src/engine/approvals/approvals.test.ts`, `src/server/approvals/events.test.ts`, the upgrade and ISO 27001 pack tests, pgTAP `0030_approval_workflows.sql`, e2e `tests/e2e/approvals.spec.ts`
 - [ ] Reassign an approver mid-flight, delegation while away, working-day SLAs, reminders before the SLA (not asked for yet)
 
+### Core registers  [Opus]
+Owner decision (Nov 2026, board unanimous, option B): one set of shared registers (the Core registers) that every standard builds on as an add-on, so a risk, an incident or a document is recorded once and counts for every standard that uses it (docs/11 Core registers, Extends).
+
+Phase 1 (platform and the Core pack):
+- [x] Manifest `extends` (fields, groups, views, forms, items, automations, options of existing option fields), `standard`, `system`, domain folders and `<pack>:<folder>`; refs in the extender's namespace and ref map; extends only into packs in `requires`; the planner resolves the targets through the Core install's rows and plans them as virtual template sheets; options merged by id in plan and upgrade; cross-pack links (both ways) resolved (`src/engine/packs/extend.ts`)
+- [x] Upgrades: an add-on's new columns and options reach the Core sheets; a Core update that removes or retypes a key an add-on uses (or drops a sheet it extends) is blocked
+- [x] Migration 0040: `folders.domain`, `fields.system` with its guard, field keys unique among live fields, `install_pack` / `upgrade_pack` accept rows on required packs' sheets and merge options, `archive_pack` refuses a pack another builds on and takes back an add-on's columns, views, empty groups and standard option, keeping every item; granted to `authenticated`; pgTAP `0030_core_registers.sql`
+- [x] `core` 1.0.0 (Starter: Documents and policies, Objectives and KPIs, Risk register, Risk categories, Incidents, Nonconformities and CAPA, Actions; Full adds Legal register, Competence and training, Internal audits, Management reviews, Controls library, Assets), five domains, a locked Standards field on every sheet, Table, Board by status and Calendar views, 7 automations, "Management system overview"
+- [x] Install order does not matter: an add-on installs Core first (or raises it to the level it needs, `neededLevel`); Core alone installs; Create installs Core first too
+- [x] Side menu Registers (non-empty domains in order) then Your sheets; System board and Used by in the sheet header; system columns with their lock text, not deletable or retypeable; per-standard view and Standards option added when an add-on installs
+- [x] Demonstration add-on `iso-14001` 1.0.0: the Environmental risk category (its own scales and appetite), the Environmental incident type, ISO 14001 tags and views on the registers it uses, an aspect column on the risk register linked both ways to its own Environmental aspects sheet under Operations, one automation
+- [x] Tests: `src/engine/packs/extend.test.ts`, `system.test.ts`, `src/lib/packs/core.test.ts`, the catalogue planning every pack on top of what it requires, `src/server/commands/packs.test.ts` (Core first), pgTAP 0030, e2e `tests/e2e/core-registers.spec.ts`
+
+Phase 2 (open; a separate task):
+- [ ] Rewrite the standard packs as add-ons to the Core registers with the pack quality bar: ISO/IEC 27001, ISO 9001, ISO 14001 (replacing the demonstration add-on), ISO 45001, GDPR, NIS2 and Supplier management; their own sheets only where Core has none, the rest as extends
+- [ ] Reset the demo workspaces onto Core plus the add-ons
+- [ ] Workspace settings › Standards in scope (the design's scope filter) over the Standards tags
+
 ### NIS2 pack (not built yet)
 - Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace.
 
