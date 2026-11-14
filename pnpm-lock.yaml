@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  next@15.5.29:
+    hash: 64fb010f8c02a9b7df85600c66509fbc9da697ac11b04f84e440505af3084f78
+    path: patches/next@15.5.29.patch
+
 importers:
 
   .:
@@ -52,7 +57,7 @@ importers:
         version: 1.72.0(@types/react@19.3.0)(react@19.1.0)
       next:
         specifier: 15.5.29
-        version: 15.5.29(@babel/core@7.29.13)(@playwright/test@1.63.0)(@types/node@20.19.43)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 15.5.29(patch_hash=64fb010f8c02a9b7df85600c66509fbc9da697ac11b04f84e440505af3084f78)(@babel/core@7.29.13)(@playwright/test@1.63.0)(@types/node@20.19.43)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       papaparse:
         specifier: ^5.7.1
         version: 5.7.1
@@ -6833,7 +6838,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next@15.5.29(@babel/core@7.29.13)(@playwright/test@1.63.0)(@types/node@20.19.43)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  next@15.5.29(patch_hash=64fb010f8c02a9b7df85600c66509fbc9da697ac11b04f84e440505af3084f78)(@babel/core@7.29.13)(@playwright/test@1.63.0)(@types/node@20.19.43)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@next/env': 15.5.29
       '@swc/helpers': 0.5.15

@@ -297,19 +297,8 @@ export function CreateWizard({
         );
         return;
       }
-      const message = `Created ${r.data.name}: ${r.data.made.join(', ')}.`;
-      // the toast shows once the created sheet has opened (its banner reads it); elsewhere at once
-      if (r.data.sheetId) {
-        try {
-          sessionStorage.setItem('create.toast', message);
-        } catch {
-          toast(message, { duration: 6000 });
-        }
-      } else toast(message, { duration: 6000 });
-      // a full load: the action's layout refresh can win a race with a client-side push and keep the old page
-      window.location.assign(
-        r.data.sheetId ? `/${org}/s/${r.data.sheetId}?created=1` : `/${org}/home`,
-      );
+      toast(`Created ${r.data.name}: ${r.data.made.join(', ')}.`, { duration: 6000 });
+      go(r.data.sheetId ? `/${org}/s/${r.data.sheetId}?created=1` : `/${org}/home`);
     } catch {
       setCreateError('Nothing was created. Check your connection and try again.');
     } finally {
