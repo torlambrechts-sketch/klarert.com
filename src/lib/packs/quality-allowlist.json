@@ -1,0 +1,4 @@
+{
+  "$comment": "Packs in templates/packs that do not meet the pack quality bar yet (docs/11 Pack quality bar). Each phase 2 pack rewrite removes its key here in the same commit; quality.test.ts fails while an allowlisted pack passes.",
+  "packs": ["core", "gdpr", "iso-14001", "iso-27001", "iso-9001", "supplier-management"]
+}
