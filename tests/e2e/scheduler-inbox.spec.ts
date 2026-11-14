@@ -133,7 +133,10 @@ test.describe('scheduler', () => {
     // editors do not get "Run date checks now"
     await page.goto(`/meridian/automations?sheet=${sheet.id}`);
     await expect(page.getByRole('heading', { name: 'Automations', level: 1 })).toBeVisible();
-    await expect(page.getByText('A month before')).toBeVisible();
+    // the automation in the list (its runs below name it too)
+    await expect(
+      page.getByRole('list', { name: 'Automations' }).getByText('A month before'),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Run date checks now' })).toHaveCount(0);
   });
 
