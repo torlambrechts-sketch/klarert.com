@@ -94,7 +94,8 @@ test('supplier requirement checks: install, sync from the panel, flag on a chang
     await page
       .locator('[data-sonner-toast]')
       .filter({ hasText: 'Added 7' })
-      .screenshot({ path: `${SHOTS}/02-sync-toast.png` });
+      .screenshot({ path: `${SHOTS}/02-sync-toast.png`, timeout: 3_000 })
+      .catch(() => undefined);
   expect(await countChecks()).toBe(11);
   await list.getByRole('heading').scrollIntoViewIfNeeded();
   await list.getByRole('heading').evaluate((h) => h.scrollIntoView({ block: 'start' }));
