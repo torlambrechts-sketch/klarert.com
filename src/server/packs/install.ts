@@ -341,7 +341,9 @@ export async function requiredFirst(
 export function manifestRequirementKeys(m: CataloguePack['manifest']): string[] {
   return [
     ...new Set(
-      m.sheets.flatMap((s) => s.items.flatMap((i) => Object.values(i.requirements ?? {}).flat())),
+      [...m.sheets, ...(m.extends ?? [])].flatMap((s) =>
+        (s.items ?? []).flatMap((i) => Object.values(i.requirements ?? {}).flat()),
+      ),
     ),
   ];
 }
