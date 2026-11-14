@@ -111,7 +111,7 @@ One view for working through items as rows; it replaced the former List and Grid
 - Item panel: "From form: <name> (v3) · Public" under the name for items from forms.
 
 ### 3.4 Item panel
-- Right drawer 470 px (Expand → `min(1080px, 100vw − 100px)`), overlay on phones. Esc closes. J/K previous/next.
+- Right drawer 580 px (wide enough for every tab without scrolling) (Expand → `min(1080px, 100vw − 100px)`), overlay on phones. Esc closes. J/K previous/next.
 - Header: breadcrumb "Sheet › Group", name (editable, `text-heading-20`), display id (mono), Lock badge, buttons: Expand, Copy link, Close.
 - Tabs: **Details** · (**Actions · n** on sheets with sub-items: "3 of 5 done" with a bar, the list with status, owner and due date, "+ Add", "From template"; a click opens the sub-item in the panel with the breadcrumb "CA-014 / CA-014.2" and Back) · **Updates · n** · **Activity log · n**.
 - Details: summary strip (cards: Status, first person, first due date with relative text red when overdue, Group); "Linked items n" list (both directions: chip with the link field or source sheet name, name, display id · sheet, status pill; click opens that item); "Automations on this item" (name + pause toggle); "All fields" as a label/value list (two columns when expanded), each value editable in place.
