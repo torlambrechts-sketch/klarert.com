@@ -307,7 +307,7 @@ export async function planUpgrade(
   return { ok: true, plan, from, to };
 }
 
-/** Write a ready upgrade plan: upgrade_pack, all or nothing. */
+/** Write a ready upgrade plan: upgrade_pack and the sheets' approval workflows (apply_pack_upgrade), all or nothing. */
 export async function writeUpgrade(
   db: Db,
   plan: UpgradePlan,
@@ -316,7 +316,7 @@ export async function writeUpgrade(
   | { ok: false; error: { message: string; code?: string } }
 > {
   if (!plan.payload) return { ok: false, error: { message: 'There is nothing to update.' } };
-  const { data, error } = await db.rpc('upgrade_pack', {
+  const { data, error } = await db.rpc('apply_pack_upgrade', {
     p_install: plan.payload.install,
     p_plan: plan.payload as unknown as Json,
   });

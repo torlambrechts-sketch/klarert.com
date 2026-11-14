@@ -72,7 +72,7 @@ test('update an installed pack: dry run, a conflict, apply', async ({ page }, in
 
   await dialog.getByRole('button', { name: 'Apply update' }).click();
   await expect(dialog.getByRole('status')).toContainText('to 1.3.0', { timeout: 30_000 });
-  await expect(page.getByText(/Updated ISO\/IEC 27001.* to 1\.2\.0/).first()).toBeVisible();
+  await expect(page.getByText(/Updated ISO\/IEC 27001.* to 1\.3\.0/).first()).toBeVisible();
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/upgrade-done.png`, fullPage: false });
   await dialog.getByRole('button', { name: 'Done' }).click();
 

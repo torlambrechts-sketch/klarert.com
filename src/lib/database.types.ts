@@ -1778,6 +1778,9 @@ isOneToOne: false
 "verify_activity_chain":
 { Args: { "p_chain_key": string }; Returns: Json
                            },
+"apply_pack_upgrade":
+{ Args: { "p_install": string,"p_plan": Json }; Returns: Json
+                           },
 "workflow_decide":
 { Args: { "p_comment"?: string,"p_decision": string,"p_instance": string }; Returns: Json
                            },

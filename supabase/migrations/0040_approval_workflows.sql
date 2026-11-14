@@ -576,16 +576,15 @@ grant insert, update, delete on workflow_instances, workflow_decisions to servic
 
 -- ───────────────────────── packs: approval workflows in manifests ─────────────────────────
 -- install_pack writes a sheet's settings as the plan gives them, workflows included. upgrade_pack (0035) updates only
--- the columns it names, so this wrapper applies p_plan.update.workflows ([{ sheet_id, workflows }], a sheet's list
--- replaced as a whole, chosen by the three-way diff in src/engine/packs/upgrade.ts) after it, in the same
--- transaction, to sheets of the install only. A later migration that redefines upgrade_pack must keep this step.
-alter function upgrade_pack(uuid, jsonb) rename to _upgrade_pack_0035;
-revoke all on function _upgrade_pack_0035(uuid, jsonb) from public, anon, authenticated;
-create or replace function upgrade_pack(p_install uuid, p_plan jsonb) returns jsonb
+-- the columns it names, so the update is written by apply_pack_upgrade: upgrade_pack (whichever definition is current)
+-- and then p_plan.update.workflows ([{ sheet_id, workflows }], a sheet's list replaced as a whole, chosen by the
+-- three-way diff in src/engine/packs/upgrade.ts), in one transaction, to sheets of the install only. The app calls
+-- apply_pack_upgrade; upgrade_pack keeps its contract.
+create or replace function apply_pack_upgrade(p_install uuid, p_plan jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare r jsonb; e jsonb; n int := 0;
 begin
-  r := _upgrade_pack_0035(p_install, p_plan);
+  r := upgrade_pack(p_install, p_plan);
   for e in select x from jsonb_array_elements(case when jsonb_typeof(p_plan->'update'->'workflows') = 'array'
                                                    then p_plan->'update'->'workflows' else '[]'::jsonb end) x loop
     if jsonb_typeof(e->'workflows') is distinct from 'array' then
@@ -603,5 +602,5 @@ begin
   perform set_config('app.pack_op', '', true);
   return r || jsonb_build_object('workflows', n);
 end $$;
-revoke all on function upgrade_pack(uuid, jsonb) from public, anon;
-grant execute on function upgrade_pack(uuid, jsonb) to authenticated;
+revoke all on function apply_pack_upgrade(uuid, jsonb) from public, anon;
+grant execute on function apply_pack_upgrade(uuid, jsonb) to authenticated;

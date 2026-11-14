@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(51);
+select plan(52);
 
 -- people: owner (o), editor who submits (e), second editor (e2), viewer (v), outsider (x), auditor (a)
 insert into auth.users (id, email) values
@@ -248,8 +248,11 @@ select is((select workflow_decide((select id from workflow_instances where item_
 reset role;
 select ok(has_function_privilege('authenticated', 'workflow_decide(uuid,text,text)', 'execute')
           and has_function_privilege('authenticated', 'workflow_submit(uuid,text,text,uuid,uuid)', 'execute')
-          and has_function_privilege('authenticated', 'workflow_withdraw(uuid,text)', 'execute'),
-  'the three RPCs are granted to authenticated');
+          and has_function_privilege('authenticated', 'workflow_withdraw(uuid,text)', 'execute')
+          and has_function_privilege('authenticated', 'apply_pack_upgrade(uuid,jsonb)', 'execute'),
+  'the three RPCs and apply_pack_upgrade are granted to authenticated');
+select throws_like($$ select apply_pack_upgrade('a9a9a9a9-0000-0000-0000-0000000000ff', '{}') $$, '%',
+  'apply_pack_upgrade goes through upgrade_pack''s checks first');
 select ok(not has_function_privilege('authenticated', '_wf_resolve(items,jsonb)', 'execute')
           and not has_function_privilege('authenticated', '_wf_apply(uuid,jsonb,text,text,boolean,text,uuid,uuid,text)', 'execute')
           and not has_function_privilege('anon', 'workflow_decide(uuid,text,text)', 'execute'),
