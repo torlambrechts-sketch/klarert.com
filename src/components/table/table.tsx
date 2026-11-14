@@ -13,7 +13,12 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { useVirtualizer, useWindowVirtualizer } from '@tanstack/react-virtual';
+import {
+  defaultRangeExtractor,
+  useVirtualizer,
+  useWindowVirtualizer,
+  type Range,
+} from '@tanstack/react-virtual';
 import {
   Archive,
   ChevronDown,
@@ -99,10 +104,14 @@ import {
   rangeOf,
   rowHeight,
   step,
+  stickyHeaders,
   tableColumns,
   type Density,
   type TableRow,
 } from './table-model';
+
+/** The app's sticky top bar (docs/05 §2): pinned column headers sit under it. */
+const TOP_BAR_H = 48;
 
 // The Table view (docs/05 §3.1): each group is a card spanning the content width: a title row (chevron, dot, name,
 // item count), its own column header (select all, small muted names, "+" add column), readable two-line rows
@@ -446,11 +455,21 @@ export function Table({
   const toBase = useCallback((_f: Field, shown: number) => shown, []);
 
   const docTop = useDocumentTop(scrollRef);
+  // the column header of the card under the top bar stays rendered and pinned there (docs/05 §3.1)
+  const sticky = useMemo(() => stickyHeaders(layout.rows), [layout.rows]);
+  const stickyRef = useRef(sticky);
+  stickyRef.current = sticky;
   const rowV = useWindowVirtualizer({
     count: layout.rows.length,
     scrollMargin: docTop,
-    // keyboard moves keep the active row clear of the sticky top bar
-    scrollPaddingStart: 48,
+    // keyboard moves keep the active row clear of the sticky top bar and the pinned column header
+    scrollPaddingStart: TOP_BAR_H + rowHeight('header', density, labels),
+    rangeExtractor: useCallback((range: Range) => {
+      const out = defaultRangeExtractor(range);
+      const header = stickyRef.current.headerOf[range.startIndex] ?? -1;
+      if (header >= 0 && !out.includes(header)) out.unshift(header);
+      return out;
+    }, []),
     // the last row of a card also carries the card's bottom border (item and header rows draw their own line)
     estimateSize: (i) => {
       const kind = layout.rows[i]!.kind;
@@ -1268,6 +1287,18 @@ export function Table({
                 const row = layout.rows[vr.index]!;
                 const first = row.kind === 'group';
                 const last = endsCard(layout.rows, vr.index);
+                // a column header follows the page under the top bar until its card's last row pushes it up
+                const cardEnd = row.kind === 'header' ? sticky.cardEnd.get(vr.index) : undefined;
+                const endOfCard =
+                  cardEnd !== undefined ? rowV.measurementsCache[cardEnd]?.end : undefined;
+                const top =
+                  endOfCard !== undefined
+                    ? Math.max(
+                        vr.start,
+                        Math.min((rowV.scrollOffset ?? 0) + TOP_BAR_H, endOfCard - vr.size),
+                      )
+                    : vr.start;
+                const pinned = top > vr.start;
                 return (
                   <div
                     key={row.key}
@@ -1284,11 +1315,13 @@ export function Table({
                       last && 'rounded-b-[10px]',
                       // item, sub-item and header rows draw their own bottom line
                       last && !ownLine(row.kind) && 'border-b',
+                      pinned && 'z-[4]',
                     )}
+                    data-pinned={pinned || undefined}
                     style={{
                       height: vr.size,
                       width: totalW,
-                      transform: `translateY(${vr.start - rowV.options.scrollMargin}px)`,
+                      transform: `translateY(${top - rowV.options.scrollMargin}px)`,
                     }}
                   >
                     <RowContent

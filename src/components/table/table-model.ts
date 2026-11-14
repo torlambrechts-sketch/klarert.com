@@ -88,6 +88,27 @@ export const endsCard = (rows: TableRow[], i: number) => {
 };
 
 /**
+ * The sticky column header of each group card (docs/05 §3.1): for every row, the index of its card's column header
+ * row (-1 before it or in a card without one), and for every header, the index of its card's last row. The Table
+ * keeps the header of the card under the top bar rendered and pins it there until the card's end pushes it up.
+ */
+export function stickyHeaders(rows: TableRow[]): {
+  headerOf: Int32Array;
+  cardEnd: Map<number, number>;
+} {
+  const headerOf = new Int32Array(rows.length).fill(-1);
+  const cardEnd = new Map<number, number>();
+  let header = -1;
+  rows.forEach((row, i) => {
+    if (row.kind === 'gap' || row.kind === 'group') header = -1;
+    if (row.kind === 'header') header = i;
+    headerOf[i] = header;
+    if (header >= 0 && endsCard(rows, i)) cardEnd.set(header, i);
+  });
+  return { headerOf, cardEnd };
+}
+
+/**
  * The width of the table's trailing column ("+" in the header, "…" in rows): the room the columns leave in the card,
  * at least `min`. Columns keep their widths (docs/05 §3.1); when they do not fit, the trailing column is `min` wide
  * and the table scrolls.
