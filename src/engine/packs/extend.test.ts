@@ -393,6 +393,78 @@ describe('planning an add-on on top of Core', () => {
     );
   });
 
+  it('reads a Core sheet from a dashboard widget, with the real sheet id', () => {
+    const { payload: corePayload, snap } = withCore();
+    const refs = refMapOf(corePayload);
+    const m = addon();
+    m.dashboards = [
+      {
+        ref: 'env',
+        name: 'Environment overview',
+        headline: true,
+        widgets: [
+          {
+            ref: 'w_risks',
+            type: 'count',
+            title: 'ISO 14001 risks',
+            sheetRef: 'core:risk',
+            conditions: [{ fieldKey: 'standards', op: 'has_any_of', value: ['iso14001'] }],
+          },
+          { ref: 'w_aspects', type: 'count', title: 'Aspects', sheetRef: 'aspects' },
+        ],
+      },
+    ];
+    expect(extendsProblems(m)).toEqual([]);
+    expect([...extensionUses(m, 'core').get('risk')!]).toContain('standards');
+    const plan = planPackInstall(m, snap, env);
+    expect(plan.preview.conflicts).toEqual([]);
+    const widgets = (plan.payload!.dashboards[0]!.config as { widgets: Row[] }).widgets;
+    expect(widgets.map((w) => w.sheetId)).toEqual([
+      refs['sheet:risk'],
+      plan.payload!.sheets.find((s) => s.ref === 'aspects')!.id,
+    ]);
+    // a field the Core sheet lacks is a conflict, as for the pack's own sheets
+    m.dashboards[0]!.widgets[0]!.type = 'by_option';
+    m.dashboards[0]!.widgets[0]!.fieldKey = 'missing';
+    expect(planPackInstall(m, snap, env).preview.conflicts.join(' ')).toMatch(
+      /Environment overview › ISO 14001 risks/,
+    );
+  });
+
+  it('links an example item on a Core sheet to a required library through a requirement column it adds', () => {
+    const { snap } = withCore();
+    const m = addon();
+    m.frameworks = [{ key: 'iso-14001', version: '2026' }];
+    m.extends![1]!.fields!.push({
+      key: 'iso14001_clauses',
+      name: 'ISO 14001 clauses',
+      type: 'requirement',
+      config: { multiple: true },
+    });
+    m.extends![1]!.items![0]!.requirements = {
+      iso14001_clauses: ['iso-14001@2026#6.1.4', 'iso-14001@2026#9.9'],
+    };
+    const p = planPackInstall(
+      m,
+      {
+        ...snap,
+        libraries: [{ library: 'iso-14001@2026', sheetId: 'lib' }],
+        requirementItems: { 'iso-14001@2026#6.1.4': 'req-614' },
+      },
+      env,
+    );
+    const field = p.payload!.fields.find((f) => f.ref === 'core:risk.iso14001_clauses')!;
+    const spill = p.payload!.items.find((i) => i.ref === 'core:risk.iso14001_spill')!;
+    expect(p.payload!.links).toContainEqual({
+      field_id: field.id,
+      from_item: spill.id,
+      to_item: 'req-614',
+    });
+    expect(p.preview.warnings).toContain(
+      'Risk register › Example: spill: the library has no requirement 9.9, so it is not linked.',
+    );
+  });
+
   it('merges options by id: an option already there is left as it is', () => {
     const { payload, snap } = withCore();
     const refs = refMapOf(payload);

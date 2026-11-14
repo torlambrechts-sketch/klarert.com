@@ -8,6 +8,7 @@
       "keywords": ["complaint", "complaints", "customer complaint", "customer feedback", "feedback", "grievance", "unhappy customer", "claim"],
       "targets": [
         { "kind": "pack", "id": "start-capa" },
+        { "kind": "pack", "id": "iso-9001" },
         { "kind": "start", "id": "log" },
         { "kind": "recipe", "id": "form-alert" }
       ]
@@ -30,6 +31,7 @@
       "targets": [
         { "kind": "pack", "id": "start-incident" },
         { "kind": "pack", "id": "iso-27001" },
+        { "kind": "pack", "id": "iso-45001" },
         { "kind": "start", "id": "log" }
       ]
     },
@@ -93,6 +95,20 @@
       "chip": false,
       "keywords": ["iso 27001", "27001", "isms", "information security", "security", "statement of applicability", "soa", "assets", "access control"],
       "targets": [{ "kind": "pack", "id": "iso-27001" }]
+    },
+    {
+      "id": "environment",
+      "label": "Environmental management",
+      "chip": false,
+      "keywords": ["iso 14001", "14001", "environment", "environmental", "ems", "environmental aspects", "aspects and impacts", "emissions", "waste", "spill", "permit", "sustainability"],
+      "targets": [{ "kind": "pack", "id": "iso-14001" }]
+    },
+    {
+      "id": "health-safety",
+      "label": "Health and safety",
+      "chip": false,
+      "keywords": ["iso 45001", "45001", "health and safety", "ohs", "oh&s", "hse", "safety", "hazard", "hazards", "hira", "risk assessment", "near miss", "injury", "contractors", "toolbox talk"],
+      "targets": [{ "kind": "pack", "id": "iso-45001" }]
     },
     {
       "id": "inspections",

@@ -1,0 +1,1291 @@
+{
+  "key": "iso-45001",
+  "version": "1.0.0",
+  "title": "ISO 45001 health and safety (add-on)",
+  "description": "ISO 45001:2018 on the Core registers: hazard identification and risk assessment with the hierarchy of controls, and worker consultation and participation, with injuries, near misses and ill health in the shared Incidents register, OH&S objectives, risks, nonconformities and documents tagged ISO 45001 with their own views. Full adds contractors, emergency drills and health surveillance. Installs the Core registers first. A new edition of ISO 45001 is expected in 2027: this add-on will get a version on it, and you move your library over from Workspace admin › Frameworks. Written in our own words; no text of the standard.",
+  "requires": [{ "pack": "core", "range": "^1.0.0" }],
+  "standard": { "id": "iso45001", "label": "ISO 45001", "color": "orange" },
+  "frameworks": [{ "key": "iso-45001", "version": "2018" }],
+  "levels": [
+    {
+      "key": "starter",
+      "name": "Starter",
+      "description": "Hazards and OH&S risks (HIRA) and worker consultation, ISO 45001 columns, views and examples on the Core registers, the OH&S risk category and the audit-readiness dashboard."
+    },
+    {
+      "key": "full",
+      "name": "Full",
+      "description": "Everything in Starter plus contractors, emergency drills and health surveillance (personal data, installed restricted)."
+    }
+  ],
+  "folders": [],
+  "sheets": [
+    {
+      "ref": "hazards",
+      "name": "Hazards and OH&S risks (HIRA)",
+      "itemLabel": "Hazard",
+      "idPrefix": "HAZ-",
+      "folder": "core:risk",
+      "kind": "register",
+      "description": "Hazard identification and risk assessment: what could hurt someone or make them ill, who is exposed, how likely and how bad it is, the controls in place by the hierarchy of controls (eliminate first, protective equipment last) and the risk that is left. Uses the scales of the OH&S risk category.",
+      "groups": [
+        { "ref": "assessing", "name": "Being assessed", "color": "orange" },
+        { "ref": "accepted", "name": "Accepted", "color": "green" },
+        { "ref": "retired", "name": "No longer present", "color": "dark" }
+      ],
+      "fields": [
+        { "key": "task", "name": "Task or activity", "type": "text" },
+        { "key": "location", "name": "Where", "type": "text" },
+        { "key": "hazard", "name": "What could cause harm", "type": "longtext", "description": "What could cause harm: a moving part, a chemical, a load, working alone, time pressure." },
+        {
+          "key": "hazard_type",
+          "name": "Type of hazard",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              { "id": "opt_mechanical", "label": "Mechanical", "color": "blue" },
+              { "id": "opt_electrical", "label": "Electrical", "color": "orange" },
+              { "id": "opt_chemical", "label": "Chemical", "color": "purple" },
+              { "id": "opt_physical", "label": "Noise, vibration or heat", "color": "teal" },
+              { "id": "opt_ergonomic", "label": "Lifting and posture", "color": "navy" },
+              { "id": "opt_fall", "label": "Falls and slips", "color": "red" },
+              { "id": "opt_fire", "label": "Fire or explosion", "color": "red" },
+              { "id": "opt_biological", "label": "Biological", "color": "green" },
+              { "id": "opt_psychosocial", "label": "Stress, workload or violence", "color": "dark" }
+            ]
+          }
+        },
+        {
+          "key": "exposed",
+          "name": "Who is exposed",
+          "type": "multiselect",
+          "config": {
+            "options": [
+              { "id": "opt_employees", "label": "Employees", "color": "blue" },
+              { "id": "opt_contractors", "label": "Contractors", "color": "orange" },
+              { "id": "opt_visitors", "label": "Visitors", "color": "teal" },
+              { "id": "opt_public", "label": "The public", "color": "grey" }
+            ]
+          }
+        },
+        {
+          "key": "routine",
+          "name": "When",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              { "id": "opt_routine", "label": "Routine work", "color": "green" },
+              { "id": "opt_non_routine", "label": "Non-routine work", "color": "orange" },
+              { "id": "opt_emergency", "label": "Emergency", "color": "red" }
+            ]
+          }
+        },
+        { "key": "likelihood", "name": "Likelihood", "type": "rating", "config": { "scale": 5 }, "description": "Before the controls, on the OH&S category's likelihood scale." },
+        { "key": "severity", "name": "Severity", "type": "rating", "config": { "scale": 5 }, "description": "Before the controls, on the OH&S category's impact scale." },
+        {
+          "key": "score",
+          "name": "Risk before controls",
+          "type": "formula",
+          "config": { "expr": "IF(OR(EMPTY({likelihood}), EMPTY({severity})), 0, {likelihood} * {severity})", "result": "number" }
+        },
+        {
+          "key": "hierarchy",
+          "name": "Strongest control",
+          "type": "dropdown",
+          "description": "The highest level of the hierarchy of controls in place. Work down the list: remove the hazard, replace it, engineer it out, change how the work is done, and only then protective equipment.",
+          "config": {
+            "options": [
+              { "id": "opt_eliminate", "label": "1 Eliminate", "color": "green" },
+              { "id": "opt_substitute", "label": "2 Substitute", "color": "teal" },
+              { "id": "opt_engineering", "label": "3 Engineering controls", "color": "blue" },
+              { "id": "opt_administrative", "label": "4 Administrative controls", "color": "orange" },
+              { "id": "opt_ppe", "label": "5 Protective equipment", "color": "red" }
+            ]
+          }
+        },
+        { "key": "controls", "name": "Controls in place", "type": "longtext" },
+        { "key": "further_controls", "name": "Further controls needed", "type": "longtext" },
+        { "key": "residual_likelihood", "name": "Likelihood after controls", "type": "rating", "config": { "scale": 5 } },
+        { "key": "residual_severity", "name": "Severity after controls", "type": "rating", "config": { "scale": 5 } },
+        {
+          "key": "residual",
+          "name": "Risk after controls",
+          "type": "formula",
+          "config": { "expr": "IF(OR(EMPTY({residual_likelihood}), EMPTY({residual_severity})), 0, {residual_likelihood} * {residual_severity})", "result": "number" }
+        },
+        {
+          "key": "residual_level",
+          "name": "Level after controls",
+          "type": "formula",
+          "config": { "expr": "IF({residual} >= 12, \"High\", IF({residual} >= 6, \"Medium\", IF({residual} > 0, \"Low\", \"\")))", "result": "text" }
+        },
+        { "key": "consulted", "name": "Workers consulted", "type": "check", "description": "The people who do the work helped find the hazards and choose the controls." },
+        { "key": "owner", "name": "Owner", "type": "people", "config": { "multiple": false } },
+        {
+          "key": "risk",
+          "name": "Risk register",
+          "type": "link",
+          "description": "The risk in the shared risk register this hazard rolls up into, when it matters beyond the task.",
+          "config": { "targetSheetRef": "core:risk", "multiple": false, "inverseKey": "iso45001_hazards" }
+        },
+        {
+          "key": "incidents",
+          "name": "Incidents",
+          "type": "link",
+          "config": { "targetSheetRef": "core:incidents", "multiple": true, "inverseKey": "iso45001_hazard" }
+        },
+        { "key": "clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_draft", "label": "Being assessed", "color": "grey" },
+              { "id": "opt_acceptance", "label": "Awaiting acceptance", "color": "purple" },
+              { "id": "opt_more_controls", "label": "Needs more controls", "color": "red" },
+              { "id": "opt_accepted", "label": "Accepted", "color": "green", "done": true },
+              { "id": "opt_retired", "label": "No longer present", "color": "dark", "done": true }
+            ]
+          },
+          "rules": [
+            {
+              "id": "accept_needs",
+              "whenFieldKey": "status",
+              "whenValues": ["opt_accepted"],
+              "require": ["hierarchy", "controls", "residual_likelihood", "residual_severity"],
+              "message": "Record the controls in place, the strongest control and the risk after controls before accepting it."
+            }
+          ]
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the assessment is in its risk acceptance. Set by the Risk acceptance workflow, never by hand.",
+          "config": {
+            "options": [
+              { "id": "opt_step_draft", "label": "Not submitted", "color": "grey" },
+              { "id": "opt_step_owner", "label": "Owner review", "color": "blue" },
+              { "id": "opt_step_hse", "label": "HSE acceptance", "color": "purple" },
+              { "id": "opt_step_rejected", "label": "Needs more controls", "color": "red" },
+              { "id": "opt_step_approved", "label": "Accepted", "color": "green", "done": true }
+            ]
+          }
+        },
+        { "key": "review_date", "name": "Next review", "type": "date" }
+      ],
+      "views": [
+        { "name": "By status", "type": "kanban", "config": { "labelFieldKey": "status" } },
+        { "name": "By strongest control", "type": "kanban", "config": { "labelFieldKey": "hierarchy" } }
+      ],
+      "tabs": [{ "ref": "table" }, { "ref": "By status" }, { "ref": "By strongest control" }, { "ref": "calendar" }],
+      "workflows": [
+        {
+          "id": "risk-acceptance",
+          "name": "Risk acceptance",
+          "enabled": true,
+          "requiredFields": ["hazard", "owner", "hierarchy", "controls", "residual_likelihood", "residual_severity"],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_acceptance",
+            "onApproved": "opt_accepted",
+            "onRejected": "opt_more_controls"
+          },
+          "steps": [
+            {
+              "id": "owner-review",
+              "name": "Owner review",
+              "approvers": { "kind": "field", "fieldKey": "owner" },
+              "mode": "any",
+              "sla": { "amount": 5, "unit": "days" },
+              "onReject": { "to": "draft" },
+              "optionId": "opt_step_owner"
+            },
+            {
+              "id": "hse-acceptance",
+              "name": "HSE acceptance",
+              "approvers": { "kind": "jobRole", "roleName": "HSE manager" },
+              "mode": "any",
+              "sla": { "amount": 10, "unit": "days" },
+              "onReject": { "to": "draft" },
+              "optionId": "opt_step_hse"
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_forklift",
+          "group": "assessing",
+          "name": "Example: Forklift and pedestrians in the warehouse aisles",
+          "values": {
+            "task": "Picking and putting away pallets",
+            "location": "Warehouse",
+            "hazard": "Pedestrians walk in the same aisles as forklifts reversing out of racks.",
+            "hazard_type": "opt_mechanical",
+            "exposed": ["opt_employees", "opt_visitors"],
+            "routine": "opt_routine",
+            "likelihood": 3,
+            "severity": 5,
+            "hierarchy": "opt_engineering",
+            "controls": "Barriers along the main walkway, blue spot lights on forklifts, high-visibility vests.",
+            "further_controls": "Separate pick times for pedestrians in aisle 4; mirrors at the rack ends.",
+            "residual_likelihood": 2,
+            "residual_severity": 5,
+            "consulted": true,
+            "status": "opt_draft",
+            "approval_step": "opt_step_draft",
+            "review_date": "$in:90"
+          },
+          "requirements": { "clauses": ["iso-45001@2018#6.1.2", "iso-45001@2018#8.1.2"] }
+        },
+        {
+          "ref": "ex_solvent",
+          "group": "assessing",
+          "name": "Example: Solvent-based degreaser in the workshop",
+          "values": {
+            "task": "Cleaning parts before painting",
+            "location": "Workshop",
+            "hazard": "Breathing in solvent vapour; skin contact.",
+            "hazard_type": "opt_chemical",
+            "exposed": ["opt_employees"],
+            "routine": "opt_routine",
+            "likelihood": 4,
+            "severity": 3,
+            "hierarchy": "opt_ppe",
+            "controls": "Gloves and a half-mask respirator.",
+            "further_controls": "Switch to a water-based degreaser (substitute) and add extraction at the cleaning bench.",
+            "residual_likelihood": 3,
+            "residual_severity": 3,
+            "status": "opt_more_controls",
+            "approval_step": "opt_step_draft",
+            "review_date": "$in:30"
+          },
+          "requirements": { "clauses": ["iso-45001@2018#6.1.2", "iso-45001@2018#8.1.2"] }
+        },
+        {
+          "ref": "ex_lone_working",
+          "group": "assessing",
+          "name": "Example: Working alone on the night shift",
+          "values": {
+            "task": "Machine monitoring between 22:00 and 06:00",
+            "location": "Production hall",
+            "hazard": "Nobody notices if the operator is hurt or taken ill.",
+            "hazard_type": "opt_psychosocial",
+            "exposed": ["opt_employees"],
+            "routine": "opt_routine",
+            "likelihood": 2,
+            "severity": 4,
+            "status": "opt_draft",
+            "approval_step": "opt_step_draft",
+            "review_date": "$in:60"
+          },
+          "requirements": { "clauses": ["iso-45001@2018#6.1.2"] }
+        }
+      ]
+    },
+    {
+      "ref": "consultation",
+      "name": "Worker consultation and participation",
+      "itemLabel": "Consultation",
+      "idPrefix": "WCP-",
+      "folder": "core:management",
+      "kind": "log",
+      "description": "How the people who do the work take part: safety committee meetings, toolbox talks, surveys, and the concerns and ideas workers raise, with what was decided and what was done. A concern is answered within 7 days.",
+      "groups": [
+        { "ref": "open", "name": "Open", "color": "orange" },
+        { "ref": "done", "name": "Done", "color": "green" }
+      ],
+      "fields": [
+        {
+          "key": "channel",
+          "name": "Kind",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              { "id": "opt_committee", "label": "Safety committee", "color": "purple" },
+              { "id": "opt_toolbox", "label": "Toolbox talk", "color": "blue" },
+              { "id": "opt_survey", "label": "Survey", "color": "teal" },
+              { "id": "opt_concern", "label": "Concern raised", "color": "red" },
+              { "id": "opt_idea", "label": "Idea or suggestion", "color": "green" }
+            ]
+          }
+        },
+        { "key": "held_on", "name": "Date", "type": "date" },
+        {
+          "key": "answer_due",
+          "name": "Answer due",
+          "type": "formula",
+          "config": { "expr": "IF(EMPTY({held_on}), \"\", ADDDAYS({held_on}, 7))", "result": "date" },
+          "description": "Seven days after a concern or idea was raised."
+        },
+        { "key": "topic", "name": "What was raised or discussed", "type": "longtext" },
+        { "key": "participants", "name": "Who took part", "type": "text", "description": "Teams or roles, and the worker representatives." },
+        {
+          "key": "raised_by",
+          "name": "Raised by",
+          "type": "text",
+          "config": { "personalData": true },
+          "description": "Optional: a concern can be raised without a name."
+        },
+        { "key": "outcome", "name": "What was decided or answered", "type": "longtext" },
+        { "key": "owner", "name": "Follow-up by", "type": "people", "config": { "multiple": false } },
+        { "key": "needs_action", "name": "Needs action", "type": "check" },
+        { "key": "actions", "name": "Actions", "type": "link", "config": { "targetSheetRef": "core:actions", "multiple": true } },
+        { "key": "hazards", "name": "Hazards", "type": "link", "config": { "targetSheetRef": "hazards", "multiple": true } },
+        { "key": "clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_planned", "label": "Planned or raised", "color": "orange" },
+              { "id": "opt_in_progress", "label": "Being followed up", "color": "blue" },
+              { "id": "opt_closed", "label": "Closed", "color": "green", "done": true }
+            ]
+          },
+          "rules": [
+            {
+              "id": "close_needs",
+              "whenFieldKey": "status",
+              "whenValues": ["opt_closed"],
+              "require": ["outcome"],
+              "message": "Write down what was decided or answered before closing it."
+            }
+          ]
+        }
+      ],
+      "views": [{ "name": "By status", "type": "kanban", "config": { "labelFieldKey": "status" } }],
+      "tabs": [{ "ref": "table" }, { "ref": "By status" }, { "ref": "calendar" }, { "ref": "form" }],
+      "forms": [
+        {
+          "ref": "concern",
+          "name": "Raise a safety concern or idea",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Raise a safety concern or idea",
+            "description": "Tell us about anything at work that could hurt someone or make them ill, or an idea that would make work safer. You do not have to give your name. We answer within 7 days.",
+            "nameLabel": "Your concern or idea, in one line",
+            "fields": [
+              { "key": "channel", "label": "Is it a concern or an idea?", "required": true },
+              { "key": "topic", "label": "What did you see, where and when?", "required": true },
+              { "key": "held_on", "label": "Today's date", "required": true },
+              { "key": "raised_by", "label": "Your name (optional)", "help": "Leave it empty to stay anonymous. With a name we can tell you what was done." }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. Your concern is with the safety team and you will hear back within 7 days.",
+            "prefill": [{ "key": "status", "value": "opt_planned" }]
+          },
+          "notice": {
+            "purpose": "To look into safety concerns and ideas from workers and to answer them.",
+            "legalBasis": "legal_obligation",
+            "recipients": "The people in this workspace who follow up health and safety concerns.",
+            "retention": "Kept for 3 years after it is closed.",
+            "rights": "You can ask to see, correct or delete what you sent. Contact the person who shared this form."
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_committee",
+          "group": "done",
+          "name": "Example: Safety committee, third quarter",
+          "values": {
+            "channel": "opt_committee",
+            "held_on": "$in:-40",
+            "topic": "Near misses in the warehouse, the new degreaser trial, results of the noise survey.",
+            "participants": "Site manager, HSE manager, two elected worker representatives, warehouse lead",
+            "outcome": "Agreed to separate pedestrian pick times in aisle 4 and to trial a water-based degreaser.",
+            "status": "opt_closed"
+          },
+          "links": { "hazards": ["ex_forklift", "ex_solvent"] },
+          "requirements": { "clauses": ["iso-45001@2018#5.4"] }
+        },
+        {
+          "ref": "ex_concern",
+          "group": "open",
+          "name": "Example: Emergency exit blocked by pallets",
+          "values": {
+            "channel": "opt_concern",
+            "held_on": "$in:-2",
+            "topic": "The emergency exit by goods-in was blocked by empty pallets two mornings in a row.",
+            "status": "opt_planned"
+          },
+          "requirements": { "clauses": ["iso-45001@2018#5.4", "iso-45001@2018#8.2"] }
+        }
+      ]
+    },
+    {
+      "ref": "contractors",
+      "name": "Contractors",
+      "itemLabel": "Contractor",
+      "idPrefix": "CON-",
+      "folder": "core:suppliers",
+      "level": "full",
+      "kind": "register",
+      "description": "Contractors who work on your sites: the work they do, the safety documents and insurance you checked, their induction and when their approval runs out.",
+      "groups": [
+        { "ref": "approved", "name": "Approved", "color": "green" },
+        { "ref": "pending", "name": "Waiting for approval", "color": "orange" },
+        { "ref": "ended", "name": "Ended or suspended", "color": "dark" }
+      ],
+      "fields": [
+        { "key": "work", "name": "Work they do", "type": "longtext" },
+        { "key": "contact_email", "name": "Contact", "type": "email", "config": { "personalData": true } },
+        { "key": "owner", "name": "Our contact", "type": "people", "config": { "multiple": false } },
+        { "key": "method_statement", "name": "Risk assessment and method statement", "type": "evidence", "config": { "validDays": 365, "multiple": true, "accept": [] } },
+        { "key": "insurance", "name": "Insurance", "type": "evidence", "config": { "validDays": 365, "multiple": true, "accept": [] } },
+        { "key": "inducted_on", "name": "Site induction on", "type": "date" },
+        { "key": "permit", "name": "Needs a permit to work", "type": "check" },
+        { "key": "approval_expires", "name": "Approval expires", "type": "date" },
+        { "key": "hazards", "name": "Hazards", "type": "link", "config": { "targetSheetRef": "hazards", "multiple": true } },
+        { "key": "clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_pending", "label": "Not approved yet", "color": "orange" },
+              { "id": "opt_in_approval", "label": "In approval", "color": "purple" },
+              { "id": "opt_approved", "label": "Approved for work", "color": "green", "done": true },
+              { "id": "opt_suspended", "label": "Suspended", "color": "red" },
+              { "id": "opt_ended", "label": "Ended", "color": "dark", "done": true }
+            ]
+          },
+          "rules": [
+            {
+              "id": "approve_needs",
+              "whenFieldKey": "status",
+              "whenValues": ["opt_approved"],
+              "require": ["method_statement", "insurance", "inducted_on", "approval_expires"],
+              "message": "Add the method statement, the insurance, the induction date and when the approval expires before approving."
+            }
+          ]
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the contractor is in its approval. Set by the Contractor approval workflow, never by hand.",
+          "config": {
+            "options": [
+              { "id": "opt_step_draft", "label": "Not submitted", "color": "grey" },
+              { "id": "opt_step_owner", "label": "Our contact", "color": "blue" },
+              { "id": "opt_step_hse", "label": "HSE approval", "color": "purple" },
+              { "id": "opt_step_rejected", "label": "Not approved", "color": "red" },
+              { "id": "opt_step_approved", "label": "Approved", "color": "green", "done": true }
+            ]
+          }
+        }
+      ],
+      "views": [{ "name": "By status", "type": "kanban", "config": { "labelFieldKey": "status" } }],
+      "tabs": [{ "ref": "table" }, { "ref": "By status" }, { "ref": "calendar" }],
+      "workflows": [
+        {
+          "id": "contractor-approval",
+          "name": "Contractor approval",
+          "enabled": true,
+          "requiredFields": ["work", "owner", "method_statement", "insurance", "inducted_on", "approval_expires"],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_in_approval",
+            "onApproved": "opt_approved",
+            "onRejected": "opt_pending"
+          },
+          "steps": [
+            {
+              "id": "owner-check",
+              "name": "Our contact",
+              "approvers": { "kind": "field", "fieldKey": "owner" },
+              "mode": "any",
+              "sla": { "amount": 3, "unit": "days" },
+              "onReject": { "to": "draft" },
+              "optionId": "opt_step_owner"
+            },
+            {
+              "id": "hse-approval",
+              "name": "HSE approval",
+              "approvers": { "kind": "jobRole", "roleName": "HSE manager" },
+              "mode": "any",
+              "sla": { "amount": 3, "unit": "days" },
+              "onReject": { "to": "close" },
+              "optionId": "opt_step_hse"
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_roofers",
+          "group": "pending",
+          "name": "Example: Example Roofing Ltd",
+          "values": {
+            "work": "Repairing the warehouse roof in spring: work at height, hot works.",
+            "permit": true,
+            "status": "opt_pending",
+            "approval_step": "opt_step_draft"
+          },
+          "requirements": { "clauses": ["iso-45001@2018#8.1.4"] }
+        }
+      ]
+    },
+    {
+      "ref": "drills",
+      "name": "Emergency drills",
+      "itemLabel": "Drill",
+      "idPrefix": "DRL-",
+      "folder": "core:operations",
+      "level": "full",
+      "kind": "plan",
+      "description": "Planned and held emergency drills: the scenario, how long it took against the target, what went wrong and what was done about it.",
+      "groups": [
+        { "ref": "planned", "name": "Planned", "color": "blue" },
+        { "ref": "held", "name": "Held", "color": "green" }
+      ],
+      "fields": [
+        {
+          "key": "scenario",
+          "name": "Scenario",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              { "id": "opt_fire", "label": "Fire evacuation", "color": "red" },
+              { "id": "opt_chemical", "label": "Chemical release", "color": "purple" },
+              { "id": "opt_first_aid", "label": "Injury and first aid", "color": "orange" },
+              { "id": "opt_rescue", "label": "Rescue from height or a confined space", "color": "navy" },
+              { "id": "opt_other", "label": "Other", "color": "grey" }
+            ]
+          }
+        },
+        { "key": "planned_on", "name": "Planned for", "type": "date" },
+        { "key": "held_on", "name": "Held on", "type": "date" },
+        { "key": "owner", "name": "Drill lead", "type": "people", "config": { "multiple": false } },
+        { "key": "participants", "name": "People taking part", "type": "number" },
+        { "key": "target_minutes", "name": "Target time (minutes)", "type": "number" },
+        { "key": "actual_minutes", "name": "Time taken (minutes)", "type": "number" },
+        {
+          "key": "against_target",
+          "name": "Against target",
+          "type": "formula",
+          "config": { "expr": "IF(OR(EMPTY({target_minutes}), EMPTY({actual_minutes})), \"\", IF({actual_minutes} <= {target_minutes}, \"Met\", \"Not met\"))", "result": "text" }
+        },
+        { "key": "findings", "name": "What went wrong or well", "type": "longtext" },
+        { "key": "actions", "name": "Actions", "type": "link", "config": { "targetSheetRef": "core:actions", "multiple": true } },
+        { "key": "clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_planned", "label": "Planned", "color": "blue" },
+              { "id": "opt_held", "label": "Held, follow-up open", "color": "orange" },
+              { "id": "opt_closed", "label": "Closed", "color": "green", "done": true }
+            ]
+          },
+          "rules": [
+            {
+              "id": "close_needs",
+              "whenFieldKey": "status",
+              "whenValues": ["opt_closed"],
+              "require": ["held_on", "findings"],
+              "message": "Add the date it was held and what it showed before closing it."
+            }
+          ]
+        }
+      ],
+      "views": [{ "name": "Drill dates", "type": "calendar", "config": { "dateFieldKey": "planned_on" } }],
+      "tabs": [{ "ref": "table" }, { "ref": "Drill dates" }],
+      "items": [
+        {
+          "ref": "ex_fire",
+          "group": "planned",
+          "name": "Example: Fire evacuation, day shift",
+          "values": { "scenario": "opt_fire", "planned_on": "$in:30", "target_minutes": 4, "status": "opt_planned" },
+          "requirements": { "clauses": ["iso-45001@2018#8.2"] }
+        }
+      ]
+    },
+    {
+      "ref": "health",
+      "name": "Health surveillance",
+      "itemLabel": "Health check",
+      "idPrefix": "HSV-",
+      "folder": "core:operations",
+      "level": "full",
+      "kind": "register",
+      "personalData": true,
+      "description": "Health checks for people exposed to noise, vibration, dust, chemicals or night work: when each person was last seen, when they are due and whether there are work restrictions. Health information about named people: installed restricted, never put clinical details here.",
+      "groups": [
+        { "ref": "current", "name": "Current", "color": "green" },
+        { "ref": "left", "name": "Left the role", "color": "dark" }
+      ],
+      "fields": [
+        { "key": "person", "name": "Person", "type": "people", "config": { "multiple": false, "personalData": true } },
+        {
+          "key": "exposure",
+          "name": "Exposure",
+          "type": "multiselect",
+          "config": {
+            "options": [
+              { "id": "opt_noise", "label": "Noise", "color": "orange" },
+              { "id": "opt_vibration", "label": "Hand-arm vibration", "color": "purple" },
+              { "id": "opt_dust", "label": "Dust", "color": "dark" },
+              { "id": "opt_chemicals", "label": "Chemicals or solvents", "color": "red" },
+              { "id": "opt_night", "label": "Night work", "color": "navy" }
+            ]
+          }
+        },
+        { "key": "provider", "name": "Occupational health provider", "type": "text" },
+        { "key": "last_check", "name": "Last check", "type": "date" },
+        { "key": "next_check", "name": "Next check due", "type": "date" },
+        {
+          "key": "fitness",
+          "name": "Outcome",
+          "type": "dropdown",
+          "config": {
+            "personalData": true,
+            "options": [
+              { "id": "opt_fit", "label": "Fit for the work", "color": "green" },
+              { "id": "opt_restricted", "label": "Fit with restrictions", "color": "orange" },
+              { "id": "opt_unfit", "label": "Not fit for the work", "color": "red" },
+              { "id": "opt_pending", "label": "Waiting for the result", "color": "grey" }
+            ]
+          }
+        },
+        { "key": "restrictions", "name": "Work restrictions", "type": "longtext", "config": { "personalData": true }, "description": "Only what the manager needs to know to arrange the work. No diagnosis." },
+        { "key": "owner", "name": "Arranged by", "type": "people", "config": { "multiple": false } },
+        { "key": "hazards", "name": "Hazards", "type": "link", "config": { "targetSheetRef": "hazards", "multiple": true } },
+        { "key": "clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              { "id": "opt_due", "label": "Due", "color": "orange" },
+              { "id": "opt_booked", "label": "Booked", "color": "blue" },
+              { "id": "opt_done", "label": "Up to date", "color": "green", "done": true },
+              { "id": "opt_overdue", "label": "Overdue", "color": "red" }
+            ]
+          }
+        }
+      ],
+      "views": [{ "name": "By status", "type": "kanban", "config": { "labelFieldKey": "status" } }],
+      "tabs": [{ "ref": "table" }, { "ref": "By status" }, { "ref": "calendar" }],
+      "retention": {
+        "personalNames": true,
+        "rules": [
+          {
+            "id": "health_left",
+            "name": "Health checks: after the person left the role",
+            "from": { "kind": "field", "fieldKey": "last_check" },
+            "period": { "n": 40, "unit": "years" },
+            "action": "erase",
+            "files": true,
+            "comments": true,
+            "groups": ["left"],
+            "note": "A suggestion, not advice: some exposure records must be kept for decades and others only for a few years. Your country's rules and your occupational health provider set the period."
+          }
+        ]
+      },
+      "items": [
+        {
+          "ref": "ex_noise",
+          "group": "current",
+          "name": "Example: Hearing check for press shop staff",
+          "values": {
+            "exposure": ["opt_noise"],
+            "provider": "Example Occupational Health",
+            "last_check": "$in:-330",
+            "next_check": "$in:35",
+            "fitness": "opt_fit",
+            "status": "opt_due"
+          },
+          "requirements": { "clauses": ["iso-45001@2018#9.1.1"] }
+        }
+      ]
+    }
+  ],
+  "extends": [
+    {
+      "pack": "core",
+      "sheet": "risk_category",
+      "items": [
+        {
+          "ref": "iso45001_ohs",
+          "group": "in_use",
+          "name": "Occupational health and safety",
+          "values": {
+            "likelihood_scale": "1 Rare: not known to have happened in our industry. 2 Unlikely: has happened in our industry. 3 Possible: has happened here or at a similar site. 4 Likely: happens here every year or so. 5 Almost certain: happens here several times a year.",
+            "impact_scale": "1 Negligible: discomfort, no first aid. 2 Minor: first aid, back at work the same day. 3 Moderate: medical treatment or up to three days off work. 4 Major: more than three days off, a fracture or lasting ill health. 5 Severe: a life-changing injury or a death.",
+            "appetite": 4,
+            "review_date": "$in:365",
+            "standards": ["$option:ISO 45001"]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "risk",
+      "fields": [
+        {
+          "key": "iso45001_hazards",
+          "name": "Hazards",
+          "type": "link",
+          "config": { "targetSheetRef": "hazards", "multiple": true, "inverseKey": "risk" }
+        },
+        { "key": "iso45001_clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "items": [
+        {
+          "ref": "iso45001_shutdown",
+          "group": "identified",
+          "name": "Example: Serious injury during the summer maintenance shutdown",
+          "values": {
+            "cause": "Many contractors at once, non-routine work at height and on isolated machines",
+            "consequence": "A fall or an entanglement, a stopped shutdown and an investigation by the authority",
+            "likelihood": 2,
+            "impact": 5,
+            "treatment": "opt_reduce",
+            "review_date": "$in:120",
+            "status": "opt_open",
+            "standards": ["$option:ISO 45001"]
+          },
+          "links": { "category": ["iso45001_ohs"] },
+          "requirements": { "iso45001_clauses": ["iso-45001@2018#6.1.2", "iso-45001@2018#8.1.4"] }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso45001_above_appetite",
+          "name": "OH&S risk above appetite → owner treats it, the HSE manager is told",
+          "advanced": true,
+          "description": "Escalation: when an ISO 45001 risk's score rises above 4 (the OH&S category's appetite) and it is above its category's appetite, the risk owner is asked to plan the treatment and the HSE manager is told.",
+          "trigger": { "type": "number_above", "fieldKey": "score", "threshold": 4 },
+          "conditions": [
+            { "fieldKey": "standards", "op": "has_any_of", "value": ["iso45001"] },
+            { "fieldKey": "against_appetite", "op": "is", "value": "Above appetite" }
+          ],
+          "actions": [
+            { "type": "request_update", "fieldKey": "owner", "message": "{id} {name} scores {score}, above the appetite of its category. Plan the treatment and set a review date." },
+            { "type": "notify", "to": ["jobRole:HSE manager", "field:owner"], "message": "{id} {name} is above appetite (score {score}). The risk owner has been asked to treat it." }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "incidents",
+      "fields": [
+        {
+          "key": "iso45001_outcome",
+          "name": "Harm",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              { "id": "iso45001_none", "label": "No harm (near miss)", "color": "grey" },
+              { "id": "iso45001_first_aid", "label": "First aid", "color": "green" },
+              { "id": "iso45001_medical", "label": "Medical treatment", "color": "orange" },
+              { "id": "iso45001_lost_time", "label": "Time off work", "color": "red" },
+              { "id": "iso45001_serious", "label": "Serious or fatal", "color": "dark" }
+            ]
+          }
+        },
+        { "key": "iso45001_days_lost", "name": "Days off work", "type": "number" },
+        { "key": "iso45001_reportable", "name": "Reportable to the authority", "type": "check" },
+        { "key": "iso45001_workers_involved", "name": "Workers took part in the investigation", "type": "check" },
+        {
+          "key": "iso45001_hazard",
+          "name": "Hazard",
+          "type": "link",
+          "config": { "targetSheetRef": "hazards", "multiple": false, "inverseKey": "incidents" }
+        },
+        { "key": "iso45001_clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "options": {
+        "incident_type": [
+          { "id": "iso45001_ill_health", "label": "Work-related ill health", "color": "purple" },
+          { "id": "iso45001_dangerous", "label": "Dangerous occurrence", "color": "red" }
+        ]
+      },
+      "forms": [
+        {
+          "ref": "iso45001_report",
+          "name": "Report an injury or near miss",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report an injury or near miss",
+            "description": "Report every injury, however small, and every near miss: something that could have hurt someone but did not. Reporting near misses is how we stop the next injury. Do not write the injured person's health details here.",
+            "nameLabel": "What happened, in one line",
+            "fields": [
+              { "key": "incident_type", "label": "Was someone hurt, or was it a near miss?", "required": true },
+              { "key": "occurred_on", "label": "When did it happen?", "required": true },
+              { "key": "iso45001_outcome", "label": "How bad was the harm?" },
+              { "key": "severity", "label": "How serious could it have been?", "help": "Your best guess. The investigator decides." },
+              { "key": "reported_by", "label": "Your name", "help": "So the investigator can ask you more." }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The safety team has your report. If someone needs medical help, make sure they get it first.",
+            "prefill": [
+              { "key": "status", "value": "opt_new" },
+              { "key": "standards", "value": ["iso45001"] }
+            ]
+          },
+          "notice": {
+            "purpose": "To investigate injuries and near misses and stop them happening again.",
+            "legalBasis": "legal_obligation",
+            "recipients": "The people in this workspace who investigate incidents.",
+            "retention": "Kept for 5 years after the incident is closed, or longer where the law requires it.",
+            "rights": "You can ask to see, correct or delete what you reported. Contact the person who shared this form."
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "iso45001_near_miss",
+          "group": "open",
+          "name": "Example: Pallet fell from the top rack next to a picker",
+          "values": {
+            "incident_type": "opt_near_miss",
+            "occurred_on": "$in:-6",
+            "reported_by": "Warehouse lead",
+            "severity": "opt_high",
+            "status": "opt_investigating",
+            "iso45001_outcome": "iso45001_none",
+            "iso45001_workers_involved": true,
+            "standards": ["$option:ISO 45001"]
+          },
+          "links": { "iso45001_hazard": ["ex_forklift"] },
+          "requirements": { "iso45001_clauses": ["iso-45001@2018#10.2"] }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso45001_reportable",
+          "name": "Incident reportable to the authority → tell the HSE manager",
+          "advanced": true,
+          "description": "SLA clock: when an incident is marked reportable, the HSE manager and the investigator are told at once, because the authority has to be told within a legal time limit (check the limit where you work).",
+          "trigger": { "type": "field_becomes", "fieldKey": "iso45001_reportable", "value": "true" },
+          "conditions": [],
+          "actions": [
+            { "type": "notify", "to": ["jobRole:HSE manager", "field:owner"], "message": "{id} {name} on {occurred_on} is reportable. Tell the authority within the legal time limit and record when you did." }
+          ]
+        },
+        {
+          "ref": "iso45001_lost_time",
+          "name": "Time off work after an incident → raise a nonconformity and tell top management",
+          "advanced": true,
+          "description": "Escalation and cascade: when days off work are recorded on an incident, a linked nonconformity tagged ISO 45001 is raised for the root cause and corrective action, and top management are told: lost-time injuries are a management review input.",
+          "trigger": { "type": "number_above", "fieldKey": "iso45001_days_lost", "threshold": 0 },
+          "conditions": [{ "fieldKey": "nonconformity", "op": "has_none" }],
+          "actions": [
+            {
+              "type": "create_item",
+              "sheetRef": "core:nc",
+              "groupRef": "open",
+              "name": "Lost-time incident: {name}",
+              "values": { "source": "opt_incident", "stage": "opt_containment", "due_date": "$in:30", "standards": ["iso45001"] },
+              "link": true
+            },
+            { "type": "notify", "to": ["jobRole:Top management", "field:owner"], "message": "{id} {name} led to {iso45001_days_lost} days off work. A nonconformity has been raised for the investigation." }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "objectives",
+      "fields": [
+        { "key": "iso45001_clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "items": [
+        {
+          "ref": "iso45001_ltifr",
+          "group": "active",
+          "name": "Example: No lost-time injuries this year",
+          "values": {
+            "kpi": "Injuries with time off work, counted each month",
+            "target": "0",
+            "result": "1 so far this year",
+            "status": "opt_at_risk",
+            "due": "$in:47",
+            "review_date": "$in:20",
+            "standards": ["$option:ISO 45001"]
+          },
+          "requirements": { "iso45001_clauses": ["iso-45001@2018#6.2.1"] }
+        },
+        {
+          "ref": "iso45001_toolbox",
+          "group": "active",
+          "name": "Example: Every team holds a monthly toolbox talk",
+          "values": {
+            "kpi": "Teams that logged a toolbox talk in Worker consultation this month",
+            "target": "All 6 teams",
+            "result": "5 of 6 last month",
+            "status": "opt_on_track",
+            "due": "$in:200",
+            "review_date": "$in:30",
+            "standards": ["$option:ISO 45001"]
+          },
+          "requirements": { "iso45001_clauses": ["iso-45001@2018#6.2.1", "iso-45001@2018#5.4"] }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "nc",
+      "fields": [
+        { "key": "iso45001_clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "options": {
+        "source": [
+          { "id": "iso45001_inspection", "label": "Safety inspection", "color": "orange" },
+          { "id": "iso45001_worker", "label": "Worker concern", "color": "purple" }
+        ]
+      }
+    },
+    {
+      "pack": "core",
+      "sheet": "documents",
+      "fields": [
+        { "key": "iso45001_clauses", "name": "ISO 45001 clauses", "type": "requirement", "config": { "multiple": true } }
+      ],
+      "items": [
+        {
+          "ref": "iso45001_policy",
+          "group": "draft",
+          "name": "Health and safety policy",
+          "values": { "document_id": "OHS-POL-01", "doc_type": "opt_policy", "status": "opt_draft", "version": 1, "next_review": "$in:365", "standards": ["$option:ISO 45001"] },
+          "requirements": { "iso45001_clauses": ["iso-45001@2018#5.2"] }
+        },
+        {
+          "ref": "iso45001_hira_method",
+          "group": "draft",
+          "name": "How we identify hazards and assess risks",
+          "values": { "document_id": "OHS-PRO-01", "doc_type": "opt_procedure", "status": "opt_draft", "version": 1, "next_review": "$in:365", "standards": ["$option:ISO 45001"] },
+          "requirements": { "iso45001_clauses": ["iso-45001@2018#6.1.2"] }
+        },
+        {
+          "ref": "iso45001_emergency",
+          "group": "draft",
+          "name": "Emergency response plan",
+          "values": { "document_id": "OHS-PLN-01", "doc_type": "opt_plan", "status": "opt_draft", "version": 1, "next_review": "$in:365", "standards": ["$option:ISO 45001"] },
+          "requirements": { "iso45001_clauses": ["iso-45001@2018#8.2"] }
+        },
+        {
+          "ref": "iso45001_contractor_rules",
+          "group": "draft",
+          "name": "Safety rules for contractors",
+          "values": { "document_id": "OHS-PRO-04", "doc_type": "opt_procedure", "status": "opt_draft", "version": 1, "next_review": "$in:365", "standards": ["$option:ISO 45001"] },
+          "requirements": { "iso45001_clauses": ["iso-45001@2018#8.1.4"] }
+        }
+      ]
+    },
+    { "pack": "core", "sheet": "actions" }
+  ],
+  "automations": [
+    {
+      "ref": "hazard_review_due",
+      "sheet": "hazards",
+      "name": "Hazard review in 30 days → ask the owner",
+      "trigger": { "type": "date_arrives", "fieldKey": "review_date", "offsetDays": -30 },
+      "conditions": [{ "fieldKey": "status", "op": "is_none_of", "value": ["opt_retired"] }],
+      "actions": [
+        { "type": "request_update", "fieldKey": "owner", "message": "Review {id} {name} by {review_date}: is the hazard still there, do the controls work and has anything changed?" }
+      ]
+    },
+    {
+      "ref": "hazard_high_residual",
+      "sheet": "hazards",
+      "name": "Risk after controls 12 or more → stop and tell the HSE manager",
+      "advanced": true,
+      "description": "Escalation: a hazard whose risk after controls reaches 12 (High) is marked Needs more controls and the HSE manager and the owner are told, because work should not go on with a high risk left.",
+      "trigger": { "type": "number_above", "fieldKey": "residual", "threshold": 11 },
+      "conditions": [],
+      "actions": [
+        { "type": "set_field", "fieldKey": "status", "value": "opt_more_controls" },
+        { "type": "notify", "to": ["jobRole:HSE manager", "field:owner"], "message": "{id} {name} is still High after controls (score {residual}). Add stronger controls before the work goes on." }
+      ]
+    },
+    {
+      "ref": "hazard_ppe_only",
+      "sheet": "hazards",
+      "name": "Protective equipment as the strongest control on a serious hazard → ask for a better control",
+      "advanced": true,
+      "description": "Hierarchy of controls gate: when protective equipment is the strongest control on a hazard whose risk before controls is 10 or more, the owner is asked to look for elimination, substitution or an engineering control, and the hazard cannot be accepted until the reason is noted.",
+      "trigger": { "type": "field_becomes", "fieldKey": "hierarchy", "value": "opt_ppe" },
+      "conditions": [{ "fieldKey": "score", "op": "gte", "value": 10 }],
+      "actions": [
+        { "type": "request_update", "fieldKey": "owner", "message": "{id} {name} relies on protective equipment alone. Can the hazard be removed, replaced or engineered out? Write why not under Further controls needed." },
+        { "type": "post_update", "message": "Protective equipment is the last control in the hierarchy: look for a stronger one before accepting this risk." }
+      ]
+    },
+    {
+      "ref": "hazard_next_review",
+      "sheet": "hazards",
+      "name": "Risk accepted → next review in a year",
+      "advanced": true,
+      "description": "Recurring review cycle: when a hazard's risk is accepted, its next review is set a year ahead, so every assessment is looked at again at least once a year (sooner after an incident or a change).",
+      "trigger": { "type": "workflow_approved", "workflowId": "risk-acceptance" },
+      "conditions": [],
+      "actions": [{ "type": "set_field", "fieldKey": "review_date", "value": "$in:365" }]
+    },
+    {
+      "ref": "concern_answer_soon",
+      "sheet": "consultation",
+      "name": "Concern answer due in 2 days → tell the follow-up owner",
+      "advanced": true,
+      "description": "SLA clock, step 1: a safety concern or idea is answered within 7 days. Two days before the answer is due, the person following it up is reminded.",
+      "trigger": { "type": "date_arrives", "fieldKey": "answer_due", "offsetDays": -2 },
+      "conditions": [
+        { "fieldKey": "channel", "op": "is_any_of", "value": ["opt_concern", "opt_idea"] },
+        { "fieldKey": "status", "op": "is_not_done" }
+      ],
+      "actions": [
+        { "type": "notify", "to": ["field:owner"], "message": "{id} {name}: the worker who raised it should hear back by {answer_due}." }
+      ]
+    },
+    {
+      "ref": "concern_answer_late",
+      "sheet": "consultation",
+      "name": "Concern not answered in 7 days → tell the HSE manager",
+      "advanced": true,
+      "description": "SLA clock, step 2: a safety concern or idea with no answer after 7 days goes to the HSE manager the next day, so workers see that raising a concern leads somewhere.",
+      "trigger": { "type": "date_arrives", "fieldKey": "answer_due", "offsetDays": 1 },
+      "conditions": [
+        { "fieldKey": "channel", "op": "is_any_of", "value": ["opt_concern", "opt_idea"] },
+        { "fieldKey": "status", "op": "is_not_done" }
+      ],
+      "actions": [
+        { "type": "notify", "to": ["jobRole:HSE manager", "field:owner"], "message": "{id} {name} was raised on {held_on} and has no answer yet." }
+      ]
+    },
+    {
+      "ref": "concern_action",
+      "sheet": "consultation",
+      "name": "Consultation needs action → create an action",
+      "advanced": true,
+      "description": "Cascade: ticking Needs action on a meeting, a talk or a concern creates a linked action in Actions, tagged ISO 45001 and due in 30 days, so what was agreed with workers is followed up like any other action.",
+      "trigger": { "type": "field_becomes", "fieldKey": "needs_action", "value": "true" },
+      "conditions": [{ "fieldKey": "actions", "op": "has_none" }],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "core:actions",
+          "groupRef": "open",
+          "name": "Follow up: {name}",
+          "values": { "origin": "Worker consultation {id}", "due": "$in:30", "standards": ["iso45001"] },
+          "link": true
+        }
+      ]
+    },
+    {
+      "ref": "contractor_expiry",
+      "sheet": "contractors",
+      "level": "full",
+      "name": "Contractor approval expires in 30 days → ask our contact",
+      "trigger": { "type": "date_arrives", "fieldKey": "approval_expires", "offsetDays": -30 },
+      "conditions": [{ "fieldKey": "status", "op": "is_any_of", "value": ["opt_approved"] }],
+      "actions": [
+        { "type": "request_update", "fieldKey": "owner", "message": "The approval of {name} expires on {approval_expires}. Collect a current method statement and insurance and submit it for approval again." }
+      ]
+    },
+    {
+      "ref": "contractor_insurance",
+      "sheet": "contractors",
+      "level": "full",
+      "name": "Contractor insurance expires → suspend and tell our contact",
+      "advanced": true,
+      "description": "Gate: the day before a contractor's insurance evidence expires, an approved contractor is suspended and our contact told, so nobody works on site without cover.",
+      "trigger": { "type": "evidence_expiring", "fieldKey": "insurance", "days": 1 },
+      "conditions": [{ "fieldKey": "status", "op": "is_any_of", "value": ["opt_approved"] }],
+      "actions": [
+        { "type": "set_field", "fieldKey": "status", "value": "opt_suspended" },
+        { "type": "notify", "to": ["field:owner"], "message": "{name} is suspended: the insurance evidence has expired. Upload the new certificate and approve them again." }
+      ]
+    },
+    {
+      "ref": "drill_due",
+      "sheet": "drills",
+      "level": "full",
+      "name": "Drill in 7 days → tell the drill lead",
+      "trigger": { "type": "date_arrives", "fieldKey": "planned_on", "offsetDays": -7 },
+      "conditions": [{ "fieldKey": "status", "op": "is_any_of", "value": ["opt_planned"] }],
+      "actions": [
+        { "type": "notify", "to": ["field:owner"], "message": "{name} is planned for {planned_on}. Brief the observers and set the target time." }
+      ]
+    },
+    {
+      "ref": "drill_next",
+      "sheet": "drills",
+      "level": "full",
+      "name": "Drill closed → plan the next one in six months",
+      "advanced": true,
+      "description": "Recurring drill cycle: when a drill is closed, the next drill is planned six months ahead with the same lead, so drills keep happening without anyone having to remember.",
+      "trigger": { "type": "field_becomes", "fieldKey": "status", "value": "opt_closed" },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "drills",
+          "groupRef": "planned",
+          "name": "Next drill after {name}",
+          "values": { "planned_on": "$in:182", "status": "opt_planned" }
+        }
+      ]
+    },
+    {
+      "ref": "health_check_due",
+      "sheet": "health",
+      "level": "full",
+      "name": "Health check due in 30 days → ask who arranges it",
+      "trigger": { "type": "date_arrives", "fieldKey": "next_check", "offsetDays": -30 },
+      "conditions": [{ "fieldKey": "status", "op": "is_none_of", "value": ["opt_booked"] }],
+      "actions": [
+        { "type": "request_update", "fieldKey": "owner", "message": "{id} {name} is due on {next_check}. Book it with the provider and set the status to Booked." }
+      ]
+    },
+    {
+      "ref": "health_check_overdue",
+      "sheet": "health",
+      "level": "full",
+      "name": "Health check date passed → mark it overdue and tell the HSE manager",
+      "advanced": true,
+      "description": "Escalation: the day after a health check was due and not done, it is marked Overdue and the HSE manager is told along with whoever arranges it, so exposed people are not left without surveillance.",
+      "trigger": { "type": "date_arrives", "fieldKey": "next_check", "offsetDays": 1 },
+      "conditions": [{ "fieldKey": "status", "op": "is_not_done" }],
+      "actions": [
+        { "type": "set_field", "fieldKey": "status", "value": "opt_overdue" },
+        { "type": "notify", "to": ["jobRole:HSE manager", "field:owner"], "message": "{id} {name} was due on {next_check} and has not been done." }
+      ]
+    }
+  ],
+  "dashboards": [
+    {
+      "ref": "ohs_overview",
+      "name": "ISO 45001 audit readiness",
+      "headline": true,
+      "widgets": [
+        { "ref": "w_clauses", "type": "by_option", "title": "ISO 45001 requirements by implementation", "library": "iso-45001@2018", "fieldKey": "status" },
+        { "ref": "w_hazards", "type": "by_option", "title": "Hazards by status", "sheetRef": "hazards", "fieldKey": "status" },
+        { "ref": "w_hierarchy", "type": "by_option", "title": "Hazards by strongest control", "sheetRef": "hazards", "fieldKey": "hierarchy" },
+        { "ref": "w_hazards_due", "type": "overdue", "title": "Hazard assessments due for review", "sheetRef": "hazards", "fieldKey": "review_date" },
+        {
+          "ref": "w_incident_types",
+          "type": "by_option",
+          "title": "Injuries, near misses and ill health by type",
+          "sheetRef": "core:incidents",
+          "fieldKey": "incident_type",
+          "conditions": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso45001"] }]
+        },
+        {
+          "ref": "w_incidents_open",
+          "type": "count",
+          "title": "OH&S incidents still open",
+          "sheetRef": "core:incidents",
+          "conditions": [
+            { "fieldKey": "standards", "op": "has_any_of", "value": ["iso45001"] },
+            { "fieldKey": "status", "op": "is_not_done" }
+          ]
+        },
+        { "ref": "w_concerns", "type": "overdue", "title": "Worker concerns not answered in time", "sheetRef": "consultation", "fieldKey": "answer_due" },
+        {
+          "ref": "w_objectives",
+          "type": "by_option",
+          "title": "OH&S objectives by status",
+          "sheetRef": "core:objectives",
+          "fieldKey": "status",
+          "conditions": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso45001"] }]
+        },
+        {
+          "ref": "w_nc_open",
+          "type": "count",
+          "title": "Open ISO 45001 nonconformities",
+          "sheetRef": "core:nc",
+          "conditions": [
+            { "fieldKey": "standards", "op": "has_any_of", "value": ["iso45001"] },
+            { "fieldKey": "stage", "op": "is_not_done" }
+          ]
+        },
+        {
+          "ref": "w_docs_due",
+          "type": "overdue",
+          "title": "OH&S documents due for review",
+          "sheetRef": "core:documents",
+          "fieldKey": "next_review",
+          "conditions": [{ "fieldKey": "standards", "op": "has_any_of", "value": ["iso45001"] }]
+        }
+      ]
+    }
+  ],
+  "setup": {
+    "title": "ISO 45001 setup",
+    "description": "Four steps to a health and safety system an auditor can follow, on the shared registers.",
+    "steps": [
+      {
+        "ref": "applicability",
+        "title": "Decide what applies",
+        "body": "Mark every ISO 45001 requirement applicable or not, with a reason for the ones that are not.",
+        "target": { "library": "iso-45001@2018" },
+        "rules": [{ "library": "iso-45001@2018", "all": [{ "fieldKey": "applicable", "op": "is_not_empty" }] }]
+      },
+      {
+        "ref": "hazards",
+        "title": "Assess your hazards with the people who do the work",
+        "body": "Walk through each task with the people who do it, list the hazards, the controls in place by the hierarchy of controls and the risk that is left, and get each one accepted.",
+        "target": { "sheetRef": "hazards" },
+        "rules": [
+          { "sheetRef": "hazards", "all": [{ "fieldKey": "consulted", "op": "is_checked" }], "min": 5 },
+          { "sheetRef": "hazards", "all": [{ "fieldKey": "status", "op": "is_done" }], "min": 5 }
+        ]
+      },
+      {
+        "ref": "consultation",
+        "title": "Show how workers take part",
+        "body": "Log your safety committee meetings and toolbox talks, and share the concern form with everyone.",
+        "target": { "sheetRef": "consultation", "view": "Raise a safety concern or idea" },
+        "rules": [{ "sheetRef": "consultation", "where": [{ "fieldKey": "channel", "op": "is_any_of", "value": ["opt_committee", "opt_toolbox"] }], "min": 3 }]
+      },
+      {
+        "ref": "drills",
+        "title": "Test your emergency response",
+        "body": "Plan drills for the emergencies you could face and record how each one went.",
+        "target": { "sheetRef": "drills" },
+        "rules": [{ "sheetRef": "drills", "all": [{ "fieldKey": "status", "op": "is_done" }], "min": 1 }],
+        "levels": {
+          "starter": {
+            "title": "Decide how you test your emergency response",
+            "body": "Starter has no drill log: record in the library how you plan and test emergency drills, or add Full for the Emergency drills sheet.",
+            "target": { "library": "iso-45001@2018" },
+            "rules": [{ "library": "iso-45001@2018", "where": [{ "fieldKey": "ref", "op": "is", "value": "8.2" }], "all": [{ "fieldKey": "status", "op": "is_not_empty" }] }]
+          }
+        }
+      }
+    ]
+  }
+}

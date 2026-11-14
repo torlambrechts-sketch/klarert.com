@@ -3,7 +3,7 @@ import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
 // Core registers (docs/11 Core registers and Extends, docs/05 §2.1 Registers): an admin installs the ISO 14001
-// demonstration add-on into an empty workspace; the Core registers are installed first. The side menu shows the
+// add-on into an empty workspace; the Core registers are installed first, at Full for the Legal register. The side menu shows the
 // Registers domains that have sheets, the risk register is a System board with the Environmental category, the
 // ISO 14001 tag and view and the add-on's system column; archiving the add-on takes back what it added and keeps
 // every shared row.
@@ -35,21 +35,21 @@ test.describe('desktop', () => {
     await row.getByRole('button', { name: `Preview ${ADDON}` }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByTestId('installs-first')).toContainText(
-      'Installs Core registers 1.0.0 (Starter) first.',
+      'Installs Core registers 1.0.0 (Full) first.',
     );
     await shot(page, '01-preview');
     await dialog.getByRole('button', { name: 'Install' }).click();
-    await expect(dialog.getByRole('status')).toContainText(`Installed ${ADDON}.`, {
-      timeout: 60_000,
+    await expect(dialog.getByRole('status')).toContainText(`Installed ${ADDON} (Starter).`, {
+      timeout: 90_000,
     });
     await expect(dialog.getByRole('status')).toContainText(
-      'Installed Core registers 1.0.0 (Starter) first.',
+      'Installed Core registers 1.0.0 (Full) first.',
     );
 
     const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
     const installs = await rest<{ id: string; pack_key: string; status: string }[]>(
       page,
-      `pack_installs?org_id=eq.${org!.id}&select=id,pack_key,status&order=installed_at`,
+      `pack_installs?org_id=eq.${org!.id}&pack_key=in.(core,iso-14001)&select=id,pack_key,status&order=installed_at`,
     );
     expect(installs.map((i) => [i.pack_key, i.status])).toEqual([
       ['core', 'installed'],
@@ -131,7 +131,7 @@ test.describe('desktop', () => {
       page,
       `items?sheet_id=eq.${risk!.id}&archived_at=is.null&select=id`,
     );
-    expect(riskItems).toHaveLength(2);
+    expect(riskItems).toHaveLength(3);
 
     // ── archive the add-on: its column, view and tag go; the shared rows stay
     await page.goto(`/${slug}/settings?tab=packs`);
@@ -153,7 +153,7 @@ test.describe('desktop', () => {
       page,
       `items?sheet_id=eq.${risk!.id}&archived_at=is.null&select=id`,
     );
-    expect(kept).toHaveLength(2);
+    expect(kept).toHaveLength(3);
     const column = await rest<{ archived_at: string | null }[]>(
       page,
       `fields?sheet_id=eq.${risk!.id}&key=eq.iso14001_aspect&select=archived_at`,

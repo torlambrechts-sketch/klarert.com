@@ -472,6 +472,8 @@ export const sheetTemplateSchema = z
         }
       }
       for (const action of a.actions) {
+        // another pack's sheet (`core:nc`, a pack automation into a required pack): the pack checks it
+        if (typeof action.sheetRef === 'string' && action.sheetRef.includes(':')) continue;
         const target = typeof action.sheetRef === 'string' ? sheets.get(action.sheetRef) : s;
         if (!target) problem(['automations', ai], `Unknown sheet "${String(action.sheetRef)}".`);
         else if (
