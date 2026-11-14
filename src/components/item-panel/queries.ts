@@ -1,6 +1,6 @@
 'use client';
 
-import { isMaskedValue } from '@/engine/access';
+import { ERASED_VALUE, isMaskedValue } from '@/engine/access';
 import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ActivityEntry } from '@/engine/activity';
@@ -111,8 +111,56 @@ export function useActivity(itemId: string, sheetId: string, version: string) {
       }));
       // restricted values (docs/02 §16): the log keeps markers; people who may see the field read the values
       const masked = entries.filter(
-        (e) => isMaskedValue(e.oldValue) || isMaskedValue(e.newValue) || hasMaskedValues(e),
+        (e) =>
+          isMaskedValue(e.oldValue) ||
+          isMaskedValue(e.newValue) ||
+          hasMaskedValues(e) ||
+          hasMaskedKeys(e.oldValue) ||
+          hasMaskedKeys(e.newValue),
       );
+      // personal data (docs/02 §18): values not erased yet are read from personal_activity; erased ones say so
+      if (masked.length) {
+        const { data: personal } = await db
+          .from('personal_activity')
+          .select('activity_id, slot, field_id, old_value, new_value, erased_at')
+          .in(
+            'activity_id',
+            masked.map((e) => e.id),
+          );
+        for (const r of personal ?? []) {
+          const e = entries.find((x) => x.id === r.activity_id);
+          if (!e) continue;
+          const erased = !!r.erased_at;
+          const pick = (v: Json | null) => (erased ? (ERASED_VALUE as unknown as Json) : v);
+          if (r.slot === 'file') {
+            // the file entry's name, description and version note, key by key
+            const merge = (base: Json | null, real: Json | null) => {
+              if (!base || typeof base !== 'object' || Array.isArray(base)) return base;
+              const out: Record<string, Json> = { ...base };
+              for (const k of ['filename', 'description', 'version_note'])
+                if (isMaskedValue(out[k]))
+                  out[k] = erased
+                    ? (ERASED_VALUE as unknown as Json)
+                    : (((real as Record<string, Json> | null)?.[k] ?? null) as Json);
+              return out;
+            };
+            e.oldValue = merge(e.oldValue, (r.old_value ?? null) as Json) as ActivityEntry['oldValue'];
+            e.newValue = merge(e.newValue, (r.new_value ?? null) as Json) as ActivityEntry['newValue'];
+          } else if (r.slot === 'name' && e.action === 'item.created') {
+            if (e.newValue && typeof e.newValue === 'object' && !Array.isArray(e.newValue))
+              e.newValue = { ...e.newValue, name: pick((r.new_value ?? null) as Json) };
+          } else if (r.slot === 'field' && !e.fieldId) {
+            if (e.newValue && typeof e.newValue === 'object' && !Array.isArray(e.newValue)) {
+              const values = { ...((e.newValue.values ?? {}) as Record<string, Json>) };
+              values[r.field_id!] = pick((r.new_value ?? null) as Json);
+              e.newValue = { ...e.newValue, values };
+            }
+          } else {
+            e.oldValue = (e.oldValue === null ? null : pick((r.old_value ?? null) as Json)) as ActivityEntry['oldValue'];
+            e.newValue = (e.newValue === null ? null : pick((r.new_value ?? null) as Json)) as ActivityEntry['newValue'];
+          }
+        }
+      }
       if (masked.length) {
         const { data: real } = await db
           .from('restricted_activity')
@@ -235,6 +283,16 @@ export function useFileCategories(org: string) {
     },
     staleTime: 5 * 60_000,
   });
+}
+
+/** A file entry whose name, description or version note is a personal-data marker. */
+function hasMaskedKeys(v: Json | null): boolean {
+  return (
+    !!v &&
+    typeof v === 'object' &&
+    !Array.isArray(v) &&
+    ['filename', 'description', 'version_note'].some((k) => isMaskedValue(v[k]))
+  );
 }
 
 /** An item.created entry whose values hold a restricted value's marker. */

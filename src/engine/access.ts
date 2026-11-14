@@ -133,9 +133,20 @@ export function auditorBanner(expiresAt: string, timeZone: string): string {
   return `Read-only auditor access until ${date}`;
 }
 
-/** A restricted value in the activity log (0027): the marker that stands for it. */
+/**
+ * A value the activity log keeps as a marker: restricted (0027) or personal data (0036, docs/02 §18). People who may
+ * see it read the value from its own store; an erased personal value stays a marker for good.
+ */
 export function isMaskedValue(v: unknown): boolean {
-  return !!v && typeof v === 'object' && !Array.isArray(v) && '$restricted' in v;
+  return (
+    !!v && typeof v === 'object' && !Array.isArray(v) && ('$restricted' in v || '$personal' in v)
+  );
+}
+
+/** A personal-data value erased under a retention rule (the panel puts this in place of the marker). */
+export const ERASED_VALUE = { $erased: true } as const;
+export function isErasedValue(v: unknown): boolean {
+  return !!v && typeof v === 'object' && !Array.isArray(v) && '$erased' in v;
 }
 
 /**

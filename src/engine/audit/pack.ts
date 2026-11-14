@@ -160,14 +160,19 @@ export interface ActivityEntry {
   hash: string;
 }
 
-/** A logged value in words: restricted markers ({"$restricted": …}) read "Restricted". */
+/**
+ * A logged value in words: restricted markers ({"$restricted": …}) read "Restricted", personal-data markers
+ * ({"$personal": …}, docs/02 §18) read "Personal data": an export never carries personal data from the log.
+ */
 export function logValueText(v: Json | null): string {
   if (v === null || v === undefined) return '';
   if (typeof v === 'string') return v;
   return JSON.stringify(v, (_k, x: unknown) =>
     x && typeof x === 'object' && !Array.isArray(x) && '$restricted' in (x as object)
       ? 'Restricted'
-      : x,
+      : x && typeof x === 'object' && !Array.isArray(x) && '$personal' in (x as object)
+        ? 'Personal data'
+        : x,
   );
 }
 

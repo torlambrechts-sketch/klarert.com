@@ -1,6 +1,7 @@
 // Activity log lines (docs/05 §3.4, FR-28/FR-39): one readable sentence per entry of an item's chain. Pure: the
 // lookups for fields, groups, items and people are passed in; values are shown with the field type's toText.
-import { isMaskedValue } from './access';
+import { isErasedValue, isMaskedValue } from './access';
+import { formatDate } from './fields/helpers';
 import { resolveFieldType } from './fields/resolve';
 import type { Ctx, Field, Json } from './types';
 
@@ -37,9 +38,12 @@ export interface ActivityLine {
 
 const EMPTY = 'empty';
 const RESTRICTED = 'Restricted';
+const ERASED = 'erased';
 
 function valueText(field: Field | undefined, v: Json | null, look: ActivityLookup): string {
   if (v === null || v === undefined) return EMPTY;
+  // personal data erased under a retention rule (docs/02 §18): the log keeps only its marker
+  if (isErasedValue(v)) return ERASED;
   // a restricted value (docs/02 §16): the log keeps a marker; people who may see it read it from its own store
   if (isMaskedValue(v)) return RESTRICTED;
   const def = field ? resolveFieldType(field.type) : undefined;
@@ -75,9 +79,56 @@ const FILE_DETAIL: Record<string, string> = {
 };
 
 function fileName(v: Json | null): string {
-  return v && typeof v === 'object' && !Array.isArray(v) && typeof v.filename === 'string'
-    ? v.filename
-    : 'a file';
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return 'a file';
+  if (isErasedValue(v.filename)) return 'an erased file';
+  if (isMaskedValue(v.filename)) return 'a file (restricted)';
+  return typeof v.filename === 'string' ? v.filename : 'a file';
+}
+
+/** An item name in the log: erased, restricted (personal names the reader may not see) or the name. */
+function nameText(v: Json | null): string {
+  if (isErasedValue(v)) return ERASED;
+  if (isMaskedValue(v)) return RESTRICTED;
+  return quote(String(v ?? ''));
+}
+
+const PERIOD_WORDS: Record<string, string> = {
+  erase: 'erase the personal data',
+  anonymise: 'anonymise it',
+  archive: 'archive it',
+};
+
+/** Retention entries (docs/02 §18): due, postponed, holds, and the tombstone of an erasure. */
+function retentionText(e: ActivityEntry): string | null {
+  const v = objOf(e.newValue);
+  const rule = v && typeof v.rule === 'string' ? quote(v.rule) : 'a retention rule';
+  switch (e.action) {
+    case 'retention.due':
+      return `Due for retention review under ${rule}: ${PERIOD_WORDS[String(v?.action)] ?? 'review it'}`;
+    case 'retention.postponed':
+      return `Retention postponed to ${typeof v?.until === 'string' ? formatDate(v.until) : 'a later date'}${e.note ? ` · Reason: ${quote(e.note)}` : ''}`;
+    case 'retention.hold_placed':
+      return `Legal hold placed${e.note ? ` · Reason: ${quote(e.note)}` : ''}`;
+    case 'retention.hold_released':
+      return `Legal hold released${e.note ? ` · ${quote(e.note)}` : ''}`;
+    case 'retention.archived':
+      return `Archived under ${rule}${e.note ? ` · Note: ${quote(e.note)}` : ''}`;
+    case 'retention.erased':
+    case 'retention.anonymised': {
+      const fields = Array.isArray(v?.fields)
+        ? v.fields.map((f) => String(objOf(f)?.name ?? '')).filter(Boolean)
+        : [];
+      const parts = [
+        fields.length ? fields.join(', ') : 'no fields',
+        Number(v?.files) ? `${Number(v?.files)} ${Number(v?.files) === 1 ? 'file' : 'files'}` : '',
+        Number(v?.comments) ? `${Number(v?.comments)} ${Number(v?.comments) === 1 ? 'comment' : 'comments'}` : '',
+        v?.renamed === true ? 'the name' : '',
+      ].filter(Boolean);
+      return `${e.action === 'retention.anonymised' ? 'Anonymised' : 'Personal data erased'} under ${rule}: ${parts.join(', ')}${e.note ? ` · Note: ${quote(e.note)}` : ''}`;
+    }
+    default:
+      return null;
+  }
 }
 
 function itemList(list: string[], look: ActivityLookup): string {
@@ -100,8 +151,14 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
   // files of the item's Files tab have no field
   const files = e.fieldId ? fieldName(field) : 'Files';
   const comment = e.note && e.action === 'value.changed' ? ` · Comment: ${quote(e.note)}` : '';
+  const retention = retentionText(e);
+  if (retention) return retention;
   // links and files of a restricted field: what changed is not shown to everyone
-  if (e.action !== 'value.changed' && (isMaskedValue(e.oldValue) || isMaskedValue(e.newValue)))
+  if (
+    e.action !== 'value.changed' &&
+    e.action !== 'item.renamed' &&
+    (isMaskedValue(e.oldValue) || isMaskedValue(e.newValue))
+  )
     return `${e.fieldId ? fieldName(field) : files}: changed (restricted)`;
   switch (e.action) {
     case 'item.created': {
@@ -150,7 +207,7 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
       return `${fieldName(field)}: ${before} → ${after}${comment}`;
     }
     case 'item.renamed':
-      return `Renamed: ${quote(String(e.oldValue ?? ''))} → ${quote(String(e.newValue ?? ''))}`;
+      return `Renamed: ${nameText(e.oldValue)} → ${nameText(e.newValue)}`;
     case 'item.moved': {
       const from = look.groupName(String(e.oldValue ?? '')) ?? 'a deleted group';
       const to = look.groupName(String(e.newValue ?? '')) ?? 'a deleted group';
