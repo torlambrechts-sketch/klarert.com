@@ -25,15 +25,30 @@ describe('app manifest', () => {
     expect(p.dashboards.map((d) => d.ref)).toEqual(['capa_overview']);
   });
 
-  it('the ISO 27001 pack ships its own CAPA app over Nonconformities and CAPA', () => {
+  it('the ISO 27001 add-on ships its own CAPA app over the Core registers', () => {
     const iso = repoPacks().find((p) => p.key === 'iso-27001')!;
-    expect(iso.version).toBe('1.3.0');
+    const core = repoPacks().find((p) => p.key === 'core')!;
+    expect(iso.version).toBe('2.0.0');
     const app = iso.apps!.find((a) => a.key === 'isms-capa')!;
     expect(appProblems(app, iso)).toEqual([]);
+    expect(appProblems(app, iso, [core])).toEqual([]);
     expect(app.sections[0]!.screens.map((s) => s.title)).toEqual([
       'Report a problem',
       'My actions',
-      'Needs my approval',
+      'Needs my check',
+    ]);
+    // a Core column that does not exist is named when Core's manifest is at hand
+    const bad = JSON.parse(JSON.stringify(app));
+    bad.sections[0].screens[2].filters[1].fieldKey = 'status';
+    expect(appProblems(bad, iso, [core]).map((p) => p.message)).toEqual([
+      'Unknown field "status".',
+    ]);
+    // only packs it requires, and only forms its extends add
+    bad.sections[0].screens[2].sheet = 'gdpr:breach';
+    bad.sections[0].screens[0].form = 'report';
+    expect(appProblems(bad, iso).map((p) => p.message)).toEqual([
+      'Unknown form "report" on "core:nc".',
+      '"gdpr:breach" is not a sheet of a pack this one requires.',
     ]);
   });
 

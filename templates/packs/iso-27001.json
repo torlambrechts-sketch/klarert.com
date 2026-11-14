@@ -1,41 +1,35 @@
 {
   "key": "iso-27001",
-  "version": "1.3.0",
-  "title": "ISO/IEC 27001:2022 ISMS",
-  "description": "A working information security management system on top of the ISO/IEC 27001:2022 requirement library: scope and context, a scored risk register with treatment, the documents an ISMS keeps, nonconformities with corrective actions, automations, an ISMS overview dashboard and a seven-step setup checklist. Choose Starter or Full; you can add Full later. Reference numbers and short titles only, never the text of the standard.",
-  "requires": [],
-  "levels": [
+  "version": "2.0.0",
+  "title": "ISO/IEC 27001:2022 ISMS (add-on)",
+  "description": "An information security management system on top of the Core registers and the ISO/IEC 27001:2022 requirement library: the ISMS scope and context and the risk treatment plan as its own sheets, and the information security risk category, Annex A links, residual risk, the ISMS documents, security incidents with a 24-hour containment clock, ISMS nonconformities, audits, reviews and training on the shared registers. Installs the Core registers (Full) first. The statement of applicability comes from the library. Reference numbers and short titles only, never the text of the standard.",
+  "requires": [
     {
-      "key": "starter",
-      "name": "Starter",
-      "description": "The core of an ISMS: scope and context, risk register, risk treatment plan, ISMS documents, nonconformities and CAPA."
-    },
-    {
-      "key": "full",
-      "name": "Full",
-      "description": "Everything in Starter plus the asset register, internal audits with findings, management reviews, security incidents and training."
+      "pack": "core",
+      "range": "^1.0.0"
     }
   ],
+  "standard": {
+    "id": "iso27001",
+    "label": "ISO 27001",
+    "color": "navy"
+  },
   "frameworks": [
     {
       "key": "iso-27001",
       "version": "2022"
     }
   ],
-  "folders": [
-    {
-      "ref": "isms",
-      "name": "ISMS"
-    }
-  ],
+  "folders": [],
   "sheets": [
     {
       "ref": "scope",
-      "name": "Scope and context",
+      "name": "ISMS scope and context",
       "itemLabel": "Entry",
-      "idPrefix": "CTX-",
-      "folder": "isms",
-      "description": "What shapes your ISMS: internal and external issues, the interested parties and what they need from you, and the scope statement. Link each entry to the clause it answers.",
+      "idPrefix": "ISC-",
+      "folder": "core:management",
+      "kind": "register",
+      "description": "What shapes your ISMS: internal and external issues, the interested parties and what they need from you, the interfaces with what others run for you, and the scope statement. Link each entry to the clause it answers. Top management approves the scope statement with the Scope approval workflow.",
       "groups": [
         {
           "ref": "internal",
@@ -54,7 +48,7 @@
         },
         {
           "ref": "scope",
-          "name": "Scope statement",
+          "name": "Scope",
           "color": "navy"
         }
       ],
@@ -79,6 +73,11 @@
                 "id": "opt_party",
                 "label": "Interested party",
                 "color": "teal"
+              },
+              {
+                "id": "opt_interface",
+                "label": "Interface or dependency",
+                "color": "orange"
               },
               {
                 "id": "opt_scope",
@@ -112,21 +111,15 @@
         },
         {
           "key": "needs",
-          "name": "Their requirements",
+          "name": "What they need from us",
           "type": "longtext",
-          "description": "What this party expects from you, and which of those expectations the ISMS takes on.",
-          "visibility": {
-            "fieldKey": "kind",
-            "op": "is_any_of",
-            "value": [
-              "opt_party"
-            ]
-          }
+          "description": "For an interested party: what they expect, and which of those needs the ISMS takes on."
         },
         {
           "key": "response",
-          "name": "How the ISMS responds",
-          "type": "longtext"
+          "name": "How the ISMS answers it",
+          "type": "longtext",
+          "description": "The risks, controls, objectives or documents that deal with this entry."
         },
         {
           "key": "status",
@@ -140,8 +133,44 @@
                 "color": "grey"
               },
               {
+                "id": "opt_review",
+                "label": "In review",
+                "color": "orange"
+              },
+              {
                 "id": "opt_agreed",
                 "label": "Agreed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "approval_step",
+          "name": "Approval step",
+          "type": "workflowstep",
+          "description": "Where the entry is in its approval. Set by the Scope approval workflow, never by hand.",
+          "config": {
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Not submitted",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_management",
+                "label": "Top management",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Sent back",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Approved",
                 "color": "green",
                 "done": true
               }
@@ -156,6 +185,13 @@
       ],
       "views": [
         {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        },
+        {
           "name": "By kind",
           "type": "kanban",
           "config": {
@@ -168,41 +204,111 @@
           "ref": "table"
         },
         {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        },
+        {
           "ref": "By kind"
+        }
+      ],
+      "forms": [],
+      "columnGroups": [],
+      "workflows": [
+        {
+          "id": "scope-approval",
+          "name": "Scope approval",
+          "enabled": true,
+          "requiredFields": [
+            "owner",
+            "details"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": false,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
+          },
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_review",
+            "onApproved": "opt_agreed",
+            "onRejected": "opt_draft"
+          },
+          "steps": [
+            {
+              "id": "management",
+              "name": "Top management",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Top management"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_management"
+            }
+          ]
         }
       ],
       "items": [
         {
           "ref": "ex_cloud",
           "group": "external",
-          "name": "Example: more of our work runs on cloud services",
+          "name": "Example: we depend on one cloud provider for every customer system",
           "values": {
             "kind": "opt_external",
-            "details": "Most business systems are hosted by suppliers, so their security becomes ours.",
+            "details": "An outage or a change in their terms would stop our service.",
+            "response": "Risk \"Example: key supplier outage stops the service\"; supplier reviews each year.",
             "status": "opt_draft",
-            "next_review": "$in:180"
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "clause": [
+              "iso-27001@2022#4.1"
+            ]
           }
         },
         {
           "ref": "ex_team",
           "group": "internal",
-          "name": "Example: a small IT team covers everything",
+          "name": "Example: a small IT team covers security next to other work",
           "values": {
             "kind": "opt_internal",
-            "details": "Two people run IT. Holidays and sick leave leave gaps.",
+            "details": "Two people run IT and security; holidays leave gaps.",
+            "response": "Objective on patching; a stand-in agreed for incidents.",
             "status": "opt_draft",
-            "next_review": "$in:180"
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "clause": [
+              "iso-27001@2022#4.1"
+            ]
           }
         },
         {
           "ref": "ex_customers",
           "group": "parties",
-          "name": "Example: customers",
+          "name": "Example: business customers",
           "values": {
             "kind": "opt_party",
-            "needs": "Their data is kept confidential, our service is available, and we tell them quickly about incidents that affect them.",
+            "needs": "Their data kept confidential and available, a signed data processing agreement, and to be told quickly about incidents that affect them.",
+            "response": "Contract terms, incident process, ISO/IEC 27001 certificate.",
             "status": "opt_draft",
-            "next_review": "$in:180"
+            "next_review": "$in:365"
+          },
+          "requirements": {
+            "clause": [
+              "iso-27001@2022#4.2"
+            ]
           }
         },
         {
@@ -214,343 +320,11 @@
             "details": "Write which sites, teams, services and systems the ISMS covers, what it leaves out and why, and where it meets what others run for you.",
             "status": "opt_draft",
             "next_review": "$in:365"
-          }
-        }
-      ]
-    },
-    {
-      "ref": "risk",
-      "name": "Risk register",
-      "itemLabel": "Risk",
-      "idPrefix": "RSK-",
-      "folder": "isms",
-      "description": "Information security risks: what could happen to which asset or process, how likely and how bad, how you treat it and the controls that do it. Scores are likelihood times impact (1 to 25).",
-      "groups": [
-        {
-          "ref": "identified",
-          "name": "Identified",
-          "color": "blue"
-        },
-        {
-          "ref": "treating",
-          "name": "Being treated",
-          "color": "orange"
-        },
-        {
-          "ref": "accepted",
-          "name": "Accepted",
-          "color": "green"
-        },
-        {
-          "ref": "closed",
-          "name": "Closed",
-          "color": "grey"
-        }
-      ],
-      "fields": [
-        {
-          "key": "asset",
-          "name": "Asset or process",
-          "type": "text"
-        },
-        {
-          "key": "threat",
-          "name": "Threat",
-          "type": "text"
-        },
-        {
-          "key": "vulnerability",
-          "name": "Vulnerability",
-          "type": "text"
-        },
-        {
-          "key": "owner",
-          "name": "Risk owner",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "likelihood",
-          "name": "Likelihood",
-          "type": "rating",
-          "config": {
-            "scale": 5
-          },
-          "description": "1 rare, 5 almost certain."
-        },
-        {
-          "key": "impact",
-          "name": "Impact",
-          "type": "rating",
-          "config": {
-            "scale": 5
-          },
-          "description": "1 negligible, 5 severe."
-        },
-        {
-          "key": "score",
-          "name": "Inherent score",
-          "type": "formula",
-          "config": {
-            "expr": "IF(OR(EMPTY({likelihood}), EMPTY({impact})), 0, {likelihood} * {impact})",
-            "result": "number"
-          }
-        },
-        {
-          "key": "level",
-          "name": "Risk level",
-          "type": "formula",
-          "config": {
-            "expr": "IF({score} >= 15, \"High\", IF({score} >= 8, \"Medium\", IF({score} > 0, \"Low\", \"\")))",
-            "result": "text"
-          }
-        },
-        {
-          "key": "treatment",
-          "name": "Treatment option",
-          "type": "dropdown",
-          "config": {
-            "options": [
-              {
-                "id": "opt_treat",
-                "label": "Treat",
-                "color": "blue"
-              },
-              {
-                "id": "opt_tolerate",
-                "label": "Tolerate",
-                "color": "green"
-              },
-              {
-                "id": "opt_transfer",
-                "label": "Transfer",
-                "color": "purple"
-              },
-              {
-                "id": "opt_terminate",
-                "label": "Terminate",
-                "color": "red"
-              }
-            ]
-          }
-        },
-        {
-          "key": "controls",
-          "name": "Annex A controls",
-          "type": "requirement",
-          "config": {
-            "multiple": true
-          },
-          "description": "The controls from the ISO/IEC 27001 library that treat this risk."
-        },
-        {
-          "key": "treatments",
-          "name": "Treatment actions",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "treatment",
-            "multiple": true,
-            "inverseKey": "risk"
-          }
-        },
-        {
-          "key": "residual_likelihood",
-          "name": "Residual likelihood",
-          "type": "rating",
-          "config": {
-            "scale": 5
-          }
-        },
-        {
-          "key": "residual_impact",
-          "name": "Residual impact",
-          "type": "rating",
-          "config": {
-            "scale": 5
-          }
-        },
-        {
-          "key": "residual_score",
-          "name": "Residual score",
-          "type": "formula",
-          "config": {
-            "expr": "IF(OR(EMPTY({residual_likelihood}), EMPTY({residual_impact})), 0, {residual_likelihood} * {residual_impact})",
-            "result": "number"
-          }
-        },
-        {
-          "key": "review_date",
-          "name": "Next review",
-          "type": "date"
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
-              {
-                "id": "opt_open",
-                "label": "Open",
-                "color": "blue"
-              },
-              {
-                "id": "opt_treating",
-                "label": "Being treated",
-                "color": "orange"
-              },
-              {
-                "id": "opt_accepted",
-                "label": "Accepted",
-                "color": "green",
-                "done": true
-              },
-              {
-                "id": "opt_closed",
-                "label": "Closed",
-                "color": "grey",
-                "done": true
-              }
-            ]
-          },
-          "rules": [
-            {
-              "id": "accept_owner",
-              "whenFieldKey": "status",
-              "whenValues": [
-                "opt_accepted"
-              ],
-              "require": [
-                "owner",
-                "treatment"
-              ],
-              "requireComment": true,
-              "message": "Say why the risk owner accepts this risk."
-            }
-          ]
-        },
-        {
-          "key": "notes",
-          "name": "Notes",
-          "type": "longtext"
-        }
-      ],
-      "views": [
-        {
-          "name": "By status",
-          "type": "kanban",
-          "config": {
-            "labelFieldKey": "status"
-          }
-        }
-      ],
-      "tabs": [
-        {
-          "ref": "table"
-        },
-        {
-          "ref": "By status"
-        },
-        {
-          "ref": "calendar"
-        }
-      ],
-      "columnGroups": [
-        {
-          "name": "Inherent risk",
-          "fields": [
-            "likelihood",
-            "impact",
-            "score",
-            "level"
-          ]
-        },
-        {
-          "name": "Residual risk",
-          "fields": [
-            "residual_likelihood",
-            "residual_impact",
-            "residual_score"
-          ]
-        }
-      ],
-      "items": [
-        {
-          "ref": "ex_laptop",
-          "group": "treating",
-          "name": "Example: customer data exposed through a lost laptop",
-          "values": {
-            "asset": "Staff laptops",
-            "threat": "Loss or theft",
-            "vulnerability": "Disks are not encrypted on older laptops",
-            "likelihood": 3,
-            "impact": 4,
-            "treatment": "opt_treat",
-            "residual_likelihood": 2,
-            "residual_impact": 2,
-            "review_date": "$in:90",
-            "status": "opt_treating"
-          },
-          "links": {
-            "treatments": [
-              "ex_encrypt"
-            ]
           },
           "requirements": {
-            "controls": [
-              "iso-27001@2022#A.8.1",
-              "iso-27001@2022#A.7.9"
-            ]
-          }
-        },
-        {
-          "ref": "ex_phishing",
-          "group": "identified",
-          "name": "Example: account taken over by phishing",
-          "values": {
-            "asset": "Email and office accounts",
-            "threat": "Phishing",
-            "vulnerability": "Not every account has multi-factor sign-in",
-            "likelihood": 4,
-            "impact": 4,
-            "treatment": "opt_treat",
-            "review_date": "$in:30",
-            "status": "opt_open"
-          },
-          "links": {
-            "treatments": [
-              "ex_mfa"
-            ]
-          },
-          "requirements": {
-            "controls": [
-              "iso-27001@2022#A.6.3",
-              "iso-27001@2022#A.8.7"
-            ]
-          }
-        },
-        {
-          "ref": "ex_supplier",
-          "group": "identified",
-          "name": "Example: hosting supplier outage",
-          "values": {
-            "asset": "Customer portal",
-            "threat": "Supplier outage",
-            "vulnerability": "One hosting region",
-            "likelihood": 2,
-            "impact": 3,
-            "treatment": "opt_tolerate",
-            "residual_likelihood": 2,
-            "residual_impact": 3,
-            "review_date": "$in:180",
-            "status": "opt_open"
-          },
-          "requirements": {
-            "controls": [
-              "iso-27001@2022#A.5.19",
-              "iso-27001@2022#A.5.30"
+            "clause": [
+              "iso-27001@2022#4.3",
+              "iso-27001@2022#4.4"
             ]
           }
         }
@@ -559,10 +333,11 @@
     {
       "ref": "treatment",
       "name": "Risk treatment plan",
-      "itemLabel": "Action",
+      "itemLabel": "Treatment",
       "idPrefix": "RTP-",
-      "folder": "isms",
-      "description": "The actions that treat your risks: who does what by when, for which risk and with which control.",
+      "folder": "core:risk",
+      "kind": "actions",
+      "description": "How each information security risk is treated: the controls it puts in place, the actions (as sub-items) with owners and due dates, and the residual risk the risk owner accepts. When every action is done the plan goes to the risk owner, then top management, for risk acceptance.",
       "groups": [
         {
           "ref": "planned",
@@ -576,23 +351,68 @@
         },
         {
           "ref": "done",
-          "name": "Done",
+          "name": "Accepted",
           "color": "green"
         }
       ],
       "fields": [
         {
+          "key": "risk",
+          "name": "Risk",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:risk",
+            "multiple": false,
+            "inverseKey": "iso27001_treatment"
+          }
+        },
+        {
+          "key": "risk_owner",
+          "name": "Risk owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          },
+          "description": "Approves the plan and accepts the risk that remains once it is done."
+        },
+        {
           "key": "owner",
-          "name": "Owner",
+          "name": "Plan owner",
           "type": "people",
           "config": {
             "multiple": false
           }
         },
         {
+          "key": "annex_a",
+          "name": "Annex A controls",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The Annex A controls this plan puts in place. They show on the requirement and in the statement of applicability."
+        },
+        {
+          "key": "controls",
+          "name": "Controls it puts in place",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "core:controls",
+            "multiple": true
+          }
+        },
+        {
+          "key": "details",
+          "name": "What we will do",
+          "type": "longtext"
+        },
+        {
           "key": "due_date",
-          "name": "Due date",
-          "type": "date"
+          "name": "Due",
+          "type": "date",
+          "config": {
+            "relative": true
+          }
         },
         {
           "key": "status",
@@ -601,60 +421,64 @@
           "config": {
             "options": [
               {
-                "id": "opt_todo",
-                "label": "To do",
-                "color": "grey"
+                "id": "opt_planned",
+                "label": "Planned",
+                "color": "blue"
               },
               {
                 "id": "opt_doing",
-                "label": "Working on it",
+                "label": "In progress",
                 "color": "orange"
               },
               {
-                "id": "opt_done",
-                "label": "Done",
+                "id": "opt_review",
+                "label": "Awaiting acceptance",
+                "color": "purple"
+              },
+              {
+                "id": "opt_accepted",
+                "label": "Residual risk accepted",
                 "color": "green",
                 "done": true
               }
             ]
-          },
-          "rules": [
-            {
-              "id": "reopen",
-              "whenFieldKey": "status",
-              "whenValues": [
-                "opt_todo",
-                "opt_doing"
-              ],
-              "requireComment": true,
-              "fromDone": true,
-              "message": "Say why this is reopened."
-            }
-          ]
-        },
-        {
-          "key": "risk",
-          "name": "Risk",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "risk",
-            "multiple": false,
-            "inverseKey": "treatments"
           }
         },
         {
-          "key": "control",
-          "name": "Control",
-          "type": "requirement",
+          "key": "approval_step",
+          "name": "Acceptance step",
+          "type": "workflowstep",
+          "description": "Where the plan is in its risk acceptance. Set by the Risk acceptance workflow, never by hand.",
           "config": {
-            "multiple": true
-          },
-          "description": "The Annex A control this action puts in place."
-        },
-        {
-          "key": "details",
-          "name": "What to do",
-          "type": "longtext"
+            "options": [
+              {
+                "id": "opt_step_draft",
+                "label": "Not submitted",
+                "color": "grey"
+              },
+              {
+                "id": "opt_step_owner",
+                "label": "Risk owner",
+                "color": "blue"
+              },
+              {
+                "id": "opt_step_management",
+                "label": "Top management",
+                "color": "purple"
+              },
+              {
+                "id": "opt_step_rejected",
+                "label": "Not accepted",
+                "color": "red"
+              },
+              {
+                "id": "opt_step_approved",
+                "label": "Accepted",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
         },
         {
           "key": "evidence",
@@ -686,658 +510,8 @@
           "ref": "calendar"
         }
       ],
-      "items": [
-        {
-          "ref": "ex_encrypt",
-          "group": "doing",
-          "name": "Example: turn on disk encryption on every laptop",
-          "values": {
-            "due_date": "$in:30",
-            "status": "opt_doing"
-          },
-          "links": {
-            "risk": [
-              "ex_laptop"
-            ]
-          },
-          "requirements": {
-            "control": [
-              "iso-27001@2022#A.8.24"
-            ]
-          }
-        },
-        {
-          "ref": "ex_mfa",
-          "group": "planned",
-          "name": "Example: require multi-factor sign-in for every account",
-          "values": {
-            "due_date": "$in:45",
-            "status": "opt_todo"
-          },
-          "links": {
-            "risk": [
-              "ex_phishing"
-            ]
-          },
-          "requirements": {
-            "control": [
-              "iso-27001@2022#A.8.5"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "ref": "documents",
-      "name": "ISMS documents",
-      "itemLabel": "Document",
-      "idPrefix": "ISD-",
-      "folder": "isms",
-      "register": "documents",
-      "description": "The documented information your ISMS keeps: policies, the scope, the risk method, the statement of applicability and the records that show it works. Controlled documents: approved by a second person, reviewed on a date. Submit a document for approval: its owner reviews it, then top management approves it and it is locked. Attach the files on each document's Files tab.",
-      "groups": [
-        {
-          "ref": "draft",
-          "name": "Draft",
-          "color": "grey"
-        },
-        {
-          "ref": "in_review",
-          "name": "In review",
-          "color": "orange"
-        },
-        {
-          "ref": "approved",
-          "name": "Approved",
-          "color": "green"
-        },
-        {
-          "ref": "obsolete",
-          "name": "Obsolete",
-          "color": "dark"
-        }
-      ],
-      "fields": [
-        {
-          "key": "document_id",
-          "name": "Document ID",
-          "type": "text"
-        },
-        {
-          "key": "doc_type",
-          "name": "Type",
-          "type": "dropdown",
-          "config": {
-            "options": [
-              {
-                "id": "opt_policy",
-                "label": "Policy",
-                "color": "navy"
-              },
-              {
-                "id": "opt_scope",
-                "label": "Scope",
-                "color": "blue"
-              },
-              {
-                "id": "opt_method",
-                "label": "Method",
-                "color": "purple"
-              },
-              {
-                "id": "opt_statement",
-                "label": "Statement",
-                "color": "teal"
-              },
-              {
-                "id": "opt_plan",
-                "label": "Plan",
-                "color": "orange"
-              },
-              {
-                "id": "opt_record",
-                "label": "Record",
-                "color": "grey"
-              }
-            ]
-          }
-        },
-        {
-          "key": "owner",
-          "name": "Owner",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "version",
-          "name": "Version",
-          "type": "number"
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
-              {
-                "id": "opt_draft",
-                "label": "Draft",
-                "color": "grey"
-              },
-              {
-                "id": "opt_review",
-                "label": "In review",
-                "color": "orange"
-              },
-              {
-                "id": "opt_approved",
-                "label": "Approved",
-                "color": "green",
-                "done": true
-              },
-              {
-                "id": "opt_obsolete",
-                "label": "Obsolete",
-                "color": "dark"
-              }
-            ]
-          },
-          "rules": [
-            {
-              "id": "approve_note",
-              "whenFieldKey": "status",
-              "whenValues": [
-                "opt_approved"
-              ],
-              "requireComment": true,
-              "message": "Add a version note: what changed in this version."
-            },
-            {
-              "id": "leave_approved",
-              "whenFieldKey": "status",
-              "whenValues": [
-                "opt_draft",
-                "opt_review",
-                "opt_obsolete"
-              ],
-              "requireComment": true,
-              "fromDone": true,
-              "message": "Say why this approved document changes status."
-            }
-          ]
-        },
-        {
-          "key": "approval_step",
-          "name": "Approval step",
-          "type": "workflowstep",
-          "description": "Where the document is in its approval. Set by the Document approval workflow, never by hand.",
-          "config": {
-            "options": [
-              {
-                "id": "opt_step_draft",
-                "label": "Draft",
-                "color": "grey"
-              },
-              {
-                "id": "opt_step_review",
-                "label": "Owner review",
-                "color": "blue"
-              },
-              {
-                "id": "opt_step_approval",
-                "label": "Management approval",
-                "color": "purple"
-              },
-              {
-                "id": "opt_step_rejected",
-                "label": "Rejected",
-                "color": "red"
-              },
-              {
-                "id": "opt_step_approved",
-                "label": "Approved",
-                "color": "green",
-                "done": true
-              }
-            ]
-          }
-        },
-        {
-          "key": "approver",
-          "name": "Approver",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "approved_on",
-          "name": "Approved on",
-          "type": "date"
-        },
-        {
-          "key": "next_review",
-          "name": "Next review",
-          "type": "date"
-        },
-        {
-          "key": "meets",
-          "name": "Requirements it meets",
-          "type": "requirement",
-          "config": {
-            "multiple": true
-          }
-        }
-      ],
-      "items": [
-        {
-          "ref": "policy",
-          "group": "draft",
-          "name": "Information security policy",
-          "values": {
-            "document_id": "ISMS-POL-01",
-            "doc_type": "opt_policy",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "scope_doc",
-          "group": "draft",
-          "name": "ISMS scope",
-          "values": {
-            "document_id": "ISMS-DOC-01",
-            "doc_type": "opt_scope",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "risk_method",
-          "group": "draft",
-          "name": "Risk assessment and treatment method",
-          "values": {
-            "document_id": "ISMS-DOC-02",
-            "doc_type": "opt_method",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "soa",
-          "group": "draft",
-          "name": "Statement of applicability",
-          "values": {
-            "document_id": "ISMS-DOC-03",
-            "doc_type": "opt_statement",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "rtp",
-          "group": "draft",
-          "name": "Risk treatment plan",
-          "values": {
-            "document_id": "ISMS-DOC-04",
-            "doc_type": "opt_plan",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "objectives",
-          "group": "draft",
-          "name": "Information security objectives",
-          "values": {
-            "document_id": "ISMS-DOC-05",
-            "doc_type": "opt_plan",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "roles",
-          "group": "draft",
-          "name": "Roles and responsibilities",
-          "values": {
-            "document_id": "ISMS-DOC-06",
-            "doc_type": "opt_policy",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "competence",
-          "group": "draft",
-          "name": "Competence and training records",
-          "values": {
-            "document_id": "ISMS-REC-01",
-            "doc_type": "opt_record",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "monitoring",
-          "group": "draft",
-          "name": "Monitoring and measurement results",
-          "values": {
-            "document_id": "ISMS-REC-02",
-            "doc_type": "opt_record",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "audit_prog",
-          "group": "draft",
-          "name": "Internal audit programme and reports",
-          "values": {
-            "document_id": "ISMS-REC-03",
-            "doc_type": "opt_record",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "mr_record",
-          "group": "draft",
-          "name": "Management review record",
-          "values": {
-            "document_id": "ISMS-REC-MR",
-            "doc_type": "opt_record",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        },
-        {
-          "ref": "nc_records",
-          "group": "draft",
-          "name": "Nonconformity and corrective action records",
-          "values": {
-            "document_id": "ISMS-REC-04",
-            "doc_type": "opt_record",
-            "status": "opt_draft",
-            "next_review": "$in:365"
-          }
-        }
-      ],
-      "workflows": [
-        {
-          "id": "document-approval",
-          "name": "Document approval",
-          "enabled": true,
-          "requiredFields": [
-            "document_id",
-            "owner"
-          ],
-          "allowSelfApproval": false,
-          "lockOnApproval": true,
-          "stepField": {
-            "fieldKey": "approval_step",
-            "draft": "opt_step_draft",
-            "approved": "opt_step_approved",
-            "rejected": "opt_step_rejected"
-          },
-          "statusField": {
-            "fieldKey": "status",
-            "onSubmit": "opt_review",
-            "onApproved": "opt_approved",
-            "onRejected": "opt_draft"
-          },
-          "steps": [
-            {
-              "id": "owner-review",
-              "name": "Owner review",
-              "approvers": {
-                "kind": "field",
-                "fieldKey": "owner"
-              },
-              "mode": "any",
-              "sla": {
-                "amount": 5,
-                "unit": "days"
-              },
-              "onReject": {
-                "to": "draft"
-              },
-              "optionId": "opt_step_review"
-            },
-            {
-              "id": "management-approval",
-              "name": "Management approval",
-              "approvers": {
-                "kind": "jobRole",
-                "roleName": "Top management"
-              },
-              "mode": "any",
-              "sla": {
-                "amount": 10,
-                "unit": "days"
-              },
-              "onReject": {
-                "to": "step",
-                "stepId": "owner-review"
-              },
-              "optionId": "opt_step_approval"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "ref": "nc",
-      "name": "Nonconformities and CAPA",
-      "itemLabel": "Nonconformity",
-      "idPrefix": "NC-",
-      "folder": "isms",
-      "description": "What did not meet a requirement, from audits, incidents, reviews or anywhere else: the correction, the root cause, the corrective actions (as sub-items) and the check that they worked. A nonconformity closes only when its actions are done.",
-      "groups": [
-        {
-          "ref": "open",
-          "name": "Open",
-          "color": "orange"
-        },
-        {
-          "ref": "closed",
-          "name": "Closed",
-          "color": "green"
-        }
-      ],
-      "fields": [
-        {
-          "key": "source",
-          "name": "Source",
-          "type": "dropdown",
-          "config": {
-            "options": [
-              {
-                "id": "opt_audit",
-                "label": "Audit",
-                "color": "blue"
-              },
-              {
-                "id": "opt_incident",
-                "label": "Incident",
-                "color": "red"
-              },
-              {
-                "id": "opt_review",
-                "label": "Management review",
-                "color": "purple"
-              },
-              {
-                "id": "opt_other",
-                "label": "Other",
-                "color": "grey"
-              }
-            ]
-          }
-        },
-        {
-          "key": "owner",
-          "name": "Owner",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "found_on",
-          "name": "Found on",
-          "type": "date",
-          "config": {
-            "relative": false,
-            "default": "$today"
-          }
-        },
-        {
-          "key": "severity",
-          "name": "Severity",
-          "type": "severity"
-        },
-        {
-          "key": "description",
-          "name": "What is wrong",
-          "type": "longtext"
-        },
-        {
-          "key": "correction",
-          "name": "Correction",
-          "type": "longtext",
-          "description": "What was done straight away to limit the effect."
-        },
-        {
-          "key": "root_cause",
-          "name": "Root cause",
-          "type": "longtext"
-        },
-        {
-          "key": "corrective_action",
-          "name": "Corrective action",
-          "type": "longtext",
-          "description": "What removes the cause so it does not happen again. Track the steps as sub-items."
-        },
-        {
-          "key": "effectiveness",
-          "name": "Effectiveness check",
-          "type": "checklist",
-          "config": {
-            "lines": [
-              {
-                "id": "l1",
-                "text": "The corrective actions are done",
-                "noteOnNo": true
-              },
-              {
-                "id": "l2",
-                "text": "It has not happened again since",
-                "noteOnNo": true
-              },
-              {
-                "id": "l3",
-                "text": "Risks and documents are updated where needed",
-                "noteOnNo": true
-              }
-            ]
-          }
-        },
-        {
-          "key": "due_date",
-          "name": "Due date",
-          "type": "date",
-          "config": {
-            "relative": true,
-            "default": "$in:60"
-          }
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
-              {
-                "id": "opt_open",
-                "label": "Open",
-                "color": "orange"
-              },
-              {
-                "id": "opt_analysis",
-                "label": "Root cause analysis",
-                "color": "blue"
-              },
-              {
-                "id": "opt_actions",
-                "label": "Actions under way",
-                "color": "purple"
-              },
-              {
-                "id": "opt_verify",
-                "label": "Checking effectiveness",
-                "color": "teal"
-              },
-              {
-                "id": "opt_closed",
-                "label": "Closed",
-                "color": "green",
-                "done": true
-              }
-            ]
-          },
-          "rules": [
-            {
-              "id": "close_needs",
-              "whenFieldKey": "status",
-              "whenValues": [
-                "opt_closed"
-              ],
-              "require": [
-                "root_cause",
-                "corrective_action",
-                "effectiveness"
-              ],
-              "message": "Add the root cause, the corrective action and the effectiveness check before closing."
-            },
-            {
-              "id": "reopen",
-              "whenFieldKey": "status",
-              "whenValues": [
-                "opt_open",
-                "opt_analysis",
-                "opt_actions",
-                "opt_verify"
-              ],
-              "requireComment": true,
-              "fromDone": true,
-              "message": "Say why this is reopened."
-            }
-          ]
-        }
-      ],
-      "views": [
-        {
-          "name": "By status",
-          "type": "kanban",
-          "config": {
-            "labelFieldKey": "status"
-          }
-        }
-      ],
-      "tabs": [
-        {
-          "ref": "table"
-        },
-        {
-          "ref": "By status"
-        },
-        {
-          "ref": "calendar"
-        }
-      ],
+      "forms": [],
+      "columnGroups": [],
       "subitems": {
         "label": "Actions",
         "blockClose": true,
@@ -1371,37 +545,9 @@
                   "label": "Done",
                   "color": "green",
                   "done": true
-                },
-                {
-                  "id": "opt_na",
-                  "label": "N/A",
-                  "color": "dark",
-                  "done": true
                 }
               ]
-            },
-            "rules": [
-              {
-                "id": "na_reason",
-                "whenFieldKey": "status",
-                "whenValues": [
-                  "opt_na"
-                ],
-                "requireComment": true,
-                "message": "Say why this does not apply."
-              },
-              {
-                "id": "reopen",
-                "whenFieldKey": "status",
-                "whenValues": [
-                  "opt_todo",
-                  "opt_doing"
-                ],
-                "requireComment": true,
-                "fromDone": true,
-                "message": "Say why this is reopened."
-              }
-            ]
+            }
           },
           {
             "key": "due_date",
@@ -1410,744 +556,1264 @@
             "config": {
               "relative": true
             }
-          },
-          {
-            "key": "evidence",
-            "name": "Evidence",
-            "type": "evidence",
-            "config": {
-              "validDays": 365,
-              "multiple": true,
-              "accept": []
-            }
           }
         ],
         "items": [
           {
-            "name": "Correct the problem",
-            "values": {
-              "due_date": "$in:7"
-            }
-          },
-          {
-            "name": "Remove the root cause",
+            "name": "Put the control in place",
             "values": {
               "due_date": "$in:30"
             }
           },
           {
-            "name": "Check it worked",
+            "name": "Check that it works",
             "values": {
-              "due_date": "$in:90"
+              "due_date": "$in:60"
             }
           }
         ]
       },
-      "items": [
+      "workflows": [
         {
-          "ref": "ex_leavers",
-          "group": "open",
-          "name": "Example: leavers' accounts not removed on their last day",
-          "values": {
-            "source": "opt_audit",
-            "severity": "$option:Medium",
-            "description": "Three of ten leavers sampled still had active accounts a week after leaving.",
-            "due_date": "$in:45",
-            "status": "opt_analysis"
-          }
-        }
-      ],
-      "forms": [
-        {
-          "ref": "report",
-          "name": "Report a problem",
-          "groupRef": "open",
-          "access": "internal",
-          "layout": {
-            "title": "Report a problem",
-            "description": "Something that does not meet a requirement of the ISMS: a control not working, a procedure not followed, an audit or review finding.",
-            "nameLabel": "What is wrong, in one line",
-            "fields": [
-              {
-                "key": "description",
-                "label": "What did you find?",
-                "required": true
-              },
-              {
-                "key": "source",
-                "label": "Where did it come from?"
-              },
-              {
-                "key": "found_on",
-                "label": "When did you find it?",
-                "required": true
-              },
-              {
-                "key": "severity",
-                "label": "How serious is it?"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "ref": "asset",
-      "name": "Asset register",
-      "itemLabel": "Asset",
-      "idPrefix": "AST-",
-      "folder": "isms",
-      "level": "full",
-      "description": "The information and the things that hold or process it: who owns each asset, how sensitive it is, where it is and the risks to it.",
-      "groups": [
-        {
-          "ref": "in_use",
-          "name": "In use",
-          "color": "green"
-        },
-        {
-          "ref": "planned",
-          "name": "Planned",
-          "color": "blue"
-        },
-        {
-          "ref": "retired",
-          "name": "Retired",
-          "color": "grey"
-        }
-      ],
-      "fields": [
-        {
-          "key": "type",
-          "name": "Type",
-          "type": "dropdown",
-          "config": {
-            "options": [
-              {
-                "id": "opt_information",
-                "label": "Information",
-                "color": "navy"
-              },
-              {
-                "id": "opt_software",
-                "label": "Software",
-                "color": "blue"
-              },
-              {
-                "id": "opt_hardware",
-                "label": "Hardware",
-                "color": "teal"
-              },
-              {
-                "id": "opt_service",
-                "label": "Service",
-                "color": "purple"
-              },
-              {
-                "id": "opt_people",
-                "label": "People",
-                "color": "orange"
-              },
-              {
-                "id": "opt_site",
-                "label": "Site",
-                "color": "grey"
-              }
-            ]
-          }
-        },
-        {
-          "key": "owner",
-          "name": "Owner",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "classification",
-          "name": "Classification",
-          "type": "classification"
-        },
-        {
-          "key": "location",
-          "name": "Location",
-          "type": "text"
-        },
-        {
-          "key": "risks",
-          "name": "Linked risks",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "risk",
-            "multiple": true
-          }
-        },
-        {
-          "key": "notes",
-          "name": "Notes",
-          "type": "longtext"
-        }
-      ],
-      "items": [
-        {
-          "ref": "ex_crm",
-          "group": "in_use",
-          "name": "Example: customer database",
-          "values": {
-            "type": "opt_information",
-            "classification": "opt_confidential",
-            "location": "Hosted CRM"
-          }
-        },
-        {
-          "ref": "ex_laptops",
-          "group": "in_use",
-          "name": "Example: staff laptops",
-          "values": {
-            "type": "opt_hardware",
-            "classification": "opt_internal",
-            "location": "Office and home"
-          }
-        }
-      ]
-    },
-    {
-      "ref": "audit",
-      "name": "Internal audit programme",
-      "itemLabel": "Audit",
-      "idPrefix": "IAP-",
-      "folder": "isms",
-      "level": "full",
-      "description": "The internal audits you plan and run: what each covers, who leads it and what it found.",
-      "groups": [
-        {
-          "ref": "planned",
-          "name": "Planned",
-          "color": "blue"
-        },
-        {
-          "ref": "running",
-          "name": "In progress",
-          "color": "orange"
-        },
-        {
-          "ref": "done",
-          "name": "Done",
-          "color": "green"
-        }
-      ],
-      "fields": [
-        {
-          "key": "lead",
-          "name": "Lead auditor",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "audit_date",
-          "name": "Audit date",
-          "type": "date"
-        },
-        {
-          "key": "in_scope",
-          "name": "Clauses and controls in scope",
-          "type": "requirement",
-          "config": {
-            "multiple": true
-          }
-        },
-        {
-          "key": "scope",
-          "name": "Scope and criteria",
-          "type": "longtext"
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
-              {
-                "id": "opt_planned",
-                "label": "Planned",
-                "color": "blue"
-              },
-              {
-                "id": "opt_running",
-                "label": "In progress",
-                "color": "orange"
-              },
-              {
-                "id": "opt_done",
-                "label": "Done",
-                "color": "green",
-                "done": true
-              }
-            ]
-          }
-        },
-        {
-          "key": "findings",
-          "name": "Findings",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "finding",
-            "multiple": true,
-            "inverseKey": "audit"
-          }
-        },
-        {
-          "key": "report",
-          "name": "Report",
-          "type": "attachment"
-        }
-      ],
-      "tabs": [
-        {
-          "ref": "table"
-        },
-        {
-          "ref": "calendar"
-        }
-      ],
-      "items": [
-        {
-          "ref": "ex_audit",
-          "group": "planned",
-          "name": "Example: ISMS internal audit, first half",
-          "values": {
-            "audit_date": "$in:60",
-            "status": "opt_planned",
-            "scope": "Clauses 4 to 10 and the access control and supplier controls."
+          "id": "risk-acceptance",
+          "name": "Risk acceptance",
+          "enabled": true,
+          "requiredFields": [
+            "risk",
+            "risk_owner",
+            "details"
+          ],
+          "allowSelfApproval": false,
+          "lockOnApproval": true,
+          "stepField": {
+            "fieldKey": "approval_step",
+            "draft": "opt_step_draft",
+            "approved": "opt_step_approved",
+            "rejected": "opt_step_rejected"
           },
-          "links": {
-            "findings": [
-              "ex_finding"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "ref": "finding",
-      "name": "Audit findings",
-      "itemLabel": "Finding",
-      "idPrefix": "AF-",
-      "folder": "isms",
-      "level": "full",
-      "description": "What each internal audit found. A finding of type Nonconformity raises an item in Nonconformities and CAPA and links to it.",
-      "groups": [
-        {
-          "ref": "open",
-          "name": "Open",
-          "color": "orange"
-        },
-        {
-          "ref": "closed",
-          "name": "Closed",
-          "color": "green"
-        }
-      ],
-      "fields": [
-        {
-          "key": "audit",
-          "name": "Audit",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "audit",
-            "multiple": false,
-            "inverseKey": "findings"
-          }
-        },
-        {
-          "key": "finding_type",
-          "name": "Type",
-          "type": "dropdown",
-          "config": {
-            "options": [
-              {
-                "id": "opt_nc",
-                "label": "Nonconformity",
-                "color": "red"
-              },
-              {
-                "id": "opt_obs",
-                "label": "Observation",
-                "color": "orange"
-              },
-              {
-                "id": "opt_ofi",
-                "label": "Opportunity to improve",
-                "color": "blue"
-              }
-            ]
-          }
-        },
-        {
-          "key": "requirement",
-          "name": "Requirement",
-          "type": "requirement",
-          "config": {
-            "multiple": true
-          }
-        },
-        {
-          "key": "details",
-          "name": "What was found",
-          "type": "longtext"
-        },
-        {
-          "key": "owner",
-          "name": "Owner",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "nonconformity",
-          "name": "Nonconformity",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "nc",
-            "multiple": false
-          }
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
-              {
-                "id": "opt_open",
-                "label": "Open",
-                "color": "orange"
-              },
-              {
-                "id": "opt_closed",
-                "label": "Closed",
-                "color": "green",
-                "done": true
-              }
-            ]
-          }
-        }
-      ],
-      "items": [
-        {
-          "ref": "ex_finding",
-          "group": "open",
-          "name": "Example: access reviews not recorded",
-          "values": {
-            "finding_type": "opt_obs",
-            "status": "opt_open"
-          }
-        }
-      ]
-    },
-    {
-      "ref": "review",
-      "name": "Management review",
-      "itemLabel": "Meeting",
-      "idPrefix": "MR-",
-      "folder": "isms",
-      "level": "full",
-      "description": "Top management's reviews of the ISMS: tick the inputs you covered and record the decisions.",
-      "groups": [
-        {
-          "ref": "planned",
-          "name": "Planned",
-          "color": "blue"
-        },
-        {
-          "ref": "held",
-          "name": "Held",
-          "color": "green"
-        }
-      ],
-      "fields": [
-        {
-          "key": "meeting_date",
-          "name": "Meeting date",
-          "type": "date"
-        },
-        {
-          "key": "chair",
-          "name": "Chair",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "attendees",
-          "name": "Attendees",
-          "type": "people",
-          "config": {
-            "multiple": true
-          }
-        },
-        {
-          "key": "in_actions",
-          "name": "Actions from earlier reviews",
-          "type": "check"
-        },
-        {
-          "key": "in_changes",
-          "name": "Changes in issues",
-          "type": "check"
-        },
-        {
-          "key": "in_parties",
-          "name": "Changes in what interested parties need",
-          "type": "check"
-        },
-        {
-          "key": "in_performance",
-          "name": "Security performance",
-          "type": "check"
-        },
-        {
-          "key": "in_feedback",
-          "name": "Feedback from interested parties",
-          "type": "check"
-        },
-        {
-          "key": "in_risks",
-          "name": "Risk assessment and treatment",
-          "type": "check"
-        },
-        {
-          "key": "in_improve",
-          "name": "Chances to improve",
-          "type": "check"
-        },
-        {
-          "key": "decisions",
-          "name": "Decisions and outputs",
-          "type": "longtext",
-          "description": "Improvements, changes to the ISMS and resources needed."
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
-              {
-                "id": "opt_planned",
-                "label": "Planned",
-                "color": "blue"
-              },
-              {
-                "id": "opt_held",
-                "label": "Held",
-                "color": "green",
-                "done": true
-              }
-            ]
+          "statusField": {
+            "fieldKey": "status",
+            "onSubmit": "opt_review",
+            "onApproved": "opt_accepted",
+            "onRejected": "opt_doing"
           },
-          "rules": [
+          "steps": [
             {
-              "id": "held_needs",
-              "whenFieldKey": "status",
-              "whenValues": [
-                "opt_held"
-              ],
-              "require": [
-                "meeting_date",
-                "decisions"
-              ],
-              "message": "Add the meeting date and the decisions."
+              "id": "risk-owner",
+              "name": "Risk owner",
+              "approvers": {
+                "kind": "field",
+                "fieldKey": "risk_owner"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 5,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "draft"
+              },
+              "optionId": "opt_step_owner"
+            },
+            {
+              "id": "management",
+              "name": "Top management",
+              "approvers": {
+                "kind": "jobRole",
+                "roleName": "Top management"
+              },
+              "mode": "any",
+              "sla": {
+                "amount": 10,
+                "unit": "days"
+              },
+              "onReject": {
+                "to": "step",
+                "stepId": "risk-owner"
+              },
+              "optionId": "opt_step_management"
             }
           ]
         }
       ],
-      "columnGroups": [
-        {
-          "name": "Inputs covered",
-          "fields": [
-            "in_actions",
-            "in_changes",
-            "in_parties",
-            "in_performance",
-            "in_feedback",
-            "in_risks",
-            "in_improve"
-          ]
-        }
-      ],
       "items": [
         {
-          "ref": "ex_review",
-          "group": "planned",
-          "name": "Example: annual management review",
+          "ref": "ex_mfa",
+          "group": "doing",
+          "name": "Example: multi-factor sign-in on every account",
           "values": {
-            "meeting_date": "$in:120",
+            "details": "Turn on multi-factor sign-in for email, the office suite and the admin consoles; block legacy sign-in.",
+            "due_date": "$in:30",
+            "status": "opt_doing"
+          },
+          "requirements": {
+            "annex_a": [
+              "iso-27001@2022#A.8.5",
+              "iso-27001@2022#A.5.17"
+            ]
+          }
+        },
+        {
+          "ref": "ex_encrypt",
+          "group": "planned",
+          "name": "Example: encrypt every laptop disk",
+          "values": {
+            "details": "Turn on full-disk encryption through device management and report the laptops that are not encrypted.",
+            "due_date": "$in:45",
             "status": "opt_planned"
+          },
+          "requirements": {
+            "annex_a": [
+              "iso-27001@2022#A.8.24",
+              "iso-27001@2022#A.8.1"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "extends": [
+    {
+      "pack": "core",
+      "sheet": "risk_category",
+      "items": [
+        {
+          "ref": "iso27001_infosec",
+          "group": "in_use",
+          "name": "Information security",
+          "values": {
+            "likelihood_scale": "1 Rare: never seen here or at similar organisations. 2 Unlikely: seen at similar organisations. 3 Possible: happened here before. 4 Likely: happens most years. 5 Almost certain: happens several times a year.",
+            "impact_scale": "1 Negligible: no data exposed, no downtime that customers notice. 2 Minor: a few records or a short outage, handled in a day. 3 Moderate: customers affected or a report to an authority. 4 Major: many customers affected, a contract or certificate at risk. 5 Severe: lasting harm to people whose data it is, or the business stops.",
+            "appetite": 8,
+            "review_date": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
           }
         }
       ]
     },
     {
-      "ref": "incident",
-      "name": "Security incidents",
-      "itemLabel": "Incident",
-      "idPrefix": "SIN-",
-      "folder": "isms",
-      "level": "full",
-      "description": "Information security incidents from detection to close. Anyone in the workspace reports one through the form \"Report a security incident\" (Forms tab). Closing one that needs a root cause raises a nonconformity.",
-      "groups": [
-        {
-          "ref": "open",
-          "name": "Open",
-          "color": "red"
-        },
-        {
-          "ref": "closed",
-          "name": "Closed",
-          "color": "green"
-        }
-      ],
+      "pack": "core",
+      "sheet": "risk",
       "fields": [
         {
-          "key": "severity",
-          "name": "Severity",
-          "type": "severity"
+          "key": "iso27001_asset",
+          "name": "Asset or process",
+          "type": "text",
+          "description": "What the risk is to: the information, system, service or process."
         },
         {
-          "key": "reported_by",
-          "name": "Reported by",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "handler",
-          "name": "Handler",
-          "type": "people",
-          "config": {
-            "multiple": false
-          }
-        },
-        {
-          "key": "detected",
-          "name": "Detected",
-          "type": "datetime"
-        },
-        {
-          "key": "contained",
-          "name": "Contained",
-          "type": "datetime"
-        },
-        {
-          "key": "closed_on",
-          "name": "Closed on",
-          "type": "date"
-        },
-        {
-          "key": "description",
-          "name": "What happened",
-          "type": "longtext"
-        },
-        {
-          "key": "affected",
-          "name": "Systems and data affected",
-          "type": "longtext"
-        },
-        {
-          "key": "reporter_name",
-          "name": "Reporter's name",
+          "key": "iso27001_threat",
+          "name": "Threat",
           "type": "text"
         },
         {
-          "key": "reporter_email",
-          "name": "Reporter's email",
-          "type": "email"
+          "key": "iso27001_vulnerability",
+          "name": "Vulnerability",
+          "type": "text"
         },
         {
-          "key": "root_cause_needed",
-          "name": "Needs a root cause",
-          "type": "check",
-          "description": "Tick when the incident shows something to fix for good: closing it then raises a nonconformity."
-        },
-        {
-          "key": "nonconformity",
-          "name": "Nonconformity",
-          "type": "link",
-          "config": {
-            "targetSheetRef": "nc",
-            "multiple": false
-          }
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
+          "key": "iso27001_cia",
+          "name": "Affects",
+          "type": "multiselect",
           "config": {
             "options": [
               {
-                "id": "opt_new",
-                "label": "New",
-                "color": "red"
+                "id": "opt_confidentiality",
+                "label": "Confidentiality",
+                "color": "navy"
               },
               {
-                "id": "opt_contained",
-                "label": "Contained",
-                "color": "orange"
+                "id": "opt_integrity",
+                "label": "Integrity",
+                "color": "purple"
               },
               {
-                "id": "opt_closed",
-                "label": "Closed",
-                "color": "green",
-                "done": true
+                "id": "opt_availability",
+                "label": "Availability",
+                "color": "teal"
               }
             ]
+          }
+        },
+        {
+          "key": "iso27001_controls",
+          "name": "Annex A controls",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The Annex A controls from the ISO/IEC 27001 library that treat this risk."
+        },
+        {
+          "key": "iso27001_treatment",
+          "name": "Treatment plan",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "treatment",
+            "multiple": true,
+            "inverseKey": "risk"
+          }
+        },
+        {
+          "key": "iso27001_residual_likelihood",
+          "name": "Residual likelihood",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          }
+        },
+        {
+          "key": "iso27001_residual_impact",
+          "name": "Residual impact",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          }
+        },
+        {
+          "key": "iso27001_residual_score",
+          "name": "Residual score",
+          "type": "formula",
+          "config": {
+            "expr": "IF(OR(EMPTY({iso27001_residual_likelihood}), EMPTY({iso27001_residual_impact})), 0, {iso27001_residual_likelihood} * {iso27001_residual_impact})",
+            "result": "number"
+          },
+          "description": "Likelihood times impact once the treatment plan is done."
+        },
+        {
+          "key": "iso27001_residual_vs_appetite",
+          "name": "Residual against appetite",
+          "type": "formula",
+          "config": {
+            "expr": "IF({iso27001_residual_score} = 0, \"\", IF(EMPTY({appetite}), \"No appetite set\", IF({iso27001_residual_score} > {appetite}, \"Above appetite\", \"Within appetite\")))",
+            "result": "text"
           }
         }
       ],
       "views": [
         {
-          "name": "By status",
-          "type": "kanban",
+          "name": "ISMS residual risk",
+          "type": "table",
           "config": {
-            "labelFieldKey": "status"
+            "filters": [
+              {
+                "fieldKey": "standards",
+                "op": "has_any_of",
+                "value": [
+                  "iso27001"
+                ]
+              }
+            ],
+            "sort": [
+              {
+                "fieldKey": "iso27001_residual_score",
+                "direction": "desc"
+              }
+            ]
           }
-        }
-      ],
-      "tabs": [
-        {
-          "ref": "table"
-        },
-        {
-          "ref": "By status"
-        },
-        {
-          "ref": "form"
         }
       ],
       "items": [
         {
-          "ref": "ex_phish",
-          "group": "open",
-          "name": "Example: phishing email clicked by a member of staff",
+          "ref": "iso27001_phishing",
+          "group": "treating",
+          "name": "Example: account taken over by phishing",
           "values": {
-            "severity": "$option:Medium",
-            "status": "opt_contained",
-            "root_cause_needed": true
+            "cause": "Not every account has multi-factor sign-in",
+            "consequence": "Customer data read or mail sent in our name",
+            "iso27001_asset": "Email and office accounts",
+            "iso27001_threat": "Phishing",
+            "iso27001_vulnerability": "Passwords alone protect some accounts",
+            "iso27001_cia": [
+              "opt_confidentiality",
+              "opt_integrity"
+            ],
+            "likelihood": 4,
+            "impact": 4,
+            "iso27001_residual_likelihood": 2,
+            "iso27001_residual_impact": 3,
+            "treatment": "opt_reduce",
+            "review_date": "$in:30",
+            "status": "opt_treating",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "links": {
+            "category": [
+              "iso27001_infosec"
+            ],
+            "iso27001_treatment": [
+              "ex_mfa"
+            ]
+          },
+          "requirements": {
+            "iso27001_controls": [
+              "iso-27001@2022#A.6.3",
+              "iso-27001@2022#A.8.7",
+              "iso-27001@2022#A.8.5"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_laptop",
+          "group": "identified",
+          "name": "Example: lost or stolen laptop exposes customer data",
+          "values": {
+            "cause": "Laptops travel; some disks are not encrypted",
+            "consequence": "Customer files read by whoever finds it",
+            "iso27001_asset": "Staff laptops",
+            "iso27001_threat": "Loss or theft",
+            "iso27001_vulnerability": "Disk encryption not enforced",
+            "iso27001_cia": [
+              "opt_confidentiality"
+            ],
+            "likelihood": 3,
+            "impact": 4,
+            "treatment": "opt_reduce",
+            "review_date": "$in:60",
+            "status": "opt_open",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "links": {
+            "category": [
+              "iso27001_infosec"
+            ],
+            "iso27001_treatment": [
+              "ex_encrypt"
+            ]
+          },
+          "requirements": {
+            "iso27001_controls": [
+              "iso-27001@2022#A.8.1",
+              "iso-27001@2022#A.7.9",
+              "iso-27001@2022#A.8.24"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_outage",
+          "group": "identified",
+          "name": "Example: key supplier outage stops the service",
+          "values": {
+            "cause": "One cloud provider hosts every customer system",
+            "consequence": "Customers cannot work; service credits and lost trust",
+            "iso27001_asset": "Customer platform",
+            "iso27001_threat": "Supplier outage",
+            "iso27001_vulnerability": "No tested failover",
+            "iso27001_cia": [
+              "opt_availability"
+            ],
+            "likelihood": 2,
+            "impact": 5,
+            "treatment": "opt_reduce",
+            "review_date": "$in:90",
+            "status": "opt_open",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "links": {
+            "category": [
+              "iso27001_infosec"
+            ]
+          },
+          "requirements": {
+            "iso27001_controls": [
+              "iso-27001@2022#A.5.19",
+              "iso-27001@2022#A.5.30",
+              "iso-27001@2022#A.8.14"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "controls",
+      "fields": [
+        {
+          "key": "iso27001_annex_a",
+          "name": "Annex A controls",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The Annex A controls this control meets. They show on the requirement and in the statement of applicability."
+        }
+      ],
+      "items": [
+        {
+          "ref": "iso27001_mfa",
+          "group": "planned",
+          "name": "Example: multi-factor sign-in for every account",
+          "values": {
+            "control_type": "opt_preventive",
+            "frequency": "opt_continuous",
+            "health": "opt_not_tested",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "links": {
+            "risks": [
+              "iso27001_phishing"
+            ]
+          },
+          "requirements": {
+            "iso27001_annex_a": [
+              "iso-27001@2022#A.8.5",
+              "iso-27001@2022#A.5.17"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_awareness",
+          "group": "in_place",
+          "name": "Example: security awareness training every year",
+          "values": {
+            "control_type": "opt_preventive",
+            "frequency": "opt_yearly",
+            "health": "opt_working",
+            "last_tested": "$today",
+            "next_test": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "links": {
+            "risks": [
+              "iso27001_phishing"
+            ]
+          },
+          "requirements": {
+            "iso27001_annex_a": [
+              "iso-27001@2022#A.6.3"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_backup",
+          "group": "in_place",
+          "name": "Example: daily backups, restore tested each quarter",
+          "values": {
+            "control_type": "opt_corrective",
+            "frequency": "opt_quarterly",
+            "health": "opt_working",
+            "last_tested": "$today",
+            "next_test": "$in:90",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "links": {
+            "risks": [
+              "iso27001_outage"
+            ]
+          },
+          "requirements": {
+            "iso27001_annex_a": [
+              "iso-27001@2022#A.8.13"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_supplier_review",
+          "group": "in_place",
+          "name": "Example: security review of a supplier before signing",
+          "values": {
+            "control_type": "opt_preventive",
+            "frequency": "opt_continuous",
+            "health": "opt_not_tested",
+            "next_test": "$in:180",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "links": {
+            "risks": [
+              "iso27001_outage"
+            ]
+          },
+          "requirements": {
+            "iso27001_annex_a": [
+              "iso-27001@2022#A.5.19",
+              "iso-27001@2022#A.5.20"
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso27001_control_failing",
+          "name": "Control failing → put its risks back into treatment and tell the risk owners",
+          "advanced": true,
+          "description": "A control that fails no longer protects the risks it treats. Every risk linked to it goes back to Being treated, so the risk register shows the gap, and the control owner is told to fix it or plan a replacement.",
+          "trigger": {
+            "type": "field_becomes",
+            "fieldKey": "health",
+            "value": "opt_failing"
+          },
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "update_linked",
+              "path": {
+                "direction": "out",
+                "linkFieldKey": "risks"
+              },
+              "fieldKey": "status",
+              "value": "opt_treating"
+            },
+            {
+              "type": "notify",
+              "to": [
+                "field:owner"
+              ],
+              "message": "{id} {name} is failing. The risks it treats are back in treatment: fix it or plan a replacement."
+            }
+          ]
+        },
+        {
+          "ref": "iso27001_control_test_overdue",
+          "name": "Control test 14 days late → tell the owner and top management",
+          "advanced": true,
+          "description": "Escalation: the owner is reminded by the Core automation before the test date. When a control of the ISMS is still not tested 14 days after its date, top management hears about it with the owner, because untested controls are an audit finding.",
+          "trigger": {
+            "type": "date_arrives",
+            "fieldKey": "next_test",
+            "offsetDays": 14
+          },
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Top management"
+              ],
+              "message": "{id} {name} was due for testing on {next_test} and has not been tested."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "assets",
+      "fields": [
+        {
+          "key": "iso27001_confidentiality",
+          "name": "Confidentiality need",
+          "type": "rating",
+          "config": {
+            "scale": 3
+          },
+          "description": "1 low, 2 medium, 3 high: how much harm disclosure would do."
+        },
+        {
+          "key": "iso27001_integrity",
+          "name": "Integrity need",
+          "type": "rating",
+          "config": {
+            "scale": 3
+          }
+        },
+        {
+          "key": "iso27001_availability",
+          "name": "Availability need",
+          "type": "rating",
+          "config": {
+            "scale": 3
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "iso27001_crm",
+          "group": "systems",
+          "name": "Example: customer relationship system",
+          "values": {
+            "asset_type": "opt_system",
+            "classification": "opt_confidential",
+            "location": "Cloud service, EU region",
+            "status": "opt_in_use",
+            "iso27001_confidentiality": 3,
+            "iso27001_integrity": 2,
+            "iso27001_availability": 2,
+            "review_date": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_laptops",
+          "group": "devices",
+          "name": "Example: staff laptops",
+          "values": {
+            "asset_type": "opt_device",
+            "classification": "opt_internal",
+            "location": "With staff, office and home",
+            "status": "opt_in_use",
+            "iso27001_confidentiality": 3,
+            "iso27001_integrity": 2,
+            "iso27001_availability": 2,
+            "review_date": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "documents",
+      "fields": [
+        {
+          "key": "iso27001_meets",
+          "name": "Requirement it meets",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The ISO/IEC 27001 clause or control this document is evidence for."
+        }
+      ],
+      "options": {
+        "doc_type": [
+          {
+            "id": "iso27001_scope",
+            "label": "Scope",
+            "color": "navy"
+          },
+          {
+            "id": "iso27001_soa",
+            "label": "Statement of applicability",
+            "color": "teal"
+          }
+        ]
+      },
+      "items": [
+        {
+          "ref": "iso27001_policy",
+          "group": "draft",
+          "name": "Information security policy",
+          "values": {
+            "document_id": "ISMS-POL-01",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#5.2"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_scope_doc",
+          "group": "draft",
+          "name": "ISMS scope",
+          "values": {
+            "document_id": "ISMS-DOC-01",
+            "doc_type": "iso27001_scope",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#4.3"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_risk_method",
+          "group": "draft",
+          "name": "Risk assessment and treatment method",
+          "values": {
+            "document_id": "ISMS-DOC-02",
+            "doc_type": "opt_procedure",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#6.1.2",
+              "iso-27001@2022#6.1.3"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_soa",
+          "group": "draft",
+          "name": "Statement of applicability",
+          "values": {
+            "document_id": "ISMS-DOC-03",
+            "doc_type": "iso27001_soa",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#6.1.3"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_rtp",
+          "group": "draft",
+          "name": "Risk treatment plan",
+          "values": {
+            "document_id": "ISMS-DOC-04",
+            "doc_type": "opt_plan",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#6.1.3",
+              "iso-27001@2022#8.3"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_objectives",
+          "group": "draft",
+          "name": "Information security objectives",
+          "values": {
+            "document_id": "ISMS-DOC-05",
+            "doc_type": "opt_plan",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#6.2"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_roles",
+          "group": "draft",
+          "name": "Roles and responsibilities",
+          "values": {
+            "document_id": "ISMS-DOC-06",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#5.3"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_competence",
+          "group": "draft",
+          "name": "Competence and training records",
+          "values": {
+            "document_id": "ISMS-REC-01",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#7.2"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_monitoring",
+          "group": "draft",
+          "name": "Monitoring and measurement results",
+          "values": {
+            "document_id": "ISMS-REC-02",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#9.1"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_audit_prog",
+          "group": "draft",
+          "name": "Internal audit programme and reports",
+          "values": {
+            "document_id": "ISMS-REC-03",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#9.2.2"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_mr_record",
+          "group": "draft",
+          "name": "Management review record",
+          "values": {
+            "document_id": "ISMS-REC-MR",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#9.3.3"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_nc_records",
+          "group": "draft",
+          "name": "Nonconformity and corrective action records",
+          "values": {
+            "document_id": "ISMS-REC-04",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "version": 1,
+            "next_review": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_meets": [
+              "iso-27001@2022#10.2"
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso27001_document_review_missed",
+          "name": "ISMS document review 14 days late → tell the owner and top management",
+          "advanced": true,
+          "description": "Escalation: Core reminds the owner 30 days before the review date. An ISMS document still not reviewed 14 days after it goes to top management with the owner, since an out-of-date controlled document is an audit finding.",
+          "trigger": {
+            "type": "date_arrives",
+            "fieldKey": "next_review",
+            "offsetDays": 14
+          },
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            },
+            {
+              "fieldKey": "status",
+              "op": "is_none_of",
+              "value": [
+                "opt_obsolete"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Top management"
+              ],
+              "message": "{id} {name} was due for review on {next_review}. Review it, or mark it obsolete."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "objectives",
+      "items": [
+        {
+          "ref": "iso27001_awareness",
+          "group": "active",
+          "name": "Example: everyone completes security awareness training this year",
+          "values": {
+            "kpi": "Share of staff who completed the training",
+            "target": "100% by year end",
+            "status": "opt_on_track",
+            "due": "$in:300",
+            "review_date": "$in:90",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_patching",
+          "group": "active",
+          "name": "Example: critical security updates installed within 14 days",
+          "values": {
+            "kpi": "Share of critical updates installed within 14 days",
+            "target": "95% each quarter",
+            "status": "opt_on_track",
+            "due": "$in:365",
+            "review_date": "$in:90",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "legal",
+      "fields": [
+        {
+          "key": "iso27001_controls",
+          "name": "Annex A controls",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "iso27001_gdpr",
+          "group": "current",
+          "name": "Example: data protection law for customer and staff data",
+          "values": {
+            "jurisdiction": "opt_eu",
+            "source": "GDPR",
+            "summary": "We process personal data as a processor for customers and as a controller for staff. Security of processing and breach reporting apply.",
+            "evaluation": "opt_not_evaluated",
+            "next_evaluation": "$in:180",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_controls": [
+              "iso-27001@2022#A.5.31",
+              "iso-27001@2022#A.5.34"
+            ]
+          }
+        },
+        {
+          "ref": "iso27001_contracts",
+          "group": "current",
+          "name": "Example: security terms in customer contracts",
+          "values": {
+            "jurisdiction": "opt_contract",
+            "source": "Master services agreement",
+            "summary": "Customers expect notice of an incident within 48 hours, yearly penetration tests and data kept in the EU.",
+            "evaluation": "opt_not_evaluated",
+            "next_evaluation": "$in:180",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_controls": [
+              "iso-27001@2022#A.5.31",
+              "iso-27001@2022#A.5.20"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "training",
+      "items": [
+        {
+          "ref": "iso27001_awareness",
+          "group": "planned",
+          "name": "Example: security awareness training 2026",
+          "values": {
+            "competence": "Spot phishing, report incidents, handle customer data",
+            "course": "Online awareness course and a 30-minute team session",
+            "status": "opt_planned",
+            "expires_on": "$in:365",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "audits",
+      "fields": [
+        {
+          "key": "iso27001_in_scope",
+          "name": "Clauses and controls in scope",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "iso27001_audit",
+          "group": "planned",
+          "name": "Example: internal ISMS audit of access control and suppliers",
+          "values": {
+            "scope": "Access rights, joiners and leavers, supplier reviews. Sample ten accounts and three suppliers.",
+            "start": "$in:60",
+            "end": "$in:61",
+            "status": "opt_planned",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_in_scope": [
+              "iso-27001@2022#9.2.2",
+              "iso-27001@2022#A.5.15",
+              "iso-27001@2022#A.5.18",
+              "iso-27001@2022#A.5.19"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "reviews",
+      "fields": [
+        {
+          "key": "iso27001_in_actions",
+          "name": "Actions from earlier reviews",
+          "type": "check"
+        },
+        {
+          "key": "iso27001_in_changes",
+          "name": "Changes in issues",
+          "type": "check"
+        },
+        {
+          "key": "iso27001_in_parties",
+          "name": "Needs of interested parties",
+          "type": "check"
+        },
+        {
+          "key": "iso27001_in_performance",
+          "name": "Security performance",
+          "type": "check"
+        },
+        {
+          "key": "iso27001_in_feedback",
+          "name": "Feedback from interested parties",
+          "type": "check"
+        },
+        {
+          "key": "iso27001_in_risks",
+          "name": "Risk assessment and treatment",
+          "type": "check"
+        },
+        {
+          "key": "iso27001_in_improve",
+          "name": "Opportunities to improve",
+          "type": "check"
+        }
+      ],
+      "items": [
+        {
+          "ref": "iso27001_review",
+          "group": "planned",
+          "name": "Example: ISMS management review 2026",
+          "values": {
+            "meeting_date": "$in:60",
+            "status": "opt_planned",
+            "inputs": "Use Insights › Audit outputs › Management review inputs to compile the period, then Add to Management review.",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso27001_next_review",
+          "name": "ISMS management review held → plan the next one in 12 months",
+          "advanced": true,
+          "description": "Recurring review cycle: when an ISMS management review is marked held, the next one is added for a year later, so the yearly review is never forgotten.",
+          "trigger": {
+            "type": "field_becomes",
+            "fieldKey": "status",
+            "value": "opt_held"
+          },
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "create_item",
+              "sheetRef": "core:reviews",
+              "name": "ISMS management review (next)",
+              "values": {
+                "meeting_date": "$in:365",
+                "status": "opt_planned",
+                "standards": [
+                  "iso27001"
+                ]
+              },
+              "link": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pack": "core",
+      "sheet": "incidents",
+      "fields": [
+        {
+          "key": "iso27001_description",
+          "name": "What happened",
+          "type": "longtext"
+        },
+        {
+          "key": "iso27001_detected",
+          "name": "Noticed at",
+          "type": "datetime"
+        },
+        {
+          "key": "iso27001_contained",
+          "name": "Contained at",
+          "type": "datetime"
+        },
+        {
+          "key": "iso27001_containment_clock",
+          "name": "Containment clock",
+          "type": "clock",
+          "config": {
+            "startFieldKey": "iso27001_detected",
+            "hours": 24,
+            "stopFieldKey": "iso27001_contained"
+          },
+          "description": "24 hours from noticing a security incident to containing it."
+        },
+        {
+          "key": "iso27001_affected",
+          "name": "Systems and data affected",
+          "type": "longtext"
+        },
+        {
+          "key": "iso27001_reporter_name",
+          "name": "Reporter's name",
+          "type": "text",
+          "config": {
+            "personalData": true
+          }
+        },
+        {
+          "key": "iso27001_reporter_email",
+          "name": "Reporter's email",
+          "type": "email",
+          "config": {
+            "personalData": true
+          }
+        },
+        {
+          "key": "iso27001_root_cause_needed",
+          "name": "Needs a root cause",
+          "type": "check"
+        },
+        {
+          "key": "iso27001_controls",
+          "name": "Annex A controls involved",
+          "type": "requirement",
+          "config": {
+            "multiple": true
           }
         }
       ],
       "forms": [
         {
-          "ref": "report",
+          "ref": "iso27001_report",
           "name": "Report a security incident",
-          "level": "full",
           "groupRef": "open",
           "access": "internal",
           "layout": {
@@ -2156,18 +1822,18 @@
             "nameLabel": "What happened, in one line",
             "fields": [
               {
-                "key": "description",
+                "key": "iso27001_description",
                 "label": "What happened",
                 "help": "What you saw, when and where, and anything you have already done about it.",
                 "required": true
               },
               {
-                "key": "detected",
+                "key": "iso27001_detected",
                 "label": "When did you notice it?",
                 "required": true
               },
               {
-                "key": "affected",
+                "key": "iso27001_affected",
                 "label": "Which systems or data are affected?",
                 "help": "For example a laptop, an email account or a customer list. Write \"Not sure\" if you do not know."
               },
@@ -2177,12 +1843,12 @@
                 "help": "Your best guess. The incident handler decides."
               },
               {
-                "key": "reporter_name",
+                "key": "iso27001_reporter_name",
                 "label": "Your name",
                 "help": "So the incident handler can reach you."
               },
               {
-                "key": "reporter_email",
+                "key": "iso27001_reporter_email",
                 "label": "Your email"
               }
             ]
@@ -2191,8 +1857,18 @@
             "confirmation": "Thank you. The incident handler has your report and will contact you if they need more.",
             "prefill": [
               {
+                "key": "incident_type",
+                "value": "opt_security"
+              },
+              {
                 "key": "status",
                 "value": "opt_new"
+              },
+              {
+                "key": "standards",
+                "value": [
+                  "iso27001"
+                ]
               }
             ]
           },
@@ -2204,154 +1880,329 @@
             "rights": "You can ask to see, correct or delete what you reported. Contact the person who shared this form."
           }
         }
+      ],
+      "items": [
+        {
+          "ref": "iso27001_phish",
+          "group": "closed",
+          "name": "Example: phishing email clicked, password changed the same day",
+          "values": {
+            "incident_type": "opt_security",
+            "occurred_on": "$today",
+            "severity": "opt_medium",
+            "status": "opt_closed",
+            "iso27001_description": "A staff member entered their password on a fake sign-in page. IT reset the password and checked the sign-in log within two hours.",
+            "iso27001_affected": "One email account; no sign-in from outside found",
+            "root_cause": "The account did not have multi-factor sign-in yet.",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_controls": [
+              "iso-27001@2022#A.5.24",
+              "iso-27001@2022#A.5.26",
+              "iso-27001@2022#A.6.8"
+            ]
+          }
+        }
+      ],
+      "automations": [
+        {
+          "ref": "iso27001_incident_new",
+          "name": "Security incident reported → tell the investigator",
+          "trigger": {
+            "type": "form_submitted",
+            "formId": null
+          },
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Information security officer"
+              ],
+              "message": "New security incident {id} {name}. Contain it within 24 hours of {iso27001_detected}."
+            }
+          ]
+        },
+        {
+          "ref": "iso27001_containment_12h",
+          "name": "Security incident: 12 hours left to contain it → tell the investigator",
+          "advanced": true,
+          "description": "SLA clock, first rung: a security incident should be contained within 24 hours of being noticed. With 12 hours left and no containment time recorded, the investigator and the information security officer are reminded.",
+          "trigger": {
+            "type": "clock_warning",
+            "fieldKey": "iso27001_containment_clock",
+            "hoursLeft": 12
+          },
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_not_done"
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Information security officer"
+              ],
+              "message": "{id} {name}: 12 hours left to contain it. Record the time it was contained."
+            }
+          ]
+        },
+        {
+          "ref": "iso27001_containment_missed",
+          "name": "Serious security incident about to miss its 24 hours → tell top management",
+          "advanced": true,
+          "description": "SLA clock, last rung of the escalation ladder: a medium or high security incident still not contained in the last hour of its 24-hour clock goes to top management, with the investigator, so they can add people or decide what to tell customers.",
+          "trigger": {
+            "type": "clock_warning",
+            "fieldKey": "iso27001_containment_clock",
+            "hoursLeft": 1
+          },
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_not_done"
+            },
+            {
+              "fieldKey": "severity",
+              "op": "is_any_of",
+              "value": [
+                "opt_medium",
+                "opt_high"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Top management"
+              ],
+              "message": "{id} {name} has less than an hour left of its 24 hours to be contained. Decide on more help and on telling customers."
+            }
+          ]
+        },
+        {
+          "ref": "iso27001_incident_nc",
+          "name": "Security incident closed and needs a root cause → raise a nonconformity",
+          "advanced": true,
+          "description": "Cross-sheet cascade: closing a security incident marked Needs a root cause raises a linked item in Nonconformities and CAPA, where the root cause, the corrective actions and the effectiveness check are tracked until the nonconformity can close.",
+          "trigger": {
+            "type": "field_becomes",
+            "fieldKey": "status",
+            "value": "opt_closed"
+          },
+          "conditions": [
+            {
+              "fieldKey": "iso27001_root_cause_needed",
+              "op": "is_checked"
+            },
+            {
+              "fieldKey": "nonconformity",
+              "op": "has_none"
+            }
+          ],
+          "actions": [
+            {
+              "type": "create_item",
+              "sheetRef": "core:nc",
+              "name": "{name}",
+              "values": {
+                "source": "opt_incident",
+                "stage": "opt_root_cause",
+                "due_date": "$in:30",
+                "iso27001_details": "{iso27001_description}",
+                "standards": [
+                  "iso27001"
+                ]
+              },
+              "link": true
+            }
+          ]
+        }
       ]
     },
     {
-      "ref": "training",
-      "name": "Training and awareness",
-      "itemLabel": "Training",
-      "idPrefix": "TRN-",
-      "folder": "isms",
-      "level": "full",
-      "description": "Who needs which training or awareness session, by when, and the record that they did it.",
-      "groups": [
-        {
-          "ref": "due",
-          "name": "Due",
-          "color": "orange"
-        },
-        {
-          "ref": "done",
-          "name": "Completed",
-          "color": "green"
-        }
-      ],
+      "pack": "core",
+      "sheet": "nc",
       "fields": [
         {
-          "key": "person",
-          "name": "Person",
-          "type": "people",
+          "key": "iso27001_details",
+          "name": "What was found",
+          "type": "longtext"
+        },
+        {
+          "key": "iso27001_found_on",
+          "name": "Found on",
+          "type": "date"
+        },
+        {
+          "key": "iso27001_requirement",
+          "name": "Requirement not met",
+          "type": "requirement",
           "config": {
-            "multiple": false
+            "multiple": true
           }
         },
         {
-          "key": "course",
-          "name": "Course",
-          "type": "text"
-        },
+          "key": "iso27001_correction",
+          "name": "Correction",
+          "type": "longtext"
+        }
+      ],
+      "forms": [
         {
-          "key": "due_date",
-          "name": "Due date",
-          "type": "date"
-        },
-        {
-          "key": "completed_on",
-          "name": "Completed on",
-          "type": "date"
-        },
-        {
-          "key": "status",
-          "name": "Status",
-          "type": "status",
-          "config": {
-            "options": [
+          "ref": "iso27001_report",
+          "name": "Report a problem",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Report a problem",
+            "description": "Something that does not meet a requirement of the ISMS: a control not working, a procedure not followed, an audit or review finding.",
+            "nameLabel": "What is wrong, in one line",
+            "fields": [
               {
-                "id": "opt_not_started",
-                "label": "Not started",
-                "color": "grey"
+                "key": "iso27001_details",
+                "label": "What did you find?",
+                "required": true
               },
               {
-                "id": "opt_in_progress",
-                "label": "In progress",
-                "color": "orange"
+                "key": "source",
+                "label": "Where did it come from?"
               },
               {
-                "id": "opt_completed",
-                "label": "Completed",
-                "color": "green",
-                "done": true
+                "key": "iso27001_found_on",
+                "label": "When did you find it?",
+                "required": true
+              },
+              {
+                "key": "grade",
+                "label": "How serious is it?"
+              }
+            ]
+          },
+          "settings": {
+            "confirmation": "Thank you. The ISMS owner will look at it and may ask you for more.",
+            "prefill": [
+              {
+                "key": "stage",
+                "value": "opt_containment"
+              },
+              {
+                "key": "standards",
+                "value": [
+                  "iso27001"
+                ]
               }
             ]
           }
-        },
-        {
-          "key": "evidence",
-          "name": "Evidence",
-          "type": "evidence",
-          "config": {
-            "validDays": 365,
-            "multiple": true
-          }
-        }
-      ],
-      "tabs": [
-        {
-          "ref": "table"
-        },
-        {
-          "ref": "calendar"
         }
       ],
       "items": [
         {
-          "ref": "ex_awareness",
-          "group": "due",
-          "name": "Example: security awareness for everyone",
+          "ref": "iso27001_leavers",
+          "group": "open",
+          "name": "Example: leaver accounts still active after 30 days",
           "values": {
-            "course": "Security awareness basics",
+            "source": "opt_internal_audit",
+            "grade": "opt_minor",
+            "stage": "opt_root_cause",
             "due_date": "$in:30",
-            "status": "opt_not_started"
+            "iso27001_found_on": "$today",
+            "iso27001_details": "Two of ten sampled leavers still had active accounts a month after leaving.",
+            "iso27001_correction": "Both accounts disabled the day they were found.",
+            "standards": [
+              "$option:ISO 27001"
+            ]
+          },
+          "requirements": {
+            "iso27001_requirement": [
+              "iso-27001@2022#A.5.18",
+              "iso-27001@2022#A.6.5"
+            ]
           }
         }
+      ],
+      "automations": [
+        {
+          "ref": "iso27001_nc_escalate",
+          "name": "ISMS nonconformity 14 days overdue → tell top management",
+          "advanced": true,
+          "description": "Escalation ladder: Core tells the owner the day a nonconformity is overdue. If an ISMS nonconformity is still open 14 days after its due date, top management is told with the owner, so a stuck corrective action gets resources or a new date.",
+          "trigger": {
+            "type": "date_arrives",
+            "fieldKey": "due_date",
+            "offsetDays": 14
+          },
+          "conditions": [
+            {
+              "fieldKey": "stage",
+              "op": "is_not_done"
+            },
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "notify",
+              "to": [
+                "field:owner",
+                "jobRole:Top management"
+              ],
+              "message": "{id} {name} was due on {due_date} and is still at {stage}. Agree resources or a new date."
+            }
+          ]
+        }
       ]
+    },
+    {
+      "pack": "core",
+      "sheet": "actions"
     }
   ],
   "automations": [
     {
-      "ref": "risk_review_due",
-      "sheet": "risk",
-      "name": "Risk review in 14 days → tell the risk owner",
+      "ref": "scope_review_due",
+      "sheet": "scope",
+      "name": "Scope or context review in 30 days → ask the owner for an update",
       "trigger": {
         "type": "date_arrives",
-        "fieldKey": "review_date",
-        "offsetDays": -14
+        "fieldKey": "next_review",
+        "offsetDays": -30
       },
       "conditions": [],
       "actions": [
         {
-          "type": "notify",
-          "to": [
-            "field:owner"
-          ],
-          "message": "{id} {name} is due for review on {review_date}."
+          "type": "request_update",
+          "fieldKey": "owner",
+          "message": "Check {id} {name} is still right before {next_review}, and move the review date on."
         }
       ]
     },
     {
-      "ref": "residual_high",
-      "sheet": "risk",
-      "name": "Residual score above 12 → tell the risk owner",
-      "trigger": {
-        "type": "number_above",
-        "fieldKey": "residual_score",
-        "threshold": 12
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "notify",
-          "to": [
-            "field:owner"
-          ],
-          "message": "{id} {name} still scores {residual_score} after treatment. Decide on more treatment or accept it."
-        }
-      ]
-    },
-    {
-      "ref": "capa_overdue",
-      "sheet": "nc",
-      "name": "Nonconformity overdue → tell the owner",
+      "ref": "treatment_overdue",
+      "sheet": "treatment",
+      "name": "Treatment plan overdue → tell the plan owner and the risk owner",
       "trigger": {
         "type": "date_arrives",
         "fieldKey": "due_date",
@@ -2367,17 +2218,18 @@
         {
           "type": "notify",
           "to": [
-            "field:owner"
+            "field:owner",
+            "field:risk_owner"
           ],
-          "message": "{id} {name} was due on {due_date} and is not closed."
+          "message": "{id} {name} was due on {due_date} and is not done."
         }
       ]
     },
     {
-      "ref": "capa_action_overdue",
-      "sheet": "nc",
+      "ref": "treatment_action_overdue",
+      "sheet": "treatment",
       "subitems": true,
-      "name": "Corrective action overdue → tell the action owner",
+      "name": "Treatment action overdue → tell the action owner",
       "trigger": {
         "type": "date_arrives",
         "fieldKey": "due_date",
@@ -2400,13 +2252,14 @@
       ]
     },
     {
-      "ref": "treatment_overdue",
+      "ref": "treatment_acceptance",
       "sheet": "treatment",
-      "name": "Treatment action overdue → tell the owner",
+      "name": "Every treatment action done → submit the plan for risk acceptance",
+      "advanced": true,
+      "description": "Gate: a treatment plan is not finished until its risk owner, then top management, accept the risk that remains. When the last action is done the plan is submitted to the Risk acceptance workflow; it can only reach Residual risk accepted through that approval.",
+      "startInTestMode": true,
       "trigger": {
-        "type": "date_arrives",
-        "fieldKey": "due_date",
-        "offsetDays": 1
+        "type": "all_subitems_done"
       },
       "conditions": [
         {
@@ -2416,121 +2269,8 @@
       ],
       "actions": [
         {
-          "type": "notify",
-          "to": [
-            "field:owner"
-          ],
-          "message": "{id} {name} was due on {due_date} and is not done."
-        }
-      ]
-    },
-    {
-      "ref": "document_review_due",
-      "sheet": "documents",
-      "name": "Document review in 30 days → tell the owner",
-      "trigger": {
-        "type": "date_arrives",
-        "fieldKey": "next_review",
-        "offsetDays": -30
-      },
-      "conditions": [],
-      "actions": [
-        {
-          "type": "notify",
-          "to": [
-            "field:owner"
-          ],
-          "message": "{document_id} {name} is due for review on {next_review}."
-        }
-      ]
-    },
-    {
-      "ref": "finding_nc",
-      "sheet": "finding",
-      "level": "full",
-      "name": "Finding is a nonconformity → raise it in Nonconformities and CAPA",
-      "trigger": {
-        "type": "field_becomes",
-        "fieldKey": "finding_type",
-        "value": "opt_nc"
-      },
-      "conditions": [
-        {
-          "fieldKey": "nonconformity",
-          "op": "has_none"
-        }
-      ],
-      "actions": [
-        {
-          "type": "create_item",
-          "sheetRef": "nc",
-          "groupRef": "open",
-          "name": "{name}",
-          "values": {
-            "source": "opt_audit",
-            "description": "{details}"
-          },
-          "link": true
-        }
-      ]
-    },
-    {
-      "ref": "incident_nc",
-      "sheet": "incident",
-      "level": "full",
-      "name": "Incident closed and needs a root cause → raise a nonconformity",
-      "trigger": {
-        "type": "field_becomes",
-        "fieldKey": "status",
-        "value": "opt_closed"
-      },
-      "conditions": [
-        {
-          "fieldKey": "root_cause_needed",
-          "op": "is_checked"
-        },
-        {
-          "fieldKey": "nonconformity",
-          "op": "has_none"
-        }
-      ],
-      "actions": [
-        {
-          "type": "create_item",
-          "sheetRef": "nc",
-          "groupRef": "open",
-          "name": "{name}",
-          "values": {
-            "source": "opt_incident",
-            "description": "{description}"
-          },
-          "link": true
-        }
-      ]
-    },
-    {
-      "ref": "training_due",
-      "sheet": "training",
-      "level": "full",
-      "name": "Training due in 7 days → remind the person",
-      "trigger": {
-        "type": "date_arrives",
-        "fieldKey": "due_date",
-        "offsetDays": -7
-      },
-      "conditions": [
-        {
-          "fieldKey": "status",
-          "op": "is_not_done"
-        }
-      ],
-      "actions": [
-        {
-          "type": "notify",
-          "to": [
-            "field:person"
-          ],
-          "message": "{course} is due on {due_date}."
+          "type": "start_workflow",
+          "workflowId": "risk-acceptance"
         }
       ]
     }
@@ -2539,63 +2279,83 @@
     {
       "ref": "isms_overview",
       "name": "ISMS overview",
+      "headline": true,
       "widgets": [
         {
-          "ref": "w_high",
+          "ref": "w_nc_open",
           "type": "count",
-          "title": "High risks (score 15 or more)",
-          "sheetRef": "risk",
+          "title": "Open ISMS nonconformities",
+          "sheetRef": "core:nc",
           "conditions": [
             {
-              "fieldKey": "score",
-              "op": "gte",
-              "value": 15
-            }
-          ]
-        },
-        {
-          "ref": "w_medium",
-          "type": "count",
-          "title": "Medium risks (8 to 14)",
-          "sheetRef": "risk",
-          "conditions": [
+              "fieldKey": "stage",
+              "op": "is_not_done"
+            },
             {
-              "fieldKey": "score",
-              "op": "between",
+              "fieldKey": "standards",
+              "op": "has_any_of",
               "value": [
-                8,
-                14
+                "iso27001"
               ]
             }
           ]
         },
         {
-          "ref": "w_low",
-          "type": "count",
-          "title": "Low risks (1 to 7)",
-          "sheetRef": "risk",
+          "ref": "w_nc_due",
+          "type": "overdue",
+          "title": "Nonconformities past their due date",
+          "sheetRef": "core:nc",
+          "fieldKey": "due_date",
           "conditions": [
             {
-              "fieldKey": "score",
-              "op": "between",
+              "fieldKey": "standards",
+              "op": "has_any_of",
               "value": [
-                1,
-                7
+                "iso27001"
               ]
             }
           ]
+        },
+        {
+          "ref": "w_scope",
+          "type": "by_option",
+          "title": "Scope and context by status",
+          "sheetRef": "scope",
+          "fieldKey": "status"
         },
         {
           "ref": "w_risk_status",
           "type": "by_option",
-          "title": "Risks by status",
-          "sheetRef": "risk",
-          "fieldKey": "status"
+          "title": "Information security risks by status",
+          "sheetRef": "core:risk",
+          "fieldKey": "status",
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_risk_high",
+          "type": "count",
+          "title": "Risks with a residual score above 12",
+          "sheetRef": "core:risk",
+          "conditions": [
+            {
+              "fieldKey": "iso27001_residual_score",
+              "op": "gt",
+              "value": 12
+            }
+          ]
         },
         {
           "ref": "w_treatment",
           "type": "by_option",
-          "title": "Treatment progress",
+          "title": "Risk treatment progress",
           "sheetRef": "treatment",
           "fieldKey": "status"
         },
@@ -2614,89 +2374,87 @@
           ]
         },
         {
-          "ref": "w_nc_open",
-          "type": "count",
-          "title": "Open nonconformities",
-          "sheetRef": "nc",
+          "ref": "w_controls",
+          "type": "by_option",
+          "title": "Controls by health",
+          "sheetRef": "core:controls",
+          "fieldKey": "health",
           "conditions": [
             {
-              "fieldKey": "status",
-              "op": "is_not_done"
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_incidents",
+          "type": "by_option",
+          "title": "Security incidents by status",
+          "sheetRef": "core:incidents",
+          "fieldKey": "status",
+          "conditions": [
+            {
+              "fieldKey": "incident_type",
+              "op": "is_any_of",
+              "value": [
+                "opt_security"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_audits",
+          "type": "by_option",
+          "title": "Internal audits by status",
+          "sheetRef": "core:audits",
+          "fieldKey": "status",
+          "conditions": [
+            {
+              "fieldKey": "standards",
+              "op": "has_any_of",
+              "value": [
+                "iso27001"
+              ]
             }
           ]
         },
         {
           "ref": "w_docs_due",
           "type": "overdue",
-          "title": "Documents due for review",
-          "sheetRef": "documents",
-          "fieldKey": "next_review"
-        }
-      ]
-    },
-    {
-      "ref": "nc_overview",
-      "name": "Nonconformities overview",
-      "widgets": [
-        {
-          "ref": "w_open",
-          "type": "count",
-          "title": "Open nonconformities",
-          "sheetRef": "nc",
+          "title": "ISMS documents due for review",
+          "sheetRef": "core:documents",
+          "fieldKey": "next_review",
           "conditions": [
             {
-              "fieldKey": "status",
-              "op": "is_not_done"
-            }
-          ]
-        },
-        {
-          "ref": "w_verify",
-          "type": "count",
-          "title": "Checking effectiveness",
-          "sheetRef": "nc",
-          "conditions": [
-            {
-              "fieldKey": "status",
-              "op": "is_any_of",
+              "fieldKey": "standards",
+              "op": "has_any_of",
               "value": [
-                "opt_verify"
+                "iso27001"
               ]
             }
           ]
         },
         {
-          "ref": "w_status",
-          "type": "by_option",
-          "title": "Nonconformities by status",
-          "sheetRef": "nc",
-          "fieldKey": "status"
-        },
-        {
-          "ref": "w_source",
-          "type": "by_option",
-          "title": "By source",
-          "sheetRef": "nc",
-          "fieldKey": "source"
-        },
-        {
-          "ref": "w_overdue",
+          "ref": "w_training",
           "type": "overdue",
-          "title": "Overdue nonconformities",
-          "sheetRef": "nc",
-          "fieldKey": "due_date"
+          "title": "Training past its expiry",
+          "sheetRef": "core:training",
+          "fieldKey": "expires_on"
         }
       ]
     }
   ],
   "setup": {
     "title": "ISO 27001 setup",
-    "description": "Eight steps from an empty ISMS to one you can audit. Each step's progress comes from your sheets.",
+    "description": "Four steps from the Core registers to an ISMS you can audit. Each step’s progress comes from your sheets.",
     "steps": [
       {
         "ref": "scope",
         "title": "Define the scope",
-        "body": "Write down what affects your information security from inside and outside, who expects what from you, and which parts of the organisation the ISMS covers. Agree each entry.",
+        "body": "Write down what affects your information security from inside and outside, who expects what from you, and which parts of the organisation the ISMS covers. Have top management approve the scope statement.",
         "target": {
           "sheetRef": "scope"
         },
@@ -2743,96 +2501,14 @@
         ]
       },
       {
-        "ref": "assets",
-        "title": "List your assets",
-        "body": "List the information you hold and the systems, services, people and places that hold or process it, each with an owner and a classification.",
-        "target": {
-          "sheetRef": "asset"
-        },
-        "rules": [
-          {
-            "sheetRef": "asset",
-            "all": [
-              {
-                "fieldKey": "owner",
-                "op": "is_not_empty"
-              },
-              {
-                "fieldKey": "classification",
-                "op": "is_not_empty"
-              }
-            ],
-            "min": 5
-          }
-        ],
-        "levels": {
-          "starter": {
-            "title": "List your processes",
-            "body": "Starter has no asset register: name the processes and systems you depend on in the risk register's Asset or process column.",
-            "target": {
-              "sheetRef": "risk"
-            },
-            "rules": [
-              {
-                "sheetRef": "risk",
-                "all": [
-                  {
-                    "fieldKey": "asset",
-                    "op": "is_not_empty"
-                  }
-                ],
-                "min": 5
-              }
-            ]
-          }
-        }
-      },
-      {
-        "ref": "risks",
-        "title": "Assess your risks",
-        "body": "For each asset or process, note the threat and the weakness it exploits, give the risk an owner and score likelihood and impact from 1 to 5.",
-        "target": {
-          "sheetRef": "risk"
-        },
-        "rules": [
-          {
-            "sheetRef": "risk",
-            "all": [
-              {
-                "fieldKey": "owner",
-                "op": "is_not_empty"
-              },
-              {
-                "fieldKey": "likelihood",
-                "op": "is_not_empty"
-              },
-              {
-                "fieldKey": "impact",
-                "op": "is_not_empty"
-              }
-            ],
-            "min": 5
-          }
-        ]
-      },
-      {
-        "ref": "treat",
-        "title": "Decide treatments and applicability",
-        "body": "Choose how to treat each risk and the controls that do it, then mark every Annex A control applicable or not, with a reason, in the statement of applicability.",
+        "ref": "applicability",
+        "title": "Decide which controls apply",
+        "body": "Mark every Annex A control applicable or not, with a reason, in the statement of applicability. Link the controls you rely on from the Controls library.",
         "target": {
           "library": "iso-27001@2022",
           "view": "Statement of applicability"
         },
         "rules": [
-          {
-            "sheetRef": "risk",
-            "all": [
-              {
-                "fieldKey": "treatment",
-                "op": "is_not_empty"
-              }
-            ]
-          },
           {
             "library": "iso-27001@2022",
             "where": [
@@ -2852,166 +2528,53 @@
         ]
       },
       {
-        "ref": "documents",
-        "title": "Write and approve your documents",
-        "body": "Write each document, attach it on the Files tab and have someone other than the author approve it. Approved documents get a review date.",
+        "ref": "treat",
+        "title": "Plan your risk treatment",
+        "body": "For each information security risk above appetite, add a treatment plan with an owner, a due date, the Annex A controls it puts in place and the risk owner who will accept what remains.",
         "target": {
-          "sheetRef": "documents"
+          "sheetRef": "treatment"
         },
         "rules": [
           {
-            "sheetRef": "documents",
+            "sheetRef": "treatment",
             "all": [
               {
-                "fieldKey": "status",
-                "op": "is_done"
+                "fieldKey": "owner",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "risk_owner",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "due_date",
+                "op": "is_not_empty"
               }
-            ]
+            ],
+            "min": 3
           }
         ]
       },
       {
-        "ref": "incidents",
-        "title": "Make incidents easy to report",
-        "body": "Open the form \"Report a security incident\", check its questions and privacy notice, then open it and tell everyone in scope where to find it. Record your first real or test incident through it.",
+        "ref": "accept",
+        "title": "Get the residual risk accepted",
+        "body": "When a plan’s actions are done it goes to the risk owner, then top management. Give someone the job title Top management so the approval has someone to ask.",
         "target": {
-          "sheetRef": "incident",
-          "view": "Report a security incident"
+          "sheetRef": "treatment",
+          "view": "By status"
         },
         "rules": [
           {
-            "sheetRef": "incident",
-            "all": [
-              {
-                "fieldKey": "description",
-                "op": "is_not_empty"
-              }
-            ],
-            "min": 1
-          }
-        ],
-        "levels": {
-          "starter": {
-            "title": "Record incidents",
-            "body": "Starter has no incident sheet: record each security incident that needs fixing in Nonconformities and CAPA with the source Incident, and give it an owner.",
-            "target": {
-              "sheetRef": "nc"
-            },
-            "rules": [
-              {
-                "sheetRef": "nc",
-                "where": [
-                  {
-                    "fieldKey": "source",
-                    "op": "is_any_of",
-                    "value": [
-                      "opt_incident"
-                    ]
-                  }
-                ],
-                "all": [
-                  {
-                    "fieldKey": "owner",
-                    "op": "is_not_empty"
-                  }
-                ],
-                "min": 1
-              }
-            ]
-          }
-        }
-      },
-      {
-        "ref": "audit",
-        "title": "Run an internal audit",
-        "body": "Plan an audit of the whole ISMS, run it with someone independent of the work, record what it finds and raise nonconformities for what falls short.",
-        "target": {
-          "sheetRef": "audit"
-        },
-        "rules": [
-          {
-            "sheetRef": "audit",
+            "sheetRef": "treatment",
             "all": [
               {
                 "fieldKey": "status",
                 "op": "is_done"
               }
             ],
-            "min": 1
+            "min": 3
           }
-        ],
-        "levels": {
-          "starter": {
-            "body": "Starter has no audit programme: run the audit, approve its report as the internal audit record in ISMS documents and record each shortfall in Nonconformities and CAPA with the source Audit.",
-            "target": {
-              "sheetRef": "documents"
-            },
-            "rules": [
-              {
-                "sheetRef": "documents",
-                "where": [
-                  {
-                    "fieldKey": "document_id",
-                    "op": "is",
-                    "value": "ISMS-REC-03"
-                  }
-                ],
-                "all": [
-                  {
-                    "fieldKey": "status",
-                    "op": "is_done"
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      },
-      {
-        "ref": "review",
-        "title": "Hold a management review",
-        "body": "Bring top management together to look at how the ISMS performs, cover every input and record the decisions they take.",
-        "target": {
-          "sheetRef": "review"
-        },
-        "rules": [
-          {
-            "sheetRef": "review",
-            "all": [
-              {
-                "fieldKey": "status",
-                "op": "is_done"
-              }
-            ],
-            "min": 1
-          }
-        ],
-        "levels": {
-          "starter": {
-            "body": "Starter has no meeting sheet: hold the review, write the minutes and approve them as the management review record in ISMS documents.",
-            "target": {
-              "sheetRef": "documents"
-            },
-            "rules": [
-              {
-                "sheetRef": "documents",
-                "where": [
-                  {
-                    "fieldKey": "document_id",
-                    "op": "is",
-                    "value": "ISMS-REC-MR"
-                  }
-                ],
-                "all": [
-                  {
-                    "fieldKey": "status",
-                    "op": "is_done"
-                  }
-                ]
-              }
-            ]
-          }
-        }
+        ]
       }
     ]
   },
@@ -3030,8 +2593,8 @@
               "kind": "form",
               "title": "Report a problem",
               "description": "Say what does not meet a requirement. It goes to Open nonconformities.",
-              "sheet": "nc",
-              "form": "report",
+              "sheet": "core:nc",
+              "form": "iso27001_report",
               "roles": [
                 "owner",
                 "admin",
@@ -3042,9 +2605,8 @@
               "key": "my-actions",
               "kind": "item",
               "title": "My actions",
-              "description": "Corrective actions assigned to you that are not done, soonest first.",
-              "sheet": "nc",
-              "subitems": true,
+              "description": "Actions assigned to you that are not done, soonest first.",
+              "sheet": "core:actions",
               "filters": [
                 {
                   "fieldKey": "owner",
@@ -3060,22 +2622,22 @@
               ],
               "sort": [
                 {
-                  "fieldKey": "due_date",
+                  "fieldKey": "due",
                   "direction": "asc"
                 }
               ],
               "show": [
                 "status",
-                "due_date"
+                "due"
               ],
               "empty": "No open actions are assigned to you."
             },
             {
               "key": "approvals",
               "kind": "item",
-              "title": "Needs my approval",
+              "title": "Needs my check",
               "description": "Nonconformities you own whose actions are done and wait for your effectiveness check.",
-              "sheet": "nc",
+              "sheet": "core:nc",
               "filters": [
                 {
                   "fieldKey": "owner",
@@ -3085,10 +2647,10 @@
                   ]
                 },
                 {
-                  "fieldKey": "status",
+                  "fieldKey": "stage",
                   "op": "is_any_of",
                   "value": [
-                    "opt_verify"
+                    "opt_verification"
                   ]
                 }
               ],
@@ -3099,7 +2661,7 @@
                 }
               ],
               "show": [
-                "severity",
+                "grade",
                 "due_date"
               ],
               "empty": "Nothing waits for your effectiveness check."
@@ -3113,20 +2675,20 @@
               "key": "all",
               "kind": "view",
               "title": "All nonconformities",
-              "sheet": "nc"
+              "sheet": "core:nc"
             },
             {
               "key": "overview",
               "kind": "dashboard",
               "title": "Overview",
-              "dashboard": "nc_overview"
+              "dashboard": "isms_overview"
             },
             {
               "key": "workflow",
               "kind": "workflow",
               "title": "Workflow",
-              "sheet": "nc",
-              "fieldKey": "status",
+              "sheet": "core:nc",
+              "fieldKey": "stage",
               "roles": [
                 "owner",
                 "admin"

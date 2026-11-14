@@ -1,19 +1,19 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import {
-  levelSummaries,
-  manifestAtLevel,
-  planPackInstall,
-  previewLines,
-  type PackSnapshot,
-} from '@/engine/packs';
+import { planPackInstall, previewLines, type PackSnapshot } from '@/engine/packs';
+import { extendsAgainst, extensionUses, neededLevel } from '@/engine/packs/extend';
+import { afterInstall, refMapOf } from '@/engine/packs/installed.fixture';
+import { startsInTestMode } from '@/engine/packs/safety';
+import { appProblems } from '@/lib/apps/manifest';
 import { repoPacks } from './catalogue';
-import { packManifestSchema } from './manifest';
+import { REVIEW_PACK_SOURCES } from './management-review';
+import { packQualityProblems } from './quality';
 
-// The ISO/IEC 27001:2022 pack (P4, docs/11): levels, the framework it builds on, the dashboard on the library and
-// installing Full on top of Starter.
-const pack = repoPacks().find((p) => p.key === 'iso-27001')!;
+// The ISO/IEC 27001:2022 add-on (docs/11 The ISO/IEC 27001 add-on, Phase 2): it requires the Core registers, adds its
+// own scope and treatment plan sheets in Core's domains and everything else to the shared registers, builds on the
+// 27001 library and meets the pack quality bar.
+const packs = repoPacks();
+const pack = packs.find((p) => p.key === 'iso-27001')!;
+const core = packs.find((p) => p.key === 'core')!;
 const LIB = '00000000-0000-4000-8000-00000000f001';
 
 const snapshot = (over: Partial<PackSnapshot> = {}): PackSnapshot => ({
@@ -27,337 +27,190 @@ const snapshot = (over: Partial<PackSnapshot> = {}): PackSnapshot => ({
   lastSheetPosition: null,
   lastFolderPosition: null,
   lastDashboardPosition: null,
-  libraries: [{ library: 'iso-27001@2022', sheetId: LIB }],
   ...over,
 });
 let n = 0;
 const env = {
-  today: '2026-11-13',
-  now: new Date('2026-11-13T10:00:00Z'),
+  today: '2026-11-14',
+  now: new Date('2026-11-14T10:00:00Z'),
   timeZone: 'Europe/London',
   newId: () => `00000000-0000-4000-8000-${String((n += 1)).padStart(12, '0')}`,
   hash: 'h',
   userId: 'u-1',
 };
 
-describe('ISO 27001 pack', () => {
-  it('ships Starter and Full and builds on the 27001 library', () => {
-    expect(pack.version).toBe('1.3.0');
-    expect(pack.levels!.map((l) => l.key)).toEqual(['starter', 'full']);
+/** Core (Full, as the add-on needs) installed, the 27001 library adopted with a few requirements. */
+function withCore() {
+  const corePlan = planPackInstall(core, snapshot(), env, { level: 'full' });
+  const coreRefs = refMapOf(corePlan.payload!);
+  const reqs = ['A.5.17', 'A.6.3', 'A.8.5', 'A.8.7', '4.1', '4.3', '5.2', '9.9.9'];
+  const snap = afterInstall(
+    snapshot({
+      libraries: [{ library: 'iso-27001@2022', sheetId: LIB }],
+      requirementItems: Object.fromEntries(reqs.map((r, i) => [`iso-27001@2022#${r}`, `req-${i}`])),
+    }),
+    corePlan.payload!,
+    'inst-core',
+  );
+  return { snap, coreRefs };
+}
+
+describe('ISO 27001 add-on', () => {
+  it('is a new major version that requires Core, stands for ISO 27001 and builds on the library', () => {
+    expect(pack.version).toBe('2.0.0');
+    expect(pack.requires).toEqual([{ pack: 'core', range: '^1.0.0' }]);
+    expect(pack.standard).toMatchObject({ id: 'iso27001', label: 'ISO 27001' });
     expect(pack.frameworks).toEqual([{ key: 'iso-27001', version: '2022' }]);
-    const [starter, full] = levelSummaries(pack);
-    expect(starter!.sheets).toEqual([
-      'Scope and context',
-      'Risk register',
-      'Risk treatment plan',
-      'ISMS documents',
-      'Nonconformities and CAPA',
-    ]);
-    expect(full!.adds).toEqual([
-      'Asset register',
-      'Internal audit programme',
-      'Audit findings',
-      'Management review',
-      'Security incidents',
-      'Training and awareness',
-    ]);
-    expect(pack.setup!.steps).toHaveLength(8);
+    expect(pack.levels).toBeUndefined();
   });
 
-  it('never ships the text of the standard: example items are marked as examples', () => {
-    for (const s of pack.sheets)
-      for (const i of s.items)
-        if (s.register !== 'documents') expect(i.name, `${s.ref}.${i.ref}`).toMatch(/^Example: /);
+  it('meets the pack quality bar', () => {
+    expect(packQualityProblems(pack)).toEqual([]);
   });
 
-  it('plans Starter into an empty workspace, the dashboard reading the library', () => {
-    const plan = planPackInstall(pack, snapshot(), env, { level: 'starter' });
-    expect(plan.preview.conflicts).toEqual([]);
-    expect(plan.state).toBe('ready');
-    expect(plan.payload!.pack.level).toBe('starter');
-    expect(plan.preview.sheets.map((s) => s.ref)).toEqual([
-      'scope',
+  it('adds its own sheets only where Core has none, in Core domains', () => {
+    expect(pack.sheets.map((s) => [s.name, s.folder, s.kind])).toEqual([
+      ['ISMS scope and context', 'core:management', 'register'],
+      ['Risk treatment plan', 'core:risk', 'actions'],
+    ]);
+    expect(pack.folders).toEqual([]);
+  });
+
+  it('extends only Core sheets and keys that exist, and needs Core Full', () => {
+    expect(extendsAgainst(pack, core)).toEqual([]);
+    expect(neededLevel(pack, core)).toBe('full');
+    expect(pack.extends!.map((e) => e.sheet)).toEqual([
+      'risk_category',
       'risk',
-      'treatment',
+      'controls',
+      'assets',
       'documents',
-      'nc',
-    ]);
-    // automations of Full sheets stay out
-    expect(plan.payload!.automations.map((a) => a.ref)).not.toContain('finding_nc');
-    const widgets = (
-      plan.payload!.dashboards[0]!.config as { widgets: { id: string; sheetId?: string }[] }
-    ).widgets;
-    expect(widgets.find((w) => w.id === 'w_soa')!.sheetId).toBe(LIB);
-    expect(plan.preview.frameworks).toEqual([{ library: 'iso-27001@2022', adopted: true }]);
-    expect(previewLines(plan.preview)[0]).toMatch(/^Installs 1 folder, 5 sheets/);
-  });
-
-  it('says the framework is adopted first when the workspace has not adopted it', () => {
-    const plan = planPackInstall(pack, snapshot({ libraries: [] }), env, { level: 'full' });
-    expect(plan.state).toBe('ready');
-    expect(plan.preview.frameworks).toEqual([{ library: 'iso-27001@2022', adopted: false }]);
-  });
-
-  it('plans Full whole, with the automations that raise nonconformities', () => {
-    const plan = planPackInstall(pack, snapshot(), env, { level: 'full' });
-    expect(plan.preview.conflicts).toEqual([]);
-    expect(plan.preview.sheets).toHaveLength(11);
-    expect(plan.payload!.automations.map((a) => a.ref)).toEqual(
-      expect.arrayContaining(['finding_nc', 'incident_nc']),
-    );
-  });
-
-  it('adds only what is missing when Full is installed on top of Starter', () => {
-    const starter = planPackInstall(pack, snapshot(), env, { level: 'starter' });
-    const p = starter.payload!;
-    const refMap: Record<string, string> = {};
-    for (const [kind, rows] of [
-      ['folder', p.folders],
-      ['sheet', p.sheets],
-      ['field', p.fields],
-      ['group', p.groups],
-      ['view', p.views],
-      ['item', p.items],
-      ['automation', p.automations],
-      ['dashboard', p.dashboards],
-    ] as const)
-      for (const r of rows) refMap[`${kind}:${String(r.ref)}`] = String(r.id);
-    const live = {
-      id: 'inst-1',
-      packKey: 'iso-27001',
-      version: pack.version,
-      status: 'installed' as const,
-      level: 'starter',
-      refMap,
-    };
-    const full = planPackInstall(
-      pack,
-      snapshot({ installs: [live], prefixes: p.sheets.map((s) => String(s.id_prefix)) }),
-      env,
-      { level: 'full' },
-    );
-    expect(full.state).toBe('ready');
-    expect(full.preview.extendsLevel).toEqual({ key: 'starter', name: 'Starter' });
-    const q = full.payload!;
-    expect(q.extend_install).toBe('inst-1');
-    expect(q.folders).toEqual([]);
-    expect(q.dashboards).toEqual([]);
-    expect(q.sheets.map((s) => s.ref)).toEqual([
-      'asset',
-      'audit',
-      'finding',
-      'review',
-      'incident',
+      'objectives',
+      'legal',
       'training',
+      'audits',
+      'reviews',
+      'incidents',
+      'nc',
+      'actions',
     ]);
-    // no row the install already has, and new rows point at the existing sheets and folder
-    for (const rows of [q.sheets, q.fields, q.groups, q.views, q.items, q.automations])
-      for (const r of rows) expect(Object.values(refMap)).not.toContain(r.id);
-    expect(q.sheets.every((s) => s.folder_id === refMap['folder:isms'])).toBe(true);
-    const assetRisks = q.fields.find((f) => f.ref === 'asset.risks')!;
-    expect((assetRisks.config as { targetSheetId: string }).targetSheetId).toBe(
-      refMap['sheet:risk'],
+    // the dashboard and the app read Core columns too: an update of Core may not take them away
+    const uses = extensionUses(pack, 'core');
+    expect([...uses.get('nc')!]).toEqual(
+      expect.arrayContaining(['stage', 'due_date', 'standards']),
     );
-    const raise = q.automations.find((a) => a.ref === 'finding_nc')!;
-    expect((raise.actions as { sheetId: string }[])[0]!.sheetId).toBe(refMap['sheet:nc']);
-    // prefixes of the install's own sheets are not "taken"
-    expect(full.preview.renamedPrefixes).toEqual([]);
-    expect(full.preview.sheets).toHaveLength(6);
-
-    // the same level again: nothing to do
-    const again = planPackInstall(pack, snapshot({ installs: [{ ...live, level: 'full' }] }), env, {
-      level: 'full',
-    });
-    expect(again.state).toBe('installed');
-    const lower = planPackInstall(pack, snapshot({ installs: [{ ...live, level: 'full' }] }), env, {
-      level: 'starter',
-    });
-    expect(lower.state).toBe('installed');
+    expect([...uses.get('training')!]).toContain('expires_on');
   });
 
-  it('tells the action owner when a corrective action (a sub-item) is overdue', () => {
-    const plan = planPackInstall(pack, snapshot(), env, { level: 'starter' });
-    const actions = plan.payload!.sheets.find((s) => s.ref === 'nc.subitems')!;
-    const a = plan.payload!.automations.find((x) => x.ref === 'capa_action_overdue')!;
-    expect(a.sheet_id).toBe(actions.id);
-    expect(a.enabled).toBe(true);
-    expect(a.trigger).toEqual({ type: 'date_arrives', fieldKey: 'due_date', offsetDays: 1 });
-    expect(plan.preview.automations.find((x) => x.name === a.name)!.sheet).toBe(
-      'Nonconformities and CAPA › Actions',
-    );
-    // the nonconformity's own due date keeps its reminder
-    expect(plan.payload!.automations.map((x) => x.ref)).toContain('capa_overdue');
+  it('never ships the text of the standard', () => {
+    for (const s of pack.sheets) for (const i of s.items) expect(i.name).toMatch(/^Example: /);
+    for (const e of pack.extends!)
+      if (e.sheet !== 'documents' && e.sheet !== 'risk_category')
+        for (const i of e.items ?? []) expect(i.name, `${e.sheet}.${i.ref}`).toMatch(/^Example: /);
   });
 
-  it('links the example risks and treatments to Annex A controls of the adopted library', () => {
-    const keys = [
-      ...new Set(
-        pack.sheets.flatMap((s) =>
-          s.items.flatMap((i) => Object.values(i.requirements ?? {}).flat()),
-        ),
-      ),
-    ];
-    // every key names a requirement of the library the pack builds on
-    const requirementItems = Object.fromEntries(keys.map((k, i) => [k, `lib-item-${i}`]));
-    const plan = planPackInstall(pack, snapshot({ requirementItems }), env, { level: 'starter' });
+  it('plans onto Core: its sheets in Core folders, columns on the shared registers, examples linked to Annex A', () => {
+    const { snap, coreRefs } = withCore();
+    const plan = planPackInstall(pack, snap, env);
+    expect(plan.preview.conflicts).toEqual([]);
     expect(plan.state).toBe('ready');
-    const field = (ref: string) => plan.payload!.fields.find((f) => f.ref === ref)!.id;
-    const item = (ref: string) => plan.payload!.items.find((i) => i.ref === ref)!.id;
-    const linked = (fieldRef: string, itemRef: string) =>
-      plan
-        .payload!.links.filter(
-          (l) => l.field_id === field(fieldRef) && l.from_item === item(itemRef),
-        )
-        .map((l) => keys[Number(l.to_item.replace('lib-item-', ''))]);
-    expect(linked('risk.controls', 'risk.ex_phishing')).toEqual([
-      'iso-27001@2022#A.6.3',
-      'iso-27001@2022#A.8.7',
+    const p = plan.payload!;
+    expect(p.sheets.filter((s) => !s.parent_sheet_id).map((s) => [s.ref, s.folder_id])).toEqual([
+      ['scope', coreRefs['folder:management']],
+      ['treatment', coreRefs['folder:risk']],
     ]);
-    expect(linked('risk.controls', 'risk.ex_laptop')).toEqual([
-      'iso-27001@2022#A.8.1',
-      'iso-27001@2022#A.7.9',
-    ]);
-    expect(linked('risk.controls', 'risk.ex_supplier')).toEqual([
-      'iso-27001@2022#A.5.19',
-      'iso-27001@2022#A.5.30',
-    ]);
-    expect(linked('treatment.control', 'treatment.ex_mfa')).toEqual(['iso-27001@2022#A.8.5']);
-    expect(plan.preview.warnings).toEqual([]);
-  });
-
-  it('names only requirements the ISO/IEC 27001:2022 library has', () => {
-    const fw = JSON.parse(
-      readFileSync(join(process.cwd(), 'templates/frameworks/iso-27001-2022.json'), 'utf8'),
-    ) as { requirements: { ref: string }[] };
-    const refs = new Set(fw.requirements.map((r) => `iso-27001@2022#${r.ref}`));
-    for (const s of pack.sheets)
-      for (const i of s.items)
-        for (const k of Object.values(i.requirements ?? {}).flat())
-          expect(refs.has(k), `${s.ref}.${i.ref} → ${k}`).toBe(true);
-  });
-
-  it('asks for incidents through an internal form at Full, linked from the setup checklist', () => {
-    const incidents = pack.sheets.find((s) => s.ref === 'incident')!;
-    const form = incidents.forms.find((f) => f.ref === 'report')!;
-    expect(form.name).toBe('Report a security incident');
-    expect(form.access).toBe('internal');
-    expect(form.layout.fields.map((f) => f.key)).toEqual([
-      'description',
-      'detected',
-      'affected',
-      'severity',
-      'reporter_name',
-      'reporter_email',
-    ]);
-    const full = planPackInstall(pack, snapshot(), env, { level: 'full' });
-    expect(full.preview.forms).toEqual([
-      { sheet: 'Nonconformities and CAPA', name: 'Report a problem', access: 'internal' },
-      { sheet: 'Security incidents', name: 'Report a security incident', access: 'internal' },
-    ]);
-    const view = full.payload!.views.find((v) => v.ref === 'incident.form.report')!;
-    expect((view.config as { form: { status: string } }).form.status).toBe('draft');
-    expect(planPackInstall(pack, snapshot(), env, { level: 'starter' }).preview.forms).toEqual([
-      { sheet: 'Nonconformities and CAPA', name: 'Report a problem', access: 'internal' },
-    ]);
-    const step = pack.setup!.steps.find((s) => s.ref === 'incidents')!;
-    expect(step.target).toEqual({ sheetRef: 'incident', view: 'Report a security incident' });
-    expect(step.levels!.starter!.target).toEqual({ sheetRef: 'nc' });
-  });
-
-  it('refuses an unknown level', () => {
-    expect(planPackInstall(pack, snapshot(), env, { level: 'gold' }).preview.conflicts).toContain(
-      '"gold" is not a level of this pack.',
+    // the risk register gets the 27001 columns as system columns after Core's
+    const riskCols = p.fields.filter((f) => f.sheet_id === coreRefs['sheet:risk']);
+    expect(riskCols.map((f) => f.key)).toEqual(
+      expect.arrayContaining([
+        'iso27001_controls',
+        'iso27001_residual_score',
+        'iso27001_treatment',
+      ]),
     );
-  });
-});
-
-describe('manifest levels', () => {
-  const base = JSON.parse(JSON.stringify(pack)) as Record<string, unknown> & {
-    sheets: { ref: string; level?: string; fields: { key: string; config?: object }[] }[];
-  };
-  const problems = (m: unknown) => {
-    const r = packManifestSchema.safeParse(m);
-    return r.success ? [] : r.error.issues.map((i) => i.message);
-  };
-
-  it('accepts the pack and filters it by level', () => {
-    expect(problems(base)).toEqual([]);
-    expect(manifestAtLevel(pack, 'starter').sheets).toHaveLength(5);
-    expect(manifestAtLevel(pack, 'full').sheets).toHaveLength(11);
-  });
-
-  it('refuses a Starter sheet that links to a Full sheet', () => {
-    const m = structuredClone(base);
-    m.sheets
-      .find((s) => s.ref === 'risk')!
-      .fields.push({
-        key: 'assets',
-        config: { targetSheetRef: 'asset', multiple: true },
-        ...{ name: 'Assets', type: 'link' },
-      } as never);
-    expect(problems(m).join(' ')).toMatch(/installed only from Full/);
+    expect(riskCols.every((f) => f.system === true)).toBe(true);
+    // the example phishing risk links to Annex A controls of the adopted library
+    const phishing = p.items.find((i) => i.ref === 'core:risk.iso27001_phishing')!;
+    const controls = riskCols.find((f) => f.key === 'iso27001_controls')!;
+    expect(
+      p.links
+        .filter((l) => l.from_item === phishing.id && l.field_id === controls.id)
+        .map((l) => l.to_item),
+    ).toEqual(['req-1', 'req-3', 'req-2']);
+    // and to its treatment plan, both ways
+    const mfa = p.items.find((i) => i.ref === 'treatment.ex_mfa')!;
+    expect(p.links.some((l) => l.from_item === phishing.id && l.to_item === mfa.id)).toBe(true);
+    expect(p.links.some((l) => l.from_item === mfa.id && l.to_item === phishing.id)).toBe(true);
+    // the Information security risk category and the ISO 27001 tag
+    expect(p.items.find((i) => i.ref === 'core:risk_category.iso27001_infosec')?.name).toBe(
+      'Information security',
+    );
+    expect(p.options!.map((o) => o.ref)).toEqual(
+      expect.arrayContaining([
+        'core:risk.standards.iso27001',
+        'core:documents.doc_type.iso27001_soa',
+      ]),
+    );
+    expect(previewLines(plan.preview).join('\n')).toMatch(/Adds to Risk register: 10 columns/);
   });
 
-  it('refuses unknown levels and levels on a pack without levels', () => {
-    const m = structuredClone(base);
-    m.sheets[0]!.level = 'gold';
-    expect(problems(m)).toContain('Unknown level "gold".');
-    const plain = structuredClone(base);
-    delete plain.levels;
-    delete plain.setup;
-    expect(problems(plain).join(' ')).toMatch(/the pack has no levels/);
+  it('ships the forms internal, notifying automations in test mode and the approval workflows', () => {
+    const forms = pack.extends!.flatMap((e) =>
+      (e.forms ?? []).map((f) => [e.sheet, f.name, f.access]),
+    );
+    expect(forms).toEqual([
+      ['incidents', 'Report a security incident', 'internal'],
+      ['nc', 'Report a problem', 'internal'],
+    ]);
+    const all = [...pack.automations, ...pack.extends!.flatMap((e) => e.automations ?? [])];
+    const advanced = all.filter((a) => a.advanced);
+    expect(advanced.length).toBeGreaterThanOrEqual(4);
+    for (const a of advanced) expect(a.description!.length).toBeLessThanOrEqual(400);
+    const notifying = all.filter((a) => a.actions.some((x) => x.type === 'notify'));
+    for (const a of notifying) expect(startsInTestMode(a), a.ref).toBe(true);
+    expect(pack.sheets.flatMap((s) => (s.workflows ?? []).map((w) => [s.ref, w.id]))).toEqual([
+      ['scope', 'scope-approval'],
+      ['treatment', 'risk-acceptance'],
+    ]);
+    const acceptance = pack.sheets.find((s) => s.ref === 'treatment')!.workflows![0]!;
+    expect(acceptance.steps.map((s) => s.approvers)).toEqual([
+      { kind: 'field', fieldKey: 'risk_owner' },
+      { kind: 'jobRole', roleName: 'Top management' },
+    ]);
   });
 
-  it('refuses a setup step that names a sheet its level does not install', () => {
-    const m = structuredClone(base) as typeof base & {
-      setup: { steps: { levels?: Record<string, unknown> }[] };
-    };
-    delete m.setup.steps[1]!.levels;
-    expect(problems(m).join(' ')).toMatch(/"assets" uses "asset" at Starter/);
+  it('has one headline dashboard over Core and its own sheets, the ISMS CAPA app over Core', () => {
+    expect(pack.dashboards.map((d) => [d.ref, d.headline])).toEqual([['isms_overview', true]]);
+    const { snap, coreRefs } = withCore();
+    const p = planPackInstall(pack, snap, env).payload!;
+    const widgets = (p.dashboards[0]!.config as { widgets: { id: string; sheetId?: string }[] })
+      .widgets;
+    expect(widgets.find((w) => w.id === 'w_nc_open')!.sheetId).toBe(coreRefs['sheet:nc']);
+    expect(widgets.find((w) => w.id === 'w_soa')!.sheetId).toBe(LIB);
+    const app = pack.apps!.find((a) => a.key === 'isms-capa')!;
+    expect(appProblems(app, pack, [core])).toEqual([]);
+    expect(app.sections[0]!.screens.map((s) => [s.title, 'sheet' in s ? s.sheet : null])).toEqual([
+      ['Report a problem', 'core:nc'],
+      ['My actions', 'core:actions'],
+      ['Needs my check', 'core:nc'],
+    ]);
   });
-});
 
-describe('document approval (1.3.0)', () => {
-  const documents = pack.sheets.find((s) => s.ref === 'documents')!;
-
-  it('ships an approval workflow on ISMS documents: owner review, then top management, locked when approved', () => {
-    const [w] = documents.workflows ?? [];
-    expect(w).toMatchObject({
-      id: 'document-approval',
-      name: 'Document approval',
-      lockOnApproval: true,
-      allowSelfApproval: false,
-      requiredFields: ['document_id', 'owner'],
-      statusField: { fieldKey: 'status', onSubmit: 'opt_review', onApproved: 'opt_approved' },
+  it('feeds the management review inputs from Core and its own sheets', () => {
+    const def = REVIEW_PACK_SOURCES.find((d) => d.pack === 'iso-27001')!;
+    expect(def.sheets).toMatchObject({
+      reviews: 'core:reviews',
+      context: 'scope',
+      nonconformities: 'core:nc',
+      risks: 'core:risk',
+      treatments: 'treatment',
     });
-    expect(w!.steps.map((s) => [s.name, s.approvers])).toEqual([
-      ['Owner review', { kind: 'field', fieldKey: 'owner' }],
-      ['Management approval', { kind: 'jobRole', roleName: 'Top management' }],
-    ]);
-    expect(w!.steps[1]!.onReject).toEqual({ to: 'step', stepId: 'owner-review' });
-    expect(documents.fields.find((f) => f.key === 'approval_step')?.type).toBe('workflowstep');
-  });
-
-  it('installs the workflow into the sheet settings', () => {
-    const plan = planPackInstall(pack, snapshot(), env, { level: 'starter' });
-    const sheet = plan.payload!.sheets.find((s) => s.ref === 'documents')!;
-    expect((sheet.settings as { workflows: { id: string }[] }).workflows.map((w) => w.id)).toEqual([
-      'document-approval',
-    ]);
-  });
-
-  it('refuses a workflow that names a field the sheet does not have, or a person', () => {
-    const m = JSON.parse(JSON.stringify(pack)) as {
-      sheets: { ref: string; workflows: { steps: { approvers: object }[] }[] }[];
-    };
-    const flows = m.sheets.find((s) => s.ref === 'documents')!.workflows;
-    flows[0]!.steps[0]!.approvers = { kind: 'field', fieldKey: 'nobody' };
-    const r = packManifestSchema.safeParse(m);
-    expect(r.success).toBe(false);
-    expect(!r.success && r.error.issues.map((i) => i.message).join(' ')).toMatch(
-      /choose a people field for the approvers/,
-    );
-    flows[0]!.steps[0]!.approvers = { kind: 'people', userIds: ['u-1'] };
-    expect(packManifestSchema.safeParse(m).success).toBe(false);
+    const reviews = pack.extends!.find((e) => e.sheet === 'reviews')!;
+    const checks = Object.values(def.review.checks).flat();
+    for (const k of checks)
+      expect(
+        reviews.fields!.some((f) => f.key === k),
+        k,
+      ).toBe(true);
   });
 });

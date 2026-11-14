@@ -8,7 +8,7 @@ import type { ReviewSectionKey, ReviewSourceKey } from '@/engine/audit/managemen
 export interface ReviewPackSource {
   /** The pack key (pack_installs.pack_key). */
   pack: string;
-  /** Sheet refs of the pack per source. */
+  /** Sheet refs of the pack per source; `<pack>:<sheet>` for another install's sheet (an add-on over Core). */
   sheets: Partial<Record<ReviewSourceKey, string>>;
   /** Field keys (per source) of the item's main date. */
   dateFields: Partial<Record<ReviewSourceKey, string>>;
@@ -18,7 +18,7 @@ export interface ReviewPackSource {
   partyGroups: string[];
   /** Group refs of the context sheet that hold internal and external issues. */
   issueGroups: string[];
-  /** The management review sheet: where "Create the review" adds an item. */
+  /** The management review sheet: where "Create the review" adds an item (groupRef `<pack>:<sheet>.<group>` too). */
   review: {
     source: 'reviews';
     groupRef: string;
@@ -29,34 +29,35 @@ export interface ReviewPackSource {
 
 export const REVIEW_PACK_SOURCES: ReviewPackSource[] = [
   {
+    // 2.0.0 is an add-on to the Core registers: the review, nonconformities, risks, audits, incidents and training
+    // are Core's sheets (the ISO 27001 tag marks its items); context and treatment are its own
     pack: 'iso-27001',
     sheets: {
-      reviews: 'review',
+      reviews: 'core:reviews',
       context: 'scope',
-      nonconformities: 'nc',
-      risks: 'risk',
+      nonconformities: 'core:nc',
+      risks: 'core:risk',
       treatments: 'treatment',
-      audits: 'audit',
-      findings: 'finding',
-      incidents: 'incident',
-      training: 'training',
+      audits: 'core:audits',
+      incidents: 'core:incidents',
+      training: 'core:training',
     },
-    dateFields: { reviews: 'meeting_date', audits: 'audit_date', nonconformities: 'found_on' },
-    detailFields: { risks: 'level' },
+    dateFields: { reviews: 'meeting_date', audits: 'start', nonconformities: 'iso27001_found_on' },
+    detailFields: { risks: 'against_appetite' },
     partyGroups: ['scope.parties'],
     issueGroups: ['scope.internal', 'scope.external'],
     review: {
       source: 'reviews',
-      groupRef: 'review.planned',
+      groupRef: 'core:reviews.planned',
       checks: {
-        previous_actions: ['in_actions'],
-        issues: ['in_changes'],
-        parties: ['in_parties', 'in_feedback'],
-        nonconformities: ['in_performance'],
-        monitoring: ['in_performance'],
-        audits: ['in_performance'],
-        risks: ['in_risks'],
-        opportunities: ['in_improve'],
+        previous_actions: ['iso27001_in_actions'],
+        issues: ['iso27001_in_changes'],
+        parties: ['iso27001_in_parties', 'iso27001_in_feedback'],
+        nonconformities: ['iso27001_in_performance'],
+        monitoring: ['iso27001_in_performance'],
+        audits: ['iso27001_in_performance'],
+        risks: ['iso27001_in_risks'],
+        opportunities: ['iso27001_in_improve'],
       },
     },
   },
