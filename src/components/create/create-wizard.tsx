@@ -190,23 +190,27 @@ export function CreateWizard({
     const ranked = rankGoal(goal, INTENTS, candidates, 8);
     // an app is offered as the set that carries it
     const seen = new Set<string>();
-    return ranked
-      .map((m) =>
-        m.kind === 'app'
-          ? {
-              ...m,
-              kind: 'pack' as const,
-              id: opts.packs.find((p) => p.apps.includes(m.id))?.key ?? m.id,
-            }
-          : m,
-      )
-      .filter((m) => {
-        const k = `${m.kind}:${m.id}`;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      })
-      .slice(0, 5);
+    return (
+      ranked
+        .map((m) =>
+          m.kind === 'app'
+            ? {
+                ...m,
+                kind: 'pack' as const,
+                id: opts.packs.find((p) => p.apps.includes(m.id))?.key ?? m.id,
+              }
+            : m,
+        )
+        // a start shipped as a ready-made set is offered once, as the set
+        .filter((m) => !(m.kind === 'start' && opts.packs.some((p) => p.key === `start-${m.id}`)))
+        .filter((m) => {
+          const k = `${m.kind}:${m.id}`;
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        })
+        .slice(0, 5)
+    );
   }, [goal, candidates, opts]);
 
   const go = (href: string) => {
@@ -293,8 +297,19 @@ export function CreateWizard({
         );
         return;
       }
-      toast(`Created ${r.data.name}: ${r.data.made.join(', ')}.`, { duration: 6000 });
-      go(r.data.sheetId ? `/${org}/s/${r.data.sheetId}?created=1` : `/${org}/home`);
+      const message = `Created ${r.data.name}: ${r.data.made.join(', ')}.`;
+      // the toast shows once the created sheet has opened (its banner reads it); elsewhere at once
+      if (r.data.sheetId) {
+        try {
+          sessionStorage.setItem('create.toast', message);
+        } catch {
+          toast(message, { duration: 6000 });
+        }
+      } else toast(message, { duration: 6000 });
+      // a full load: the action's layout refresh can win a race with a client-side push and keep the old page
+      window.location.assign(
+        r.data.sheetId ? `/${org}/s/${r.data.sheetId}?created=1` : `/${org}/home`,
+      );
     } catch {
       setCreateError('Nothing was created. Check your connection and try again.');
     } finally {
@@ -352,8 +367,6 @@ export function CreateWizard({
             >
               {STEPS.map((label, i) => {
                 const n = (i + 1) as 1 | 2 | 3;
-                const shown = card === 'solve' || n < 3;
-                if (!shown) return null;
                 return (
                   <li
                     key={label}
@@ -375,9 +388,7 @@ export function CreateWizard({
                       {n}
                     </span>
                     <span className={cn(step !== n && 'max-[759px]:sr-only')}>{label}</span>
-                    {i < 2 && shown && (card === 'solve' || n < 2) ? (
-                      <span aria-hidden className="bg-line ml-1 h-px w-5" />
-                    ) : null}
+                    {i < 2 ? <span aria-hidden className="bg-line ml-1 h-px w-5" /> : null}
                   </li>
                 );
               })}
@@ -705,6 +716,13 @@ function SolveStep({
   onOpen: (sheetId: string | null) => void;
 }) {
   const pack = opts.packs.find((p) => p.key === packKey) ?? null;
+  // side by side, the chosen set stays in sight in the list; on phones its preview comes first instead
+  useEffect(() => {
+    if (!packKey || !window.matchMedia('(min-width: 1000px)').matches) return;
+    document
+      .querySelector(`[data-testid="create-set-${packKey}"]`)
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [packKey]);
   return (
     <div className="grid gap-6 min-[1000px]:grid-cols-[320px_minmax(0,1fr)]">
       <section aria-labelledby="create-sets">
@@ -749,7 +767,10 @@ function SolveStep({
           ))}
         </ul>
       </section>
-      <section aria-label="What will be created" className="min-w-0">
+      <section
+        aria-label="What will be created"
+        className={cn('min-w-0', pack && 'max-[999px]:order-first')}
+      >
         {!pack ? (
           <div className="border-line text-copy-14 text-muted-foreground flex min-h-[200px] items-center justify-center rounded-lg border border-dashed p-6 text-center">
             Pick a set to see exactly what it creates.

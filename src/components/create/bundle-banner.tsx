@@ -42,6 +42,13 @@ export function BundleBanner({
     const url = new URL(window.location.href);
     if (url.searchParams.get('created') === '1') {
       setFresh(true);
+      try {
+        const message = sessionStorage.getItem('create.toast');
+        sessionStorage.removeItem('create.toast');
+        if (message) toast(message, { duration: 6000 });
+      } catch {
+        // storage blocked: the banner still says what is next
+      }
       url.searchParams.delete('created');
       window.history.replaceState(window.history.state, '', url);
     }

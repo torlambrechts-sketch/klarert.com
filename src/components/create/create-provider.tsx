@@ -65,21 +65,22 @@ export function CreateSheetLink({
   org,
   folderId,
   onNavigate,
-  className,
+  onClick,
   children,
-}: {
+  ...rest
+}: Omit<React.ComponentProps<typeof Link>, 'href'> & {
   org: string;
   folderId?: string | null;
   onNavigate?: () => void;
-  className?: string;
-  children: React.ReactNode;
 }) {
   const create = useCreate();
   return (
+    // the rest carries a menu item's role, ref and handlers when it sits inside a menu (asChild)
     <Link
+      {...rest}
       href={folderId ? `/${org}/s/new?folder=${folderId}` : `/${org}/s/new`}
-      className={className}
       onClick={(e) => {
+        onClick?.(e);
         onNavigate?.();
         if (!create || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
         e.preventDefault();

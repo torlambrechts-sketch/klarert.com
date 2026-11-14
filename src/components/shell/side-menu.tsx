@@ -31,7 +31,7 @@ import type { Nav } from '@/server/repositories/sheets';
 import { AppIcon, type MenuApp } from '@/components/apps/app-icon';
 import { iconClass, itemClass } from './menu-bits';
 import { MenuSheets } from './menu-sheets';
-import { CreateButton, useCreate } from '@/components/create/create-provider';
+import { CreateButton, CreateSheetLink } from '@/components/create/create-provider';
 
 // The side menu (docs/05 §2.1): workspace switcher, "Find" to filter the menu, Home and My work, Insights (Dashboards,
 // Evidence library, Audit outputs), Apps (the installed packs' apps, docs/13), one collapsible section per folder with its sheets (menu-sheets.tsx: "+", "…" menus, rename,
@@ -228,38 +228,22 @@ export function SideMenu({
       return next;
     });
   const empty = nav.folders.length === 0 && nav.unfiled.length === 0;
-  const create = useCreate();
   // "New sheet" opens Create at the Sheet card (docs/05 §4 Create): one way to make a sheet
   const newSheet =
     canEdit && !empty && hit('New sheet') ? (
       <ul className="flex flex-col gap-px">
-        {create ? (
-          <li>
-            <button
-              type="button"
-              onClick={() => {
-                onNavigate?.();
-                create.openCreate({ card: 'sheet' });
-              }}
-              className={cn(itemClass, 'text-muted-foreground text-label-14 h-8 w-full px-2')}
-              title="New sheet"
-            >
-              <Plus className={iconClass} aria-hidden />
-              <span data-side-text className="min-w-0 flex-1 truncate text-left">
-                New sheet
-              </span>
-            </button>
-          </li>
-        ) : (
-          <NavLink
-            href={`/${org}/s/new`}
-            label="New sheet"
-            icon={<Plus className={iconClass} aria-hidden />}
-            active={path === `/${org}/s/new`}
+        <li>
+          <CreateSheetLink
+            org={org}
             onNavigate={onNavigate}
-            className="text-muted-foreground text-label-14 h-8 px-2"
-          />
-        )}
+            className={cn(itemClass, 'text-muted-foreground text-label-14 h-8 px-2')}
+          >
+            <Plus className={iconClass} aria-hidden />
+            <span data-side-text className="min-w-0 flex-1 truncate">
+              New sheet
+            </span>
+          </CreateSheetLink>
+        </li>
       </ul>
     ) : null;
   const anyInsights = hit('Dashboards') || hit('Evidence library') || hit('Audit outputs');
