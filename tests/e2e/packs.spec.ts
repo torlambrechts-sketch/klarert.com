@@ -46,6 +46,9 @@ test.describe('desktop', () => {
     await expect(dialog.getByRole('list', { name: 'Automations' })).toContainText(
       'When Status becomes Done, then move to Closed and lock.',
     );
+    await expect(dialog.getByRole('list', { name: 'Automations' })).toContainText(
+      '(test mode: logs what it would do until you turn it on)',
+    );
 
     // ── install: progress, then success with Open
     await dialog.getByRole('button', { name: 'Install' }).click();
@@ -113,6 +116,30 @@ test.describe('desktop', () => {
       `Maria Pereira · Installed ${TITLE} 1.0.0: 2 sheets`,
     );
     await expect(packRow(page)).toContainText('Installed');
+
+    // ── test mode (docs/04 §14): the 6 automations that notify start quiet; one goes live from the list, the rest
+    // from the banner, both logged
+    const banner = page.getByTestId('test-mode-banner');
+    await expect(banner).toContainText(`6 automations from ${TITLE} are in test mode.`);
+    const stuck = 'Stuck → notify the owner and the compliance manager';
+    await page.goto(`/${slug}/automations`);
+    const stuckRow = page.getByRole('listitem').filter({ hasText: stuck });
+    await expect(stuckRow.getByTestId('automation-test-mode')).toContainText('Test mode');
+    await stuckRow.getByRole('switch', { name: `Live: ${stuck}` }).click();
+    await expect(page.getByText(`“${stuck}” is live.`).first()).toBeVisible();
+    await expect(stuckRow.getByTestId('automation-test-mode')).toHaveCount(0);
+    await page.goto(`/${slug}/home`);
+    await expect(banner).toContainText(`5 automations from ${TITLE} are in test mode.`);
+    await banner.getByRole('button', { name: `Turn on all automations from ${TITLE}` }).click();
+    await expect(page.getByText(`Turned on 5 automations from ${TITLE}.`).first()).toBeVisible();
+    await expect(banner).toHaveCount(0);
+    const quiet = await rest<unknown[]>(
+      page,
+      `automations?org_id=eq.${org!.id}&mode=eq.test&select=id`,
+    );
+    expect(quiet).toHaveLength(0);
+    await page.goto(`/${slug}/settings?tab=packs`);
+    await expect(page.getByTestId('test-mode-banner')).toHaveCount(0);
 
     // ── archive: sheets archived, automations off, items and the log kept
     await installed.getByRole('button', { name: `Archive ${TITLE}` }).click();
