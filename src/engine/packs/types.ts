@@ -203,6 +203,36 @@ export interface PackStandard {
   color?: LabelColor;
 }
 
+/** One choice of a pack setting (docs/11 Pack settings), e.g. a country with its authority and CSIRT. */
+export interface PackSettingChoice {
+  id: string;
+  label: string;
+  /** Shown as a group in the picker ("EU member states", "EEA countries"). */
+  group?: string;
+  /** value key → text, in our own words (the setting's `values` name the keys). */
+  values: Record<string, string>;
+  /** Checked against the sources on `checkedOn`; unverified entries say so wherever they are shown. */
+  verified: boolean;
+  checkedOn?: string;
+  note?: string;
+  sources: { title: string; url: string }[];
+}
+
+/**
+ * A choice a workspace makes for a pack (docs/11 Pack settings): at install or later on Workspace admin › Packs. It
+ * sets the defaults of the pack's own fields whose `config.default` is `$setting:<key>.<value key>`.
+ */
+export interface PackSetting {
+  key: string;
+  label: string;
+  description: string;
+  /** What each choice says (the columns of the table): `{ key, label }`. */
+  values: { key: string; label: string }[];
+  choices: PackSettingChoice[];
+  /** A choice id used until the workspace chooses; none: the defaults stay empty. */
+  default?: string;
+}
+
 export interface PackRequirement {
   pack: string;
   /** A semver range: 1.2.3, ^1.2.0, ~1.2.0, >=1.2.0 or *. */
@@ -251,6 +281,8 @@ export interface PackManifest {
   extends?: PackExtension[];
   /** Why the pack ships no intake forms (docs/11 Pack quality bar), e.g. a pure library or add-on. */
   formsNotApplicable?: string;
+  /** Choices a workspace makes for the pack, setting defaults in its own sheets (docs/11 Pack settings). */
+  settings?: PackSetting[];
 }
 
 /** `<pack key>:<sheet ref>` or `<sheet ref>`. */

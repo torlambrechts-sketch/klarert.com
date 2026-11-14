@@ -18,7 +18,7 @@ import {
 } from './members';
 import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
-import { ArchivePack, PackPreview } from './packs';
+import { ArchivePack, PackPreview, PackSettings } from './packs';
 import { PackUpgrade } from './pack-upgrade';
 import { listPacks, packSetups, testModePacks } from '@/server/commands/packs';
 import { TestModeBanner } from '@/components/packs/test-mode-banner';
@@ -499,6 +499,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                         version: p.version,
                         levels: p.levels,
                         installedLevel: p.installedLevel,
+                        settings: p.settings,
                       }}
                     />
                   </div>
@@ -541,6 +542,13 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                       </span>
                     ) : null}
                   </span>
+                  {i.settings && i.status === 'installed' ? (
+                    <span className="text-label-13" data-testid="pack-settings-summary">
+                      {i.settings.summary.length
+                        ? i.settings.summary.join(' · ')
+                        : `Settings not chosen yet: ${i.settings.defs.map((d) => d.label.toLowerCase()).join(', ')}`}
+                    </span>
+                  ) : null}
                   <span className="text-muted-foreground text-label-13">
                     Installed by {i.installedBy}, {formatDateTime(i.installedAt, timeZone)}
                     {i.archivedAt
@@ -582,6 +590,15 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                         title={i.title}
                         from={i.version}
                         to={i.updateTo}
+                      />
+                    ) : null}
+                    {canInstall && i.settings ? (
+                      <PackSettings
+                        org={org}
+                        installId={i.id}
+                        title={i.title}
+                        defs={i.settings.defs}
+                        values={i.settings.values}
                       />
                     ) : null}
                     {canInstall ? (

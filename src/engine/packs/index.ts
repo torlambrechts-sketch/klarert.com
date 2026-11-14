@@ -6,3 +6,4 @@ export * from './audit';
 export * from './levels';
 export * from './setup';
 export * from './upgrade';
+export * from './settings';

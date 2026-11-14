@@ -42,7 +42,13 @@ export async function previewPackAction(input: { org: string; key: string }) {
   return packs.previewPack(input);
 }
 
-export async function installPackAction(input: { org: string; key: string; hash: string }) {
+export async function installPackAction(input: {
+  org: string;
+  key: string;
+  hash: string;
+  level?: string;
+  settings?: Record<string, string>;
+}) {
   const result = await packs.installPack(input);
   if (result.ok) revalidatePath(`/${input.org}`, 'layout');
   return result;
@@ -50,6 +56,17 @@ export async function installPackAction(input: { org: string; key: string; hash:
 
 export async function archivePackAction(input: { org: string; installId: string }) {
   const result = await packs.archivePack(input);
+  if (result.ok) revalidatePath(`/${input.org}`, 'layout');
+  return result;
+}
+
+// Pack settings (docs/11 Pack settings): the workspace's choices, which set defaults in the pack's own sheets.
+export async function setPackSettingsAction(input: {
+  org: string;
+  installId: string;
+  settings: Record<string, string>;
+}) {
+  const result = await packs.setPackSettings(input);
   if (result.ok) revalidatePath(`/${input.org}`, 'layout');
   return result;
 }
