@@ -42,7 +42,7 @@ import {
 import type { InstallFirst } from '@/engine/packs/plan';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
-import { planUpgrade, updatesFor, writeUpgrade } from '@/server/packs/upgrade';
+import { planUpgrade, readPackVersions, updatesFor, writeUpgrade } from '@/server/packs/upgrade';
 import { readSetups, type InstalledSetup } from '@/server/packs/setup';
 import { readFrameworks } from '@/server/frameworks/catalogue';
 import { parsePack } from '@/lib/packs/manifest';
@@ -137,7 +137,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
     'member',
     async ({ supabase, orgId, role }) => {
       try {
-        const [catalogue, installs, members, sheets, log, fws] = await Promise.all([
+        const [catalogue, installs, members, sheets, log, fws, versions] = await Promise.all([
           readCatalogue(supabase),
           supabase
             .from('pack_installs')
@@ -166,6 +166,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
             .order('id', { ascending: false })
             .limit(20),
           readFrameworks(supabase).catch(() => []),
+          readPackVersions(supabase),
         ]);
         const fwTitle = (k: string, v: string) =>
           fws.find((f) => f.key === k && f.version === v)?.title ?? `${k} ${v}`;
@@ -176,7 +177,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
         const titles = new Map(catalogue.map((c) => [c.key, c.title]));
         const byKey = new Map(catalogue.map((c) => [c.key, c]));
         const liveRows = (installs.data ?? []).filter((i) => i.status === 'installed');
-        const updates = updatesFor(installs.data ?? [], catalogue);
+        const updates = updatesFor(installs.data ?? [], versions);
         const live = new Map(liveRows.map((i) => [i.pack_key, i.version]));
         const liveLevel = new Map(liveRows.map((i) => [i.pack_key, i.level ?? null]));
         const levelOf = (key: string, version: string, level: string | null) => {

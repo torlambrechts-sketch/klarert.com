@@ -49,8 +49,8 @@ import {
   readLibraryCoverage,
   type Library,
 } from '@/server/frameworks/workspace';
-import { planInstall, readCatalogue, readPack } from '@/server/packs/install';
-import { updatesFor } from '@/server/packs/upgrade';
+import { planInstall, readPack } from '@/server/packs/install';
+import { readPackVersions, updatesFor } from '@/server/packs/upgrade';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { sheetLevel } from './access';
 import { withOrg } from './context';
@@ -126,7 +126,7 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
         const now = new Date();
         const timeZone = await timeZoneOf(supabase, orgId);
         const env = { today: todayIn(now, timeZone), now, timeZone, userId: user.id };
-        const [catalogue, libraries, controls, installs, packs] = await Promise.all([
+        const [catalogue, libraries, controls, installs, versions] = await Promise.all([
           readFrameworks(supabase),
           readLibraries(supabase, orgId, { items: true }),
           isAdminRole(role) ? readControlsSheets(supabase, orgId) : Promise.resolve([]),
@@ -136,10 +136,10 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
             .eq('org_id', orgId)
             .eq('status', 'installed')
             .like('pack_key', 'framework-%'),
-          readCatalogue(supabase).catch(() => []),
+          readPackVersions(supabase).catch(() => []),
         ]);
         if (installs.error) throw new Error(installs.error.message);
-        const updates = updatesFor(installs.data ?? [], packs);
+        const updates = updatesFor(installs.data ?? [], versions);
         const byId = new Map(catalogue.map((f) => [fwId(f), f]));
         const adoptedIds = new Set(libraries.map((l) => fwId(l.framework)));
         const adopted = new Map<string, AdoptedFramework>();
