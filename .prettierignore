@@ -1,6 +1,7 @@
 reference/
 docs/
 templates/
+tests/e2e/fixtures/
 supabase/
 pnpm-lock.yaml
 .next/

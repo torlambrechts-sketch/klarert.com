@@ -1,0 +1,2648 @@
+{
+  "key": "iso-27001",
+  "version": "1.0.0",
+  "title": "ISO/IEC 27001:2022 ISMS",
+  "description": "A working information security management system on top of the ISO/IEC 27001:2022 requirement library: scope and context, a scored risk register with treatment, the documents an ISMS keeps, nonconformities with corrective actions, automations, an ISMS overview dashboard and a seven-step setup checklist. Choose Starter or Full; you can add Full later. Reference numbers and short titles only, never the text of the standard.",
+  "requires": [],
+  "levels": [
+    {
+      "key": "starter",
+      "name": "Starter",
+      "description": "The core of an ISMS: scope and context, risk register, risk treatment plan, ISMS documents, nonconformities and CAPA."
+    },
+    {
+      "key": "full",
+      "name": "Full",
+      "description": "Everything in Starter plus the asset register, internal audits with findings, management reviews, security incidents and training."
+    }
+  ],
+  "frameworks": [
+    {
+      "key": "iso-27001",
+      "version": "2022"
+    }
+  ],
+  "folders": [
+    {
+      "ref": "isms",
+      "name": "ISMS"
+    }
+  ],
+  "sheets": [
+    {
+      "ref": "scope",
+      "name": "Scope and context",
+      "itemLabel": "Entry",
+      "idPrefix": "CTX-",
+      "folder": "isms",
+      "description": "What shapes your ISMS: internal and external issues, the interested parties and what they need from you, and the scope statement. Link each entry to the clause it answers.",
+      "groups": [
+        {
+          "ref": "internal",
+          "name": "Internal issues",
+          "color": "blue"
+        },
+        {
+          "ref": "external",
+          "name": "External issues",
+          "color": "purple"
+        },
+        {
+          "ref": "parties",
+          "name": "Interested parties",
+          "color": "teal"
+        },
+        {
+          "ref": "scope",
+          "name": "Scope statement",
+          "color": "navy"
+        }
+      ],
+      "fields": [
+        {
+          "key": "kind",
+          "name": "Kind",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_internal",
+                "label": "Internal issue",
+                "color": "blue"
+              },
+              {
+                "id": "opt_external",
+                "label": "External issue",
+                "color": "purple"
+              },
+              {
+                "id": "opt_party",
+                "label": "Interested party",
+                "color": "teal"
+              },
+              {
+                "id": "opt_scope",
+                "label": "Scope statement",
+                "color": "navy"
+              }
+            ]
+          }
+        },
+        {
+          "key": "clause",
+          "name": "Clause",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The clause this entry answers: 4.1 for issues, 4.2 for interested parties, 4.3 for the scope."
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "details",
+          "name": "Details",
+          "type": "longtext"
+        },
+        {
+          "key": "needs",
+          "name": "Their requirements",
+          "type": "longtext",
+          "description": "What this party expects from you, and which of those expectations the ISMS takes on.",
+          "visibility": {
+            "fieldKey": "kind",
+            "op": "is_any_of",
+            "value": [
+              "opt_party"
+            ]
+          }
+        },
+        {
+          "key": "response",
+          "name": "How the ISMS responds",
+          "type": "longtext"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_agreed",
+                "label": "Agreed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        }
+      ],
+      "views": [
+        {
+          "name": "By kind",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "kind"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By kind"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_cloud",
+          "group": "external",
+          "name": "Example: more of our work runs on cloud services",
+          "values": {
+            "kind": "opt_external",
+            "details": "Most business systems are hosted by suppliers, so their security becomes ours.",
+            "status": "opt_draft",
+            "next_review": "$in:180"
+          }
+        },
+        {
+          "ref": "ex_team",
+          "group": "internal",
+          "name": "Example: a small IT team covers everything",
+          "values": {
+            "kind": "opt_internal",
+            "details": "Two people run IT. Holidays and sick leave leave gaps.",
+            "status": "opt_draft",
+            "next_review": "$in:180"
+          }
+        },
+        {
+          "ref": "ex_customers",
+          "group": "parties",
+          "name": "Example: customers",
+          "values": {
+            "kind": "opt_party",
+            "needs": "Their data is kept confidential, our service is available, and we tell them quickly about incidents that affect them.",
+            "status": "opt_draft",
+            "next_review": "$in:180"
+          }
+        },
+        {
+          "ref": "ex_scope",
+          "group": "scope",
+          "name": "Example: ISMS scope statement",
+          "values": {
+            "kind": "opt_scope",
+            "details": "Write which sites, teams, services and systems the ISMS covers, what it leaves out and why, and where it meets what others run for you.",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "risk",
+      "name": "Risk register",
+      "itemLabel": "Risk",
+      "idPrefix": "RSK-",
+      "folder": "isms",
+      "description": "Information security risks: what could happen to which asset or process, how likely and how bad, how you treat it and the controls that do it. Scores are likelihood times impact (1 to 25).",
+      "groups": [
+        {
+          "ref": "identified",
+          "name": "Identified",
+          "color": "blue"
+        },
+        {
+          "ref": "treating",
+          "name": "Being treated",
+          "color": "orange"
+        },
+        {
+          "ref": "accepted",
+          "name": "Accepted",
+          "color": "green"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "grey"
+        }
+      ],
+      "fields": [
+        {
+          "key": "asset",
+          "name": "Asset or process",
+          "type": "text"
+        },
+        {
+          "key": "threat",
+          "name": "Threat",
+          "type": "text"
+        },
+        {
+          "key": "vulnerability",
+          "name": "Vulnerability",
+          "type": "text"
+        },
+        {
+          "key": "owner",
+          "name": "Risk owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "likelihood",
+          "name": "Likelihood",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          },
+          "description": "1 rare, 5 almost certain."
+        },
+        {
+          "key": "impact",
+          "name": "Impact",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          },
+          "description": "1 negligible, 5 severe."
+        },
+        {
+          "key": "score",
+          "name": "Inherent score",
+          "type": "formula",
+          "config": {
+            "expr": "IF(OR(EMPTY({likelihood}), EMPTY({impact})), 0, {likelihood} * {impact})",
+            "result": "number"
+          }
+        },
+        {
+          "key": "level",
+          "name": "Risk level",
+          "type": "formula",
+          "config": {
+            "expr": "IF({score} >= 15, \"High\", IF({score} >= 8, \"Medium\", IF({score} > 0, \"Low\", \"\")))",
+            "result": "text"
+          }
+        },
+        {
+          "key": "treatment",
+          "name": "Treatment option",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_treat",
+                "label": "Treat",
+                "color": "blue"
+              },
+              {
+                "id": "opt_tolerate",
+                "label": "Tolerate",
+                "color": "green"
+              },
+              {
+                "id": "opt_transfer",
+                "label": "Transfer",
+                "color": "purple"
+              },
+              {
+                "id": "opt_terminate",
+                "label": "Terminate",
+                "color": "red"
+              }
+            ]
+          }
+        },
+        {
+          "key": "controls",
+          "name": "Annex A controls",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The controls from the ISO/IEC 27001 library that treat this risk."
+        },
+        {
+          "key": "treatments",
+          "name": "Treatment actions",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "treatment",
+            "multiple": true,
+            "inverseKey": "risk"
+          }
+        },
+        {
+          "key": "residual_likelihood",
+          "name": "Residual likelihood",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          }
+        },
+        {
+          "key": "residual_impact",
+          "name": "Residual impact",
+          "type": "rating",
+          "config": {
+            "scale": 5
+          }
+        },
+        {
+          "key": "residual_score",
+          "name": "Residual score",
+          "type": "formula",
+          "config": {
+            "expr": "IF(OR(EMPTY({residual_likelihood}), EMPTY({residual_impact})), 0, {residual_likelihood} * {residual_impact})",
+            "result": "number"
+          }
+        },
+        {
+          "key": "review_date",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_open",
+                "label": "Open",
+                "color": "blue"
+              },
+              {
+                "id": "opt_treating",
+                "label": "Being treated",
+                "color": "orange"
+              },
+              {
+                "id": "opt_accepted",
+                "label": "Accepted",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "grey",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "accept_owner",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_accepted"
+              ],
+              "require": [
+                "owner",
+                "treatment"
+              ],
+              "requireComment": true,
+              "message": "Say why the risk owner accepts this risk."
+            }
+          ]
+        },
+        {
+          "key": "notes",
+          "name": "Notes",
+          "type": "longtext"
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "columnGroups": [
+        {
+          "name": "Inherent risk",
+          "fields": [
+            "likelihood",
+            "impact",
+            "score",
+            "level"
+          ]
+        },
+        {
+          "name": "Residual risk",
+          "fields": [
+            "residual_likelihood",
+            "residual_impact",
+            "residual_score"
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_laptop",
+          "group": "treating",
+          "name": "Example: customer data exposed through a lost laptop",
+          "values": {
+            "asset": "Staff laptops",
+            "threat": "Loss or theft",
+            "vulnerability": "Disks are not encrypted on older laptops",
+            "likelihood": 3,
+            "impact": 4,
+            "treatment": "opt_treat",
+            "residual_likelihood": 2,
+            "residual_impact": 2,
+            "review_date": "$in:90",
+            "status": "opt_treating"
+          },
+          "links": {
+            "treatments": [
+              "ex_encrypt"
+            ]
+          }
+        },
+        {
+          "ref": "ex_phishing",
+          "group": "identified",
+          "name": "Example: account taken over by phishing",
+          "values": {
+            "asset": "Email and office accounts",
+            "threat": "Phishing",
+            "vulnerability": "Not every account has multi-factor sign-in",
+            "likelihood": 4,
+            "impact": 4,
+            "treatment": "opt_treat",
+            "review_date": "$in:30",
+            "status": "opt_open"
+          },
+          "links": {
+            "treatments": [
+              "ex_mfa"
+            ]
+          }
+        },
+        {
+          "ref": "ex_supplier",
+          "group": "identified",
+          "name": "Example: hosting supplier outage",
+          "values": {
+            "asset": "Customer portal",
+            "threat": "Supplier outage",
+            "vulnerability": "One hosting region",
+            "likelihood": 2,
+            "impact": 3,
+            "treatment": "opt_tolerate",
+            "residual_likelihood": 2,
+            "residual_impact": 3,
+            "review_date": "$in:180",
+            "status": "opt_open"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "treatment",
+      "name": "Risk treatment plan",
+      "itemLabel": "Action",
+      "idPrefix": "RTP-",
+      "folder": "isms",
+      "description": "The actions that treat your risks: who does what by when, for which risk and with which control.",
+      "groups": [
+        {
+          "ref": "planned",
+          "name": "Planned",
+          "color": "blue"
+        },
+        {
+          "ref": "doing",
+          "name": "In progress",
+          "color": "orange"
+        },
+        {
+          "ref": "done",
+          "name": "Done",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_todo",
+                "label": "To do",
+                "color": "grey"
+              },
+              {
+                "id": "opt_doing",
+                "label": "Working on it",
+                "color": "orange"
+              },
+              {
+                "id": "opt_done",
+                "label": "Done",
+                "color": "green",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "reopen",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_todo",
+                "opt_doing"
+              ],
+              "requireComment": true,
+              "fromDone": true,
+              "message": "Say why this is reopened."
+            }
+          ]
+        },
+        {
+          "key": "risk",
+          "name": "Risk",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "risk",
+            "multiple": false,
+            "inverseKey": "treatments"
+          }
+        },
+        {
+          "key": "control",
+          "name": "Control",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          },
+          "description": "The Annex A control this action puts in place."
+        },
+        {
+          "key": "details",
+          "name": "What to do",
+          "type": "longtext"
+        },
+        {
+          "key": "evidence",
+          "name": "Evidence",
+          "type": "evidence",
+          "config": {
+            "validDays": 365,
+            "multiple": true
+          }
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_encrypt",
+          "group": "doing",
+          "name": "Example: turn on disk encryption on every laptop",
+          "values": {
+            "due_date": "$in:30",
+            "status": "opt_doing"
+          },
+          "links": {
+            "risk": [
+              "ex_laptop"
+            ]
+          }
+        },
+        {
+          "ref": "ex_mfa",
+          "group": "planned",
+          "name": "Example: require multi-factor sign-in for every account",
+          "values": {
+            "due_date": "$in:45",
+            "status": "opt_todo"
+          },
+          "links": {
+            "risk": [
+              "ex_phishing"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "documents",
+      "name": "ISMS documents",
+      "itemLabel": "Document",
+      "idPrefix": "ISD-",
+      "folder": "isms",
+      "register": "documents",
+      "description": "The documented information your ISMS keeps: policies, the scope, the risk method, the statement of applicability and the records that show it works. Controlled documents: approved by a second person, reviewed on a date. Attach the files on each document's Files tab.",
+      "groups": [
+        {
+          "ref": "draft",
+          "name": "Draft",
+          "color": "grey"
+        },
+        {
+          "ref": "in_review",
+          "name": "In review",
+          "color": "orange"
+        },
+        {
+          "ref": "approved",
+          "name": "Approved",
+          "color": "green"
+        },
+        {
+          "ref": "obsolete",
+          "name": "Obsolete",
+          "color": "dark"
+        }
+      ],
+      "fields": [
+        {
+          "key": "document_id",
+          "name": "Document ID",
+          "type": "text"
+        },
+        {
+          "key": "doc_type",
+          "name": "Type",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_policy",
+                "label": "Policy",
+                "color": "navy"
+              },
+              {
+                "id": "opt_scope",
+                "label": "Scope",
+                "color": "blue"
+              },
+              {
+                "id": "opt_method",
+                "label": "Method",
+                "color": "purple"
+              },
+              {
+                "id": "opt_statement",
+                "label": "Statement",
+                "color": "teal"
+              },
+              {
+                "id": "opt_plan",
+                "label": "Plan",
+                "color": "orange"
+              },
+              {
+                "id": "opt_record",
+                "label": "Record",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "version",
+          "name": "Version",
+          "type": "number"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_draft",
+                "label": "Draft",
+                "color": "grey"
+              },
+              {
+                "id": "opt_review",
+                "label": "In review",
+                "color": "orange"
+              },
+              {
+                "id": "opt_approved",
+                "label": "Approved",
+                "color": "green",
+                "done": true
+              },
+              {
+                "id": "opt_obsolete",
+                "label": "Obsolete",
+                "color": "dark"
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "approve_note",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_approved"
+              ],
+              "requireComment": true,
+              "message": "Add a version note: what changed in this version."
+            },
+            {
+              "id": "leave_approved",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_draft",
+                "opt_review",
+                "opt_obsolete"
+              ],
+              "requireComment": true,
+              "fromDone": true,
+              "message": "Say why this approved document changes status."
+            }
+          ]
+        },
+        {
+          "key": "approver",
+          "name": "Approver",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "approved_on",
+          "name": "Approved on",
+          "type": "date"
+        },
+        {
+          "key": "next_review",
+          "name": "Next review",
+          "type": "date"
+        },
+        {
+          "key": "meets",
+          "name": "Requirements it meets",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "policy",
+          "group": "draft",
+          "name": "Information security policy",
+          "values": {
+            "document_id": "ISMS-POL-01",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "scope_doc",
+          "group": "draft",
+          "name": "ISMS scope",
+          "values": {
+            "document_id": "ISMS-DOC-01",
+            "doc_type": "opt_scope",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "risk_method",
+          "group": "draft",
+          "name": "Risk assessment and treatment method",
+          "values": {
+            "document_id": "ISMS-DOC-02",
+            "doc_type": "opt_method",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "soa",
+          "group": "draft",
+          "name": "Statement of applicability",
+          "values": {
+            "document_id": "ISMS-DOC-03",
+            "doc_type": "opt_statement",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "rtp",
+          "group": "draft",
+          "name": "Risk treatment plan",
+          "values": {
+            "document_id": "ISMS-DOC-04",
+            "doc_type": "opt_plan",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "objectives",
+          "group": "draft",
+          "name": "Information security objectives",
+          "values": {
+            "document_id": "ISMS-DOC-05",
+            "doc_type": "opt_plan",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "roles",
+          "group": "draft",
+          "name": "Roles and responsibilities",
+          "values": {
+            "document_id": "ISMS-DOC-06",
+            "doc_type": "opt_policy",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "competence",
+          "group": "draft",
+          "name": "Competence and training records",
+          "values": {
+            "document_id": "ISMS-REC-01",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "monitoring",
+          "group": "draft",
+          "name": "Monitoring and measurement results",
+          "values": {
+            "document_id": "ISMS-REC-02",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "audit_prog",
+          "group": "draft",
+          "name": "Internal audit programme and reports",
+          "values": {
+            "document_id": "ISMS-REC-03",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "mr_record",
+          "group": "draft",
+          "name": "Management review record",
+          "values": {
+            "document_id": "ISMS-REC-MR",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        },
+        {
+          "ref": "nc_records",
+          "group": "draft",
+          "name": "Nonconformity and corrective action records",
+          "values": {
+            "document_id": "ISMS-REC-04",
+            "doc_type": "opt_record",
+            "status": "opt_draft",
+            "next_review": "$in:365"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "nc",
+      "name": "Nonconformities and CAPA",
+      "itemLabel": "Nonconformity",
+      "idPrefix": "NC-",
+      "folder": "isms",
+      "description": "What did not meet a requirement, from audits, incidents, reviews or anywhere else: the correction, the root cause, the corrective actions (as sub-items) and the check that they worked. A nonconformity closes only when its actions are done.",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "Open",
+          "color": "orange"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "source",
+          "name": "Source",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_audit",
+                "label": "Audit",
+                "color": "blue"
+              },
+              {
+                "id": "opt_incident",
+                "label": "Incident",
+                "color": "red"
+              },
+              {
+                "id": "opt_review",
+                "label": "Management review",
+                "color": "purple"
+              },
+              {
+                "id": "opt_other",
+                "label": "Other",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "found_on",
+          "name": "Found on",
+          "type": "date",
+          "config": {
+            "relative": false,
+            "default": "$today"
+          }
+        },
+        {
+          "key": "severity",
+          "name": "Severity",
+          "type": "severity"
+        },
+        {
+          "key": "description",
+          "name": "What is wrong",
+          "type": "longtext"
+        },
+        {
+          "key": "correction",
+          "name": "Correction",
+          "type": "longtext",
+          "description": "What was done straight away to limit the effect."
+        },
+        {
+          "key": "root_cause",
+          "name": "Root cause",
+          "type": "longtext"
+        },
+        {
+          "key": "corrective_action",
+          "name": "Corrective action",
+          "type": "longtext",
+          "description": "What removes the cause so it does not happen again. Track the steps as sub-items."
+        },
+        {
+          "key": "effectiveness",
+          "name": "Effectiveness check",
+          "type": "checklist",
+          "config": {
+            "lines": [
+              {
+                "id": "l1",
+                "text": "The corrective actions are done",
+                "noteOnNo": true
+              },
+              {
+                "id": "l2",
+                "text": "It has not happened again since",
+                "noteOnNo": true
+              },
+              {
+                "id": "l3",
+                "text": "Risks and documents are updated where needed",
+                "noteOnNo": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date",
+          "config": {
+            "relative": true,
+            "default": "$in:60"
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_open",
+                "label": "Open",
+                "color": "orange"
+              },
+              {
+                "id": "opt_analysis",
+                "label": "Root cause analysis",
+                "color": "blue"
+              },
+              {
+                "id": "opt_actions",
+                "label": "Actions under way",
+                "color": "purple"
+              },
+              {
+                "id": "opt_verify",
+                "label": "Checking effectiveness",
+                "color": "teal"
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "close_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_closed"
+              ],
+              "require": [
+                "root_cause",
+                "corrective_action",
+                "effectiveness"
+              ],
+              "message": "Add the root cause, the corrective action and the effectiveness check before closing."
+            },
+            {
+              "id": "reopen",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_open",
+                "opt_analysis",
+                "opt_actions",
+                "opt_verify"
+              ],
+              "requireComment": true,
+              "fromDone": true,
+              "message": "Say why this is reopened."
+            }
+          ]
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "subitems": {
+        "label": "Actions",
+        "blockClose": true,
+        "fields": [
+          {
+            "key": "owner",
+            "name": "Owner",
+            "type": "people",
+            "config": {
+              "multiple": false
+            }
+          },
+          {
+            "key": "status",
+            "name": "Status",
+            "type": "status",
+            "config": {
+              "options": [
+                {
+                  "id": "opt_todo",
+                  "label": "To do",
+                  "color": "grey"
+                },
+                {
+                  "id": "opt_doing",
+                  "label": "Working on it",
+                  "color": "orange"
+                },
+                {
+                  "id": "opt_done",
+                  "label": "Done",
+                  "color": "green",
+                  "done": true
+                },
+                {
+                  "id": "opt_na",
+                  "label": "N/A",
+                  "color": "dark",
+                  "done": true
+                }
+              ]
+            },
+            "rules": [
+              {
+                "id": "na_reason",
+                "whenFieldKey": "status",
+                "whenValues": [
+                  "opt_na"
+                ],
+                "requireComment": true,
+                "message": "Say why this does not apply."
+              },
+              {
+                "id": "reopen",
+                "whenFieldKey": "status",
+                "whenValues": [
+                  "opt_todo",
+                  "opt_doing"
+                ],
+                "requireComment": true,
+                "fromDone": true,
+                "message": "Say why this is reopened."
+              }
+            ]
+          },
+          {
+            "key": "due_date",
+            "name": "Due date",
+            "type": "date",
+            "config": {
+              "relative": true
+            }
+          },
+          {
+            "key": "evidence",
+            "name": "Evidence",
+            "type": "evidence",
+            "config": {
+              "validDays": 365,
+              "multiple": true,
+              "accept": []
+            }
+          }
+        ],
+        "items": [
+          {
+            "name": "Correct the problem",
+            "values": {
+              "due_date": "$in:7"
+            }
+          },
+          {
+            "name": "Remove the root cause",
+            "values": {
+              "due_date": "$in:30"
+            }
+          },
+          {
+            "name": "Check it worked",
+            "values": {
+              "due_date": "$in:90"
+            }
+          }
+        ]
+      },
+      "items": [
+        {
+          "ref": "ex_leavers",
+          "group": "open",
+          "name": "Example: leavers' accounts not removed on their last day",
+          "values": {
+            "source": "opt_audit",
+            "severity": "$option:Medium",
+            "description": "Three of ten leavers sampled still had active accounts a week after leaving.",
+            "due_date": "$in:45",
+            "status": "opt_analysis"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "asset",
+      "name": "Asset register",
+      "itemLabel": "Asset",
+      "idPrefix": "AST-",
+      "folder": "isms",
+      "level": "full",
+      "description": "The information and the things that hold or process it: who owns each asset, how sensitive it is, where it is and the risks to it.",
+      "groups": [
+        {
+          "ref": "in_use",
+          "name": "In use",
+          "color": "green"
+        },
+        {
+          "ref": "planned",
+          "name": "Planned",
+          "color": "blue"
+        },
+        {
+          "ref": "retired",
+          "name": "Retired",
+          "color": "grey"
+        }
+      ],
+      "fields": [
+        {
+          "key": "type",
+          "name": "Type",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_information",
+                "label": "Information",
+                "color": "navy"
+              },
+              {
+                "id": "opt_software",
+                "label": "Software",
+                "color": "blue"
+              },
+              {
+                "id": "opt_hardware",
+                "label": "Hardware",
+                "color": "teal"
+              },
+              {
+                "id": "opt_service",
+                "label": "Service",
+                "color": "purple"
+              },
+              {
+                "id": "opt_people",
+                "label": "People",
+                "color": "orange"
+              },
+              {
+                "id": "opt_site",
+                "label": "Site",
+                "color": "grey"
+              }
+            ]
+          }
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "classification",
+          "name": "Classification",
+          "type": "classification"
+        },
+        {
+          "key": "location",
+          "name": "Location",
+          "type": "text"
+        },
+        {
+          "key": "risks",
+          "name": "Linked risks",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "risk",
+            "multiple": true
+          }
+        },
+        {
+          "key": "notes",
+          "name": "Notes",
+          "type": "longtext"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_crm",
+          "group": "in_use",
+          "name": "Example: customer database",
+          "values": {
+            "type": "opt_information",
+            "classification": "opt_confidential",
+            "location": "Hosted CRM"
+          }
+        },
+        {
+          "ref": "ex_laptops",
+          "group": "in_use",
+          "name": "Example: staff laptops",
+          "values": {
+            "type": "opt_hardware",
+            "classification": "opt_internal",
+            "location": "Office and home"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "audit",
+      "name": "Internal audit programme",
+      "itemLabel": "Audit",
+      "idPrefix": "IAP-",
+      "folder": "isms",
+      "level": "full",
+      "description": "The internal audits you plan and run: what each covers, who leads it and what it found.",
+      "groups": [
+        {
+          "ref": "planned",
+          "name": "Planned",
+          "color": "blue"
+        },
+        {
+          "ref": "running",
+          "name": "In progress",
+          "color": "orange"
+        },
+        {
+          "ref": "done",
+          "name": "Done",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "lead",
+          "name": "Lead auditor",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "audit_date",
+          "name": "Audit date",
+          "type": "date"
+        },
+        {
+          "key": "in_scope",
+          "name": "Clauses and controls in scope",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "scope",
+          "name": "Scope and criteria",
+          "type": "longtext"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_planned",
+                "label": "Planned",
+                "color": "blue"
+              },
+              {
+                "id": "opt_running",
+                "label": "In progress",
+                "color": "orange"
+              },
+              {
+                "id": "opt_done",
+                "label": "Done",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "findings",
+          "name": "Findings",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "finding",
+            "multiple": true,
+            "inverseKey": "audit"
+          }
+        },
+        {
+          "key": "report",
+          "name": "Report",
+          "type": "attachment"
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_audit",
+          "group": "planned",
+          "name": "Example: ISMS internal audit, first half",
+          "values": {
+            "audit_date": "$in:60",
+            "status": "opt_planned",
+            "scope": "Clauses 4 to 10 and the access control and supplier controls."
+          },
+          "links": {
+            "findings": [
+              "ex_finding"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "ref": "finding",
+      "name": "Audit findings",
+      "itemLabel": "Finding",
+      "idPrefix": "AF-",
+      "folder": "isms",
+      "level": "full",
+      "description": "What each internal audit found. A finding of type Nonconformity raises an item in Nonconformities and CAPA and links to it.",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "Open",
+          "color": "orange"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "audit",
+          "name": "Audit",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "audit",
+            "multiple": false,
+            "inverseKey": "findings"
+          }
+        },
+        {
+          "key": "finding_type",
+          "name": "Type",
+          "type": "dropdown",
+          "config": {
+            "options": [
+              {
+                "id": "opt_nc",
+                "label": "Nonconformity",
+                "color": "red"
+              },
+              {
+                "id": "opt_obs",
+                "label": "Observation",
+                "color": "orange"
+              },
+              {
+                "id": "opt_ofi",
+                "label": "Opportunity to improve",
+                "color": "blue"
+              }
+            ]
+          }
+        },
+        {
+          "key": "requirement",
+          "name": "Requirement",
+          "type": "requirement",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "details",
+          "name": "What was found",
+          "type": "longtext"
+        },
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "nonconformity",
+          "name": "Nonconformity",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "nc",
+            "multiple": false
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_open",
+                "label": "Open",
+                "color": "orange"
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_finding",
+          "group": "open",
+          "name": "Example: access reviews not recorded",
+          "values": {
+            "finding_type": "opt_obs",
+            "status": "opt_open"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "review",
+      "name": "Management review",
+      "itemLabel": "Meeting",
+      "idPrefix": "MR-",
+      "folder": "isms",
+      "level": "full",
+      "description": "Top management's reviews of the ISMS: tick the inputs you covered and record the decisions.",
+      "groups": [
+        {
+          "ref": "planned",
+          "name": "Planned",
+          "color": "blue"
+        },
+        {
+          "ref": "held",
+          "name": "Held",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "meeting_date",
+          "name": "Meeting date",
+          "type": "date"
+        },
+        {
+          "key": "chair",
+          "name": "Chair",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "attendees",
+          "name": "Attendees",
+          "type": "people",
+          "config": {
+            "multiple": true
+          }
+        },
+        {
+          "key": "in_actions",
+          "name": "Actions from earlier reviews",
+          "type": "check"
+        },
+        {
+          "key": "in_changes",
+          "name": "Changes in issues",
+          "type": "check"
+        },
+        {
+          "key": "in_parties",
+          "name": "Changes in what interested parties need",
+          "type": "check"
+        },
+        {
+          "key": "in_performance",
+          "name": "Security performance",
+          "type": "check"
+        },
+        {
+          "key": "in_feedback",
+          "name": "Feedback from interested parties",
+          "type": "check"
+        },
+        {
+          "key": "in_risks",
+          "name": "Risk assessment and treatment",
+          "type": "check"
+        },
+        {
+          "key": "in_improve",
+          "name": "Chances to improve",
+          "type": "check"
+        },
+        {
+          "key": "decisions",
+          "name": "Decisions and outputs",
+          "type": "longtext",
+          "description": "Improvements, changes to the ISMS and resources needed."
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_planned",
+                "label": "Planned",
+                "color": "blue"
+              },
+              {
+                "id": "opt_held",
+                "label": "Held",
+                "color": "green",
+                "done": true
+              }
+            ]
+          },
+          "rules": [
+            {
+              "id": "held_needs",
+              "whenFieldKey": "status",
+              "whenValues": [
+                "opt_held"
+              ],
+              "require": [
+                "meeting_date",
+                "decisions"
+              ],
+              "message": "Add the meeting date and the decisions."
+            }
+          ]
+        }
+      ],
+      "columnGroups": [
+        {
+          "name": "Inputs covered",
+          "fields": [
+            "in_actions",
+            "in_changes",
+            "in_parties",
+            "in_performance",
+            "in_feedback",
+            "in_risks",
+            "in_improve"
+          ]
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_review",
+          "group": "planned",
+          "name": "Example: annual management review",
+          "values": {
+            "meeting_date": "$in:120",
+            "status": "opt_planned"
+          }
+        }
+      ]
+    },
+    {
+      "ref": "incident",
+      "name": "Security incidents",
+      "itemLabel": "Incident",
+      "idPrefix": "SIN-",
+      "folder": "isms",
+      "level": "full",
+      "description": "Information security incidents from detection to close. Closing one that needs a root cause raises a nonconformity.",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "Open",
+          "color": "red"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "severity",
+          "name": "Severity",
+          "type": "severity"
+        },
+        {
+          "key": "reported_by",
+          "name": "Reported by",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "handler",
+          "name": "Handler",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "detected",
+          "name": "Detected",
+          "type": "datetime"
+        },
+        {
+          "key": "contained",
+          "name": "Contained",
+          "type": "datetime"
+        },
+        {
+          "key": "closed_on",
+          "name": "Closed on",
+          "type": "date"
+        },
+        {
+          "key": "description",
+          "name": "What happened",
+          "type": "longtext"
+        },
+        {
+          "key": "root_cause_needed",
+          "name": "Needs a root cause",
+          "type": "check",
+          "description": "Tick when the incident shows something to fix for good: closing it then raises a nonconformity."
+        },
+        {
+          "key": "nonconformity",
+          "name": "Nonconformity",
+          "type": "link",
+          "config": {
+            "targetSheetRef": "nc",
+            "multiple": false
+          }
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_new",
+                "label": "New",
+                "color": "red"
+              },
+              {
+                "id": "opt_contained",
+                "label": "Contained",
+                "color": "orange"
+              },
+              {
+                "id": "opt_closed",
+                "label": "Closed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        }
+      ],
+      "views": [
+        {
+          "name": "By status",
+          "type": "kanban",
+          "config": {
+            "labelFieldKey": "status"
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "By status"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_phish",
+          "group": "open",
+          "name": "Example: phishing email clicked by a member of staff",
+          "values": {
+            "severity": "$option:Medium",
+            "status": "opt_contained",
+            "root_cause_needed": true
+          }
+        }
+      ]
+    },
+    {
+      "ref": "training",
+      "name": "Training and awareness",
+      "itemLabel": "Training",
+      "idPrefix": "TRN-",
+      "folder": "isms",
+      "level": "full",
+      "description": "Who needs which training or awareness session, by when, and the record that they did it.",
+      "groups": [
+        {
+          "ref": "due",
+          "name": "Due",
+          "color": "orange"
+        },
+        {
+          "ref": "done",
+          "name": "Completed",
+          "color": "green"
+        }
+      ],
+      "fields": [
+        {
+          "key": "person",
+          "name": "Person",
+          "type": "people",
+          "config": {
+            "multiple": false
+          }
+        },
+        {
+          "key": "course",
+          "name": "Course",
+          "type": "text"
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date"
+        },
+        {
+          "key": "completed_on",
+          "name": "Completed on",
+          "type": "date"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_not_started",
+                "label": "Not started",
+                "color": "grey"
+              },
+              {
+                "id": "opt_in_progress",
+                "label": "In progress",
+                "color": "orange"
+              },
+              {
+                "id": "opt_completed",
+                "label": "Completed",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "evidence",
+          "name": "Evidence",
+          "type": "evidence",
+          "config": {
+            "validDays": 365,
+            "multiple": true
+          }
+        }
+      ],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "items": [
+        {
+          "ref": "ex_awareness",
+          "group": "due",
+          "name": "Example: security awareness for everyone",
+          "values": {
+            "course": "Security awareness basics",
+            "due_date": "$in:30",
+            "status": "opt_not_started"
+          }
+        }
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "ref": "risk_review_due",
+      "sheet": "risk",
+      "name": "Risk review in 14 days → tell the risk owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "review_date",
+        "offsetDays": -14
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} is due for review on {review_date}."
+        }
+      ]
+    },
+    {
+      "ref": "residual_high",
+      "sheet": "risk",
+      "name": "Residual score above 12 → tell the risk owner",
+      "trigger": {
+        "type": "number_above",
+        "fieldKey": "residual_score",
+        "threshold": 12
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} still scores {residual_score} after treatment. Decide on more treatment or accept it."
+        }
+      ]
+    },
+    {
+      "ref": "capa_overdue",
+      "sheet": "nc",
+      "name": "Nonconformity overdue → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "due_date",
+        "offsetDays": 1
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} was due on {due_date} and is not closed."
+        }
+      ]
+    },
+    {
+      "ref": "treatment_overdue",
+      "sheet": "treatment",
+      "name": "Treatment action overdue → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "due_date",
+        "offsetDays": 1
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{id} {name} was due on {due_date} and is not done."
+        }
+      ]
+    },
+    {
+      "ref": "document_review_due",
+      "sheet": "documents",
+      "name": "Document review in 30 days → tell the owner",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "next_review",
+        "offsetDays": -30
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:owner"
+          ],
+          "message": "{document_id} {name} is due for review on {next_review}."
+        }
+      ]
+    },
+    {
+      "ref": "finding_nc",
+      "sheet": "finding",
+      "level": "full",
+      "name": "Finding is a nonconformity → raise it in Nonconformities and CAPA",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "finding_type",
+        "value": "opt_nc"
+      },
+      "conditions": [
+        {
+          "fieldKey": "nonconformity",
+          "op": "has_none"
+        }
+      ],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "nc",
+          "groupRef": "open",
+          "name": "{name}",
+          "values": {
+            "source": "opt_audit",
+            "description": "{details}"
+          },
+          "link": true
+        }
+      ]
+    },
+    {
+      "ref": "incident_nc",
+      "sheet": "incident",
+      "level": "full",
+      "name": "Incident closed and needs a root cause → raise a nonconformity",
+      "trigger": {
+        "type": "field_becomes",
+        "fieldKey": "status",
+        "value": "opt_closed"
+      },
+      "conditions": [
+        {
+          "fieldKey": "root_cause_needed",
+          "op": "is_checked"
+        },
+        {
+          "fieldKey": "nonconformity",
+          "op": "has_none"
+        }
+      ],
+      "actions": [
+        {
+          "type": "create_item",
+          "sheetRef": "nc",
+          "groupRef": "open",
+          "name": "{name}",
+          "values": {
+            "source": "opt_incident",
+            "description": "{description}"
+          },
+          "link": true
+        }
+      ]
+    },
+    {
+      "ref": "training_due",
+      "sheet": "training",
+      "level": "full",
+      "name": "Training due in 7 days → remind the person",
+      "trigger": {
+        "type": "date_arrives",
+        "fieldKey": "due_date",
+        "offsetDays": -7
+      },
+      "conditions": [
+        {
+          "fieldKey": "status",
+          "op": "is_not_done"
+        }
+      ],
+      "actions": [
+        {
+          "type": "notify",
+          "to": [
+            "field:person"
+          ],
+          "message": "{course} is due on {due_date}."
+        }
+      ]
+    }
+  ],
+  "dashboards": [
+    {
+      "ref": "isms_overview",
+      "name": "ISMS overview",
+      "widgets": [
+        {
+          "ref": "w_high",
+          "type": "count",
+          "title": "High risks (score 15 or more)",
+          "sheetRef": "risk",
+          "conditions": [
+            {
+              "fieldKey": "score",
+              "op": "gte",
+              "value": 15
+            }
+          ]
+        },
+        {
+          "ref": "w_medium",
+          "type": "count",
+          "title": "Medium risks (8 to 14)",
+          "sheetRef": "risk",
+          "conditions": [
+            {
+              "fieldKey": "score",
+              "op": "between",
+              "value": [
+                8,
+                14
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_low",
+          "type": "count",
+          "title": "Low risks (1 to 7)",
+          "sheetRef": "risk",
+          "conditions": [
+            {
+              "fieldKey": "score",
+              "op": "between",
+              "value": [
+                1,
+                7
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_risk_status",
+          "type": "by_option",
+          "title": "Risks by status",
+          "sheetRef": "risk",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_treatment",
+          "type": "by_option",
+          "title": "Treatment progress",
+          "sheetRef": "treatment",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_soa",
+          "type": "by_option",
+          "title": "Annex A controls by implementation",
+          "library": "iso-27001@2022",
+          "fieldKey": "status",
+          "conditions": [
+            {
+              "fieldKey": "ref",
+              "op": "starts_with",
+              "value": "A."
+            }
+          ]
+        },
+        {
+          "ref": "w_nc_open",
+          "type": "count",
+          "title": "Open nonconformities",
+          "sheetRef": "nc",
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_not_done"
+            }
+          ]
+        },
+        {
+          "ref": "w_docs_due",
+          "type": "overdue",
+          "title": "Documents due for review",
+          "sheetRef": "documents",
+          "fieldKey": "next_review"
+        }
+      ]
+    }
+  ],
+  "setup": {
+    "title": "ISO 27001 setup",
+    "description": "Seven steps from an empty ISMS to one you can audit. Each step's progress comes from your sheets.",
+    "steps": [
+      {
+        "ref": "scope",
+        "title": "Define the scope",
+        "body": "Write down what affects your information security from inside and outside, who expects what from you, and which parts of the organisation the ISMS covers. Agree each entry.",
+        "target": {
+          "sheetRef": "scope"
+        },
+        "rules": [
+          {
+            "sheetRef": "scope",
+            "where": [
+              {
+                "fieldKey": "kind",
+                "op": "is_any_of",
+                "value": [
+                  "opt_scope"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ]
+          },
+          {
+            "sheetRef": "scope",
+            "where": [
+              {
+                "fieldKey": "kind",
+                "op": "is_any_of",
+                "value": [
+                  "opt_internal",
+                  "opt_external",
+                  "opt_party"
+                ]
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ],
+            "min": 3
+          }
+        ]
+      },
+      {
+        "ref": "assets",
+        "title": "List your assets",
+        "body": "List the information you hold and the systems, services, people and places that hold or process it, each with an owner and a classification.",
+        "target": {
+          "sheetRef": "asset"
+        },
+        "rules": [
+          {
+            "sheetRef": "asset",
+            "all": [
+              {
+                "fieldKey": "owner",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "classification",
+                "op": "is_not_empty"
+              }
+            ],
+            "min": 5
+          }
+        ],
+        "levels": {
+          "starter": {
+            "title": "List your processes",
+            "body": "Starter has no asset register: name the processes and systems you depend on in the risk register's Asset or process column.",
+            "target": {
+              "sheetRef": "risk"
+            },
+            "rules": [
+              {
+                "sheetRef": "risk",
+                "all": [
+                  {
+                    "fieldKey": "asset",
+                    "op": "is_not_empty"
+                  }
+                ],
+                "min": 5
+              }
+            ]
+          }
+        }
+      },
+      {
+        "ref": "risks",
+        "title": "Assess your risks",
+        "body": "For each asset or process, note the threat and the weakness it exploits, give the risk an owner and score likelihood and impact from 1 to 5.",
+        "target": {
+          "sheetRef": "risk"
+        },
+        "rules": [
+          {
+            "sheetRef": "risk",
+            "all": [
+              {
+                "fieldKey": "owner",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "likelihood",
+                "op": "is_not_empty"
+              },
+              {
+                "fieldKey": "impact",
+                "op": "is_not_empty"
+              }
+            ],
+            "min": 5
+          }
+        ]
+      },
+      {
+        "ref": "treat",
+        "title": "Decide treatments and applicability",
+        "body": "Choose how to treat each risk and the controls that do it, then mark every Annex A control applicable or not, with a reason, in the statement of applicability.",
+        "target": {
+          "library": "iso-27001@2022",
+          "view": "Statement of applicability"
+        },
+        "rules": [
+          {
+            "sheetRef": "risk",
+            "all": [
+              {
+                "fieldKey": "treatment",
+                "op": "is_not_empty"
+              }
+            ]
+          },
+          {
+            "library": "iso-27001@2022",
+            "where": [
+              {
+                "fieldKey": "ref",
+                "op": "starts_with",
+                "value": "A."
+              }
+            ],
+            "all": [
+              {
+                "fieldKey": "applicable",
+                "op": "is_not_empty"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "documents",
+        "title": "Write and approve your documents",
+        "body": "Write each document, attach it on the Files tab and have someone other than the author approve it. Approved documents get a review date.",
+        "target": {
+          "sheetRef": "documents"
+        },
+        "rules": [
+          {
+            "sheetRef": "documents",
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "audit",
+        "title": "Run an internal audit",
+        "body": "Plan an audit of the whole ISMS, run it with someone independent of the work, record what it finds and raise nonconformities for what falls short.",
+        "target": {
+          "sheetRef": "audit"
+        },
+        "rules": [
+          {
+            "sheetRef": "audit",
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ],
+            "min": 1
+          }
+        ],
+        "levels": {
+          "starter": {
+            "body": "Starter has no audit programme: run the audit, approve its report as the internal audit record in ISMS documents and record each shortfall in Nonconformities and CAPA with the source Audit.",
+            "target": {
+              "sheetRef": "documents"
+            },
+            "rules": [
+              {
+                "sheetRef": "documents",
+                "where": [
+                  {
+                    "fieldKey": "document_id",
+                    "op": "is",
+                    "value": "ISMS-REC-03"
+                  }
+                ],
+                "all": [
+                  {
+                    "fieldKey": "status",
+                    "op": "is_done"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "ref": "review",
+        "title": "Hold a management review",
+        "body": "Bring top management together to look at how the ISMS performs, cover every input and record the decisions they take.",
+        "target": {
+          "sheetRef": "review"
+        },
+        "rules": [
+          {
+            "sheetRef": "review",
+            "all": [
+              {
+                "fieldKey": "status",
+                "op": "is_done"
+              }
+            ],
+            "min": 1
+          }
+        ],
+        "levels": {
+          "starter": {
+            "body": "Starter has no meeting sheet: hold the review, write the minutes and approve them as the management review record in ISMS documents.",
+            "target": {
+              "sheetRef": "documents"
+            },
+            "rules": [
+              {
+                "sheetRef": "documents",
+                "where": [
+                  {
+                    "fieldKey": "document_id",
+                    "op": "is",
+                    "value": "ISMS-REC-MR"
+                  }
+                ],
+                "all": [
+                  {
+                    "fieldKey": "status",
+                    "op": "is_done"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
