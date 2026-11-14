@@ -79,7 +79,8 @@ export async function importTemplate(
     db,
     env.orgId,
     { manifest, hash: packHash(manifest) },
-    { userId: '', now: env.now, newId: env.newId ?? randomUUID },
+    // sample data: its automations start live (a person's install starts notifying ones in test mode)
+    { userId: '', now: env.now, newId: env.newId ?? randomUUID, live: true },
   );
   if (plan.state === 'installed') return { status: 'exists', sheetIds: found };
   const problems = [...plan.preview.conflicts, ...plan.preview.warnings];

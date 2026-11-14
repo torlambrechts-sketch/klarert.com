@@ -320,4 +320,26 @@ describe('runChain', () => {
     });
     expect(out.messages).toEqual(['1 automation ran 2 times']);
   });
+
+  it('test mode: logs what each step would do and executes nothing (docs/04 §14)', async () => {
+    const a = automation({
+      name: 'New risk → tell the owner',
+      mode: 'test',
+      actions: [
+        { type: 'notify', to: ['field:owner'], message: '{name} was added.' },
+        { type: 'set_field', fieldKey: 'status', value: 'opt_done' },
+        { type: 'webhook', url: 'https://hooks.example.com/x', preset: 'generic' },
+      ],
+    });
+    const item = makeItem({ [owner.id]: ['u-maria'] }, { id: 'i-1' });
+    const { store, saved } = fakeStore([a], [item], () => ({}));
+    const out = await runChain([created('i-1')], store, opts());
+    expect(store.execute).not.toHaveBeenCalled();
+    expect(saved).toHaveLength(1);
+    expect(saved[0]!.status).toBe('test');
+    expect(saved[0]!.steps.map((x) => x.outcome)).toEqual(['test', 'test', 'test']);
+    expect(out.messages[0]).toMatch(/^New risk → tell the owner \(test mode\): Would notify /);
+    expect(out.messages[0]).toContain('Would set Status to');
+    expect(out.messages[0]).toContain('Would send a webhook to hooks.example.com');
+  });
 });

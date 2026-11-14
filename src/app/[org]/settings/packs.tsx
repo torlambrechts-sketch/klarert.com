@@ -191,6 +191,9 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
                 <span className="text-muted-foreground">{a.sheet}: </span>
                 {a.sentence}
                 {a.enabled ? '' : ' (installed off)'}
+                {a.enabled && a.testMode
+                  ? ' (test mode: logs what it would do until you turn it on)'
+                  : ''}
               </span>
             ))}
           />

@@ -16,6 +16,7 @@ import {
   archivePackInput,
   installPackInput,
   listPacksInput,
+  packAutomationsModeInput,
   packSetupsInput,
   previewPackInput,
   previewUpgradeInput,
@@ -335,6 +336,7 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
         now: new Date(),
         newId: randomUUID,
         level: p.data.level ?? null,
+        allowOutbound: p.data.allowOutbound === true,
       };
       // the packs it requires first (the Core registers, at the level it needs): install order does not matter
       const firsts = await requiredFirst(supabase, orgId, pack.manifest);
@@ -568,5 +570,92 @@ export async function packSetups(input: unknown): Promise<Result<InstalledSetup[
       }
     },
     'packSetups',
+  );
+}
+
+/** A pack install whose automations wait in test mode (docs/04 §14): the banner on Home and Workspace admin › Packs. */
+export interface TestModePack {
+  installId: string;
+  title: string;
+  /** Automations of the install in test mode (on sheets the person can read). */
+  count: number;
+}
+
+/**
+ * Installed packs with automations in test mode, for owners and admins (they turn them on). Empty for everyone else
+ * and when nothing waits.
+ */
+export async function testModePacks(input: unknown): Promise<Result<TestModePack[]>> {
+  const p = packSetupsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'member',
+    async ({ supabase, orgId, role }) => {
+      if (!isAdminRole(role)) return ok([]);
+      const { data: autos, error } = await supabase
+        .from('automations')
+        .select('pack_install_id')
+        .eq('org_id', orgId)
+        .eq('mode', 'test')
+        .not('pack_install_id', 'is', null);
+      if (error) return fromDbError(error);
+      const counts = new Map<string, number>();
+      for (const a of autos ?? [])
+        if (a.pack_install_id)
+          counts.set(a.pack_install_id, (counts.get(a.pack_install_id) ?? 0) + 1);
+      if (!counts.size) return ok([]);
+      const { data: installs, error: e2 } = await supabase
+        .from('pack_installs')
+        .select('id, pack_key, version, installed_at')
+        .eq('org_id', orgId)
+        .eq('status', 'installed')
+        .in('id', [...counts.keys()])
+        .order('installed_at');
+      if (e2) return fromDbError(e2);
+      const titles = new Map<string, string>();
+      const keys = [...new Set((installs ?? []).map((i) => i.pack_key))];
+      if (keys.length) {
+        const { data: packs } = await supabase
+          .from('packs')
+          .select('key, version, title')
+          .in('key', keys);
+        for (const k of packs ?? []) titles.set(`${k.key}@${k.version}`, k.title);
+      }
+      return ok(
+        (installs ?? []).map((i) => ({
+          installId: i.id,
+          title: titles.get(`${i.pack_key}@${i.version}`) ?? i.pack_key,
+          count: counts.get(i.id) ?? 0,
+        })),
+      );
+    },
+    'testModePacks',
+  );
+}
+
+/** Turn every automation of a pack install live (or back to test mode) at once. Owners and admins; logged. */
+export async function setPackAutomationsMode(input: unknown): Promise<Result<{ changed: number }>> {
+  const p = packAutomationsModeInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  return withOrg(
+    p.data.org,
+    'admin',
+    async ({ supabase, orgId }) => {
+      const { data: row } = await supabase
+        .from('pack_installs')
+        .select('id')
+        .eq('id', p.data.installId)
+        .eq('org_id', orgId)
+        .maybeSingle();
+      if (!row) return fail('not_found', 'This pack is no longer installed.');
+      const { data, error } = await supabase.rpc('set_pack_automations_mode', {
+        p_install: row.id,
+        p_mode: p.data.mode,
+      });
+      if (error) return fromDbError(error);
+      return ok({ changed: typeof data === 'number' ? data : 0 });
+    },
+    'setPackAutomationsMode',
   );
 }

@@ -2,7 +2,7 @@
 
 import { useId, useState } from 'react';
 import Link from 'next/link';
-import { Copy, Lock, Plus, Sheet as SheetIcon, Trash2, Zap } from 'lucide-react';
+import { Copy, FlaskConical, Lock, Plus, Sheet as SheetIcon, Trash2, Zap } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { describeAutomation } from '@/engine/automations';
@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import {
   deleteAutomationAction,
   duplicateAutomationAction,
+  setAutomationModeAction,
   toggleAutomationAction,
 } from '@/app/[org]/automations/actions';
 import { sourceLabel, type ListPermissions } from './automation-list';
@@ -23,7 +24,8 @@ import { automationsKey, type AutomationSummary } from './queries';
 
 // The Automations page's list in the board design (docs/04 §10, FR-32): one row per automation with a caret that
 // opens the builder in place (?edit=), its sentence, sheet, source, version, runs, an on/off switch with its state
-// word and duplicate / delete. A new automation is a row at the top (?new=1). Locked automations: admins only.
+// word and duplicate / delete. A new automation is a row at the top (?new=1). Locked automations: admins only. An
+// automation in test mode (docs/04 §14) says so under its sentence; owners and admins turn it live there.
 
 export const AUTOMATION_GRID =
   'grid-cols-[32px_minmax(0,1fr)_80px_62px] md:grid-cols-[40px_minmax(240px,2.4fr)_minmax(140px,1.1fr)_96px_56px_96px_88px_72px]';
@@ -138,6 +140,20 @@ export function AutomationRows({
     void refresh();
   };
 
+  const goLive = async (a: AutomationSummary) => {
+    patch(a.id, { mode: 'live' });
+    setBusy(a.id);
+    const r = await setAutomationModeAction({ org, automationId: a.id, mode: 'live' });
+    setBusy(null);
+    if (!r.ok) {
+      patch(a.id, { mode: 'test' });
+      toast.error(r.error.message);
+      return;
+    }
+    toast.success(`“${a.name}” is live. It now notifies people and changes items.`);
+    void refresh();
+  };
+
   const duplicate = async (a: AutomationSummary) => {
     setBusy(a.id);
     const r = await duplicateAutomationAction({ org, automationId: a.id });
@@ -204,6 +220,30 @@ export function AutomationRows({
                   <span className="text-muted-foreground text-label-13 truncate">
                     {ctx ? describeAutomation(a, ctx, sheetName) : 'Loading…'}
                   </span>
+                  {a.mode === 'test' ? (
+                    <span
+                      className="text-label-12 flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5"
+                      data-testid="automation-test-mode"
+                    >
+                      <span className="border-warn/40 bg-warn-soft text-warn inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium">
+                        <FlaskConical className="size-3" aria-hidden />
+                        Test mode
+                      </span>
+                      <span className="text-muted-foreground">Logs what it would do</span>
+                      {perms.isAdmin ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Switch
+                            checked={false}
+                            disabled={busy === a.id}
+                            aria-label={`Live: ${a.name}`}
+                            onCheckedChange={(v) => v && void goLive(a)}
+                            className="data-[state=checked]:bg-ink"
+                          />
+                          <span className="text-muted-foreground">Live</span>
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : null}
                   <span className="text-muted-foreground text-label-12 truncate md:hidden">
                     {sheetName(a.sheetId) ?? 'Archived sheet'} · {sourceLabel(a.source)} · v
                     {a.version}

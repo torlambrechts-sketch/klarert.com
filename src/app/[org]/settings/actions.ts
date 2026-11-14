@@ -54,6 +54,17 @@ export async function archivePackAction(input: { org: string; installId: string 
   return result;
 }
 
+// Test mode (docs/04 §14): every automation of a pack install live at once (or back to test mode).
+export async function setPackAutomationsModeAction(input: {
+  org: string;
+  installId: string;
+  mode: 'live' | 'test';
+}) {
+  const result = await packs.setPackAutomationsMode(input);
+  if (result.ok) revalidatePath(`/${input.org}`, 'layout');
+  return result;
+}
+
 // Pack upgrades (docs/11 Upgrades): the dry run, and the update with the person's choices on conflicts.
 export async function previewPackUpgradeAction(input: { org: string; installId: string }) {
   return packs.previewPackUpgrade(input);

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/shell/page-header';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { stepLine } from '@/engine/automations/chain';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { inputClass } from '@/components/fields/shared';
 import { ListCrumb } from '@/components/shell/data-list';
@@ -260,7 +261,8 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
               run.steps.map((s, i) => (
                 <li key={i}>
                   <span className="flex flex-wrap items-center gap-2">
-                    <span>{s.summary}</span>
+                    {/* test mode (docs/04 §14): "Would notify Maria" */}
+                    <span>{s.outcome === 'test' ? stepLine(s) : s.summary}</span>
                     <OutcomeChip outcome={s.outcome} />
                     {s.message ? <span className="text-muted-foreground">{s.message}</span> : null}
                   </span>

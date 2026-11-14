@@ -192,6 +192,42 @@ describe('pack manifest', () => {
     );
   });
 
+  it('reads the quality bar keys (docs/11 Pack quality bar)', () => {
+    const raw = supplier();
+    raw.sheets[0].kind = 'register';
+    raw.sheets[0].personalData = true;
+    raw.automations[0].advanced = true;
+    raw.automations[0].description =
+      'Asks the owner to review a supplier two weeks before the date.';
+    raw.automations[0].startInTestMode = false;
+    raw.dashboards[0].headline = true;
+    raw.formsNotApplicable = 'Not needed.';
+    // a personal data sheet marks its personal fields, and is never installed open
+    expect(problems(raw)).toEqual([
+      'sheets.0.personalData: Mark the fields that hold personal data with config.personalData.',
+    ]);
+    raw.sheets[0].fields[0].config = { ...raw.sheets[0].fields[0].config, personalData: true };
+    raw.sheets[0].restricted = false;
+    raw.automations[1].advanced = true;
+    expect(problems(raw)).toEqual([
+      'sheets.0.restricted: A sheet with personal data is always installed restricted.',
+      'automations.1: An advanced automation needs a description in plain words.',
+    ]);
+    expect(problems({ ...raw, sheets: [{ ...raw.sheets[0], kind: 'list' }] })).toContain(
+      'sheets.0.kind: Invalid option: expected one of "register"|"actions"|"log"|"library"|"plan"',
+    );
+    delete raw.sheets[0].restricted;
+    delete raw.automations[1].advanced;
+    const m = parsePack(raw);
+    expect([m.sheets[0]!.kind, m.sheets[0]!.personalData, m.dashboards[0]!.headline]).toEqual([
+      'register',
+      true,
+      true,
+    ]);
+    expect(m.automations[0]).toMatchObject({ advanced: true, startInTestMode: false });
+    expect(m.formsNotApplicable).toBe('Not needed.');
+  });
+
   it('throws with every problem listed', () => {
     expect(() => parsePack({ ...supplier(), sheets: [] })).toThrow(
       /Pack is not valid:\n[\s\S]* {2}sheets: A pack needs a sheet or an extends entry\./,

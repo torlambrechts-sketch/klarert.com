@@ -1011,7 +1011,11 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
         kind: 'automation',
         ref: String(r.ref),
         name: String(r.name),
-        ...(r.enabled ? {} : { note: 'Added off.' }),
+        ...(!r.enabled
+          ? { note: 'Added off.' }
+          : r.mode === 'test'
+            ? { note: 'Added in test mode.' }
+            : {}),
       });
     }
   for (const r of T.dashboards.values())

@@ -1,6 +1,7 @@
 // The automation runner (docs/04 §1, §7): an event loop over the events a write emitted. For each event, the enabled
 // automations of the sheet in creation order; trigger → pause → conditions (item after the change) → loop guard →
-// once per chain → plan → execute each effect on its own. Effects emit new events one level deeper.
+// once per chain → plan → execute each effect on its own. Effects emit new events one level deeper. An automation in
+// test mode (docs/04 §14) plans its steps and logs them as `test` ("Would notify Maria"); it executes nothing.
 // Kept free of `server-only` and of Supabase: the store (src/server/automations/effects.ts) does the reads and writes,
 // the clock is injected, so depth, once-per-chain, isolation and the time budget are unit-tested.
 import {
@@ -37,6 +38,8 @@ export interface AutomationRow {
   conditions: Condition[];
   actions: Automation['actions'];
   createdBy: string | null;
+  /** Test mode (docs/04 §14): runs and logs what it would do, performs no effect. Live when not given. */
+  mode?: 'live' | 'test';
 }
 
 /** The item an event is about, with the Ctx of its sheet, as stored now. */
@@ -265,6 +268,11 @@ export async function runChain(
           steps.push({ ...base, outcome: p.outcome, message: p.message ?? '' });
           continue;
         }
+        // test mode: no write, notification, email or webhook; the run log says what it would have done
+        if (automation.mode === 'test') {
+          steps.push({ ...base, outcome: 'test', message: '' });
+          continue;
+        }
         let result: Pick<EffectResult, 'outcome' | 'message'> = { outcome: 'done', message: '' };
         for (const effect of p.effects) {
           let r: EffectResult;
@@ -288,7 +296,11 @@ export async function runChain(
         steps.push({ ...base, outcome: result.outcome, message: result.message });
       }
 
-      const status: RunStatus = stopped ? 'stopped' : runStatus(steps);
+      const status: RunStatus = stopped
+        ? 'stopped'
+        : automation.mode === 'test'
+          ? 'test'
+          : runStatus(steps);
       const problem = steps.find((s) => s.outcome === 'failed' || s.outcome === 'blocked');
       const detail = stopped ? TIME_BUDGET : (problem?.message ?? '');
       await store.saveRun({
