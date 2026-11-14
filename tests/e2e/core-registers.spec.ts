@@ -65,9 +65,10 @@ test.describe('desktop', () => {
       'Management system',
       'Risk and controls',
       'Operations',
+      // Core 1.1.0 has its own Suppliers register (Starter)
+      'Suppliers',
     ]);
     await expect(menu.getByText('Privacy and security')).toHaveCount(0);
-    await expect(menu.getByText('Suppliers')).toHaveCount(0);
     await expect(menu.getByRole('link', { name: 'Environmental aspects' })).toBeVisible();
     await shot(page, '02-registers-menu');
 
@@ -201,9 +202,13 @@ test('phone · Core alone installs and the Registers menu fits 390 px', async ({
   await row.getByRole('button', { name: 'Preview Core registers' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: 'Install' }).click();
-  await expect(dialog.getByRole('status')).toContainText('Installed Core registers (Starter).', {
-    timeout: 60_000,
-  });
+  // Core alone installs its lowest level, Foundations (1.1.0): no Operations register yet
+  await expect(dialog.getByRole('status')).toContainText(
+    'Installed Core registers (Foundations).',
+    {
+      timeout: 60_000,
+    },
+  );
 
   await page.goto(`/${slug}/home`);
   const bar = page.getByRole('navigation', { name: 'Bottom bar' });
@@ -213,7 +218,6 @@ test('phone · Core alone installs and the Registers menu fits 390 px', async ({
   await expect(menu.getByTestId('menu-domain')).toHaveText([
     'Management system',
     'Risk and controls',
-    'Operations',
   ]);
   await expect(menu.getByRole('heading', { name: 'Your sheets', level: 2 })).toBeAttached();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);

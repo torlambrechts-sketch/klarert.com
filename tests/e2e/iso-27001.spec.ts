@@ -84,6 +84,8 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
     'Management system',
     'Risk and controls',
     'Operations',
+    // Core 1.1.0 has its own Suppliers register
+    'Suppliers',
   ]);
   await expect(menu.getByRole('link', { name: 'ISMS scope and context' })).toBeVisible();
   await expect(menu.getByRole('link', { name: 'Risk treatment plan' })).toBeVisible();

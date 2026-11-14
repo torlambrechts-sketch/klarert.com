@@ -48,8 +48,9 @@ test('install the ISO 45001 add-on on Core and find it in the shared registers',
   ).toBeVisible();
   const forms = await rest<{ name: string; config: { form: { access: string } } }[]>(
     page,
-    `views?sheet_id=eq.${incidents}&type=eq.form&select=name,config`,
+    `views?sheet_id=eq.${incidents}&type=eq.form&pack_install_id=eq.${i.addon}&select=name,config`,
   );
+  // the add-on's own form (Core 1.1.0 has its general "Report an incident" there too)
   expect(forms.map((f) => [f.name, f.config.form.access])).toEqual([
     ['Report an injury or near miss', 'internal'],
   ]);
