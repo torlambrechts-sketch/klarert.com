@@ -63,6 +63,7 @@ the body (admin-only branches, item and field locks, own rows).
 | `copyFormToSheet` | `form-admin.ts` | `copyFormInput` | admin |  |
 | `deleteForm` | `form-admin.ts` | `deleteFormInput` | admin |  |
 | `changeFormLink` | `form-admin.ts` | `formLinkInput` | admin |  |
+| `setNewItemForm` | `form-admin.ts` | `setNewItemFormInput` | admin |  |
 | `submitInternalForm` | `form-admin.ts` | `internalSubmitInput` | editor |  |
 | `submitPublicForm` | `forms.ts` | `publicSubmitInput` | public (token) |  |
 | `createGroup` | `groups.ts` | `createGroupInput` | editor |  |

@@ -67,7 +67,8 @@ Generic validation (not per type) runs first: `required`, `validation.min/max` (
 |---|---|---|
 | name, key | `name`, `key` | key generated once from the name |
 | description | `description` | help text in panel and form |
-| required | `required` | blocks save of a new item from a form (a form may override it per question); public forms never ask file fields (`evidence`, `attachment`) or directory fields (`people`, `team`, `role`, `entity`): `publicFormEligible` in `src/engine/fields/view-support.ts`; in grid shows a red corner on empty cells and the item is listed under "Missing required" |
+| required | `required` | blocks save of a new item from a form or the New item dialog (a form may override it per question; docs/05 §3.7); public forms never ask file fields (`evidence`, `attachment`) or directory fields (`people`, `team`, `role`, `entity`): `publicFormEligible` in `src/engine/fields/view-support.ts`; a row added inline may leave it empty: the Table says "Missing: owner, due date" with a warning symbol and the item is listed under the "Missing required" filter (the condition key `__missing`) |
+| ask when adding | `config.askWhenAdding` | `true`: the New item dialog asks it with the name although it is not required (docs/05 §3.7); a setting of every field kept outside the type's schema, like `personalData`, and kept through a type change. Packs set it on their audit registers |
 | default value | `config.default` | applied on create (any value type); `today`, `me`, `in N days` tokens allowed |
 | validation | `validation` | `{ min?, max?, pattern?, unique?, maxLength? }` |
 | status rules | `rules` | §6 |
@@ -192,7 +193,7 @@ Filters (views) and automation conditions (docs/04 §4) use the same operators, 
 | file | `has_files`, `has_none`, `freshness_is` (current/expiring/expired), `expires_within` (N days) |
 | signature | `is_signed`, `is_not_signed`, `signed_by` |
 
-Condition JSON: `{ "fieldKey": "status", "op": "is_any_of", "value": ["opt_7k2"] }`. Special keys: `__name` (text), `__group` (option of group ids), `__id` (text).
+Condition JSON: `{ "fieldKey": "status", "op": "is_any_of", "value": ["opt_7k2"] }`. Special keys: `__name` (text), `__group` (option of group ids), `__id` (text), `__missing` (boolean: the item leaves a required field empty, docs/05 §3.1).
 
 Server-side filtering (sheets > 2 000 items): `src/server/query/filters.ts` turns conditions into SQL on `items.values`, e.g. option `is_any_of` → `values->>'<fid>' = any($1)`; number `gt` → `(values->>'<fid>')::numeric > $1`; date `before` → `values->>'<fid>' < $1`; people `includes_me` → `values->'<fid>' ? $uid`; link → `exists (select 1 from item_links …)`. Computed fields (formula, rollup, lookup, progress, clock) filter on the client only; the UI says "Filters on calculated columns apply to loaded items".
 
