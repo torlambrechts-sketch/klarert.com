@@ -160,7 +160,11 @@ export interface RetentionDue {
  * Items whose period has ended by `ctx.today` under each rule. An archived item is due under erase and anonymise
  * rules (it still holds the data) but not under archive rules. Sub-items are not covered (their sheet has its own).
  */
-export function retentionDue(rules: readonly RetentionRule[], items: readonly Item[], ctx: Ctx): RetentionDue[] {
+export function retentionDue(
+  rules: readonly RetentionRule[],
+  items: readonly Item[],
+  ctx: Ctx,
+): RetentionDue[] {
   const out: RetentionDue[] = [];
   for (const rule of rules) {
     for (const item of items) {
@@ -184,7 +188,10 @@ const ACTION_WORDS: Record<RetentionAction, string> = {
 };
 
 /** "3 years after Closed on: erase the personal data (Requester, Email), files and comments" */
-export function describeRule(rule: RetentionRule | TemplateRetentionRule, fields: readonly Field[]): string {
+export function describeRule(
+  rule: RetentionRule | TemplateRetentionRule,
+  fields: readonly Field[],
+): string {
   const n = rule.period.n;
   const unit = n === 1 ? rule.period.unit.replace(/s$/, '') : rule.period.unit;
   const from =

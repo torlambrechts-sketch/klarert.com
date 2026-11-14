@@ -144,8 +144,14 @@ export function useActivity(itemId: string, sheetId: string, version: string) {
                     : (((real as Record<string, Json> | null)?.[k] ?? null) as Json);
               return out;
             };
-            e.oldValue = merge(e.oldValue, (r.old_value ?? null) as Json) as ActivityEntry['oldValue'];
-            e.newValue = merge(e.newValue, (r.new_value ?? null) as Json) as ActivityEntry['newValue'];
+            e.oldValue = merge(
+              e.oldValue,
+              (r.old_value ?? null) as Json,
+            ) as ActivityEntry['oldValue'];
+            e.newValue = merge(
+              e.newValue,
+              (r.new_value ?? null) as Json,
+            ) as ActivityEntry['newValue'];
           } else if (r.slot === 'name' && e.action === 'item.created') {
             if (e.newValue && typeof e.newValue === 'object' && !Array.isArray(e.newValue))
               e.newValue = { ...e.newValue, name: pick((r.new_value ?? null) as Json) };
@@ -156,8 +162,12 @@ export function useActivity(itemId: string, sheetId: string, version: string) {
               e.newValue = { ...e.newValue, values };
             }
           } else {
-            e.oldValue = (e.oldValue === null ? null : pick((r.old_value ?? null) as Json)) as ActivityEntry['oldValue'];
-            e.newValue = (e.newValue === null ? null : pick((r.new_value ?? null) as Json)) as ActivityEntry['newValue'];
+            e.oldValue = (
+              e.oldValue === null ? null : pick((r.old_value ?? null) as Json)
+            ) as ActivityEntry['oldValue'];
+            e.newValue = (
+              e.newValue === null ? null : pick((r.new_value ?? null) as Json)
+            ) as ActivityEntry['newValue'];
           }
         }
       }

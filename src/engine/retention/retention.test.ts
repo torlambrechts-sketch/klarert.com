@@ -15,7 +15,11 @@ import {
   type RetentionRule,
 } from '.';
 
-const requester = makeField('text', { personalData: true }, { key: 'requester', name: 'Requester' });
+const requester = makeField(
+  'text',
+  { personalData: true },
+  { key: 'requester', name: 'Requester' },
+);
 const email = makeField('email', { personalData: true }, { key: 'email', name: 'Email' });
 const outcome = makeField('text', {}, { key: 'outcome', name: 'Outcome' });
 const closedOn = makeField('date', {}, { key: 'closed_on', name: 'Closed on' });
@@ -59,7 +63,10 @@ describe('retention rules', () => {
   });
 
   it('counts from creation or the last change in the workspace time zone', () => {
-    const a = makeItem({}, { id: 'a', createdAt: '2026-10-31T23:30:00Z', updatedAt: '2026-11-10T09:00:00Z' });
+    const a = makeItem(
+      {},
+      { id: 'a', createdAt: '2026-10-31T23:30:00Z', updatedAt: '2026-11-10T09:00:00Z' },
+    );
     const ctx = makeCtx({ fields, items: [a] }, { timeZone: 'Europe/Berlin' });
     const created = rule({ id: 'c', from: { kind: 'created' }, period: { n: 10, unit: 'days' } });
     const updated = rule({ id: 'u', from: { kind: 'updated' }, period: { n: 1, unit: 'days' } });
@@ -78,8 +85,12 @@ describe('retention rules', () => {
     );
     const items = [open, closed];
     const ctx = makeCtx({ fields, items });
-    expect(retentionDue([rule({ onlyDone: true })], items, ctx).map((d) => d.itemId)).toEqual(['closed']);
-    expect(retentionDue([rule({ groupIds: ['g-open'] })], items, ctx).map((d) => d.itemId)).toEqual(['open']);
+    expect(retentionDue([rule({ onlyDone: true })], items, ctx).map((d) => d.itemId)).toEqual([
+      'closed',
+    ]);
+    expect(retentionDue([rule({ groupIds: ['g-open'] })], items, ctx).map((d) => d.itemId)).toEqual(
+      ['open'],
+    );
     expect(
       retentionDue(
         [rule({ conditions: [{ fieldKey: 'outcome', op: 'is_not_empty' }] })],
@@ -90,24 +101,34 @@ describe('retention rules', () => {
   });
 
   it('archived items stay due for erasure but not for archiving', () => {
-    const gone = makeItem({ [closedOn.id]: '2020-01-01' }, { id: 'gone', archivedAt: '2024-01-01T00:00:00Z' });
+    const gone = makeItem(
+      { [closedOn.id]: '2020-01-01' },
+      { id: 'gone', archivedAt: '2024-01-01T00:00:00Z' },
+    );
     const ctx = makeCtx({ fields, items: [gone] });
     expect(retentionDue([rule()], [gone], ctx)).toHaveLength(1);
     expect(retentionDue([rule({ action: 'archive' })], [gone], ctx)).toHaveLength(0);
   });
 
   it('an item whose Retention field says Legal hold is never due', () => {
-    const hold = makeField('retention', { years: 3, fromFieldKey: null }, { key: 'keep', name: 'Keep' });
-    const held = makeItem({ [closedOn.id]: '2020-01-01', [hold.id]: { hold: true, holdReason: 'Claim' } });
+    const hold = makeField(
+      'retention',
+      { years: 3, fromFieldKey: null },
+      { key: 'keep', name: 'Keep' },
+    );
+    const held = makeItem({
+      [closedOn.id]: '2020-01-01',
+      [hold.id]: { hold: true, holdReason: 'Claim' },
+    });
     const ctx = makeCtx({ fields: [...fields, hold], items: [held] });
     expect(retentionDue([rule()], [held], ctx)).toEqual([]);
   });
 
   it('erases the personal-data fields, all or the ones named', () => {
     expect(erasedFields(rule(), fields).map((f) => f.key)).toEqual(['requester', 'email']);
-    expect(erasedFields(rule({ fieldKeys: ['email', 'outcome'] }), fields).map((f) => f.key)).toEqual([
-      'email',
-    ]);
+    expect(
+      erasedFields(rule({ fieldKeys: ['email', 'outcome'] }), fields).map((f) => f.key),
+    ).toEqual(['email']);
   });
 
   it('says the rule in words', () => {
@@ -115,9 +136,21 @@ describe('retention rules', () => {
       '3 years after Closed on: erase the personal data (Requester, Email), personal files and comments',
     );
     expect(
-      describeRule(rule({ action: 'anonymise', from: { kind: 'created' }, period: { n: 1, unit: 'months' }, onlyDone: true }), fields),
-    ).toBe('1 month after creation once done: anonymise the item (Requester, Email), personal files and comments');
-    expect(describeRule(rule({ action: 'archive' }), [])).toBe('3 years after a deleted field: archive the item');
+      describeRule(
+        rule({
+          action: 'anonymise',
+          from: { kind: 'created' },
+          period: { n: 1, unit: 'months' },
+          onlyDone: true,
+        }),
+        fields,
+      ),
+    ).toBe(
+      '1 month after creation once done: anonymise the item (Requester, Email), personal files and comments',
+    );
+    expect(describeRule(rule({ action: 'archive' }), [])).toBe(
+      '3 years after a deleted field: archive the item',
+    );
     expect(describeRule(rule(), [outcome, closedOn])).toBe(
       '3 years after Closed on: erase the personal data (no field is marked personal data yet)',
     );
@@ -130,7 +163,9 @@ describe('retention rules', () => {
     expect(s.personalNames).toBe(true);
     expect(s.rules.map((r) => r.id)).toEqual(['dsr3y', 'two']);
     expect(readRetention(null)).toEqual({ rules: [] });
-    expect(retentionProblems([{ id: 'a' }, { id: 'a' }])).toEqual(['Two retention rules share the id a.']);
+    expect(retentionProblems([{ id: 'a' }, { id: 'a' }])).toEqual([
+      'Two retention rules share the id a.',
+    ]);
   });
 
   it('manifest rules name groups by ref', () => {
@@ -148,8 +183,12 @@ describe('retention rules', () => {
 
   it('queue state: a hold wins, a postponement ends on its date', () => {
     expect(queueState({ status: 'due', postponedUntil: null }, true, '2026-11-11')).toBe('held');
-    expect(queueState({ status: 'postponed', postponedUntil: '2026-12-01' }, false, '2026-11-11')).toBe('postponed');
-    expect(queueState({ status: 'postponed', postponedUntil: '2026-11-11' }, false, '2026-11-11')).toBe('due');
+    expect(
+      queueState({ status: 'postponed', postponedUntil: '2026-12-01' }, false, '2026-11-11'),
+    ).toBe('postponed');
+    expect(
+      queueState({ status: 'postponed', postponedUntil: '2026-11-11' }, false, '2026-11-11'),
+    ).toBe('due');
     expect(queueState({ status: 'done', postponedUntil: null }, true, '2026-11-11')).toBe('done');
   });
 
@@ -157,11 +196,13 @@ describe('retention rules', () => {
     expect(erasureMessage({ action: 'erase', fields: 2, files: 1, comments: 0, in_clear: 0 })).toBe(
       'Erased: 2 fields, 1 file.',
     );
-    expect(erasureMessage({ action: 'anonymise', fields: 1, files: 0, comments: 3, in_clear: 2 })).toBe(
+    expect(
+      erasureMessage({ action: 'anonymise', fields: 1, files: 0, comments: 3, in_clear: 2 }),
+    ).toBe(
       'Anonymised: 1 field, 3 comments. 2 older log entries were written before the field was marked personal data and still hold their values.',
     );
-    expect(erasureMessage({ action: 'archive', fields: 0, files: 0, comments: 0, in_clear: 0 })).toBe(
-      'Archived under the retention rule.',
-    );
+    expect(
+      erasureMessage({ action: 'archive', fields: 0, files: 0, comments: 0, in_clear: 0 }),
+    ).toBe('Archived under the retention rule.');
   });
 });

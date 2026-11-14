@@ -121,7 +121,9 @@ function retentionText(e: ActivityEntry): string | null {
       const parts = [
         fields.length ? fields.join(', ') : 'no fields',
         Number(v?.files) ? `${Number(v?.files)} ${Number(v?.files) === 1 ? 'file' : 'files'}` : '',
-        Number(v?.comments) ? `${Number(v?.comments)} ${Number(v?.comments) === 1 ? 'comment' : 'comments'}` : '',
+        Number(v?.comments)
+          ? `${Number(v?.comments)} ${Number(v?.comments) === 1 ? 'comment' : 'comments'}`
+          : '',
         v?.renamed === true ? 'the name' : '',
       ].filter(Boolean);
       return `${e.action === 'retention.anonymised' ? 'Anonymised' : 'Personal data erased'} under ${rule}: ${parts.join(', ')}${e.note ? ` · Note: ${quote(e.note)}` : ''}`;

@@ -192,7 +192,11 @@ describe('activity lines', () => {
     ).toBe('Due for retention review under “Requests 3 years”: erase the personal data');
     expect(
       activityText(
-        entry({ action: 'retention.postponed', newValue: { until: '2027-01-31' }, note: 'Open complaint' }),
+        entry({
+          action: 'retention.postponed',
+          newValue: { until: '2027-01-31' },
+          note: 'Open complaint',
+        }),
         look,
       ),
     ).toBe('Retention postponed to 31 Jan 2027 · Reason: “Open complaint”');
@@ -202,7 +206,10 @@ describe('activity lines', () => {
           action: 'retention.erased',
           newValue: {
             rule: 'Requests 3 years',
-            fields: [{ key: 'requester', name: 'Requester' }, { key: 'email', name: 'Email' }],
+            fields: [
+              { key: 'requester', name: 'Requester' },
+              { key: 'email', name: 'Email' },
+            ],
             files: 1,
             comments: 2,
             renamed: false,

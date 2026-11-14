@@ -199,7 +199,9 @@ describe('management review inputs', () => {
   it('words incidents neutrally (security, quality or privacy)', () => {
     const r = compileManagementReview({
       ...period,
-      sources: { incidents: source([row({ status: 'New' }), row({ done: true, createdAt: before })]) },
+      sources: {
+        incidents: source([row({ status: 'New' }), row({ done: true, createdAt: before })]),
+      },
     });
     const m = r.sections.find((s) => s.key === 'monitoring')!;
     expect(m.facts).toEqual(['1 incident reported in the period, 1 open now']);

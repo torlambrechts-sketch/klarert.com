@@ -210,9 +210,7 @@ export function compileManagementReview(input: ReviewInput): ManagementReview {
     'parties',
     !!src('context') || !!src('feedback'),
     [
-      ...(src('context')
-        ? contextFacts(partyRows, 'interested party', 'interested parties')
-        : []),
+      ...(src('context') ? contextFacts(partyRows, 'interested party', 'interested parties') : []),
       ...(src('feedback')
         ? [
             `${plural(fbIn.length, 'piece', 'pieces')} of customer feedback received in the period` +
