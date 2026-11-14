@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { checkConditions } from '../automations';
 import { addDays, addMonths, formatDate, isoDateInZone } from '../fields/helpers';
 import { itemStatusField } from '../fields/item-status';
+import { resolveFieldType } from '../fields/resolve';
 import { dateOf, isDoneOf } from '../values';
 import type { Condition, Ctx, Field, Item, Json } from '../types';
 
@@ -98,6 +99,22 @@ export function readRetention(settings: unknown): RetentionSettings {
 export function isPersonalField(field: Pick<Field, 'config'>): boolean {
   const c = field.config as { personalData?: unknown } | null;
   return !!c && typeof c === 'object' && c.personalData === true;
+}
+
+/** Fields a rule can count from: those that give a date (a date formula too). */
+export function retentionDateFields<F extends Pick<Field, 'type' | 'config'>>(
+  fields: readonly F[],
+): F[] {
+  return fields.filter((f) => {
+    const def = resolveFieldType(f.type);
+    if (!def || !def.triggers.includes('date_arrives')) return false;
+    if (!def.effectiveKind) return def.kind === 'date';
+    try {
+      return def.effectiveKind(f as never, {} as Ctx) === 'date';
+    } catch {
+      return false;
+    }
+  });
 }
 
 /** The fields a rule erases: its keys among the personal-data fields, or all of them. */

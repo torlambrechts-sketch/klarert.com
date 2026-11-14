@@ -11,6 +11,8 @@ import { DocumentsRegisterSetting } from '@/components/sheets/documents-register
 import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
 import { SheetTabsSettings } from '@/components/sheets/sheet-tabs-settings';
+import { RetentionSettingsSection } from '@/components/sheets/retention-settings';
+import { isPersonalField, readRetention, retentionDateFields } from '@/engine/retention';
 import { SheetColumnGroups } from '@/components/table/column-groups-editor';
 import { parseColumnGroups } from '@/engine/views/column-groups';
 import { SubitemSettingsSection } from '@/components/subitems/subitem-settings';
@@ -57,7 +59,7 @@ export default async function SheetSettingsPage({
   params: Promise<{ org: string; sheetId: string }>;
 }) {
   const { org, sheetId } = await params;
-  const { workspace, role: workspaceRole, user } = await requireMember(org);
+  const { supabase, workspace, role: workspaceRole, user } = await requireMember(org);
   const [sheet, access] = await Promise.all([
     getSheet(workspace.id, sheetId),
     getSheetAccess(workspace.id, sheetId),
@@ -76,6 +78,15 @@ export default async function SheetSettingsPage({
     getViews(sheet.id),
   ]);
   const subSettings = (sheet.settings as { subitems?: unknown } | null)?.subitems;
+  // retention (docs/02 §18): the fields with their settings (personal data, date results)
+  const { data: retentionRows } = await supabase
+    .from('fields')
+    .select('key, name, type, config')
+    .eq('sheet_id', sheet.id)
+    .is('archived_at', null)
+    .order('position');
+  const retentionFields = (retentionRows ?? []).map((f) => ({ ...f, config: f.config ?? {} }));
+  const dateKeys = new Set(retentionDateFields(retentionFields).map((f) => f.key));
   const archivedSubitems = child ? await getArchivedItems(child.id) : [];
   const canEdit = isEditorRole(role);
   const tabSettings = readTabSettings(sheet.settings);
@@ -152,6 +163,27 @@ export default async function SheetSettingsPage({
           canChange={isAdminRole(role) && !sheet.archived_at}
         />
       </Card>
+
+      <section id="retention" className="scroll-mt-4">
+        <Card
+          title="Retention"
+          description="How long this sheet keeps personal data. When a record's period ends it goes to Workspace admin › Retention, where an owner or admin approves the erasure, postpones it or places a legal hold."
+        >
+          <RetentionSettingsSection
+            org={org}
+            sheetId={sheet.id}
+            initial={readRetention(sheet.settings)}
+            fields={retentionFields.map((f) => ({
+              key: f.key,
+              name: f.name,
+              personal: isPersonalField(f),
+              date: dateKeys.has(f.key),
+            }))}
+            groups={sheet.groups.map((g) => ({ id: g.id, name: g.name }))}
+            canEdit={isAdminRole(role) && !sheet.archived_at}
+          />
+        </Card>
+      </section>
 
       <Card
         title="Groups"

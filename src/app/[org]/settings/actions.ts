@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import * as frameworks from '@/server/commands/frameworks';
 import * as members from '@/server/commands/members';
 import * as packs from '@/server/commands/packs';
+import * as retention from '@/server/commands/retention';
 import * as structure from '@/server/commands/structure';
 import type { Result } from '@/server/result';
 
@@ -89,4 +90,50 @@ export async function adoptFrameworkAction(input: {
   const result = await frameworks.adoptFramework(input);
   if (result.ok) revalidatePath(`/${input.org}`, 'layout');
   return result;
+}
+
+// Retention (docs/02 §18): object inputs; the commands validate with Zod and authorise (owners and admins).
+async function retentionCall<T>(
+  command: (input: unknown) => Promise<Result<T>>,
+  input: { org: string },
+) {
+  const result = await command(input);
+  if (result.ok) revalidatePath(`/${input.org}`, 'layout');
+  return result;
+}
+export async function checkRetentionNowAction(input: { org: string }) {
+  return retentionCall(retention.checkRetentionNow, input);
+}
+export async function approveRetentionAction(input: {
+  org: string;
+  queueId: string;
+  note?: string;
+}) {
+  return retentionCall(retention.approveRetention, input);
+}
+export async function postponeRetentionAction(input: {
+  org: string;
+  queueId: string;
+  until: string;
+  reason: string;
+}) {
+  return retentionCall(retention.postponeRetention, input);
+}
+export async function setRetentionHoldAction(input: {
+  org: string;
+  itemId: string;
+  on: boolean;
+  reason?: string;
+}) {
+  return retentionCall(retention.setRetentionHold, input);
+}
+export async function removeErasedFilesAction(input: { org: string }) {
+  return retentionCall(retention.removeErasedFiles, input);
+}
+export async function saveRetentionRulesAction(input: {
+  org: string;
+  sheetId: string;
+  retention: unknown;
+}) {
+  return retentionCall(retention.saveRetentionRules, input);
 }

@@ -8,6 +8,7 @@ import {
   erasureMessage,
   queueState,
   readRetention,
+  retentionDateFields,
   retentionDue,
   retentionProblems,
   retentionRuleSchema,
@@ -129,6 +130,15 @@ describe('retention rules', () => {
     expect(
       erasedFields(rule({ fieldKeys: ['email', 'outcome'] }), fields).map((f) => f.key),
     ).toEqual(['email']);
+  });
+
+  it('counts from fields that give a date, a date formula too', () => {
+    const due = makeField('formula', { expr: 'TODAY()', result: 'date' }, { key: 'due' });
+    const score = makeField('formula', { expr: '1', result: 'number' }, { key: 'score' });
+    expect(retentionDateFields([...fields, due, score]).map((f) => f.key)).toEqual([
+      'closed_on',
+      'due',
+    ]);
   });
 
   it('says the rule in words', () => {

@@ -193,7 +193,8 @@ export async function updateField(input: unknown): Promise<Result<{ field: Field
         patch.rules = v.rules as DbJson;
       }
       if (v.config !== undefined) {
-        const { default: dflt, twoWay, ...rest } = v.config;
+        // personalData is a setting of every field (docs/02 §18), not of the type: kept outside the type's schema
+        const { default: dflt, twoWay, personalData, ...rest } = v.config;
         if (isLinkType(row.type)) {
           // inverseFieldId is the app's to keep: only the two-way switch changes it
           const stored =
@@ -218,6 +219,7 @@ export async function updateField(input: unknown): Promise<Result<{ field: Field
         patch.config = {
           ...(parsed.data as object),
           ...(dflt !== undefined && dflt !== null && dflt !== '' ? { default: dflt } : {}),
+          ...(personalData === true ? { personalData: true } : {}),
         } as DbJson;
       }
       if (Object.keys(patch).length === 0) return ok({ field: toField(row) });
@@ -233,6 +235,12 @@ export async function updateField(input: unknown): Promise<Result<{ field: Field
     },
     'updateField',
   );
+}
+
+/** A type change keeps the personal-data marker (docs/02 §18). */
+function keepPersonal(before: unknown, after: unknown): DbJson {
+  const personal = (before as { personalData?: unknown } | null)?.personalData === true;
+  return { ...(after as object), ...(personal ? { personalData: true } : {}) } as DbJson;
 }
 
 export type AddOptionResult = { field: Field; option: LabelOption; mutationId?: string };
@@ -497,7 +505,7 @@ export async function changeFieldType(input: unknown): Promise<Result<TypeChange
       if (plan.mode === 'in_place') {
         const { data, error } = await supabase
           .from('fields')
-          .update({ type: v.to, config: plan.config as DbJson })
+          .update({ type: v.to, config: keepPersonal(row.config, plan.config) })
           .eq('id', row.id)
           .select(FIELD_COLUMNS)
           .single();
@@ -547,7 +555,7 @@ export async function changeFieldType(input: unknown): Promise<Result<TypeChange
                   all.filter((f) => !f.archived_at)[at + 1]?.position ?? null,
                 ),
             width: clampWidth(fieldType(v.to)!.defaultWidth),
-            config: plan.config as DbJson,
+            config: keepPersonal(row.config, plan.config),
           })
           .select(FIELD_COLUMNS)
           .single();
