@@ -104,6 +104,11 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
     'invalid',
     "Choose the day an auditor's access ends.",
   ],
+  [
+    /only owners and admins change approval workflows/,
+    'forbidden',
+    'Only owners and admins can change approval workflows.',
+  ],
   [/item locked: (.*)/, 'forbidden', 'This item is locked. Only owners and admins can change it.'],
   [/item locked/, 'forbidden', 'This item is locked. Only owners and admins can change it.'],
   [
@@ -179,6 +184,12 @@ export function fromDbError(error: { message: string; code?: string }): Result<n
   // access control (0026–0028) words its refusals for people, prefixed "access: "
   const access = error.message.match(/^access: (.*)/);
   if (access) return fail('forbidden', access[1]!.trim());
+  // approval workflows (0040) word their refusals for people, prefixed "approval: "
+  const approval = error.message.match(/approval: (.*)/);
+  if (approval) {
+    const text = approval[1]!.trim();
+    return fail('blocked', text.charAt(0).toUpperCase() + text.slice(1));
+  }
   const form = error.message.match(/^form: (.*)/);
   if (form) return fail('invalid', form[1]!.trim());
   const parent = error.message.match(/restore the parent first: (\S+)/);

@@ -5,9 +5,11 @@ import {
   type AutomationEvent,
   type ScheduledAutomation,
 } from '@/engine/automations';
+import { planApprovalFirings, type ApprovalInstance } from '@/engine/approvals';
 import { sheetCtx } from '@/engine/sheet-data';
 import type { Condition } from '@/engine/types';
 import { fetchSheetData, type Db } from '@/lib/sheet-query';
+import { INSTANCE_COLUMNS, toInstance } from '@/server/approvals/rows';
 import { runAutomations } from '@/server/automations';
 import { newId } from '@/server/sheet-context';
 
@@ -118,7 +120,23 @@ export async function runDateChecks(
       newId,
       isAdmin: true,
     });
-    const firings = planFirings(list, data.items, ctx, (a, i) => paused.has(`${a}:${i}`));
+    const isPaused = (a: string, i: string) => paused.has(`${a}:${i}`);
+    const firings = planFirings(list, data.items, ctx, isPaused);
+    // approval overdue (docs/04 §13): the current step of an item's approval passed its SLA
+    if (list.some((a) => a.trigger.type === 'approval_overdue')) {
+      const live = must(
+        await db
+          .from('workflow_instances')
+          .select(INSTANCE_COLUMNS)
+          .eq('sheet_id', sheetId)
+          .eq('status', 'in_progress')
+          .not('step_due_at', 'is', null)
+          .lte('step_due_at', opts.now.toISOString()),
+      )
+        .map(toInstance)
+        .filter((x): x is ApprovalInstance => !!x);
+      firings.push(...planApprovalFirings(list, live, data.items, ctx, isPaused));
+    }
     summary.due += firings.length;
     for (const f of firings) {
       const { data: claimed, error } = await db.rpc('claim_schedule_occurrence', {

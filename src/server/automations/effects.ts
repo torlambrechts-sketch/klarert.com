@@ -43,6 +43,7 @@ import {
 import { toItem } from '@/lib/sheet-rows';
 import { fromDbError } from '@/server/result';
 import { newId, sha256, uniqueConflicts } from '@/server/sheet-context';
+import { approvalChangeEvents } from '@/server/approvals/events';
 import type { AutomationRow, EffectResult, RunnerStore, RunRecord, World } from './runner';
 
 // The automation runner's reads and writes (docs/02 §7, docs/04 §1). This is the one place in a request path that
@@ -981,6 +982,28 @@ export function automationStore(scope: { orgId: string; userId: string | null })
           return createSubitems(automation, effect);
         case 'sync_requirement_checks':
           return syncRequirementChecks(automation, effect);
+        case 'start_workflow': {
+          const { data, error } = await db.rpc('workflow_submit', {
+            p_item: effect.itemId,
+            p_workflow: effect.workflowId,
+            p_automation: automation.id,
+            ...(effect.submittedBy ? { p_submitter: effect.submittedBy } : {}),
+          });
+          if (error) {
+            const r = fromDbError(error);
+            // already waiting, turned off, nobody to approve: the run log says blocked with the reason
+            return not(
+              !r.ok && r.error.code === 'blocked' ? 'blocked' : 'failed',
+              dbMessage(error),
+            );
+          }
+          // the action submits the item the automation runs on
+          const events = approvalChangeEvents(data, world.item.sheetId, effect.itemId, {
+            kind: 'automation',
+            id: automation.id,
+          });
+          return done({ touched: [effect.itemId], events });
+        }
       }
     },
 
