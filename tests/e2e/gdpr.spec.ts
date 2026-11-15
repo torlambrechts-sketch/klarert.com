@@ -146,7 +146,7 @@ test('install the GDPR add-on on Core and erase a request record under its reten
 
   await page.goto(`/${slug}/settings?tab=retention`);
   await page.getByRole('button', { name: 'Check now' }).click();
-  await expect(page.getByText('Retention checked. 1 record was added to the queue.')).toBeVisible();
+  await expect(page.getByText('Retention checked. 1 item was added to the queue.')).toBeVisible();
   const queue = page.getByRole('list', { name: 'Items to review' });
   await expect(queue).toContainText('Example: erasure request');
   await queue
