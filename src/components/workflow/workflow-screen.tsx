@@ -35,6 +35,7 @@ import { WindowList } from '@/components/shell/window-list';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { WorkflowData, WorkflowRow } from '@/server/repositories/workflow';
+import { countItems } from '@/engine/nouns';
 
 // The workflow screen (docs/05 §4) in the board design's "Workflows" list: one row per sheet with the field its
 // stages come from (remembered per browser), the number of stages, items and running items. A row opens in place to
@@ -361,9 +362,7 @@ function WorkflowListRow({
           <span className="flex min-w-0 flex-col">
             <span className="text-label-14 truncate font-medium">{row.sheet.name}</span>
             <span className="text-muted-foreground text-label-12-mono truncate">
-              {l
-                ? `${l.field.key} · ${plural(l.total, row.sheet.itemLabel.toLowerCase())}`
-                : 'no stages'}
+              {l ? `${l.field.key} · ${countItems(l.total, row.sheet.itemLabel)}` : 'no stages'}
               {row.approvals.length
                 ? ` · ${plural(row.approvals.length, 'approval workflow')}`
                 : ''}
@@ -580,7 +579,7 @@ function Steps({
         <span className="text-muted-foreground text-label-13">
           {l.onChange.length > 0
             ? `On any change: ${l.onChange.map((a) => a.name).join(', ')}`
-            : `${plural(l.total, row.sheet.itemLabel.toLowerCase())}`}
+            : countItems(l.total, row.sheet.itemLabel)}
         </span>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import { stageFields } from '../../workflow';
 import { laneOptions } from '../../fields/view-support';
 import { keysOf } from '../../values';
-import { matchingItems, plural, sourceOf } from '../shared';
+import { matchingItems, sourceOf } from '../shared';
 import type { Bar, WidgetTypeDef } from '../types';
+import { countItems } from '../../nouns';
 
 /** by_option: items per option of a label field (status, dropdown, priority …), as bars. */
 export const byOption: WidgetTypeDef = {
@@ -36,7 +37,7 @@ export const byOption: WidgetTypeDef = {
       kind: 'bars',
       bars,
       total: items.length,
-      caption: `${plural(items.length, s.source.sheet.itemLabel.toLowerCase())} in ${s.source.sheet.name}`,
+      caption: `${countItems(items.length, s.source.sheet.itemLabel)} in ${s.source.sheet.name}`,
     };
   },
 };

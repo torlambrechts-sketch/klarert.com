@@ -2,6 +2,7 @@ import { itemStatusField } from '../../fields/item-status';
 import { isItemDone } from '../../values';
 import { plural } from '../shared';
 import type { WidgetRow, WidgetTypeDef } from '../types';
+import { countItems } from '../../nouns';
 
 /** Sheets listed at most: the first in menu order that have a field that decides done. */
 const MAX_SHEETS = 6;
@@ -28,7 +29,7 @@ export const doneBySheet: WidgetTypeDef = {
         row: {
           key: s.sheet.id,
           label: s.sheet.name,
-          sub: `${done} of ${plural(total, s.sheet.itemLabel.toLowerCase())} done`,
+          sub: `${done} of ${countItems(total, s.sheet.itemLabel)} done`,
           value: `${pct}%`,
           fill: pct,
           link: { to: 'sheet', sheetId: s.sheet.id },

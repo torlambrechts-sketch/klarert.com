@@ -100,6 +100,46 @@ describe('widget registry', () => {
     ).toMatchObject({ kind: 'stat', value: 1 });
   });
 
+  it('captions count the sheet’s items by its item label, never "1 dpia" or "3 feedbacks"', () => {
+    const named = (itemLabel: string, name: string): DashboardData => {
+      const s = { ...sheet, itemLabel, name };
+      const src: SheetSource = { ...source, sheet: s };
+      return { ...data, sheet: (id) => (id === s.id ? src : undefined), sheets: () => [src] };
+    };
+    const cases: [string, string, string, string][] = [
+      ['DPIA', 'DPIA register', 'of 4 DPIAs in DPIA register', '4 DPIAs in DPIA register'],
+      ['CAPA', 'CAPA', 'of 4 CAPAs in CAPA', '4 CAPAs in CAPA'],
+      [
+        'Feedback',
+        'Customer feedback',
+        'of 4 items in Customer feedback',
+        '4 items in Customer feedback',
+      ],
+      [
+        'Interested party',
+        'Context',
+        'of 4 interested parties in Context',
+        '4 interested parties in Context',
+      ],
+    ];
+    const notes = [{ fieldKey: 'notes', op: 'contains', value: 'urg' }];
+    for (const [label, name, count, bars] of cases) {
+      expect(computeWidget(w({ conditions: notes }), named(label, name))).toMatchObject({
+        caption: count,
+      });
+      expect(
+        computeWidget(w({ type: 'by_option', fieldKey: 'status' }), named(label, name)),
+      ).toMatchObject({ caption: bars });
+    }
+    // without conditions, the noun alone
+    expect(computeWidget(w({}), named('DPIA', 'DPIA register'))).toMatchObject({
+      caption: 'DPIAs in DPIA register',
+    });
+    expect(computeWidget(w({}), named('Feedback', 'Customer feedback'))).toMatchObject({
+      caption: 'items in Customer feedback',
+    });
+  });
+
   it('scope: a count says "of N" against the items in scope, and every kind reads only those', () => {
     // the rows of a shared register tagged with one standard: here the items in progress (i1, i2)
     const scope = [{ fieldKey: 'status', op: 'is_any_of', value: ['opt_wip'] }];
