@@ -3,16 +3,13 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { env } from '@/lib/env';
+import { safeNext } from '@/lib/safe-next';
 import { createClient } from '@/lib/supabase/server';
 import { fail, invalid, ok, type Result } from '@/server/result';
 
 const input = z.object({
   email: z.email('Enter a valid email address.').trim().toLowerCase(),
-  next: z
-    .string()
-    .regex(/^\/(?!\/)/)
-    .optional()
-    .catch(undefined),
+  next: z.unknown().transform((v) => safeNext(v) ?? undefined),
 });
 
 export async function sendMagicLink(
@@ -41,8 +38,6 @@ export async function sendMagicLink(
 }
 
 const MIN_PASSWORD = 10;
-const safeNext = (v: FormDataEntryValue | null) =>
-  typeof v === 'string' && /^\/(?!\/)/.test(v) ? v : '/';
 
 const passwordInput = z.object({
   email: z.email('Enter a valid email address.').trim().toLowerCase(),
@@ -63,7 +58,7 @@ export async function signInWithPassword(_: unknown, form: FormData): Promise<Re
     // same message for unknown email and wrong password, so accounts cannot be probed
     return fail('unauthenticated', 'Email or password is wrong.');
   }
-  redirect(safeNext(form.get('next')));
+  redirect(safeNext(form.get('next')) ?? '/');
 }
 
 const signUpInput = z.object({
@@ -96,5 +91,5 @@ export async function signUpWithPassword(_: unknown, form: FormData): Promise<Re
   // projects that require email confirmation return no session: tell the person instead of redirecting
   if (!data.session)
     return fail('failed', 'Check your email to confirm the account, then sign in.');
-  redirect(safeNext(form.get('next')));
+  redirect(safeNext(form.get('next')) ?? '/');
 }

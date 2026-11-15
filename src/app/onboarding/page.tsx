@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { safeNext as safePath } from '@/lib/safe-next';
 import { getMyWorkspaces, getSession } from '@/server/auth';
 import { CreateWorkspaceForm, ProfileForm } from './forms';
 
@@ -11,7 +12,7 @@ export default async function OnboardingPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const safeNext = next && /^\/(?!\/)/.test(next) ? next : undefined;
+  const safeNext = safePath(next) ?? undefined;
   const session = await getSession();
   if (!session) redirect('/login');
   const workspaces = session.profile ? await getMyWorkspaces() : [];

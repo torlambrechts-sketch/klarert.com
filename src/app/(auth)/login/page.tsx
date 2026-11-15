@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { safeNext as safePath } from '@/lib/safe-next';
 import { getSession } from '@/server/auth';
 import { LoginForm, PasswordForm } from './login-form';
 
@@ -21,7 +22,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; error?: string; mode?: string }>;
 }) {
   const { next, error, mode: rawMode } = await searchParams;
-  const safeNext = next && /^\/(?!\/)/.test(next) ? next : undefined;
+  const safeNext = safePath(next) ?? undefined;
   if (await getSession()) redirect(safeNext ?? '/');
   const mode: Mode = rawMode === 'signup' || rawMode === 'link' ? rawMode : 'signin';
   const href = (m: Mode) => {

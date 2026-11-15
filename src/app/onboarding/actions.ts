@@ -2,11 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { safeNext } from '@/lib/safe-next';
 import { createWorkspace, saveProfile } from '@/server/commands/onboarding';
 import type { Result } from '@/server/result';
-
-const safe = (next: FormDataEntryValue | null) =>
-  typeof next === 'string' && /^\/(?!\/)/.test(next) ? next : null;
 
 export async function saveProfileAction(
   _: unknown,
@@ -19,7 +17,7 @@ export async function saveProfileAction(
   });
   if (!result.ok) return result;
   revalidatePath('/', 'layout');
-  redirect(safe(form.get('next')) ?? '/onboarding');
+  redirect(safeNext(form.get('next')) ?? '/onboarding');
 }
 
 export async function createWorkspaceAction(
