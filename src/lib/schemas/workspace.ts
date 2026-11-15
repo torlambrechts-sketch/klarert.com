@@ -8,6 +8,16 @@ export const ROLE_LABELS: Record<(typeof ROLES)[number], string> = {
   viewer: 'Viewer',
   auditor: 'Auditor',
 };
+/** One plain sentence on what each role can do (docs/01 §4), shown beside the role choice and in the invite email. */
+export const ROLE_SUMMARIES: Record<(typeof ROLES)[number], string> = {
+  owner:
+    'Owners can do everything, including managing members, deleting the workspace and transferring ownership.',
+  admin: 'Admins manage members, roles and workspace settings, and can do everything editors can.',
+  editor: 'Editors add and change items, and create sheets, fields, views and automations.',
+  viewer: 'Viewers see sheets, items and activity, but cannot change anything.',
+  auditor:
+    'Auditors have read-only access to sheets, evidence, files and activity until their access ends.',
+};
 
 export const PROFILE_COLORS = [
   'blue',
