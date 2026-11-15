@@ -397,6 +397,15 @@ describe('the activity log', () => {
     expect(e('restricted.accessed', null, null)).toBe(
       'Opened this restricted sheet as an owner who is not on the list',
     );
+    expect(e('invite.created', null, { invite_id: 'i', role: 'editor' })).toBe(
+      'Invited someone as an editor',
+    );
+    expect(e('invite.resent', null, { invite_id: 'i', role: 'viewer', resend: 2 })).toBe(
+      'Sent an invite again (2 of 5)',
+    );
+    expect(e('invite.revoked', { invite_id: 'i', role: 'viewer' }, null)).toBe(
+      'Revoked an invite to join as a viewer',
+    );
     expect(e('item.renamed', null, null)).toBeNull();
   });
 });

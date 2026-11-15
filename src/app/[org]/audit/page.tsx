@@ -32,7 +32,8 @@ function Card({
 }) {
   return (
     <section
-      className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
+      id={testId}
+      className="border-line bg-background-100 flex scroll-mt-4 flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
       data-testid={testId}
     >
       <div className="flex flex-col gap-1">
