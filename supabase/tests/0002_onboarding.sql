@@ -2,11 +2,13 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(16);
+select plan(17);
 
+-- James has confirmed his address (accept_invite asks for it since 0057)
+insert into auth.users (id, email, email_confirmed_at) values
+  ('00000000-0000-0000-0000-0000000000a2', 'james@example.test', now());
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'maria@example.test'),
-  ('00000000-0000-0000-0000-0000000000a2', 'james@example.test'),
   ('00000000-0000-0000-0000-0000000000a3', 'nadia@example.test'),
   ('00000000-0000-0000-0000-0000000000a4', 'noprofile@example.test');
 insert into profiles (id, display_name, initials) values
@@ -44,7 +46,13 @@ select throws_ok($$ delete from memberships where user_id = auth.uid() $$, 'a wo
 select throws_ok($$ update memberships set role = 'admin' where user_id = auth.uid() $$, 'a workspace needs at least one owner',
   'the last owner cannot be demoted');
 
+-- people join only through an invite (0057, M4): a direct insert, even by the owner, is refused; the system adds Nadia
+select throws_ok($$ insert into memberships (org_id, user_id, role)
+                    select id, '00000000-0000-0000-0000-0000000000a3', 'admin' from t_org $$,
+  '42501', 'access: People join a workspace by accepting an invite.', 'members are not added directly');
+reset role;
 insert into memberships (org_id, user_id, role) select id, '00000000-0000-0000-0000-0000000000a3', 'admin' from t_org;
+set local role authenticated;
 
 -- ───────────── invites ─────────────
 insert into invites (org_id, email, role, invited_by)

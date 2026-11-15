@@ -12,6 +12,8 @@ import {
   SYNC_BATCH,
   syncConfig,
   syncMessage,
+  hasSavedWebhook,
+  withWebhookAddresses,
   type ActionJson,
   type AutomationEvent,
   type Effect,
@@ -868,18 +870,45 @@ export function automationStore(scope: { orgId: string; userId: string | null })
             .eq('enabled', true)
             .order('created_at')
             .order('id'),
-        ).then((r) =>
-          must(r).map((a) => ({
+        ).then(async (r) => {
+          const rows = must(r);
+          // the person each automation acts as must still be a member who can edit every sheet it writes to (0052)
+          const stops = new Map<string, string>();
+          if (rows.length > 0) {
+            const authority = must(
+              await db.rpc('automation_authority', { p_automations: rows.map((a) => a.id) }),
+            );
+            for (const x of authority) if (x.stop_reason) stops.set(x.automation_id, x.stop_reason);
+          }
+          // webhook addresses stay on the server (0056): the action holds a key, the address is read here
+          const withHooks = rows.filter((a) => hasSavedWebhook(a.actions)).map((a) => a.id);
+          const addresses = new Map<string, Record<string, unknown>>();
+          if (withHooks.length > 0) {
+            const secrets = must(
+              await db
+                .from('automation_secrets')
+                .select('automation_id, webhook_urls')
+                .eq('org_id', orgId)
+                .in('automation_id', withHooks),
+            );
+            for (const x of secrets)
+              addresses.set(x.automation_id, (x.webhook_urls ?? {}) as Record<string, unknown>);
+          }
+          return rows.map((a) => ({
             id: a.id,
             sheetId: a.sheet_id,
             name: a.name,
             trigger: a.trigger as AutomationRow['trigger'],
             conditions: (Array.isArray(a.conditions) ? a.conditions : []) as unknown as Condition[],
-            actions: (Array.isArray(a.actions) ? a.actions : []) as AutomationRow['actions'],
+            actions: withWebhookAddresses(
+              (Array.isArray(a.actions) ? a.actions : []) as AutomationRow['actions'],
+              addresses.get(a.id) ?? {},
+            ),
             createdBy: a.created_by,
             mode: a.mode === 'test' ? ('test' as const) : ('live' as const),
-          })),
-        );
+            stopReason: stops.get(a.id) ?? null,
+          }));
+        });
         automationLists.set(sheetId, list);
       }
       return list;

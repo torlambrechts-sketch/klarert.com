@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { BlockedUrlError } from './ssrf';
 import {
@@ -6,6 +7,7 @@ import {
   BACKOFF_MS,
   MAX_FAILURES,
   runWebhookWorker,
+  SIGNATURE_HEADER,
   type Settled,
   type WebhookRow,
   type WorkerDeps,
@@ -181,5 +183,53 @@ describe('runWebhookWorker', () => {
     const { d, recorded } = deps([], () => 200);
     expect(await runWebhookWorker(d)).toEqual({ claimed: 0, sent: 0, retrying: 0, deadLetter: 0 });
     expect(recorded).toEqual([]);
+  });
+});
+
+describe('signed webhooks (0056, SA-12)', () => {
+  const hmacHex = (key: string, message: string) =>
+    createHmac('sha256', key).update(message).digest('hex');
+  const row: WebhookRow = {
+    id: 'w1',
+    url: 'https://hooks.example.com/x',
+    payload: { item: 'CA-001' },
+    attempts: 0,
+    signingKey: 'k3y',
+  };
+
+  it('sends X-Klarert-Signature: t=<unix>,v1=HMAC-SHA256(key, "<t>.<body>")', async () => {
+    let seen: { body: string; headers: Record<string, string> } | null = null;
+    const r = await attempt(row, {
+      check: async (u) => new URL(u),
+      send: async (_u, body, _s, headers) => {
+        seen = { body, headers };
+        return 200;
+      },
+      now: () => NOW,
+      hmacHex,
+    });
+    expect(r).toEqual({ ok: true });
+    const t = Math.floor(NOW / 1000);
+    expect(seen!.headers[SIGNATURE_HEADER]).toBe(
+      `t=${t},v1=${hmacHex('k3y', `${t}.${seen!.body}`)}`,
+    );
+    expect(seen!.body).toBe(JSON.stringify({ item: 'CA-001' }));
+  });
+
+  it('a row whose automation is gone goes unsigned', async () => {
+    let headers: Record<string, string> | null = null;
+    await attempt(
+      { ...row, signingKey: null },
+      {
+        check: async (u) => new URL(u),
+        send: async (_u, _b, _s, h) => {
+          headers = h;
+          return 200;
+        },
+        now: () => NOW,
+        hmacHex,
+      },
+    );
+    expect(headers).toEqual({});
   });
 });

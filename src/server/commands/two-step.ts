@@ -1,8 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import type { AuthError } from '@supabase/supabase-js';
-import type { Json } from '@/lib/database.types';
-import { cleanCode, REQUIRE_TWO_STEP, unfinishedApps, verifiedApps } from '@/lib/two-step';
+import { cleanCode, unfinishedApps, verifiedApps } from '@/lib/two-step';
 import { getSession, getSignIn } from '@/server/auth';
 import { fail, invalid, ok, type Result } from '@/server/result';
 import { log, withOrg } from './context';
@@ -144,20 +143,11 @@ export async function setWorkspaceTwoStep(input: unknown): Promise<Result<{ requ
           'forbidden',
           'Set up two-step sign-in for yourself first, in Your account. Then turn this on.',
         );
-      const { data: org, error: readError } = await supabase
-        .from('orgs')
-        .select('settings')
-        .eq('id', orgId)
-        .single();
-      if (readError || !org) return fail('failed', 'The setting could not be saved. Try again.');
-      const settings = {
-        ...((org.settings ?? {}) as Record<string, Json>),
-        [REQUIRE_TWO_STEP]: v.required,
-      };
-      const { error } = await supabase
-        .from('orgs')
-        .update({ settings: settings as NonNullable<Json> })
-        .eq('id', orgId);
+      // the database's own rule (0063): owners only, in a two-step session, logged on the workspace chain
+      const { error } = await supabase.rpc('set_require_two_step', {
+        p_org: orgId,
+        p_on: v.required,
+      });
       if (error) return fail('failed', 'The setting could not be saved. Try again.');
       return ok({ required: v.required });
     },

@@ -132,12 +132,13 @@ export function useActivity(itemId: string, sheetId: string, version: string) {
           if (!e) continue;
           const erased = !!r.erased_at;
           const pick = (v: Json | null) => (erased ? (ERASED_VALUE as unknown as Json) : v);
-          if (r.slot === 'file') {
-            // the file entry's name, description and version note, key by key
+          if (r.slot === 'file' || r.slot === 'subitem') {
+            // key by key: a file entry's name, description and version note; a sub-item's name (0059)
+            const keys = r.slot === 'file' ? ['filename', 'description', 'version_note'] : ['name'];
             const merge = (base: Json | null, real: Json | null) => {
               if (!base || typeof base !== 'object' || Array.isArray(base)) return base;
               const out: Record<string, Json> = { ...base };
-              for (const k of ['filename', 'description', 'version_note'])
+              for (const k of keys)
                 if (isMaskedValue(out[k]))
                   out[k] = erased
                     ? (ERASED_VALUE as unknown as Json)

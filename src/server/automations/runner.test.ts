@@ -99,6 +99,24 @@ const created = (itemId: string): AutomationEvent => ({
 });
 
 describe('runChain', () => {
+  it('an automation whose author lost access is stopped with the reason and does nothing (0052)', async () => {
+    const reason =
+      'Stopped: Eve Editor is no longer a member of this workspace. An owner, admin or editor can save the automation again to run it as themselves.';
+    const a = automation({
+      name: 'Post to HR',
+      actions: [{ type: 'create_item', sheetId: 's-ca', name: 'Copy of {name}' }],
+      stopReason: reason,
+    });
+    const { store, saved } = fakeStore([a], [makeItem({}, { id: 'i-0' })], () => ({}));
+    const out = await runChain([created('i-0')], store, opts());
+    expect(store.execute).not.toHaveBeenCalled();
+    expect(saved.map((r) => [r.status, r.detail, r.steps.length])).toEqual([
+      ['stopped', reason, 0],
+    ]);
+    expect(out.runs.map((r) => r.status)).toEqual(['stopped']);
+    expect(out.messages.join(' ')).toContain('no longer a member');
+  });
+
   it('a chain that keeps creating items stops at depth 3 with a stopped run', async () => {
     let n = 0;
     const a = automation({

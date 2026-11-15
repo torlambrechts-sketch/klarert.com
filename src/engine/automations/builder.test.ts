@@ -261,6 +261,17 @@ describe('validation and the self-trigger guard', () => {
     expect(draftProblems(draft({}), ctx)).toEqual({});
   });
 
+  it('keeps a saved webhook address without showing it, and asks for one when there is none (0056)', () => {
+    const saved = draft({
+      actions: [{ type: 'webhook', urlRef: 'r1', urlHost: 'hooks.slack.com', preset: 'slack' }],
+    });
+    expect(draftProblems(saved, ctx)).toEqual({});
+    const none = draft({ actions: [{ type: 'webhook', url: '', preset: 'generic' }] });
+    expect(draftProblems(none, ctx)['actions.0']).toBe(
+      'Enter an address that starts with https://.',
+    );
+  });
+
   it('flags a field_changed automation that sets its own field', () => {
     const d = draft({
       trigger: { type: 'field_changed', fieldKey: 'status' },

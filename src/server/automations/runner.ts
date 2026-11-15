@@ -40,6 +40,11 @@ export interface AutomationRow {
   createdBy: string | null;
   /** Test mode (docs/04 §14): runs and logs what it would do, performs no effect. Live when not given. */
   mode?: 'live' | 'test';
+  /**
+   * Why it must not run now, in words (0052): the person it acts as left the workspace, is no longer an editor, or
+   * can no longer edit its sheet or a sheet it writes to. The run is recorded as stopped and nothing is done.
+   */
+  stopReason?: string | null;
 }
 
 /** The item an event is about, with the Ctx of its sheet, as stored now. */
@@ -245,6 +250,23 @@ export async function runChain(
         continue;
       }
       if (!guard.enter(automation.id, w.item.id)) continue;
+      if (automation.stopReason) {
+        await store.saveRun({
+          automationId: automation.id,
+          itemId: w.item.id,
+          event: { ...event, depth },
+          status: 'stopped',
+          detail: automation.stopReason,
+          steps: [],
+          depth,
+          chainId: opts.chainId,
+          startedAt,
+        });
+        runs.push({ automationId: automation.id, itemId: w.item.id, status: 'stopped', steps: [] });
+        messages.push(runMessage(automation.name, 'stopped', [], automation.stopReason));
+        problems.push(messages.at(-1)!);
+        continue;
+      }
 
       const steps: Step[] = [];
       for (const action of automation.actions) {

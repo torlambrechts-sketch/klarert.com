@@ -31,6 +31,21 @@ export interface WebhookRow {
   url: string;
   payload: unknown;
   attempts: number;
+  /** The automation's signing key (0056); null when the automation is gone: the POST is then unsigned. */
+  signingKey?: string | null;
+}
+
+/** The signature header receivers check (SA-12): HMAC-SHA256 of "<t>.<body>" with the automation's key. */
+export const SIGNATURE_HEADER = 'X-Klarert-Signature';
+
+export function signatureHeader(
+  key: string,
+  body: string,
+  nowMs: number,
+  hmacHex: (key: string, message: string) => string,
+): string {
+  const t = Math.floor(nowMs / 1000);
+  return `t=${t},v1=${hmacHex(key, `${t}.${body}`)}`;
 }
 
 export interface WorkerDeps {
@@ -38,9 +53,16 @@ export interface WorkerDeps {
   record(id: string, settled: Settled): Promise<void>;
   /** Checks the URL (https, SSRF guard) and returns it parsed; throws BlockedUrlError. */
   check(url: string): Promise<URL>;
-  /** POST the JSON body; resolves with the HTTP status. Must not follow redirects and must honour the signal. */
-  send(url: URL, body: string, signal: AbortSignal): Promise<number>;
+  /** POST the JSON body with the extra headers; resolves with the HTTP status. No redirects; honours the signal. */
+  send(
+    url: URL,
+    body: string,
+    signal: AbortSignal,
+    headers: Record<string, string>,
+  ): Promise<number>;
   now(): number;
+  /** HMAC-SHA256 as hex, for the signature header (the route always gives it; rows without a key go unsigned). */
+  hmacHex?(key: string, message: string): string;
   timeoutMs?: number;
 }
 
@@ -54,7 +76,8 @@ export interface WorkerSummary {
 /** One attempt: the outcome and the error text people see in the dead-letter notice. */
 export async function attempt(
   row: WebhookRow,
-  deps: Pick<WorkerDeps, 'check' | 'send' | 'timeoutMs'>,
+  deps: Pick<WorkerDeps, 'check' | 'send' | 'timeoutMs' | 'hmacHex'> &
+    Partial<Pick<WorkerDeps, 'now'>>,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   let url: URL;
   try {
@@ -69,7 +92,19 @@ export async function attempt(
   const timeoutMs = deps.timeoutMs ?? TIMEOUT_MS;
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const status = await deps.send(url, JSON.stringify(row.payload ?? {}), controller.signal);
+    const body = JSON.stringify(row.payload ?? {});
+    const headers: Record<string, string> =
+      row.signingKey && deps.hmacHex
+        ? {
+            [SIGNATURE_HEADER]: signatureHeader(
+              row.signingKey,
+              body,
+              (deps.now ?? Date.now)(),
+              deps.hmacHex,
+            ),
+          }
+        : {};
+    const status = await deps.send(url, body, controller.signal, headers);
     if (status >= 200 && status < 300) return { ok: true };
     if (status >= 300 && status < 400)
       return { ok: false, error: `HTTP ${status}: redirects are not followed.` };

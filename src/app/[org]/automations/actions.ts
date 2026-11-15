@@ -16,5 +16,6 @@ export const duplicateAutomationAction = async (input: unknown) =>
 export const deleteAutomationAction = async (input: unknown) => automations.deleteAutomation(input);
 export const setAutomationPauseAction = async (input: unknown) =>
   automations.setAutomationPause(input);
+export const revealSigningKeyAction = async (input: unknown) => automations.revealSigningKey(input);
 
 export const runDateChecksNowAction = async (input: unknown) => scheduler.runDateChecksNow(input);

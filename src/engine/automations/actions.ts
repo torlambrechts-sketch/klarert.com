@@ -6,7 +6,7 @@ import type { Automation, Ctx, Item, Json } from '../types';
 import { defOf, keysOfValue, kindOf, valueOf } from '../values';
 import { actorName, renderTemplate, type TemplateEnv } from './template';
 import type { ActionId, ActionJson, AutomationEvent, Effect, PlannedStep } from './types';
-import { isWebhookPreset, webhookPayload } from './webhook';
+import { isWebhookPreset, savedWebhookHost, webhookPayload } from './webhook';
 import { resolveValueToken, valueLabel } from './value-tokens';
 import { SUBITEM_ACTIONS } from './subitem-actions';
 import { planSyncAction } from './requirement-sync';
@@ -355,7 +355,10 @@ export const ACTIONS: Record<ActionId, Planner> = {
     } catch {
       host = '';
     }
-    if (!url.startsWith('https://') || !host)
+    // a saved address stays on the server (0056): the runner fills `url` in; previews know only its host
+    const saved = !url && savedWebhookHost(action);
+    if (saved) host = saved;
+    else if (!url.startsWith('https://') || !host)
       return failed('webhook', 'Send a webhook', 'Webhooks need an https:// address.');
     const preset = isWebhookPreset(action.preset) ? action.preset : 'generic';
     return {

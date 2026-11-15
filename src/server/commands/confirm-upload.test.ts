@@ -86,4 +86,33 @@ describe('confirmUpload', () => {
       data: row,
     });
   });
+
+  it('removes a refused or changed upload so it cannot be served from storage (SA-9)', async () => {
+    const tampered = new TextEncoder().encode('Fire drill report, June');
+    const d = { ...deps(tampered), discard: vi.fn(async () => {}) };
+    await confirmWith(d, expected);
+    expect(d.discard).toHaveBeenCalledWith(expected.path);
+    const program = new Uint8Array([0x4d, 0x5a, 0x90, 0x00, ...bytes]);
+    const p = { ...deps(program), discard: vi.fn(async () => {}) };
+    p.inspect = (b: Uint8Array) => {
+      const c = checkUpload('report.pdf', b.byteLength, b.subarray(0, 4096));
+      return c.ok ? null : c.reason;
+    };
+    const r = await confirmWith(p, { ...expected, sha256: sha(program), size: program.byteLength });
+    expect(r.ok).toBe(false);
+    expect(p.discard).toHaveBeenCalledWith(expected.path);
+    expect(p.addFile).not.toHaveBeenCalled();
+  });
+
+  it('a failed removal is logged, never thrown', async () => {
+    const d = {
+      ...deps(new TextEncoder().encode('other')),
+      discard: vi.fn(async () => {
+        throw new Error('storage down');
+      }),
+    };
+    const r = await confirmWith(d, expected);
+    expect(r.ok).toBe(false);
+    expect(d.log).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'discard_failed' }));
+  });
 });

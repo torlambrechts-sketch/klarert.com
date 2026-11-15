@@ -246,9 +246,13 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
         string,
         unknown
       > | null;
-      const what = v
-        ? `${String(v.display_id ?? '')} ${quote(String(v.name ?? ''))}`.trim()
-        : 'a sub-item';
+      // a sub-item's name is personal data on some sheets (0059): erased, or not readable here
+      const name = isErasedValue(v?.name)
+        ? 'erased'
+        : isMaskedValue(v?.name)
+          ? RESTRICTED
+          : quote(String(v?.name ?? ''));
+      const what = v ? `${String(v.display_id ?? '')} ${name}`.trim() : 'a sub-item';
       if (e.action === 'subitem.added')
         return v && typeof v.from === 'string'
           ? `Sub-item ${what} moved here from ${v.from}`
