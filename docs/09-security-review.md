@@ -493,7 +493,8 @@ app sends mail; reminders, read-and-accept requests and notifications will add a
   and the role). Never the address: the log is append-only, and the invite id links these entries to the
   `member.added` entry written when the person joins (0057). pgTAP `0070_invite_email.sql`.
 
-Environment variables (server only, Vercel Production and Preview; see `scripts/hosted/README.md` › Email):
+Environment variables (server only, Vercel **Production only**, so previews never email real people and fall back to
+copy-link; see `scripts/hosted/README.md` › Email):
 
 | Variable | Value |
 |---|---|

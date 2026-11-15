@@ -41,7 +41,8 @@ instead." and invites still work by copying the link. No migration or database s
    The app already asks for no open pixel and anonymised clicks per message, but only the account setting stops
    Brevo rewriting the accept link (docs/09 §10).
 4. Brevo › SMTP & API › API keys › Generate a new API key, named for example `klarert-vercel`. Copy it once.
-5. Vercel › the project › Settings › Environment Variables, for **Production** and **Preview**:
+5. Vercel › the project › Settings › Environment Variables, for **Production only** (owner decision 15 Nov 2026:
+   previews never email real people; there an invite falls back to its copy-link):
    - `BREVO_API_KEY` = the key (mark it Sensitive);
    - `EMAIL_FROM` = `Compliance OS <no-reply@mail.klarert.com>` (the sender from step 2).
    Redeploy so the functions pick them up.
