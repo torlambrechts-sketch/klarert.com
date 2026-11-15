@@ -32,13 +32,15 @@ const UNAVAILABLE: Record<UnavailableForm['state'], string> = {
 export default async function PublicFormPage({ params }: { params: Promise<{ token: string }> }) {
   const token = (await params).token;
   const form = await loadPublicForm(token);
+  // null without the server secret: the form refuses answers, so it is not shown (fail closed, SA-10)
+  const started = form?.state === 'open' ? startStamp(form.token) : null;
   return (
     <main className="bg-subtle min-h-dvh px-4 py-8 sm:py-12">
       <div className="mx-auto flex w-full max-w-[560px] flex-col gap-5">
-        {form?.state === 'open' ? (
+        {form?.state === 'open' && started ? (
           <PublicFormView
             token={form.token}
-            started={startStamp(form.token)}
+            started={started}
             title={form.title}
             description={form.description}
             nameLabel={form.nameLabel}
@@ -51,6 +53,13 @@ export default async function PublicFormPage({ params }: { params: Promise<{ tok
             fields={form.fields}
             layout={form.layout}
           />
+        ) : form?.state === 'open' ? (
+          <section className="border-line bg-background-100 rounded-xl border p-6">
+            <h1 className="text-heading-24">{form.title}</h1>
+            <p className="text-muted-foreground text-copy-13 mt-2">
+              This form cannot take answers right now. Try again later.
+            </p>
+          </section>
         ) : form ? (
           <section className="border-line bg-background-100 rounded-xl border p-6">
             <h1 className="text-heading-24">{form.title}</h1>
