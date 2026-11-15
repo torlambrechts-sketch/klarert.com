@@ -8,6 +8,19 @@ export const ROLE_LABELS: Record<(typeof ROLES)[number], string> = {
   viewer: 'Viewer',
   auditor: 'Auditor',
 };
+/** What an admin reads when an invite exists but its email did not go out (docs/09 §10). */
+export const INVITE_EMAIL_NOT_SENT = 'The email could not be sent. Copy the link instead.';
+
+/** One plain sentence on what each role can do (docs/01 §4), shown beside the role choice and in the invite email. */
+export const ROLE_SUMMARIES: Record<(typeof ROLES)[number], string> = {
+  owner:
+    'Owners can do everything, including managing members, deleting the workspace and transferring ownership.',
+  admin: 'Admins manage members, roles and workspace settings, and can do everything editors can.',
+  editor: 'Editors add and change items, and create sheets, fields, views and automations.',
+  viewer: 'Viewers see sheets, items and activity, but cannot change anything.',
+  auditor:
+    'Auditors have read-only access to sheets, evidence, files and activity until their access ends.',
+};
 
 export const PROFILE_COLORS = [
   'blue',
@@ -77,6 +90,7 @@ export const createInviteInput = orgRef
   })
   .refine(auditorNeedsEnd, endMessage);
 export const revokeInviteInput = orgRef.extend({ inviteId: uuid });
+export const resendInviteInput = orgRef.extend({ inviteId: uuid });
 export const acceptInviteInput = z.object({
   token: z.string().regex(/^[0-9a-f]{48}$/, 'Invalid invite link.'),
 });

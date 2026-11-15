@@ -145,7 +145,7 @@ async function invite(owner: Page, slug: string, email: string) {
   await owner.goto(`/${slug}/settings`);
   await owner.getByLabel('Email').fill(email);
   await owner.getByLabel('Role', { exact: true }).selectOption('admin');
-  await owner.getByRole('button', { name: 'Create invite link' }).click();
+  await owner.getByRole('button', { name: 'Send invite' }).click();
   return new URL((await owner.getByTestId('invite-link').textContent())!).pathname;
 }
 

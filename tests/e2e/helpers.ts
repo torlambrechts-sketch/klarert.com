@@ -5,7 +5,7 @@ import { COMMAND_HEADER, commandProof, commandSecret } from '@/lib/supabase/comm
 
 const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324';
 
-type Msg = { ID: string; Created: string; To: { Address: string }[] };
+type Msg = { ID: string; Created: string; To: { Address: string }[]; Tags?: string[] };
 
 /** Unique address per test run so magic links never collide. */
 export const freshEmail = (who: string) =>
@@ -20,7 +20,10 @@ async function latestLink(email: string, after: number): Promise<string> {
           `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=5`,
         );
         const { messages } = (await res.json()) as { messages: Msg[] };
-        const msg = messages.find((m) => new Date(m.Created).getTime() >= after - 2000);
+        // the app's own mail (invites, src/server/email) is tagged; sign-in links from Supabase Auth are not
+        const msg = messages.find(
+          (m) => !m.Tags?.length && new Date(m.Created).getTime() >= after - 2000,
+        );
         if (!msg) return null;
         const body = (await (await fetch(`${MAILPIT}/api/v1/message/${msg.ID}`)).json()) as {
           HTML: string;
@@ -35,6 +38,44 @@ async function latestLink(email: string, after: number): Promise<string> {
     )
     .not.toBeNull();
   return link!;
+}
+
+export type AppMail = { subject: string; text: string; html: string; link: string };
+
+/**
+ * The newest email the app sent to `email` with `tag` (src/server/email, local Mailpit transport), after `after`
+ * (ms). Waits for it; `count` waits until at least that many such messages exist (a resend is the second).
+ */
+export async function appMail(
+  email: string,
+  tag: string,
+  opts: { after?: number; count?: number } = {},
+): Promise<AppMail> {
+  let mail: AppMail | null = null;
+  await expect
+    .poll(
+      async () => {
+        const res = await fetch(
+          `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${email}" tag:${tag}`)}&limit=10`,
+        );
+        const { messages } = (await res.json()) as { messages: Msg[] };
+        const fresh = messages.filter(
+          (m) => new Date(m.Created).getTime() >= (opts.after ?? 0) - 2000,
+        );
+        if (fresh.length < (opts.count ?? 1)) return null;
+        const body = (await (await fetch(`${MAILPIT}/api/v1/message/${fresh[0]!.ID}`)).json()) as {
+          Subject: string;
+          HTML: string;
+          Text: string;
+        };
+        const link = body.HTML.match(/href="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&') ?? '';
+        mail = { subject: body.Subject, text: body.Text, html: body.HTML, link };
+        return mail;
+      },
+      { timeout: 15_000, message: `${tag} email to ${email}` },
+    )
+    .not.toBeNull();
+  return mail!;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { todayIn } from '@/engine/sheet-data';
-import { formatDate, formatDateTime } from '@/engine/fields/helpers';
+import { formatDate, formatDateTime, isoDateInZone } from '@/engine/fields/helpers';
 import { ORGANISE_ACTIONS, organiseText } from '@/engine/organise';
 import Link from 'next/link';
 import { env } from '@/lib/env';
@@ -160,6 +160,7 @@ export default async function SettingsPage({
           members={members}
           myRole={role}
           today={today}
+          timeZone={timeZone}
         />
       ) : null}
       {tab === 'teams' ? (
@@ -202,6 +203,7 @@ async function MembersTab({
   members,
   myRole,
   today,
+  timeZone,
 }: {
   db: ServerClient;
   org: string;
@@ -209,25 +211,31 @@ async function MembersTab({
   members: MemberRow[];
   myRole: MemberRow['role'];
   today: string;
+  timeZone: string;
 }) {
   const { data: inviteRows } = await db
     .from('invites')
-    .select('id, email, role, token, created_at, expires_at')
+    .select('id, email, role, token, created_at, expires_at, link_expires_at')
     .eq('org_id', orgId)
     .is('accepted_at', null)
     .order('created_at', { ascending: false });
+  const now = Date.now();
   const invites: InviteRow[] = (inviteRows ?? []).map((i) => ({
     id: i.id,
     email: i.email,
     role: i.role,
     link: `${env.NEXT_PUBLIC_APP_URL}/invite/${i.token}`,
     createdAt: i.created_at,
+    linkExpiresOn: formatDate(isoDateInZone(i.link_expires_at, timeZone)),
+    // an invite ends with its link, or an auditor's with their access (accept_invite refuses both)
+    linkExpired:
+      Date.parse(i.link_expires_at) <= now || (!!i.expires_at && Date.parse(i.expires_at) <= now),
   }));
   return (
     <>
       <Card
         title="Invite a member"
-        description="Create a link and send it to them. They sign in with that email address to join."
+        description="They get an email with a link that works for 14 days, and sign in with that email address to join."
       >
         <InviteForm org={org} canInviteOwner={myRole === 'owner'} today={today} />
       </Card>
@@ -271,7 +279,8 @@ async function MembersTab({
                 <div className="flex flex-col">
                   <span className="font-medium">{i.email}</span>
                   <span className="text-muted-foreground text-label-13">
-                    {ROLE_LABELS[i.role]} · not accepted yet
+                    {ROLE_LABELS[i.role]} · not accepted yet ·{' '}
+                    {i.linkExpired ? 'link ended' : `link works until ${i.linkExpiresOn}`}
                   </span>
                 </div>
                 <InviteRowControls org={org} invite={i} />
