@@ -138,6 +138,7 @@ Webhook payload (generic):
 10. **Run log:** every executed run is stored (`done`, `partial`, `failed`, `stopped`) with its steps. Runs whose conditions were false are **not** stored (noise), except when started from the builder's Test.
 11. **Counters:** `automations.run_count` and `last_run_at` updated per run (bookkeeping, not audited).
 12. **Errors:** an exception in an effect = step `failed` with the message; the automation's creator gets a `system` notification at most once per hour per automation.
+13. **Authority (0052):** an automation acts with the access of the person who last saved it (`acts_as`, else its creator). Saving is refused in the database when an action writes to a sheet that person cannot edit. Before every run the runner asks `automation_authority`; when that person has left the workspace, is no longer an owner, admin or editor, or can no longer edit the automation's sheet or a sheet it writes to, the run is recorded `stopped` with the reason in words ("Stopped: Eve Editor is no longer a member of this workspace …") and nothing is done. Saving it again as someone with access makes it run as them.
 
 ## 8. Scheduler (date, clock, evidence)
 
@@ -154,6 +155,8 @@ Webhook payload (generic):
 ## 9. Webhook worker
 
 `*/5 * * * *` → `GET /api/cron/webhooks`. Picks `queued`/`retrying` rows with `next_attempt_at ≤ now()` (limit 50, `for update skip locked`), POSTs with a 10 s timeout. 2xx → `sent`. Otherwise `attempts + 1`, backoff 1 min, 5 min, 30 min, 2 h, 6 h; after 5 failures → `dead_letter` and a `system` notification to the automation's creator. Only `https://` URLs; block private IP ranges (SSRF guard).
+
+**Addresses and signatures (0056).** A webhook action's address is kept in `automation_secrets` (the service role only); the saved action holds `urlRef` and `urlHost`, so members and the log see only the host, and the builder asks for a new address to change it. Every POST carries `X-Klarert-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(signing key, "<t>.<body>")>` with the automation's own signing key; receivers recompute it and reject old timestamps. Owners and admins see the key in the builder ("Show signing key", logged `automation.key_viewed`).
 
 Members never read `outbound_webhooks` (its addresses and payloads stay with the worker). The Design area (docs/05 §3.8) shows the queue's problems per automation through `design_health(org)` (0048, SECURITY DEFINER, granted to `authenticated`): counts only, for automations on sheets the caller can read: failed and partly done runs in the last 30 days among the workspace's latest 5000 runs, the last failure, and dead-letter and retrying deliveries in the last 30 days (at most 5000). It words them "Dead letter: 2 webhooks failed", "1 run failed in 30 days", "1 webhook waiting to retry".
 
