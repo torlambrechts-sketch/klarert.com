@@ -322,7 +322,7 @@ const sentenceList = (xs: string[]) =>
 const capital = (s: string) => (s ? s[0]!.toUpperCase() + s.slice(1) : s);
 
 /** The rows a plan wrote per kind, by ref. */
-interface Planned {
+export interface Planned {
   folders: Map<string, Row>;
   sheets: Map<string, Row>;
   fields: Map<string, Row>;
@@ -358,24 +358,54 @@ function planAsInstalled(
   renamed: { sheet: string; from: string; to: string }[];
 } {
   const { state, snapshot, env } = input;
-  const ownFolders = new Set(state.folders.map((f) => f.id));
+  const { planned, problems, renamed } = planInstalledBase(
+    m,
+    { installId: state.installId, folderIds: state.folders.map((f) => f.id), refMap: state.refMap },
+    snapshot,
+    env,
+    level,
+    hash,
+  );
+  return { planned, problems, renamed };
+}
+
+/**
+ * A version of an installed pack planned as install_pack wrote it into this workspace, with the plan's ids swapped for
+ * the install's (its ref map): the base of the upgrade's three-way diff, and of "differs from pack" on the Design tab
+ * (docs/05 §3.8). Also the approval workflows it adds to other packs' sheets (docs/11 Extends).
+ */
+export function planInstalledBase(
+  m: PackManifest,
+  own: { installId: string; folderIds: readonly string[]; refMap: Record<string, string> },
+  snapshot: PackSnapshot,
+  env: Omit<PackEnv, 'hash'>,
+  level: string | null,
+  hash: string,
+): {
+  planned: Planned | null;
+  problems: string[];
+  renamed: { sheet: string; from: string; to: string }[];
+  workflows: { sheetId: string; workflow: Json }[];
+} {
+  const ownFolders = new Set(own.folderIds);
   const plan = planPackInstall(
     m,
     {
       ...snapshot,
-      installs: snapshot.installs.filter((i) => i.id !== state.installId),
+      installs: snapshot.installs.filter((i) => i.id !== own.installId),
       folders: snapshot.folders.filter((f) => !ownFolders.has(f.id)),
     },
     { ...env, hash },
     // its own rows on other packs' sheets are planned again, not taken for that pack's columns
-    { level, selfInstall: state.installId },
+    { level, selfInstall: own.installId },
   );
-  if (!plan.payload) return { planned: null, problems: plan.preview.conflicts, renamed: [] };
+  if (!plan.payload)
+    return { planned: null, problems: plan.preview.conflicts, renamed: [], workflows: [] };
   const p = plan.payload;
   const remap = new Map<string, string>();
   for (const [list, kind] of KINDS)
     for (const r of p[list] as Row[]) {
-      const known = state.refMap[`${kind}:${String(r.ref)}`];
+      const known = own.refMap[`${kind}:${String(r.ref)}`];
       if (known) remap.set(String(r.id), known);
     }
   const swap = (v: Json): Json => {
@@ -401,6 +431,10 @@ function planAsInstalled(
     },
     problems: [],
     renamed: plan.preview.renamedPrefixes,
+    workflows: (p.workflows ?? []).map((w) => ({
+      sheetId: String(swap(w.sheet_id)),
+      workflow: swap(w.workflow),
+    })),
   };
 }
 
