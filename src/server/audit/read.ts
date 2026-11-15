@@ -9,6 +9,7 @@ import {
   type EvidenceFile,
   type Period,
 } from '@/engine/audit';
+import type { ExportEntry } from '@/engine/audit/exports';
 import { buildSoa, type Soa, type SoaEvidence, type SoaLinked } from '@/engine/audit/soa';
 import { LIBRARY_KEYS } from '@/engine/frameworks/pack';
 import { addDays } from '@/engine/fields/helpers';
@@ -518,4 +519,98 @@ export async function verifyChains(
   };
   await Promise.all(Array.from({ length: Math.min(8, chains.length) }, worker));
   return out;
+}
+
+// ───────────────────────── exports ─────────────────────────
+
+/** Exports shown per page of the Exports list; "Show more" reads the next page. */
+export const EXPORTS_PAGE = 50;
+
+export interface ExportsPage {
+  entries: ExportEntry[];
+  /** The id to read before for the next page, or null when this is the last. */
+  next: number | null;
+}
+
+/**
+ * The workspace's audit exports (`audit.exported` on the workspace chain), newest first, a page at a time: entries with
+ * an id below `before` when given. Read under RLS (members read the workspace chain, 0027).
+ */
+export async function readExports(
+  db: Db,
+  orgId: string,
+  opts: { before?: number; size?: number } = {},
+): Promise<ExportsPage> {
+  const size = opts.size ?? EXPORTS_PAGE;
+  let q = db
+    .from('activity_log')
+    .select('id, at, actor_kind, actor_id, new_value')
+    .eq('org_id', orgId)
+    .eq('chain_key', workspaceChainKey(orgId))
+    .eq('action', 'audit.exported');
+  if (opts.before) q = q.lt('id', opts.before);
+  // one more than a page says whether there is a next one
+  const rows = must(await q.order('id', { ascending: false }).limit(size + 1), 'exports');
+  const page = rows.slice(0, size);
+  return {
+    entries: page.map((r) => ({
+      id: r.id,
+      at: r.at,
+      actorKind: r.actor_kind,
+      actorId: r.actor_id,
+      newValue: r.new_value as ExportEntry['newValue'],
+    })),
+    next: rows.length > size ? page[page.length - 1]!.id : null,
+  };
+}
+
+/** Names of the folders (archived ones too), pack installs and packs a page of exports refers to. */
+export async function readExportNames(
+  db: Db,
+  orgId: string,
+  refs: { folders: string[]; installs: string[]; packs: string[] },
+) {
+  const [folders, installs] = await Promise.all([
+    refs.folders.length
+      ? chunks(refs.folders, async (part) =>
+          must(
+            await db.from('folders').select('id, name').eq('org_id', orgId).in('id', part),
+            'folders',
+          ),
+        )
+      : [],
+    refs.installs.length
+      ? chunks(refs.installs, async (part) =>
+          must(
+            await db
+              .from('pack_installs')
+              .select('id, pack_key, version')
+              .eq('org_id', orgId)
+              .in('id', part),
+            'pack installs',
+          ),
+        )
+      : [],
+  ]);
+  const keys = [...new Set([...refs.packs, ...installs.map((i) => i.pack_key)])];
+  const packs = keys.length
+    ? await fetchAllPages((a, b) =>
+        db
+          .from('packs')
+          .select('key, version, title')
+          .in('key', keys)
+          .order('key')
+          .order('version')
+          .range(a, b),
+      )
+    : [];
+  const title = (key: string, version?: string) =>
+    packs.find((p) => p.key === key && p.version === version)?.title ??
+    packs.find((p) => p.key === key)?.title ??
+    null;
+  return {
+    folder: new Map(folders.map((f) => [f.id, f.name])),
+    install: new Map(installs.map((i) => [i.id, title(i.pack_key, i.version) ?? i.pack_key])),
+    pack: (key: string) => title(key),
+  };
 }

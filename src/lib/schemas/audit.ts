@@ -14,6 +14,12 @@ export const soaExportInput = z.object({
 
 export const auditScopesInput = z.object({ org: slugInput });
 
+/** A page of the Exports list: entries before this id (the previous page's last), or the newest. */
+export const auditExportsInput = z.object({
+  org: slugInput,
+  before: z.number().int().positive().optional(),
+});
+
 /** "workspace", "folder:<id>" or "install:<id>". */
 export const auditScope = z
   .string()

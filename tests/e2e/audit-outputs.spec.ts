@@ -89,10 +89,19 @@ test('export the SoA, make an audit pack and compile the review inputs', async (
   const readme = strFromU8(zip['README.txt']!);
   expect(readme).toContain('Scope: Whole workspace');
   expect(readme).toMatch(/Hash chains: \d+ checked, \d+ ok, 0 broken/);
+  expect(readme).toMatch(/entries in the period, [1-9]\d* of them on the workspace chain/);
   const chains = strFromU8(zip['activity/chains.csv']!);
   expect(chains).toContain(',ok,');
   expect(chains).not.toContain(',broken,');
-  expect(strFromU8(zip['activity/log.csv']!)).toContain('item.created');
+  // the workspace chain is checked with the others (owner decision 15 Nov 2026)
+  expect(chains).toMatch(new RegExp(`\\r\\nsheet:${org!.id},Workspace,Workspace,ok,[1-9]`));
+  const log = strFromU8(zip['activity/log.csv']!);
+  expect(log).toContain('item.created');
+  // workspace entries are rows of the sheet "Workspace": the adoption and the SoA exports made above
+  const workspaceRows = log.split('\r\n').filter((l) => l.split(',')[2] === 'Workspace');
+  expect(workspaceRows.some((l) => l.includes(',framework.adopted,'))).toBe(true);
+  expect(workspaceRows.some((l) => l.includes(',audit.exported,'))).toBe(true);
+  expect(workspaceRows.every((l) => l.includes(`,sheet:${org!.id},`))).toBe(true);
 
   // ── management review inputs for the period
   await page.goto(`/${slug}/audit`);
@@ -115,4 +124,89 @@ test('export the SoA, make an audit pack and compile the review inputs', async (
   expect(logged.map((l) => l.new_value.kind)).toEqual(
     expect.arrayContaining(['soa.print', 'soa.csv', 'audit_pack', 'management_review']),
   );
+
+  // ── and in the Exports list, newest first, with who and the filters used
+  await page.goto(`/${slug}/audit`);
+  const exports = page.getByTestId('audit-exports');
+  await expect(exports.getByRole('heading', { name: 'Exports' })).toBeVisible();
+  const rows = exports.getByRole('list', { name: 'Exports, newest first' }).getByRole('listitem');
+  await expect(rows.first()).toContainText('Management review inputs');
+  await expect(rows.first()).toContainText('Maria Pereira');
+  await expect(rows.first()).toContainText(/Period \d+ \w{3} \d{4} to \d+ \w{3} \d{4}/);
+  const pack = rows.filter({ hasText: 'Audit pack' });
+  await expect(pack).toHaveCount(1);
+  await expect(pack).toContainText('Whole workspace');
+  await expect(pack).toContainText(/\d+ chains checked, \d+ ok/);
+  await expect(rows.filter({ hasText: 'Statement of applicability (CSV)' })).toContainText(
+    'ISO/IEC 27001:2022',
+  );
+  await expect(
+    rows.filter({ hasText: 'Statement of applicability (print)' }).first(),
+  ).toBeVisible();
+});
+
+test('the Exports list: owners, admins and auditors, paged, keyboard and 390 px', async ({
+  page,
+  browser,
+}, info) => {
+  test.setTimeout(150_000);
+  const slug = seedWorkspace('exports', { empty: true });
+  await signIn(page, 'maria@example.com', `/${slug}/audit`);
+  const exports = page.getByTestId('audit-exports');
+  await expect(exports.getByTestId('audit-exports-empty')).toContainText('No exports yet.');
+  const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
+
+  // 52 exports: a data-flow record first, then audit packs; the list shows 50 and offers more
+  await rest(page, 'rpc/log_audit_export', {
+    method: 'POST',
+    body: {
+      p_org: org!.id,
+      p_kind: 'data_flow_record',
+      p_scope: { domain: 'Quality', differs: true, sheets: 3, destinations: 1 },
+    },
+  });
+  for (let i = 0; i < 51; i++)
+    await rest(page, 'rpc/log_audit_export', {
+      method: 'POST',
+      body: {
+        p_org: org!.id,
+        p_kind: 'audit_pack',
+        p_scope: { scope: 'workspace', from: '2026-01-01', to: '2026-11-15', sheets: i },
+      },
+    });
+  await page.reload();
+  const list = exports.getByRole('list', { name: 'Exports, newest first' });
+  await expect(list.getByRole('listitem')).toHaveCount(50);
+  await expect(list.getByRole('listitem').first()).toContainText('50 registers');
+  await expect(list.getByRole('listitem').first()).toContainText(
+    'Whole workspace · Period 1 Jan 2026 to 15 Nov 2026',
+  );
+  if (info.project.name === 'phone') {
+    const width = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(width).toBeLessThanOrEqual(390);
+  }
+
+  // keyboard: Show more exports, and focus lands on the first export that arrived
+  const more = exports.getByRole('button', { name: 'Show more exports' });
+  await more.focus();
+  await page.keyboard.press('Enter');
+  await expect(list.getByRole('listitem')).toHaveCount(52);
+  await expect(more).toHaveCount(0);
+  const focused = list.getByRole('listitem').nth(50);
+  await expect(focused).toBeFocused();
+  await expect(focused).toContainText('Audit pack');
+  const last = list.getByRole('listitem').last();
+  await expect(last).toContainText('Data-flow record');
+  await expect(last).toContainText(
+    'Registers domain: Quality · Only sheets that differ from their pack',
+  );
+  await expect(last).toContainText('3 sheets · 1 destination');
+  await expect(last).toContainText('Maria Pereira');
+
+  // an editor exports too, but does not see the list
+  const editor = await (await browser.newContext({ viewport: page.viewportSize() })).newPage();
+  await signIn(editor, 'james@example.com', `/${slug}/audit`);
+  await expect(editor.getByTestId('audit-pack')).toBeVisible();
+  await expect(editor.getByTestId('audit-exports')).toHaveCount(0);
+  await editor.context().close();
 });

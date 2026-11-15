@@ -196,6 +196,8 @@ Packs are installable bundles of the core as DATA (CLAUDE.md): folders, sheets, 
 
 ### P5 · Audit outputs  [Opus]
 - [x] SoA export; audit pack (PDF/zip: SoA, registers, evidence index, log extract with chain verification); management review inputs compiled from existing data (docs/11 Audit outputs; 0034)
+- [x] Owner decision (15 Nov 2026): the workspace chain's entries (exports, packs, frameworks, folders, settings) in the audit pack's `activity/log.csv` as rows of the sheet "Workspace", and the workspace chain in the hash-chain check; masked as item entries are
+- [x] Owner decision (15 Nov 2026): the Exports list on Audit outputs (owners, admins and auditors; newest first, paged; what, who, when and the filters used); `exportRow` unit tests, pgTAP `0040_audit_exports_read.sql` (no new grant needed), e2e in `audit-outputs.spec.ts`
 
 ### P6 · Pack upgrades  [Opus]
 - [x] Three-way diff (shipped hash, client's current, new manifest): apply untouched, flag conflicts, archive removed, fields add-only, keep client options and automation on/off; dry run and rollback

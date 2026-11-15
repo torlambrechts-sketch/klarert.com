@@ -1,9 +1,13 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Download } from 'lucide-react';
 import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
+import { ExportsSkeleton } from '@/components/audit/exports-list';
+import { ExportsSection } from '@/components/audit/exports-section';
 import { inputClass } from '@/components/fields/shared';
 import { PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
+import { canSeeExports } from '@/engine/audit/exports';
 import { addDays, addMonths } from '@/engine/fields/helpers';
 import { requireMember } from '@/server/auth';
 import { listAuditOutputs } from '@/server/commands/audit';
@@ -12,7 +16,8 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Audit outputs · Compliance OS' };
 
 // Audit outputs (docs/11 Audit outputs): the statement of applicability of each adopted library, the audit pack and
-// the management review inputs. Every member may export what they can read, auditors too.
+// the management review inputs. Every member may export what they can read, auditors too. Owners, admins and auditors
+// also see the Exports list: every audit export of the workspace, newest first (owner decision 15 Nov 2026).
 
 function Card({
   title,
@@ -48,7 +53,7 @@ export default async function AuditPage({
 }) {
   const { org } = await params;
   const { scope } = await searchParams;
-  await requireMember(org);
+  const { role } = await requireMember(org);
   const r = await listAuditOutputs({ org });
   if (!r.ok)
     return (
@@ -150,6 +155,17 @@ export default async function AuditPage({
           </Button>
         </form>
       </Card>
+      {canSeeExports(role) ? (
+        <Card
+          title="Exports"
+          description="Every audit export made in this workspace, newest first: what was exported, who exported it, when and the filters used. Taken from the activity log."
+          testId="audit-exports"
+        >
+          <Suspense fallback={<ExportsSkeleton />}>
+            <ExportsSection org={org} />
+          </Suspense>
+        </Card>
+      ) : null}
     </main>
   );
 }

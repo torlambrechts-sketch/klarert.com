@@ -21,6 +21,11 @@ import {
   workspaceChainKey,
   WORKSPACE_LABEL,
   zipName,
+  canSeeExports,
+  exportRefs,
+  exportRow,
+  type AuditExportKind,
+  type ExportRow,
   type ManagementReview,
   type ReviewRow,
   type ReviewSource,
@@ -38,6 +43,7 @@ import {
   type ReviewPackSource,
 } from '@/lib/packs/management-review';
 import {
+  auditExportsInput,
   auditPackInput,
   auditScopesInput,
   managementReviewInput,
@@ -45,12 +51,15 @@ import {
 } from '@/lib/schemas/audit';
 import { fetchDirectory, type Db } from '@/lib/sheet-query';
 import { isAdminRole, isEditorRole } from '@/server/auth';
+import { getApps } from '@/server/apps/read';
 import { readLibraries, readLibraryCoverage } from '@/server/frameworks/workspace';
 import {
   itemLabels,
   loadSheet,
   readActivity,
   readEvidence,
+  readExportNames,
+  readExports,
   readScopes,
   readScopeSheets,
   readSoa,
@@ -73,13 +82,7 @@ import { withOrg } from './context';
 
 const BUCKET = 'files';
 
-export type AuditExportKind =
-  | 'soa.csv'
-  | 'soa.print'
-  | 'audit_pack'
-  | 'management_review'
-  | 'management_review.item'
-  | 'data_flow_record';
+export type { AuditExportKind } from '@/engine/audit';
 
 /** Log an export on the workspace chain (log_audit_export, 0034 and 0049): the kind and a flat scope of known keys. */
 export async function logExport(
@@ -196,6 +199,62 @@ export async function listAuditOutputs(input: unknown): Promise<Result<AuditOutp
       }
     },
     'listAuditOutputs',
+  );
+}
+
+export interface AuditExports {
+  rows: ExportRow[];
+  /** Pass as `before` for the next page; null on the last page. */
+  next: number | null;
+}
+
+/**
+ * The Exports list on Audit outputs (owner decision 15 Nov 2026): the workspace's audit exports, newest first, a page
+ * at a time, with what was exported, who, when and the filters used. Owners, admins and auditors, the people who can
+ * make every export; read under RLS.
+ */
+export async function listAuditExports(input: unknown): Promise<Result<AuditExports>> {
+  const p = auditExportsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'member',
+    async ({ supabase, orgId, role }) => {
+      if (!canSeeExports(role))
+        return fail('forbidden', 'Owners, admins and auditors see the list of exports.');
+      try {
+        const [page, ws] = await Promise.all([
+          readExports(supabase, orgId, { before: v.before }),
+          workspaceInfo(supabase, orgId),
+        ]);
+        const refs = exportRefs(page.entries);
+        const [names, directory, apps] = await Promise.all([
+          readExportNames(supabase, orgId, refs),
+          fetchDirectory(supabase, orgId),
+          refs.apps.length ? getApps(orgId, role).catch(() => []) : Promise.resolve([]),
+        ]);
+        const personName = new Map(directory.people.map((x) => [x.id, x.name]));
+        const appTitle = new Map(apps.map((a) => [a.key, a.title]));
+        const rows = page.entries.map((e) =>
+          exportRow(
+            e,
+            {
+              person: (id) => (id ? (personName.get(id) ?? 'Former member') : 'Unknown'),
+              folder: (id) => names.folder.get(id) ?? null,
+              install: (id) => names.install.get(id) ?? null,
+              pack: names.pack,
+              app: (key) => appTitle.get(key) ?? null,
+            },
+            ws.timeZone,
+          ),
+        );
+        return ok({ rows, next: page.next });
+      } catch (e) {
+        return fromDbError(e as Error);
+      }
+    },
+    'listAuditExports',
   );
 }
 
