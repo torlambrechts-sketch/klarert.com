@@ -3,17 +3,12 @@ import { laneInput } from '@/engine/fields/view-support';
 import { emptySheetData, sheetCtx, todayIn } from '@/engine/sheet-data';
 import type { Automation, Condition, Json } from '@/engine/types';
 import { lifecycle, stageField, stageFields, type Lifecycle } from '@/engine/workflow';
-import { fetchItemsOfSheets, type Db } from '@/lib/sheet-query';
+import { fetchAllPages, fetchItemsOfSheets, type Db } from '@/lib/sheet-query';
 import { fetchSheetMetas } from '@/server/repositories/dashboards';
 import { newId } from '@/server/sheet-context';
 
 // Reads for the workflow page (docs/05 §4): every sheet of the workspace as one lifecycle row (its stage field, the
 // stages, the items still running), the chosen sheet's field from ?field=. Run under the person's session and RLS.
-
-function must<T>(r: { data: T | null; error: { message: string } | null }): T {
-  if (r.error) throw new Error(r.error.message);
-  return r.data as T;
-}
 
 export type WorkflowLifecycle = Omit<Lifecycle, 'field'> & {
   field: { id: string; key: string; name: string };
@@ -76,13 +71,17 @@ export async function getWorkflow(
   // related items are not needed for stages, done and overdue (stored values), so the page stays a few queries.
   const [metas, autoRows] = await Promise.all([
     fetchSheetMetas(db, orgId),
-    db
-      .from('automations')
-      .select('id, sheet_id, name, enabled, trigger, conditions, actions, source, version, locked')
-      .eq('org_id', orgId)
-      .order('created_at')
-      .order('id')
-      .then(must),
+    fetchAllPages((from, to) =>
+      db
+        .from('automations')
+        .select(
+          'id, sheet_id, name, enabled, trigger, conditions, actions, source, version, locked',
+        )
+        .eq('org_id', orgId)
+        .order('created_at')
+        .order('id')
+        .range(from, to),
+    ),
   ]);
   const sheets = metas.sheets.map((m) => m.sheet);
   const allFields = metas.sheets.flatMap((m) => m.fields);

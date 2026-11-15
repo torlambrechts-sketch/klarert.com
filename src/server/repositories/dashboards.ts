@@ -13,7 +13,13 @@ import { emptySheetData, sheetCtx, todayIn, type CtxEnv } from '@/engine/sheet-d
 import { itemStatusField } from '@/engine/fields/item-status';
 import type { Ctx, Field, Group, Json, Person, Sheet } from '@/engine/types';
 import { monthPoints } from '@/engine/dashboards/history';
-import { fetchDirectory, fetchItemsOfSheets, fetchSheetData, type Db } from '@/lib/sheet-query';
+import {
+  fetchAllPages,
+  fetchDirectory,
+  fetchItemsOfSheets,
+  fetchSheetData,
+  type Db,
+} from '@/lib/sheet-query';
 import {
   SHEET_COLUMNS,
   toDashboard,
@@ -41,15 +47,16 @@ const PAGE = 1000;
 const FIELDS_PER_QUERY = 100;
 
 export async function listDashboards(db: Db, orgId: string): Promise<Dashboard[]> {
-  const rows = must(
-    await db
+  const rows = await fetchAllPages((from, to) =>
+    db
       .from('dashboards')
       .select(DASHBOARD_COLUMNS)
       .eq('org_id', orgId)
       // a pack's dashboards are archived with the pack (archive_pack)
       .is('archived_at', null)
       .order('position')
-      .order('id'),
+      .order('id')
+      .range(from, to),
   );
   return rows.map(toDashboard);
 }
@@ -61,36 +68,48 @@ export interface SheetMeta {
   groups: Group[];
 }
 
-/** Every sheet of the workspace that is not archived, in menu order, with its live fields and groups. */
+/**
+ * Every sheet of the workspace that is not archived, in menu order, with its live fields and groups: the sources a
+ * dashboard widget offers and reads. Every page of each list past the API's 1000-row cap (fields pass it soon).
+ */
 export async function fetchSheetMetas(
   db: Db,
   orgId: string,
 ): Promise<{ sheets: SheetMeta[]; people: Person[] }> {
   const [sheets, fields, groups, directory] = await Promise.all([
-    db
-      .from('sheets')
-      .select(SHEET_COLUMNS)
-      .eq('org_id', orgId)
-      .is('archived_at', null)
-      // sub-item sheets are not offered: dashboards count parents (docs/02 §12)
-      .is('parent_sheet_id', null)
-      .order('position')
-      .then(must),
-    db
-      .from('fields')
-      .select(
-        'id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, archived_at',
-      )
-      .eq('org_id', orgId)
-      .is('archived_at', null)
-      .order('position')
-      .then(must),
-    db
-      .from('groups')
-      .select('id, sheet_id, name, color, position')
-      .eq('org_id', orgId)
-      .order('position')
-      .then(must),
+    fetchAllPages((from, to) =>
+      db
+        .from('sheets')
+        .select(SHEET_COLUMNS)
+        .eq('org_id', orgId)
+        .is('archived_at', null)
+        // sub-item sheets are not offered: dashboards count parents (docs/02 §12)
+        .is('parent_sheet_id', null)
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db
+        .from('fields')
+        .select(
+          'id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, archived_at',
+        )
+        .eq('org_id', orgId)
+        .is('archived_at', null)
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db
+        .from('groups')
+        .select('id, sheet_id, name, color, position')
+        .eq('org_id', orgId)
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ),
     fetchDirectory(db, orgId),
   ]);
   const allFields = fields.map(toField);

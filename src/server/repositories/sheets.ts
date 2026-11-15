@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { byPosition } from '@/engine/organise';
 import { sheetCodes } from '@/lib/sheet-codes';
+import { fetchAllPages, type Db } from '@/lib/sheet-query';
 import { getSession } from '@/server/auth';
 
 // Reads for the app shell and the sheet pages. Run under the user's session and RLS.
@@ -27,24 +28,41 @@ export type Nav = { registers: NavFolder[]; folders: NavFolder[]; unfiled: NavSh
 export const getNav = cache(async (orgId: string): Promise<Nav> => {
   const session = await getSession();
   if (!session) return { registers: [], folders: [], unfiled: [] };
-  const db = session.supabase;
-  const [{ data: folders }, { data: readable }, { data: access }] = await Promise.all([
-    db
-      .from('folders')
-      .select('id, name, position, restricted, domain')
-      .eq('org_id', orgId)
-      .is('archived_at', null)
-      .order('position'),
-    db
-      .from('sheets')
-      .select('id, name, folder_id, position, created_at')
-      .eq('org_id', orgId)
-      .is('archived_at', null)
-      // sub-item sheets live inside their parent sheet, not in the side menu (docs/02 §12)
-      .is('parent_sheet_id', null)
-      .order('position'),
+  return readNav(session.supabase, orgId);
+});
+
+/**
+ * The side menu's folders and sheets with every page of each list past the API's 1000-row cap, so a large workspace
+ * never loses the sheets that sort last. A list that cannot be read leaves its part of the menu empty, as before.
+ */
+export async function readNav(db: Db, orgId: string): Promise<Nav> {
+  const [folders, readable, access] = await Promise.all([
+    fetchAllPages((from, to) =>
+      db
+        .from('folders')
+        .select('id, name, position, restricted, domain')
+        .eq('org_id', orgId)
+        .is('archived_at', null)
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ).catch(() => []),
+    fetchAllPages((from, to) =>
+      db
+        .from('sheets')
+        .select('id, name, folder_id, position, created_at')
+        .eq('org_id', orgId)
+        .is('archived_at', null)
+        // sub-item sheets live inside their parent sheet, not in the side menu (docs/02 §12)
+        .is('parent_sheet_id', null)
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ).catch(() => []),
     // levels, and for owners and admins the names of restricted sheets they cannot open (docs/02 §16)
-    db.rpc('my_sheet_access', { p_org: orgId }),
+    fetchAllPages((from, to) =>
+      db.rpc('my_sheet_access', { p_org: orgId }).order('sheet_id').range(from, to),
+    ).catch(() => []),
   ]);
   const levels = new Map((access ?? []).map((a) => [a.sheet_id, a]));
   const hidden = (access ?? [])
@@ -90,7 +108,7 @@ export const getNav = cache(async (orgId: string): Promise<Nav> => {
     folders: (folders ?? []).filter((f) => !f.domain).map(toFolder),
     unfiled: nav.filter((s) => !s.folderId || !folderIds.has(s.folderId)),
   };
-});
+}
 
 export type SheetGroup = {
   id: string;
@@ -184,15 +202,20 @@ export async function getArchivedItems(sheetId: string) {
   }));
 }
 
-/** Prefixes in use (archived sheets keep theirs) and sheets that can be copied. */
+/** Prefixes in use (archived sheets keep theirs) and sheets that can be copied, every page. */
 export async function getWizardData(orgId: string) {
   const session = await getSession();
   if (!session) return { prefixes: [], sheets: [] };
-  const { data } = await session.supabase
-    .from('sheets')
-    .select('id, name, id_prefix, is_library, archived_at, parent_sheet_id')
-    .eq('org_id', orgId)
-    .order('name');
+  const db = session.supabase;
+  const data = await fetchAllPages((from, to) =>
+    db
+      .from('sheets')
+      .select('id, name, id_prefix, is_library, archived_at, parent_sheet_id')
+      .eq('org_id', orgId)
+      .order('name')
+      .order('id')
+      .range(from, to),
+  ).catch(() => []);
   return {
     prefixes: (data ?? []).flatMap((s) => (s.id_prefix ? [s.id_prefix] : [])),
     sheets: (data ?? [])
@@ -230,8 +253,11 @@ export const getSheetAccess = cache(async (orgId: string, sheetId: string) => {
   const session = await getSession();
   if (!session || !/^[0-9a-f-]{36}$/i.test(sheetId)) return null;
   const db = session.supabase;
-  const { data } = await db.rpc('my_sheet_access', { p_org: orgId });
-  const row = (data ?? []).find((r) => r.sheet_id === sheetId);
+  // this sheet's row only: the whole list stops at the API's 1000-row cap in a large workspace
+  const { data: row } = await db
+    .rpc('my_sheet_access', { p_org: orgId })
+    .eq('sheet_id', sheetId)
+    .maybeSingle();
   if (!row) return null;
   if (row.restricted && row.level === 'owner')
     await db.rpc('note_sheet_opened', { p_sheet: sheetId });

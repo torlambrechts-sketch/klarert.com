@@ -8,6 +8,7 @@ import {
   type ItemHit,
   type SearchResults,
 } from '@/engine/search';
+import { fetchLiveSheets } from '@/lib/sheet-query';
 import { invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
 
@@ -39,7 +40,8 @@ export async function search(raw: unknown): Promise<Result<SearchResults>> {
     async ({ supabase: db, orgId }) => {
       const like = likePattern(q);
       const [sheets, byName, byId, people] = await Promise.all([
-        db.from('sheets').select('id, name').eq('org_id', orgId).is('archived_at', null).then(must),
+        // every live sheet, past the API's 1000-row cap: a sheet is found by name wherever it sorts
+        fetchLiveSheets(db, orgId),
         db
           .from('items')
           .select('id, sheet_id, display_id, name')

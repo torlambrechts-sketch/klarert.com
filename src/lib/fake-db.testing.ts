@@ -9,9 +9,9 @@ export const MAX_ROWS = 1000;
 type Row = Record<string, unknown>;
 type Pred = (r: Row) => boolean;
 
-/** "settings->retention->rules" or "trigger->>type": a JSON path into a row. */
+/** "settings->retention->rules", "trigger->>type" or "profiles.display_name": a path into a row. */
 function get(row: Row, path: string): unknown {
-  const parts = path.split(/->>?/);
+  const parts = path.split(/->>?|\./);
   let v: unknown = row[parts[0]!];
   for (const p of parts.slice(1)) v = v && typeof v === 'object' ? (v as Row)[p] : undefined;
   return v;
@@ -85,6 +85,17 @@ export function fakeDb(
       not(col: string, op: string, v: unknown) {
         if (op !== 'is') throw new Error(`fakeDb: not.${op} is not supported`);
         preds.push((r) => (get(r, col) ?? null) !== v);
+        return b;
+      },
+      ilike(col: string, pattern: string) {
+        const re = new RegExp(
+          `^${pattern
+            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            .replace(/%/g, '.*')
+            .replace(/_/g, '.')}$`,
+          'i',
+        );
+        preds.push((r) => re.test(String(get(r, col) ?? '')));
         return b;
       },
       gte(col: string, v: unknown) {

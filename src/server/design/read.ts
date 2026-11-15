@@ -13,7 +13,7 @@ import type {
 import { maskWorld } from '@/engine/flow/words';
 import type { Automation, Condition, Json, Role } from '@/engine/types';
 import { parseViewConfig } from '@/engine/views/config';
-import { fetchDirectory, type Db } from '@/lib/sheet-query';
+import { fetchAllPages, fetchDirectory, type Db } from '@/lib/sheet-query';
 import { FIELD_COLUMNS, SHEET_COLUMNS, toField, toSheet } from '@/lib/sheet-rows';
 import { getApps } from '@/server/apps/read';
 import { readDrift } from './drift';
@@ -57,56 +57,100 @@ export interface DesignRead {
   sheet: DesignSheetDetail | null;
 }
 
-export async function readDesignWorld(
-  db: Db,
-  orgId: string,
-  person: { userId: string; role: Role },
-  opts: { sheetId?: string | null } = {},
-): Promise<DesignRead> {
-  const [sheetRows, folderRows, fieldRows, formRows, autoRows, installRows, directory] =
-    await Promise.all([
+/**
+ * The configuration lists the Design area reads, each every page past the API's 1000-row cap: a workspace's fields
+ * alone pass 1000 with a few dozen sheets. Errors name the list.
+ */
+export async function readDesignLists(db: Db, orgId: string) {
+  const all = <T>(
+    what: string,
+    page: (
+      from: number,
+      to: number,
+    ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  ) =>
+    fetchAllPages(page).catch((e: Error) => {
+      throw new Error(`${what}: ${e.message}`);
+    });
+  const [sheets, folders, fields, forms, automations, installs] = await Promise.all([
+    all('sheets', (from, to) =>
       db
         .from('sheets')
         .select(`${SHEET_COLUMNS}, folder_id, pack_install_id, pack_ref, position`)
         .eq('org_id', orgId)
         .is('archived_at', null)
         .is('parent_sheet_id', null)
-        .order('position'),
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ),
+    all('folders', (from, to) =>
       db
         .from('folders')
         .select('id, name, domain, position, pack_install_id')
         .eq('org_id', orgId)
         .is('archived_at', null)
-        .order('position'),
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ),
+    all('fields', (from, to) =>
       db
         .from('fields')
         .select(`${FIELD_COLUMNS}, pack_install_id, pack_ref`)
         .eq('org_id', orgId)
         .is('archived_at', null)
-        .order('position'),
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ),
+    all('forms', (from, to) =>
       db
         .from('views')
         .select('id, sheet_id, name, config, position, pack_install_id, pack_ref')
         .eq('org_id', orgId)
         .eq('type', 'form')
         .is('owner_id', null)
-        .order('position'),
+        .order('position')
+        .order('id')
+        .range(from, to),
+    ),
+    all('automations', (from, to) =>
       db
         .from('automations')
         .select(
           'id, sheet_id, name, enabled, mode, trigger, conditions, actions, locked, last_run_at, run_count, created_at, pack_install_id, pack_ref',
         )
         .eq('org_id', orgId)
-        .order('created_at'),
+        .order('created_at')
+        .order('id')
+        .range(from, to),
+    ),
+    all('pack installs', (from, to) =>
       db
         .from('pack_installs')
         .select('id, pack_key, version, level, ref_map')
         .eq('org_id', orgId)
-        .eq('status', 'installed'),
-      fetchDirectory(db, orgId),
-    ]);
-  const sheetsRaw = must(sheetRows, 'sheets') ?? [];
-  const folders = (must(folderRows, 'folders') ?? []).map((f) => ({
+        .eq('status', 'installed')
+        .order('id')
+        .range(from, to),
+    ),
+  ]);
+  return { sheets, folders, fields, forms, automations, installs };
+}
+
+export async function readDesignWorld(
+  db: Db,
+  orgId: string,
+  person: { userId: string; role: Role },
+  opts: { sheetId?: string | null } = {},
+): Promise<DesignRead> {
+  const [lists, directory] = await Promise.all([
+    readDesignLists(db, orgId),
+    fetchDirectory(db, orgId),
+  ]);
+  const sheetsRaw = lists.sheets;
+  const folders = lists.folders.map((f) => ({
     id: f.id,
     name: f.name,
     domain: f.domain ?? null,
@@ -128,9 +172,9 @@ export async function readDesignWorld(
       pack: prov(r),
     };
   });
-  const fieldsRaw = (must(fieldRows, 'fields') ?? []).filter((f) => sheetIds.has(f.sheet_id));
+  const fieldsRaw = lists.fields.filter((f) => sheetIds.has(f.sheet_id));
   const fields = fieldsRaw.map((r) => ({ ...toField(r), pack: prov(r) }));
-  const formsRaw = (must(formRows, 'forms') ?? []).filter((v) => sheetIds.has(v.sheet_id));
+  const formsRaw = lists.forms.filter((v) => sheetIds.has(v.sheet_id));
   const forms: FlowForm[] = formsRaw.flatMap((v) => {
     const layout = parseViewConfig(v.config).form;
     return layout
@@ -146,7 +190,7 @@ export async function readDesignWorld(
         ]
       : [];
   });
-  const autosRaw = (must(autoRows, 'automations') ?? []).filter((a) => sheetIds.has(a.sheet_id));
+  const autosRaw = lists.automations.filter((a) => sheetIds.has(a.sheet_id));
   const automations: FlowAutomation[] = autosRaw.map((a) => ({
     id: a.id,
     sheetId: a.sheet_id,
@@ -162,7 +206,7 @@ export async function readDesignWorld(
     createdAt: a.created_at,
     pack: prov(a),
   }));
-  const installs = must(installRows, 'pack installs') ?? [];
+  const installs = lists.installs;
 
   const [titles, apps, health, stats, detail] = await Promise.all([
     installs.length
@@ -229,7 +273,7 @@ export async function readDesignWorld(
     })),
   };
   const ownFolders = new Map<string, string[]>();
-  for (const f of must(folderRows, 'folders') ?? [])
+  for (const f of lists.folders)
     if (f.pack_install_id)
       ownFolders.set(f.pack_install_id, [...(ownFolders.get(f.pack_install_id) ?? []), f.id]);
   const drift = await readDrift(db, orgId, person.userId, installs, ownFolders, live);

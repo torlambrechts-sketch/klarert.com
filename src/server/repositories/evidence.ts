@@ -1,6 +1,6 @@
 import 'server-only';
 import type { EvidenceRow } from '@/engine/evidence-library';
-import { fetchDirectory, type Db } from '@/lib/sheet-query';
+import { fetchDirectory, fetchLiveSheets, type Db } from '@/lib/sheet-query';
 
 // Reads for the evidence library and the evidence widgets (docs/05 §4). Run under the person's session and RLS:
 // the current, live file versions (replaced_by and archived_at null) of the workspace, on items and fields that are
@@ -71,7 +71,7 @@ export async function fetchEvidence(db: Db, orgId: string): Promise<EvidenceRow[
     chunked(fieldIds, async (part) =>
       must(await db.from('fields').select('id, name').in('id', part).is('archived_at', null)),
     ),
-    db.from('sheets').select('id, name').eq('org_id', orgId).is('archived_at', null).then(must),
+    fetchLiveSheets(db, orgId),
     fetchDirectory(db, orgId),
   ]);
   const itemById = new Map(items.map((i) => [i.id, i]));

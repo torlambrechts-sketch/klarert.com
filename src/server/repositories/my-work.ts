@@ -8,8 +8,10 @@ import type { Item } from '@/engine/types';
 import type { Json } from '@/lib/database.types';
 import {
   fetchAttached,
+  fetchAllPages,
   fetchDirectory,
   fetchItemsById,
+  fetchLiveSheets,
   fetchRelated,
   fetchSheetMeta,
   type Db,
@@ -38,7 +40,8 @@ export interface WorkContext {
   timeZone: string;
 }
 
-async function loadMyWork(db: Db, orgId: string, userId: string, timeZone: string) {
+/** My work of one person, read with the given client (exported for its paging test). */
+export async function loadMyWork(db: Db, orgId: string, userId: string, timeZone: string) {
   const now = new Date();
   const [assigned, requestRows, liveSheets] = await Promise.all([
     db.rpc('items_for_people', { p_org: orgId, p_people: [userId], p_limit: MAX_ITEMS }).then(must),
@@ -52,7 +55,7 @@ async function loadMyWork(db: Db, orgId: string, userId: string, timeZone: strin
       .order('created_at', { ascending: false })
       .limit(200)
       .then(must),
-    db.from('sheets').select('id').eq('org_id', orgId).is('archived_at', null).then(must),
+    fetchLiveSheets(db, orgId),
   ]);
   const live = new Set(liveSheets.map((s) => s.id));
   const items = new Map<string, Item>();
@@ -258,15 +261,22 @@ async function recentActivity(
   const [items, sheets, fields, groups, autos, directory] = await Promise.all([
     fetchItemsById(db, itemIds),
     db.from('sheets').select(SHEET_COLUMNS).in('id', sheetIds).then(must),
-    db
-      .from('fields')
-      .select(
-        'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, archived_at',
-      )
-      .in('sheet_id', sheetIds)
-      .then(must),
-    db.from('groups').select('id, name').in('sheet_id', sheetIds).then(must),
-    db.from('automations').select('id, name').eq('org_id', orgId).then(must),
+    fetchAllPages((from, to) =>
+      db
+        .from('fields')
+        .select(
+          'id, org_id, sheet_id, key, name, type, position, width, required, locked, description, config, validation, rules, visibility, archived_at',
+        )
+        .in('sheet_id', sheetIds)
+        .order('id')
+        .range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db.from('groups').select('id, name').in('sheet_id', sheetIds).order('id').range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db.from('automations').select('id, name').eq('org_id', orgId).order('id').range(from, to),
+    ),
     fetchDirectory(db, orgId),
   ]);
   const itemById = new Map(items.map((i) => [i.id, i]));
