@@ -273,7 +273,7 @@ function SheetBody(props: SheetViewProps) {
     }
   };
   const itemLabel = data?.sheet.itemLabel.toLowerCase() ?? 'item';
-  // "+ New", Create › Entry and N open the New item dialog (docs/05 §3.7); the Table's "+ Add item" rows stay
+  // "+ New" and N open the New item dialog (docs/05 §3.7); the Table's "+ Add item" rows stay
   const addNew = () => setNewItem({});
   const canAdd = canEdit && active.type !== 'form' && !!data;
   // N adds an item, unless the person is typing or working in the grid (a key there edits the cell)
@@ -290,7 +290,7 @@ function SheetBody(props: SheetViewProps) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [canAdd]);
-  // ?new=1 (Create › Entry, docs/05 §4): open the add-item flow once the sheet has loaded
+  // ?new=1 (a link to add an item, docs/05 §3.7): open the add-item flow once the sheet has loaded
   const wantsNew = useRef(false);
   useEffect(() => {
     const url = new URL(window.location.href);
