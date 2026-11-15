@@ -34,8 +34,8 @@ import { MenuRegisters } from './menu-registers';
 import { MenuSheets } from './menu-sheets';
 import { CreateButton, CreateSheetLink } from '@/components/create/create-provider';
 
-// The side menu (docs/05 §2.1, owner decision 15 Nov 2026): workspace switcher and Create, then four groups. Work: Home,
-// My work and the installed packs' apps (docs/13). Registers: the shared registers' domains, then the workspace's own
+// The side menu (docs/05 §2.1, owner decision 15 Nov 2026): workspace switcher and Create (editors and up), then four
+// groups. Work: Home, My work and the installed packs' apps (docs/13). Registers: the shared registers' domains, then the workspace's own
 // folders and sheets (menu-sheets.tsx: "+", "…" menus, rename, drag and drop). Reports: Dashboards, Evidence library,
 // Audit outputs. Build (editors and up): Workflow, Automations, Design and Workspace admin (admins and owners). One
 // search, in the top bar ("/"). 256 px on desktop; on phones the same menu opens as a sheet from the bottom bar.
@@ -262,7 +262,12 @@ export function SideMenu({
   return (
     <nav aria-label="Side menu" className="flex h-full flex-col px-2 pt-2.5 pb-4">
       <WorkspaceSwitcher current={current} workspaces={workspaces} />
-      <CreateButton onOpen={onNavigate} className="mt-2 mb-2.5" />
+      {/* Create: editors, admins and owners, the same check as Build (owner decision 15 Nov 2026) */}
+      {canEdit ? (
+        <CreateButton onOpen={onNavigate} className="mt-2 mb-2.5" />
+      ) : (
+        <div aria-hidden className="h-2" />
+      )}
 
       <div className="flex min-h-0 flex-1 [scrollbar-width:thin] flex-col overflow-x-hidden overflow-y-auto">
         {/* Work: Home, My work and the installed packs' apps (docs/13) */}
