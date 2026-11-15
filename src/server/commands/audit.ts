@@ -68,10 +68,19 @@ import { withOrg } from './context';
 
 const BUCKET = 'files';
 
-async function logExport(
+export type AuditExportKind =
+  | 'soa.csv'
+  | 'soa.print'
+  | 'audit_pack'
+  | 'management_review'
+  | 'management_review.item'
+  | 'data_flow_record';
+
+/** Log an export on the workspace chain (log_audit_export, 0034 and 0049): the kind and a flat scope of known keys. */
+export async function logExport(
   db: Db,
   orgId: string,
-  kind: 'soa.csv' | 'soa.print' | 'audit_pack' | 'management_review' | 'management_review.item',
+  kind: AuditExportKind,
   scope: Record<string, string | number | boolean | null>,
 ) {
   const { error } = await db.rpc('log_audit_export', {

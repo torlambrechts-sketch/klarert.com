@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Step } from '@/engine/automations';
 import type { Automation, Condition, Field, Sheet } from '@/engine/types';
-import { fetchDirectory } from '@/lib/sheet-query';
+import { fetchAllPages, fetchDirectory } from '@/lib/sheet-query';
 import { FIELD_COLUMNS, SHEET_COLUMNS, toField, toSheet, withChildIds } from '@/lib/sheet-rows';
 import { createClient } from '@/lib/supabase/client';
 
@@ -74,20 +74,24 @@ export function useRefreshAutomations(orgId: string) {
 
 export type SheetRef = Sheet;
 
-/** Sheets of the workspace that are not archived, by name. */
+/** Sheets of the workspace that are not archived, by name: every page, not just the API's first 1000 rows. */
 export function useWorkspaceSheets(orgId: string | undefined) {
   return useQuery({
     queryKey: ['automation-sheets', orgId],
     enabled: !!orgId,
     queryFn: async (): Promise<SheetRef[]> => {
-      const { data, error } = await createClient()
-        .from('sheets')
-        .select(SHEET_COLUMNS)
-        .eq('org_id', orgId!)
-        .is('archived_at', null)
-        .order('name');
-      if (error) throw new Error(error.message);
-      return withChildIds((data ?? []).map(toSheet));
+      const db = createClient();
+      const data = await fetchAllPages((from, to) =>
+        db
+          .from('sheets')
+          .select(SHEET_COLUMNS)
+          .eq('org_id', orgId!)
+          .is('archived_at', null)
+          .order('name')
+          .order('id')
+          .range(from, to),
+      );
+      return withChildIds(data.map(toSheet));
     },
     staleTime: 60_000,
   });

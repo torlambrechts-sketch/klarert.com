@@ -68,7 +68,7 @@ The app header is the app's name and its screens as underline tabs that scroll s
 
 **ISMS CAPA** (`iso-27001` 1.2.0, `apps`): the same screens over Nonconformities and CAPA. The pack adds the internal form "Report a problem" (Starter) and the "Nonconformities overview" dashboard; Needs my approval lists nonconformities you own in "Checking effectiveness". Reported problems do not get actions automatically here (the sheet's "From template" adds them).
 
-**ISMS CAPA in the 27001 add-on** (`iso-27001` 2.0.0): the screens read the Core registers (`core:nc`, `core:actions`): Report a problem (the add-on's form on Nonconformities and CAPA), My actions (Core Actions assigned to you, not done, by Due), Needs my check (nonconformities you own at the stage Verification), All nonconformities, Overview (the add-on's headline dashboard "ISMS overview") and Workflow (by Stage, owners and admins).
+**ISMS CAPA in the 27001 add-on** (`iso-27001` 2.0.0): the screens read the Core registers (`core:nc`, `core:actions`): Report a problem (the add-on's form on Nonconformities and CAPA), My actions (Core Actions assigned to you, not done, by Due), Needs my check (nonconformities at the stage Verification whose Effectiveness checked by is you, from 2.3.0 as on CAPA on Core (owner decision 15 Nov 2026); 2.0.0 to 2.2.0 asked the owner), All nonconformities, Overview (the add-on's headline dashboard "ISMS overview") and Workflow (by Stage, owners and admins).
 
 ## Catalogue
 

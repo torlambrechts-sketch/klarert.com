@@ -231,6 +231,19 @@ test('a copy to a sheet without some fields reports what was left out', async ({
   await page.getByRole('button', { name: 'Actions for Investigator intake' }).click();
   await page.getByRole('menuitem', { name: 'Copy to another sheet' }).click();
   const copy = page.getByRole('dialog', { name: /^Copy Investigator intake/ });
+  // the picker lists this workspace's other sheets, not archived ones and not other workspaces' (whose sheets would
+  // otherwise fill the API's first 1000 rows for someone in many workspaces)
+  await expect(copy.getByLabel('Sheet').locator(`option[value="${other.id}"]`)).toHaveCount(1);
+  const listed = await copy
+    .getByLabel('Sheet')
+    .locator('option')
+    .evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value).filter(Boolean));
+  const [org] = await rest<{ id: string }[]>(page, 'orgs?slug=eq.meridian&select=id');
+  const expected = await rest<{ id: string }[]>(
+    page,
+    `sheets?org_id=eq.${org!.id}&archived_at=is.null&parent_sheet_id=is.null&id=neq.${sheet.id}&select=id`,
+  );
+  expect([...listed].sort()).toEqual(expected.map((x) => x.id).sort());
   await copy.getByLabel('Sheet').selectOption(other.id);
   await copy.getByRole('button', { name: 'Copy form' }).click();
   await expect(

@@ -279,10 +279,25 @@ test('a viewer reads the design and changes nothing; a restricted field keeps it
     page.getByText('Owners, admins and auditors see where data leaves the workspace.'),
   ).toBeVisible();
   await expect(page.getByTestId('leaves-lane')).toHaveCount(0);
+  // the record's export shows them nothing and logs nothing
+  const vic = one(`select id from auth.users where email = 'vic@example.com'`);
+  await page.goto(`/${w.slug}/design/print?part=leaves`);
+  await expect(page.getByTestId('design-print')).toContainText(
+    'Owners, admins and auditors see where data leaves the workspace.',
+  );
+  expect(
+    one(
+      `select count(*) from activity_log where org_id = '${w.org}' and action = 'audit.exported' and actor_id = '${vic}'`,
+    ),
+  ).toBe('0');
 });
+
+const exportsLogged = () =>
+  one(`select count(*) from activity_log where org_id = '${w.org}' and action = 'audit.exported'`);
 
 test('the export prints the sheet’s flow and the data-flow record', async ({ page }, info) => {
   desktopOnly(info.project.name);
+  const before = exportsLogged();
   await signIn(page, 'maria@example.com', `/${w.slug}/s/${w.nc}?view=design`);
   await page.goto(`/${w.slug}/s/${w.nc}?view=design`);
   await page.getByTestId('design-export').click();
@@ -306,6 +321,78 @@ test('the export prints the sheet’s flow and the data-flow record', async ({ p
   await page.goto(`/${w.slug}/design/print?pack=core`);
   await expect(page.getByTestId('design-print')).toContainText('Scope: Pack: Core registers');
   await expect(page.getByTestId('print-connections')).toContainText('Link field, both ways');
+  // the plain flow print and the workspace print are not logged
+  expect(exportsLogged()).toBe(before);
+
+  // the data-flow record is (owner decision 15 Nov 2026): who, when and the filters used, never an address or a value
+  await page.goto(`/${w.slug}/design?pack=core`);
+  await page
+    .getByTestId('leaves-lane')
+    .getByRole('link', { name: 'Export data-flow record' })
+    .click();
+  await expect(page).toHaveURL(/\/design\/print\?pack=core&part=leaves/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Data-flow record: leaves the system',
+  );
+  await expect(page.getByTestId('leaves-row')).toContainText('hooks.slack.com/…');
+  expect(Number(exportsLogged())).toBe(Number(before) + 1);
+  const maria = one(`select id from auth.users where email = 'maria@example.com'`);
+  const [entry] = await rest<
+    {
+      actor_id: string;
+      at: string;
+      chain_key: string;
+      note: string;
+      new_value: Record<string, unknown>;
+    }[]
+  >(
+    page,
+    `activity_log?org_id=eq.${w.org}&action=eq.audit.exported&select=actor_id,at,chain_key,note,new_value&order=id.desc&limit=1`,
+  );
+  expect(entry!.actor_id).toBe(maria);
+  expect(entry!.at).toBeTruthy();
+  expect(entry!.chain_key).toBe(`sheet:${w.org}`);
+  expect(entry!.note).toBe('Maria Pereira exported data flow record');
+  expect(entry!.new_value).toEqual({
+    kind: 'data_flow_record',
+    app: null,
+    pack: 'core',
+    folder_id: null,
+    domain: null,
+    differs: false,
+    sheets: expect.any(Number),
+    destinations: 1,
+  });
+  const logged = JSON.stringify(entry);
+  expect(logged).not.toContain('hooks.slack.com');
+  expect(logged).not.toContain('SECRET');
+  expect(logged).not.toContain('Supplier fee');
+});
+
+test('CAPA 1.2.0 on Core: its form on Core’s register is unchanged, and no sheet differs from its pack', async ({
+  page,
+}, info) => {
+  desktopOnly(info.project.name);
+  // the optional-requirement case (docs/11): start-capa 1.2.0 in a Core workspace makes no register of its own
+  const slug = seedWorkspace('dsc', { empty: true });
+  install(slug, 'core', '1.3.0', 'starter');
+  install(slug, 'start-capa', '1.2.0');
+  const org = one(`select id from orgs where slug = '${slug}'`);
+  const nc = one(
+    `select s.id from sheets s join pack_installs i on i.id = s.pack_install_id
+      where s.org_id = '${org}' and i.pack_key = 'core' and s.pack_ref = 'nc'`,
+  );
+  await signIn(page, 'maria@example.com', `/${slug}/s/${nc}?view=design`);
+  await page.goto(`/${slug}/s/${nc}?view=design`);
+  await expect(row(page, /^Raise a nonconformity/)).toContainText(
+    'From Corrective action (CAPA) · unchanged',
+  );
+  await expect(row(page, /^Report a nonconformity/)).toContainText(
+    'From Core registers · unchanged',
+  );
+  await expect(page.getByTestId('design-list')).not.toContainText('· changed');
+  await page.goto(`/${slug}/design?differs=1`);
+  await expect(page.getByText('No sheets match these filters.')).toBeVisible();
 });
 
 test('at 390 px: the list, a full-screen side window with Back, and the Connections table only', async ({

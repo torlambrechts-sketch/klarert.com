@@ -148,6 +148,8 @@ export function LeavesLane({
           </label>
           <Link
             href={exportHref}
+            // opening the export logs it (docs/05 §4): never fetch it ahead of a click
+            prefetch={false}
             className="border-line hover:bg-soft bg-background-100 text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
           >
             Export data-flow record

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { seedWorkspace } from './first-sheet-helpers';
+import { localSql, seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
 // The ISO/IEC 27001 add-on (docs/11, Phase 2): an owner installs it into an empty workspace; the Core registers
@@ -14,6 +14,7 @@ const CORE12_SHOTS = process.env.CORE12_SHOTS;
 const shot = async (page: Page, name: string) => {
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
 };
+const one = (sql: string) => localSql(sql).trim().split('\n')[0]!;
 
 test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode and risk acceptance', async ({
   page,
@@ -165,6 +166,37 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
     'Overview',
     'Workflow',
   ]);
+  // Needs my check asks the person in Effectiveness checked by, not the owner (2.3.0, owner decision 15 Nov 2026)
+  const nc = sheets.find((s) => s.name === 'Nonconformities and CAPA')!;
+  const field = (key: string) =>
+    one(
+      `select id from fields where sheet_id = '${nc.id}' and key = '${key}' and archived_at is null`,
+    );
+  const [owner, verifier, stage] = [field('owner'), field('verifier'), field('stage')];
+  const verification = one(
+    `select o->>'id' from fields f, jsonb_array_elements(f.config->'options') o
+      where f.id = '${stage}' and o->>'label' = 'Verification'`,
+  );
+  const maria = one(`select id from auth.users where email = 'maria@example.com'`);
+  const james = one(`select id from auth.users where email = 'james@example.com'`);
+  const group = one(`select id from groups where sheet_id = '${nc.id}' order by position limit 1`);
+  const prefix = one(`select id_prefix from sheets where id = '${nc.id}'`);
+  const ncItem = (seq: number, name: string, ownerId: string, verifierId: string) =>
+    `('${org!.id}', '${nc.id}', '${group}', ${seq}, '${prefix}${seq}', '${name}',
+      '{"${owner}":["${ownerId}"],"${verifier}":["${verifierId}"],"${stage}":"${verification}"}',
+      'zz${seq}', '${maria}', '${maria}')`;
+  localSql(`insert into items (org_id, sheet_id, group_id, seq, display_id, name, "values", position, created_by, updated_by)
+    values ${ncItem(901, 'Access review missed for leavers', james, maria)},
+           ${ncItem(902, 'Backup restore test overdue', maria, james)}`);
+  await page
+    .getByRole('navigation', { name: 'ISMS CAPA screens' })
+    .getByRole('link', { name: 'Needs my check' })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`/${slug}/apps/isms-capa/approvals$`));
+  await expect(page.getByText('Access review missed for leavers')).toBeVisible();
+  await expect(page.getByText('Backup restore test overdue')).toHaveCount(0);
+  await shot(page, '05-needs-my-check');
+
   await page.goto(`/${slug}/apps/isms-capa/overview`);
   await expect(page.getByRole('heading', { name: 'Open ISMS nonconformities' })).toBeVisible();
   // the risk widgets read the same risks, the ones tagged ISO 27001 (owner decision, Nov 2026): Core's own example

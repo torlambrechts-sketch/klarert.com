@@ -1,10 +1,14 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { planPackInstall, previewLines, type PackSnapshot } from '@/engine/packs';
 import { extendsAgainst, extensionUses, neededLevel } from '@/engine/packs/extend';
-import { afterInstall, refMapOf } from '@/engine/packs/installed.fixture';
+import { afterInstall, installedStateOf, refMapOf } from '@/engine/packs/installed.fixture';
+import { planPackUpgrade } from '@/engine/packs/upgrade';
 import { startsInTestMode } from '@/engine/packs/safety';
 import { appProblems } from '@/lib/apps/manifest';
-import { repoPacks } from './catalogue';
+import { repoApps, repoPacks } from './catalogue';
+import { parsePack } from './manifest';
 import { REVIEW_PACK_SOURCES } from './management-review';
 import { packQualityProblems } from './quality';
 
@@ -57,7 +61,7 @@ function withCore() {
 
 describe('ISO 27001 add-on', () => {
   it('is a new major version that requires Core, stands for ISO 27001 and builds on the library', () => {
-    expect(pack.version).toBe('2.2.0');
+    expect(pack.version).toBe('2.3.0');
     expect(pack.requires).toEqual([{ pack: 'core', range: '^1.0.0' }]);
     expect(pack.standard).toMatchObject({ id: 'iso27001', label: 'ISO 27001' });
     expect(pack.frameworks).toEqual([{ key: 'iso-27001', version: '2022' }]);
@@ -214,5 +218,87 @@ describe('ISO 27001 add-on', () => {
         reviews.fields!.some((f) => f.key === k),
         k,
       ).toBe(true);
+  });
+});
+
+// Owner decision (15 Nov 2026): ISMS CAPA's "Needs my check" asks the person who checks effectiveness, as CAPA on the
+// Core registers does (start-capa 1.2.0), not the owner. 2.3.0 is a same-major minor version of 2.2.0 (kept in
+// tests/e2e/fixtures/catalogue, taken from the repository's history) and an untouched workspace updates without a
+// conflict: only the app's screen changes, and apps are read from the installed version.
+describe('ISO 27001 2.3.0: Needs my check by Effectiveness checked by', () => {
+  const previous = parsePack(
+    JSON.parse(
+      readFileSync(
+        join(process.cwd(), 'tests/e2e/fixtures/catalogue/iso-27001@2.2.0.json'),
+        'utf8',
+      ),
+    ) as unknown,
+  );
+  const screen = (m: typeof pack) =>
+    m
+      .apps!.find((a) => a.key === 'isms-capa')!
+      .sections[0]!.screens.find((x) => x.key === 'approvals') as {
+      title: string;
+      filters: { fieldKey: string; op: string; value?: unknown }[];
+    };
+
+  it('filters Needs my check by Effectiveness checked by at Verification, as CAPA on Core does', () => {
+    expect(previous.version).toBe('2.2.0');
+    expect(pack.version.split('.')[0]).toBe(previous.version.split('.')[0]);
+    const mine = screen(pack);
+    expect(mine.title).toBe('Needs my check');
+    expect(mine.filters).toEqual([
+      { fieldKey: 'verifier', op: 'includes_any_of', value: ['{me}'] },
+      { fieldKey: 'stage', op: 'is_any_of', value: ['opt_verification'] },
+    ]);
+    const verifier = core.sheets
+      .find((x) => x.ref === 'nc')!
+      .fields.find((f) => f.key === 'verifier')!;
+    expect(verifier.name).toBe('Effectiveness checked by');
+    // the same filters as start-capa's app on Core
+    const onCore = repoApps().find((a) => a.requires.range === '^1.2.0')!.app;
+    const theirs = onCore.sections[0]!.screens.find((x) => x.key === 'approvals') as {
+      filters: unknown;
+    };
+    expect(mine.filters).toEqual(theirs.filters);
+    expect(screen(previous).filters[0]!.fieldKey).toBe('owner');
+    // nothing else changed but the version
+    const withoutScreen = (m: typeof pack) =>
+      JSON.stringify({ ...m, version: '', apps: m.apps!.map((a) => ({ ...a, sections: [] })) });
+    expect(withoutScreen(pack)).toBe(withoutScreen(previous));
+    expect(
+      appProblems(
+        pack.apps!.find((a) => a.key === 'isms-capa')!,
+        pack,
+        [core],
+      ),
+    ).toEqual([]);
+    expect(packQualityProblems(pack)).toEqual([]);
+  });
+
+  it('updates an untouched 2.2.0 workspace without a conflict', () => {
+    const { snap } = withCore();
+    const from = planPackInstall(previous, snap, env).payload!;
+    const all = afterInstall(snap, from, 'inst-27001');
+    // its own rows on Core's sheets are its own (as the server reads them)
+    for (const f of Object.values(all.foreign ?? {}))
+      for (const x of f.fields)
+        if (from.fields.some((y) => y.id === x.id)) x.installId = 'inst-27001';
+    const p = planPackUpgrade({
+      from: { manifest: previous, hash: 'h-from' },
+      to: { manifest: pack, hash: 'h-to' },
+      state: installedStateOf(from, 'inst-27001'),
+      snapshot: { ...all, installs: all.installs.filter((i) => i.id !== 'inst-27001') },
+      env,
+    });
+    expect(p.preview.blockers).toEqual([]);
+    expect(p.preview.conflicts).toEqual([]);
+    expect(p.preview.added).toEqual([]);
+    expect(p.preview.changed).toEqual([]);
+    expect(p.preview.archived).toEqual([]);
+    expect(p.preview.to).toBe('2.3.0');
+    // the install moves to 2.3.0, so its apps are read from 2.3.0
+    expect(p.state).toBe('ready');
+    expect(p.payload!.pack).toMatchObject({ from_version: '2.2.0', version: '2.3.0' });
   });
 });

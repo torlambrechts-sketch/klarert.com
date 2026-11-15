@@ -44,6 +44,25 @@ async function paged<T>(
   return parts.flat();
 }
 
+/**
+ * Every row of a list query, a page of PAGE rows at a time until a short page: for lists with no known size, such as a
+ * workspace's sheets (no limit on how many a workspace holds), instead of relying on the API's row cap. The query must
+ * have a stable order (end it with a unique column).
+ */
+export async function fetchAllPages<T>(
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const rows = must(await page(from, from + PAGE - 1)) ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE) return out;
+  }
+}
+
 async function chunked<T>(ids: string[], run: (ids: string[]) => PromiseLike<T[]>): Promise<T[]> {
   const out: T[] = [];
   for (let i = 0; i < ids.length; i += ID_CHUNK)

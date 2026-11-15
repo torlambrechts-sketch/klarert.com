@@ -1,6 +1,6 @@
 {
   "key": "iso-27001",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "title": "ISO/IEC 27001:2022 ISMS (add-on)",
   "description": "An information security management system on top of the Core registers and the ISO/IEC 27001:2022 requirement library: the ISMS scope and context and the risk treatment plan as its own sheets, and the information security risk category, Annex A links, residual risk, the ISMS documents, security incidents with a 24-hour containment clock, ISMS nonconformities, audits, reviews and training on the shared registers. Installs the Core registers (Full) first. The statement of applicability comes from the library. Reference numbers and short titles only, never the text of the standard.",
   "requires": [
@@ -2710,11 +2710,11 @@
               "key": "approvals",
               "kind": "item",
               "title": "Needs my check",
-              "description": "Nonconformities you own whose actions are done and wait for your effectiveness check.",
+              "description": "Nonconformities at Verification where you check that the actions worked.",
               "sheet": "core:nc",
               "filters": [
                 {
-                  "fieldKey": "owner",
+                  "fieldKey": "verifier",
                   "op": "includes_any_of",
                   "value": [
                     "{me}"
