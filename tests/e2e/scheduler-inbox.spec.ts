@@ -397,11 +397,9 @@ test.describe('phone', () => {
     await signIn(page, 'vic@example.com');
     await page.goto('/meridian/home');
     await hydrated(page);
-    await page
-      .getByRole('navigation', { name: 'Bottom bar' })
-      .getByRole('button', { name: 'Search' })
-      .click();
+    // the top bar's search is the one search on a phone too (docs/05 §5)
     const box = page.getByRole('combobox', { name: 'Search sheets, items and people' });
+    await box.click();
     await expect(box).toBeFocused();
     const form = page.getByRole('search');
     await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();

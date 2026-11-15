@@ -10,7 +10,7 @@ import { rest, signIn } from './helpers';
 // criticality and personal data call for ("Added 7, flagged 0"); a second sync changes nothing; lowering the
 // criticality flags the checks that no longer apply, never deleting them. The review escalation is in test mode.
 
-const TITLE = 'Supplier management (add-on)';
+const TITLE = 'Supplier management';
 const SHOTS = process.env.SUPPLIER_SHOTS;
 const CORE12_SHOTS = process.env.CORE12_SHOTS;
 const shot = async (page: Page, name: string) => {
@@ -53,7 +53,7 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.3.0 (Starter) first.',
+    'Installs Shared registers 1.3.0 (Standard) first.',
     { timeout: 30_000 },
   );
   await expect(dialog.getByTestId('adopts-framework')).toHaveCount(0);

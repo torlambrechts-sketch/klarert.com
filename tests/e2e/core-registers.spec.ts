@@ -8,7 +8,7 @@ import { rest, signIn } from './helpers';
 // ISO 14001 tag and view and the add-on's system column; archiving the add-on takes back what it added and keeps
 // every shared row.
 
-const ADDON = 'ISO 14001 environment (add-on)';
+const ADDON = 'ISO 14001 environment';
 const SHOTS = process.env.CORE_SHOTS ?? '';
 
 async function shot(page: Page, name: string) {
@@ -35,15 +35,15 @@ test.describe('desktop', () => {
     await row.getByRole('button', { name: `Preview ${ADDON}` }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByTestId('installs-first')).toContainText(
-      'Installs Core registers 1.3.0 (Full) first.',
+      'Installs Shared registers 1.3.0 (Everything) first.',
     );
     await shot(page, '01-preview');
     await dialog.getByRole('button', { name: 'Install' }).click();
-    await expect(dialog.getByRole('status')).toContainText(`Installed ${ADDON} (Starter).`, {
+    await expect(dialog.getByRole('status')).toContainText(`Installed ${ADDON} (Standard).`, {
       timeout: 90_000,
     });
     await expect(dialog.getByRole('status')).toContainText(
-      'Installed Core registers 1.3.0 (Full) first.',
+      'Installed Shared registers 1.3.0 (Everything) first.',
     );
 
     const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
@@ -75,8 +75,8 @@ test.describe('desktop', () => {
     // ── the risk register: a System board used by ISO 14001, with its view and system column
     await menu.getByRole('link', { name: 'Risk register' }).click();
     await expect(page.getByRole('heading', { name: 'Risk register', level: 1 })).toBeVisible();
-    await expect(page.getByTestId('system-board')).toContainText('System board');
-    await expect(page.getByTestId('system-board')).toContainText('Core registers 1.3.0');
+    await expect(page.getByTestId('system-board')).toContainText('System sheet');
+    await expect(page.getByTestId('system-board')).toContainText('Shared registers 1.3.0');
     await expect(page.getByTestId('system-used-by')).toHaveText('Used by ISO 14001');
     const spill = page.getByRole('gridcell', { name: /Coolant spill reaches a surface drain/ });
     await expect(spill.first()).toBeVisible();
@@ -198,17 +198,14 @@ test('phone · Core alone installs and the Registers menu fits 390 px', async ({
   const row = page
     .getByRole('list', { name: 'Available packs' })
     .getByRole('listitem')
-    .filter({ hasText: 'Core registers' });
-  await row.getByRole('button', { name: 'Preview Core registers' }).click();
+    .filter({ hasText: 'Shared registers' });
+  await row.getByRole('button', { name: 'Preview Shared registers' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('button', { name: 'Install' }).click();
   // Core alone installs its lowest level, Foundations (1.1.0): no Operations register yet
-  await expect(dialog.getByRole('status')).toContainText(
-    'Installed Core registers (Foundations).',
-    {
-      timeout: 60_000,
-    },
-  );
+  await expect(dialog.getByRole('status')).toContainText('Installed Shared registers (Basic).', {
+    timeout: 60_000,
+  });
 
   await page.goto(`/${slug}/home`);
   const bar = page.getByRole('navigation', { name: 'Bottom bar' });
@@ -219,11 +216,13 @@ test('phone · Core alone installs and the Registers menu fits 390 px', async ({
     'Management system',
     'Risk and controls',
   ]);
-  await expect(menu.getByRole('heading', { name: 'Your sheets', level: 2 })).toBeAttached();
+  // one Registers heading over the shared registers and the workspace's own sheets (docs/05 §2.1)
+  await expect(menu.getByRole('heading', { name: 'Registers', level: 2 })).toHaveCount(1);
+  await expect(menu.getByRole('heading', { name: 'Your sheets', level: 2 })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await shot(page, '06-phone-registers');
   await menu.getByRole('link', { name: 'Risk register' }).click();
-  await expect(page.getByTestId('system-board')).toContainText('System board');
+  await expect(page.getByTestId('system-board')).toContainText('System sheet');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await shot(page, '07-phone-risk-register');
 });

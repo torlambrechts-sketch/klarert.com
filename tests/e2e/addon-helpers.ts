@@ -23,7 +23,7 @@ export async function installAddon(
   opts: {
     title: string;
     key: string;
-    coreLevel: 'Starter' | 'Full';
+    coreLevel: 'Standard' | 'Everything';
     library: string;
     shot?: (page: Page, name: string) => Promise<void>;
   },
@@ -38,12 +38,12 @@ export async function installAddon(
   const dialog = page.getByRole('dialog');
   await expect(
     dialog.getByRole('group', { name: 'Choose a level' }).getByRole('radio', {
-      name: 'Starter',
+      name: 'Standard',
       exact: true,
     }),
   ).toBeChecked();
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    `Installs Core registers 1.3.0 (${opts.coreLevel}) first.`,
+    `Installs Shared registers 1.3.0 (${opts.coreLevel}) first.`,
   );
   await expect(dialog.getByTestId('adopts-framework')).toContainText(
     `Adopts the ${opts.library} requirement library first`,
@@ -54,8 +54,8 @@ export async function installAddon(
   if (opts.shot) await opts.shot(page, '01-install-dialog');
   await dialog.getByRole('button', { name: 'Install' }).click();
   const status = dialog.getByRole('status');
-  await expect(status).toContainText(`Installed ${opts.title} (Starter).`, { timeout: 90_000 });
-  await expect(status).toContainText(`Installed Core registers 1.3.0 (${opts.coreLevel}) first.`);
+  await expect(status).toContainText(`Installed ${opts.title} (Standard).`, { timeout: 90_000 });
+  await expect(status).toContainText(`Installed Shared registers 1.3.0 (${opts.coreLevel}) first.`);
   await expect(status).toContainText(`Adopted ${opts.library} first.`);
   await dialog.getByRole('button', { name: 'Done' }).click();
 

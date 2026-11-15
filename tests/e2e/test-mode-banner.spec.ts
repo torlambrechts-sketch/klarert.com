@@ -3,10 +3,11 @@ import { expect, test } from '@playwright/test';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
 import { signIn } from './helpers';
 
-// One test mode banner (docs/04 §14, owner decision Nov 2026): with the Core registers and every add-on installed,
-// Home and Workspace admin › Packs show one banner, not one per pack. It says how many automations from how many
-// packs wait in test mode and names the packs; "Turn on by pack" opens each pack's own Turn on, by keyboard too.
-// Turning one pack on leaves the banner naming the others. At 390 px nothing scrolls sideways.
+// One test mode banner (docs/04 §14, owner decisions Nov 2026 and 15 Nov 2026): with the shared registers and every
+// standard installed, Home shows one short banner ("N automations are in test mode." and one link) and Workspace
+// admin › Packs one full banner, not one per pack. The full banner says how many automations from how many packs
+// wait in test mode and names the packs; "Turn on by pack" opens each pack's own Turn on, by keyboard too. Turning
+// one pack on leaves the banner naming the others. At 390 px nothing scrolls sideways.
 
 const SHOTS = process.env.CORE12_SHOTS;
 
@@ -55,11 +56,31 @@ test('one banner names every pack whose automations wait in test mode', async ({
   for (const key of PACKS) {
     const [version, title] = newest(key);
     install(slug, key, version, key === 'core' ? 'full' : undefined);
-    titles.push(title);
+    // the words people see (engine/packs/words.ts): no "(add-on)", Shared registers for Core
+    titles.push(
+      title === 'Core registers' ? 'Shared registers' : title.replace(/ \(add-on\)$/, ''),
+    );
   }
 
+  // ── Home: one short banner, the total and one link (owner decision 15 Nov 2026, UX-3)
   await signIn(page, 'maria@example.com', `/${slug}/home`);
   await page.goto(`/${slug}/home`);
+  const home = page.getByTestId('test-mode-banner');
+  await expect(home).toHaveCount(1);
+  await expect(home.getByRole('heading')).toHaveText(/^\d+ automations are in test mode\.$/);
+  await expect(home.getByRole('link')).toHaveCount(1);
+  await expect(home.getByRole('button')).toHaveCount(0);
+  for (const t of titles) await expect(home).not.toContainText(t);
+  if (phone)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      390,
+    );
+  if (SHOTS)
+    await home.screenshot({ path: `${SHOTS}/banner-home-${phone ? '390' : 'desktop'}.png` });
+
+  // ── its one link opens Workspace admin › Packs at the full banner, which names every pack
+  await home.getByRole('link', { name: 'Review and turn on' }).click();
+  await expect(page).toHaveURL(new RegExp(`/${slug}/settings\\?tab=packs#test-mode$`));
   const banner = page.getByTestId('test-mode-banner');
   await expect(banner).toHaveCount(1);
   await expect(banner.getByRole('heading')).toHaveText(
@@ -69,12 +90,6 @@ test('one banner names every pack whose automations wait in test mode', async ({
   await expect(banner.getByRole('link', { name: 'Review the run log' })).toBeVisible();
   const list = banner.getByRole('list', { name: 'Packs with automations in test mode' });
   await expect(list).toBeHidden();
-  if (phone)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      390,
-    );
-  if (SHOTS)
-    await banner.screenshot({ path: `${SHOTS}/banner-home-${phone ? '390' : 'desktop'}.png` });
 
   // ── by keyboard: the disclosure opens the per-pack actions
   const byPack = banner.getByRole('button', { name: 'Turn on by pack' });
@@ -89,7 +104,7 @@ test('one banner names every pack whose automations wait in test mode', async ({
     );
   if (SHOTS)
     await banner.screenshot({
-      path: `${SHOTS}/banner-home-${phone ? '390' : 'desktop'}-open.png`,
+      path: `${SHOTS}/banner-packs-${phone ? '390' : 'desktop'}-open.png`,
     });
 
   // ── one pack goes live; the banner names the seven left
@@ -110,10 +125,10 @@ test('one banner names every pack whose automations wait in test mode', async ({
     ).trim(),
   ).toBe('0');
 
-  // ── Workspace admin › Packs: the same single banner
-  await page.goto(`/${slug}/settings?tab=packs`);
+  // ── Home: still one banner, with the smaller total
+  await page.goto(`/${slug}/home`);
   await expect(page.getByTestId('test-mode-banner')).toHaveCount(1);
   await expect(page.getByTestId('test-mode-banner').getByRole('heading')).toHaveText(
-    /from 7 packs are in test mode\./,
+    /^\d+ automations are in test mode\.$/,
   );
 });

@@ -176,7 +176,7 @@ test.describe('CAPA on the Core registers', () => {
     await wizard.getByTestId('create-app-capa').click();
     const preview = wizard.getByTestId('create-app-preview');
     await expect(preview.getByTestId('create-app-uses')).toHaveText(
-      'Uses sheets you already have: Nonconformities and CAPA (Core registers), Actions (Core registers).',
+      'Uses sheets you already have: Nonconformities and CAPA (Shared registers), Actions (Shared registers).',
     );
     await expect(preview.getByTestId('create-summary')).toHaveText('Creates 1 dashboard · 1 app.');
     await expect(preview.getByTestId('create-uses')).toContainText('No second register is made.');
