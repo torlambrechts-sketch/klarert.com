@@ -1453,6 +1453,12 @@ isOneToOne: false
 "_archive_pack_rows":
 { Args: { "p_install": string }; Returns: Json
                            },
+"_attest_payload":
+{ Args: { "p_field": string,"p_item": string,"p_values": Json }; Returns: Json
+                           },
+"_attest_value":
+{ Args: { "p_config": Json,"p_new": Json,"p_old": Json,"p_type": string,"p_values": Json }; Returns: Json
+                           },
 "_automation_targets":
 { Args: { "p_actions": Json,"p_sheet": string }; Returns: (string)[]
                            },
@@ -1461,6 +1467,9 @@ isOneToOne: false
                            },
 "_can_manage_sheet":
 { Args: { "p_sheet": string }; Returns: boolean
+                           },
+"_canonical_json":
+{ Args: { "v": Json }; Returns: string
                            },
 "_command_proof":
 { Args: { "p_t": number,"p_user": string }; Returns: string
@@ -1762,6 +1771,9 @@ isOneToOne: false
                            },
 "_personal_mask_keys":
 { Args: { "p_kind": string,"p_salt": string,"v": Json }; Returns: Json
+                           },
+"_public_field_config":
+{ Args: { "p_config": Json }; Returns: Json
                            },
 "_public_form_hidden_types":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
@@ -2248,6 +2260,9 @@ isOneToOne: false
                            },
 "folder_hidden_sheet_count":
 { Args: { "p_folder": string }; Returns: number
+                           },
+"folder_log_visible":
+{ Args: { "p_new": Json,"p_old": Json }; Returns: boolean
                            },
 "form_link_create":
 { Args: { "p_view": string }; Returns: {
