@@ -304,6 +304,8 @@ Phase 2 (open; a separate task):
 
 Later: consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
 
+Later (owner decision 15 Nov 2026): the script Content-Security-Policy with nonces and a stricter HSTS, after the demo, as their own change.
+
 ---
 
 ## After the MVP (do not start without Tor)
