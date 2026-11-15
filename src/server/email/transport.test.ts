@@ -22,9 +22,11 @@ const message: EmailMessage = {
 const HOSTED = 'https://abcd.supabase.co';
 const LOCAL = 'http://127.0.0.1:54321';
 
+type FetchArgs = [url: string, init: RequestInit];
+
 function fakeFetch(status = 200, body: unknown = { id: 'msg_1' }) {
-  return vi.fn(
-    async (_url: string, _init: RequestInit) =>
+  return vi.fn<(...args: FetchArgs) => Promise<Response>>(
+    async () =>
       new Response(JSON.stringify(body), {
         status,
         headers: { 'Content-Type': 'application/json' },

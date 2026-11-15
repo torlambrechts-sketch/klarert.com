@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { Copy, Lock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AlertTriangle, Copy, Lock, MailCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { ActionForm } from '@/components/forms/action-form';
 import { SubmitButton, TextField } from '@/components/forms/form-bits';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { ROLE_LABELS, ROLES } from '@/lib/schemas/workspace';
+import { INVITE_EMAIL_NOT_SENT, ROLE_LABELS, ROLE_SUMMARIES, ROLES } from '@/lib/schemas/workspace';
+import type { InviteCreated } from '@/server/commands/members';
 import {
   changeRoleAction,
   createInviteAction,
   removeMemberAction,
+  resendInviteAction,
   revokeInviteAction,
 } from './actions';
 
@@ -27,7 +29,16 @@ export type MemberRow = {
   expiresAt?: string | null;
   expiresLabel?: string | null;
 };
-export type InviteRow = { id: string; email: string; role: Role; link: string; createdAt: string };
+export type InviteRow = {
+  id: string;
+  email: string;
+  role: Role;
+  link: string;
+  createdAt: string;
+  /** The day the link stops working (29 Nov 2026), and whether it has stopped. */
+  linkExpiresOn: string;
+  linkExpired: boolean;
+};
 
 function copy(text: string) {
   navigator.clipboard.writeText(text).then(
@@ -46,80 +57,115 @@ export function InviteForm({
   /** Today in the workspace's time zone: an auditor's access ends on a later day. */
   today: string;
 }) {
-  const [link, setLink] = useState<string | null>(null);
+  const [sent, setSent] = useState<InviteCreated | null>(null);
   const [role, setRole] = useState<Role>('editor');
+  // one toast per invite: whether the email went out (docs/09 §10)
+  useEffect(() => {
+    if (!sent) return;
+    if (sent.emailSent) toast(`Invite sent to ${sent.email}`);
+    else toast.error(INVITE_EMAIL_NOT_SENT);
+  }, [sent]);
   return (
     <div className="flex flex-col gap-3">
       <ActionForm
         action={createInviteAction}
         hidden={{ org }}
         reset
-        onSuccess={(d) => setLink(d.link)}
-        className="flex flex-col gap-3 sm:flex-row sm:items-end"
+        onSuccess={setSent}
+        className="flex flex-col gap-2"
         aria-label="Invite a member"
       >
         {(state) => (
           <>
-            <div className="flex-1">
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                placeholder="name@company.com"
-                state={state}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="invite-role">Role</Label>
-              <select
-                id="invite-role"
-                name="role"
-                value={role}
-                onChange={(e) => setRole(e.currentTarget.value as Role)}
-                className="border-input bg-background-100 h-[40px] rounded-md border px-3"
-              >
-                {ROLES.filter((r) => r !== 'owner' || canInviteOwner).map((r) => (
-                  <option key={r} value={r}>
-                    {ROLE_LABELS[r]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {role === 'auditor' ? (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="invite-expires">Access ends on</Label>
-                <input
-                  id="invite-expires"
-                  name="expiresOn"
-                  type="date"
-                  required
-                  min={today}
-                  aria-describedby="invite-expires-hint"
-                  className="border-input bg-background-100 h-[40px] rounded-md border px-3"
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <TextField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="name@company.com"
+                  state={state}
                 />
-                <span id="invite-expires-hint" className="sr-only">
-                  Auditors have read-only access until the end of this day.
-                </span>
               </div>
-            ) : null}
-            <SubmitButton pendingText="Creating…">Create invite link</SubmitButton>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="invite-role">Role</Label>
+                <select
+                  id="invite-role"
+                  name="role"
+                  value={role}
+                  onChange={(e) => setRole(e.currentTarget.value as Role)}
+                  aria-describedby="invite-role-hint"
+                  className="border-input bg-background-100 h-[40px] rounded-md border px-3"
+                >
+                  {ROLES.filter((r) => r !== 'owner' || canInviteOwner).map((r) => (
+                    <option key={r} value={r}>
+                      {ROLE_LABELS[r]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {role === 'auditor' ? (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="invite-expires">Access ends on</Label>
+                  <input
+                    id="invite-expires"
+                    name="expiresOn"
+                    type="date"
+                    required
+                    min={today}
+                    aria-describedby="invite-expires-hint"
+                    className="border-input bg-background-100 h-[40px] rounded-md border px-3"
+                  />
+                  <span id="invite-expires-hint" className="sr-only">
+                    Auditors have read-only access until the end of this day.
+                  </span>
+                </div>
+              ) : null}
+              <SubmitButton pendingText="Sending…">Send invite</SubmitButton>
+            </div>
+            <p id="invite-role-hint" className="text-muted-foreground text-copy-13 m-0">
+              {ROLE_SUMMARIES[role]}
+            </p>
           </>
         )}
       </ActionForm>
-      {link ? (
+      {sent ? (
         <div
           role="status"
-          className="bg-subtle border-line flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center"
+          data-testid="invite-result"
+          className="bg-subtle border-line flex flex-col gap-2 rounded-lg border p-3"
         >
-          <p className="text-copy-13">
-            Send this link to the person you invited. It works once, for that email address.
+          <p className="text-copy-13 m-0 flex items-start gap-2">
+            {sent.emailSent ? (
+              <MailCheck className="text-good mt-0.5 size-4 shrink-0" aria-hidden />
+            ) : (
+              <AlertTriangle className="text-warn mt-0.5 size-4 shrink-0" aria-hidden />
+            )}
+            <span>
+              {sent.emailSent ? (
+                <>
+                  Invite sent to <span className="font-medium">{sent.email}</span>.
+                </>
+              ) : (
+                INVITE_EMAIL_NOT_SENT
+              )}{' '}
+              The link works once, for that email address, until {sent.linkExpiresOn}.
+            </span>
           </p>
-          <code className="text-label-12-mono min-w-0 flex-1 truncate" data-testid="invite-link">
-            {link}
-          </code>
-          <Button type="button" variant="outline" size="sm" onClick={() => copy(link)}>
-            <Copy aria-hidden /> Copy link
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <code className="text-label-12-mono min-w-0 flex-1 truncate" data-testid="invite-link">
+              {sent.link}
+            </code>
+            <Button
+              type="button"
+              variant={sent.emailSent ? 'ghost' : 'outline'}
+              size="sm"
+              className="self-start sm:self-auto"
+              onClick={() => copy(sent.link)}
+            >
+              <Copy aria-hidden /> Copy link
+            </Button>
+          </div>
         </div>
       ) : null}
     </div>
@@ -223,10 +269,28 @@ export function MemberRowControls({
 }
 
 export function InviteRowControls({ org, invite }: { org: string; invite: InviteRow }) {
+  const [resent, setResent] = useState<{ emailSent: boolean } | null>(null);
+  // one toast per resend: whether the email went out
+  useEffect(() => {
+    if (!resent) return;
+    if (resent.emailSent) toast(`Invite sent again to ${invite.email}`);
+    else toast.error(INVITE_EMAIL_NOT_SENT);
+  }, [resent, invite.email]);
   return (
-    <div className="flex items-center justify-end gap-2">
-      <Button type="button" variant="outline" size="sm" onClick={() => copy(invite.link)}>
-        <Copy aria-hidden /> Copy link
+    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+      {invite.linkExpired ? null : (
+        <ActionForm
+          action={resendInviteAction}
+          hidden={{ org, inviteId: invite.id }}
+          onSuccess={setResent}
+        >
+          <SubmitButton variant="outline" size="sm" pendingText="Sending…">
+            Resend<span className="sr-only"> the invite to {invite.email}</span>
+          </SubmitButton>
+        </ActionForm>
+      )}
+      <Button type="button" variant="ghost" size="sm" onClick={() => copy(invite.link)}>
+        <Copy aria-hidden /> Copy link<span className="sr-only"> for {invite.email}</span>
       </Button>
       <ActionForm
         action={revokeInviteAction}
@@ -234,7 +298,7 @@ export function InviteRowControls({ org, invite }: { org: string; invite: Invite
         success="Invite revoked"
       >
         <SubmitButton variant="ghost" size="sm" pendingText="Revoking…">
-          Revoke
+          Revoke<span className="sr-only"> the invite to {invite.email}</span>
         </SubmitButton>
       </ActionForm>
     </div>

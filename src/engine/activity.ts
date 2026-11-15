@@ -357,6 +357,11 @@ const LEVEL_WORDS: Record<string, string> = {
   commenter: 'can comment',
   viewer: 'can view',
 };
+/** "an editor", "a viewer": the role an invite was for. */
+const roleWord = (v: Record<string, Json> | null) => {
+  const r = String(v?.role ?? 'member');
+  return /^[aeiou]/.test(r) ? `an ${r}` : `a ${r}`;
+};
 const objOf = (v: Json | null) =>
   v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, Json>) : null;
 
@@ -407,6 +412,13 @@ export function accessText(
       return `Changed a member's role to ${String(n?.role ?? '')}`;
     case 'member.removed':
       return 'Removed a member';
+    // invites (0070): the entry holds the invite id and the role, never the address
+    case 'invite.created':
+      return `Invited someone as ${roleWord(n)}`;
+    case 'invite.resent':
+      return `Sent an invite again (${String(n?.resend ?? 1)} of 5)`;
+    case 'invite.revoked':
+      return `Revoked an invite to join as ${roleWord(o)}`;
     default:
       return null;
   }

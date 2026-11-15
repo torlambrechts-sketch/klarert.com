@@ -25,7 +25,7 @@ test('sign up, create a workspace, invite a colleague who accepts', async ({ bro
   await owner.goto(`/${slug}/settings`);
   await owner.getByLabel('Email').fill(inviteeEmail);
   await owner.getByLabel('Role', { exact: true }).selectOption('viewer');
-  await owner.getByRole('button', { name: 'Create invite link' }).click();
+  await owner.getByRole('button', { name: 'Send invite' }).click();
   const link = (await owner.getByTestId('invite-link').textContent())!;
   expect(link).toMatch(/\/invite\/[0-9a-f]{48}$/);
   await expect(owner.getByText(inviteeEmail)).toBeVisible();
@@ -71,7 +71,7 @@ test('an invite only works for the address it was sent to', async ({ browser }) 
   await expect(owner).toHaveURL(new RegExp(`/${slug}/home$`));
   await owner.goto(`/${slug}/settings`);
   await owner.getByLabel('Email').fill(freshEmail('intended'));
-  await owner.getByRole('button', { name: 'Create invite link' }).click();
+  await owner.getByRole('button', { name: 'Send invite' }).click();
   const link = (await owner.getByTestId('invite-link').textContent())!;
 
   const ctx = await browser.newContext();
