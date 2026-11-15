@@ -326,9 +326,10 @@ export function FieldSettingsBody({
             <Labelled
               label="Personal data"
               hint={
-                isAdmin
+                // editors may mark a field, only owners and admins unmark it (migration 0064)
+                isAdmin || (field.config as { personalData?: unknown }).personalData !== true
                   ? "Values are kept out of the activity log in clear and can be erased under the sheet's retention rules (Sheet settings › Retention). Mark the field before it holds data: earlier log entries cannot change."
-                  : 'Only owners and admins change whether a field holds personal data.'
+                  : 'Only owners and admins can turn this off.'
               }
             >
               {(id) => (
@@ -336,7 +337,9 @@ export function FieldSettingsBody({
                   <input
                     id={id}
                     type="checkbox"
-                    disabled={!isAdmin}
+                    disabled={
+                      !isAdmin && (field.config as { personalData?: unknown }).personalData === true
+                    }
                     checked={config.personalData === true}
                     onChange={(e) =>
                       setConfig((c) => {
