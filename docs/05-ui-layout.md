@@ -224,4 +224,4 @@ Label and copy set no weight: add `font-medium` (500) or `font-semibold` (600, t
 
 ## 7. States
 
-Every list, table and panel needs: skeleton loading (no layout shift), empty state with one action ("No items yet. Add the first one." + button), error state with Retry, and offline banner ("You are offline. Changes will fail until you reconnect."). Toasts: bottom centre, dark, 4 s, with "Undo" for archive and bulk edits.
+Every list, table and panel needs: skeleton loading (no layout shift), empty state with one action ("No items yet. Add the first one." + button), error state with Retry, and offline banner ("You are offline. Changes will fail until you reconnect."). An unknown address shows the app's own 404 page (`src/app/not-found.tsx`: "Page not found", "It may have been deleted or moved, or the link is wrong." and "Go to your workspace"); a sheet keeps its own. Toasts: bottom centre, dark, 4 s, with "Undo" for archive and bulk edits.
