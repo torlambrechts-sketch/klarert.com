@@ -1,6 +1,6 @@
 'use client';
 
-import { ERASED_VALUE, isMaskedValue } from '@/engine/access';
+import { ERASED_NOTE, ERASED_VALUE, isMaskedNote, isMaskedValue } from '@/engine/access';
 import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ActivityEntry } from '@/engine/activity';
@@ -112,6 +112,7 @@ export function useActivity(itemId: string, sheetId: string, version: string) {
       // restricted values (docs/02 §16): the log keeps markers; people who may see the field read the values
       const masked = entries.filter(
         (e) =>
+          isMaskedNote(e.note) ||
           isMaskedValue(e.oldValue) ||
           isMaskedValue(e.newValue) ||
           hasMaskedValues(e) ||
@@ -132,7 +133,10 @@ export function useActivity(itemId: string, sheetId: string, version: string) {
           if (!e) continue;
           const erased = !!r.erased_at;
           const pick = (v: Json | null) => (erased ? (ERASED_VALUE as unknown as Json) : v);
-          if (r.slot === 'file' || r.slot === 'subitem') {
+          if (r.slot === 'note') {
+            // a comment on a value change or an approval comment (0065): the note only, never the values
+            e.note = erased ? ERASED_NOTE : typeof r.new_value === 'string' ? r.new_value : e.note;
+          } else if (r.slot === 'file' || r.slot === 'subitem') {
             // key by key: a file entry's name, description and version note; a sub-item's name (0059)
             const keys = r.slot === 'file' ? ['filename', 'description', 'version_note'] : ['name'];
             const merge = (base: Json | null, real: Json | null) => {

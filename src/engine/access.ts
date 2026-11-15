@@ -151,6 +151,10 @@ export function isMaskedNote(note: string | null | undefined): boolean {
   return typeof note === 'string' && /^\{"\$personal": "[0-9a-f]{64}"\}$/.test(note);
 }
 
+/** A personal-data note erased under a retention rule (the panel puts this in place of the note's marker). */
+export const ERASED_NOTE = '{"$erased": true}';
+export const isErasedNote = (note: string | null | undefined): boolean => note === ERASED_NOTE;
+
 /** A personal-data value erased under a retention rule (the panel puts this in place of the marker). */
 export const ERASED_VALUE = { $erased: true } as const;
 export function isErasedValue(v: unknown): boolean {

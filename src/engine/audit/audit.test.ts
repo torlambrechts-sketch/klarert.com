@@ -12,6 +12,7 @@ import {
   filesToInclude,
   inPeriod,
   isWorkspaceEntry,
+  logNoteText,
   logValueText,
   mergeEntries,
   packReadme,
@@ -282,6 +283,10 @@ describe('audit pack tables', () => {
       '{"values":{"f1":"Personal data"}}',
     );
     expect(logValueText('text')).toBe('text');
+    // a comment on a value change or an approval comment kept out of the log (0065)
+    expect(logNoteText(`{"$personal": "${'0f'.repeat(32)}"}`)).toBe('Personal data');
+    expect(logNoteText('Pack update')).toBe('Pack update');
+    expect(logNoteText(null)).toBe('');
     const t = activityTable(
       [
         {
