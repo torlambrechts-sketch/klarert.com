@@ -327,6 +327,7 @@ pgTAP file that runs the attack as `authenticated` and shows it refused.
 | M6 | comment bodies and sub-item names masked in the log; `restricted_activity` erasable by retention; tombstone counts every copy in clear | 0059 | 0050 |
 | M7 | `settings.retention` and `personalData` only by owners and admins | 0060 | 0051 |
 | C-01 | ack entries only the person's own, time set by the database; signatures only as oneself, time and hash set by the database; automations never acknowledge or sign | 0061 | 0052 |
+| Two-step sign-in (app SA-6, enforced in the database) | `_aal_ok` in `is_member`, `has_role` and `_sheet_levels`: a person with a verified factor needs an `aal2` session, and a workspace with `requireTwoStep` needs one from everyone; workspaces and one's own memberships stay readable; `set_require_two_step` (owners, `aal2`, logged) is the only way to change the setting; `orgs` changes logged; `member_two_step` for the Members list | 0063 | 0054 |
 | L1, L2, L3, L4, L7, L9 | definer helpers scoped to the caller's workspaces; form tokens for admins, public form configs without internal ids; restricted folders' log entries; ended auditors list no profiles; approvers never from restricted fields; retention and schedule claims need read access | 0062 | 0053 |
 
 ### 8.1 Open (for Tor)
@@ -342,4 +343,6 @@ pgTAP file that runs the attack as `authenticated` and shows it refused.
    restricted ack field is not stopped).
 5. **Public form configs** are filtered by a deny-list of internal keys (`_public_field_config`); a new field type
    with an internal id in its config must add its key there.
+6. **Two-step setting from the app:** `setWorkspaceTwoStep` (branch `claude/security-app`) must call
+   `set_require_two_step` instead of updating `orgs.settings`; the database refuses that direct update since 0063.
 

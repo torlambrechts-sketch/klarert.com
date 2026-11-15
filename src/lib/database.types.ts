@@ -1447,7 +1447,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "_access_changed":
+            "_aal_ok":
+{ Args: { "o": string }; Returns: boolean
+                           },
+"_access_changed":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "_archive_pack_rows":
@@ -1990,6 +1993,9 @@ isOneToOne: false
 "automation_signing_key":
 { Args: { "p_automation": string }; Returns: string
                            },
+"belongs_to":
+{ Args: { "o": string }; Returns: boolean
+                           },
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean
                            },
@@ -2396,6 +2402,11 @@ isOneToOne: false
 "mark_bundle_reviewed":
 { Args: { "p_install": string }; Returns: Json
                            },
+"member_two_step":
+{ Args: { "p_org": string }; Returns: {
+              "two_step": boolean,"user_id": string
+            }[]
+                           },
 "move_framework_edition":
 { Args: { "p_copies": Json,"p_from_sheet": string,"p_links": Json,"p_org": string,"p_to_sheet": string }; Returns: Json
                            },
@@ -2762,6 +2773,9 @@ isOneToOne: false
                            },
 "set_protected_value":
 { Args: { "p_field": string,"p_item": string,"p_note"?: string,"p_value": string }; Returns: undefined
+                           },
+"set_require_two_step":
+{ Args: { "p_on": boolean,"p_org": string }; Returns: boolean
                            },
 "set_retention_hold":
 { Args: { "p_item": string,"p_on": boolean,"p_reason": string }; Returns: boolean
