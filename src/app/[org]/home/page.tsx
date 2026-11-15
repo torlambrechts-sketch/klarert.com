@@ -10,11 +10,18 @@ import {
   UserRound,
 } from 'lucide-react';
 import { WorkList } from '@/components/my-work/work-row';
-import { SetupCard } from '@/components/packs/setup-card';
-import { TestModeBanner } from '@/components/packs/test-mode-banner';
+import { NextStepCard } from '@/components/packs/setup-card';
+import { TestModeNotice } from '@/components/packs/test-mode-banner';
 import { Card, PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
-import { checklistDone, greeting, homeSummary, hourIn, type ChecklistStepId } from '@/engine/home';
+import {
+  checklistDone,
+  greeting,
+  homeSummary,
+  hourIn,
+  nextSteps,
+  type ChecklistStepId,
+} from '@/engine/home';
 import { BUCKET_LABEL, type Bucket } from '@/engine/my-work';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
@@ -23,8 +30,9 @@ import { getHome, getMyWork } from '@/server/repositories/my-work';
 
 export const metadata = { title: 'Home · Compliance OS' };
 
-// Home (docs/05 §4): greeting and a one-line summary, My work tiles, Getting started (computed; hidden once done),
-// Needs you, Next 30 days and Recent activity. Folders are organised in the side menu. Every number comes from the workspace's data.
+// Home (docs/05 §4): greeting and a one-line summary, My work tiles, one test-mode banner, one Next step per installed
+// standard (engine/home.ts nextSteps), Getting started (computed; hidden once done), Needs you, Next 30 days and
+// Recent activity. Folders are organised in the side menu. Every number comes from the workspace's data.
 
 const TILES: { bucket: Bucket; icon: typeof AlertTriangle }[] = [
   { bucket: 'overdue', icon: AlertTriangle },
@@ -134,16 +142,10 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
         </nav>
       ) : null}
 
-      <TestModeBanner org={org} packs={quiet} />
+      <TestModeNotice org={org} packs={quiet} />
 
-      {setups.map((s) => (
-        <SetupCard
-          key={s.installId}
-          org={org}
-          installId={s.installId}
-          progress={s.progress}
-          levelName={s.level?.name ?? null}
-        />
+      {nextSteps(setups).map((n) => (
+        <NextStepCard key={n.installId} org={org} next={n} />
       ))}
 
       {home && !checklistDone(home.checklist) ? (

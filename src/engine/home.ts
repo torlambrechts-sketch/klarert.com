@@ -2,6 +2,7 @@
 // number is computed from the workspace's data passed in.
 import { addDays, formatDate } from './fields/helpers';
 import type { MyWork, WorkRow } from './my-work';
+import type { SetupProgress, SetupStepProgress } from './packs/setup';
 
 export const NEEDS_YOU_MAX = 6;
 export const NEXT_DAYS = 30;
@@ -92,4 +93,58 @@ export function hourIn(now: Date, timeZone: string): number {
   } catch {
     return now.getUTCHours();
   }
+}
+
+/** A standard's setup as Home reads it (docs/11 Setup): its install, title, installed level and computed progress. */
+export interface StandardSetup {
+  installId: string;
+  title: string;
+  level: { name: string } | null;
+  progress: SetupProgress;
+}
+
+/** One "Next step" card on Home: the first unfinished setup step of one installed standard. */
+export interface NextStep {
+  installId: string;
+  /** The standard's name ("GDPR privacy"), and its level when it has levels. */
+  standard: string;
+  level: string | null;
+  step: SetupStepProgress;
+  /** "Step 3 of 8 · 25% done" */
+  line: string;
+  /** Steps in the standard's setup: "See all 8 steps". */
+  total: number;
+  percent: number;
+}
+
+/**
+ * Home's first run (docs/05 §4, owner decision 15 Nov 2026): one Next step per installed standard, in install order,
+ * each the first step of its setup that is not done. A standard whose setup is done shows none.
+ */
+export function nextSteps(setups: readonly StandardSetup[]): NextStep[] {
+  return setups.flatMap((s) => {
+    const step = s.progress.steps.find((x) => !x.done);
+    if (!step) return [];
+    return [
+      {
+        installId: s.installId,
+        standard: s.title,
+        level: s.level?.name ?? null,
+        step,
+        line: `Step ${step.number} of ${s.progress.total} · ${s.progress.percent}% done`,
+        total: s.progress.total,
+        percent: s.progress.percent,
+      },
+    ];
+  });
+}
+
+/**
+ * The one test-mode banner (docs/04 §14, owner decision 15 Nov 2026): "74 automations are in test mode." over every
+ * pack whose automations wait; null when none wait.
+ */
+export function testModeLine(packs: readonly { count: number }[]): string | null {
+  const n = packs.reduce((t, p) => t + Math.max(0, p.count), 0);
+  if (n === 0) return null;
+  return n === 1 ? '1 automation is in test mode.' : `${n} automations are in test mode.`;
 }
