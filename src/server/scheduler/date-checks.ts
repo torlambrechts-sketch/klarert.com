@@ -8,7 +8,7 @@ import {
 import { planApprovalFirings, type ApprovalInstance } from '@/engine/approvals';
 import { sheetCtx } from '@/engine/sheet-data';
 import type { Condition } from '@/engine/types';
-import { fetchSheetData, type Db } from '@/lib/sheet-query';
+import { fetchAllPages, fetchSheetData, type Db } from '@/lib/sheet-query';
 import { INSTANCE_COLUMNS, toInstance } from '@/server/approvals/rows';
 import { runAutomations } from '@/server/automations';
 import { newId } from '@/server/sheet-context';
@@ -44,22 +44,83 @@ export const emptySummary = (): DateCheckSummary => ({
 });
 
 const SYSTEM = { kind: 'system' as const, id: null };
+/** Ids per request: they go in the URL. */
+const ID_CHUNK = 150;
 
 function must<T>(r: { data: T | null; error: { message: string } | null }): T {
   if (r.error) throw new Error(r.error.message);
   return r.data as T;
 }
 
-/** Workspaces that have at least one enabled scheduled automation (cron route, service role). */
+/**
+ * Workspaces that have at least one enabled scheduled automation (cron route, service role). Across every workspace,
+ * so every page past the API's 1000-row cap.
+ */
 export async function workspacesWithDateChecks(db: Db): Promise<string[]> {
-  const rows = must(
-    await db
+  const rows = await fetchAllPages((from, to) =>
+    db
       .from('automations')
       .select('org_id')
       .eq('enabled', true)
-      .in('trigger->>type', SCHEDULED_TRIGGERS),
+      .in('trigger->>type', SCHEDULED_TRIGGERS)
+      .order('org_id')
+      .order('id')
+      .range(from, to),
   );
   return [...new Set(rows.map((r) => r.org_id))];
+}
+
+/** A workspace's enabled automations with a date, clock or evidence trigger, oldest first, every page. */
+export async function scheduledAutomations(db: Db, orgId: string) {
+  return fetchAllPages((from, to) =>
+    db
+      .from('automations')
+      .select('id, sheet_id, trigger, conditions, mode')
+      .eq('org_id', orgId)
+      .eq('enabled', true)
+      .in('trigger->>type', SCHEDULED_TRIGGERS)
+      .order('created_at')
+      .order('id')
+      .range(from, to),
+  );
+}
+
+/** The ids of a workspace's live sheets, every page. */
+export async function liveSheetIds(db: Db, orgId: string): Promise<string[]> {
+  const rows = await fetchAllPages((from, to) =>
+    db
+      .from('sheets')
+      .select('id')
+      .eq('org_id', orgId)
+      .is('archived_at', null)
+      .order('id')
+      .range(from, to),
+  );
+  return rows.map((r) => r.id);
+}
+
+/** Items paused for these automations ("automation_id:item_id"), the ids asked in parts, every page of each. */
+export async function pausedPairs(
+  db: Db,
+  orgId: string,
+  automationIds: string[],
+): Promise<Set<string>> {
+  const out = new Set<string>();
+  for (let i = 0; i < automationIds.length; i += ID_CHUNK) {
+    const part = automationIds.slice(i, i + ID_CHUNK);
+    const rows = await fetchAllPages((from, to) =>
+      db
+        .from('automation_pauses')
+        .select('automation_id, item_id')
+        .eq('org_id', orgId)
+        .in('automation_id', part)
+        .order('automation_id')
+        .order('item_id')
+        .range(from, to),
+    );
+    for (const p of rows) out.add(`${p.automation_id}:${p.item_id}`);
+  }
+  return out;
 }
 
 export async function runDateChecks(
@@ -69,20 +130,12 @@ export async function runDateChecks(
 ): Promise<DateCheckSummary> {
   const summary = emptySummary();
   const [autoRows, org, sheets] = await Promise.all([
-    db
-      .from('automations')
-      .select('id, sheet_id, trigger, conditions, mode')
-      .eq('org_id', orgId)
-      .eq('enabled', true)
-      .in('trigger->>type', SCHEDULED_TRIGGERS)
-      .order('created_at')
-      .order('id')
-      .then(must),
+    scheduledAutomations(db, orgId),
     db.from('orgs').select('slug, time_zone').eq('id', orgId).maybeSingle().then(must),
-    db.from('sheets').select('id').eq('org_id', orgId).is('archived_at', null).then(must),
+    liveSheetIds(db, orgId),
   ]);
   if (!org) return summary;
-  const live = new Set(sheets.map((s) => s.id));
+  const live = new Set(sheets);
   const automations: ScheduledAutomation[] = autoRows
     .filter((a) => live.has(a.sheet_id))
     .map((a) => ({
@@ -96,17 +149,11 @@ export async function runDateChecks(
   const testMode = new Set(autoRows.filter((a) => a.mode === 'test').map((a) => a.id));
   if (automations.length === 0) return summary;
 
-  const pauses = must(
-    await db
-      .from('automation_pauses')
-      .select('automation_id, item_id')
-      .eq('org_id', orgId)
-      .in(
-        'automation_id',
-        automations.map((a) => a.id),
-      ),
+  const paused = await pausedPairs(
+    db,
+    orgId,
+    automations.map((a) => a.id),
   );
-  const paused = new Set(pauses.map((p) => `${p.automation_id}:${p.item_id}`));
 
   const bySheet = new Map<string, ScheduledAutomation[]>();
   for (const a of automations) bySheet.set(a.sheetId, [...(bySheet.get(a.sheetId) ?? []), a]);
@@ -126,14 +173,18 @@ export async function runDateChecks(
     const firings = planFirings(list, data.items, ctx, isPaused);
     // approval overdue (docs/04 §13): the current step of an item's approval passed its SLA
     if (list.some((a) => a.trigger.type === 'approval_overdue')) {
-      const live = must(
-        await db
-          .from('workflow_instances')
-          .select(INSTANCE_COLUMNS)
-          .eq('sheet_id', sheetId)
-          .eq('status', 'in_progress')
-          .not('step_due_at', 'is', null)
-          .lte('step_due_at', opts.now.toISOString()),
+      const live = (
+        await fetchAllPages((from, to) =>
+          db
+            .from('workflow_instances')
+            .select(INSTANCE_COLUMNS)
+            .eq('sheet_id', sheetId)
+            .eq('status', 'in_progress')
+            .not('step_due_at', 'is', null)
+            .lte('step_due_at', opts.now.toISOString())
+            .order('id')
+            .range(from, to),
+        )
       )
         .map(toInstance)
         .filter((x): x is ApprovalInstance => !!x);
