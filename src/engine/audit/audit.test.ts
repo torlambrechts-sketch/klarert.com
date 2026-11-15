@@ -3,7 +3,7 @@ import '../fields/registry';
 import { IMPLEMENTATION_OPTIONS, LIBRARY_KEYS } from '../frameworks/pack';
 import { makeCtx, makeField, makeItem } from '../testing/fixtures';
 import type { Field } from '../types';
-import { csvCell, toCsv } from './csv';
+import { csvCell, escapeFormula, toCsv, unescapeFormula } from './csv';
 import {
   activityTable,
   chainSummary,
@@ -40,6 +40,13 @@ describe('csv', () => {
     expect(csvCell('+44 20')).toBe("'+44 20");
     expect(csvCell('-3')).toBe('-3');
     expect(csvCell('-2.5')).toBe('-2.5');
+  });
+
+  it('undoes its own escaping only', () => {
+    for (const v of ['=SUM(A1)', '@cmd', '+44 20', '-3', 'plain', "'quoted"])
+      expect(unescapeFormula(escapeFormula(v))).toBe(v);
+    expect(unescapeFormula("'plain")).toBe("'plain");
+    expect(unescapeFormula("'-3")).toBe("'-3");
   });
 
   it('ends rows with CRLF and can start with a BOM', () => {

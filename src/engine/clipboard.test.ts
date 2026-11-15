@@ -42,6 +42,53 @@ describe('copy', () => {
     const tsv = copyRange([a], columns, { top: 0, left: 0, bottom: 0, right: 2 }, ctx);
     expect(tsv).toBe('Fix guard\tDone\t20 Nov 2026');
   });
+
+  describe('formula escaping (SA-11, as CSV exports)', () => {
+    const note = makeField('text', {}, { name: 'Note' });
+    const n = makeField('number', { unit: '', decimals: 0 }, { name: 'Count' });
+    const cols: GridColumn[] = [
+      { kind: 'name' },
+      { kind: 'field', field: note },
+      { kind: 'field', field: n },
+    ];
+    const c = makeCtx({ fields: [note, n] });
+    const copy = (name: string, text: string, count: number | null = null) =>
+      copyRange(
+        [makeItem({ [note.id]: text, ...(count === null ? {} : { [n.id]: count }) }, { name })],
+        cols,
+        { top: 0, left: 0, bottom: 0, right: 2 },
+        c,
+      );
+
+    it.each([
+      ['=HYPERLINK("https://evil","Open")', `"'=HYPERLINK(""https://evil"",""Open"")"`],
+      ['+cmd|calc', "'+cmd|calc"],
+      ['-2+3', "'-2+3"],
+      ['@SUM(A1)', "'@SUM(A1)"],
+    ])('puts an apostrophe before %s', (text, cell) => {
+      expect(copy('Plain', text).split('\t')[1]).toBe(cell);
+    });
+
+    it('escapes names too, and leaves plain text and plain numbers as they are', () => {
+      expect(copy('=1+1', 'fine', -3)).toBe("'=1+1\tfine\t-3");
+      expect(copy('A', '-3', 4)).toBe('A\t-3\t4');
+      expect(copy('A', '+44', null)).toBe('A\t+44\t');
+    });
+
+    it('pastes a copied cell back as the value it had', () => {
+      const item = makeItem({}, { name: 'A' });
+      const r = planPaste(
+        copy('=1+1', '=HYPERLINK("x")'),
+        [item],
+        cols,
+        { top: 0, left: 0, bottom: 0, right: 1 },
+        c,
+        { canEdit: () => true },
+      );
+      expect(r.names.get(item.id)).toBe('=1+1');
+      expect(r.values.get(item.id)?.[note.id]).toBe('=HYPERLINK("x")');
+    });
+  });
 });
 
 describe('paste', () => {
