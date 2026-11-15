@@ -26,7 +26,7 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
   await signIn(page, 'maria@example.com', `/${slug}/home`);
   await page.goto(`/${slug}/home`);
 
-  // ── Create offers 3.1.0 for "Supplier onboarding" (a new major: a fresh install)
+  // ── Create offers 3.1.1 for "Supplier onboarding" (a new major: a fresh install)
   const wizard = page.getByRole('dialog', { name: 'Create' });
   await expect(async () => {
     await page.keyboard.press('Control+k');
@@ -36,7 +36,7 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
   await wizard.getByTestId('create-matches').getByRole('button').filter({ hasText: TITLE }).click();
   const preview = wizard.getByTestId('create-preview');
   await expect(preview.getByRole('heading', { name: TITLE })).toBeVisible();
-  await expect(preview).toContainText('3.1.0');
+  await expect(preview).toContainText('3.1.1');
   await page.keyboard.press('Escape');
   await expect(wizard).toBeHidden();
 
@@ -46,7 +46,7 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
     .getByRole('list', { name: 'Available packs' })
     .getByRole('listitem')
     .filter({ hasText: TITLE });
-  await expect(row).toContainText('3.1.0');
+  await expect(row).toContainText('3.1.1');
   const dialog = page.getByRole('dialog');
   await expect(async () => {
     await row.getByRole('button', { name: `Preview ${TITLE}` }).click();
@@ -219,4 +219,31 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
         .getByRole('tab', { name: v }),
     ).toBeVisible();
   await shot(page, '08-checks-sheet');
+
+  // ── 3.1.1: "Met checks with expired evidence" counts a Met check whose evidence has expired (3.1.0 always read 0)
+  const checkFields = await rest<{ id: string; key: string }[]>(
+    page,
+    `fields?sheet_id=eq.${checks}&select=id,key`,
+  );
+  const checkField = (k: string) => checkFields.find((f) => f.key === k)!.id;
+  const [aCheck] = await rest<{ id: string }[]>(
+    page,
+    `items?sheet_id=eq.${checks}&archived_at=is.null&select=id&order=position&limit=1`,
+  );
+  await rest(page, 'rpc/set_item_values', {
+    method: 'POST',
+    body: {
+      p_item: aCheck!.id,
+      p_patch: { [checkField('status')]: 'opt_met', [checkField('evidence_expiry')]: '2026-01-31' },
+    },
+  });
+  const [install] = await rest<{ ref_map: Record<string, string> }[]>(
+    page,
+    `pack_installs?org_id=eq.${org!.id}&pack_key=eq.supplier-management&status=eq.installed&select=ref_map`,
+  );
+  await page.goto(`/${slug}/dashboards/${install!.ref_map['dashboard:overview']}`);
+  const expired = page.getByRole('listitem', { name: 'Met checks with expired evidence' });
+  await expect(expired.getByText('1', { exact: true })).toBeVisible();
+  await expired.scrollIntoViewIfNeeded();
+  await shot(page, '09-met-checks-expired');
 });

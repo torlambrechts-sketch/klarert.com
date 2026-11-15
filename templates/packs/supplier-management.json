@@ -1,6 +1,6 @@
 {
   "key": "supplier-management",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "title": "Supplier management (add-on)",
   "description": "Supplier approval, reviews, a library of supplier requirements with the rules for who they apply to, and a check per supplier and requirement kept in step for you, on the shared Suppliers register of the Core registers. Supplier documents go in Documents and policies, supplier risks in the Risk register and supplier problems in Nonconformities and CAPA. Installs the Core registers first.",
   "requires": [
@@ -2006,10 +2006,9 @@
         },
         {
           "ref": "w_expired",
-          "type": "overdue",
+          "type": "count",
           "title": "Met checks with expired evidence",
           "sheetRef": "check",
-          "fieldKey": "evidence_expiry",
           "conditions": [
             {
               "fieldKey": "status",
@@ -2017,6 +2016,11 @@
               "value": [
                 "opt_met"
               ]
+            },
+            {
+              "fieldKey": "evidence_expiry",
+              "op": "before",
+              "value": "today"
             }
           ]
         },
