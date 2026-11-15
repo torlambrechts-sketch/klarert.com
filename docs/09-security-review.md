@@ -180,8 +180,8 @@ Server Actions (`'use server'` files in `src/app`) only bind these commands; the
 
 ## 6. Open (not fixed here; for Tor to decide)
 
-1. **Rate-limit salt.** `hashIp` uses `FORM_RATE_LIMIT_SALT`, else `CRON_SECRET`, else an empty salt. Set
-   `FORM_RATE_LIMIT_SALT` in Vercel so the hashes do not depend on another secret (and are not unsalted).
+1. ~~**Rate-limit salt.**~~ Fixed (§8.4, SA-10): public forms use `FORM_RATE_LIMIT_SALT` only and refuse every
+   answer without it.
 2. **Client IP header.** The form action takes the first `x-forwarded-for` entry, then `x-real-ip`. On Vercel these are
    set by the platform; behind any other proxy a visitor could choose their own IP and step around the rate limit.
    Keep the app on Vercel or read the platform's header only.
@@ -305,3 +305,86 @@ cache keeps it to one level check). Grants are indexed by (sheet, person), (fold
    on a restricted field (no leak; the filter finds nothing).
 5. `archive_pack` stops with "no access" when the pack holds restricted sheets the admin cannot open (their
    automations are held by the structure guard): an owner, or an admin on their lists, archives it.
+
+## 8. Application security fixes (15 Nov 2026, branch `claude/security-app`)
+
+From the board's application security review (SA-*) and engineering review (E1). The database findings (SA-1, SA-3,
+SA-4, SA-5, SA-8, SA-9, SA-12, SA-14) are fixed on `claude/security-db`, which owns every migration.
+
+### 8.1 Redirects after sign-in (SA-2)
+
+Every `next` (the sign-in page, the password and email-link actions, the email-link callback, onboarding and the
+two-step page) goes through `safeNext` (`src/lib/safe-next.ts`). It refuses backslashes, control characters (tab, line
+feed, carriage return …) and their percent-encoded forms (decoded up to three times), anything not starting with one
+`/`, then parses the value with `new URL(next, base)` and keeps it only when the origin is still the base's. The result
+is the parsed path, query and hash. Unit tests list the known bypasses (`/\evil.com`, `/\t/evil.com`, `/%5Cevil.com`,
+`//evil.com`, `https://evil.com`, `/%09/evil.com` and more); `tests/e2e/password.spec.ts` checks the redirects.
+
+### 8.2 Two-step sign-in (SA-6)
+
+Supabase Auth MFA with an authenticator app (TOTP). The words in the product are "two-step sign-in", never "MFA".
+
+- **Your account** (`/account`, docs/05 §1): set up an app (QR code, the key to type by hand, the first code),
+  add a spare, remove one, and recovery guidance. There are no recovery codes (Supabase's are experimental): a spare
+  app or the saved key is the way back, else Supabase support of the project resets the factor (owner step below).
+- **At sign-in:** a person with an app who signed in with a password or an email link holds an `aal1` session.
+  `getSession()` (`src/server/auth.ts`) treats that session as signed out, so every page, server read and command
+  refuses it; pages send it to `/login/two-step`, commands answer "Enter the code from your authenticator app to
+  finish signing in." The code raises the session to `aal2`.
+- **Workspace setting:** Workspace admin › Security › "Require two-step sign-in for this workspace", stored as
+  `orgs.settings.requireTwoStep` (owners change it, admins read it; an owner must use two-step sign-in before turning
+  it on). `requireMember` sends a member whose session is not `aal2` to `/account?required=<slug>`, and `withOrg`
+  refuses every command of that workspace ("This workspace requires two-step sign-in. Set it up in Your account, then
+  try again."). The rules are pure (`src/lib/two-step.ts`) and unit tested, with `withOrg` tests in
+  `src/server/commands/context.test.ts` and e2e in `tests/e2e/two-step.spec.ts` (desktop and 390 px, keyboard).
+- **Open until the database enforces it (asked of `claude/security-db`):** the setting is enforced by the server only.
+  A member's browser still holds a JWT that PostgREST accepts, so a member of a requiring workspace without an app
+  could read its rows through the REST API directly. Wanted: a restrictive RLS check (or one inside `is_member`) that
+  requires `auth.jwt()->>'aal' = 'aal2'` when `orgs.settings->>'requireTwoStep' = 'true'`, and for every person who
+  has a verified factor; an audit row when the setting changes; and an owner-only, `aal2`-only RPC to change it in
+  place of the direct `orgs` update.
+- Local development: `supabase/config.toml` `[auth.mfa.totp]` enroll and verify on.
+
+### 8.3 Sessions (SA-17)
+
+A session ends 12 hours after sign-in (`timebox`, one working day) or after 2 hours in which its refresh token was not
+used (`inactivity_timeout`). An open tab refreshes its 1-hour access token about once an hour, so the inactivity limit
+must stay above `jwt_expiry`; it signs out laptops that were shut and tabs that were closed. Values in
+`supabase/config.toml` `[auth.sessions]`; the hosted project needs the same (Pro plan). Supabase does not expose when a
+session will end (the time box is a project setting, not a claim), so Your account shows "Signed in since …" (the
+first sign-in step's time from the token's `amr`) instead of "Signed in until".
+
+### 8.4 Public forms fail closed (SA-10)
+
+The "page served at" stamp and the per-visitor rate-limit key use `FORM_RATE_LIMIT_SALT` only (at least 32
+characters, `src/server/form-stamp.ts`). Without it the form page says "This form cannot take answers right now. Try
+again later.", every submission is refused, and each refusal logs `FORM_RATE_LIMIT_SALT is missing or shorter than 32
+characters: public forms refuse every submission until it is set`. There is no fallback to `CRON_SECRET`.
+
+### 8.5 Smaller fixes
+
+- **Grid copy (SA-11):** copied cells that a spreadsheet would run as a formula get the apostrophe CSV exports use
+  (`escapeFormula`, `src/engine/audit/csv.ts`); number columns are copied as they are, and pasting a copied cell back
+  drops the apostrophe (`unescapeFormula`).
+- **Files (SA-13):** download, preview, edit details and archive check the file's workspace before any RPC that writes
+  or logs.
+- **File preview (SA-15):** `/[org]/files/[fileId]/preview` answers with `Content-Security-Policy: sandbox;
+  default-src 'none'; base-uri 'none'; frame-ancestors 'self'` (set in `next.config.ts`: config headers replace a
+  route's own). Chromium's PDF viewer still renders under it (checked in full Chromium by
+  `tests/e2e/item-files.spec.ts`). The iframe gets no `sandbox` attribute: Chromium then shows a "blocked" page in
+  place of the PDF (tried 15 Nov 2026).
+- **Headers (SA-7, in part):** `Permissions-Policy` turns off camera, microphone, geolocation, payment, USB and the
+  other features the app does not use; `Strict-Transport-Security: max-age=63072000; includeSubDomains`. HSTS
+  `includeSubDomains` applies only to names under the host that sends it (`*.www.klarert.com`), never to the apex
+  `klarert.com` (another product) or its other subdomains, so it is safe whatever they serve; `preload` would need
+  the apex to send it and is left out. The nonce-based script CSP comes after the demo.
+
+### 8.6 CI (E1)
+
+31 of the last 33 failed runs on `main` stopped at "Generated types are up to date": `src/lib/database.types.ts` had
+been edited by hand (`design_health.last_failed_at` made nullable) or not regenerated after a migration. Because that
+step came first, the build, the bundle secret check and e2e never ran. Fixed: the file is regenerated, the nullable
+read is cast where it is used, and CI is split into jobs so one failure no longer hides the others (`static`: lint,
+typecheck, unit tests, migration smoke test; `database`: migrations, pgTAP, types; `e2e`: seed, build, bundle check,
+Playwright). When the types differ, the job prints how to fix it and uploads the generated file as an artifact, so a
+builder without Docker can download it. See `README.md` › Generated types and Branch protection.
