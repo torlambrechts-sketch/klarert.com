@@ -73,35 +73,92 @@ async function chunked<T>(ids: string[], run: (ids: string[]) => PromiseLike<T[]
 const storageIds = (fields: Field[], storage: string) =>
   fields.filter((f) => resolveFieldType(f.type)?.storage === storage).map((f) => f.id);
 
-/** People, teams, job roles, entities and sites of a workspace. */
+/** People, teams, job roles, entities and sites of a workspace, every page of each. */
 export async function fetchDirectory(db: Db, orgId: string) {
-  const [members, teams, teamMembers, jobRoles, entities, sites] = await Promise.all([
-    db
-      .from('memberships')
-      .select('user_id, profiles(id, display_name, initials, color)')
-      .eq('org_id', orgId),
-    db.from('teams').select('id, name').eq('org_id', orgId).order('name'),
-    db.from('team_members').select('team_id, user_id').eq('org_id', orgId),
-    db.from('job_roles').select('id, name').eq('org_id', orgId).order('name'),
-    db.from('entities').select('id, name, country').eq('org_id', orgId).order('name'),
-    db.from('sites').select('id, entity_id, name').eq('org_id', orgId).order('name'),
+  const [members, teams, tm, jobRoles, entities, sites] = await Promise.all([
+    fetchAllPages((from, to) =>
+      db
+        .from('memberships')
+        .select('user_id, profiles(id, display_name, initials, color)')
+        .eq('org_id', orgId)
+        .order('user_id')
+        .range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db
+        .from('teams')
+        .select('id, name')
+        .eq('org_id', orgId)
+        .order('name')
+        .order('id')
+        .range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db
+        .from('team_members')
+        .select('team_id, user_id')
+        .eq('org_id', orgId)
+        .order('team_id')
+        .order('user_id')
+        .range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db
+        .from('job_roles')
+        .select('id, name')
+        .eq('org_id', orgId)
+        .order('name')
+        .order('id')
+        .range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db
+        .from('entities')
+        .select('id, name, country')
+        .eq('org_id', orgId)
+        .order('name')
+        .order('id')
+        .range(from, to),
+    ),
+    fetchAllPages((from, to) =>
+      db
+        .from('sites')
+        .select('id, entity_id, name')
+        .eq('org_id', orgId)
+        .order('name')
+        .order('id')
+        .range(from, to),
+    ),
   ]);
-  const people: Person[] = must(members)
+  const people: Person[] = members
     .flatMap((m) => (m.profiles ? [m.profiles] : []))
     .map((p) => ({ id: p.id, name: p.display_name, initials: p.initials, color: p.color }))
     .sort((a, b) => a.name.localeCompare(b.name, 'en-GB'));
-  const tm = must(teamMembers);
+  const byTeam = new Map<string, string[]>();
+  for (const x of tm) byTeam.set(x.team_id, [...(byTeam.get(x.team_id) ?? []), x.user_id]);
   return {
     people,
-    teams: must(teams).map((t) => ({
-      id: t.id,
-      name: t.name,
-      memberIds: tm.filter((x) => x.team_id === t.id).map((x) => x.user_id),
-    })),
-    jobRoles: must(jobRoles),
-    entities: must(entities).map((e) => ({ id: e.id, name: e.name, country: e.country })),
-    sites: must(sites).map((s) => ({ id: s.id, entityId: s.entity_id, name: s.name })),
+    teams: teams.map((t) => ({ id: t.id, name: t.name, memberIds: byTeam.get(t.id) ?? [] })),
+    jobRoles,
+    entities: entities.map((e) => ({ id: e.id, name: e.name, country: e.country })),
+    sites: sites.map((s) => ({ id: s.id, entityId: s.entity_id, name: s.name })),
   };
+}
+
+/** The workspace's live sheets (sub-item sheets too): id and name, every page. */
+export async function fetchLiveSheets(
+  db: Db,
+  orgId: string,
+): Promise<{ id: string; name: string }[]> {
+  return fetchAllPages((from, to) =>
+    db
+      .from('sheets')
+      .select('id, name')
+      .eq('org_id', orgId)
+      .is('archived_at', null)
+      .order('id')
+      .range(from, to),
+  );
 }
 
 /**

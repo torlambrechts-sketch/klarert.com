@@ -11,11 +11,16 @@ import {
   evidenceTable,
   filesToInclude,
   inPeriod,
+  isWorkspaceEntry,
   logValueText,
+  mergeEntries,
   packReadme,
   registerTable,
   uniqueNames,
+  workspaceChainKey,
+  WORKSPACE_LABEL,
   zipName,
+  type ActivityEntry,
   type ChainResult,
 } from './pack';
 import { buildSoa, soaCsv, soaHtml, soaTable, SOA_COLUMNS, type SoaHeader } from './soa';
@@ -313,6 +318,71 @@ describe('audit pack tables', () => {
     ]);
   });
 
+  it('workspace entries are rows of the sheet "Workspace", masked like item entries, in id order', () => {
+    const entry = (id: number, more: Partial<ActivityEntry>): ActivityEntry => ({
+      id,
+      at: '2026-05-01T10:00:00Z',
+      chainKey: 'sheet:o-1',
+      itemId: null,
+      sheetId: null,
+      actorKind: 'user',
+      actorId: 'u-maria',
+      action: 'audit.exported',
+      fieldId: null,
+      oldValue: null,
+      newValue: { kind: 'audit_pack', scope: 'workspace' },
+      note: 'Maria Pereira exported audit pack',
+      prevHash: 'genesis',
+      hash: `h${id}`,
+      ...more,
+    });
+    const item = entry(5, {
+      chainKey: 'i-1',
+      itemId: 'i-1',
+      sheetId: 's-1',
+      action: 'value.changed',
+      newValue: { $personal: 'abc' },
+    });
+    const ws = entry(9, {});
+    const settings = entry(3, {
+      action: 'pack.settings_changed',
+      newValue: { values: { f1: { $restricted: 'x' } } },
+    });
+    expect(workspaceChainKey('o-1')).toBe('sheet:o-1');
+    expect([ws, item, settings].map(isWorkspaceEntry)).toEqual([true, false, true]);
+    const merged = mergeEntries([item, ws], [ws, settings]);
+    expect(merged.map((e) => e.id)).toEqual([3, 5, 9]);
+    const t = activityTable(
+      merged,
+      {
+        person: () => 'Maria Pereira',
+        item: (id) => (id ? 'R-1 Risk' : ''),
+        sheet: (id) => (id ? 'Risks' : ''),
+        field: () => '',
+      },
+      'Europe/London',
+    );
+    expect(t.slice(1).map((r) => [r[0], r[2], r[3], r[5], r[8], r[10]])).toEqual([
+      [
+        '3',
+        WORKSPACE_LABEL,
+        '',
+        'pack.settings_changed',
+        '{"values":{"f1":"Restricted"}}',
+        'sheet:o-1',
+      ],
+      ['5', 'Risks', 'R-1 Risk', 'value.changed', '"Personal data"', 'i-1'],
+      [
+        '9',
+        'Workspace',
+        '',
+        'audit.exported',
+        '{"kind":"audit_pack","scope":"workspace"}',
+        'sheet:o-1',
+      ],
+    ]);
+  });
+
   it('reports each chain and sums them up', () => {
     const results: ChainResult[] = [
       { chainKey: 'i-1', label: 'R-1', sheetName: 'Risks', ok: true, entries: 4, lastHash: 'h' },
@@ -337,6 +407,7 @@ describe('audit pack tables', () => {
       registers: 3,
       evidence: { listed: 4, included: 2 },
       entries: 10,
+      workspaceEntries: 3,
       chains: { chains: 5, ok: 5, broken: 0, failed: 0, entries: 30 },
       soa: ['ISO/IEC 27001:2022'],
       leftOut: ['1 sheet you cannot open'],
@@ -345,5 +416,9 @@ describe('audit pack tables', () => {
     expect(text).toContain('5 checked, 5 ok, 0 broken');
     expect(text).toContain('sha256(prev_hash');
     expect(text).toContain('- 1 sheet you cannot open');
+    expect(text).toContain(
+      'Activity log: 10 entries in the period, 3 of them on the workspace chain (sheet "Workspace"',
+    );
+    expect(text).toContain('the workspace chain included');
   });
 });

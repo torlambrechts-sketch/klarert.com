@@ -10,13 +10,22 @@ import {
   evidenceTable,
   filesToInclude,
   inPeriod,
+  isWorkspaceEntry,
+  mergeEntries,
   packReadme,
   registerTable,
   soaCsv,
   soaHtml,
   toCsv,
   uniqueNames,
+  workspaceChainKey,
+  WORKSPACE_LABEL,
   zipName,
+  canSeeExports,
+  exportRefs,
+  exportRow,
+  type AuditExportKind,
+  type ExportRow,
   type ManagementReview,
   type ReviewRow,
   type ReviewSource,
@@ -34,6 +43,7 @@ import {
   type ReviewPackSource,
 } from '@/lib/packs/management-review';
 import {
+  auditExportsInput,
   auditPackInput,
   auditScopesInput,
   managementReviewInput,
@@ -41,15 +51,19 @@ import {
 } from '@/lib/schemas/audit';
 import { fetchDirectory, type Db } from '@/lib/sheet-query';
 import { isAdminRole, isEditorRole } from '@/server/auth';
+import { getApps } from '@/server/apps/read';
 import { readLibraries, readLibraryCoverage } from '@/server/frameworks/workspace';
 import {
   itemLabels,
   loadSheet,
   readActivity,
   readEvidence,
+  readExportNames,
+  readExports,
   readScopes,
   readScopeSheets,
   readSoa,
+  readWorkspaceActivity,
   verifyChains,
   workspaceInfo,
   type AuditScopes,
@@ -68,13 +82,7 @@ import { withOrg } from './context';
 
 const BUCKET = 'files';
 
-export type AuditExportKind =
-  | 'soa.csv'
-  | 'soa.print'
-  | 'audit_pack'
-  | 'management_review'
-  | 'management_review.item'
-  | 'data_flow_record';
+export type { AuditExportKind } from '@/engine/audit';
 
 /** Log an export on the workspace chain (log_audit_export, 0034 and 0049): the kind and a flat scope of known keys. */
 export async function logExport(
@@ -194,6 +202,62 @@ export async function listAuditOutputs(input: unknown): Promise<Result<AuditOutp
   );
 }
 
+export interface AuditExports {
+  rows: ExportRow[];
+  /** Pass as `before` for the next page; null on the last page. */
+  next: number | null;
+}
+
+/**
+ * The Exports list on Audit outputs (owner decision 15 Nov 2026): the workspace's audit exports, newest first, a page
+ * at a time, with what was exported, who, when and the filters used. Owners, admins and auditors, the people who can
+ * make every export; read under RLS.
+ */
+export async function listAuditExports(input: unknown): Promise<Result<AuditExports>> {
+  const p = auditExportsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'member',
+    async ({ supabase, orgId, role }) => {
+      if (!canSeeExports(role))
+        return fail('forbidden', 'Owners, admins and auditors see the list of exports.');
+      try {
+        const [page, ws] = await Promise.all([
+          readExports(supabase, orgId, { before: v.before }),
+          workspaceInfo(supabase, orgId),
+        ]);
+        const refs = exportRefs(page.entries);
+        const [names, directory, apps] = await Promise.all([
+          readExportNames(supabase, orgId, refs),
+          fetchDirectory(supabase, orgId),
+          refs.apps.length ? getApps(orgId, role).catch(() => []) : Promise.resolve([]),
+        ]);
+        const personName = new Map(directory.people.map((x) => [x.id, x.name]));
+        const appTitle = new Map(apps.map((a) => [a.key, a.title]));
+        const rows = page.entries.map((e) =>
+          exportRow(
+            e,
+            {
+              person: (id) => (id ? (personName.get(id) ?? 'Former member') : 'Unknown'),
+              folder: (id) => names.folder.get(id) ?? null,
+              install: (id) => names.install.get(id) ?? null,
+              pack: names.pack,
+              app: (key) => appTitle.get(key) ?? null,
+            },
+            ws.timeZone,
+          ),
+        );
+        return ok({ rows, next: page.next });
+      } catch (e) {
+        return fromDbError(e as Error);
+      }
+    },
+    'listAuditExports',
+  );
+}
+
 export interface AuditPackResult {
   filename: string;
   bytes: Uint8Array;
@@ -294,8 +358,14 @@ export async function buildAuditPack(input: unknown): Promise<Result<AuditPackRe
         put('evidence/index.csv', toCsv(evidenceTable(evidence, ws.timeZone), { bom: true }));
 
         // the activity log of the period and the chain check
+        // the workspace chain's entries (exports, packs, frameworks, folders, settings) go in every pack as rows
+        // of the sheet "Workspace" (owner decision 15 Nov 2026), and its chain is checked with the others
         const sheetIds = loaded.map((l) => l.data.sheet.id);
-        const entries = (await readActivity(supabase, orgId, sheetIds, period)).filter((e) =>
+        const [sheetEntries, workspaceEntries] = await Promise.all([
+          readActivity(supabase, orgId, sheetIds, period),
+          readWorkspaceActivity(supabase, orgId, period),
+        ]);
+        const entries = mergeEntries(sheetEntries, workspaceEntries).filter((e) =>
           inPeriod(e.at, period, ws.timeZone),
         );
         const itemLabel = new Map<string, string>();
@@ -328,7 +398,9 @@ export async function buildAuditPack(input: unknown): Promise<Result<AuditPackRe
             { bom: true },
           ),
         );
-        const chainKeys = new Map<string, { label: string; sheetName: string }>();
+        const chainKeys = new Map<string, { label: string; sheetName: string }>([
+          [workspaceChainKey(orgId), { label: WORKSPACE_LABEL, sheetName: WORKSPACE_LABEL }],
+        ]);
         for (const l of loaded) {
           chainKeys.set(`sheet:${l.data.sheet.id}`, {
             label: `Sheet ${l.data.sheet.name}`,
@@ -362,6 +434,7 @@ export async function buildAuditPack(input: unknown): Promise<Result<AuditPackRe
           registers: loaded.length,
           evidence: { listed: evidence.length, included },
           entries: entries.length,
+          workspaceEntries: entries.filter(isWorkspaceEntry).length,
           chains: summary,
           soa: soaTitles,
           leftOut: scope.leftOut,

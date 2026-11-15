@@ -2,7 +2,14 @@
 // what is seen, so a restricted sheet never reaches an export and a restricted field's values never leave the
 // database for someone not listed on it. The engine (src/engine/audit) turns these rows into tables and text.
 import 'server-only';
-import type { ActivityEntry, ChainResult, EvidenceFile, Period } from '@/engine/audit';
+import {
+  workspaceChainKey,
+  type ActivityEntry,
+  type ChainResult,
+  type EvidenceFile,
+  type Period,
+} from '@/engine/audit';
+import type { ExportEntry } from '@/engine/audit/exports';
 import { buildSoa, type Soa, type SoaEvidence, type SoaLinked } from '@/engine/audit/soa';
 import { LIBRARY_KEYS } from '@/engine/frameworks/pack';
 import { addDays } from '@/engine/fields/helpers';
@@ -11,13 +18,12 @@ import type { Condition, Ctx, Sheet } from '@/engine/types';
 import { parseViewConfig } from '@/engine/views/config';
 import { env } from '@/lib/env';
 import { repoFrameworks } from '@/lib/frameworks/catalogue';
-import { fetchItemsById, fetchSheetData, type Db } from '@/lib/sheet-query';
+import { fetchAllPages, fetchItemsById, fetchSheetData, type Db } from '@/lib/sheet-query';
 import { SHEET_COLUMNS, toSheet } from '@/lib/sheet-rows';
 import { readFrameworks } from '@/server/frameworks/catalogue';
 import { linksAround } from '@/server/frameworks/workspace';
 import { newId } from '@/server/sheet-context';
 
-const PAGE = 1000;
 const CHUNK = 150;
 
 function must<T>(r: { data: T | null; error: { message: string } | null }, what: string): T {
@@ -378,6 +384,49 @@ export async function readEvidence(
 
 // ───────────────────────── activity ─────────────────────────
 
+const ACTIVITY_COLUMNS =
+  'id, at, chain_key, item_id, sheet_id, actor_kind, actor_id, action, field_id, old_value, new_value, note, prev_hash, hash';
+
+type ActivityRow = {
+  id: number;
+  at: string;
+  chain_key: string;
+  item_id: string | null;
+  sheet_id: string | null;
+  actor_kind: string;
+  actor_id: string | null;
+  action: string;
+  field_id: string | null;
+  old_value: unknown;
+  new_value: unknown;
+  note: string | null;
+  prev_hash: string;
+  hash: string;
+};
+
+const toEntry = (r: ActivityRow): ActivityEntry => ({
+  id: r.id,
+  at: r.at,
+  chainKey: r.chain_key,
+  itemId: r.item_id,
+  sheetId: r.sheet_id,
+  actorKind: r.actor_kind,
+  actorId: r.actor_id,
+  action: r.action,
+  fieldId: r.field_id,
+  oldValue: r.old_value as ActivityEntry['oldValue'],
+  newValue: r.new_value as ActivityEntry['newValue'],
+  note: r.note,
+  prevHash: r.prev_hash,
+  hash: r.hash,
+});
+
+/** A day either side in UTC; the engine keeps the entries whose day in the workspace time zone is in the period. */
+const periodWindow = (period: Period) => ({
+  from: `${addDays(period.from, -1)}T00:00:00Z`,
+  to: `${addDays(period.to, 2)}T00:00:00Z`,
+});
+
 /** Entries of the given sheets (and their items) in the period, read under RLS, oldest first. */
 export async function readActivity(
   db: Db,
@@ -386,49 +435,49 @@ export async function readActivity(
   period: Period,
 ): Promise<ActivityEntry[]> {
   if (sheetIds.length === 0) return [];
-  // a day either side in UTC; the engine keeps the entries whose day in the workspace time zone is in the period
-  const from = `${addDays(period.from, -1)}T00:00:00Z`;
-  const to = `${addDays(period.to, 2)}T00:00:00Z`;
+  const { from, to } = periodWindow(period);
   const out: ActivityEntry[] = [];
   for (let i = 0; i < sheetIds.length; i += CHUNK) {
     const part = sheetIds.slice(i, i + CHUNK);
-    for (let start = 0; ; start += PAGE) {
-      const rows = must(
-        await db
-          .from('activity_log')
-          .select(
-            'id, at, chain_key, item_id, sheet_id, actor_kind, actor_id, action, field_id, old_value, new_value, note, prev_hash, hash',
-          )
-          .eq('org_id', orgId)
-          .in('sheet_id', part)
-          .gte('at', from)
-          .lt('at', to)
-          .order('id')
-          .range(start, start + PAGE - 1),
-        'activity',
-      );
-      out.push(
-        ...rows.map((r) => ({
-          id: r.id,
-          at: r.at,
-          chainKey: r.chain_key,
-          itemId: r.item_id,
-          sheetId: r.sheet_id,
-          actorKind: r.actor_kind,
-          actorId: r.actor_id,
-          action: r.action,
-          fieldId: r.field_id,
-          oldValue: r.old_value as ActivityEntry['oldValue'],
-          newValue: r.new_value as ActivityEntry['newValue'],
-          note: r.note,
-          prevHash: r.prev_hash,
-          hash: r.hash,
-        })),
-      );
-      if (rows.length < PAGE) break;
-    }
+    const rows = await fetchAllPages((a, b) =>
+      db
+        .from('activity_log')
+        .select(ACTIVITY_COLUMNS)
+        .eq('org_id', orgId)
+        .in('sheet_id', part)
+        .gte('at', from)
+        .lt('at', to)
+        .order('id')
+        .range(a, b),
+    );
+    out.push(...rows.map(toEntry));
   }
   return out.sort((a, b) => a.id - b.id);
+}
+
+/**
+ * Entries of the workspace chain (`sheet:<org>`, no sheet and no item) in the period, read under RLS as the item
+ * entries are (folder access entries only for owners and admins), oldest first: exports, packs, frameworks, folders
+ * and settings (owner decision 15 Nov 2026).
+ */
+export async function readWorkspaceActivity(
+  db: Db,
+  orgId: string,
+  period: Period,
+): Promise<ActivityEntry[]> {
+  const { from, to } = periodWindow(period);
+  const rows = await fetchAllPages((a, b) =>
+    db
+      .from('activity_log')
+      .select(ACTIVITY_COLUMNS)
+      .eq('org_id', orgId)
+      .eq('chain_key', workspaceChainKey(orgId))
+      .gte('at', from)
+      .lt('at', to)
+      .order('id')
+      .range(a, b),
+  );
+  return rows.map(toEntry);
 }
 
 /** Labels of items that are not loaded (archived since), for the log and the chain report. */
@@ -470,4 +519,98 @@ export async function verifyChains(
   };
   await Promise.all(Array.from({ length: Math.min(8, chains.length) }, worker));
   return out;
+}
+
+// ───────────────────────── exports ─────────────────────────
+
+/** Exports shown per page of the Exports list; "Show more" reads the next page. */
+export const EXPORTS_PAGE = 50;
+
+export interface ExportsPage {
+  entries: ExportEntry[];
+  /** The id to read before for the next page, or null when this is the last. */
+  next: number | null;
+}
+
+/**
+ * The workspace's audit exports (`audit.exported` on the workspace chain), newest first, a page at a time: entries with
+ * an id below `before` when given. Read under RLS (members read the workspace chain, 0027).
+ */
+export async function readExports(
+  db: Db,
+  orgId: string,
+  opts: { before?: number; size?: number } = {},
+): Promise<ExportsPage> {
+  const size = opts.size ?? EXPORTS_PAGE;
+  let q = db
+    .from('activity_log')
+    .select('id, at, actor_kind, actor_id, new_value')
+    .eq('org_id', orgId)
+    .eq('chain_key', workspaceChainKey(orgId))
+    .eq('action', 'audit.exported');
+  if (opts.before) q = q.lt('id', opts.before);
+  // one more than a page says whether there is a next one
+  const rows = must(await q.order('id', { ascending: false }).limit(size + 1), 'exports');
+  const page = rows.slice(0, size);
+  return {
+    entries: page.map((r) => ({
+      id: r.id,
+      at: r.at,
+      actorKind: r.actor_kind,
+      actorId: r.actor_id,
+      newValue: r.new_value as ExportEntry['newValue'],
+    })),
+    next: rows.length > size ? page[page.length - 1]!.id : null,
+  };
+}
+
+/** Names of the folders (archived ones too), pack installs and packs a page of exports refers to. */
+export async function readExportNames(
+  db: Db,
+  orgId: string,
+  refs: { folders: string[]; installs: string[]; packs: string[] },
+) {
+  const [folders, installs] = await Promise.all([
+    refs.folders.length
+      ? chunks(refs.folders, async (part) =>
+          must(
+            await db.from('folders').select('id, name').eq('org_id', orgId).in('id', part),
+            'folders',
+          ),
+        )
+      : [],
+    refs.installs.length
+      ? chunks(refs.installs, async (part) =>
+          must(
+            await db
+              .from('pack_installs')
+              .select('id, pack_key, version')
+              .eq('org_id', orgId)
+              .in('id', part),
+            'pack installs',
+          ),
+        )
+      : [],
+  ]);
+  const keys = [...new Set([...refs.packs, ...installs.map((i) => i.pack_key)])];
+  const packs = keys.length
+    ? await fetchAllPages((a, b) =>
+        db
+          .from('packs')
+          .select('key, version, title')
+          .in('key', keys)
+          .order('key')
+          .order('version')
+          .range(a, b),
+      )
+    : [];
+  const title = (key: string, version?: string) =>
+    packs.find((p) => p.key === key && p.version === version)?.title ??
+    packs.find((p) => p.key === key)?.title ??
+    null;
+  return {
+    folder: new Map(folders.map((f) => [f.id, f.name])),
+    install: new Map(installs.map((i) => [i.id, title(i.pack_key, i.version) ?? i.pack_key])),
+    pack: (key: string) => title(key),
+  };
 }

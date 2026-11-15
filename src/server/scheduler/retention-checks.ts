@@ -1,7 +1,7 @@
 import 'server-only';
 import { readRetention, retentionDue, type RetentionDue } from '@/engine/retention';
 import { sheetCtx, todayIn } from '@/engine/sheet-data';
-import { fetchSheetData, type Db } from '@/lib/sheet-query';
+import { fetchAllPages, fetchSheetData, type Db } from '@/lib/sheet-query';
 import { ITEM_COLUMNS, toItem } from '@/lib/sheet-rows';
 import { newId } from '@/server/sheet-context';
 
@@ -25,18 +25,51 @@ function must<T>(r: { data: T | null; error: { message: string } | null }): T {
   return r.data as T;
 }
 
-/** Workspaces with at least one sheet that has retention rules (cron route, service role). */
+/**
+ * Workspaces with at least one sheet that has retention rules (cron route, service role). Across every workspace, so
+ * every page past the API's 1000-row cap: a workspace whose sheets sort after the first 1000 is never skipped.
+ */
 export async function workspacesWithRetention(db: Db): Promise<string[]> {
-  const rows = must(
-    await db
+  const rows = await fetchAllPages((from, to) =>
+    db
       .from('sheets')
       .select('org_id, settings')
       .is('archived_at', null)
-      .not('settings->retention->rules', 'is', null),
+      .not('settings->retention->rules', 'is', null)
+      .order('org_id')
+      .order('id')
+      .range(from, to),
   );
   return [
     ...new Set(rows.filter((r) => readRetention(r.settings).rules.length).map((r) => r.org_id)),
   ];
+}
+
+/** A workspace's live sheets with their settings, every page. */
+export async function liveSheetSettings(db: Db, orgId: string) {
+  return fetchAllPages((from, to) =>
+    db
+      .from('sheets')
+      .select('id, settings')
+      .eq('org_id', orgId)
+      .is('archived_at', null)
+      .order('id')
+      .range(from, to),
+  );
+}
+
+/** A sheet's archived items, every page: erase and anonymise rules look at them too. */
+export async function archivedItems(db: Db, sheetId: string) {
+  const rows = await fetchAllPages((from, to) =>
+    db
+      .from('items')
+      .select(ITEM_COLUMNS)
+      .eq('sheet_id', sheetId)
+      .not('archived_at', 'is', null)
+      .order('id')
+      .range(from, to),
+  );
+  return rows.map(toItem);
 }
 
 /** The scheduler checks a workspace once a day (service role only). */
@@ -54,7 +87,7 @@ export async function runRetentionChecks(
   const summary: RetentionCheckSummary = { sheets: 0, items: 0, due: 0, queued: 0 };
   const [org, sheets] = await Promise.all([
     db.from('orgs').select('time_zone').eq('id', orgId).maybeSingle().then(must),
-    db.from('sheets').select('id, settings').eq('org_id', orgId).is('archived_at', null).then(must),
+    liveSheetSettings(db, orgId),
   ]);
   if (!org) return summary;
   const due: RetentionDue[] = [];
@@ -64,16 +97,7 @@ export async function runRetentionChecks(
     const data = await fetchSheetData(db, s.id);
     if (!data || data.sheet.orgId !== orgId) continue;
     // archived items still hold the data: erase and anonymise rules look at them too
-    const archived = rules.some((r) => r.action !== 'archive')
-      ? must(
-          await db
-            .from('items')
-            .select(ITEM_COLUMNS)
-            .eq('sheet_id', s.id)
-            .not('archived_at', 'is', null)
-            .limit(5000),
-        ).map(toItem)
-      : [];
+    const archived = rules.some((r) => r.action !== 'archive') ? await archivedItems(db, s.id) : [];
     summary.sheets += 1;
     const items = [...data.items, ...archived];
     summary.items += items.length;
