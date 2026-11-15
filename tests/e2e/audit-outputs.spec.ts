@@ -11,6 +11,36 @@ import { rest, signIn } from './helpers';
 
 const ISO27001 = 'ISO/IEC 27001:2022';
 
+/** The rows of a CSV file (quoted cells may hold commas, quotes and line breaks). */
+function csvRows(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]!;
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') {
+      row.push(cell);
+      cell = '';
+    } else if (c === '\r' && text[i + 1] === '\n') {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+      i++;
+    } else cell += c;
+  }
+  if (cell || row.length) rows.push([...row, cell]);
+  return rows;
+}
+
 async function adopt(page: Page, slug: string) {
   await page.goto(`/${slug}/settings?tab=frameworks`);
   await page
@@ -98,10 +128,14 @@ test('export the SoA, make an audit pack and compile the review inputs', async (
   const log = strFromU8(zip['activity/log.csv']!);
   expect(log).toContain('item.created');
   // workspace entries are rows of the sheet "Workspace": the adoption and the SoA exports made above
-  const workspaceRows = log.split('\r\n').filter((l) => l.split(',')[2] === 'Workspace');
-  expect(workspaceRows.some((l) => l.includes(',framework.adopted,'))).toBe(true);
-  expect(workspaceRows.some((l) => l.includes(',audit.exported,'))).toBe(true);
-  expect(workspaceRows.every((l) => l.includes(`,sheet:${org!.id},`))).toBe(true);
+  const [head, ...entries] = csvRows(log.replace('\uFEFF', ''));
+  expect(head!.slice(0, 6)).toEqual(['Entry', 'At', 'Sheet', 'Item', 'Actor', 'Action']);
+  const workspaceRows = entries.filter((r) => r[2] === 'Workspace');
+  expect(workspaceRows.map((r) => r[5])).toEqual(
+    expect.arrayContaining(['framework.adopted', 'audit.exported']),
+  );
+  expect(workspaceRows.every((r) => r[3] === '' && r[10] === `sheet:${org!.id}`)).toBe(true);
+  expect(workspaceRows.some((r) => r[4] === 'Maria Pereira')).toBe(true);
 
   // ── management review inputs for the period
   await page.goto(`/${slug}/audit`);
