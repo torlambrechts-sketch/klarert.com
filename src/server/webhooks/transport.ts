@@ -30,7 +30,12 @@ const guardedLookup: LookupFunction = (hostname, options, callback) => {
   });
 };
 
-export function postJson(url: URL, body: string, signal: AbortSignal): Promise<number> {
+export function postJson(
+  url: URL,
+  body: string,
+  signal: AbortSignal,
+  extra: Record<string, string> = {},
+): Promise<number> {
   return new Promise((resolve, reject) => {
     const req = https.request(
       url,
@@ -39,6 +44,7 @@ export function postJson(url: URL, body: string, signal: AbortSignal): Promise<n
         signal,
         lookup: guardedLookup,
         headers: {
+          ...extra,
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(body),
           'User-Agent': 'ComplianceOS-Webhooks/1.0',

@@ -305,3 +305,28 @@ export async function setAutomationPause(input: unknown): Promise<Result<{ pause
     'setAutomationPause',
   );
 }
+
+/**
+ * The key this automation signs its webhooks with (SA-12): receivers check `X-Klarert-Signature`. Owners and admins
+ * who can edit the sheet; each look is logged on the sheet's chain (automation.key_viewed).
+ */
+export async function revealSigningKey(input: unknown): Promise<Result<{ key: string }>> {
+  const p = automationRefInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'admin',
+    async ({ supabase, orgId }) => {
+      const row = await loadRow(supabase, orgId, v.automationId);
+      if (!row) return notFound();
+      const { data, error } = await supabase.rpc('automation_signing_key', {
+        p_automation: v.automationId,
+      });
+      if (error) return fromDbError(error);
+      return ok({ key: data });
+    },
+    'revealSigningKey',
+  );
+}
+

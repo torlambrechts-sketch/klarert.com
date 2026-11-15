@@ -37,7 +37,11 @@ import { ConditionRow, filterable, newCondition } from '@/components/views/filte
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { isItemFilesSource } from '@/engine/automations/schedule';
-import { createAutomationAction, updateAutomationAction } from '@/app/[org]/automations/actions';
+import {
+  createAutomationAction,
+  revealSigningKeyAction,
+  updateAutomationAction,
+} from '@/app/[org]/automations/actions';
 import { OutcomeChip } from './outcome';
 import type { SheetRef } from './queries';
 import { TemplateInput } from './template-input';
@@ -467,6 +471,9 @@ export function AutomationBuilder(props: BuilderProps) {
                 </Button>
               </li>
             </ol>
+            {props.automationId && draft.actions.some((a) => a.type === 'webhook') ? (
+              <SigningKey org={props.org} automationId={props.automationId} />
+            ) : null}
           </div>
         </Row>
         <div className="border-soft border-b py-2 last:border-b-0">
@@ -971,7 +978,12 @@ function ActionRow({
         <input
           type="url"
           aria-label={label('address')}
-          placeholder="https://"
+          // a saved address stays on the server (0056): only its host is shown; typing replaces it
+          placeholder={
+            str(action.urlHost) && str(action.urlRef)
+              ? `${str(action.urlHost)}/… (saved; type a new address to replace it)`
+              : 'https://'
+          }
           className={inputClass}
           value={str(action.url)}
           onChange={(e) => set({ url: e.target.value })}
@@ -1257,3 +1269,47 @@ function TestPanel({ result, item }: { result: TestResult; item: Item }) {
     </div>
   );
 }
+
+/** The key webhooks of this automation are signed with (owners and admins; each look is logged). */
+function SigningKey({ org, automationId }: { org: string; automationId: string }) {
+  const [key, setKey] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const id = useId();
+  return (
+    <div className="mt-2 flex flex-col gap-1.5">
+      <p id={id} className="text-muted-foreground text-label-12 m-0">
+        Webhooks are signed: the header X-Klarert-Signature is t=(seconds),v1=(HMAC-SHA256 of
+        &quot;t.body&quot; with this automation&apos;s signing key). Only owners and admins can see the key.
+      </p>
+      {key ? (
+        <input
+          readOnly
+          aria-label="Signing key"
+          aria-describedby={id}
+          className={cn(inputClass, 'font-mono')}
+          value={key}
+          onFocus={(e) => e.currentTarget.select()}
+        />
+      ) : (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="self-start"
+          disabled={pending}
+          aria-describedby={id}
+          onClick={async () => {
+            setPending(true);
+            const r = await revealSigningKeyAction({ org, automationId });
+            setPending(false);
+            if (!r.ok) toast.error(r.error.message);
+            else setKey(r.data.key);
+          }}
+        >
+          Show signing key
+        </Button>
+      )}
+    </div>
+  );
+}
+

@@ -197,7 +197,7 @@ export function webhookLeave(
     automationId: a.id,
     automationName: a.name,
     destination,
-    host: maskUrl(action.url),
+    host: maskUrl(action.url, action.urlHost),
     note:
       destination === 'webhook'
         ? 'The item’s ID, name and link, the sheet, the automation and every field below.'

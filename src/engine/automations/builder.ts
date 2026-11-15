@@ -16,7 +16,7 @@ import { subitemRows } from './subitem-actions';
 import { subitemTriggerField } from './subitem-triggers';
 import { childSheetIdOf, subitemLabel, subitemsOf } from '../subitems';
 import { type ActionId, type ActionJson, type AutomationEvent, type PlannedStep } from './types';
-import { isWebhookPreset } from './webhook';
+import { isWebhookPreset, savedWebhookHost } from './webhook';
 
 type Trigger = Automation['trigger'];
 
@@ -863,6 +863,8 @@ function actionProblem(action: ActionJson, ctx: Ctx, env: ValidationEnv): string
       } catch {
         ok = false;
       }
+      // the address saved before (0056) is kept unless a new one is typed
+      if (!url && savedWebhookHost(action)) ok = true;
       if (!ok) return 'Enter an address that starts with https://.';
       return isWebhookPreset(action.preset) ? null : 'Choose a format.';
     }

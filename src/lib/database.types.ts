@@ -163,6 +163,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"automation_secrets": {
+                  Row: {
+                    "automation_id": string,"created_at": string,"org_id": string,"signing_key": string,"webhook_urls": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "automation_id": string,"created_at"?: string,"org_id": string,"signing_key"?: string,"webhook_urls"?: NonNullable<Json>
+                  }
+                  Update: {
+                    "automation_id"?: string,"created_at"?: string,"org_id"?: string,"signing_key"?: string,"webhook_urls"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "automation_secrets_automation_id_fkey"
+      columns: ["automation_id"]
+isOneToOne: true
+      referencedRelation: "automations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "automation_secrets_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"automations": {
                   Row: {
                     "actions": NonNullable<Json>,"acts_as": string | null,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"last_run_at": string | null,"locked": boolean,"mode": string,"name": string,"org_id": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number
@@ -1436,6 +1462,12 @@ isOneToOne: false
 "_can_manage_sheet":
 { Args: { "p_sheet": string }; Returns: boolean
                            },
+"_command_proof":
+{ Args: { "p_t": number,"p_user": string }; Returns: string
+                           },
+"_command_secret":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "_create_item":
 { Args: { "p_actor_id": string,"p_actor_kind": string,"p_group": string,"p_name": string,"p_position": string,"p_sheet": string,"p_values": Json }; Returns: {
               "archived_at": string | null,
@@ -1666,6 +1698,9 @@ isOneToOne: false
 "_mask_value":
 { Args: { "p_kind": string,"p_salt": string,"v": Json }; Returns: Json
                            },
+"_mask_webhook_row":
+{ Args: { "p_row": Json }; Returns: Json
+                           },
 "_member_name":
 { Args: { "p_user": string }; Returns: string
                            },
@@ -1786,6 +1821,9 @@ isOneToOne: false
 "_submit_form":
 { Args: { "p_actor_id": string,"p_actor_kind": string,"p_channel": string,"p_consent": boolean,"p_name": string,"p_position": string,"p_values": Json,"p_view": string }; Returns: Json
                            },
+"_webhook_host":
+{ Args: { "p_url": string }; Returns: string
+                           },
 "_wf_apply":
 { Args: { "p_actor": string,"p_actor_kind": string,"p_automation": string,"p_def": Json,"p_item": string,"p_lock": boolean,"p_note": string,"p_status_option": string,"p_step_option": string }; Returns: Json
                            },
@@ -1865,6 +1903,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"activity_has_webhook_url":
+{ Args: { "p_new": Json,"p_old": Json }; Returns: boolean
+                           },
 "activity_hash":
 { Args: { "action": string,"actor_id": string,"actor_kind": string,"at": string,"field_id": string,"new_value": Json,"note": string,"old_value": Json,"prev": string }; Returns: string
                            },
@@ -1914,6 +1955,9 @@ isOneToOne: false
 "adopt_framework":
 { Args: { "p_framework": string,"p_org": string,"p_plan": Json,"p_version": string }; Returns: Json
                            },
+"api_request_guard":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "apply_pack_upgrade":
 { Args: { "p_install": string,"p_plan": Json }; Returns: Json
                            },
@@ -1927,6 +1971,9 @@ isOneToOne: false
 { Args: { "p_automations": (string)[] }; Returns: {
               "automation_id": string,"stop_reason": string
             }[]
+                           },
+"automation_signing_key":
+{ Args: { "p_automation": string }; Returns: string
                            },
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean
@@ -2182,6 +2229,9 @@ isOneToOne: false
 { Args: { "p_field": string }; Returns: boolean
                            },
 "file_object_pending":
+{ Args: { "p_path": string }; Returns: boolean
+                           },
+"file_object_readable":
 { Args: { "p_path": string }; Returns: boolean
                            },
 "filter_item_ids":

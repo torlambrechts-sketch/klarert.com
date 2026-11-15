@@ -676,6 +676,8 @@ describe('leaves the system', () => {
   it('masks addresses to their host', () => {
     expect(maskUrl('https://example.org/hook?key=abc')).toBe('example.org/…');
     expect(maskUrl('')).toBe('No address yet');
+    // a saved address (0056): the action holds its host only
+    expect(maskUrl(undefined, 'hooks.slack.com')).toBe('hooks.slack.com/…');
     expect(maskUrl('not a url')).toBe('An address that is not valid');
     expect(maskUrl(undefined)).toBe('No address yet');
   });
