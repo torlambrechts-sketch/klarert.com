@@ -165,14 +165,14 @@ isOneToOne: false
                   ]
                 },"automations": {
                   Row: {
-                    "actions": NonNullable<Json>,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"last_run_at": string | null,"locked": boolean,"mode": string,"name": string,"org_id": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number
+                    "actions": NonNullable<Json>,"acts_as": string | null,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"last_run_at": string | null,"locked": boolean,"mode": string,"name": string,"org_id": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "actions": NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"mode"?: string,"name": string,"org_id": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"run_count"?: number,"sheet_id": string,"source"?: string,"trigger": NonNullable<Json>,"updated_at"?: string,"version"?: number
+                    "actions": NonNullable<Json>,"acts_as"?: string | null,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"mode"?: string,"name": string,"org_id": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"run_count"?: number,"sheet_id": string,"source"?: string,"trigger": NonNullable<Json>,"updated_at"?: string,"version"?: number
                   }
                   Update: {
-                    "actions"?: NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"mode"?: string,"name"?: string,"org_id"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"run_count"?: number,"sheet_id"?: string,"source"?: string,"trigger"?: NonNullable<Json>,"updated_at"?: string,"version"?: number
+                    "actions"?: NonNullable<Json>,"acts_as"?: string | null,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"mode"?: string,"name"?: string,"org_id"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"run_count"?: number,"sheet_id"?: string,"source"?: string,"trigger"?: NonNullable<Json>,"updated_at"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -1427,6 +1427,9 @@ isOneToOne: false
 "_archive_pack_rows":
 { Args: { "p_install": string }; Returns: Json
                            },
+"_automation_targets":
+{ Args: { "p_actions": Json,"p_sheet": string }; Returns: (string)[]
+                           },
 "_can_manage_folder":
 { Args: { "p_folder": string }; Returns: boolean
                            },
@@ -1739,6 +1742,9 @@ isOneToOne: false
               "level": string,"org_id": string,"restricted": boolean,"sheet_id": string
             }[]
                            },
+"_sheet_name_for":
+{ Args: { "p_sheet": string,"p_user": string }; Returns: string
+                           },
 "_sheet_names_personal":
 { Args: { "p_sheet": string }; Returns: boolean
                            },
@@ -1916,6 +1922,11 @@ isOneToOne: false
                            },
 "archive_pack":
 { Args: { "p_install": string }; Returns: Json
+                           },
+"automation_authority":
+{ Args: { "p_automations": (string)[] }; Returns: {
+              "automation_id": string,"stop_reason": string
+            }[]
                            },
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean

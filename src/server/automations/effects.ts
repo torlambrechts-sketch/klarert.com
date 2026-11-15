@@ -868,8 +868,17 @@ export function automationStore(scope: { orgId: string; userId: string | null })
             .eq('enabled', true)
             .order('created_at')
             .order('id'),
-        ).then((r) =>
-          must(r).map((a) => ({
+        ).then(async (r) => {
+          const rows = must(r);
+          // the person each automation acts as must still be a member who can edit every sheet it writes to (0052)
+          const stops = new Map<string, string>();
+          if (rows.length > 0) {
+            const authority = must(
+              await db.rpc('automation_authority', { p_automations: rows.map((a) => a.id) }),
+            );
+            for (const x of authority) if (x.stop_reason) stops.set(x.automation_id, x.stop_reason);
+          }
+          return rows.map((a) => ({
             id: a.id,
             sheetId: a.sheet_id,
             name: a.name,
@@ -878,8 +887,9 @@ export function automationStore(scope: { orgId: string; userId: string | null })
             actions: (Array.isArray(a.actions) ? a.actions : []) as AutomationRow['actions'],
             createdBy: a.created_by,
             mode: a.mode === 'test' ? ('test' as const) : ('live' as const),
-          })),
-        );
+            stopReason: stops.get(a.id) ?? null,
+          }));
+        });
         automationLists.set(sheetId, list);
       }
       return list;
