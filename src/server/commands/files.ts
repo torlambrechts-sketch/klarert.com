@@ -213,6 +213,10 @@ export async function confirmUpload(input: unknown): Promise<Result<ConfirmedUpl
             saved = toFileVersion(data);
             return ok(toFile(data));
           },
+          discard: async (at) => {
+            const { error } = await supabase.storage.from(BUCKET).remove([at]);
+            if (error) throw new Error(error.message);
+          },
           log: (fields) =>
             log('confirmUpload.check', { org: orgId, user: user.id, item: v.itemId, ...fields }),
         },

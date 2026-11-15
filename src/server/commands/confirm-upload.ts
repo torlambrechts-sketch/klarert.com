@@ -15,6 +15,8 @@ export interface ConfirmDeps {
   inspect?(bytes: Uint8Array): string | null;
   /** Writes the files row and the activity entry in one transaction (add_file RPC). */
   addFile(): Promise<Result<FileRow>>;
+  /** Removes a refused object (the uploader may delete their own pending upload, 0054). Failures are only logged. */
+  discard?(path: string): Promise<void>;
   log(fields: Record<string, unknown>): void;
 }
 
@@ -29,8 +31,7 @@ export async function confirmWith(
   }
   const actual = deps.sha256(bytes);
   if (actual !== expected.sha256 || bytes.byteLength !== expected.size) {
-    // Nothing is deleted (files are immutable, no delete policy): the object stays unreferenced and the attempt is
-    // recorded as failed in the command log.
+    // No files row ever points at it; the uploader's pending object is removed (0054) and the attempt logged.
     deps.log({
       outcome: 'hash_mismatch',
       path: expected.path,
@@ -38,13 +39,24 @@ export async function confirmWith(
       actual,
       size: bytes.byteLength,
     });
+    await discard(deps, expected.path);
     return fail('conflict', CHANGED_DURING_UPLOAD);
   }
   const refused = deps.inspect?.(bytes) ?? null;
   if (refused) {
-    // the object stays unreferenced: no files row ever points at it, so nobody can download it
+    // never recorded: the object is removed so it cannot be served from storage (SA-9)
     deps.log({ outcome: 'refused', path: expected.path, reason: refused });
+    await discard(deps, expected.path);
     return fail('invalid', refused);
   }
   return deps.addFile();
+}
+
+async function discard(deps: ConfirmDeps, path: string) {
+  if (!deps.discard) return;
+  try {
+    await deps.discard(path);
+  } catch (e) {
+    deps.log({ outcome: 'discard_failed', path, reason: e instanceof Error ? e.message : String(e) });
+  }
 }
