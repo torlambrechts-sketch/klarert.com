@@ -229,13 +229,19 @@ describe('activity lines', () => {
     // a sub-item's name in its parent's log (0059)
     expect(
       activityText(
-        entry({ action: 'subitem.added', newValue: { display_id: 'INC-001.1', name: { $erased: true } } }),
+        entry({
+          action: 'subitem.added',
+          newValue: { display_id: 'INC-001.1', name: { $erased: true } },
+        }),
         look,
       ),
     ).toBe('Sub-item added: INC-001.1 erased');
     expect(
       activityText(
-        entry({ action: 'subitem.added', newValue: { display_id: 'INC-001.1', name: { $personal: 'x' } } }),
+        entry({
+          action: 'subitem.added',
+          newValue: { display_id: 'INC-001.1', name: { $personal: 'x' } },
+        }),
         look,
       ),
     ).toBe('Sub-item added: INC-001.1 Restricted');

@@ -267,7 +267,9 @@ describe('validation and the self-trigger guard', () => {
     });
     expect(draftProblems(saved, ctx)).toEqual({});
     const none = draft({ actions: [{ type: 'webhook', url: '', preset: 'generic' }] });
-    expect(draftProblems(none, ctx)['actions.0']).toBe('Enter an address that starts with https://.');
+    expect(draftProblems(none, ctx)['actions.0']).toBe(
+      'Enter an address that starts with https://.',
+    );
   });
 
   it('flags a field_changed automation that sets its own field', () => {

@@ -11,7 +11,10 @@ export type WebhookPreset = 'generic' | 'teams' | 'slack';
  * resolves) and `urlHost` instead of the address, which members never read. Null when the action has none.
  */
 export function savedWebhookHost(action: Record<string, unknown>): string | null {
-  return typeof action.urlRef === 'string' && action.urlRef && typeof action.urlHost === 'string' && action.urlHost
+  return typeof action.urlRef === 'string' &&
+    action.urlRef &&
+    typeof action.urlHost === 'string' &&
+    action.urlHost
     ? action.urlHost
     : null;
 }
@@ -22,7 +25,10 @@ export function hasSavedWebhook(actions: unknown): boolean {
     Array.isArray(actions) &&
     actions.some(
       (x) =>
-        !!x && typeof x === 'object' && (x as { type?: unknown }).type === 'webhook' && 'urlRef' in x,
+        !!x &&
+        typeof x === 'object' &&
+        (x as { type?: unknown }).type === 'webhook' &&
+        'urlRef' in x,
     )
   );
 }

@@ -1279,7 +1279,8 @@ function SigningKey({ org, automationId }: { org: string; automationId: string }
     <div className="mt-2 flex flex-col gap-1.5">
       <p id={id} className="text-muted-foreground text-label-12 m-0">
         Webhooks are signed: the header X-Klarert-Signature is t=(seconds),v1=(HMAC-SHA256 of
-        &quot;t.body&quot; with this automation&apos;s signing key). Only owners and admins can see the key.
+        &quot;t.body&quot; with this automation&apos;s signing key). Only owners and admins can see
+        the key.
       </p>
       {key ? (
         <input
@@ -1312,4 +1313,3 @@ function SigningKey({ org, automationId }: { org: string; automationId: string }
     </div>
   );
 }
-

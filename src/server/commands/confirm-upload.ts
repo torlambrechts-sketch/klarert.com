@@ -57,6 +57,10 @@ async function discard(deps: ConfirmDeps, path: string) {
   try {
     await deps.discard(path);
   } catch (e) {
-    deps.log({ outcome: 'discard_failed', path, reason: e instanceof Error ? e.message : String(e) });
+    deps.log({
+      outcome: 'discard_failed',
+      path,
+      reason: e instanceof Error ? e.message : String(e),
+    });
   }
 }

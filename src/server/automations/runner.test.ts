@@ -110,7 +110,9 @@ describe('runChain', () => {
     const { store, saved } = fakeStore([a], [makeItem({}, { id: 'i-0' })], () => ({}));
     const out = await runChain([created('i-0')], store, opts());
     expect(store.execute).not.toHaveBeenCalled();
-    expect(saved.map((r) => [r.status, r.detail, r.steps.length])).toEqual([['stopped', reason, 0]]);
+    expect(saved.map((r) => [r.status, r.detail, r.steps.length])).toEqual([
+      ['stopped', reason, 0],
+    ]);
     expect(out.runs.map((r) => r.status)).toEqual(['stopped']);
     expect(out.messages.join(' ')).toContain('no longer a member');
   });

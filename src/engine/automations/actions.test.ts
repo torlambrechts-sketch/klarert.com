@@ -335,7 +335,12 @@ describe('planActions', () => {
   });
 
   it('webhook with a saved address (0056): previews name the host, the runner fills the address in', () => {
-    const saved = plan({ type: 'webhook', urlRef: 'r1', urlHost: 'hooks.slack.com', preset: 'slack' });
+    const saved = plan({
+      type: 'webhook',
+      urlRef: 'r1',
+      urlHost: 'hooks.slack.com',
+      preset: 'slack',
+    });
     expect(saved.outcome).toBeUndefined();
     expect(saved.summary).toBe('Send a webhook to hooks.slack.com');
     expect(plan({ type: 'webhook', urlHost: 'hooks.slack.com' }).outcome).toBe('failed');
@@ -345,8 +350,15 @@ describe('planActions', () => {
       { type: 'post_update', message: 'hi' },
     ];
     expect(hasSavedWebhook(actions)).toBe(true);
-    expect(withWebhookAddresses(actions, { r1: 'https://hooks.slack.com/services/T/B/secret' })).toEqual([
-      { type: 'webhook', urlRef: 'r1', urlHost: 'hooks.slack.com', url: 'https://hooks.slack.com/services/T/B/secret' },
+    expect(
+      withWebhookAddresses(actions, { r1: 'https://hooks.slack.com/services/T/B/secret' }),
+    ).toEqual([
+      {
+        type: 'webhook',
+        urlRef: 'r1',
+        urlHost: 'hooks.slack.com',
+        url: 'https://hooks.slack.com/services/T/B/secret',
+      },
       { type: 'webhook' },
       { type: 'post_update', message: 'hi' },
     ]);

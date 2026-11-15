@@ -329,4 +329,3 @@ export async function revealSigningKey(input: unknown): Promise<Result<{ key: st
     'revealSigningKey',
   );
 }
-

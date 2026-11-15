@@ -54,7 +54,12 @@ export interface WorkerDeps {
   /** Checks the URL (https, SSRF guard) and returns it parsed; throws BlockedUrlError. */
   check(url: string): Promise<URL>;
   /** POST the JSON body with the extra headers; resolves with the HTTP status. No redirects; honours the signal. */
-  send(url: URL, body: string, signal: AbortSignal, headers: Record<string, string>): Promise<number>;
+  send(
+    url: URL,
+    body: string,
+    signal: AbortSignal,
+    headers: Record<string, string>,
+  ): Promise<number>;
   now(): number;
   /** HMAC-SHA256 as hex, for the signature header (the route always gives it; rows without a key go unsigned). */
   hmacHex?(key: string, message: string): string;
@@ -71,7 +76,8 @@ export interface WorkerSummary {
 /** One attempt: the outcome and the error text people see in the dead-letter notice. */
 export async function attempt(
   row: WebhookRow,
-  deps: Pick<WorkerDeps, 'check' | 'send' | 'timeoutMs' | 'hmacHex'> & Partial<Pick<WorkerDeps, 'now'>>,
+  deps: Pick<WorkerDeps, 'check' | 'send' | 'timeoutMs' | 'hmacHex'> &
+    Partial<Pick<WorkerDeps, 'now'>>,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   let url: URL;
   try {
