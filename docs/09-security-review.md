@@ -208,22 +208,22 @@ own restriction and list, the parent of a sub-item sheet, and owners always. Eve
 | sheets | `readable_sheet_ids()` (admins without access get the name only through `my_sheet_access`) | insert: editors, into folders they can edit, parents they can edit; update/delete: `editable_sheet_ids()`; restriction columns only through the access functions (trigger); moving into or out of a restricted folder only by people who manage both (trigger) |
 | fields, groups | readable sheet | editable sheet (fields: locked rule as before); `restricted_to` only through `set_field_restriction` (trigger) |
 | views | readable sheet, shared or own | personal: readable sheet; shared: editors of the sheet; forms: admins who can edit the sheet |
-| form_links | readable sheet | admins who can edit the sheet |
-| automations | readable sheet | editable sheet (+ 0011 rules) |
-| automation_pauses | the automation is readable | editors of the automation's sheet |
+| form_links | admins who can read the sheet (the token is the form's only key, 0062) | admins who can edit the sheet |
+| automations | readable sheet (webhook addresses are not in the row, 0056) | editable sheet (+ 0011 rules); every sheet the actions write to editable by the person saving (0052) |
+| automation_pauses | the automation is readable | `set_automation_pause` only (0057) |
 | automation_runs | readable sheet (runs without a sheet: admins) | service role only |
 | items | `readable_sheet_ids()` | definer RPCs only, guarded (7.2) |
 | item_links | both items readable and the field not hidden | definer RPCs only, guarded |
 | item_updates | item readable | commenters and up, as themselves (`commentable_sheet_ids()`); edit/delete own within 15 min, guarded |
-| files | item readable, field not hidden (item files: no field) | editors of the sheet, guarded |
+| files | item readable, field not hidden (item files: no field) | `add_file` only (0054), guarded; a restricted field's files need sight of the field |
 | file_access_log | item readable | `download_file` only, guarded (read access) |
-| protected_values | item readable and (admin or listed) as before | as before, guarded (edit access) |
+| protected_values | item readable and (admin or listed) as before | `set_protected_value` only (0051), guarded (edit access); the list is changed by owners and admins only |
 | restricted_values, restricted_activity (new) | sheet readable and field visible | definer functions only (no write policies), guarded |
 | activity_log | sheet readable (workspace entries: members; folder access entries: admins); entries written before a field was restricted that still hold its value: hidden from people who may not see it | definer functions and audit triggers only |
 | notifications | own, and the item readable | `read_at` only; inserts dropped for recipients who cannot read the item (trigger) |
 | dashboards | members (config only: the data behind each widget follows the sheet; "No access" when it cannot be read) | editors as before |
 | access_grants (new) | the person's own, owners and admins, people with access to the target | access functions only |
-| storage.objects (files bucket) | the object's `files` row is readable | uploads to items of sheets the person can edit |
+| storage.objects (files bucket) | after a logged `download_file` by the same person in the last two minutes, never blocked or erased, archived for admins only (0054); a pending upload: its uploader | uploads to items of sheets the person can edit; a pending upload can be removed by its uploader |
 
 pgTAP: `supabase/tests/0020_access.sql` (110 assertions): a role × object matrix over a restricted sheet (owner;
 admin not listed / listed; editor listed / not; commenter; viewer listed / not; auditor active / expired; another
@@ -305,3 +305,41 @@ cache keeps it to one level check). Grants are indexed by (sheet, person), (fold
    on a restricted field (no leak; the filter finds nothing).
 5. `archive_pack` stops with "no access" when the pack holds restricted sheets the admin cannot open (their
    automations are held by the structure guard): an owner, or an admin on their lists, archives it.
+
+## 8. Security review fixes (15 Nov 2026, branch `claude/security-db`)
+
+The board's database and application reviews (security-db H1–L9, security-app SA-1, SA-3–SA-5, SA-8, SA-9, SA-12,
+SA-14, compliance C-01) found rules that lived only in the TypeScript commands, so a signed-in person calling
+PostgREST or Storage directly could step round them. Every rule below is now enforced in the database, and each has a
+pgTAP file that runs the attack as `authenticated` and shows it refused.
+
+| Finding | Enforced in the database | Migration | pgTAP |
+|---|---|---|---|
+| H1, SA-14, L8 | `org_id` and parent keys fixed on every workspace table; a row's workspace is its sheet's or item's on insert; `hidden_field_ids()` / `field_visible()` judge by the sheet's workspace; `next_seq` only through item creation | 0050 | 0041 |
+| H2 | a protected field's list only by owners and admins; `protected_values` only through `set_protected_value` (logged) | 0051 | 0042 |
+| SA-1, M1 | automation action targets editable by the person saving (insert and every change but switching off); `acts_as`; the runner asks `automation_authority` before every run and records `stopped` with the reason when the person left, lost the editor role or can no longer edit a target | 0052 | 0043, runner unit test |
+| SA-3 | `api_request_guard` (PostgREST pre-request): mutating requests from people need the server's HMAC proof (Vault secret `klarert_command_secret`, `SUPABASE_COMMAND_SECRET`), bound to the user and five minutes; reads and the service role pass | 0053 | 0044, `command-proof.test.ts` |
+| SA-4, M3, SA-9, M2, M4 | Storage reads only after a logged download (blocked, erased, archived-for-admins rules as `download_file`); refused uploads removed by their uploader; bucket MIME allow-list; restricted fields' files guarded; no direct `files` inserts | 0054 | 0045, `confirm-upload.test.ts` |
+| M2 | `set_item_links` checks sight of the field and edit access first and returns only readable targets; `set_protected_value` needs sight of the field | 0055 | 0046 |
+| SA-5, SA-12 | webhook addresses in `automation_secrets` (service role only), actions keep `urlRef` / `urlHost`; the log shows hosts; earlier entries with an address for admins only; data migration; per-automation `signing_key` and `X-Klarert-Signature` | 0056 | 0047, worker and engine unit tests |
+| M4, SA-8 | every membership insert logged with how; joins only by invite or workspace creation; `automation_pauses` only through the function; invite links 14 days; a confirmed email to accept | 0057 | 0048 |
+| M5, L5 | `chain_seq` assigned under the chain's lock; verification by `chain_seq` (earlier entries by id); v2 hash covers org, sheet, item, chain and place; no TRUNCATE | 0058 | 0049 |
+| M6 | comment bodies and sub-item names masked in the log; `restricted_activity` erasable by retention; tombstone counts every copy in clear | 0059 | 0050 |
+| M7 | `settings.retention` and `personalData` only by owners and admins | 0060 | 0051 |
+| C-01 | ack entries only the person's own, time set by the database; signatures only as oneself, time and hash set by the database; automations never acknowledge or sign | 0061 | 0052 |
+| L1, L2, L3, L4, L7, L9 | definer helpers scoped to the caller's workspaces; form tokens for admins, public form configs without internal ids; restricted folders' log entries; ended auditors list no profiles; approvers never from restricted fields; retention and schedule claims need read access | 0062 | 0053 |
+
+### 8.1 Open (for Tor)
+
+1. **Command gate secret** (0053): set it in Vault and Vercel before applying 0053 (scripts/hosted/README.md); without
+   it every write by a person is refused.
+2. **Pending uploads never confirmed** (closed tab during upload) stay in the bucket, readable only by their
+   uploader. A daily cleanup by the scheduler (service role) would remove those older than an hour.
+3. **Personal data still in clear in the log:** display names in `member.*` notes (access-provisioning evidence),
+   free-text notes on value changes and approval comments. They need an owner decision on what counts as personal.
+4. **Restricted `ack` / `signature` fields:** clearing such a value goes to `restricted_values` by delete, which the
+   attestation guard does not see (clearing a signature is allowed anyway; clearing others' acknowledgements of a
+   restricted ack field is not stopped).
+5. **Public form configs** are filtered by a deny-list of internal keys (`_public_field_config`); a new field type
+   with an internal id in its config must add its key there.
+
