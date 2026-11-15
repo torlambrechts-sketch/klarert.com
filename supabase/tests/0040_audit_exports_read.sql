@@ -31,8 +31,8 @@ insert into memberships (org_id, user_id, role, expires_at) values
   ('a50a50a5-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000050a4', 'editor', null),
   ('a50a50a5-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000050a5', 'auditor', now() + interval '30 days');
 
--- workspace entries: the two auditors' member.added (written by the database), a pack install and a folder access
--- change
+-- workspace entries: the five members' member.added (written by the database; every join is logged since 0057, not
+-- only auditors'), a pack install and a folder access change
 insert into activity_log (org_id, chain_key, actor_kind, actor_id, action, new_value) values
   ('a50a50a5-0000-0000-0000-000000000000', '', 'user', '00000000-0000-0000-0000-0000000050a2', 'pack.installed',
    '{"pack_key": "core"}'),
@@ -82,11 +82,11 @@ insert into seen select 'outsider',
   (select count(*) from activity_log where chain_key = 'sheet:a50a50a5-0000-0000-0000-000000000000'),
   0;
 
-select is((select exports || '|' || workspace || '|' || folder_access from seen where who = 'owner'), '2|6|1',
+select is((select exports || '|' || workspace || '|' || folder_access from seen where who = 'owner'), '2|9|1',
   'an owner reads both exports and every workspace entry, folder access included');
-select is((select exports || '|' || workspace || '|' || folder_access from seen where who = 'admin'), '2|6|1',
+select is((select exports || '|' || workspace || '|' || folder_access from seen where who = 'admin'), '2|9|1',
   'an admin too');
-select is((select exports || '|' || workspace || '|' || folder_access from seen where who = 'auditor'), '2|5|0',
+select is((select exports || '|' || workspace || '|' || folder_access from seen where who = 'auditor'), '2|8|0',
   'an auditor reads both exports and the workspace entries, not folder access');
 select is((select exports || '|' || workspace from seen where who = 'outsider'), '0|0',
   'an outsider reads nothing');
@@ -101,7 +101,7 @@ select is((select new_value->>'app' || '|' || note from activity_log
   'capa|Export Auditor exported data flow record', 'with the filters used and who');
 select is((verify_activity_chain('sheet:a50a50a5-0000-0000-0000-000000000000')->>'ok')::boolean, true,
   'an auditor verifies the workspace chain');
-select is((verify_activity_chain('sheet:a50a50a5-0000-0000-0000-000000000000')->>'entries')::int, 6,
+select is((verify_activity_chain('sheet:a50a50a5-0000-0000-0000-000000000000')->>'entries')::int, 9,
   'the whole chain, the entries the auditor cannot read included');
 
 reset role;

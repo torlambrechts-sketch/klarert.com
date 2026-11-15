@@ -96,8 +96,9 @@ select throws_ok($$ select install_pack('a0a0a0a0-0000-0000-0000-000000000000', 
 select is((select count(*)::int from sheets where org_id = 'a0a0a0a0-0000-0000-0000-000000000000')
           + (select count(*)::int from folders where org_id = 'a0a0a0a0-0000-0000-0000-000000000000')
           + (select count(*)::int from pack_installs where org_id = 'a0a0a0a0-0000-0000-0000-000000000000')
-          + (select count(*)::int from activity_log where org_id = 'a0a0a0a0-0000-0000-0000-000000000000'), 0,
-  'nothing of a failed install is left: no folder, sheet, install or log entry');
+          + (select count(*)::int from activity_log where org_id = 'a0a0a0a0-0000-0000-0000-000000000000'
+                                                        and action <> 'member.added'), 0,
+  'nothing of a failed install is left: no folder, sheet, install or log entry (members were logged joining, 0057)');
 select throws_ok($$ select install_pack('a0a0a0a0-0000-0000-0000-000000000000', (select p from plans where name = 'bad_link')) $$,
   'pack plan: a link field points outside the workspace', 'a link field cannot point into another workspace');
 select throws_ok($$ select install_pack('a0a0a0a0-0000-0000-0000-000000000000', (select p from plans where name = 'bad_hash')) $$,

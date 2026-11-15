@@ -589,14 +589,14 @@ isOneToOne: false
                   ]
                 },"invites": {
                   Row: {
-                    "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string | null,"id": string,"invited_by": string | null,"org_id": string,"role": Database["public"]['Enums']["member_role"],"token": string
+                    "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string | null,"id": string,"invited_by": string | null,"link_expires_at": string,"org_id": string,"role": Database["public"]['Enums']["member_role"],"token": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
+                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"link_expires_at"?: string,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
                   }
                   Update: {
-                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
+                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"link_expires_at"?: string,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
                   }
                   Relationships: [
                     {
