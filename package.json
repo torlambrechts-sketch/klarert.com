@@ -15,6 +15,7 @@
     "supabase:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript > src/lib/database.types.ts",
+    "db:types:check": "pnpm db:types && git diff --exit-code src/lib/database.types.ts",
     "fonts:copy": "node scripts/copy-fonts.mjs",
     "db:smoke": "node scripts/test-migration.mjs",
     "db:test": "supabase test db",

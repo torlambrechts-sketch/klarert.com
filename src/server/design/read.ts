@@ -340,7 +340,8 @@ async function readHealth(db: Db, orgId: string): Promise<FlowHealth> {
     automations[r.automation_id] = {
       failed: r.failed_runs,
       partial: r.partial_runs,
-      lastFailedAt: r.last_failed_at,
+      // null when no run failed: generated types cannot mark a returned column nullable, so it is typed here
+      lastFailedAt: (r.last_failed_at as string | null) ?? null,
       deadLetters: r.dead_letters,
       retrying: r.retrying,
     };

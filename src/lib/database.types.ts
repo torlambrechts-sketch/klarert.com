@@ -2101,7 +2101,7 @@ isOneToOne: false
                            },
 "design_health":
 { Args: { "p_org": string }; Returns: {
-              "automation_id": string,"dead_letters": number,"failed_runs": number,"last_failed_at": string | null,"partial_runs": number,"retrying": number
+              "automation_id": string,"dead_letters": number,"failed_runs": number,"last_failed_at": string,"partial_runs": number,"retrying": number
             }[]
                            },
 "download_file":
