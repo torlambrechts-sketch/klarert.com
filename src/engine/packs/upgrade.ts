@@ -16,6 +16,7 @@ import { keysBetween } from '../ordering';
 import type { Json } from '../types';
 import { extensionUses, foreignKey, namespaceOf, ownWorkflowId, workflowList } from './extend';
 import { defaultLevel, levelRank, manifestAtLevel } from './levels';
+import { installCase, manifestFor } from './optional';
 import { planPackInstall, type PackEnv, type PackSnapshot } from './plan';
 import { compareVersions } from './semver';
 import type { PackManifest } from './types';
@@ -368,7 +369,8 @@ function planAsInstalled(
     },
     { ...env, hash },
     // its own rows on other packs' sheets are planned again, not taken for that pack's columns
-    { level, selfInstall: state.installId },
+    // the case it was made in (docs/11 Optional requirements) stays: an update never moves it onto another register
+    { level, selfInstall: state.installId, withPacks: installCase(m, state.refMap) },
   );
   if (!plan.payload) return { planned: null, problems: plan.preview.conflicts, renamed: [] };
   const p = plan.payload;
@@ -410,8 +412,17 @@ const pick = (r: Row | undefined, keys: string[]): Attrs =>
 // ───────────────────────── the planner ─────────────────────────
 
 export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
-  const { from, to, state } = input;
+  const { state } = input;
   const choices = input.choices ?? {};
+  // both versions in the case the install was made in (docs/11 Optional requirements): an update keeps it
+  const from = {
+    ...input.from,
+    manifest: manifestFor(input.from.manifest, installCase(input.from.manifest, state.refMap)),
+  };
+  const to = {
+    ...input.to,
+    manifest: manifestFor(input.to.manifest, installCase(input.to.manifest, state.refMap)),
+  };
   const m = to.manifest;
   const preview: UpgradePreview = {
     key: m.key,

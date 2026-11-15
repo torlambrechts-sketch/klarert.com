@@ -12,8 +12,9 @@ import {
   type AppNeeds,
   type BundlePart,
 } from '@/engine/packs/select';
+import { manifestFor, workspaceCase } from '@/engine/packs/optional';
 import { cleanSettings } from '@/engine/packs/settings';
-import type { PackSetting } from '@/engine/packs/types';
+import type { PackManifest, PackSetting } from '@/engine/packs/types';
 import type { Json } from '@/engine/types';
 import {
   bundleDetailsInput,
@@ -25,7 +26,12 @@ import { RECIPES } from '@/lib/recipes';
 import { STARTS } from '@/lib/starts';
 import { getApps } from '@/server/apps/read';
 import { isAdminRole, isEditorRole } from '@/server/auth';
-import { planInstall, readCatalogue, readPack, requiredFirst } from '@/server/packs/install';
+import {
+  planInstall,
+  readCatalogue,
+  requiredFirst,
+  type CataloguePack,
+} from '@/server/packs/install';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
 import { adoptForPack } from './frameworks';
@@ -37,6 +43,43 @@ import { installRequired } from './packs';
 // options and details are reads, and createBundle plans again on the server from the catalogue as it is now (the
 // browser sends only the key, the hash it saw, its choices and the bundle's name, owner and date). Installing is for
 // owners and admins, as for packs; members see the same cards with "Ask an admin".
+
+type Db = Parameters<Parameters<typeof withOrg>[2]>[0]['supabase'];
+
+/** The workspace's live installs, as the optional-requirement case needs them (docs/11 Optional requirements). */
+async function liveInstalls(db: Db, orgId: string) {
+  const { data, error } = await db
+    .from('pack_installs')
+    .select('pack_key, ref_map')
+    .eq('org_id', orgId)
+    .eq('status', 'installed');
+  if (error) throw new Error(`pack installs: ${error.message}`);
+  return (data ?? []).map((i) => ({
+    packKey: i.pack_key,
+    refMap: (i.ref_map ?? {}) as Record<string, string>,
+  }));
+}
+
+/**
+ * A catalogue pack as this workspace gets it (docs/11 Optional requirements): CAPA on Core's register when Core is
+ * live, on its own register when it is not, and as its live install was made when it is set up here.
+ */
+const inWorkspace = <T extends { manifest: PackManifest }>(
+  c: T,
+  installs: Parameters<typeof workspaceCase>[1],
+): T => ({ ...c, manifest: manifestFor(c.manifest, workspaceCase(c.manifest, installs)) });
+
+/** The registers of required packs a manifest works on: "Nonconformities and CAPA (Core registers)". */
+function usesSheets(m: PackManifest, catalogue: CataloguePack[]): string[] {
+  const out: string[] = [];
+  for (const e of m.extends ?? []) {
+    const dep = catalogue.find((c) => c.key === e.pack);
+    const name = dep?.manifest.sheets.find((s) => s.ref === e.sheet)?.name;
+    const line = name ? `${name} (${dep!.title})` : null;
+    if (line && !out.includes(line)) out.push(line);
+  }
+  return out;
+}
 
 export interface CreatePack {
   key: string;
@@ -97,7 +140,7 @@ export async function createOptions(input: unknown): Promise<Result<CreateOption
             readCatalogue(supabase),
             supabase
               .from('pack_installs')
-              .select('id, pack_key, version, bundle_name')
+              .select('id, pack_key, version, bundle_name, ref_map')
               .eq('org_id', orgId)
               .eq('status', 'installed'),
             supabase
@@ -142,7 +185,14 @@ export async function createOptions(input: unknown): Promise<Result<CreateOption
         for (const r of recent.data ?? [])
           if (!rank.has(r.sheet_id)) rank.set(r.sheet_id, rank.size);
         const sheetRows = (sheets.data ?? []).filter((s) => !s.is_library);
-        const offered = catalogue.filter((c) => !isFrameworkPack(c.manifest));
+        const forCase = (installs.data ?? []).map((i) => ({
+          packKey: i.pack_key,
+          refMap: (i.ref_map ?? {}) as Record<string, string>,
+        }));
+        // each pack in the case it has here (docs/11 Optional requirements): CAPA on Core's register when Core is live
+        const offered = catalogue
+          .filter((c) => !isFrameworkPack(c.manifest))
+          .map((c) => inWorkspace(c, forCase));
         return ok({
           canInstall: isAdminRole(role),
           canEdit: isEditorRole(role),
@@ -237,6 +287,11 @@ export interface BundleDetails {
   canChooseFolder: boolean;
   /** The pack's own folders at this level. */
   packFolders: string[];
+  /**
+   * Registers the workspace already has (or that are installed first) that the set works on instead of making its own:
+   * "Nonconformities and CAPA (Core registers)" (docs/11 Extends, Optional requirements).
+   */
+  uses: string[];
   /** Frameworks the pack builds on: their requirement libraries are adopted first when missing. */
   frameworks: string[];
   /**
@@ -263,9 +318,15 @@ export async function bundleDetails(input: unknown): Promise<Result<BundleDetail
     p.data.org,
     'member',
     async ({ supabase, orgId, role, user }) => {
-      const pack = await readPack(supabase, p.data.key);
-      if (!pack || isFrameworkPack(pack.manifest))
+      const [catalogue, installs] = await Promise.all([
+        readCatalogue(supabase),
+        liveInstalls(supabase, orgId),
+      ]);
+      const found = catalogue.find((c) => c.key === p.data.key);
+      if (!found || isFrameworkPack(found.manifest))
         return fail('not_found', 'This starting point is no longer available.');
+      // the case it has here (docs/11 Optional requirements): CAPA on Core's register when Core is live
+      const pack = inWorkspace(found, installs);
       const m = pack.manifest;
       const levelKey = m.levels?.some((l) => l.key === p.data.level)
         ? p.data.level!
@@ -312,6 +373,7 @@ export async function bundleDetails(input: unknown): Promise<Result<BundleDetail
           apps: appNeeds(at),
           canChooseFolder: canChooseFolder(at),
           packFolders: at.folders.map((f) => f.name),
+          uses: usesSheets(at, catalogue),
           frameworks: (m.frameworks ?? []).map((f) => `${f.key} ${f.version}`),
           settings: m.settings ?? [],
           check,
@@ -363,9 +425,15 @@ export async function createBundle(input: unknown): Promise<Result<CreatedBundle
     p.data.org,
     'admin',
     async ({ supabase, orgId, user }) => {
-      const pack = await readPack(supabase, p.data.key);
-      if (!pack || isFrameworkPack(pack.manifest))
+      const [catalogue, installs] = await Promise.all([
+        readCatalogue(supabase),
+        liveInstalls(supabase, orgId),
+      ]);
+      const found = catalogue.find((c) => c.key === p.data.key);
+      if (!found || isFrameworkPack(found.manifest))
         return fail('not_found', 'This starting point is no longer available.');
+      // the case it has here (docs/11 Optional requirements): on Core's register when Core is live, never a second one
+      const pack = inWorkspace(found, installs);
       if (pack.hash !== p.data.hash)
         return fail('conflict', 'This starting point changed since you looked at it. Look again.');
       const levelKey = pack.manifest.levels?.some((l) => l.key === p.data.level)
@@ -379,7 +447,9 @@ export async function createBundle(input: unknown): Promise<Result<CreatedBundle
           p.data.folder,
         ),
       };
-      if (!chosen.manifest.sheets.length) return fail('invalid', 'Keep at least one sheet.');
+      // a set that works on registers the workspace has may make no sheet of its own (CAPA on Core's register)
+      if (!chosen.manifest.sheets.length && !chosen.manifest.extends?.length)
+        return fail('invalid', 'Keep at least one sheet.');
       // only the pack's own settings and choices (docs/11 Pack settings), as installPack does
       const settings = cleanSettings(pack.manifest, p.data.settings ?? {});
       if (Object.keys(settings).length !== Object.keys(p.data.settings ?? {}).length)
@@ -433,7 +503,7 @@ export async function createBundle(input: unknown): Promise<Result<CreatedBundle
       });
       if (error) return bundleError(error);
       const out = data as { install_id: string; ref_map: Record<string, string> };
-      const first = chosen.manifest.sheets[0]!;
+      const first = chosen.manifest.sheets[0];
       const c = plan.preview.counts;
       const made = [
         c.sheets && plural(c.sheets, 'sheet'),
@@ -446,8 +516,8 @@ export async function createBundle(input: unknown): Promise<Result<CreatedBundle
       return ok({
         installId: out.install_id,
         name: p.data.name,
-        sheetId: out.ref_map[`sheet:${first.ref}`] ?? null,
-        itemLabel: first.itemLabel ?? null,
+        sheetId: first ? (out.ref_map[`sheet:${first.ref}`] ?? null) : null,
+        itemLabel: first?.itemLabel ?? null,
         made,
         warnings: plan.preview.warnings,
       });

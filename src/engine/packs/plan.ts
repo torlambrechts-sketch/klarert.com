@@ -45,6 +45,7 @@ import {
 } from './extend';
 import { packToTemplate } from './template';
 import { splitSheetRef, type PackManifest } from './types';
+import { manifestFor, workspaceCase } from './optional';
 
 export interface PackSnapshot {
   orgId: string;
@@ -365,9 +366,17 @@ export function planPackInstall(
      * values of its own sheets are resolved with them; without a choice they are left out.
      */
     settings?: PackSettingValues;
+    /**
+     * The optional requirements the install works on (docs/11 Optional requirements). Default: the case of the live
+     * install of this pack (its ref map), or else the optional packs live in the workspace.
+     */
+    withPacks?: string[];
   } = {},
 ): PackPlan {
-  const full = applyPackSettings(manifest, opts.settings ?? {});
+  const full = manifestFor(
+    applyPackSettings(manifest, opts.settings ?? {}),
+    opts.withPacks ?? workspaceCase(manifest, snap.installs),
+  );
   const conflicts: string[] = [];
   const operations: PackOperation[] = [];
   // ── the level: the manifest as installed at it (a pack without levels installs whole)

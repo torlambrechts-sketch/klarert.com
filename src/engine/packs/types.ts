@@ -63,6 +63,11 @@ export type PackSheet = Omit<TemplateSheet, 'folder' | 'items' | 'forms'> & {
   level?: string;
   /** Forms may name their lowest level too (forms of a sheet never install before the sheet). */
   forms: (TemplateSheet['forms'][number] & { level?: string })[];
+  /**
+   * An optional requirement's key (docs/11 Optional requirements): the sheet is made only when that pack is not live;
+   * with it live, the pack works on that pack's registers instead and everything that needs this sheet is left out.
+   */
+  onlyWithout?: string;
 };
 
 /** What a pack automation adds to a template automation (docs/11 Pack quality bar). */
@@ -250,6 +255,11 @@ export interface PackRequirement {
   pack: string;
   /** A semver range: 1.2.3, ^1.2.0, ~1.2.0, >=1.2.0 or *. */
   range: string;
+  /**
+   * Used when live, never installed for you (docs/11 Optional requirements): with it live the pack works on its
+   * registers (its `onlyWithout` sheets are not made); without it everything that names it is left out.
+   */
+  optional?: boolean;
 }
 
 export interface PackManifest {

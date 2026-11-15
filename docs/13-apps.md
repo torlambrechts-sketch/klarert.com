@@ -7,7 +7,7 @@ An **app** is navigation over a pack's sheets, forms and dashboards: named scree
 | Source | Becomes |
 |---|---|
 | A pack manifest's `apps` (docs/11) | Installed with the pack, e.g. `templates/packs/iso-27001.json` → ISMS CAPA |
-| `templates/apps/*.json` | `{ requires: { pack, range }, app }`: added to the `apps` of the pack it requires by `withApps` (`src/lib/packs/catalogue.ts`) before the manifest is checked. A missing pack or a version out of range is an error. `capa.json` → the CAPA app in `start-capa` |
+| `templates/apps/*.json` | `{ requires: { pack, range }, app }`: added to the `apps` of the pack it requires by `withApps` (`src/lib/packs/catalogue.ts`) before the manifest is checked. A missing pack or a version out of range is an error. `capa.json` and `capa-on-core.json` → the CAPA app in `start-capa`, one per case (docs/11 Optional requirements) |
 
 **Starting an app from Create** (owner decision, 14 Nov 2026; docs/05 §4 Create › App): Create lists the apps of the catalogue's packs and of the live installs (`appStarts`, `src/engine/create/apps.ts`) and gives each the shortest valid path: open it when a live install carries it, create the set that carries it (the same preview, `createBundle` and `create_bundle` as Solve a problem, Core installed first when the app reads Core's registers, the registers the workspace already has named in the preview), or Workspace admin › Packs when its pack is live without it (an update, or parts left out). Owners and admins create; others preview and ask. Goal matching (`templates/intents.json`) finds apps as apps.
 
@@ -63,6 +63,8 @@ The app header is the app's name and its screens as underline tabs that scroll s
 | Overview | All nonconformities | view | The CAPA sheet |
 | Overview | Overview | dashboard | CAPA overview |
 | Overview | Workflow | workflow | The sheet by Status (owners and admins) |
+
+**CAPA on Core** (`templates/apps/capa-on-core.json`, requires `start-capa` ^1.2.0; owner decision 15 Nov 2026): the same app key and screens, for the case with the Core registers live (docs/11 Optional requirements), so Create › App › CAPA in a Core workspace makes no second register: the App card says "Uses sheets you already have: Nonconformities and CAPA (Core registers), Actions (Core registers)". Report a problem (the pack's form "Raise a nonconformity" on Nonconformities and CAPA), My actions (Core Actions assigned to you, not done, by Due), Needs my approval (nonconformities at Verification where you are Effectiveness checked by, the person Core's CAPA closure asks), All nonconformities, Overview ("CAPA overview" on Core's registers) and Workflow (by Stage, owners and admins). A workspace with ISO/IEC 27001 2.x has both CAPA and ISMS CAPA over the one register: two keys, the same rows.
 
 **ISMS CAPA** (`iso-27001` 1.2.0, `apps`): the same screens over Nonconformities and CAPA. The pack adds the internal form "Report a problem" (Starter) and the "Nonconformities overview" dashboard; Needs my approval lists nonconformities you own in "Checking effectiveness". Reported problems do not get actions automatically here (the sheet's "From template" adds them).
 

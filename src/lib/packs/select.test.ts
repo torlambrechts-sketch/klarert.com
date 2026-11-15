@@ -6,6 +6,7 @@ import { parsePack } from './manifest';
 import { packLogText } from '@/engine/packs/audit';
 import { afterInstall } from '@/engine/packs/installed.fixture';
 import { manifestAtLevel } from '@/engine/packs/levels';
+import { manifestFor } from '@/engine/packs/optional';
 import { planPackInstall, type PackSnapshot } from '@/engine/packs/plan';
 import {
   appsAfter,
@@ -19,6 +20,8 @@ import {
 import type { PackManifest } from '@/engine/packs/types';
 
 const pack = (key: string) => repoPacks().find((p) => p.key === key)!;
+// CAPA as Create shows it in a workspace without the Core registers (docs/11 Optional requirements)
+const capaAlone = () => manifestFor(pack('start-capa'), []);
 /** Supplier management 1.1.0, a standalone pack with a documents register, a library and a public form. */
 const standalone = () =>
   parsePack(
@@ -64,14 +67,14 @@ describe('bundle parts', () => {
   });
 
   it('makes a form trigger depend on its form', () => {
-    const parts = bundleParts(pack('start-capa'));
+    const parts = bundleParts(capaAlone());
     const auto = parts.find((p) => p.id === 'automation:reported_add_steps')!;
     expect(auto.requires).toEqual(['sheet:capa', 'form:capa.nonconformity']);
   });
 
   it('flags and turns off automations that send data out', () => {
     const m: PackManifest = {
-      ...pack('start-capa'),
+      ...capaAlone(),
       automations: [
         {
           ref: 'hook',
@@ -92,7 +95,7 @@ describe('bundle parts', () => {
 });
 
 describe('ticking and unticking', () => {
-  const parts = bundleParts(pack('start-capa'));
+  const parts = bundleParts(capaAlone());
 
   it('unticking a sheet leaves out what is on it, with a note', () => {
     const s = togglePart(parts, [], 'sheet:capa', false);
@@ -169,7 +172,7 @@ describe('the chosen manifest', () => {
     )!;
     const chosen = selectManifest(iso, [`sheet:${sheet.ref}`]);
     expect(chosen.setup!.steps.every((st) => st.target.sheetRef !== sheet.ref)).toBe(true);
-    const capa = pack('start-capa');
+    const capa = capaAlone();
     expect(appsAfter(capa, [])).toEqual([{ title: 'CAPA', screens: 6 }]);
     expect(appsAfter(capa, ['dashboard:capa_overview'])).toEqual([{ title: 'CAPA', screens: 5 }]);
     expect(appsAfter(capa, ['sheet:capa'])).toEqual([]);

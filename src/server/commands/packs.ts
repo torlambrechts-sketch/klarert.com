@@ -45,6 +45,7 @@ import type { Database } from '@/lib/database.types';
 import { planUpgrade, readPackVersions, updatesFor, writeUpgrade } from '@/server/packs/upgrade';
 import { readSetups, type InstalledSetup } from '@/server/packs/setup';
 import { readFrameworks } from '@/server/frameworks/catalogue';
+import { manifestFor, workspaceCase } from '@/engine/packs/optional';
 import { parsePack } from '@/lib/packs/manifest';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
@@ -142,7 +143,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
           supabase
             .from('pack_installs')
             .select(
-              'id, pack_key, version, status, level, installed_by, installed_at, archived_by, archived_at, settings',
+              'id, pack_key, version, status, level, installed_by, installed_at, archived_by, archived_at, settings, ref_map',
             )
             .eq('org_id', orgId)
             .order('installed_at', { ascending: false }),
@@ -177,6 +178,10 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
         const titles = new Map(catalogue.map((c) => [c.key, c.title]));
         const byKey = new Map(catalogue.map((c) => [c.key, c]));
         const liveRows = (installs.data ?? []).filter((i) => i.status === 'installed');
+        const forCase = liveRows.map((i) => ({
+          packKey: i.pack_key,
+          refMap: (i.ref_map ?? {}) as Record<string, string>,
+        }));
         const updates = updatesFor(installs.data ?? [], versions);
         const live = new Map(liveRows.map((i) => [i.pack_key, i.version]));
         const liveLevel = new Map(liveRows.map((i) => [i.pack_key, i.level ?? null]));
@@ -196,6 +201,11 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
           // a framework's library is adopted from Frameworks (docs/12), not listed here
           available: catalogue
             .filter((c) => !isFrameworkPack(c.manifest))
+            // each pack in the case it has here (docs/11 Optional requirements): CAPA on Core's register with Core
+            .map((c) => ({
+              ...c,
+              manifest: manifestFor(c.manifest, workspaceCase(c.manifest, forCase)),
+            }))
             .map((c) => {
               const counts = manifestCounts(c.manifest);
               return {

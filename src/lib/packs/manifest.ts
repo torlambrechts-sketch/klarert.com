@@ -12,6 +12,7 @@ import { SEMVER, SEMVER_RANGE } from '@/engine/packs/semver';
 import { packToTemplate } from '@/engine/packs/template';
 import { SHEET_KINDS, SHEET_REF, splitSheetRef, type PackManifest } from '@/engine/packs/types';
 import { levelProblems } from '@/engine/packs/levels';
+import { caseWords, manifestFor, optionalProblems, packCases } from '@/engine/packs/optional';
 import { extendsProblems } from '@/engine/packs/extend';
 import { applyPackSettings, settingProblems } from '@/engine/packs/settings';
 import {
@@ -123,6 +124,8 @@ export const packSheet = templateSheet.omit({ folder: true, items: true, forms: 
     .array(templateForm.extend({ level: levelKey.optional() }))
     .max(20)
     .default([]),
+  /** Made only when this optional requirement is not live (docs/11 Optional requirements). */
+  onlyWithout: packKey.optional(),
 });
 
 /** What a pack automation adds (docs/11 Pack quality bar): test mode at install, advanced with a description. */
@@ -232,6 +235,8 @@ export const packManifestSchema = z
         z.object({
           pack: packKey,
           range: z.string().regex(SEMVER_RANGE, 'Use a range like ^1.0.0.'),
+          /** Used when live, never installed for you (docs/11 Optional requirements). */
+          optional: z.boolean().optional(),
         }),
       )
       .max(20)
@@ -328,229 +333,240 @@ export const packManifestSchema = z
     /** Choices a workspace makes for the pack (docs/11 Pack settings). */
     settings: z.array(packSetting).max(5).optional(),
   })
-  .superRefine((m, ctx) => {
+  .superRefine((raw, ctx) => {
     const problem = (path: (string | number)[], message: string) =>
       ctx.addIssue({ code: 'custom', path, message });
-    const unique = (list: string[], path: (string | number)[], what: string) => {
-      const seen = new Set<string>();
-      for (const x of list) {
-        if (seen.has(x)) problem(path, `Duplicate ${what} "${x}".`);
-        seen.add(x);
-      }
-    };
-    unique(
-      m.folders.map((f) => f.ref),
-      ['folders'],
-      'folder ref',
-    );
-    unique(
-      m.automations.map((a) => a.ref),
-      ['automations'],
-      'automation ref',
-    );
-    unique(
-      m.dashboards.map((d) => d.ref),
-      ['dashboards'],
-      'dashboard ref',
-    );
-    const folders = new Set(m.folders.map((f) => f.ref));
-    const sheets = new Map(m.sheets.map((s) => [s.ref, s]));
-    const required = new Set(m.requires.map((r) => r.pack));
-    const libraries = new Set((m.frameworks ?? []).map((f) => `${f.key}@${f.version}`));
-    for (const r of m.requires)
-      if (r.pack === m.key) problem(['requires'], 'A pack cannot require itself.');
+    const whole = raw as PackManifest;
+    // optional requirements (docs/11): each case is a whole manifest of its own, checked as one
+    for (const p of optionalProblems(whole)) problem(p.path, p.message);
+    const cases = packCases(whole);
+    if (cases.length === 1) manifestProblems(whole, problem);
+    else
+      for (const c of cases)
+        manifestProblems(manifestFor(whole, c), (path, message) =>
+          problem(path, `${message} (${caseWords(whole, c)})`),
+        );
+  });
 
-    for (const [si, s] of m.sheets.entries()) {
-      const at = (...p: (string | number)[]) => ['sheets', si, ...p];
-      if (s.folder && s.folder.includes(':')) {
-        const [pack] = s.folder.split(':');
-        if (!required.has(pack!))
-          problem(
-            at('folder'),
-            `"${s.folder}" names the pack "${pack}", which is not in requires.`,
-          );
-      } else if (s.folder && !folders.has(s.folder))
-        problem(at('folder'), `Unknown folder "${s.folder}".`);
-      if (s.uniqueLinks) {
-        const linkTypes = new Set(['link', 'requirement', 'controllink']);
-        if (s.uniqueLinks[0] === s.uniqueLinks[1])
-          problem(at('uniqueLinks'), 'Name two different link fields.');
-        for (const k of s.uniqueLinks)
-          if (!s.fields.some((f) => f.key === k && linkTypes.has(f.type)))
-            problem(at('uniqueLinks'), `"${k}" is not a link field of the sheet.`);
+/** Every check of one manifest (one case of a pack with optional requirements). */
+function manifestProblems(
+  m: PackManifest,
+  problem: (path: (string | number)[], message: string) => void,
+) {
+  const unique = (list: string[], path: (string | number)[], what: string) => {
+    const seen = new Set<string>();
+    for (const x of list) {
+      if (seen.has(x)) problem(path, `Duplicate ${what} "${x}".`);
+      seen.add(x);
+    }
+  };
+  unique(
+    m.folders.map((f) => f.ref),
+    ['folders'],
+    'folder ref',
+  );
+  unique(
+    m.automations.map((a) => a.ref),
+    ['automations'],
+    'automation ref',
+  );
+  unique(
+    m.dashboards.map((d) => d.ref),
+    ['dashboards'],
+    'dashboard ref',
+  );
+  const folders = new Set(m.folders.map((f) => f.ref));
+  const sheets = new Map(m.sheets.map((s) => [s.ref, s]));
+  const required = new Set(m.requires.map((r) => r.pack));
+  const libraries = new Set((m.frameworks ?? []).map((f) => `${f.key}@${f.version}`));
+  for (const r of m.requires)
+    if (r.pack === m.key) problem(['requires'], 'A pack cannot require itself.');
+
+  for (const [si, s] of m.sheets.entries()) {
+    const at = (...p: (string | number)[]) => ['sheets', si, ...p];
+    if (s.folder && s.folder.includes(':')) {
+      const [pack] = s.folder.split(':');
+      if (!required.has(pack!))
+        problem(at('folder'), `"${s.folder}" names the pack "${pack}", which is not in requires.`);
+    } else if (s.folder && !folders.has(s.folder))
+      problem(at('folder'), `Unknown folder "${s.folder}".`);
+    if (s.uniqueLinks) {
+      const linkTypes = new Set(['link', 'requirement', 'controllink']);
+      if (s.uniqueLinks[0] === s.uniqueLinks[1])
+        problem(at('uniqueLinks'), 'Name two different link fields.');
+      for (const k of s.uniqueLinks)
+        if (!s.fields.some((f) => f.key === k && linkTypes.has(f.type)))
+          problem(at('uniqueLinks'), `"${k}" is not a link field of the sheet.`);
+    }
+    if (s.personalData) {
+      if (s.restricted === false)
+        problem(at('restricted'), 'A sheet with personal data is always installed restricted.');
+      if (!s.fields.some((f) => (f.config as { personalData?: unknown })?.personalData === true))
+        problem(
+          at('personalData'),
+          'Mark the fields that hold personal data with config.personalData.',
+        );
+    }
+    if (s.register === 'documents' && !s.fields.some((f) => f.type === 'status'))
+      problem(at('register'), 'A documents register needs a status field.');
+    if (s.framework) {
+      if (!s.isLibrary) problem(at('framework'), 'A framework sheet is a library.');
+      if (!s.fields.some((f) => f.key === s.framework!.refFieldKey && f.type === 'text'))
+        problem(at('framework'), `"${s.framework.refFieldKey}" is not a text field of the sheet.`);
+    }
+    const prefix = s.framework ? `${s.framework.key}@${s.framework.version}#` : null;
+    const seenRefs = new Set<string>();
+    for (const [ii, item] of s.items.entries()) {
+      if (!item.requirementRef) continue;
+      if (!prefix || !item.requirementRef.startsWith(prefix))
+        problem(at('items', ii), "A requirement ref belongs to the sheet's framework.");
+      if (seenRefs.has(item.requirementRef))
+        problem(at('items', ii), `Duplicate requirement "${item.requirementRef}".`);
+      seenRefs.add(item.requirementRef);
+    }
+    unique(
+      s.items.map((i) => i.ref),
+      at('items'),
+      'item ref',
+    );
+    const targets = new Map<string, string | null>(); // link field key → own target sheet ref (null: other pack)
+    for (const [fi, f] of s.fields.entries()) {
+      const raw = (f.config as Record<string, Json> | undefined)?.targetSheetRef;
+      if (raw === undefined) continue;
+      const split = typeof raw === 'string' ? splitSheetRef(raw, m.key) : null;
+      if (!split || typeof raw !== 'string' || !SHEET_REF.test(raw)) {
+        problem(at('fields', fi), `"${String(raw)}" is not a sheet ref.`);
+        continue;
       }
-      if (s.personalData) {
-        if (s.restricted === false)
-          problem(at('restricted'), 'A sheet with personal data is always installed restricted.');
-        if (!s.fields.some((f) => (f.config as { personalData?: unknown })?.personalData === true))
-          problem(
-            at('personalData'),
-            'Mark the fields that hold personal data with config.personalData.',
-          );
-      }
-      if (s.register === 'documents' && !s.fields.some((f) => f.type === 'status'))
-        problem(at('register'), 'A documents register needs a status field.');
-      if (s.framework) {
-        if (!s.isLibrary) problem(at('framework'), 'A framework sheet is a library.');
-        if (!s.fields.some((f) => f.key === s.framework!.refFieldKey && f.type === 'text'))
-          problem(
-            at('framework'),
-            `"${s.framework.refFieldKey}" is not a text field of the sheet.`,
-          );
-      }
-      const prefix = s.framework ? `${s.framework.key}@${s.framework.version}#` : null;
-      const seenRefs = new Set<string>();
-      for (const [ii, item] of s.items.entries()) {
-        if (!item.requirementRef) continue;
-        if (!prefix || !item.requirementRef.startsWith(prefix))
-          problem(at('items', ii), "A requirement ref belongs to the sheet's framework.");
-        if (seenRefs.has(item.requirementRef))
-          problem(at('items', ii), `Duplicate requirement "${item.requirementRef}".`);
-        seenRefs.add(item.requirementRef);
-      }
-      unique(
-        s.items.map((i) => i.ref),
-        at('items'),
-        'item ref',
-      );
-      const targets = new Map<string, string | null>(); // link field key → own target sheet ref (null: other pack)
-      for (const [fi, f] of s.fields.entries()) {
-        const raw = (f.config as Record<string, Json> | undefined)?.targetSheetRef;
-        if (raw === undefined) continue;
-        const split = typeof raw === 'string' ? splitSheetRef(raw, m.key) : null;
-        if (!split || typeof raw !== 'string' || !SHEET_REF.test(raw)) {
-          problem(at('fields', fi), `"${String(raw)}" is not a sheet ref.`);
+      if (split.pack && !required.has(split.pack))
+        problem(
+          at('fields', fi),
+          `"${raw}" names the pack "${split.pack}", which is not in requires.`,
+        );
+      targets.set(f.key, split.pack ? null : split.ref);
+    }
+    for (const [ii, item] of s.items.entries())
+      for (const [key, keys] of Object.entries(item.requirements ?? {})) {
+        const f = s.fields.find((x) => x.key === key);
+        if (!f || (f.type !== 'requirement' && f.type !== 'controllink')) {
+          problem(at('items', ii), `"${key}" is not a requirement field.`);
           continue;
         }
-        if (split.pack && !required.has(split.pack))
-          problem(
-            at('fields', fi),
-            `"${raw}" names the pack "${split.pack}", which is not in requires.`,
-          );
-        targets.set(f.key, split.pack ? null : split.ref);
-      }
-      for (const [ii, item] of s.items.entries())
-        for (const [key, keys] of Object.entries(item.requirements ?? {})) {
-          const f = s.fields.find((x) => x.key === key);
-          if (!f || (f.type !== 'requirement' && f.type !== 'controllink')) {
-            problem(at('items', ii), `"${key}" is not a requirement field.`);
-            continue;
-          }
-          for (const k of keys) {
-            const id = parseRequirementKey(k);
-            if (!id || !libraries.has(`${id.framework}@${id.version}`))
-              problem(
-                at('items', ii),
-                `"${k}" is not in a framework the pack builds on (frameworks).`,
-              );
-          }
-        }
-      for (const [ii, item] of s.items.entries())
-        for (const [key, refs] of Object.entries(item.links ?? {})) {
-          if (!targets.has(key)) {
-            problem(at('items', ii), `"${key}" is not a link field.`);
-            continue;
-          }
-          const target = targets.get(key);
-          if (target === null) {
+        for (const k of keys) {
+          const id = parseRequirementKey(k);
+          if (!id || !libraries.has(`${id.framework}@${id.version}`))
             problem(
               at('items', ii),
-              `"${key}" links to another pack: example links to it are not allowed.`,
+              `"${k}" is not in a framework the pack builds on (frameworks).`,
             );
-            continue;
-          }
-          const sheet = sheets.get(target!);
-          for (const r of refs)
-            if (!sheet?.items.some((x) => x.ref === r))
-              problem(at('items', ii), `Unknown linked item "${r}" on "${target}".`);
         }
-    }
-
-    // example links of extension items into a required library: through a requirement field the entry adds
-    for (const [ei, e] of (m.extends ?? []).entries())
-      for (const [ii, item] of (e.items ?? []).entries())
-        for (const [key, keys] of Object.entries(item.requirements ?? {})) {
-          const at = ['extends', ei, 'items', ii];
-          const f = (e.fields ?? []).find((x) => x.key === key);
-          if (!f || (f.type !== 'requirement' && f.type !== 'controllink')) {
-            problem(at, `"${key}" is not a requirement field this entry adds.`);
-            continue;
-          }
-          for (const k of keys) {
-            const id = parseRequirementKey(k);
-            if (!id || !libraries.has(`${id.framework}@${id.version}`))
-              problem(at, `"${k}" is not in a framework the pack builds on (frameworks).`);
-          }
-        }
-
-    // an advanced automation says what it does in plain words
-    const allAutomations = [
-      ...m.automations.map((a, i) => ({ a, path: ['automations', i] })),
-      ...(m.extends ?? []).flatMap((e, ei) =>
-        (e.automations ?? []).map((a, i) => ({ a, path: ['extends', ei, 'automations', i] })),
-      ),
-    ];
-    for (const { a, path } of allAutomations)
-      if (a.advanced && !a.description)
-        problem(path, 'An advanced automation needs a description in plain words.');
-
-    for (const [di, d] of m.dashboards.entries()) {
-      unique(
-        d.widgets.map((w) => w.ref),
-        ['dashboards', di, 'widgets'],
-        'widget ref',
-      );
-      for (const [wi, w] of d.widgets.entries()) {
-        const at = ['dashboards', di, 'widgets', wi];
-        if (!widgetType(w.type)) problem(at, `Unknown widget "${w.type}".`);
-        const split = w.sheetRef ? splitSheetRef(w.sheetRef, m.key) : null;
-        const s = split && !split.pack ? sheets.get(split.ref) : undefined;
-        if (split?.pack && !required.has(split.pack))
-          problem(at, `"${w.sheetRef}" names the pack "${split.pack}", which is not in requires.`);
-        else if (w.sheetRef && !split?.pack && !s) problem(at, `Unknown sheet "${w.sheetRef}".`);
-        if (w.sheetRef && w.library) problem(at, 'Name a sheetRef or a library, not both.');
-        if (w.fieldKey && s && !s.fields.some((f) => f.key === w.fieldKey))
-          problem(at, `Unknown field "${w.fieldKey}" on "${w.sheetRef}".`);
-        if (w.fieldKey && !w.sheetRef && !w.library)
-          problem(at, `"${w.fieldKey}" needs a sheetRef or a library.`);
       }
-    }
+    for (const [ii, item] of s.items.entries())
+      for (const [key, refs] of Object.entries(item.links ?? {})) {
+        if (!targets.has(key)) {
+          problem(at('items', ii), `"${key}" is not a link field.`);
+          continue;
+        }
+        const target = targets.get(key);
+        if (target === null) {
+          problem(
+            at('items', ii),
+            `"${key}" links to another pack: example links to it are not allowed.`,
+          );
+          continue;
+        }
+        const sheet = sheets.get(target!);
+        for (const r of refs)
+          if (!sheet?.items.some((x) => x.ref === r))
+            problem(at('items', ii), `Unknown linked item "${r}" on "${target}".`);
+      }
+  }
 
-    // apps: keys once each, every ref one of the pack's
+  // example links of extension items into a required library: through a requirement field the entry adds
+  for (const [ei, e] of (m.extends ?? []).entries())
+    for (const [ii, item] of (e.items ?? []).entries())
+      for (const [key, keys] of Object.entries(item.requirements ?? {})) {
+        const at = ['extends', ei, 'items', ii];
+        const f = (e.fields ?? []).find((x) => x.key === key);
+        if (!f || (f.type !== 'requirement' && f.type !== 'controllink')) {
+          problem(at, `"${key}" is not a requirement field this entry adds.`);
+          continue;
+        }
+        for (const k of keys) {
+          const id = parseRequirementKey(k);
+          if (!id || !libraries.has(`${id.framework}@${id.version}`))
+            problem(at, `"${k}" is not in a framework the pack builds on (frameworks).`);
+        }
+      }
+
+  // an advanced automation says what it does in plain words
+  const allAutomations = [
+    ...m.automations.map((a, i) => ({ a, path: ['automations', i] })),
+    ...(m.extends ?? []).flatMap((e, ei) =>
+      (e.automations ?? []).map((a, i) => ({ a, path: ['extends', ei, 'automations', i] })),
+    ),
+  ];
+  for (const { a, path } of allAutomations)
+    if (a.advanced && !a.description)
+      problem(path, 'An advanced automation needs a description in plain words.');
+
+  for (const [di, d] of m.dashboards.entries()) {
     unique(
-      (m.apps ?? []).map((a) => a.key),
-      ['apps'],
-      'app key',
+      d.widgets.map((w) => w.ref),
+      ['dashboards', di, 'widgets'],
+      'widget ref',
     );
-    for (const [ai, app] of (m.apps ?? []).entries())
-      for (const p of appProblems(app, m as PackManifest))
-        problem(['apps', ai, ...p.path], p.message);
-
-    // levels, required frameworks and the setup checklist: every reference resolves, nothing needs a higher level
-    for (const p of levelProblems(m as PackManifest)) problem(p.path, p.message);
-
-    // extends: into required packs only, in the pack's namespace, links and inverses that resolve
-    if (!m.sheets.length && !m.extends?.length)
-      problem(['sheets'], 'A pack needs a sheet or an extends entry.');
-    for (const p of extendsProblems(m as PackManifest)) problem(p.path, p.message);
-
-    // settings: unique keys and choices, tokens that name a setting value, on the pack's own text fields
-    for (const p of settingProblems(m as PackManifest)) problem(p.path, p.message);
-
-    // everything a template checks: field refs, rules, views, tabs, forms, column groups, items, automations (with
-    // each setting at its first choice, so `$setting:` tokens are checked as the values they become)
-    if (m.sheets.length) {
-      const first = Object.fromEntries(
-        (m.settings ?? []).map((s) => [s.key, s.default ?? s.choices[0]!.id]),
-      );
-      const asTemplate = sheetTemplateSchema.safeParse(
-        packToTemplate(applyPackSettings(m as PackManifest, first)),
-      );
-      if (!asTemplate.success)
-        for (const issue of asTemplate.error.issues)
-          problem(issue.path as (string | number)[], issue.message);
+    for (const [wi, w] of d.widgets.entries()) {
+      const at = ['dashboards', di, 'widgets', wi];
+      if (!widgetType(w.type)) problem(at, `Unknown widget "${w.type}".`);
+      const split = w.sheetRef ? splitSheetRef(w.sheetRef, m.key) : null;
+      const s = split && !split.pack ? sheets.get(split.ref) : undefined;
+      if (split?.pack && !required.has(split.pack))
+        problem(at, `"${w.sheetRef}" names the pack "${split.pack}", which is not in requires.`);
+      else if (w.sheetRef && !split?.pack && !s) problem(at, `Unknown sheet "${w.sheetRef}".`);
+      if (w.sheetRef && w.library) problem(at, 'Name a sheetRef or a library, not both.');
+      if (w.fieldKey && s && !s.fields.some((f) => f.key === w.fieldKey))
+        problem(at, `Unknown field "${w.fieldKey}" on "${w.sheetRef}".`);
+      if (w.fieldKey && !w.sheetRef && !w.library)
+        problem(at, `"${w.fieldKey}" needs a sheetRef or a library.`);
     }
-  });
+  }
+
+  // apps: keys once each, every ref one of the pack's
+  unique(
+    (m.apps ?? []).map((a) => a.key),
+    ['apps'],
+    'app key',
+  );
+  for (const [ai, app] of (m.apps ?? []).entries())
+    for (const p of appProblems(app, m as PackManifest))
+      problem(['apps', ai, ...p.path], p.message);
+
+  // levels, required frameworks and the setup checklist: every reference resolves, nothing needs a higher level
+  for (const p of levelProblems(m as PackManifest)) problem(p.path, p.message);
+
+  // extends: into required packs only, in the pack's namespace, links and inverses that resolve
+  if (!m.sheets.length && !m.extends?.length)
+    problem(['sheets'], 'A pack needs a sheet or an extends entry.');
+  for (const p of extendsProblems(m as PackManifest)) problem(p.path, p.message);
+
+  // settings: unique keys and choices, tokens that name a setting value, on the pack's own text fields
+  for (const p of settingProblems(m as PackManifest)) problem(p.path, p.message);
+
+  // everything a template checks: field refs, rules, views, tabs, forms, column groups, items, automations (with
+  // each setting at its first choice, so `$setting:` tokens are checked as the values they become)
+  if (m.sheets.length) {
+    const first = Object.fromEntries(
+      (m.settings ?? []).map((s) => [s.key, s.default ?? s.choices[0]!.id]),
+    );
+    const asTemplate = sheetTemplateSchema.safeParse(
+      packToTemplate(applyPackSettings(m as PackManifest, first)),
+    );
+    if (!asTemplate.success)
+      for (const issue of asTemplate.error.issues)
+        problem(issue.path as (string | number)[], issue.message);
+  }
+}
 
 export type PackManifestInput = z.input<typeof packManifestSchema>;
 

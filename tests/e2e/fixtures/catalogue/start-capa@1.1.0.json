@@ -1,0 +1,455 @@
+{
+  "key": "start-capa",
+  "version": "1.1.0",
+  "title": "Corrective action (CAPA)",
+  "description": "Nonconformities with containment, root cause, correction, corrective action and an effectiveness check",
+  "requires": [],
+  "people": [],
+  "folders": [
+    {
+      "ref": "audit_and_capa",
+      "name": "Audit and CAPA"
+    }
+  ],
+  "sheets": [
+    {
+      "ref": "capa",
+      "name": "Corrective action (CAPA)",
+      "description": "Nonconformities with containment, root cause, correction, corrective action and an effectiveness check",
+      "itemLabel": "CAPA",
+      "idPrefix": "CAC-",
+      "groups": [
+        {
+          "ref": "open",
+          "name": "Open",
+          "color": "green"
+        },
+        {
+          "ref": "closed",
+          "name": "Closed",
+          "color": "orange"
+        }
+      ],
+      "fields": [
+        {
+          "key": "owner",
+          "name": "Owner",
+          "type": "people"
+        },
+        {
+          "key": "status",
+          "name": "Status",
+          "type": "status",
+          "config": {
+            "options": [
+              {
+                "id": "opt_todo",
+                "label": "Not started",
+                "color": "grey"
+              },
+              {
+                "id": "opt_wip",
+                "label": "Working on it",
+                "color": "orange"
+              },
+              {
+                "id": "opt_stuck",
+                "label": "Stuck",
+                "color": "red"
+              },
+              {
+                "id": "opt_verify",
+                "label": "Awaiting verification",
+                "color": "blue"
+              },
+              {
+                "id": "opt_done",
+                "label": "Done",
+                "color": "green",
+                "done": true
+              }
+            ]
+          }
+        },
+        {
+          "key": "severity",
+          "name": "Severity",
+          "type": "severity"
+        },
+        {
+          "key": "found_on",
+          "name": "Found on",
+          "type": "date"
+        },
+        {
+          "key": "due_date",
+          "name": "Due date",
+          "type": "date"
+        },
+        {
+          "key": "description",
+          "name": "Description",
+          "type": "longtext"
+        }
+      ],
+      "views": [],
+      "tabs": [
+        {
+          "ref": "table"
+        },
+        {
+          "ref": "kanban"
+        },
+        {
+          "ref": "calendar"
+        }
+      ],
+      "subitems": {
+        "label": "Actions",
+        "blockClose": true,
+        "lockCascade": false,
+        "fields": [
+          {
+            "key": "owner",
+            "name": "Owner",
+            "type": "people",
+            "config": {
+              "multiple": false
+            }
+          },
+          {
+            "key": "status",
+            "name": "Status",
+            "type": "status",
+            "config": {
+              "options": [
+                {
+                  "id": "opt_todo",
+                  "label": "To do",
+                  "color": "grey"
+                },
+                {
+                  "id": "opt_doing",
+                  "label": "Working on it",
+                  "color": "orange"
+                },
+                {
+                  "id": "opt_done",
+                  "label": "Done",
+                  "color": "green",
+                  "done": true
+                },
+                {
+                  "id": "opt_na",
+                  "label": "N/A",
+                  "color": "dark",
+                  "done": true
+                }
+              ]
+            },
+            "rules": [
+              {
+                "id": "na_reason",
+                "whenFieldKey": "status",
+                "whenValues": [
+                  "opt_na"
+                ],
+                "requireComment": true,
+                "message": "Say why this does not apply."
+              },
+              {
+                "id": "reopen",
+                "whenFieldKey": "status",
+                "whenValues": [
+                  "opt_todo",
+                  "opt_doing"
+                ],
+                "requireComment": true,
+                "message": "Say why this is reopened.",
+                "fromDone": true
+              }
+            ]
+          },
+          {
+            "key": "due_date",
+            "name": "Due date",
+            "type": "date",
+            "config": {
+              "relative": true
+            }
+          },
+          {
+            "key": "evidence",
+            "name": "Evidence",
+            "type": "evidence",
+            "config": {
+              "validDays": 365,
+              "multiple": true,
+              "accept": []
+            }
+          }
+        ],
+        "items": [
+          {
+            "name": "Containment",
+            "values": {
+              "due_date": "$in:2",
+              "owner": "$actor"
+            }
+          },
+          {
+            "name": "Root cause",
+            "values": {
+              "due_date": "$in:14"
+            }
+          },
+          {
+            "name": "Correction",
+            "values": {
+              "due_date": "$in:30"
+            }
+          },
+          {
+            "name": "Corrective action",
+            "values": {
+              "due_date": "$in:60"
+            }
+          },
+          {
+            "name": "Effectiveness check",
+            "values": {
+              "due_date": "$in:90"
+            }
+          }
+        ]
+      },
+      "columnGroups": [],
+      "folder": "audit_and_capa",
+      "isLibrary": false,
+      "items": [],
+      "forms": [
+        {
+          "ref": "nonconformity",
+          "name": "Raise a nonconformity",
+          "groupRef": "open",
+          "access": "internal",
+          "layout": {
+            "title": "Raise a nonconformity",
+            "nameLabel": "Nonconformity",
+            "fields": [
+              {
+                "key": "found_on",
+                "required": true
+              },
+              {
+                "key": "severity"
+              },
+              {
+                "key": "description",
+                "label": "What is wrong?",
+                "required": true
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "sheet": "capa",
+      "name": "Problem reported → add the CAPA steps",
+      "enabled": true,
+      "trigger": {
+        "type": "form_submitted",
+        "formId": "nonconformity"
+      },
+      "conditions": [],
+      "actions": [
+        {
+          "type": "create_subitems",
+          "fromTemplate": true
+        }
+      ],
+      "ref": "reported_add_steps"
+    }
+  ],
+  "dashboards": [
+    {
+      "ref": "capa_overview",
+      "name": "CAPA overview",
+      "widgets": [
+        {
+          "ref": "w_open",
+          "type": "count",
+          "title": "Open nonconformities",
+          "sheetRef": "capa",
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_not_done"
+            }
+          ]
+        },
+        {
+          "ref": "w_verify",
+          "type": "count",
+          "title": "Awaiting verification",
+          "sheetRef": "capa",
+          "conditions": [
+            {
+              "fieldKey": "status",
+              "op": "is_any_of",
+              "value": [
+                "opt_verify"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "w_status",
+          "type": "by_option",
+          "title": "Nonconformities by status",
+          "sheetRef": "capa",
+          "fieldKey": "status"
+        },
+        {
+          "ref": "w_severity",
+          "type": "by_option",
+          "title": "By severity",
+          "sheetRef": "capa",
+          "fieldKey": "severity"
+        },
+        {
+          "ref": "w_overdue",
+          "type": "overdue",
+          "title": "Overdue nonconformities",
+          "sheetRef": "capa",
+          "fieldKey": "due_date"
+        }
+      ]
+    }
+  ],
+  "apps": [
+    {
+      "key": "capa",
+      "title": "CAPA",
+      "description": "Report problems, work on your corrective actions and verify that they worked.",
+      "icon": "wrench",
+      "sections": [
+        {
+          "title": "Work",
+          "screens": [
+            {
+              "key": "report",
+              "title": "Report a problem",
+              "description": "Say what is wrong. The CAPA steps are added for you, and you own the containment.",
+              "roles": [
+                "owner",
+                "admin",
+                "member"
+              ],
+              "kind": "form",
+              "sheet": "capa",
+              "form": "nonconformity"
+            },
+            {
+              "key": "my-actions",
+              "title": "My actions",
+              "description": "Corrective actions assigned to you that are not done, soonest first.",
+              "kind": "item",
+              "sheet": "capa",
+              "subitems": true,
+              "filters": [
+                {
+                  "fieldKey": "owner",
+                  "op": "includes_any_of",
+                  "value": [
+                    "{me}"
+                  ]
+                },
+                {
+                  "fieldKey": "status",
+                  "op": "is_not_done"
+                }
+              ],
+              "sort": [
+                {
+                  "fieldKey": "due_date",
+                  "direction": "asc"
+                }
+              ],
+              "show": [
+                "status",
+                "due_date"
+              ],
+              "empty": "No open actions are assigned to you."
+            },
+            {
+              "key": "approvals",
+              "title": "Needs my approval",
+              "description": "Nonconformities you own that wait for you to verify the actions worked.",
+              "kind": "item",
+              "sheet": "capa",
+              "filters": [
+                {
+                  "fieldKey": "owner",
+                  "op": "includes_any_of",
+                  "value": [
+                    "{me}"
+                  ]
+                },
+                {
+                  "fieldKey": "status",
+                  "op": "is_any_of",
+                  "value": [
+                    "opt_verify"
+                  ]
+                }
+              ],
+              "sort": [
+                {
+                  "fieldKey": "due_date",
+                  "direction": "asc"
+                }
+              ],
+              "show": [
+                "severity",
+                "due_date"
+              ],
+              "empty": "Nothing waits for your verification."
+            }
+          ]
+        },
+        {
+          "title": "Overview",
+          "screens": [
+            {
+              "key": "all",
+              "title": "All nonconformities",
+              "kind": "view",
+              "sheet": "capa"
+            },
+            {
+              "key": "overview",
+              "title": "Overview",
+              "kind": "dashboard",
+              "dashboard": "capa_overview"
+            },
+            {
+              "key": "workflow",
+              "title": "Workflow",
+              "roles": [
+                "owner",
+                "admin"
+              ],
+              "kind": "workflow",
+              "sheet": "capa",
+              "fieldKey": "status"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

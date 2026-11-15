@@ -302,6 +302,8 @@ export async function requiredFirst(
     ) ?? [];
   const out: InstallFirst[] = [];
   for (const r of m.requires) {
+    // an optional requirement is never installed for you (docs/11 Optional requirements); live, it is raised as any
+    if (r.optional && !installs.some((i) => i.pack_key === r.pack)) continue;
     const dep = cat.find((c) => c.key === r.pack);
     if (!dep || !satisfies(dep.version, r.range)) continue;
     const need = neededLevel(m, dep.manifest, level ?? null) ?? defaultLevel(dep.manifest);

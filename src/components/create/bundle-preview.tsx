@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { AppWindow, Info, Lock, ShieldAlert, Users } from 'lucide-react';
+import { AppWindow, Info, Layers, Lock, ShieldAlert, Users } from 'lucide-react';
 import {
   appsFor,
   selectionCounts,
@@ -46,9 +46,11 @@ export function BundlePreview({
   const restricted = kept.filter((p) => p.flags.some((f) => f.kind === 'restricted'));
   const neededBy = (p: BundlePart) =>
     details.parts.filter((x) => x.kind === 'sheet' && x.requires.includes(p.id) && !off.has(x.id));
+  // a set on registers the workspace has makes no sheet of its own (CAPA on Core's register): no "0 sheets"
+  const ownSheets = c.sheets > 0 || details.uses.length === 0;
   const summary = [
-    plural(c.sheets, 'sheet'),
-    plural(c.fields, 'field'),
+    ownSheets && plural(c.sheets, 'sheet'),
+    ownSheets && plural(c.fields, 'field'),
     c.forms && plural(c.forms, 'form'),
     c.automations && plural(c.automations, 'automation'),
     c.dashboards && plural(c.dashboards, 'dashboard'),
@@ -70,6 +72,15 @@ export function BundlePreview({
         <p className="text-copy-14 mt-2" data-testid="create-summary">
           Creates {summary.join(' · ')}.
         </p>
+        {details.uses.length ? (
+          <p className="text-copy-13 mt-1 flex items-start gap-1.5" data-testid="create-uses">
+            <Layers className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>
+              Works on registers you already have: {details.uses.join(', ')}.
+              {c.sheets === 0 ? ' No second register is made.' : ''}
+            </span>
+          </p>
+        ) : null}
         <p className="text-copy-13 text-muted-foreground mt-2 flex items-start gap-1.5">
           <Users className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>

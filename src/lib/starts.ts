@@ -47,14 +47,22 @@ const startSchema = z
     /** Ready-made forms (group by name, fields by the keys the columns get). Created as drafts for owners and admins. */
     forms: z.array(templateForm).optional(),
     /**
-     * What the start adds when it is offered as a pack (docs/11): the pack's version and its automations and
-     * dashboards (sheet ref = the start's id as a key). Checked by the pack manifest schema; the wizard ignores it.
+     * What the start adds when it is offered as a pack (docs/11): the pack's version, its automations and dashboards
+     * (sheet ref = the start's id as a key) and optional requirements. Checked by the pack manifest schema; the
+     * wizard ignores it.
      */
     pack: z
       .object({
         version: z.string(),
         automations: z.array(z.record(z.string(), z.json())).optional(),
         dashboards: z.array(z.record(z.string(), z.json())).optional(),
+        /**
+         * Packs it works on when they are live (docs/11 Optional requirements), what it adds to their sheets, and the
+         * optional pack without which the start's own sheet is made (CAPA: Core's Nonconformities and CAPA).
+         */
+        requires: z.array(z.record(z.string(), z.json())).optional(),
+        extends: z.array(z.record(z.string(), z.json())).optional(),
+        onlyWithout: z.string().optional(),
       })
       .optional(),
   })

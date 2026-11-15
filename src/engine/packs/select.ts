@@ -305,7 +305,7 @@ function namesKey(v: unknown, keys: ReadonlySet<string>): boolean {
  * them or act on that sheet (Supplier management 3.0's checks columns on Core's Suppliers, when the checks are left
  * out).
  */
-function withoutLeftOut(e: Extension, keptRefs: ReadonlySet<string>): Extension {
+export function withoutLeftOut(e: Extension, keptRefs: ReadonlySet<string>): Extension {
   const leftOut = (raw: unknown) =>
     typeof raw === 'string' && !raw.includes(':') && !keptRefs.has(raw);
   const dropped = new Set<string>();
