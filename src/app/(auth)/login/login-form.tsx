@@ -72,7 +72,7 @@ export function PasswordForm({ next, mode }: { next?: string; mode: 'signin' | '
         name="password"
         type="password"
         autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-        hint={mode === 'signup' ? 'At least 10 characters.' : undefined}
+        hint={mode === 'signup' ? 'At least 12 characters.' : undefined}
         required
         state={state}
       />

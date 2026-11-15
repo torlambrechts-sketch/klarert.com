@@ -38,7 +38,7 @@ export async function sendMagicLink(
   return ok({ email: parsed.data.email });
 }
 
-const MIN_PASSWORD = 10;
+const MIN_PASSWORD = 12;
 
 const passwordInput = z.object({
   email: z.email('Enter a valid email address.').trim().toLowerCase(),

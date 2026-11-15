@@ -65,4 +65,6 @@ Protect `main` so nothing merges red. In GitHub: **Settings › Rules › Rulese
    once the workflow has run on a pull request; the old single check `check` is gone). Tick **Require branches to be
    up to date before merging**.
 4. Tick **Block force pushes**. Leave **Restrict deletions** on.
-5. Save. Admins can still bypass a ruleset only when they are added to its bypass list: leave the list empty.
+5. Do not add `perf`: the scroll-performance budget runs nightly (`.github/workflows/perf.yml`), because frame times
+   on shared runners vary. A red nightly is a signal to look, not a broken main.
+6. Save. Admins can still bypass a ruleset only when they are added to its bypass list: leave the list empty.

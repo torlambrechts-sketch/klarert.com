@@ -326,7 +326,11 @@ Supabase Auth MFA with an authenticator app (TOTP). The words in the product are
 
 - **Your account** (`/account`, docs/05 §1): set up an app (QR code, the key to type by hand, the first code),
   add a spare, remove one, and recovery guidance. There are no recovery codes (Supabase's are experimental): a spare
-  app or the saved key is the way back, else Supabase support of the project resets the factor (owner step below).
+  app or the saved key is the way back. Otherwise the person asks their workspace owner, who contacts Compliance OS
+  support. Support confirms who they are (from an owner of the same workspace, by a channel other than the account
+  itself), then deletes the factor in the Supabase dashboard (Authentication › Users › the user › MFA factors). The
+  app does not reset factors, because that would need a fifth service-role place (CLAUDE.md rule 6). Revisit
+  Supabase recovery codes once they are stable (decided 15 Nov 2026).
 - **At sign-in:** a person with an app who signed in with a password or an email link holds an `aal1` session.
   `getSession()` (`src/server/auth.ts`) treats that session as signed out, so every page, server read and command
   refuses it; pages send it to `/login/two-step`, commands answer "Enter the code from your authenticator app to
@@ -344,6 +348,11 @@ Supabase Auth MFA with an authenticator app (TOTP). The words in the product are
   has a verified factor; an audit row when the setting changes; and an owner-only, `aal2`-only RPC to change it in
   place of the direct `orgs` update.
 - Local development: `supabase/config.toml` `[auth.mfa.totp]` enroll and verify on.
+
+Passwords are at least 12 characters (`MIN_PASSWORD`, `src/app/(auth)/login/actions.ts`, and
+`minimum_password_length` in `supabase/config.toml`). On the hosted project, set the same minimum and turn on leaked
+password protection (Authentication › Passwords). Who must use two-step sign-in is the workspace switch only for now;
+a per-role rule can come later (decided 15 Nov 2026).
 
 ### 8.3 Sessions (SA-17)
 

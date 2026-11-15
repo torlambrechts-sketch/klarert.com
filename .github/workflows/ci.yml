@@ -123,7 +123,8 @@ jobs:
         run: pnpm security:bundle
 
       - name: End-to-end tests
-        run: pnpm e2e
+        # the scroll-performance budget runs nightly instead (perf.yml): frame times are noisy on shared runners
+        run: pnpm e2e --project=chromium --project=phone
 
       - name: Upload Playwright report
         if: failure()

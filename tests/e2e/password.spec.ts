@@ -15,7 +15,7 @@ test('create an account with a password, sign out, sign in again, wrong password
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill('short');
   await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByText('Use at least 10 characters.')).toBeVisible();
+  await expect(page.getByText('Use at least 12 characters.')).toBeVisible();
 
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Create account' }).click();
