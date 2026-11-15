@@ -1,6 +1,7 @@
 // Pack entries of the activity log (pack.installed, pack.archived on the workspace chain) as sentences. Pure.
 import type { Json } from '../types';
 import { countsText, type PackCounts } from './plan';
+import { levelName, packTitle } from './words';
 
 export const PACK_ACTIONS = [
   'pack.installed',
@@ -17,12 +18,15 @@ type Obj = Record<string, Json>;
 const obj = (v: Json | null | undefined): Obj =>
   v && typeof v === 'object' && !Array.isArray(v) ? (v as Obj) : {};
 const num = (v: Json | undefined) => (typeof v === 'number' ? v : 0);
+/** The pack's title as people see it (engine/packs/words.ts), also for entries written before the rename. */
+const titleOf = (v: Obj) =>
+  typeof v.title === 'string' ? packTitle(v.title) : String(v.pack_key ?? 'a pack');
 
 /** "Installed Supplier management 1.0.0: 3 sheets, …" / "Archived Supplier management 1.0.0: …". */
 export function packLogText(action: string, newValue: Json | null): string {
   const v = obj(newValue);
   const name =
-    `${typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack')} ${String(v.version ?? '')}`.trim();
+    `${titleOf(v)} ${String(v.version ?? '')}`.trim();
   const c = obj(v.counts);
   if (action === 'pack.installed' || action === 'pack.extended') {
     const counts: PackCounts = {
@@ -40,7 +44,7 @@ export function packLogText(action: string, newValue: Json | null): string {
     };
     const level =
       typeof v.level_name === 'string'
-        ? v.level_name
+        ? levelName(v.level_name)
         : typeof v.level === 'string'
           ? v.level
           : null;
@@ -49,7 +53,7 @@ export function packLogText(action: string, newValue: Json | null): string {
     return `Installed ${name}${level ? ` (${level})` : ''}: ${countsText(counts)}.`;
   }
   if (action === 'pack.upgraded') {
-    const title = typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack');
+    const title = titleOf(v);
     const added = obj(c.added);
     const nAdded = Object.values(added).reduce<number>((n, x) => n + num(x), 0);
     const s = obj(v.summary);
@@ -78,7 +82,7 @@ export function packLogText(action: string, newValue: Json | null): string {
     return `Archived ${name}: ${parts.join(', ')}. Items and the activity log are kept.`;
   }
   if (action === 'pack.automations_mode') {
-    const title = typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack');
+    const title = titleOf(v);
     const n = num(v.count);
     const what = `${n} ${n === 1 ? 'automation' : 'automations'}`;
     return v.mode === 'test'
@@ -86,7 +90,7 @@ export function packLogText(action: string, newValue: Json | null): string {
       : `Turned on ${what} from ${title}: they now notify people and change items.`;
   }
   if (action === 'pack.settings_changed') {
-    const title = typeof v.title === 'string' ? v.title : String(v.pack_key ?? 'a pack');
+    const title = titleOf(v);
     const labels = Object.entries(obj(v.labels)).map(([k, x]) => `${k}: ${String(x)}`);
     const n = num(v.fields);
     return `Changed the settings of ${title}${labels.length ? ` (${labels.join(', ')})` : ''}${

@@ -1,5 +1,6 @@
 import 'server-only';
 import { libraryKey, setupProgress, type SetupProgress, type SetupSource } from '@/engine/packs';
+import { manifestForPeople, packTitle } from '@/engine/packs/words';
 import type { SetupTarget } from '@/engine/packs/types';
 import { sheetCtx } from '@/engine/sheet-data';
 import { parsePack } from '@/lib/packs/manifest';
@@ -50,8 +51,9 @@ export async function readSetups(
     const row = packs.find((p) => p.key === i.pack_key && p.version === i.version);
     if (!row) return [];
     try {
-      const manifest = parsePack(row.manifest);
-      return manifest.setup ? [{ install: i, manifest, title: row.title }] : [];
+      // in the words people see (engine/packs/words.ts): "Shared registers", Basic / Standard / Everything
+      const manifest = manifestForPeople(parsePack(row.manifest));
+      return manifest.setup ? [{ install: i, manifest, title: packTitle(row.title) }] : [];
     } catch {
       return [];
     }

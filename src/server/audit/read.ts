@@ -23,6 +23,7 @@ import { SHEET_COLUMNS, toSheet } from '@/lib/sheet-rows';
 import { readFrameworks } from '@/server/frameworks/catalogue';
 import { linksAround } from '@/server/frameworks/workspace';
 import { newId } from '@/server/sheet-context';
+import { packTitle } from '@/engine/packs/words';
 
 const CHUNK = 150;
 
@@ -205,7 +206,7 @@ export async function readScopes(db: Db, orgId: string): Promise<AuditScopes> {
       .then((r) => must(r, 'libraries')),
   ]);
   const title = (k: string, v: string) =>
-    packs.find((p) => p.key === k && p.version === v)?.title ?? k;
+    packTitle(packs.find((p) => p.key === k && p.version === v)?.title ?? k);
   return {
     folders: folders.map((f) => ({ value: `folder:${f.id}`, label: f.name })),
     installs: installs
@@ -275,7 +276,7 @@ export async function readScopeSheets(
       .eq('key', inst.pack_key)
       .eq('version', inst.version)
       .maybeSingle();
-    label = `Pack: ${pack?.title ?? inst.pack_key}`;
+    label = `Pack: ${pack ? packTitle(pack.title) : inst.pack_key}`;
     log.install_id = inst.id;
     q = q.eq('pack_install_id', inst.id);
     const fws = (pack?.manifest as { frameworks?: { key: string; version: string }[] } | null)
@@ -604,10 +605,12 @@ export async function readExportNames(
           .range(a, b),
       )
     : [];
-  const title = (key: string, version?: string) =>
-    packs.find((p) => p.key === key && p.version === version)?.title ??
-    packs.find((p) => p.key === key)?.title ??
-    null;
+  const title = (key: string, version?: string) => {
+    const t =
+      packs.find((p) => p.key === key && p.version === version)?.title ??
+      packs.find((p) => p.key === key)?.title;
+    return t ? packTitle(t) : null;
+  };
   return {
     folder: new Map(folders.map((f) => [f.id, f.name])),
     install: new Map(installs.map((i) => [i.id, title(i.pack_key, i.version) ?? i.pack_key])),
