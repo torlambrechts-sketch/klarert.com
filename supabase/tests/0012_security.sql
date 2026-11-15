@@ -27,9 +27,10 @@ select is(
      from pg_class c
     where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p') and c.relrowsecurity
       and not exists (select 1 from pg_policy p where p.polrelid = c.oid)
-      and c.relname not in ('scheduler_fired', 'outbound_webhooks', 'form_rate_limits', 'form_link_hits')),
+      and c.relname not in ('scheduler_fired', 'outbound_webhooks', 'form_rate_limits', 'form_link_hits',
+                            'automation_secrets')),
   '{}'::text[],
-  'tables without policies are only the service-role ones (scheduler, webhook queue, form rate limits)');
+  'tables without policies are only the service-role ones (scheduler, webhook queue, form rate limits, webhook secrets)');
 
 select ok(exists (select 1 from pg_trigger where tgname = 'activity_no_change' and tgrelid = 'activity_log'::regclass
                   and tgenabled <> 'D'),

@@ -6,6 +6,52 @@ import { triggerField } from './triggers';
 
 export type WebhookPreset = 'generic' | 'teams' | 'slack';
 
+/**
+ * The host of a webhook address saved on the server (migration 0056): the action keeps `urlRef` (the key the runner
+ * resolves) and `urlHost` instead of the address, which members never read. Null when the action has none.
+ */
+export function savedWebhookHost(action: Record<string, unknown>): string | null {
+  return typeof action.urlRef === 'string' &&
+    action.urlRef &&
+    typeof action.urlHost === 'string' &&
+    action.urlHost
+    ? action.urlHost
+    : null;
+}
+
+/** Whether any action keeps its webhook address on the server. */
+export function hasSavedWebhook(actions: unknown): boolean {
+  return (
+    Array.isArray(actions) &&
+    actions.some(
+      (x) =>
+        !!x &&
+        typeof x === 'object' &&
+        (x as { type?: unknown }).type === 'webhook' &&
+        'urlRef' in x,
+    )
+  );
+}
+
+/**
+ * The runner's view of the actions: each webhook action with its saved address put back (service role only). An
+ * address that is gone leaves the action without one, so planning says "Webhooks need an https:// address."
+ */
+export function withWebhookAddresses<A extends { type: string } & Record<string, Json>>(
+  actions: A[],
+  urls: Record<string, unknown>,
+): A[] {
+  return actions.map((x) => {
+    if (x.type !== 'webhook' || typeof x.urlRef !== 'string') return x;
+    const url = urls[x.urlRef];
+    if (typeof url === 'string' && url) return { ...x, url };
+    const rest = { ...x };
+    delete rest.urlRef;
+    delete rest.urlHost;
+    return rest;
+  });
+}
+
 export const isWebhookPreset = (p: unknown): p is WebhookPreset =>
   p === 'generic' || p === 'teams' || p === 'slack';
 

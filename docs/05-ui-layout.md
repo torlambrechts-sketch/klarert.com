@@ -6,7 +6,9 @@ Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it
 
 | Route | Screen |
 |---|---|
-| `/login` | magic link sign-in |
+| `/login` | sign-in: password, create an account, or an email link. Query: `?next=<path on this site>` (`safeNext`) |
+| `/login/two-step` | two-step sign-in: the code from the person's authenticator app (§1.1). Query: `?next=` |
+| `/account` | Your account: two-step sign-in and this session (§1.1). Query: `?next=<path>&required=<workspace slug>` |
 | `/onboarding` | create a workspace or accept an invite |
 | `/[org]` | redirects to `/[org]/home` |
 | `/[org]/home` | Home: Needs you, recent activity, next 30 days, getting-started checklist |
@@ -22,11 +24,48 @@ Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it
 | `/[org]/design` | Platform › Design (§4): the workspace's sheets and how they connect, as Sheets and Connections tables or a map. Query: `?app=<key>&pack=<key>&group=<folder id or none>&domain=<Registers domain>&differs=1&show=map&focus=<sheetId>` |
 | `/[org]/design/print` | The Design export for auditors (§4): `?sheet=<id>` one sheet's flow, `?part=leaves` the data-flow record, else the workspace with the same filters; prints to PDF from the browser |
 | `/[org]/automations` | Automations (all sheets) as an expandable list with the builder in place (`?new=1`, `?edit=<id>`, recipes `?recipes=1`) and the latest runs; full run log at `?tab=runs` |
-| `/[org]/settings` | Workspace settings: members, teams, job roles, entities and sites |
+| `/[org]/settings` | Workspace settings: members, teams, job roles, entities and sites, packs, frameworks, retention, archived, security (`?tab=security`: two-step sign-in, §1.1) |
 | `/f/[token]` | Public form (no login, no app chrome) |
 | `/api/cron/scheduler`, `/api/cron/webhooks` | Cron endpoints (secret) |
 
 Every state that matters is in the URL: open item, view, search. Back/forward work. "Copy link" copies the absolute URL.
+
+### 1.1 Your account and two-step sign-in
+
+The words are always "two-step sign-in" and "authenticator app", never "MFA" or "TOTP" (docs/09 §8.2).
+
+- **Your account** (`/account`, from the account menu › Your account; outside any workspace, on the soft background
+  like onboarding, one 576 px column, full width with 16 px gutters at 390 px): a back link ("Back to <workspace>"),
+  the `h1` "Your account" with the name and email, then two cards.
+  - **Two-step sign-in** with a status chip, "On" (a tick, green) or "Off", and one line on what it does. When on, the
+    apps as rows ("Authenticator app, Added 15 Nov 2026"; numbered when there are several) with **Remove**, which opens
+    an inline confirm ("Remove this app? Two-step sign-in turns off …" for the last one, naming the workspaces that
+    require it; **Remove app** in red and **Keep it**, which has focus). Then **Set up two-step sign-in** (black) or
+    **Add another authenticator app**. Setting up shows three numbered steps in place: 1. the QR code (180 px, alt
+    text "QR code to scan with your authenticator app") with app examples and the name it adds ("Compliance OS
+    (<email>)"); 2. the key in groups of four (`text-label-13-mono`) with **Copy key**; 3. "Enter the 6-digit code
+    the app shows" (focused, numeric, one-time-code autocomplete), then **Turn on two-step sign-in** and **Cancel**.
+    A wrong code says "That code is not right. Enter the code the app shows now." under the field and focuses it
+    again. Done: the toast "Two-step sign-in is on.", the chip turns On, and **If you lose your phone**: add a spare
+    app on another device, or keep the key in a password manager; without either, the workspace owner contacts
+    support to reset it. There are no recovery codes.
+  - **This session**: "Signed in since 15 Nov 2026, 14:31, with two-step sign-in." (Supabase does not say when a
+    session ends), a line that sessions end some hours after sign-in and sooner when away, and **Sign out**.
+  - Sent by a workspace that requires it (`?required=<slug>`): a warning line above the cards, "<Workspace> requires
+    two-step sign-in. Set it up below to open the workspace.", and **Continue to the workspace** once it is set up.
+- **Two-step sign-in at sign-in** (`/login/two-step`, the sign-in card): "Two-step sign-in", "Enter the 6-digit code
+  from your authenticator app for <email>.", a "Which app?" radio list when there are several, the **6-digit code**
+  field (focused; spaces allowed) and **Continue**. Under a rule: "Lost your phone? …" and **Sign in as someone else**
+  (signs out). A person with an app who signed in with a password or email link reaches nothing else until the code is
+  entered: every page sends them here with `next`, every command answers "Enter the code from your authenticator app
+  to finish signing in."
+- **Workspace admin › Security** (owners and admins): the card **Two-step sign-in** with the switch "Require two-step
+  sign-in for this workspace · On/Off" and what it does. Owners change it; an owner who does not use two-step sign-in
+  yet sees the switch off and disabled with "Set up two-step sign-in for yourself first. Open Your account"; admins
+  see it disabled with "Only owners can change this." Toasts: "Two-step sign-in is now required." / "… now
+  optional." While it is on, a member whose session did not use two-step sign-in is sent to Your account with
+  `?required=` from every page of the workspace, and its commands are refused with "This workspace requires two-step
+  sign-in. Set it up in Your account, then try again."
 
 ## 2. App shell
 

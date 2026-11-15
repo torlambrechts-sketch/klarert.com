@@ -18,6 +18,7 @@ import {
 } from '@/engine/files';
 import type { Freshness } from '@/engine/fields/evidence';
 import { formatDate } from '@/engine/fields/helpers';
+import { previewOf } from '@/engine/item-files';
 import { filesExpire } from '@/engine/item-panel';
 import type { Ctx, Field, FileRow, Item } from '@/engine/types';
 import { Chip } from '@/components/fields/shared';
@@ -87,7 +88,8 @@ export function FilesField({
         itemId: item.id,
         fieldId: field.id,
         filename: file.name,
-        mime: file.type || 'application/octet-stream',
+        // the stored type comes from the extension for previewable files, never the browser's guess (0054)
+        mime: previewOf(file.name)?.type ?? 'application/octet-stream',
         size: file.size,
         sha256,
         ...(replaces ? { replaces } : {}),

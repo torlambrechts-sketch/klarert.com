@@ -1,4 +1,4 @@
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { chromium, expect, test, type Browser, type Page } from '@playwright/test';
 import { rest, signIn } from './helpers';
 
 // Files on items and linked controlled documents (docs/05 §3.4 Files tab, docs/02 §8 and §14). Uses the seed:
@@ -66,6 +66,52 @@ async function menu(page: Page, file: string, action: string) {
     .getByRole('button', { name: `More actions for ${file}` })
     .click();
   await page.getByRole('menuitem', { name: action }).click();
+}
+
+/**
+ * Whether Chromium's PDF viewer draws the preview route in a same-origin frame, as the preview dialog shows it. The
+ * default headless shell has no PDF viewer, so this opens full Chromium (`channel: 'chromium'`, installed with
+ * `playwright install chromium`) with the same session. A refused frame is a small grey "sad page" icon; the viewer
+ * paints its dark toolbar and page area.
+ */
+async function pdfViewerRenders(page: Page, src: string) {
+  const origin = new URL(page.url()).origin;
+  const full = await chromium.launch({ channel: 'chromium' });
+  try {
+    const context = await full.newContext({ viewport: { width: 800, height: 600 } });
+    await context.addCookies(await page.context().cookies());
+    const viewer = await context.newPage();
+    await viewer.goto(`${origin}/meridian/home`);
+    await viewer.evaluate((url) => {
+      const frame = document.createElement('iframe');
+      frame.id = 'pdf-check';
+      frame.src = url;
+      frame.style.cssText =
+        'position:fixed;inset:0;width:600px;height:400px;border:0;z-index:99999';
+      document.body.append(frame);
+    }, src);
+    await viewer.waitForTimeout(3000);
+    const shot = (await viewer.locator('#pdf-check').screenshot()).toString('base64');
+    // the share of dark pixels in the frame, counted on a canvas in the page
+    const share = await viewer.evaluate(async (b64) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const g = canvas.getContext('2d')!;
+      g.drawImage(img, 0, 0);
+      const { data } = g.getImageData(0, 0, img.width, img.height);
+      let dark = 0;
+      for (let i = 0; i < data.length; i += 4)
+        if (data[i]! < 120 && data[i + 1]! < 120 && data[i + 2]! < 120) dark += 1;
+      return dark / (img.width * img.height);
+    }, shot);
+    return share > 0.25;
+  } finally {
+    await full.close();
+  }
 }
 
 async function asUser(browser: Browser, email: string) {
@@ -155,6 +201,9 @@ test.describe('desktop', () => {
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toBe('application/pdf');
     expect(res.headers()['x-content-type-options']).toBe('nosniff');
+    // SA-15: the bytes run sandboxed, and Chromium's PDF viewer still shows them in the preview frame
+    expect(res.headers()['content-security-policy']).toContain("sandbox; default-src 'none'");
+    expect(await pdfViewerRenders(page, src!)).toBe(true);
     await preview.getByRole('button', { name: 'Next file' }).click();
     await expect(page.getByRole('img', { name: 'site.png' })).toBeVisible();
     await page.keyboard.press('Escape');

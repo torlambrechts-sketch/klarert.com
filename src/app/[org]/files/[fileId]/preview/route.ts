@@ -24,6 +24,8 @@ export async function GET(
       'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(r.data.filename)}`,
       'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'private, no-store',
+      // Content-Security-Policy "sandbox; default-src 'none' …" (SA-15) is set for this route in next.config.ts:
+      // headers there replace a route's own header of the same name.
     },
   });
 }

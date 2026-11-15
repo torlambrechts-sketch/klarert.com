@@ -325,13 +325,21 @@ export function FieldSettingsBody({
           {def.storage !== 'computed' ? (
             <Labelled
               label="Personal data"
-              hint="Values are kept out of the activity log in clear and can be erased under the sheet's retention rules (Sheet settings › Retention). Mark the field before it holds data: earlier log entries cannot change."
+              hint={
+                // editors may mark a field, only owners and admins unmark it (migration 0064)
+                isAdmin || (field.config as { personalData?: unknown }).personalData !== true
+                  ? "Values are kept out of the activity log in clear and can be erased under the sheet's retention rules (Sheet settings › Retention). Mark the field before it holds data: earlier log entries cannot change."
+                  : 'Only owners and admins can turn this off.'
+              }
             >
               {(id) => (
                 <label htmlFor={id} className="text-label-13 flex items-center gap-2">
                   <input
                     id={id}
                     type="checkbox"
+                    disabled={
+                      !isAdmin && (field.config as { personalData?: unknown }).personalData === true
+                    }
                     checked={config.personalData === true}
                     onChange={(e) =>
                       setConfig((c) => {
@@ -386,7 +394,7 @@ export function FieldSettingsBody({
               config={config}
               onChange={setConfig}
               sheet={env.sheet}
-              env={env}
+              env={{ ...env, isAdmin }}
               field={{ ...field, config }}
             />
           </Section>

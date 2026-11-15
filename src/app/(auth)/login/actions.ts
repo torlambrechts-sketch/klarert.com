@@ -3,16 +3,14 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { env } from '@/lib/env';
+import { safeNext } from '@/lib/safe-next';
+import { verifiedApps } from '@/lib/two-step';
 import { createClient } from '@/lib/supabase/server';
 import { fail, invalid, ok, type Result } from '@/server/result';
 
 const input = z.object({
   email: z.email('Enter a valid email address.').trim().toLowerCase(),
-  next: z
-    .string()
-    .regex(/^\/(?!\/)/)
-    .optional()
-    .catch(undefined),
+  next: z.unknown().transform((v) => safeNext(v) ?? undefined),
 });
 
 export async function sendMagicLink(
@@ -40,9 +38,7 @@ export async function sendMagicLink(
   return ok({ email: parsed.data.email });
 }
 
-const MIN_PASSWORD = 10;
-const safeNext = (v: FormDataEntryValue | null) =>
-  typeof v === 'string' && /^\/(?!\/)/.test(v) ? v : '/';
+const MIN_PASSWORD = 12;
 
 const passwordInput = z.object({
   email: z.email('Enter a valid email address.').trim().toLowerCase(),
@@ -56,14 +52,18 @@ export async function signInWithPassword(_: unknown, form: FormData): Promise<Re
   });
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     if (error.status === 429)
       return fail('failed', 'Too many attempts. Wait a minute and try again.');
     // same message for unknown email and wrong password, so accounts cannot be probed
     return fail('unauthenticated', 'Email or password is wrong.');
   }
-  redirect(safeNext(form.get('next')));
+  const next = safeNext(form.get('next')) ?? '/';
+  // an account with an authenticator app enters its code next (two-step sign-in, docs/09 §8)
+  if (verifiedApps(data.user?.factors).length > 0)
+    redirect(`/login/two-step?next=${encodeURIComponent(next)}`);
+  redirect(next);
 }
 
 const signUpInput = z.object({
@@ -96,5 +96,5 @@ export async function signUpWithPassword(_: unknown, form: FormData): Promise<Re
   // projects that require email confirmation return no session: tell the person instead of redirecting
   if (!data.session)
     return fail('failed', 'Check your email to confirm the account, then sign in.');
-  redirect(safeNext(form.get('next')));
+  redirect(safeNext(form.get('next')) ?? '/');
 }

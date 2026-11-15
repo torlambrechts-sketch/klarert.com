@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
+import { safeNext } from '@/lib/safe-next';
 import { createClient } from '@/lib/supabase/server';
 
 // Magic links land here: PKCE `code`, or `token_hash` when the email template links directly.
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
-  const next = url.searchParams.get('next');
-  const target = next && /^\/(?!\/)/.test(next) ? next : '/';
+  const target = safeNext(url.searchParams.get('next')) ?? '/';
   const supabase = await createClient();
 
   const code = url.searchParams.get('code');

@@ -1,5 +1,4 @@
 import 'server-only';
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createClient as createSupabase, type SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { keyBetween } from '@/engine/ordering';
@@ -11,6 +10,13 @@ import { env } from '@/lib/env';
 import { toField } from '@/lib/sheet-rows';
 import { publicSubmitInput } from '@/lib/schemas/views';
 import { runAutomations } from '@/server/automations';
+import {
+  elapsedSince,
+  formSecret,
+  logMissingSecret,
+  startStamp as signedStamp,
+  visitorKey,
+} from '@/server/form-stamp';
 import { fail, invalid, ok, type Result } from '@/server/result';
 import { newId } from '@/server/sheet-context';
 import { log } from './context';
@@ -150,32 +156,21 @@ export const publicCtx = (
     newId,
   });
 
-const secret = () => process.env.FORM_RATE_LIMIT_SALT ?? process.env.CRON_SECRET ?? '';
-
-/** The per-visitor key: HMAC-SHA-256 of the IP and the form id. The database never sees the address itself. */
-export function visitorKey(ip: string, formId: string): string {
-  return createHmac('sha256', secret()).update(`${ip}|${formId}`).digest('hex');
-}
-
 /** Minimum time between serving the form and sending it: people take longer, scripts do not. */
 export const MIN_FILL_MS = 2000;
 const MAX_FILL_MS = 24 * 60 * 60 * 1000;
 
-/** A signed "page served at" stamp for the form behind this token. */
-export function startStamp(token: string, now = Date.now()): string {
-  const sig = createHmac('sha256', secret()).update(`start|${token}|${now}`).digest('hex');
-  return `${now}.${sig}`;
-}
-
-/** How long ago the page was served, or null when the stamp is not ours. */
-export function elapsedSince(token: string, stamp: string, now = Date.now()): number | null {
-  const [t, sig] = stamp.split('.');
-  const at = Number(t);
-  if (!Number.isFinite(at) || !sig || !/^[0-9a-f]{64}$/.test(sig)) return null;
-  const want = createHmac('sha256', secret()).update(`start|${token}|${at}`).digest();
-  const got = Buffer.from(sig, 'hex');
-  if (got.length !== want.length || !timingSafeEqual(got, want)) return null;
-  return now - at;
+/**
+ * The signed "page served at" stamp for the form behind this token (src/server/form-stamp.ts), or null without
+ * FORM_RATE_LIMIT_SALT: the page then says the form cannot take answers (fail closed, SA-10).
+ */
+export function startStamp(token: string): string | null {
+  const secret = formSecret();
+  if (!secret) {
+    logMissingSecret();
+    return null;
+  }
+  return signedStamp(secret, token);
 }
 
 export type PublicSubmitResult = { displayId: string | null };
@@ -191,6 +186,7 @@ const REASONS: Record<string, string> = {
   consent_required: 'Tick the consent box to send your answers.',
   too_fast: 'Take a moment to check your answers, then send them again.',
   invalid: 'Check your answers and try again.',
+  unavailable: 'This form cannot take answers right now. Try again later.',
 };
 
 export async function submitPublicForm(
@@ -201,10 +197,16 @@ export async function submitPublicForm(
   const p = publicSubmitInput.safeParse(input);
   if (!p.success) return invalid(p.error);
   const v = p.data;
+  // fail closed: without the server secret neither the fill-time stamp nor the visitor key can be trusted (SA-10)
+  const secret = formSecret();
+  if (!secret) {
+    logMissingSecret();
+    return fail('failed', REASONS.unavailable!);
+  }
   const form = await loadPublicForm(v.token);
   if (!form) return fail('not_found', REASONS.not_found!);
   if (form.state !== 'open') return fail('invalid', REASONS[form.state] ?? REASONS.invalid!);
-  const elapsed = elapsedSince(v.token, v.started);
+  const elapsed = elapsedSince(secret, v.token, v.started);
   if (elapsed === null || elapsed > MAX_FILL_MS) return fail('invalid', REASONS.not_found!);
   if (elapsed < MIN_FILL_MS) return fail('invalid', REASONS.too_fast!);
   if (form.consent && !v.consent)
@@ -217,7 +219,7 @@ export async function submitPublicForm(
 
   const { data, error } = await submitter.rpc('submit_public_form', {
     p_token: v.token,
-    p_ip_hash: visitorKey(ip, form.viewId),
+    p_ip_hash: visitorKey(secret, ip, form.viewId),
     p_name: v.name.trim(),
     p_values: check.values as Json,
     p_position: keyBetween(form.lastPosition, null),

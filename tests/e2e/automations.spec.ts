@@ -312,9 +312,10 @@ test('a button runs its steps with a spinner; a paused automation skips that ite
     ],
   });
   const items = await seedItems(page, sheet, [{ name: 'Policy A' }, { name: 'Policy B' }]);
-  await rest(page, 'automation_pauses', {
+  // pauses go through the logged function only (0057)
+  await rest(page, 'rpc/set_automation_pause', {
     method: 'POST',
-    body: { automation_id: approve, item_id: items['Policy B'], org_id: sheet.orgId },
+    body: { p_automation: approve, p_item: items['Policy B'], p_paused: true },
   });
   await page.goto(sheet.url);
 

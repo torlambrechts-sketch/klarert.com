@@ -119,7 +119,12 @@ const fake = {
 };
 
 vi.mock('@/server/auth', () => ({
-  getSession: async () => ({ supabase: fake, user: { id: 'u1' }, profile: { id: 'u1' } }),
+  getSession: async () => ({
+    supabase: fake,
+    user: { id: 'u1' },
+    profile: { id: 'u1' },
+    twoStep: { enrolled: false, level: 'aal1', needsCode: false },
+  }),
   isAdminRole: (r: string) => r === 'owner' || r === 'admin',
   isEditorRole: (r: string) => r !== 'viewer',
 }));

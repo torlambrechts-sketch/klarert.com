@@ -9,15 +9,16 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Three jobs run side by side, so one failing step never hides the others (docs/09 §8.6). Protect main by requiring
+# all three: README.md › Branch protection.
 jobs:
-  check:
+  static:
+    name: static
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -38,8 +39,23 @@ jobs:
       - name: Migration smoke test (PGlite)
         run: pnpm db:smoke
 
+  database:
+    name: database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
       - name: Start Supabase
-        run: pnpm supabase:start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta
+        run: ./scripts/ci/supabase-start.sh
 
       - name: Migrations apply from scratch
         run: pnpm db:reset
@@ -48,7 +64,41 @@ jobs:
         run: pnpm db:test
 
       - name: Generated types are up to date
-        run: pnpm db:types && git diff --exit-code src/lib/database.types.ts
+        run: |
+          if ! pnpm db:types:check; then
+            echo "::error file=src/lib/database.types.ts::Generated types differ from the migrations. Run 'pnpm db:reset && pnpm db:types' and commit src/lib/database.types.ts, or download the 'database-types' artifact of this run and commit it. Never edit the file by hand."
+            exit 1
+          fi
+
+      - name: Upload the generated types
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-types
+          path: src/lib/database.types.ts
+          retention-days: 7
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    # about 25 minutes of Playwright on a 4-core runner, plus set-up and the build
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Start Supabase
+        run: ./scripts/ci/supabase-start.sh
+
+      - name: Migrations apply from scratch
+        run: pnpm db:reset
 
       - name: Local environment
         run: |
@@ -58,11 +108,12 @@ jobs:
             -e 's/^SERVICE_ROLE_KEY=/SUPABASE_SERVICE_ROLE_KEY=/p' > .env.local
           echo 'NEXT_PUBLIC_APP_URL=http://localhost:3000' >> .env.local
           echo "CRON_SECRET=$(openssl rand -hex 24)" >> .env.local
+          echo "FORM_RATE_LIMIT_SALT=$(openssl rand -hex 32)" >> .env.local
 
       - name: Seed
         run: pnpm seed
 
-      - name: Install Playwright browser
+      - name: Install Playwright browsers (Chromium and its headless shell)
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Build
@@ -72,7 +123,8 @@ jobs:
         run: pnpm security:bundle
 
       - name: End-to-end tests
-        run: pnpm e2e
+        # the scroll-performance budget runs nightly instead (perf.yml): frame times are noisy on shared runners
+        run: pnpm e2e --project=chromium --project=phone
 
       - name: Upload Playwright report
         if: failure()

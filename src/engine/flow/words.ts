@@ -8,8 +8,13 @@ export const UNREADABLE_SHEET = 'A sheet you cannot open';
 /** An address already masked to its host. */
 const MASKED = /^[^/\s]+\/…$/;
 
-/** "hooks.slack.com/…": the host of an https address, never its path, query or secret. */
-export function maskUrl(url: unknown): string {
+/**
+ * "hooks.slack.com/…": the host of an https address, never its path, query or secret. A saved address stays on the
+ * server (0056): the action holds only its host (`urlHost`), passed as the second argument.
+ */
+export function maskUrl(url: unknown, savedHost?: unknown): string {
+  if ((typeof url !== 'string' || !url.trim()) && typeof savedHost === 'string' && savedHost)
+    return `${savedHost}/…`;
   if (typeof url !== 'string' || !url.trim()) return 'No address yet';
   if (MASKED.test(url)) return url;
   try {

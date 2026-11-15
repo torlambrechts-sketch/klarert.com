@@ -18,8 +18,9 @@ select bag_eq(
       where p.pronamespace = 'public'::regnamespace and p.prorettype <> 'trigger'::regtype
         and has_function_privilege('anon', p.oid, 'execute') $$,
   $$ values ('get_public_form'), ('is_member'), ('has_role'), ('is_editor'), ('is_admin'), ('can_write'),
-            ('actor_kind_for'), ('activity_hash'), ('field_types'), ('non_value_types') $$,
-  'signed-out visitors can run only public forms and the read-only helpers RLS uses');
+            ('actor_kind_for'), ('activity_hash'), ('field_types'), ('non_value_types'),
+            ('api_request_guard') $$,
+  'signed-out visitors can run only public forms, the read-only helpers RLS uses and the API''s own gate (0053)');
 
 create function public.pgtap_new_fn() returns int language sql as $$ select 1 $$;
 select ok(not has_function_privilege('authenticated', 'public.pgtap_new_fn()', 'execute'),

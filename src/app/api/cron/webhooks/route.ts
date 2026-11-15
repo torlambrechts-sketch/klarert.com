@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
@@ -31,11 +32,24 @@ export async function GET(request: NextRequest) {
     async claim(limit) {
       const { data, error } = await db.rpc('claim_outbound_webhooks', { p_limit: limit });
       if (error) throw new Error(error.message);
-      return (data ?? []).map((r) => ({
+      const rows = data ?? [];
+      // each automation signs its webhooks with its own key (0056, SA-12)
+      const ids = [...new Set(rows.flatMap((r) => (r.automation_id ? [r.automation_id] : [])))];
+      const keys = new Map<string, string>();
+      if (ids.length > 0) {
+        const { data: secrets, error: keyError } = await db
+          .from('automation_secrets')
+          .select('automation_id, signing_key')
+          .in('automation_id', ids);
+        if (keyError) throw new Error(keyError.message);
+        for (const k of secrets ?? []) keys.set(k.automation_id, k.signing_key);
+      }
+      return rows.map((r) => ({
         id: r.id,
         url: r.url,
         payload: r.payload,
         attempts: r.attempts,
+        signingKey: r.automation_id ? (keys.get(r.automation_id) ?? null) : null,
       }));
     },
     async record(id, s: Settled) {
@@ -51,6 +65,7 @@ export async function GET(request: NextRequest) {
     check: (url) => checkWebhookUrl(url, resolveAll),
     send: postJson,
     now: () => Date.now(),
+    hmacHex: (key, message) => createHmac('sha256', key).update(message).digest('hex'),
   });
   const body = { ok: true, ms: Date.now() - started, ...summary };
   console.info(JSON.stringify({ level: 'info', source: 'webhooks', ...body }));

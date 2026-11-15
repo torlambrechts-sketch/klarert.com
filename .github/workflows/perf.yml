@@ -1,0 +1,67 @@
+name: Performance
+
+# The 10 000-item scroll budget (tests/e2e/perf.spec.ts). Frame times on shared GitHub runners vary, so this runs
+# nightly and on demand and is not a required check; a failure here is a signal to look, not a broken main.
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: perf
+  cancel-in-progress: true
+
+jobs:
+  perf:
+    name: perf
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Start Supabase
+        run: ./scripts/ci/supabase-start.sh
+
+      - name: Migrations apply from scratch
+        run: pnpm db:reset
+
+      - name: Local environment
+        run: |
+          pnpm exec supabase status -o env | sed -n \
+            -e 's/^API_URL=/NEXT_PUBLIC_SUPABASE_URL=/p' \
+            -e 's/^ANON_KEY=/NEXT_PUBLIC_SUPABASE_ANON_KEY=/p' \
+            -e 's/^SERVICE_ROLE_KEY=/SUPABASE_SERVICE_ROLE_KEY=/p' > .env.local
+          echo 'NEXT_PUBLIC_APP_URL=http://localhost:3000' >> .env.local
+          echo "CRON_SECRET=$(openssl rand -hex 24)" >> .env.local
+          echo "FORM_RATE_LIMIT_SALT=$(openssl rand -hex 32)" >> .env.local
+
+      - name: Seed
+        run: pnpm seed
+
+      - name: Install Playwright browsers (Chromium and its headless shell)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build
+        run: pnpm build
+
+      - name: No service-role key in client bundles
+        run: pnpm security:bundle
+
+      - name: Scroll-performance budget (M10)
+        run: pnpm e2e --project=perf --no-deps
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-report
+          path: playwright-report/
+          retention-days: 7

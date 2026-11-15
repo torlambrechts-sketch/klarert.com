@@ -1,5 +1,8 @@
 // Copy and paste between grid cells and Excel/Sheets as TSV (docs/01 FR-21), and clearing a range. Pure: every
-// pasted cell goes through its field type's parseText; nothing is written here.
+// pasted cell goes through its field type's parseText; nothing is written here. Copied text that a spreadsheet
+// would run as a formula (=, +, -, @ …) gets an apostrophe in front, as CSV exports do (SA-11); number columns are
+// copied as they are, and pasting a copied cell back drops the apostrophe again.
+import { escapeFormula, unescapeFormula } from './audit/csv';
 import type { ValueKind } from './fields/types';
 import type { Ctx, Field, Item, Json } from './types';
 import { defOf, kindOf, textOf } from './values';
@@ -92,6 +95,10 @@ export function cellText(item: Item, column: GridColumn, ctx: Ctx): string {
   return column.kind === 'name' ? item.name : textOf(item, column.field, ctx);
 }
 
+/** Text a spreadsheet may run as a formula is escaped; a number column's text is a number, copied as it is. */
+const copied = (column: GridColumn, text: string, ctx: Ctx) =>
+  column.kind === 'field' && kindOf(column.field, ctx) === 'number' ? text : escapeFormula(text);
+
 export function copyRange(rows: Item[], all: GridColumn[], range: CellRange, ctx: Ctx): string {
   const columns = cellColumns(all);
   const out: string[][] = [];
@@ -101,7 +108,7 @@ export function copyRange(rows: Item[], all: GridColumn[], range: CellRange, ctx
     const line: string[] = [];
     for (let c = range.left; c <= range.right; c += 1) {
       const col = columns[c];
-      if (col) line.push(cellText(item, col, ctx));
+      if (col) line.push(copied(col, cellText(item, col, ctx), ctx));
     }
     out.push(line);
   }
@@ -203,7 +210,7 @@ export function planPaste(
         out.skipped.push('read-only column');
         continue;
       }
-      const t = raw.trim();
+      const t = unescapeFormula(raw.trim());
       if (column.kind === 'name') {
         if (!t) out.skipped.push('a name is required');
         else put(out, item, column, t.slice(0, 500));

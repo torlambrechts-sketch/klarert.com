@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { ROLE_LABELS } from '@/lib/schemas/workspace';
-import { getSession } from '@/server/auth';
+import { getSession, signInPath } from '@/server/auth';
 import { AcceptForm } from './accept-form';
 
 export const metadata = { title: 'Invitation · Compliance OS' };
@@ -9,7 +9,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const { token } = await params;
   const here = `/invite/${token}`;
   const session = await getSession();
-  if (!session) redirect(`/login?next=${encodeURIComponent(here)}`);
+  if (!session) redirect(await signInPath(here));
   if (!session.profile) redirect(`/onboarding?next=${encodeURIComponent(here)}`);
 
   const { data: invite } = /^[0-9a-f]{48}$/.test(token)

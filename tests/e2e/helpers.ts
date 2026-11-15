@@ -1,5 +1,7 @@
+import { createHmac } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
+import { COMMAND_HEADER, commandProof, commandSecret } from '@/lib/supabase/command-proof';
 
 const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324';
 
@@ -120,19 +122,38 @@ export async function accessToken(page: Page): Promise<string> {
   return (JSON.parse(raw) as { access_token: string }).access_token;
 }
 
-/** PostgREST call as the signed-in person: `rest(page, 'rpc/create_items', { method: 'POST', body })`. */
+/**
+ * PostgREST call as the signed-in person: `rest(page, 'rpc/create_items', { method: 'POST', body })`. Fixtures stand in
+ * for the app's server, so writes carry the server's proof as the server client does (migration 0053); RLS and the
+ * database's own rules apply as for the person.
+ */
 export async function rest<T = unknown>(
   page: Page,
   path: string,
   init: { method?: string; body?: unknown } = {},
 ): Promise<T> {
+  const token = await accessToken(page);
+  const secret = commandSecret({
+    secret: localEnv('SUPABASE_COMMAND_SECRET'),
+    supabaseUrl: localEnv('NEXT_PUBLIC_SUPABASE_URL'),
+  });
+  const sub = (
+    JSON.parse(Buffer.from(token.split('.')[1]!, 'base64url').toString('utf8')) as { sub: string }
+  ).sub;
   const res = await fetch(`${localEnv('NEXT_PUBLIC_SUPABASE_URL')}/rest/v1/${path}`, {
     method: init.method ?? 'GET',
     headers: {
       apikey: localEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-      Authorization: `Bearer ${await accessToken(page)}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
+      ...(secret
+        ? {
+            [COMMAND_HEADER]: commandProof(secret, sub, Date.now(), (k, m) =>
+              createHmac('sha256', k).update(m).digest('hex'),
+            ),
+          }
+        : {}),
     },
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
   });

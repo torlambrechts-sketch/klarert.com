@@ -69,14 +69,14 @@ isOneToOne: false
                   ]
                 },"activity_log": {
                   Row: {
-                    "action": string,"actor_id": string | null,"actor_kind": string,"at": string,"chain_key": string,"field_id": string | null,"hash": string,"id": number,"item_id": string | null,"new_value": Json | null,"note": string | null,"old_value": Json | null,"org_id": string,"prev_hash": string,"sheet_id": string | null
+                    "action": string,"actor_id": string | null,"actor_kind": string,"at": string,"chain_key": string,"chain_seq": number | null,"field_id": string | null,"hash": string,"hash_v": number,"id": number,"item_id": string | null,"new_value": Json | null,"note": string | null,"old_value": Json | null,"org_id": string,"prev_hash": string,"sheet_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "action": string,"actor_id"?: string | null,"actor_kind": string,"at"?: string,"chain_key": string,"field_id"?: string | null,"hash"?: string,"id"?: never,"item_id"?: string | null,"new_value"?: Json | null,"note"?: string | null,"old_value"?: Json | null,"org_id": string,"prev_hash"?: string,"sheet_id"?: string | null
+                    "action": string,"actor_id"?: string | null,"actor_kind": string,"at"?: string,"chain_key": string,"chain_seq"?: number | null,"field_id"?: string | null,"hash"?: string,"hash_v"?: number,"id"?: never,"item_id"?: string | null,"new_value"?: Json | null,"note"?: string | null,"old_value"?: Json | null,"org_id": string,"prev_hash"?: string,"sheet_id"?: string | null
                   }
                   Update: {
-                    "action"?: string,"actor_id"?: string | null,"actor_kind"?: string,"at"?: string,"chain_key"?: string,"field_id"?: string | null,"hash"?: string,"id"?: never,"item_id"?: string | null,"new_value"?: Json | null,"note"?: string | null,"old_value"?: Json | null,"org_id"?: string,"prev_hash"?: string,"sheet_id"?: string | null
+                    "action"?: string,"actor_id"?: string | null,"actor_kind"?: string,"at"?: string,"chain_key"?: string,"chain_seq"?: number | null,"field_id"?: string | null,"hash"?: string,"hash_v"?: number,"id"?: never,"item_id"?: string | null,"new_value"?: Json | null,"note"?: string | null,"old_value"?: Json | null,"org_id"?: string,"prev_hash"?: string,"sheet_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -163,16 +163,42 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"automations": {
+                },"automation_secrets": {
                   Row: {
-                    "actions": NonNullable<Json>,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"last_run_at": string | null,"locked": boolean,"mode": string,"name": string,"org_id": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number
+                    "automation_id": string,"created_at": string,"org_id": string,"signing_key": string,"webhook_urls": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "actions": NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"mode"?: string,"name": string,"org_id": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"run_count"?: number,"sheet_id": string,"source"?: string,"trigger": NonNullable<Json>,"updated_at"?: string,"version"?: number
+                    "automation_id": string,"created_at"?: string,"org_id": string,"signing_key"?: string,"webhook_urls"?: NonNullable<Json>
                   }
                   Update: {
-                    "actions"?: NonNullable<Json>,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"mode"?: string,"name"?: string,"org_id"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"run_count"?: number,"sheet_id"?: string,"source"?: string,"trigger"?: NonNullable<Json>,"updated_at"?: string,"version"?: number
+                    "automation_id"?: string,"created_at"?: string,"org_id"?: string,"signing_key"?: string,"webhook_urls"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "automation_secrets_automation_id_fkey"
+      columns: ["automation_id"]
+isOneToOne: true
+      referencedRelation: "automations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "automation_secrets_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"automations": {
+                  Row: {
+                    "actions": NonNullable<Json>,"acts_as": string | null,"conditions": NonNullable<Json>,"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"last_run_at": string | null,"locked": boolean,"mode": string,"name": string,"org_id": string,"pack_hash": string | null,"pack_install_id": string | null,"pack_ref": string | null,"run_count": number,"sheet_id": string,"source": string,"trigger": NonNullable<Json>,"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actions": NonNullable<Json>,"acts_as"?: string | null,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"mode"?: string,"name": string,"org_id": string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"run_count"?: number,"sheet_id": string,"source"?: string,"trigger": NonNullable<Json>,"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "actions"?: NonNullable<Json>,"acts_as"?: string | null,"conditions"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"last_run_at"?: string | null,"locked"?: boolean,"mode"?: string,"name"?: string,"org_id"?: string,"pack_hash"?: string | null,"pack_install_id"?: string | null,"pack_ref"?: string | null,"run_count"?: number,"sheet_id"?: string,"source"?: string,"trigger"?: NonNullable<Json>,"updated_at"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -563,14 +589,14 @@ isOneToOne: false
                   ]
                 },"invites": {
                   Row: {
-                    "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string | null,"id": string,"invited_by": string | null,"org_id": string,"role": Database["public"]['Enums']["member_role"],"token": string
+                    "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string | null,"id": string,"invited_by": string | null,"link_expires_at": string,"org_id": string,"role": Database["public"]['Enums']["member_role"],"token": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
+                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"link_expires_at"?: string,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
                   }
                   Update: {
-                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
+                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"link_expires_at"?: string,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
                   }
                   Relationships: [
                     {
@@ -1013,14 +1039,14 @@ isOneToOne: false
                   ]
                 },"restricted_activity": {
                   Row: {
-                    "activity_id": number,"field_id": string,"new_value": Json | null,"old_value": Json | null,"org_id": string,"salt": string,"sheet_id": string | null
+                    "activity_id": number,"erased_at": string | null,"erased_by": string | null,"field_id": string,"new_value": Json | null,"old_value": Json | null,"org_id": string,"salt": string | null,"sheet_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "activity_id": number,"field_id": string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id": string,"salt": string,"sheet_id"?: string | null
+                    "activity_id": number,"erased_at"?: string | null,"erased_by"?: string | null,"field_id": string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id": string,"salt"?: string | null,"sheet_id"?: string | null
                   }
                   Update: {
-                    "activity_id"?: number,"field_id"?: string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id"?: string,"salt"?: string,"sheet_id"?: string | null
+                    "activity_id"?: number,"erased_at"?: string | null,"erased_by"?: string | null,"field_id"?: string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id"?: string,"salt"?: string | null,"sheet_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1421,17 +1447,38 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "_access_changed":
+            "_aal_ok":
+{ Args: { "o": string }; Returns: boolean
+                           },
+"_access_changed":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "_archive_pack_rows":
 { Args: { "p_install": string }; Returns: Json
+                           },
+"_attest_payload":
+{ Args: { "p_field": string,"p_item": string,"p_values": Json }; Returns: Json
+                           },
+"_attest_value":
+{ Args: { "p_config": Json,"p_new": Json,"p_old": Json,"p_type": string,"p_values": Json }; Returns: Json
+                           },
+"_automation_targets":
+{ Args: { "p_actions": Json,"p_sheet": string }; Returns: (string)[]
                            },
 "_can_manage_folder":
 { Args: { "p_folder": string }; Returns: boolean
                            },
 "_can_manage_sheet":
 { Args: { "p_sheet": string }; Returns: boolean
+                           },
+"_canonical_json":
+{ Args: { "v": Json }; Returns: string
+                           },
+"_command_proof":
+{ Args: { "p_t": number,"p_user": string }; Returns: string
+                           },
+"_command_secret":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "_create_item":
 { Args: { "p_actor_id": string,"p_actor_kind": string,"p_group": string,"p_name": string,"p_position": string,"p_sheet": string,"p_values": Json }; Returns: {
@@ -1663,6 +1710,9 @@ isOneToOne: false
 "_mask_value":
 { Args: { "p_kind": string,"p_salt": string,"v": Json }; Returns: Json
                            },
+"_mask_webhook_row":
+{ Args: { "p_row": Json }; Returns: Json
+                           },
 "_member_name":
 { Args: { "p_user": string }; Returns: string
                            },
@@ -1725,6 +1775,9 @@ isOneToOne: false
 "_personal_mask_keys":
 { Args: { "p_kind": string,"p_salt": string,"v": Json }; Returns: Json
                            },
+"_public_field_config":
+{ Args: { "p_config": Json }; Returns: Json
+                           },
 "_public_form_hidden_types":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
                            },
@@ -1738,6 +1791,9 @@ isOneToOne: false
 { Args: { "p_sheet"?: string,"p_user": string }; Returns: {
               "level": string,"org_id": string,"restricted": boolean,"sheet_id": string
             }[]
+                           },
+"_sheet_name_for":
+{ Args: { "p_sheet": string,"p_user": string }; Returns: string
                            },
 "_sheet_names_personal":
 { Args: { "p_sheet": string }; Returns: boolean
@@ -1779,6 +1835,9 @@ isOneToOne: false
                            },
 "_submit_form":
 { Args: { "p_actor_id": string,"p_actor_kind": string,"p_channel": string,"p_consent": boolean,"p_name": string,"p_position": string,"p_values": Json,"p_view": string }; Returns: Json
+                           },
+"_webhook_host":
+{ Args: { "p_url": string }; Returns: string
                            },
 "_wf_apply":
 { Args: { "p_actor": string,"p_actor_kind": string,"p_automation": string,"p_def": Json,"p_item": string,"p_lock": boolean,"p_note": string,"p_status_option": string,"p_step_option": string }; Returns: Json
@@ -1859,8 +1918,14 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"activity_has_webhook_url":
+{ Args: { "p_new": Json,"p_old": Json }; Returns: boolean
+                           },
 "activity_hash":
 { Args: { "action": string,"actor_id": string,"actor_kind": string,"at": string,"field_id": string,"new_value": Json,"note": string,"old_value": Json,"prev": string }; Returns: string
+                           },
+"activity_hash_v2":
+{ Args: { "action": string,"actor_id": string,"actor_kind": string,"at": string,"chain_key": string,"chain_seq": number,"field_id": string,"item_id": string,"new_value": Json,"note": string,"old_value": Json,"org_id": string,"prev": string,"sheet_id": string }; Returns: string
                            },
 "activity_value_masked":
 { Args: { "v": Json }; Returns: boolean
@@ -1908,6 +1973,9 @@ isOneToOne: false
 "adopt_framework":
 { Args: { "p_framework": string,"p_org": string,"p_plan": Json,"p_version": string }; Returns: Json
                            },
+"api_request_guard":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "apply_pack_upgrade":
 { Args: { "p_install": string,"p_plan": Json }; Returns: Json
                            },
@@ -1916,6 +1984,17 @@ isOneToOne: false
                            },
 "archive_pack":
 { Args: { "p_install": string }; Returns: Json
+                           },
+"automation_authority":
+{ Args: { "p_automations": (string)[] }; Returns: {
+              "automation_id": string,"stop_reason": string
+            }[]
+                           },
+"automation_signing_key":
+{ Args: { "p_automation": string }; Returns: string
+                           },
+"belongs_to":
+{ Args: { "o": string }; Returns: boolean
                            },
 "can_write":
 { Args: { "o": string,"p_automation": string }; Returns: boolean
@@ -2101,7 +2180,7 @@ isOneToOne: false
                            },
 "design_health":
 { Args: { "p_org": string }; Returns: {
-              "automation_id": string,"dead_letters": number,"failed_runs": number,"last_failed_at": string | null,"partial_runs": number,"retrying": number
+              "automation_id": string,"dead_letters": number,"failed_runs": number,"last_failed_at": string,"partial_runs": number,"retrying": number
             }[]
                            },
 "download_file":
@@ -2173,6 +2252,9 @@ isOneToOne: false
 "file_object_pending":
 { Args: { "p_path": string }; Returns: boolean
                            },
+"file_object_readable":
+{ Args: { "p_path": string }; Returns: boolean
+                           },
 "filter_item_ids":
 { Args: { "p_params": Json,"p_sheet": string,"p_where": string }; Returns: (string)[]
                            },
@@ -2184,6 +2266,9 @@ isOneToOne: false
                            },
 "folder_hidden_sheet_count":
 { Args: { "p_folder": string }; Returns: number
+                           },
+"folder_log_visible":
+{ Args: { "p_new": Json,"p_old": Json }; Returns: boolean
                            },
 "form_link_create":
 { Args: { "p_view": string }; Returns: {
@@ -2316,6 +2401,11 @@ isOneToOne: false
                            },
 "mark_bundle_reviewed":
 { Args: { "p_install": string }; Returns: Json
+                           },
+"member_two_step":
+{ Args: { "p_org": string }; Returns: {
+              "two_step": boolean,"user_id": string
+            }[]
                            },
 "move_framework_edition":
 { Args: { "p_copies": Json,"p_from_sheet": string,"p_links": Json,"p_org": string,"p_to_sheet": string }; Returns: Json
@@ -2683,6 +2773,9 @@ isOneToOne: false
                            },
 "set_protected_value":
 { Args: { "p_field": string,"p_item": string,"p_note"?: string,"p_value": string }; Returns: undefined
+                           },
+"set_require_two_step":
+{ Args: { "p_on": boolean,"p_org": string }; Returns: boolean
                            },
 "set_retention_hold":
 { Args: { "p_item": string,"p_on": boolean,"p_reason": string }; Returns: boolean

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getSession } from '@/server/auth';
+import { safeNext as safePath } from '@/lib/safe-next';
+import { getSession, getSignIn } from '@/server/auth';
 import { LoginForm, PasswordForm } from './login-form';
 
 export const metadata = { title: 'Sign in · Compliance OS' };
@@ -21,8 +22,11 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; error?: string; mode?: string }>;
 }) {
   const { next, error, mode: rawMode } = await searchParams;
-  const safeNext = next && /^\/(?!\/)/.test(next) ? next : undefined;
+  const safeNext = safePath(next) ?? undefined;
   if (await getSession()) redirect(safeNext ?? '/');
+  // signed in with the first step, the authenticator app's code still owed
+  if ((await getSignIn())?.twoStep.needsCode)
+    redirect(safeNext ? `/login/two-step?next=${encodeURIComponent(safeNext)}` : '/login/two-step');
   const mode: Mode = rawMode === 'signup' || rawMode === 'link' ? rawMode : 'signin';
   const href = (m: Mode) => {
     const p = new URLSearchParams();
