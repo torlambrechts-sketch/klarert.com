@@ -35,12 +35,7 @@ export function NextStepCard({ org, next }: { org: string; next: NextStep }) {
     <div className="relative" data-testid="next-step-card">
       <Card
         headingId={headingId}
-        title={
-          <>
-            <span className="text-muted-foreground text-label-13 block font-medium">Next step</span>
-            {next.standard}
-          </>
-        }
+        title={`Next step: ${next.standard}`}
         footer={
           <>
             <span>Progress comes from your sheets.</span>

@@ -127,8 +127,9 @@ function useCollapsed() {
 }
 
 export type MenuSheetsProps = {
-  /** The section heading (docs/05 §2.1): "Registers". */
+  /** The section heading (docs/05 §2.1): "Registers", and its id for the section around it. */
   title?: string;
+  headingId?: string;
   /** Shown under the heading before the folders: the shared registers' domains (menu-registers.tsx). */
   lead?: React.ReactNode;
   org: string;
@@ -547,7 +548,10 @@ export function MenuSheets(props: MenuSheetsProps) {
   return (
     <>
       <div className="group/row flex items-center pr-1">
-        <h2 className="text-muted-foreground text-label-12 flex-1 px-2.5 pt-0.5 pb-1.5 font-medium">
+        <h2
+          id={props.headingId}
+          className="text-muted-foreground text-label-12 flex-1 px-2.5 pt-0.5 pb-1.5 font-medium"
+        >
           {title}
         </h2>
         {canEdit ? (

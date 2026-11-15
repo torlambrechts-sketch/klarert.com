@@ -313,29 +313,32 @@ export function SideMenu({
 
         <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
         {/* Registers: the shared registers' domains, then the workspace's own folders and sheets (docs/05 §2.1) */}
-        <MenuSheets
-          title="Registers"
-          lead={
-            <MenuRegisters
-              org={org}
-              registers={nav.registers}
-              activeSheet={activeSheet}
-              isClosed={(id) => closed.has(id)}
-              toggle={toggle}
-              onNavigate={onNavigate}
-            />
-          }
-          org={org}
-          nav={nav}
-          activeSheet={activeSheet}
-          isClosed={(id) => closed.has(id)}
-          toggle={toggle}
-          setOpen={setOpen}
-          canEdit={canEdit}
-          canManage={canManage}
-          onNavigate={onNavigate}
-        />
-        {newSheet}
+        <section aria-labelledby={`${ids}-registers`} className="flex flex-col">
+          <MenuSheets
+            title="Registers"
+            headingId={`${ids}-registers`}
+            lead={
+              <MenuRegisters
+                org={org}
+                registers={nav.registers}
+                activeSheet={activeSheet}
+                isClosed={(id) => closed.has(id)}
+                toggle={toggle}
+                onNavigate={onNavigate}
+              />
+            }
+            org={org}
+            nav={nav}
+            activeSheet={activeSheet}
+            isClosed={(id) => closed.has(id)}
+            toggle={toggle}
+            setOpen={setOpen}
+            canEdit={canEdit}
+            canManage={canManage}
+            onNavigate={onNavigate}
+          />
+          {newSheet}
+        </section>
 
         {/* Reports: every role, auditors included */}
         <Group id={`${ids}-reports`} title="Reports">

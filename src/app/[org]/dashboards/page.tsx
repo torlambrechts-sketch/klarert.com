@@ -24,7 +24,7 @@ export default async function DashboardsPage({
   return (
     <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
-        crumb="Insights"
+        crumb="Reports"
         title="Dashboards"
         description="Widgets read live from your sheets, the evidence library and the run log."
       />

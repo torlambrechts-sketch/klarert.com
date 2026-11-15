@@ -58,7 +58,7 @@ export default async function AuditPage({
   if (!r.ok)
     return (
       <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
-        <PageHeader crumb="Insights" title="Audit outputs" />
+        <PageHeader crumb="Reports" title="Audit outputs" />
         <div
           role="alert"
           className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
@@ -78,7 +78,7 @@ export default async function AuditPage({
   return (
     <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
-        crumb="Insights"
+        crumb="Reports"
         title="Audit outputs"
         description="Exports for an auditor or a management review, made from your sheets as they are now. Each one holds only what you can see and is recorded in the activity log."
       />
