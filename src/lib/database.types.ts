@@ -2034,6 +2034,46 @@ isOneToOne: false
 "commentable_sheet_ids":
 { Args: Record<PropertyKey, never>; Returns: string[]
                            },
+"convert_item_value":
+{ Args: { "p_field": string,"p_item": string,"p_type_label": string,"p_value": Json }; Returns: {
+              "archived_at": string | null,
+"archived_with": string | null,
+"created_at": string,
+"created_by": string | null,
+"display_id": string,
+"form_version": number | null,
+"group_id": string,
+"held_at": string | null,
+"held_by": string | null,
+"held_created": boolean,
+"held_snapshot": Json | null,
+"id": string,
+"lock_reason": string | null,
+"locked": boolean,
+"name": string,
+"next_sub_seq": number,
+"org_id": string,
+"pack_hash": string | null,
+"pack_install_id": string | null,
+"pack_ref": string | null,
+"parent_id": string | null,
+"position": string,
+"requirement_ref": string | null,
+"seq": number,
+"sheet_id": string,
+"source_channel": string | null,
+"source_form_id": string | null,
+"sub_seq": number | null,
+"updated_at": string,
+"updated_by": string | null,
+"values": NonNullable<Json>
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "items"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_bundle":
 { Args: { "p_bundle": Json,"p_org": string,"p_plan": Json }; Returns: Json
                            },
