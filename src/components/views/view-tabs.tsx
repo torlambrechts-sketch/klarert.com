@@ -10,14 +10,17 @@ import {
   MoreHorizontal,
   Plus,
   SlidersHorizontal,
+  Network,
   SquareKanban,
   Table,
   User,
 } from 'lucide-react';
 import {
   emptyConfig,
+  SAVED_VIEW_TYPES,
+  toSavedViewType,
   VIEW_TYPE_LABEL,
-  VIEW_TYPES,
+  type SavedViewType,
   type ViewConfig,
   type ViewType,
 } from '@/engine/views/config';
@@ -49,6 +52,7 @@ const ICONS: Record<ViewType, typeof Table> = {
   table: Table,
   insights: ChartColumn,
   kanban: SquareKanban,
+  design: Network,
   calendar: Calendar,
   form: FileText,
 };
@@ -292,7 +296,7 @@ export function ViewTabs({
         submit="Create view"
         initialName=""
         chooseType
-        initialType={active.type}
+        initialType={toSavedViewType(active.type) ?? 'table'}
         canShare={views.canShare}
         onSubmit={async ({ name, type, shared }) => {
           const config: ViewConfig = type === active.type ? views.config : { ...emptyConfig() };
@@ -435,14 +439,14 @@ export function ViewDialog({
   submit: string;
   initialName: string;
   chooseType?: boolean;
-  initialType?: ViewType;
+  initialType?: SavedViewType;
   /** Undefined: no share choice (rename). */
   canShare?: boolean;
-  onSubmit(v: { name: string; type: ViewType; shared: boolean }): Promise<void>;
+  onSubmit(v: { name: string; type: SavedViewType; shared: boolean }): Promise<void>;
 }) {
   const id = useId();
   const [name, setName] = useState(initialName);
-  const [type, setType] = useState<ViewType>(initialType ?? 'table');
+  const [type, setType] = useState<SavedViewType>(initialType ?? 'table');
   const [shared, setShared] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -489,7 +493,7 @@ export function ViewDialog({
             <fieldset className="flex flex-col gap-1">
               <legend className="text-label-13 mb-1 font-semibold">Type</legend>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {VIEW_TYPES.map((t) => (
+                {SAVED_VIEW_TYPES.map((t) => (
                   <label key={t} className="text-label-13 flex items-center gap-1.5">
                     <input
                       type="radio"

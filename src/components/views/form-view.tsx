@@ -38,6 +38,37 @@ import { viewsKey, type ViewsState } from './use-views';
 // close or reopen, delete); editors open it to fill it in. The tab id stays `form`; ?form=<id> picks a form.
 
 const formLinksKey = (sheetId: string) => ['form-links', sheetId] as const;
+
+/** The sheet's live form links by form (view) id. Also read by the Design tab's form builder (docs/05 §3.8). */
+export function useFormLinks(sheetId: string) {
+  return useQuery({
+    queryKey: formLinksKey(sheetId),
+    queryFn: async () => {
+      const { data: rows, error } = await createClient()
+        .from('form_links')
+        .select('id, token, enabled, view_id')
+        .eq('sheet_id', sheetId)
+        .eq('enabled', true);
+      if (error) throw new Error(error.message);
+      return new Map((rows ?? []).map((r) => [r.view_id ?? '', r]));
+    },
+  });
+}
+
+/** Keep a form's link in the cache after Share creates, regenerates or disables it. */
+export function useSetFormLink(sheetId: string) {
+  const qc = useQueryClient();
+  return (viewId: string, link: FormLinkRow | null) =>
+    qc.setQueryData<Map<string, FormLinkRow & { view_id: string | null }>>(
+      formLinksKey(sheetId),
+      (m) => {
+        const next = new Map(m ?? []);
+        if (link) next.set(viewId, { ...link, view_id: viewId });
+        else next.delete(viewId);
+        return next;
+      },
+    );
+}
 const formStatsKey = (sheetId: string) => ['form-stats', sheetId] as const;
 
 export function FormView({
@@ -65,18 +96,7 @@ export function FormView({
   const forms = views.tabs.forms.map((f) => f.saved!).filter(Boolean);
   const selected = forms.find((f) => f.id === selectedId) ?? null;
 
-  const links = useQuery({
-    queryKey: formLinksKey(sheetId),
-    queryFn: async () => {
-      const { data: rows, error } = await createClient()
-        .from('form_links')
-        .select('id, token, enabled, view_id')
-        .eq('sheet_id', sheetId)
-        .eq('enabled', true);
-      if (error) throw new Error(error.message);
-      return new Map((rows ?? []).map((r) => [r.view_id ?? '', r]));
-    },
-  });
+  const links = useFormLinks(sheetId);
   const stats = useQuery({
     queryKey: formStatsKey(sheetId),
     queryFn: async () => {
@@ -85,16 +105,7 @@ export function FormView({
       return new Map((rows ?? []).map((r) => [r.view_id, r]));
     },
   });
-  const setLink = (viewId: string, link: FormLinkRow | null) =>
-    qc.setQueryData<Map<string, FormLinkRow & { view_id: string | null }>>(
-      formLinksKey(sheetId),
-      (m) => {
-        const next = new Map(m ?? []);
-        if (link) next.set(viewId, { ...link, view_id: viewId });
-        else next.delete(viewId);
-        return next;
-      },
-    );
+  const setLink = useSetFormLink(sheetId);
 
   const go = (formId: string | null) => {
     const url = new URL(window.location.href);
@@ -462,7 +473,7 @@ function FormsList({
   );
 }
 
-function NewFormDialog({
+export function NewFormDialog({
   open,
   onClose,
   org,

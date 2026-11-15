@@ -1,10 +1,11 @@
+import Link from 'next/link';
 import { ListCrumb } from '@/components/shell/data-list';
 import { PageTabs } from '@/components/shell/page-header';
 import { ShellCrumb } from '@/components/shell/shell-crumb';
 import { appScreens, type ResolvedApp } from '@/engine/apps/resolve';
 import { AppIcon } from './app-icon';
 
-// An app's frame (docs/13): the app's name and its screens as underline tabs (they scroll sideways on a phone), then
+// An app's frame (docs/13): the app's name, a link to its design, and its screens as underline tabs (they scroll sideways on a phone), then
 // the screen. The crumb in the top strip reads "Apps / <app>".
 export function AppFrame({
   org,
@@ -35,9 +36,16 @@ export function AppFrame({
         </ShellCrumb>
       ) : null}
       <div className="px-4 pt-4 sm:px-[28px] sm:pt-5">
-        <p className="text-muted-foreground text-label-13 m-0 flex items-center gap-1.5 font-medium">
+        <p className="text-muted-foreground text-label-13 m-0 flex flex-wrap items-center gap-1.5 font-medium">
           <AppIcon icon={app.icon} className="size-[15px]" />
           {app.title}
+          {/* the app's sheets and how they connect (Platform › Design filtered by app, docs/05 §4) */}
+          <Link
+            href={`/${org}/design?app=${encodeURIComponent(app.key)}`}
+            className="text-info ml-auto font-normal underline-offset-2 hover:underline"
+          >
+            How this app is built
+          </Link>
         </p>
         <PageTabs label={`${app.title} screens`} tabs={tabs} active={active} />
       </div>

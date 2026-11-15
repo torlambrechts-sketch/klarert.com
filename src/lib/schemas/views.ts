@@ -4,6 +4,7 @@ import {
   FORM_ACCESS,
   formLayoutSchema,
   viewConfigSchema,
+  builtinViewInput,
   viewTypeInput,
 } from '@/engine/views/config';
 import { MAX_TABS, sheetTabSchema } from '@/engine/views/tabs';
@@ -17,8 +18,8 @@ const viewName = z
   .trim()
   .min(1, 'A name is required.')
   .max(60, 'A view name can be at most 60 characters.');
-/** A saved view's uuid or a built-in view ("table", "kanban" …; the former "list" and "grid" read as "table"). */
-const viewRef = z.union([uuid, viewTypeInput]);
+/** A saved view's uuid or a built-in view ("table", "design" …; the former "list" and "grid" read as "table"). */
+const viewRef = z.union([uuid, builtinViewInput]);
 
 export const createViewInput = z.object({
   org: slugInput,
