@@ -56,7 +56,10 @@ test('an admin invites by email; the mail names the workspace and role, its link
 
   // the open invite says when its link ends; resend sends the same link again, once in 10 minutes
   await owner.reload();
-  const row = owner.getByRole('listitem').filter({ hasText: invitee });
+  const row = owner
+    .getByRole('listitem')
+    .filter({ hasText: invitee })
+    .filter({ hasText: 'not accepted yet' });
   await expect(row).toContainText(
     /Viewer · not accepted yet · link works until \d{1,2} [A-Z][a-z]{2} \d{4}/,
   );
