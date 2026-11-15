@@ -42,15 +42,21 @@ export function checklist(f: ChecklistFacts): ChecklistStep[] {
 
 export const checklistDone = (steps: ChecklistStep[]) => steps.every((s) => s.done);
 
-/** A live pack install as Home reads it: the shared registers are a system pack, every other pack is a standard. */
+/** A live pack install as Home reads it, from its installed manifest. */
 export interface InstalledPack {
   key: string;
+  /** The shared registers (a system pack). */
   system: boolean;
+  /** The pack has a guided setup (docs/11 Setup): what Home's Next step cards show. */
+  setup: boolean;
 }
 
-/** Standards are the packs that build on the shared registers (docs/05 §6.5); the shared registers are not one. */
+/**
+ * The standards installed: packs with a guided setup, the ones whose Next step cards take over from Getting started.
+ * Every standard of the catalogue has one; the shared registers and the sheet starts offered as packs do not.
+ */
 export const standardsInstalled = (packs: readonly InstalledPack[]) =>
-  packs.filter((p) => !p.system).length;
+  packs.filter((p) => !p.system && p.setup).length;
 
 /**
  * Whether Home shows the Getting started checklist (docs/05 §4, owner decision 15 Nov 2026): only until the first

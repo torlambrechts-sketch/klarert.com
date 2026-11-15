@@ -107,8 +107,9 @@ describe('showGettingStarted', () => {
     automations: 1,
     openedActivityLog: true,
   };
-  const core = { key: 'core', system: true };
-  const gdpr = { key: 'gdpr', system: false };
+  const core = { key: 'core', system: true, setup: false };
+  const gdpr = { key: 'gdpr', system: false, setup: true };
+  const capa = { key: 'start-capa', system: false, setup: false };
 
   it('shows on a new workspace with no standard', () => {
     expect(showGettingStarted({ auditor: false, packs: [], steps: checklist(none) })).toBe(true);
@@ -128,6 +129,14 @@ describe('showGettingStarted', () => {
     expect(showGettingStarted({ auditor: false, packs: [core], steps: checklist(none) })).toBe(
       true,
     );
+  });
+
+  it('keeps showing with only a sheet start installed as a pack: it has no Next step to take over', () => {
+    expect(standardsInstalled([capa])).toBe(0);
+    expect(showGettingStarted({ auditor: false, packs: [capa], steps: checklist(none) })).toBe(
+      true,
+    );
+    expect(standardsInstalled([core, capa, gdpr])).toBe(1);
   });
 
   it('hides once every step is done', () => {

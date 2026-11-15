@@ -237,7 +237,7 @@ export const getHome = cache(async (orgId: string, timeZone: string): Promise<Ho
   };
 });
 
-/** The live pack installs, each marked system (the shared registers) or not from its installed manifest. */
+/** The live pack installs, each with its installed manifest's system flag and whether it has a guided setup. */
 async function installedPacks(db: Db, orgId: string): Promise<InstalledPack[]> {
   const installs = must(
     await db
@@ -250,13 +250,13 @@ async function installedPacks(db: Db, orgId: string): Promise<InstalledPack[]> {
   const rows = must(
     await db
       .from('packs')
-      .select('key, version, system:manifest->system')
+      .select('key, version, system:manifest->system, setup:manifest->setup->>title')
       .in('key', [...new Set(installs.map((i) => i.pack_key))]),
   );
-  return installs.map((i) => ({
-    key: i.pack_key,
-    system: rows.find((r) => r.key === i.pack_key && r.version === i.version)?.system === true,
-  }));
+  return installs.map((i) => {
+    const row = rows.find((r) => r.key === i.pack_key && r.version === i.version);
+    return { key: i.pack_key, system: row?.system === true, setup: !!row?.setup };
+  });
 }
 
 type LogRow = {
