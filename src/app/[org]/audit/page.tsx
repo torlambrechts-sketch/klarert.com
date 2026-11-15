@@ -113,7 +113,7 @@ export default async function AuditPage({
       </Card>
       <Card
         title="Audit pack"
-        description="One zip for an audit: the statement of applicability, every register in a folder or pack as CSV, an evidence index with SHA-256 hashes, and the activity log of a period with each item's hash chain checked."
+        description="One zip for an audit: the statement of applicability, every register in a folder or pack as CSV, an evidence index with SHA-256 hashes, and the activity log of a period, workspace entries included, with every hash chain checked."
         testId="audit-pack"
       >
         <div>

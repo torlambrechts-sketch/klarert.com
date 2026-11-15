@@ -10,12 +10,16 @@ import {
   evidenceTable,
   filesToInclude,
   inPeriod,
+  isWorkspaceEntry,
+  mergeEntries,
   packReadme,
   registerTable,
   soaCsv,
   soaHtml,
   toCsv,
   uniqueNames,
+  workspaceChainKey,
+  WORKSPACE_LABEL,
   zipName,
   type ManagementReview,
   type ReviewRow,
@@ -50,6 +54,7 @@ import {
   readScopes,
   readScopeSheets,
   readSoa,
+  readWorkspaceActivity,
   verifyChains,
   workspaceInfo,
   type AuditScopes,
@@ -294,8 +299,14 @@ export async function buildAuditPack(input: unknown): Promise<Result<AuditPackRe
         put('evidence/index.csv', toCsv(evidenceTable(evidence, ws.timeZone), { bom: true }));
 
         // the activity log of the period and the chain check
+        // the workspace chain's entries (exports, packs, frameworks, folders, settings) go in every pack as rows
+        // of the sheet "Workspace" (owner decision 15 Nov 2026), and its chain is checked with the others
         const sheetIds = loaded.map((l) => l.data.sheet.id);
-        const entries = (await readActivity(supabase, orgId, sheetIds, period)).filter((e) =>
+        const [sheetEntries, workspaceEntries] = await Promise.all([
+          readActivity(supabase, orgId, sheetIds, period),
+          readWorkspaceActivity(supabase, orgId, period),
+        ]);
+        const entries = mergeEntries(sheetEntries, workspaceEntries).filter((e) =>
           inPeriod(e.at, period, ws.timeZone),
         );
         const itemLabel = new Map<string, string>();
@@ -328,7 +339,9 @@ export async function buildAuditPack(input: unknown): Promise<Result<AuditPackRe
             { bom: true },
           ),
         );
-        const chainKeys = new Map<string, { label: string; sheetName: string }>();
+        const chainKeys = new Map<string, { label: string; sheetName: string }>([
+          [workspaceChainKey(orgId), { label: WORKSPACE_LABEL, sheetName: WORKSPACE_LABEL }],
+        ]);
         for (const l of loaded) {
           chainKeys.set(`sheet:${l.data.sheet.id}`, {
             label: `Sheet ${l.data.sheet.name}`,
@@ -362,6 +375,7 @@ export async function buildAuditPack(input: unknown): Promise<Result<AuditPackRe
           registers: loaded.length,
           evidence: { listed: evidence.length, included },
           entries: entries.length,
+          workspaceEntries: entries.filter(isWorkspaceEntry).length,
           chains: summary,
           soa: soaTitles,
           leftOut: scope.leftOut,

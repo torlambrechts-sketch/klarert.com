@@ -176,6 +176,22 @@ export function logValueText(v: Json | null): string {
   );
 }
 
+/**
+ * The workspace's own chain (docs/02): entries with no sheet and no item, such as `audit.exported`, `pack.installed`,
+ * `pack.settings_changed`, `framework.adopted` and folder changes. The log extract names their sheet "Workspace".
+ */
+export const WORKSPACE_LABEL = 'Workspace';
+export const workspaceChainKey = (orgId: string) => `sheet:${orgId}`;
+export const isWorkspaceEntry = (e: Pick<ActivityEntry, 'sheetId' | 'itemId'>) =>
+  e.sheetId === null && e.itemId === null;
+
+/** Entries of the sheets in scope and of the workspace chain, once each, oldest first. */
+export function mergeEntries(...lists: ActivityEntry[][]): ActivityEntry[] {
+  const byId = new Map<number, ActivityEntry>();
+  for (const list of lists) for (const e of list) byId.set(e.id, e);
+  return [...byId.values()].sort((a, b) => a.id - b.id);
+}
+
 export interface ActivityNames {
   person(id: string | null): string;
   item(id: string | null): string;
@@ -207,7 +223,7 @@ export function activityTable(
     ...entries.map((e) => [
       String(e.id),
       formatDateTime(e.at, timeZone),
-      names.sheet(e.sheetId),
+      isWorkspaceEntry(e) ? WORKSPACE_LABEL : names.sheet(e.sheetId),
       names.item(e.itemId),
       e.actorKind === 'user' ? names.person(e.actorId) : e.actorKind,
       e.action,
@@ -283,10 +299,11 @@ export const CHAIN_METHOD = [
   'hash = sha256(prev_hash | at (UTC, microseconds) | actor_kind | actor_id | action | field_id | old_value |',
   'new_value | note). The database writes both in the same transaction as the change; entries can be neither changed',
   'nor deleted.',
-  'For this pack, verify_activity_chain was run on every chain in scope: it walks the whole chain from its first',
-  'entry, recomputes each hash with the same function and compares prev_hash with the previous entry. It also checks',
-  'every restricted value kept aside against the marker in the log. "ok" means every entry matched; "broken" names',
-  'the first entry that did not. The whole chain is checked, not only the entries in the period.',
+  'For this pack, verify_activity_chain was run on every chain in scope, the workspace chain included: it walks the',
+  'whole chain from its first entry, recomputes each hash with the same function and compares prev_hash with the',
+  'previous entry. It also checks every restricted value kept aside against the marker in the log. "ok" means every',
+  'entry matched; "broken" names the first entry that did not. The whole chain is checked, not only the entries in',
+  'the period.',
 ].join('\n');
 
 // ───────────────────────── read me ─────────────────────────
@@ -302,6 +319,8 @@ export interface PackMeta {
   registers: number;
   evidence: { listed: number; included: number };
   entries: number;
+  /** Of `entries`, those on the workspace chain. */
+  workspaceEntries: number;
   chains: ChainSummary;
   soa: string[];
   leftOut: string[];
@@ -322,7 +341,7 @@ export function packReadme(m: PackMeta): string {
       : ['- No statement of applicability: no framework library is in scope.']),
     `- ${m.registers} registers as CSV, with the fields you can see`,
     `- Evidence index: ${m.evidence.listed} files listed, ${m.evidence.included} included (each file up to ${formatBytes(AUDIT_FILE_LIMITS.perFile)}, ${formatBytes(AUDIT_FILE_LIMITS.total)} in all)`,
-    `- Activity log: ${m.entries} entries in the period`,
+    `- Activity log: ${m.entries} entries in the period, ${m.workspaceEntries} of them on the workspace chain (sheet "${WORKSPACE_LABEL}": exports, packs, frameworks, folders and settings)`,
     `- Hash chains: ${m.chains.chains} checked, ${m.chains.ok} ok, ${m.chains.broken} broken${m.chains.failed ? `, ${m.chains.failed} not checked` : ''}`,
     '',
     'Access',
