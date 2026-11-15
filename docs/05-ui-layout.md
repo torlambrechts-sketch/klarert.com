@@ -8,7 +8,9 @@ Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it
 |---|---|
 | `/login` | sign-in: password, create an account, or an email link. Query: `?next=<path on this site>` (`safeNext`) |
 | `/login/two-step` | two-step sign-in: the code from the person's authenticator app (§1.1). Query: `?next=` |
-| `/account` | Your account: two-step sign-in and this session (§1.1). Query: `?next=<path>&required=<workspace slug>` |
+| `/login/forgot-password` | Forgot password: asks for the email address and sends a reset link (§1.1). Query: `?next=`, `?error=link` |
+| `/login/new-password` | Set a new password, where a reset link lands (§1.1). Query: `?next=` |
+| `/account` | Your account: email address, password, two-step sign-in and this session (§1.1). Query: `?next=<path>&required=<workspace slug>&email=confirm-other\|link-failed` |
 | `/onboarding` | create a workspace or accept an invite |
 | `/[org]` | redirects to `/[org]/home` |
 | `/[org]/home` | Home: Needs you, recent activity, next 30 days, getting-started checklist |
@@ -36,7 +38,30 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
 
 - **Your account** (`/account`, from the account menu › Your account; outside any workspace, on the soft background
   like onboarding, one 576 px column, full width with 16 px gutters at 390 px): a back link ("Back to <workspace>"),
-  the `h1` "Your account" with the name and email, then two cards.
+  the `h1` "Your account" with the name and email, then the cards **Email address**, **Password**, **Two-step
+  sign-in** and **This session** (sent by a workspace that requires two-step sign-in, Two-step sign-in comes first).
+  - **Email address** (docs/09 §11): the address and what it is for, and **Change email** (outline), which opens in
+    place "New email address" (focused), **Send confirmation links** and **Cancel** (focus returns to the button).
+    "That is already your email address." under the field. Sent: the status line "Waiting for confirmation: <new>.
+    We sent a link to <old> and one to <new>. Your email changes once both links are opened. They work for 1 hour."
+    and the button reads **Use another address**. Back from the first of the two links (`?email=confirm-other`): "One
+    link is confirmed. Open the link we sent to the other address to finish." A link that failed
+    (`?email=link-failed`): "That link did not open here: … If the address above has not changed, change it again".
+  - **Password**: one line (signed out on other devices afterwards) and **Change password**, which opens in place
+    **Current password** (focused), **New password** ("At least 12 characters.") and **Repeat the new password**,
+    then **Change password** and **Cancel**. Errors under the fields: "That is not your current password.", "Use at
+    least 12 characters.", "The two passwords are not the same." Done: the status line "Your password has been
+    changed. You are signed out on your other devices." and focus back on the button. Under it: "Forgot it, or never
+    set one? Get a reset link by email" (Forgot password).
+- **Forgot password** (`/login/forgot-password`, the sign-in card; linked as "Forgot password" under the sign-in form):
+  "Reset your password", the **Email** field (focused) and **Send reset link**. Whatever the address, the answer is
+  "Check your email · If an account uses that address, we have sent a link to reset your password. The link works for
+  1 hour. Open it in this browser." **Back to sign in**. A reset link that failed comes back here with "That reset link
+  has expired, was already used or was opened in another browser. Ask for a new one."
+- **Set a new password** (`/login/new-password`, the sign-in card): "For <email>.", **New password** (focused, "At
+  least 12 characters."), **Repeat the new password** and **Set new password**. A person with an authenticator app
+  enters its code on the two-step page first, which brings them back here. Done: "Your password has been changed.",
+  "You are signed out on your other devices. Use the new password there." and **Continue** (to `next`, else Home).
   - **Two-step sign-in** with a status chip, "On" (a tick, green) or "Off", and one line on what it does. When on, the
     apps as rows ("Authenticator app, Added 15 Nov 2026"; numbered when there are several) with **Remove**, which opens
     an inline confirm ("Remove this app? Two-step sign-in turns off …" for the last one, naming the workspaces that

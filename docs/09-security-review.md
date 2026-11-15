@@ -346,7 +346,7 @@ Supabase Auth MFA with an authenticator app (TOTP). The words in the product are
   `set_require_two_step` (owners, `aal2`, logged), which `setWorkspaceTwoStep` calls.
 - Local development: `supabase/config.toml` `[auth.mfa.totp]` enroll and verify on.
 
-Passwords are at least 12 characters (`MIN_PASSWORD`, `src/app/(auth)/login/actions.ts`, and
+Passwords are at least 12 characters (`MIN_PASSWORD`, `src/lib/passwords.ts`, and
 `minimum_password_length` in `supabase/config.toml`). On the hosted project, set the same minimum and turn on leaked
 password protection (Authentication › Passwords). Who must use two-step sign-in is the workspace switch only for now;
 a per-role rule can come later (decided 15 Nov 2026).
@@ -435,3 +435,63 @@ pgTAP file that runs the attack as `authenticated` and shows it refused.
 6. ~~Two-step setting from the app~~: `setWorkspaceTwoStep` calls `set_require_two_step` (done when the branches
    merged).
 
+
+## 11. Account essentials (15 Nov 2026, branch `claude/auth-essentials`)
+
+Forgot password, Your account › Email address and Password, and the auth emails. Everything runs on the person's own
+session through Supabase Auth; no table of ours changes, no migration, and no new service-role place (CLAUDE.md
+rule 6). Screens in docs/05 §1.1.
+
+- **Forgot password** (`requestPasswordReset`, `src/app/(auth)/login/actions.ts`): `resetPasswordForEmail` with
+  `redirectTo` = `/auth/callback?next=/login/new-password` (plus the page's own `next`, through `safeNext`). The
+  answer is always "If an account uses that address, we have sent a link to reset your password.", also when Supabase
+  Auth refuses: it refuses a second request within `max_frequency` for existing addresses only, so passing that on
+  would tell which addresses have accounts. Refusals are logged with code and status, never the address.
+- **The callback** (`/auth/callback`, `afterEmailLink` in `src/lib/auth-links.ts`, unit tested): a code opens the
+  session and goes to `next`; a failed reset link goes back to Forgot password (`?error=link`); for Your account, the
+  first of two email change links (only a `message`, no code) gives `?email=confirm-other` and a failed one
+  `?email=link-failed`; every other failure `/login?error=link`. The links use PKCE, so they work in the browser where
+  they were asked for.
+- **Set a new password** (`setNewPassword`, `src/server/commands/account.ts`): only a session that a reset link
+  opened may set a password without the current one. Supabase Auth records that in the token's `amr` as `recovery`
+  (PKCE; checked 15 Nov 2026 on GoTrue 2.197), read by `openedByResetLink` (`src/lib/passwords.ts`) into
+  `getSignIn().resetLink`. Supabase Auth refuses a password or email change from an `aal1` session when the person
+  has a verified factor ("AAL2 session is required to update email or password when MFA is enabled",
+  `insufficient_aal`, checked), so a person with an authenticator app is sent to
+  `/login/two-step?next=/login/new-password` first. New passwords: `MIN_PASSWORD` (12) to 200 characters, typed twice
+  (`newPasswordTwice`). Afterwards `signOut({ scope: 'others' })` ends every other session; the page says whether that
+  worked.
+- **Change password** (`changePassword`): the current password is checked by `signInWithPassword` on a client that
+  keeps no session and no cookies (`createPasswordCheckClient`, anon key); the session it opens is signed out at once.
+  `secure_password_change` (Supabase's emailed reauthentication code) stays off: asking for the current password is
+  the check. Then `updateUser({ password })` on the person's session and `signOut({ scope: 'others' })`. Supabase's
+  refusals in words: same password, too short, and on the hosted project leaked passwords (`passwordRefusal`).
+- **Change email** (`changeEmail`): `updateUser({ email }, { emailRedirectTo: /auth/callback?next=/account })` with
+  `double_confirm_changes` (secure email change): Supabase emails a link to the current and to the new address. The
+  page shows the pending address from the user's `new_email`. Supabase asks for **both** links only while email
+  confirmation is on (`enable_confirmations`, hosted "Confirm email"); with it off, as on the local stack, one link
+  completes the change (checked 15 Nov 2026 on GoTrue 2.197). An address another account uses is refused with "That
+  address cannot be used. Choose another."
+- **Auth emails** (`supabase/templates/*.html`, subjects in `supabase/config.toml` `[auth.email.template.*]`):
+  confirm sign-up, sign-in link, reset password and change of email. One column, real text, `lang="en"`, the link
+  linked and written out, what it does, that it works once for 1 hour (`otp_expiry`, `EMAIL_LINK_EXPIRY`), and "If you
+  did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
+  the plain-text part from the HTML. Invites are our own email (§10); reauthentication is not used. The hosted project
+  gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ) and sends through
+  Brevo SMTP, which the owner sets up (`scripts/hosted/README.md` › Auth emails), sender "Compliance OS".
+- Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`; e2e `tests/e2e/account-auth.spec.ts` (desktop and
+  390 px) through Mailpit: a reset for a known and an unknown address (the same answer), the link, the rules, the new
+  password signs in and the old one does not, another browser signed out; the same with two-step sign-in (code
+  first); Your account changes the password (a wrong current one refused) and the email address (both addresses
+  emailed).
+
+### 11.1 Open (for the owner)
+
+1. **Delete my account is not built.** `profiles.id` references `auth.users(id) on delete cascade`, and about twenty
+   columns reference `profiles(id)` without a delete rule (`items.created_by`, `item_updates.author_id`,
+   `files.uploaded_by`, `file_access_log.user_id` …). Deleting the auth user would either fail for anyone who ever
+   created something, or delete the profile instead of anonymising it. The activity log itself is not affected (no
+   foreign key on `actor_id`). The data model needs a decision first.
+2. **A session opened by a reset link** may set a password without the current one for as long as it lasts (12 hours
+   at most, §8.3), also after the first change.
+3. **Supabase's "password changed" and "email changed" notices** (`[auth.email.notification.*]`) are off.
