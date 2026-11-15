@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Package, Send, TriangleAlert } from 'lucide-react';
 import {
   EDGE_KIND_LABEL,
+  flowCounts,
   layoutWorkspace,
   type EdgeKind,
   type FlowFolder,
@@ -101,11 +102,10 @@ export function WorkspaceMap({
                       ) : null}
                     </span>
                     <span className="text-muted-foreground text-label-12">
-                      {n.inputs} in · {n.logic} rules · {n.outputs} out
-                      <span className="sr-only">
-                        : {n.inputs} inputs, {n.logic} automations and workflows, {n.outputs}{' '}
-                        outputs
+                      <span aria-hidden>
+                        {n.inputs} in · {n.logic} rules · {n.outputs} out
                       </span>
+                      <span className="sr-only">{flowCounts(n)}</span>
                     </span>
                     <span className="flex min-w-0 items-center gap-1.5 overflow-hidden">
                       {n.packTitle ? (

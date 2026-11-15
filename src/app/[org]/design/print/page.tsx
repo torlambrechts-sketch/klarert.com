@@ -10,6 +10,7 @@ import {
   connectionRows,
   deriveSheetFlow,
   filterGraph,
+  flowCounts,
   leavesRows,
   workspaceGraph,
   type FlowViewer,
@@ -112,8 +113,7 @@ export default async function DesignPrintPage({
       {flow ? (
         <section aria-labelledby="print-flow" className="flex flex-col gap-2">
           <h2 id="print-flow" className="text-heading-16 m-0">
-            Flow · {flow.counts.inputs} inputs · {flow.counts.logic} logic · {flow.counts.outputs}{' '}
-            outputs
+            Flow · {flowCounts(flow.counts)}
           </h2>
           <table className="w-full border-collapse" data-testid="print-flow">
             <thead className="bg-subtle text-muted-foreground text-label-12 text-left">
@@ -190,7 +190,7 @@ export default async function DesignPrintPage({
                     </td>
                     <td className={td}>{n.folderName ?? 'No folder'}</td>
                     <td className={td}>
-                      {n.inputs} inputs · {n.logic} rules · {n.outputs} outputs
+                      {flowCounts(n)}
                       {n.outside.length
                         ? ` · leaves to ${n.outside.map((o) => o.label).join(', ')}`
                         : ''}

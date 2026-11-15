@@ -117,3 +117,7 @@ export function listWords(parts: readonly string[]): string {
 }
 
 export const capitalise = (s: string) => (s ? s[0]!.toUpperCase() + s.slice(1) : s);
+
+/** "4 inputs · 1 rule · 2 outputs": a sheet's flow in counts. */
+export const flowCounts = (c: { inputs: number; logic: number; outputs: number }) =>
+  `${plural(c.inputs, 'input')} · ${plural(c.logic, 'rule')} · ${plural(c.outputs, 'output')}`;

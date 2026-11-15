@@ -6,6 +6,7 @@ import {
   deriveSheetFlow,
   filterChoices,
   filterGraph,
+  flowCounts,
   flowSteps,
   layoutSheetMap,
   layoutWorkspace,
@@ -691,6 +692,10 @@ describe('masking', () => {
       RESTRICTED_FIELD,
     );
     expect(JSON.stringify(m)).not.toContain('Supplier fee');
+  });
+
+  it('counts in words, one and many', () => {
+    expect(flowCounts({ inputs: 1, logic: 3, outputs: 0 })).toBe('1 input · 3 rules · 0 outputs');
   });
 
   it('scrubs whole words only', () => {

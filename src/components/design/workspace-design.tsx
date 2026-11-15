@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { FileDown, TriangleAlert } from 'lucide-react';
 import {
   connectionRows,
+  flowCounts,
   filterChoices,
   filterGraph,
   hasFilter,
@@ -265,7 +266,7 @@ export function WorkspaceDesign({
                         {n.folderName ?? 'No folder'}
                       </td>
                       <td className="px-3 py-2">
-                        {n.inputs} inputs · {n.logic} rules · {n.outputs} outputs
+                        {flowCounts(n)}
                         {n.outside.length ? (
                           <span className="text-muted-foreground block">
                             Leaves to {n.outside.map((o) => o.label).join(', ')}
