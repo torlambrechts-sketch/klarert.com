@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { fetchAllPages } from '@/lib/sheet-query';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { FillForm, FormBuilder, StatusChip } from './form-builder';
@@ -438,6 +439,7 @@ function FormsList({
       />
       <CopyFormDialog
         org={org}
+        orgId={data.sheet.orgId}
         sheetId={data.sheet.id}
         form={copying}
         onClose={() => setCopying(null)}
@@ -563,28 +565,35 @@ export function NewFormDialog({
 
 function CopyFormDialog({
   org,
+  orgId,
   sheetId,
   form,
   onClose,
 }: {
   org: string;
+  orgId: string;
   sheetId: string;
   form: SavedView | null;
   onClose(): void;
 }) {
+  // this workspace's other sheets, not archived and not sub-item sheets; every page, not just the API's first 1000 rows
   const sheets = useQuery({
-    queryKey: ['form-copy-sheets', sheetId],
+    queryKey: ['form-copy-sheets', orgId, sheetId],
     enabled: !!form,
-    queryFn: async () => {
-      const { data, error } = await createClient()
-        .from('sheets')
-        .select('id, name')
-        .is('archived_at', null)
-        .is('parent_sheet_id', null)
-        .neq('id', sheetId)
-        .order('name');
-      if (error) throw new Error(error.message);
-      return data ?? [];
+    queryFn: () => {
+      const db = createClient();
+      return fetchAllPages((from, to) =>
+        db
+          .from('sheets')
+          .select('id, name')
+          .eq('org_id', orgId)
+          .is('archived_at', null)
+          .is('parent_sheet_id', null)
+          .neq('id', sheetId)
+          .order('name')
+          .order('id')
+          .range(from, to),
+      );
     },
   });
   const [target, setTarget] = useState('');

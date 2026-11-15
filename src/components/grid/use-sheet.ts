@@ -48,7 +48,7 @@ import {
   upsertItem,
   upsertLink,
 } from '@/lib/sheet-cache';
-import { fetchItemsById, fetchRelated, fetchSheetData } from '@/lib/sheet-query';
+import { fetchAllPages, fetchItemsById, fetchRelated, fetchSheetData } from '@/lib/sheet-query';
 import {
   toField,
   toGroup,
@@ -100,19 +100,24 @@ export function useSheetQuery(sheetId: string, enabled = true) {
   });
 }
 
-/** The workspace's sheets (link targets in field settings). */
+/** The workspace's sheets (link targets in field settings): every page, not just the API's first 1000 rows. */
 export function useSheetsList(orgId: string | undefined) {
   return useQuery({
     queryKey: ['sheets-list', orgId],
     enabled: !!orgId,
     queryFn: async () => {
-      const { data } = await createClient()
-        .from('sheets')
-        .select('id, name, is_library')
-        .eq('org_id', orgId!)
-        .is('archived_at', null)
-        .order('name');
-      return (data ?? []).map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library }));
+      const db = createClient();
+      const data = await fetchAllPages((from, to) =>
+        db
+          .from('sheets')
+          .select('id, name, is_library')
+          .eq('org_id', orgId!)
+          .is('archived_at', null)
+          .order('name')
+          .order('id')
+          .range(from, to),
+      );
+      return data.map((s) => ({ id: s.id, name: s.name, isLibrary: s.is_library }));
     },
     staleTime: 60_000,
   });
