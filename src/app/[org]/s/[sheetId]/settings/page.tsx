@@ -12,8 +12,7 @@ import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { SheetFields } from '@/components/sheets/sheet-fields';
 import { SheetTabsSettings } from '@/components/sheets/sheet-tabs-settings';
 import { NewItemFormSetting } from '@/components/sheets/new-item-form-setting';
-import { formAccess, formState } from '@/engine/views/form';
-import { intakePlan } from '@/engine/views/new-item';
+import { newItemFormChoices } from '@/engine/views/new-item';
 import { RetentionSettingsSection } from '@/components/sheets/retention-settings';
 import { isPersonalField, readRetention, retentionDateFields } from '@/engine/retention';
 import { SheetColumnGroups } from '@/components/table/column-groups-editor';
@@ -112,26 +111,15 @@ export default async function SheetSettingsPage({
     .eq('sheet_id', sheet.id)
     .is('archived_at', null);
   const engineFields = (fullFields ?? []).map(toField);
-  const formChoices = viewRows
-    .map(toView)
-    .filter((v) => v.type === 'form' && v.ownerId === null && v.config.form)
-    .sort((a, b) => (a.position < b.position ? -1 : 1))
-    .map((v) => {
-      const form = v.config.form!;
-      const steps = intakePlan({ id: v.id, name: v.name, form }, engineFields).steps.length;
-      const state = formState(form, now, 0);
-      return {
-        id: v.id,
-        name: v.name,
-        summary: [
-          formAccess(form) === 'public' ? 'Public' : 'Internal',
-          steps > 1 ? `${steps} steps` : 'One page',
-          state === 'draft' ? 'Draft' : state === 'closed' ? 'Closed' : 'Open',
-        ].join(' · '),
-        closed: state === 'closed',
-        intake: form.intake === true,
-      };
-    });
+  const formChoices = newItemFormChoices(
+    viewRows
+      .map(toView)
+      .filter((v) => v.type === 'form' && v.ownerId === null && v.config.form)
+      .sort((a, b) => (a.position < b.position ? -1 : 1))
+      .map((v) => ({ id: v.id, name: v.name, form: v.config.form! })),
+    engineFields,
+    now,
+  );
   const newItemSetting = (sheet.settings as { newItemForm?: unknown } | null)?.newItemForm;
 
   return (

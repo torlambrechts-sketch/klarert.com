@@ -153,6 +153,32 @@ export function newItemPlan(
   return intakeUsable(intake, now) ? intakePlan(intake, fields) : standardPlan(fields);
 }
 
+/**
+ * The sheet's forms as Sheet settings › New item form offers them (docs/05 §3.7): "Internal · 3 steps · Draft", closed
+ * or not, and whether a pack marked it as the intake form. Forms in tab order.
+ */
+export function newItemFormChoices(
+  forms: readonly IntakeForm[],
+  fields: Field[],
+  now: Date,
+): { id: string; name: string; summary: string; closed: boolean; intake: boolean }[] {
+  return forms.map((f) => {
+    const steps = intakePlan(f, fields).steps.length;
+    const state = formState(f.form, now, 0);
+    return {
+      id: f.id,
+      name: f.name,
+      summary: [
+        (f.form.access ?? 'public') === 'public' ? 'Public' : 'Internal',
+        steps > 1 ? `${steps} steps` : 'One page',
+        state === 'draft' ? 'Draft' : state === 'closed' ? 'Closed' : 'Open',
+      ].join(' · '),
+      closed: state === 'closed',
+      intake: f.form.intake === true,
+    };
+  });
+}
+
 /** Every question of a plan: the steps' and More fields. */
 export const planQuestions = (plan: NewItemPlan): FormQuestion[] => [
   ...plan.steps.flatMap((s) => s.questions),

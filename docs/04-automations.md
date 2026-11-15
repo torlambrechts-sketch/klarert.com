@@ -155,6 +155,8 @@ Webhook payload (generic):
 
 `*/5 * * * *` → `GET /api/cron/webhooks`. Picks `queued`/`retrying` rows with `next_attempt_at ≤ now()` (limit 50, `for update skip locked`), POSTs with a 10 s timeout. 2xx → `sent`. Otherwise `attempts + 1`, backoff 1 min, 5 min, 30 min, 2 h, 6 h; after 5 failures → `dead_letter` and a `system` notification to the automation's creator. Only `https://` URLs; block private IP ranges (SSRF guard).
 
+Members never read `outbound_webhooks` (its addresses and payloads stay with the worker). The Design area (docs/05 §3.8) shows the queue's problems per automation through `design_health(org)` (0048, SECURITY DEFINER, granted to `authenticated`): counts only, for automations on sheets the caller can read: failed and partly done runs in the last 30 days among the workspace's latest 5000 runs, the last failure, and dead-letter and retrying deliveries in the last 30 days (at most 5000). It words them "Dead letter: 2 webhooks failed", "1 run failed in 30 days", "1 webhook waiting to retry".
+
 ## 10. Builder (UI)
 
 Sentence layout: **When** [trigger ▾] [field ▾] [value/threshold/offset] · **if** [+ condition] · **then** [+ action] (each action a row with its own pickers). Rules:

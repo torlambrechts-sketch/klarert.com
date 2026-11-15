@@ -1,7 +1,7 @@
 // A sheet's tab set (docs/02 sheets.settings.tabs, docs/05 §3): which views get a tab, in which order, which are
 // hidden in the More menu and what a tab is called. Pure: the rules the command, the editor and templates share.
 import { z } from 'zod';
-import { toViewType, VIEW_TYPES, type ViewType } from './config';
+import { HIDDEN_BY_DEFAULT, toViewType, VIEW_TYPES, type ViewType } from './config';
 
 /** One tab: a built-in view type or a shared saved view's uuid of the sheet. The label is display only. */
 export interface SheetTab {
@@ -110,12 +110,24 @@ export function readTabSettings(settings: unknown): {
   };
 }
 
-/** The built-in tab set a sheet without one shows: today's order, all shown. */
-export const builtinTabs = (): SheetTab[] => BUILTIN_TAB_ORDER.map((id) => ({ id }));
+/** The built-in tab set a sheet without one shows: today's order, shown except the ones that start under More. */
+export const builtinTabs = (): SheetTab[] =>
+  BUILTIN_TAB_ORDER.map((id) => (HIDDEN_BY_DEFAULT.includes(id) ? { id, hidden: true } : { id }));
 
-/** Two tab sets are the same (order, shown, labels). */
+/**
+ * A tab set with the built-ins that start under More (Design) appended, hidden, when it does not list them: what the
+ * bar shows for it. Stored sets (templates, packs) never need to name them.
+ */
+export function withDefaultHidden(tabs: readonly SheetTab[]): SheetTab[] {
+  const out = tabs.map(cleanTab);
+  for (const id of HIDDEN_BY_DEFAULT)
+    if (!out.some((t) => t.id === id)) out.push({ id, hidden: true });
+  return out;
+}
+
+/** Two tab sets are the same (order, shown, labels), a built-in that starts under More counting as hidden. */
 export function sameTabs(a: readonly SheetTab[], b: readonly SheetTab[]): boolean {
-  const norm = (l: readonly SheetTab[]) => JSON.stringify(l.map(cleanTab));
+  const norm = (l: readonly SheetTab[]) => JSON.stringify(withDefaultHidden(l));
   return norm(a) === norm(b);
 }
 
@@ -167,8 +179,10 @@ export function resolveTemplateTabs(
     out.push(cleanTab({ id, hidden: t.hidden, label: t.label }));
   }
   if (!out.some((t) => t.id === 'table')) out.unshift({ id: 'table' });
+  // the built-ins it leaves out stay in More; one that starts there anyway (Design) is not stored
   for (const id of BUILTIN_TAB_ORDER)
-    if (!out.some((t) => t.id === id)) out.push({ id, hidden: true });
+    if (!out.some((t) => t.id === id) && !HIDDEN_BY_DEFAULT.includes(id))
+      out.push({ id, hidden: true });
   const defaultViewId = defaultRef ? (idOf(defaultRef) ?? undefined) : undefined;
   if (defaultRef && !defaultViewId) problems.push(`Unknown default view "${defaultRef}".`);
   const check = sheetTabsSchema.safeParse({ tabs: out, defaultViewId });
@@ -188,6 +202,9 @@ export function describeTabsChange(
   name: (id: string) => string,
 ): string | null {
   const shown = (t: SheetTab | undefined) => (t ? (t.label ?? name(t.id)) : '');
+  // a set that does not name the Design tab shows it under More, as one that hides it
+  before = { ...before, tabs: withDefaultHidden(before.tabs) };
+  after = { ...after, tabs: withDefaultHidden(after.tabs) };
   const prev = new Map(before.tabs.map((t) => [t.id, t]));
   const parts: string[] = [];
   for (const t of after.tabs) {

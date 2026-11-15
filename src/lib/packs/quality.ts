@@ -2,7 +2,7 @@
 // templates/packs ships with so that it is useful on day one and quiet in its first week. Pure: a parsed manifest in,
 // the problems out (an empty list is a pass). Run over every pack by quality.test.ts; packs not upgraded yet are in
 // quality-allowlist.json and each removes itself when it passes.
-import { VIEW_TYPES } from '@/engine/views/config';
+import { HIDDEN_BY_DEFAULT, VIEW_TYPES } from '@/engine/views/config';
 import { manifestAtLevel } from '@/engine/packs/levels';
 import type { PackManifest, PackSheet, SheetKind } from '@/engine/packs/types';
 
@@ -51,7 +51,11 @@ type Tab = { type: string; config: Record<string, unknown> };
 
 /** The tabs a sheet shows (not hidden), as view types with the saved view's config. */
 function visibleTabs(s: PackSheet): Tab[] {
-  if (!s.tabs) return VIEW_TYPES.map((type) => ({ type, config: {} }));
+  if (!s.tabs)
+    return VIEW_TYPES.filter((type) => !HIDDEN_BY_DEFAULT.includes(type)).map((type) => ({
+      type,
+      config: {},
+    }));
   return s.tabs
     .filter((t) => !t.hidden)
     .map((t) => {

@@ -74,7 +74,8 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
   // Board first after the Table, with the keyboard (Alt+↑)
   await rows.getByRole('button', { name: /^Move Board/ }).focus();
   await page.keyboard.press('Alt+ArrowUp');
-  await expect(editor.getByText('Board moved to position 2 of 5.')).toBeAttached();
+  // six rows: the five tabs and the Design tab, which starts hidden (docs/05 §3.8)
+  await expect(editor.getByText('Board moved to position 2 of 6.')).toBeAttached();
   // hide Calendar and the form
   await rows.getByRole('checkbox', { name: 'Show Calendar' }).uncheck();
   await rows.getByRole('checkbox', { name: 'Show Forms' }).uncheck();

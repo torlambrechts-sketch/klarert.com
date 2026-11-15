@@ -15,7 +15,7 @@ import type {
   StatusRule,
   Validation,
 } from '@/engine/types';
-import { parseViewConfig, toViewType, type SavedView } from '@/engine/views/config';
+import { parseViewConfig, toSavedViewType, type SavedView } from '@/engine/views/config';
 import { readSubitemSettings } from '@/engine/subitems';
 import { readWorkflows } from '@/engine/approvals/definition';
 import { parseRestriction } from '@/engine/access';
@@ -253,8 +253,8 @@ export function toView(
     id: r.id,
     sheetId: r.sheet_id,
     name: r.name,
-    type: toViewType(r.type) ?? 'table',
-    ...(toViewType(r.type) !== r.type ? { legacyType: r.type } : {}),
+    type: toSavedViewType(r.type) ?? 'table',
+    ...(toSavedViewType(r.type) !== r.type ? { legacyType: r.type } : {}),
     config: parseViewConfig(r.config),
     ownerId: r.owner_id,
     position: r.position,

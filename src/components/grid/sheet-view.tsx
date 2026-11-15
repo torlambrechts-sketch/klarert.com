@@ -29,6 +29,7 @@ import { FilterButton, SheetSearch, SortButton } from '@/components/views/filter
 import { FormView } from '@/components/views/form-view';
 import { KanbanView } from '@/components/views/kanban-view';
 import { InsightsView } from '@/components/insights/insights-view';
+import { DesignView } from '@/components/design/design-view';
 import { ownerField } from '@/engine/item-panel';
 import { statusFilterField } from '@/engine/views/quick-filters';
 import { NewItemDialog, type NewItemRequest } from '@/components/views/new-item-dialog';
@@ -250,7 +251,9 @@ function SheetBody(props: SheetViewProps) {
   );
 
   const tabular = active.type === 'table';
-  const filterable = active.type !== 'form';
+  // the Design tab is derived from the sheet's configuration: no search, filters or groups (docs/05 §3.8)
+  const design = active.type === 'design';
+  const filterable = active.type !== 'form' && !design;
   const inScope = useMemo(
     () =>
       data
@@ -307,7 +310,7 @@ function SheetBody(props: SheetViewProps) {
       className={cn(
         'flex min-w-0 flex-col px-4 pt-5 sm:px-[28px] sm:pt-[26px]',
         // the Table and Insights scroll with the page; the other views fill the window and scroll inside
-        tabular || active.type === 'insights'
+        tabular || active.type === 'insights' || active.type === 'design'
           ? 'min-h-[calc(100dvh-48px)] pb-[24px]'
           : 'h-[calc(100dvh-48px)] pb-3 max-[759px]:h-[calc(100dvh-112px)]',
       )}
@@ -450,7 +453,7 @@ function SheetBody(props: SheetViewProps) {
         canCustomise={isAdmin}
         end={
           <>
-            <ViewMenu views={views} canEdit={canEdit} />
+            {design ? null : <ViewMenu views={views} canEdit={canEdit} />}
             <Button asChild variant="ghost" size="icon-sm">
               <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
                 <Settings aria-hidden />
@@ -475,7 +478,7 @@ function SheetBody(props: SheetViewProps) {
             isAdmin={isAdmin}
           />
         ) : null}
-        {data ? (
+        {data && !design ? (
           <GroupSelect
             org={org}
             data={data}
@@ -619,6 +622,10 @@ function ViewBody({
   newButtonRef,
   setNewItem,
   sub,
+  role,
+  archived,
+  timeZone,
+  userId,
 }: SheetViewProps & {
   data: SheetData;
   ctx: Ctx;
@@ -817,6 +824,21 @@ function ViewBody({
           isAdmin={isAdmin}
           onOpenItem={openItem}
           onNew={(r) => setNewItem({ ...r, groupId: onlyGroup })}
+        />
+      ) : active.type === 'design' ? (
+        <DesignView
+          org={org}
+          data={data}
+          ctx={ctx}
+          env={env}
+          actions={actions}
+          views={views}
+          role={role}
+          canEdit={canEdit}
+          isAdmin={isAdmin}
+          archived={archived}
+          timeZone={timeZone}
+          userId={userId}
         />
       ) : active.type === 'calendar' ? (
         <CalendarView

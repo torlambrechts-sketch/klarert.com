@@ -6,8 +6,27 @@ import type { SummaryFn } from '../summaries';
 import type { Condition, Json } from '../types';
 
 /** The view types (a registry keyed by id, CLAUDE.md rule 1). */
-export const VIEW_TYPES = ['table', 'insights', 'kanban', 'calendar', 'form'] as const;
+export const VIEW_TYPES = ['table', 'insights', 'kanban', 'calendar', 'form', 'design'] as const;
 export type ViewType = (typeof VIEW_TYPES)[number];
+
+/**
+ * The types a saved view can have (a row of `views`). The others are built-in tabs only, with nothing to save: the
+ * Design tab (docs/05 §3.8) is derived from the sheet's configuration.
+ */
+export const SAVED_VIEW_TYPES = [
+  'table',
+  'insights',
+  'kanban',
+  'calendar',
+  'form',
+] as const satisfies readonly ViewType[];
+export type SavedViewType = (typeof SAVED_VIEW_TYPES)[number];
+
+/**
+ * Built-in tabs that sit under More (hidden) until an owner or admin shows them in Customise tabs: the Design tab
+ * (owner decision 15 Nov 2026; open question whether it shows by default).
+ */
+export const HIDDEN_BY_DEFAULT: readonly ViewType[] = ['design'];
 
 export const VIEW_TYPE_LABEL: Record<ViewType, string> = {
   table: 'Table',
@@ -15,6 +34,7 @@ export const VIEW_TYPE_LABEL: Record<ViewType, string> = {
   kanban: 'Kanban',
   calendar: 'Calendar',
   form: 'Form',
+  design: 'Design',
 };
 
 /**
@@ -36,7 +56,7 @@ export function toViewType(raw: string): ViewType | null {
  * The value written to `views.type`. The column's check constraint (0001_core.sql) predates the Table view and has
  * no 'table', so a Table view is stored as 'list' and read back as 'table' (toViewType).
  */
-export const STORED_VIEW_TYPE: Record<ViewType, string> = {
+export const STORED_VIEW_TYPE: Record<SavedViewType, string> = {
   table: 'list',
   insights: 'insights',
   kanban: 'kanban',
@@ -44,8 +64,24 @@ export const STORED_VIEW_TYPE: Record<ViewType, string> = {
   form: 'form',
 };
 
-/** A view type as an input accepts it: current ids and the former ones, read as current. */
+/** A saved view's type, aliases resolved; null for a built-in-only type (Design) and anything else. */
+export function toSavedViewType(raw: string): SavedViewType | null {
+  const t = toViewType(raw);
+  return t && (SAVED_VIEW_TYPES as readonly string[]).includes(t) ? (t as SavedViewType) : null;
+}
+
+/** A saved view's type as an input accepts it: current ids and the former ones, read as current. */
 export const viewTypeInput = z.string().transform((s, c) => {
+  const t = toSavedViewType(s);
+  if (!t) {
+    c.addIssue({ code: 'custom', message: 'Choose a view type.' });
+    return z.NEVER;
+  }
+  return t;
+});
+
+/** A built-in view's id as an input accepts it (a tab, the default view): every view type, former ids read as current. */
+export const builtinViewInput = z.string().transform((s, c) => {
   const t = toViewType(s);
   if (!t) {
     c.addIssue({ code: 'custom', message: 'Choose a view type.' });
@@ -329,7 +365,7 @@ export interface SavedView {
   id: string;
   sheetId: string;
   name: string;
-  type: ViewType;
+  type: SavedViewType;
   config: ViewConfig;
   ownerId: string | null;
   position: string;

@@ -298,6 +298,17 @@ Phase 2 (open; a separate task):
 - [ ] Reset the demo workspaces onto Core plus the add-ons
 - [ ] Workspace settings › Standards in scope (the design's scope filter) over the Standards tags
 
+### Design area (owner decision, 15 Nov 2026; board consulted)
+- [x] Engine `src/engine/flow` (pure): a sheet's steps in four groups (inputs, sheet, logic, outputs) with health in words, pack provenance (unchanged, changed, added here) and data that leaves the workspace; the workspace graph (sheets, link, create, update, button and sync edges), filters by app, pack, folder, Registers domain and "differs from pack", the Connections rows; auto layout for both maps; restricted field names and webhook addresses masked (`maskWorld`); unit tests for every kind of step and edge
+- [x] "Differs from pack" decided as an upgrade decides it: the installed version planned as `install_pack` wrote it (`planInstalledBase`, extracted from the upgrade planner without changing it) compared row by row (`packDrift`), kept per install version
+- [x] The Design view tab (docs/05 §3.8): a registry entry, never a saved view, under More until shown; the list with health and the pack marker, the "Coming later" API / webhook row; the side window reusing the existing editors (the automation builder extracted into `AutomationEditor`, the form builder, the approval workflow editor, field settings, sheet settings, the New item form); + Add in create mode; the Map toggle; arrow keys, Enter, Escape and focus back on the row; viewers and auditors read only
+- [x] Health from aggregates only: migration 0048 `design_health` (run log and webhook queue, bounded, granted to `authenticated`); pgTAP `0038_design_health.sql`. Configuration only, never item rows (`readDesign`)
+- [x] Platform › Design (docs/05 §4): Sheets and Connections tables (the default and the only view under 760 px) and the map in folder columns; filters and views in the URL (`?app=`, `?group=` …); a sheet opens its Design tab; an app's screens link to its design
+- [x] Leaves the system: every outside destination, the fields sent, personal-data flags, addresses masked; owners, admins and auditors (open question to the owner)
+- [x] Export for auditors: `/[org]/design/print` (one sheet, the workspace with its filters, or the data-flow record), printed to PDF from the browser (no server-side PDF path exists to reuse)
+- [x] e2e `tests/e2e/design.spec.ts`: the Core nonconformities list with a pack automation and the intake form, an automation edited in the side window and its activity log entry, the Map toggle, the overall map and table with the app filter, keyboard only, 390 px, a viewer reading only, the export
+- [ ] Later (not v1): the clause coverage lens; inbound webhooks and the API (owner sign-off and a security review); a free canvas was rejected
+
 ### NIS2 pack
 - [x] Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace. Built as the general pack settings mechanism (docs/11 Pack settings); every country entry ships unverified until someone checks it.
 

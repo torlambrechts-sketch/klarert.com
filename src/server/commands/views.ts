@@ -6,7 +6,8 @@ import {
   STORED_VIEW_TYPE,
   type SavedView,
   type ViewConfig,
-  type ViewType,
+  toSavedViewType,
+  type SavedViewType,
 } from '@/engine/views/config';
 import { asNewCopy, formLayoutProblems } from '@/engine/views/form';
 import { dropTab, readTabSettings } from '@/engine/views/tabs';
@@ -62,7 +63,7 @@ async function insertView(
     orgId: string;
     sheetId: string;
     name: string;
-    type: ViewType;
+    type: SavedViewType;
     config: ViewConfig;
     ownerId: string | null;
   },
@@ -184,7 +185,7 @@ export async function duplicateView(input: unknown): Promise<Result<{ view: Save
         orgId,
         sheetId: row.sheet_id,
         name: v.name,
-        type: row.type as ViewType,
+        type: toSavedViewType(row.type) ?? 'table',
         config,
         ownerId: row.type === 'form' || v.shared ? null : user.id,
       });

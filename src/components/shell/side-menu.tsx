@@ -15,6 +15,7 @@ import {
   Search,
   SlidersHorizontal,
   PanelLeft,
+  Network,
   Workflow,
   Zap,
 } from 'lucide-react';
@@ -36,7 +37,7 @@ import { CreateButton, CreateSheetLink } from '@/components/create/create-provid
 
 // The side menu (docs/05 §2.1): workspace switcher, "Find" to filter the menu, Home and My work, Insights (Dashboards,
 // Evidence library, Audit outputs), Apps (the installed packs' apps, docs/13), one collapsible section per folder with its sheets (menu-sheets.tsx: "+", "…" menus, rename,
-// drag and drop), then Workflow, Automations and Workspace admin. 256 px on desktop; on phones the same
+// drag and drop), then Workflow, Automations, Design and Workspace admin. 256 px on desktop; on phones the same
 // menu opens as a sheet from the bottom bar. Closed folders are remembered per browser.
 
 export type Ws = { id: string; name: string; slug: string };
@@ -250,7 +251,7 @@ export function SideMenu({
   const anyInsights = hit('Dashboards') || hit('Evidence library') || hit('Audit outputs');
   const shownApps = apps.filter((a) => hit(a.title));
   const anyPlatform =
-    hit('Workflow') || hit('Automations') || (canManage && hit('Workspace admin'));
+    hit('Workflow') || hit('Automations') || hit('Design') || (canManage && hit('Workspace admin'));
 
   return (
     <nav aria-label="Side menu" className="flex h-full flex-col px-2 pt-2.5 pb-4">
@@ -425,6 +426,14 @@ export function SideMenu({
                 active={is('automations')}
                 onNavigate={onNavigate}
                 hidden={!hit('Automations')}
+              />
+              <NavLink
+                href={`/${org}/design`}
+                label="Design"
+                icon={<Network className={iconClass} aria-hidden />}
+                active={is('design')}
+                onNavigate={onNavigate}
+                hidden={!hit('Design')}
               />
               {canManage ? (
                 <NavLink
