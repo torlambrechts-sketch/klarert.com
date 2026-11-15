@@ -301,7 +301,7 @@ test.describe('Home and search', () => {
     await expect(page.getByTestId('home-summary')).toHaveText('Nothing needs you right now');
     const checklist = page.getByTestId('checklist');
     await expect(page.getByText('0 of 6 done.')).toBeVisible();
-    await expect(checklist.getByRole('link', { name: 'New sheet' })).toBeVisible();
+    await expect(checklist.getByRole('link', { name: 'Open Create' })).toBeVisible();
     await expect(page.getByText('No activity yet. Changes to items show here.')).toBeVisible();
 
     const sheet = await makeSheet(

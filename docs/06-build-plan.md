@@ -324,6 +324,8 @@ Phase 2 (open; a separate task):
 - [x] Home: one Next step per installed standard (`nextSteps`) and one test-mode banner with one link (UX-3, A2)
 - [x] The app's Dialog for deleting an approval workflow, reduced motion, 2 px focus rings on inputs, the 13.5 and 9.5 type steps rounded, global-error on the tokens (UX-8, UX-11, UX-12, UX-14)
 - [x] e2e `tests/e2e/simple-ui.spec.ts`: the menu by role (owner, editor, viewer), one Menu, Search and Inbox at 390 px, Home's Next steps and banner
+- [x] Owner decisions (15 Nov 2026, second round): the Starter level reads Recommended, never Standard (`words.ts`, `catalogue-words.test.ts`); Getting started only until the first standard is installed (`showGettingStarted`); Create hidden from viewers and auditors (menu and phone; Create and `/s/new` refuse them with Back to Home); no "New sheet" button on Home (Getting started's first step opens Create)
+- [x] e2e `simple-ui.spec.ts`: a viewer sees no Create button and Create refuses them, Home with a standard has no Getting started, Home has no "New sheet" button, the level reads Recommended
 
 ### NIS2 pack
 - [x] Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace. Built as the general pack settings mechanism (docs/11 Pack settings); every country entry ships unverified until someone checks it.

@@ -8,6 +8,11 @@ import { signIn } from './helpers';
 //   only for admins and owners; viewers see no Build and no "Platform"; there is no menu filter (one search);
 // - at 390 px there is one Menu, one Search and one Inbox;
 // - Home shows one Next step per installed standard and one test-mode banner.
+// Second round (owner decisions 15 Nov 2026):
+// - Create only for editors, admins and owners: viewers and auditors have no Create button, and Create and the New
+//   sheet page refuse them with a way back to Home;
+// - Getting started only until the first standard is installed; Home has no "New sheet" button;
+// - the levels read Basic, Recommended and Everything (never Standard).
 // SIMPLE_SHOTS=<dir> saves the screenshots of Home and of the menu as owner and as viewer.
 
 const SHOTS = process.env.SIMPLE_SHOTS;
@@ -71,6 +76,7 @@ test.describe('the side menu by role', () => {
     await expect(menu.getByText('Insights', { exact: true })).toHaveCount(0);
     // one search: the menu has no filter box of its own
     await expect(menu.getByRole('searchbox')).toHaveCount(0);
+    await expect(menu.getByTestId('create-button')).toBeVisible();
     await shot(page, 'menu-owner');
   });
 
@@ -85,6 +91,8 @@ test.describe('the side menu by role', () => {
       'Design',
     ]);
     await expect(menu.getByRole('link', { name: 'Workspace admin' })).toHaveCount(0);
+    // Create stays for editors (the same check as Build)
+    await expect(menu.getByTestId('create-button')).toBeVisible();
   });
 
   test('a viewer sees no Build', async ({ page }) => {
@@ -102,8 +110,81 @@ test.describe('the side menu by role', () => {
       'Audit outputs',
     ]);
     await expect(group(menu, 'Registers').getByRole('link').first()).toBeVisible();
+    // no Create button for a viewer, on the desktop menu or the phone menu (owner decision 15 Nov 2026)
+    await expect(menu.getByRole('button', { name: /^Create/ })).toHaveCount(0);
+    await expect(page.getByTestId('create-button')).toHaveCount(0);
     await shot(page, 'menu-viewer');
   });
+
+  test('a viewer cannot reach Create: no shortcut, and the New sheet page leads back home', async ({
+    page,
+  }) => {
+    await signIn(page, 'vic@example.com', `/${slug}/home`);
+    await page.goto(`/${slug}/home`);
+    await expect(page.getByTestId('home-summary')).toBeVisible();
+    // Ctrl/Cmd+K opens nothing for a viewer
+    await page.keyboard.press('ControlOrMeta+k');
+    await expect(page.getByRole('dialog', { name: 'Create' })).toHaveCount(0);
+    await expect(page.getByTestId('create-wizard')).toHaveCount(0);
+    // the wizard's address refuses with a short message and a link back to Home
+    await page.goto(`/${slug}/s/new`);
+    await expect(page.getByText('Viewers cannot create sheets.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Create sheet' })).toHaveCount(0);
+    await page.getByRole('link', { name: 'Back to Home' }).click();
+    await expect(page).toHaveURL(new RegExp(`/${slug}/home$`));
+  });
+});
+
+test.describe('Home without a standard', () => {
+  test('Getting started points an editor to Create; Home has no New sheet button', async ({
+    page,
+  }, info) => {
+    const slug = seedWorkspace(info.project.name === 'phone' ? 'smep' : 'sme', { empty: true });
+    await signIn(page, 'james@example.com', `/${slug}/home`);
+    await page.goto(`/${slug}/home`);
+    const main = page.getByRole('main');
+    await expect(page.getByTestId('home-summary')).toBeVisible();
+    // no "New sheet" on Home (owner decision 15 Nov 2026): Create and the "+" next to Registers start a sheet
+    await expect(main.getByRole('button', { name: /New sheet/ })).toHaveCount(0);
+    await expect(main.getByRole('link', { name: /New sheet/ })).toHaveCount(0);
+    // no sheets yet: Getting started shows, its first step opens Create at the Sheet card
+    await expect(page.getByRole('heading', { name: 'Getting started' })).toBeVisible();
+    const checklist = page.getByTestId('checklist');
+    await expect(checklist).toContainText('Create a sheet');
+    await checklist.getByRole('link', { name: 'Open Create' }).click();
+    const create = page.getByRole('dialog', { name: 'Create' });
+    await expect(create.getByRole('link', { name: /^Tracker/ })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(create).toBeHidden();
+  });
+});
+
+test('the levels read Basic, Recommended and Everything, never Standard', async ({
+  page,
+}, info) => {
+  const slug = seedWorkspace(info.project.name === 'phone' ? 'smlp' : 'sml');
+  await signIn(page, 'maria@example.com', `/${slug}/home`);
+  await page.goto(`/${slug}/settings?tab=packs`);
+  const list = page.getByRole('list', { name: 'Available packs' });
+  const core = list
+    .getByRole('listitem')
+    .filter({ has: page.getByText('Shared registers', { exact: true }) });
+  await expect(core).toContainText('Basic or Recommended or Everything');
+  await expect(list).not.toContainText(/Standard or|or Standard\b/);
+  const gdpr = list.getByRole('listitem').filter({ hasText: 'GDPR privacy' });
+  await expect(gdpr).toContainText('Recommended or Everything');
+  const dialog = page.getByRole('dialog');
+  await expect(async () => {
+    await gdpr.getByRole('button', { name: /^Preview GDPR privacy/ }).click();
+    await expect(dialog).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 30_000 });
+  const levels = dialog.getByRole('group', { name: 'Choose a level' });
+  await expect(levels.getByRole('radio', { name: 'Recommended', exact: true })).toBeChecked();
+  await expect(levels.getByRole('radio', { name: 'Everything', exact: true })).toBeVisible();
+  await expect(levels.getByRole('radio', { name: 'Standard', exact: true })).toHaveCount(0);
+  await expect(dialog.getByTestId('installs-first')).toContainText(
+    'Installs Shared registers 1.3.0 (Recommended) first.',
+  );
 });
 
 test.describe('phone', () => {
@@ -163,11 +244,16 @@ test('Home shows one Next step per standard and one test-mode banner', async ({ 
   test.setTimeout(300_000);
   const slug = seedWorkspace(info.project.name === 'phone' ? 'smhp' : 'smh', { empty: true });
   // the shared registers (no setup of their own), then two standards with a setup each
+  await signIn(page, 'maria@example.com', `/${slug}/home`);
+  await page.goto(`/${slug}/home`);
+  // before any standard: the generic Getting started checklist (no sheets yet)
+  await expect(page.getByRole('heading', { name: 'Getting started' })).toBeVisible();
+  await expect(page.getByTestId('checklist')).toBeVisible();
+
   installNewest(slug, 'core', 'full');
   installNewest(slug, 'gdpr');
   installNewest(slug, 'iso-27001');
 
-  await signIn(page, 'maria@example.com', `/${slug}/home`);
   await page.goto(`/${slug}/home`);
   const cards = page.getByTestId('next-step-card');
   await expect(cards).toHaveCount(2);
@@ -184,6 +270,15 @@ test('Home shows one Next step per standard and one test-mode banner', async ({ 
     await expect(card.getByRole('link', { name: /^See all \d+ steps$/ })).toBeVisible();
   }
   await expect(page.getByText('(add-on)')).toHaveCount(0);
+  // GDPR at its first level, which reads Recommended (never Standard)
+  await expect(cards.nth(0)).toContainText(/% done · Recommended/);
+  await expect(cards.nth(0)).not.toContainText(/· Standard\b/);
+  // a standard is installed: its Next step cards take over from Getting started (owner decision 15 Nov 2026)
+  await expect(page.getByTestId('checklist')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Getting started' })).toHaveCount(0);
+  // and Home has no "New sheet" button
+  await expect(page.getByRole('main').getByRole('button', { name: /New sheet/ })).toHaveCount(0);
+  await expect(page.getByRole('main').getByRole('link', { name: /New sheet/ })).toHaveCount(0);
 
   const banner = page.getByTestId('test-mode-banner');
   await expect(banner).toHaveCount(1);
@@ -217,5 +312,10 @@ test('Home shows one Next step per standard and one test-mode banner', async ({ 
   await expect(vic.getByTestId('next-step-card')).toHaveCount(0);
   await expect(vic.getByTestId('checklist')).toHaveCount(0);
   await expect(vic.getByTestId('test-mode-banner')).toHaveCount(0);
+  // no Create for an auditor either, and the New sheet page refuses them
+  await expect(vic.getByTestId('create-button')).toHaveCount(0);
+  await vic.goto(`/${slug}/s/new`);
+  await expect(vic.getByText('Auditors cannot create sheets.')).toBeVisible();
+  await expect(vic.getByRole('link', { name: 'Back to Home' })).toBeVisible();
   await vic.close();
 });

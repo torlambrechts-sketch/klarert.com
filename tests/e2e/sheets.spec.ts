@@ -296,6 +296,9 @@ test.describe('desktop', () => {
     await page.goto('/meridian/s/new?start=tracker');
     await expect(page.getByText('Viewers cannot create sheets.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Create sheet' })).toHaveCount(0);
+    // no Create button for a viewer, and a way back home (owner decision 15 Nov 2026)
+    await expect(page.getByTestId('create-button')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Back to Home' })).toBeVisible();
   });
 });
 

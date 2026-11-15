@@ -14,7 +14,8 @@ describe('pack words people see (docs/05 Words)', () => {
     expect(levelName('Starter')).toBe('Recommended');
     expect(levelName('Full')).toBe('Everything');
     expect(levelName('Custom')).toBe('Custom');
-    for (const n of ['Foundations', 'Starter', 'Full']) expect(levelName(n)).not.toMatch(/standard/i);
+    for (const n of ['Foundations', 'Starter', 'Full'])
+      expect(levelName(n)).not.toMatch(/standard/i);
   });
 
   it('rewrites running text', () => {
