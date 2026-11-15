@@ -127,14 +127,13 @@ function useCollapsed() {
 }
 
 export type MenuSheetsProps = {
-  /** "Sheets", or "Your sheets" under the Registers (docs/05 §2.1). */
+  /** The section heading (docs/05 §2.1): "Registers". */
   title?: string;
+  /** Shown under the heading before the folders: the shared registers' domains (menu-registers.tsx). */
+  lead?: React.ReactNode;
   org: string;
   nav: Nav;
   activeSheet: string | null;
-  /** The "Find" text, lower-cased; empty when not filtering. */
-  q: string;
-  hit: (label: string) => boolean;
   isClosed: (id: string) => boolean;
   toggle: (id: string) => void;
   setOpen: (id: string) => void;
@@ -145,8 +144,8 @@ export type MenuSheetsProps = {
 };
 
 export function MenuSheets(props: MenuSheetsProps) {
-  const { org, nav, activeSheet, q, hit, canEdit, canManage, onNavigate } = props;
-  const title = props.title ?? 'Sheets';
+  const { org, nav, activeSheet, canEdit, canManage, onNavigate } = props;
+  const title = props.title ?? 'Registers';
   const router = useRouter();
   const [tree, setTree] = useState<Tree>(() => toTree(nav));
   useEffect(() => setTree(toTree(nav)), [nav]);
@@ -164,7 +163,7 @@ export function MenuSheets(props: MenuSheetsProps) {
 
   const wide = useMedia('(min-width: 760px)');
   const collapsed = useCollapsed();
-  const canDrag = canEdit && !q && !collapsed && wide && !onNavigate;
+  const canDrag = canEdit && !collapsed && wide && !onNavigate;
 
   // keep focus on a row that moved to another list (keyboard moves)
   useEffect(() => {
@@ -355,7 +354,7 @@ export function MenuSheets(props: MenuSheetsProps) {
   // ───────────── keyboard: F2, Alt+↑/↓, Alt+→ / Alt+← ─────────────
 
   function onSheetKey(e: React.KeyboardEvent, s: NavSheet) {
-    if (!canEdit || q) return;
+    if (!canEdit) return;
     if (e.key === 'F2') {
       e.preventDefault();
       setRenaming({ kind: 'sheet', id: s.id });
@@ -381,7 +380,7 @@ export function MenuSheets(props: MenuSheetsProps) {
   }
 
   function onFolderKey(e: React.KeyboardEvent, folderId: string) {
-    if (!canManage || q) return;
+    if (!canManage) return;
     if (e.key === 'F2') {
       e.preventDefault();
       setRenaming({ kind: 'folder', id: folderId });
@@ -538,7 +537,6 @@ export function MenuSheets(props: MenuSheetsProps) {
     canEdit,
     canManage,
     canDrag,
-    q,
     renaming,
     setRenaming,
     rename,
@@ -548,21 +546,19 @@ export function MenuSheets(props: MenuSheetsProps) {
 
   return (
     <>
-      {q ? null : (
-        <div className="group/row flex items-center pr-1">
-          <h2 className="text-muted-foreground text-label-12 flex-1 px-2.5 pt-0.5 pb-1.5 font-medium">
-            {title}
-          </h2>
-          {canEdit ? (
-            <AddMenu
-              org={org}
-              canManage={canManage}
-              onNavigate={onNavigate}
-              onNewFolder={() => setRenaming({ kind: 'new-folder' })}
-            />
-          ) : null}
-        </div>
-      )}
+      <div className="group/row flex items-center pr-1">
+        <h2 className="text-muted-foreground text-label-12 flex-1 px-2.5 pt-0.5 pb-1.5 font-medium">
+          {title}
+        </h2>
+        {canEdit ? (
+          <AddMenu
+            org={org}
+            canManage={canManage}
+            onNavigate={onNavigate}
+            onNewFolder={() => setRenaming({ kind: 'new-folder' })}
+          />
+        ) : null}
+      </div>
       <p aria-live="polite" role="status" className="sr-only">
         {live}
       </p>
@@ -581,18 +577,18 @@ export function MenuSheets(props: MenuSheetsProps) {
           </p>
         </div>
       ) : null}
-      {empty && !q ? (
+      {props.lead}
+      {/* the shared registers are sheets too: the empty state shows only when there are none at all */}
+      {empty && !nav.registers.some((d) => d.sheets.length > 0) ? (
         <div className="flex flex-col items-start gap-1 px-2.5 py-1.5">
-          <p className="text-muted-foreground text-copy-13 m-0">
-            {props.title === 'Your sheets' ? 'No sheets of your own yet.' : 'No sheets yet.'}
-          </p>
+          <p className="text-muted-foreground text-copy-13 m-0">No sheets yet.</p>
           {canEdit ? (
             <CreateSheetLink
               org={org}
               onNavigate={onNavigate}
               className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
             >
-              {props.title === 'Your sheets' ? 'Create a sheet' : 'Create your first sheet'}
+              Create your first sheet
             </CreateSheetLink>
           ) : null}
         </div>
@@ -625,11 +621,9 @@ export function MenuSheets(props: MenuSheetsProps) {
         }}
       >
         {sections.map((s) => {
-          const sheets = s.sheets.filter((x) => props.hit(x.name) || hit(s.name));
+          const sheets = s.sheets;
           if (!s.folder && s.sheets.length === 0 && !draggingSheet) return null;
-          if (q && sheets.length === 0) return null;
-          const open =
-            !!q || !props.isClosed(s.id) || sheets.some((x) => x.id === activeSheet) || false;
+          const open = !props.isClosed(s.id) || sheets.some((x) => x.id === activeSheet);
           const into = drop?.kind === 'sheet' && drop.into === s.id;
           const line =
             drop?.kind === 'folder' && drop.line.id === s.id ? drop.line.edge : undefined;
@@ -697,7 +691,7 @@ export function MenuSheets(props: MenuSheetsProps) {
                   }
                 />
               ))}
-              {s.folder && s.sheets.length === 0 && !q ? (
+              {s.folder && s.sheets.length === 0 ? (
                 <EmptyFolder
                   folderId={s.id}
                   canEdit={canEdit}
@@ -751,7 +745,6 @@ type Shared = {
   canEdit: boolean;
   canManage: boolean;
   canDrag: boolean;
-  q: string;
   renaming: Renaming;
   setRenaming: (r: Renaming) => void;
   rename: (target: Exclude<Renaming, null>, name: string) => void;
@@ -1128,7 +1121,7 @@ function EmptyFolder({
 }
 
 const triggerClass = cn(
-  'text-muted-foreground hover:bg-nav-hover hover:text-ink flex size-6 shrink-0 items-center justify-center rounded-md outline-offset-[-2px]',
+  'text-muted-foreground hover:bg-nav-hover hover:text-ink flex size-6 shrink-0 items-center max-[759.98px]:size-11 justify-center rounded-md outline-offset-[-2px]',
   revealClass,
 );
 
@@ -1197,7 +1190,6 @@ function FolderMenu({
   first,
   last,
   canManage,
-  q,
   onMove,
   onSort,
   onArchive,
@@ -1245,10 +1237,10 @@ function FolderMenu({
             >
               Rename
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={first || !!q} onSelect={() => onMove(-1)}>
+            <DropdownMenuItem disabled={first} onSelect={() => onMove(-1)}>
               Move up
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={last || !!q} onSelect={() => onMove(1)}>
+            <DropdownMenuItem disabled={last} onSelect={() => onMove(1)}>
               Move down
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={onSort}>Sort A–Z</DropdownMenuItem>
@@ -1277,7 +1269,6 @@ function SheetMenu({
   first,
   last,
   canManage,
-  q,
   onMove,
   onMoveTo,
   onArchive,
@@ -1323,10 +1314,10 @@ function SheetMenu({
         >
           <FolderInput className="size-4" aria-hidden /> Move to…
         </DropdownMenuItem>
-        <DropdownMenuItem disabled={first || !!q} onSelect={() => onMove(-1)}>
+        <DropdownMenuItem disabled={first} onSelect={() => onMove(-1)}>
           Move up
         </DropdownMenuItem>
-        <DropdownMenuItem disabled={last || !!q} onSelect={() => onMove(1)}>
+        <DropdownMenuItem disabled={last} onSelect={() => onMove(1)}>
           Move down
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

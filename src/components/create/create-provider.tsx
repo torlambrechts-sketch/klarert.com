@@ -106,7 +106,7 @@ export function CreateButton({ onOpen, className }: { onOpen?: () => void; class
       }}
       title="Create (Ctrl+K)"
       className={cn(
-        'bg-ink text-primary-foreground text-label-14 flex h-[34px] w-full shrink-0 items-center gap-2.5 rounded-md px-2.5 font-medium transition-colors duration-150 hover:bg-gray-900 active:scale-[0.98]',
+        'bg-ink text-primary-foreground text-label-14 flex h-[34px] max-[759.98px]:h-11 w-full shrink-0 items-center gap-2.5 rounded-md px-2.5 font-medium transition-colors duration-150 hover:bg-gray-900 active:scale-[0.98]',
         className,
       )}
     >
