@@ -48,6 +48,8 @@ export interface ConfigEnv {
   ctx: Ctx;
   /** First item of the sheet, for live previews (formula). */
   firstItemId?: string;
+  /** False when the person is not an owner or admin: settings only they may change are shown read-only. */
+  isAdmin?: boolean;
 }
 
 export interface ConfigFormProps<C = unknown> {

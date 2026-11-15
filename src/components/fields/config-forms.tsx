@@ -531,14 +531,16 @@ function Checks({
   all,
   chosen,
   onChange,
+  disabled,
 }: {
   legend: string;
   all: { id: string; name: string }[];
   chosen: string[];
   onChange(ids: string[]): void;
+  disabled?: boolean;
 }) {
   return (
-    <fieldset className="flex flex-col gap-1">
+    <fieldset className="flex flex-col gap-1" disabled={disabled}>
       <legend className="text-label-13 mb-1 font-semibold">{legend}</legend>
       {all.length === 0 ? (
         <p className="text-muted-foreground text-label-12">None in this workspace yet.</p>
@@ -834,12 +836,20 @@ export const ClockConfig = (p: Props) => (
 );
 
 export const ProtectedConfig = (p: Props) => (
-  <Checks
-    legend="People who can see and change it (admins always can)"
-    all={[...p.env.ctx.people.values()]}
-    chosen={(p.config.allowedUserIds as string[]) ?? []}
-    onChange={(ids) => set(p, { allowedUserIds: ids })}
-  />
+  <div className="flex flex-col gap-1">
+    <Checks
+      legend="People who can see and change it (admins always can)"
+      all={[...p.env.ctx.people.values()]}
+      chosen={(p.config.allowedUserIds as string[]) ?? []}
+      onChange={(ids) => set(p, { allowedUserIds: ids })}
+      disabled={p.env.isAdmin === false}
+    />
+    {p.env.isAdmin === false ? (
+      <p className="text-muted-foreground text-label-12">
+        Only owners and admins can change who sees this field.
+      </p>
+    ) : null}
+  </div>
 );
 
 export const RetentionConfig = (p: Props) => (

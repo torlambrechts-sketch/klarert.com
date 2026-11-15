@@ -386,7 +386,7 @@ export function FieldSettingsBody({
               config={config}
               onChange={setConfig}
               sheet={env.sheet}
-              env={env}
+              env={{ ...env, isAdmin }}
               field={{ ...field, config }}
             />
           </Section>
