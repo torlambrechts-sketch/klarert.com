@@ -69,14 +69,14 @@ isOneToOne: false
                   ]
                 },"activity_log": {
                   Row: {
-                    "action": string,"actor_id": string | null,"actor_kind": string,"at": string,"chain_key": string,"field_id": string | null,"hash": string,"id": number,"item_id": string | null,"new_value": Json | null,"note": string | null,"old_value": Json | null,"org_id": string,"prev_hash": string,"sheet_id": string | null
+                    "action": string,"actor_id": string | null,"actor_kind": string,"at": string,"chain_key": string,"chain_seq": number | null,"field_id": string | null,"hash": string,"hash_v": number,"id": number,"item_id": string | null,"new_value": Json | null,"note": string | null,"old_value": Json | null,"org_id": string,"prev_hash": string,"sheet_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "action": string,"actor_id"?: string | null,"actor_kind": string,"at"?: string,"chain_key": string,"field_id"?: string | null,"hash"?: string,"id"?: never,"item_id"?: string | null,"new_value"?: Json | null,"note"?: string | null,"old_value"?: Json | null,"org_id": string,"prev_hash"?: string,"sheet_id"?: string | null
+                    "action": string,"actor_id"?: string | null,"actor_kind": string,"at"?: string,"chain_key": string,"chain_seq"?: number | null,"field_id"?: string | null,"hash"?: string,"hash_v"?: number,"id"?: never,"item_id"?: string | null,"new_value"?: Json | null,"note"?: string | null,"old_value"?: Json | null,"org_id": string,"prev_hash"?: string,"sheet_id"?: string | null
                   }
                   Update: {
-                    "action"?: string,"actor_id"?: string | null,"actor_kind"?: string,"at"?: string,"chain_key"?: string,"field_id"?: string | null,"hash"?: string,"id"?: never,"item_id"?: string | null,"new_value"?: Json | null,"note"?: string | null,"old_value"?: Json | null,"org_id"?: string,"prev_hash"?: string,"sheet_id"?: string | null
+                    "action"?: string,"actor_id"?: string | null,"actor_kind"?: string,"at"?: string,"chain_key"?: string,"chain_seq"?: number | null,"field_id"?: string | null,"hash"?: string,"hash_v"?: number,"id"?: never,"item_id"?: string | null,"new_value"?: Json | null,"note"?: string | null,"old_value"?: Json | null,"org_id"?: string,"prev_hash"?: string,"sheet_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1908,6 +1908,9 @@ isOneToOne: false
                            },
 "activity_hash":
 { Args: { "action": string,"actor_id": string,"actor_kind": string,"at": string,"field_id": string,"new_value": Json,"note": string,"old_value": Json,"prev": string }; Returns: string
+                           },
+"activity_hash_v2":
+{ Args: { "action": string,"actor_id": string,"actor_kind": string,"at": string,"chain_key": string,"chain_seq": number,"field_id": string,"item_id": string,"new_value": Json,"note": string,"old_value": Json,"org_id": string,"prev": string,"sheet_id": string }; Returns: string
                            },
 "activity_value_masked":
 { Args: { "v": Json }; Returns: boolean
