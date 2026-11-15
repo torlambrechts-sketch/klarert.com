@@ -1039,14 +1039,14 @@ isOneToOne: false
                   ]
                 },"restricted_activity": {
                   Row: {
-                    "activity_id": number,"field_id": string,"new_value": Json | null,"old_value": Json | null,"org_id": string,"salt": string,"sheet_id": string | null
+                    "activity_id": number,"erased_at": string | null,"erased_by": string | null,"field_id": string,"new_value": Json | null,"old_value": Json | null,"org_id": string,"salt": string | null,"sheet_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "activity_id": number,"field_id": string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id": string,"salt": string,"sheet_id"?: string | null
+                    "activity_id": number,"erased_at"?: string | null,"erased_by"?: string | null,"field_id": string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id": string,"salt"?: string | null,"sheet_id"?: string | null
                   }
                   Update: {
-                    "activity_id"?: number,"field_id"?: string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id"?: string,"salt"?: string,"sheet_id"?: string | null
+                    "activity_id"?: number,"erased_at"?: string | null,"erased_by"?: string | null,"field_id"?: string,"new_value"?: Json | null,"old_value"?: Json | null,"org_id"?: string,"salt"?: string | null,"sheet_id"?: string | null
                   }
                   Relationships: [
                     {

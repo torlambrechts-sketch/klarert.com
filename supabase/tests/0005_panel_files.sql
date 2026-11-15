@@ -118,8 +118,11 @@ select throws_ok($$ select edit_update((select id from t_upd), 'changed') $$, 'n
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000007a2","role":"authenticated"}', true);
 select is((edit_update((select id from t_upd), '@owner please check today')).body, '@owner please check today',
   'the author edits their update');
-select ok((select action = 'update.edited' and new_value = to_jsonb('@owner please check today'::text)
-             from activity_log where item_id = (select id from t_item) order by id desc limit 1), 'the edit is logged');
+-- since 0059 a comment's body is personal data: the log holds a marker, the body is kept aside for readers
+select ok((select a.action = 'update.edited' and activity_value_masked(a.new_value)
+                  and pa.new_value = to_jsonb('@owner please check today'::text)
+             from activity_log a join personal_activity pa on pa.activity_id = a.id
+            where a.item_id = (select id from t_item) order by a.id desc limit 1), 'the edit is logged');
 reset role;
 update item_updates set created_at = now() - interval '16 minutes' where id = (select id from t_upd);
 set local role authenticated;
