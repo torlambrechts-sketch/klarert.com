@@ -108,6 +108,16 @@ async function currentFiles(db: Db, itemId: string, fieldId: string | null) {
   return (data ?? []).map((r) => r.id);
 }
 
+/**
+ * The file belongs to this workspace (SA-13). Checked before any RPC that writes or logs (download_file writes the
+ * access log, set_file_meta the details), so a member of two workspaces who passes one slug and the other's file
+ * gets "not found" with nothing written.
+ */
+async function fileInOrg(db: Db, fileId: string, orgId: string): Promise<boolean> {
+  const { data } = await db.from('files').select('org_id').eq('id', fileId).maybeSingle();
+  return data?.org_id === orgId;
+}
+
 /** A category must be one of the workspace's (stored by id). */
 async function knownCategory(db: Db, orgId: string, id: string | null | undefined) {
   if (!id) return true;
@@ -255,6 +265,8 @@ export async function downloadFile(input: unknown): Promise<Result<{ url: string
     v.org,
     'member',
     async ({ supabase, orgId }) => {
+      if (!(await fileInOrg(supabase, v.fileId, orgId)))
+        return fail('not_found', 'This file no longer exists.');
       const { data: row, error: rpcError } = await supabase.rpc('download_file', {
         p_file: v.fileId,
       });
@@ -284,6 +296,8 @@ export async function previewFile(
     v.org,
     'member',
     async ({ supabase, orgId }) => {
+      if (!(await fileInOrg(supabase, v.fileId, orgId)))
+        return fail('not_found', 'This file no longer exists.');
       const { data: row, error: rpcError } = await supabase.rpc('download_file', {
         p_file: v.fileId,
       });
@@ -312,6 +326,8 @@ export async function setFileDetails(input: unknown): Promise<Result<{ file: Fil
     v.org,
     'editor',
     async ({ supabase, orgId }) => {
+      if (!(await fileInOrg(supabase, v.fileId, orgId)))
+        return fail('not_found', 'This file no longer exists.');
       if (!(await knownCategory(supabase, orgId, v.details.category)))
         return fail('invalid', 'Choose a category.');
       const d = v.details;
@@ -343,12 +359,8 @@ export async function archiveFile(input: unknown): Promise<Result<{ fileId: stri
     v.org,
     'admin',
     async ({ supabase, orgId }) => {
-      const { data: row } = await supabase
-        .from('files')
-        .select('id, org_id')
-        .eq('id', v.fileId)
-        .maybeSingle();
-      if (!row || row.org_id !== orgId) return fail('not_found', 'This file no longer exists.');
+      if (!(await fileInOrg(supabase, v.fileId, orgId)))
+        return fail('not_found', 'This file no longer exists.');
       const { error } = v.archived
         ? await supabase.rpc('archive_file', { p_file: v.fileId, p_note: v.note ?? undefined })
         : await supabase.rpc('restore_file', { p_file: v.fileId });
