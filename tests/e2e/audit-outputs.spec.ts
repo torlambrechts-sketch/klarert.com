@@ -211,7 +211,7 @@ test('the Exports list: owners, admins and auditors, paged, keyboard and 390 px'
   await page.reload();
   const list = exports.getByRole('list', { name: 'Exports, newest first' });
   await expect(list.getByRole('listitem')).toHaveCount(50);
-  await expect(list.getByRole('listitem').first()).toContainText('50 registers');
+  await expect(list.getByRole('listitem').first()).toContainText('50 sheets');
   await expect(list.getByRole('listitem').first()).toContainText(
     'Whole workspace · Period 1 Jan 2026 to 15 Nov 2026',
   );
