@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { greeting, hourIn, nextSteps, testModeLine, type StandardSetup } from './home';
+import {
+  checklist,
+  greeting,
+  hourIn,
+  nextSteps,
+  showGettingStarted,
+  standardsInstalled,
+  testModeLine,
+  type ChecklistFacts,
+  type StandardSetup,
+} from './home';
 import type { SetupStepProgress } from './packs/setup';
 
 describe('greeting', () => {
@@ -77,5 +87,54 @@ describe('testModeLine', () => {
     expect(testModeLine([{ count: 1 }])).toBe('1 automation is in test mode.');
     expect(testModeLine([{ count: 0 }])).toBeNull();
     expect(testModeLine([])).toBeNull();
+  });
+});
+
+describe('showGettingStarted', () => {
+  const none: ChecklistFacts = {
+    sheets: 0,
+    items: 0,
+    statusFields: 0,
+    colleagues: 0,
+    automations: 0,
+    openedActivityLog: false,
+  };
+  const all: ChecklistFacts = {
+    sheets: 1,
+    items: 5,
+    statusFields: 1,
+    colleagues: 1,
+    automations: 1,
+    openedActivityLog: true,
+  };
+  const core = { key: 'core', system: true };
+  const gdpr = { key: 'gdpr', system: false };
+
+  it('shows on a new workspace with no standard', () => {
+    expect(showGettingStarted({ auditor: false, packs: [], steps: checklist(none) })).toBe(true);
+  });
+
+  it('hides once the first standard is installed: its Next step cards take over', () => {
+    expect(
+      showGettingStarted({ auditor: false, packs: [core, gdpr], steps: checklist(none) }),
+    ).toBe(false);
+    expect(showGettingStarted({ auditor: false, packs: [gdpr], steps: checklist(none) })).toBe(
+      false,
+    );
+  });
+
+  it('keeps showing with only the shared registers: they are not a standard', () => {
+    expect(standardsInstalled([core])).toBe(0);
+    expect(showGettingStarted({ auditor: false, packs: [core], steps: checklist(none) })).toBe(
+      true,
+    );
+  });
+
+  it('hides once every step is done', () => {
+    expect(showGettingStarted({ auditor: false, packs: [], steps: checklist(all) })).toBe(false);
+  });
+
+  it('never shows to auditors', () => {
+    expect(showGettingStarted({ auditor: true, packs: [], steps: checklist(none) })).toBe(false);
   });
 });

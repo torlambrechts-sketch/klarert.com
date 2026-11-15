@@ -28,7 +28,7 @@ export interface ChecklistStep {
 
 export const ITEMS_TO_ADD = 5;
 
-/** The Getting started steps in order, each done or not. Hidden on Home once every step is done. */
+/** The Getting started steps in order, each done or not. When Home shows them: `showGettingStarted`. */
 export function checklist(f: ChecklistFacts): ChecklistStep[] {
   return [
     { id: 'sheet', label: 'Create a sheet', done: f.sheets > 0 },
@@ -41,6 +41,29 @@ export function checklist(f: ChecklistFacts): ChecklistStep[] {
 }
 
 export const checklistDone = (steps: ChecklistStep[]) => steps.every((s) => s.done);
+
+/** A live pack install as Home reads it: the shared registers are a system pack, every other pack is a standard. */
+export interface InstalledPack {
+  key: string;
+  system: boolean;
+}
+
+/** Standards are the packs that build on the shared registers (docs/05 §6.5); the shared registers are not one. */
+export const standardsInstalled = (packs: readonly InstalledPack[]) =>
+  packs.filter((p) => !p.system).length;
+
+/**
+ * Whether Home shows the Getting started checklist (docs/05 §4, owner decision 15 Nov 2026): only until the first
+ * standard is installed (its Next step cards take over), only while a step is still to do, and never to auditors
+ * (they get their own Start here panel).
+ */
+export function showGettingStarted(f: {
+  auditor: boolean;
+  packs: readonly InstalledPack[];
+  steps: ChecklistStep[];
+}): boolean {
+  return !f.auditor && standardsInstalled(f.packs) === 0 && !checklistDone(f.steps);
+}
 
 /** Overdue, requested of me or due within 14 days: the rows Home lists under "Needs you". */
 export const needsYou = (r: WorkRow) => r.overdue || r.requests.length > 0 || r.dueSoon;
