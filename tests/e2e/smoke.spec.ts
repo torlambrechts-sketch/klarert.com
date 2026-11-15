@@ -22,3 +22,28 @@ test('fonts are self-hosted, no Google Fonts requests', async ({ page }) => {
   const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
   expect(family).toMatch(/geist/i);
 });
+
+test('an unknown address shows the app’s own 404 page with a way back', async ({ page }) => {
+  const res = await page.goto('/auth/no-such-page');
+  expect(res?.status()).toBe(404);
+  await expect(page).toHaveTitle('Page not found · Compliance OS');
+  await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
+  await page.getByRole('link', { name: 'Go to your workspace' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test('every response says who may frame it, how to read its type and what to send as a referrer', async ({
+  request,
+}) => {
+  for (const path of ['/login', '/auth/no-such-page']) {
+    const h = (await request.get(path, { maxRedirects: 0 })).headers();
+    expect(h['content-security-policy'], path).toContain("frame-ancestors 'self'");
+    expect(h['x-frame-options'], path).toBe('SAMEORIGIN');
+    expect(h['x-content-type-options'], path).toBe('nosniff');
+    expect(h['referrer-policy'], path).toBe('strict-origin-when-cross-origin');
+    expect(h['x-powered-by'], path).toBeUndefined();
+  }
+  // a public form's link is its key: never sent as a referrer (docs/05 §3.3)
+  const form = await request.get('/f/no-such-token', { maxRedirects: 0 });
+  expect(form.headers()['referrer-policy']).toBe('no-referrer');
+});
