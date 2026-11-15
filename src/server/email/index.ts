@@ -20,5 +20,5 @@ export function sendEmail(message: EmailMessage): Promise<SendResult> {
   return deliver(message, { env: process.env, fetch: (input, init) => fetch(input, init), log });
 }
 
-/** Whether a transport is set up (Resend, or Mailpit next to a local Supabase). */
+/** Whether a transport is set up (Brevo, or Mailpit next to a local Supabase). */
 export const canSendEmail = () => emailConfigured(process.env);

@@ -448,17 +448,28 @@ app sends mail; reminders, read-and-accept requests and notifications will add a
   `send({ to, subject, text, html, tag, idempotencyKey })`, the transports and the choice; `index.ts` wires it to
   `process.env`, `fetch` and the log (`sendEmail(message)`, `canSendEmail()`). It never throws: the result is
   `{ sent: true, id }` or `{ sent: false, reason: 'not_configured' | 'rejected' | 'unavailable' }`.
-- **Transports.** *Resend*: `POST https://api.resend.com/emails` with `Authorization: Bearer $RESEND_API_KEY`, from
-  `EMAIL_FROM`, the tag as a Resend tag and an `Idempotency-Key` (Resend keeps it 24 hours, so a retried request
-  never sends twice). The Resend domain is in the EU region. *Local*: Mailpit, the Supabase local stack's mail
+- **Transports.** *Brevo* (owner decision 15 Nov 2026: the owner's existing account; Brevo keeps data in the EU,
+  France and Germany): `POST https://api.brevo.com/v3/smtp/email` with the headers `api-key: $BREVO_API_KEY`,
+  `content-type` and `accept: application/json`; body `sender` (from `EMAIL_FROM`, its name when one is given), `to`,
+  `subject`, `htmlContent`, `textContent`, `tags: [tag]` and `headers: { "X-Mailin-custom": <key> }`. Success is 201
+  with a `messageId`; 400 (bad request) and 401 (bad key) are refusals, 429 and 5xx "try later"; each is logged with
+  the tag and the status code only. **Brevo has no idempotency key** (its API reference, checked 15 Nov 2026,
+  documents none), so the key travels as `X-Mailin-custom` (to find the message in Brevo's logs) and duplicates are
+  prevented on our side: the app never retries a send; an invite is emailed once when it is created, and an address
+  has at most one open invite per workspace (`invites_open_email_idx`), so a double click fails before a second send;
+  resends are counted and rate-limited in the database (below). **Tracking:** each recipient is sent with
+  `contactPixelTrackingConsent: false` (opens and clicks anonymised) and `removeTrackingPixel: true` (no open pixel,
+  honoured on Brevo Enterprise plans only). Brevo has no per-message switch for click tracking; the owner turns open
+  and click tracking off for transactional email in the Brevo account (scripts/hosted/README.md › Email), otherwise
+  Brevo adds a pixel and rewrites the accept link through its tracking domain. *Local*: Mailpit, the Supabase local stack's mail
   catcher, through its HTTP send API (`$MAILPIT_URL/api/v1/send`, default `http://127.0.0.1:54324`, the
   `[local_smtp]` port in `supabase/config.toml`; the SMTP port is not published to the host). The e2e tests read the
   mail back from Mailpit (`appMail` in `tests/e2e/helpers.ts`; app mail is tagged, sign-in links from Supabase Auth
   are not).
-- **Choice, failing closed.** Resend when `RESEND_API_KEY` is set and `EMAIL_FROM` is an address. Otherwise Mailpit,
+- **Choice, failing closed.** Brevo when `BREVO_API_KEY` is set and `EMAIL_FROM` is an address. Otherwise Mailpit,
   only when `NEXT_PUBLIC_SUPABASE_URL` is on this machine (the same test as the command gate's local secret,
   `isLocalUrl` in `src/lib/supabase/command-proof.ts`). Otherwise nothing is sent and every attempt logs one error
-  that says what to set (`RESEND_API_KEY is not set: no email is sent until RESEND_API_KEY and EMAIL_FROM are set`,
+  that says what to set (`BREVO_API_KEY is not set: no email is sent until BREVO_API_KEY and EMAIL_FROM are set`,
   or that `EMAIL_FROM` is missing), as public forms do without `FORM_RATE_LIMIT_SALT` (§8.4). **No real mail from
   CI:** when `CI` is set and `VERCEL` is not (a CI runner, not a Vercel build), the key is ignored, so CI uses Mailpit
   or sends nothing.
@@ -472,11 +483,11 @@ app sends mail; reminders, read-and-accept requests and notifications will add a
   the inviter's display name, the role with one sentence on what it can do (`ROLE_SUMMARIES`), the accept link, the
   day the link ends (14 days, 0057) and, for an auditor, the day their access ends. The result says whether the
   email went (`emailSent`); when it did not, the invite stays and the admin reads "The email could not be sent. Copy
-  the link instead." Copy link stays as the secondary action. Idempotency key `invite/<id>`.
-- **Resend, rate-limited** (`resendInvite`, `resend_invite`, migration 0070). Owners and admins send an open invite
+  the link instead." Copy link stays as the secondary action. Trace key `invite/<id>`.
+- **Sending again, rate-limited** (`resendInvite`, `resend_invite`, migration 0070). Owners and admins send an open invite
   again: **at most once every 10 minutes and 5 times per invite**, and only while its link works (an ended link is
   revoked and invited again). The limit is counted in the database (`invites.resend_count`, `resent_at`) under the
-  invite's row lock. Without a transport nothing is counted. Idempotency key `invite/<id>/resend/<n>`.
+  invite's row lock. Without a transport nothing is counted. Trace key `invite/<id>/resend/<n>`.
 - **Logged on the workspace chain** (0070, `sheet:<org_id>`): `invite.created` (invite id, role, auditor end date,
   link end date), `invite.resent` (invite id, role, which resend) and `invite.revoked` (an open invite deleted; who
   and the role). Never the address: the log is append-only, and the invite id links these entries to the
@@ -486,13 +497,16 @@ Environment variables (server only, Vercel Production and Preview; see `scripts/
 
 | Variable | Value |
 |---|---|
-| `RESEND_API_KEY` | A Resend API key with **sending access** only, for the `mail.klarert.com` domain |
+| `BREVO_API_KEY` | A Brevo API key (SMTP & API › API keys), used only by the server |
 | `EMAIL_FROM` | The sender, e.g. `Compliance OS <no-reply@mail.klarert.com>` |
 | `MAILPIT_URL` | Local only, optional: Mailpit's web address if not `http://127.0.0.1:54324` |
 
 ### 10.1 Open (for the owner)
 
 1. **Creating invites is not rate-limited.** An admin can create (and revoke and create again) any number of invites,
-   each one an email. Resend's own sending limits apply. A per-workspace daily limit can be added if abuse appears.
-2. **Bounces and complaints** are not read back. A Resend webhook could mark an invite "not delivered"; it would need
+   each one an email. Brevo's own sending limits apply. A per-workspace daily limit can be added if abuse appears.
+2. **Bounces and complaints** are not read back. A Brevo webhook could mark an invite "not delivered"; it would need
    a public route and its own secret.
+3. **Brevo API keys are not scoped.** A Brevo key can use the whole API of the account (contacts, campaigns), not only
+   sending. Keep it in Vercel only, and consider an IP allow-list in Brevo if the plan offers one (Vercel's egress IPs
+   change unless a static IP add-on is used).

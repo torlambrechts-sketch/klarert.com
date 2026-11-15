@@ -5,7 +5,7 @@ import {
   emailConfigured,
   LOCAL_MAILPIT_URL,
   parseFrom,
-  RESEND_URL,
+  BREVO_URL,
   type EmailEnv,
   type EmailMessage,
 } from './transport';
@@ -50,22 +50,22 @@ const expectNoPersonalData = (log: ReturnType<typeof vi.fn>) => {
 
 describe('chooseTransport', () => {
   const f = fakeFetch();
-  it('uses Resend when RESEND_API_KEY is set', () => {
+  it('uses Brevo when BREVO_API_KEY is set', () => {
     const c = chooseTransport(
       {
-        RESEND_API_KEY: 're_x',
+        BREVO_API_KEY: 'xkeysib-x',
         EMAIL_FROM: 'no-reply@mail.klarert.com',
         NEXT_PUBLIC_SUPABASE_URL: HOSTED,
       },
       f,
     );
-    expect(c.transport?.name).toBe('resend');
+    expect(c.transport?.name).toBe('brevo');
   });
 
-  it('uses Resend on Vercel even though Vercel sets CI while it builds', () => {
+  it('uses Brevo on Vercel even though Vercel sets CI while it builds', () => {
     const c = chooseTransport(
       {
-        RESEND_API_KEY: 're_x',
+        BREVO_API_KEY: 'xkeysib-x',
         EMAIL_FROM: 'a@b.co',
         CI: '1',
         VERCEL: '1',
@@ -73,7 +73,7 @@ describe('chooseTransport', () => {
       },
       f,
     );
-    expect(c.transport?.name).toBe('resend');
+    expect(c.transport?.name).toBe('brevo');
   });
 
   it('uses local Mailpit without a key when Supabase is on this machine', () => {
@@ -85,7 +85,7 @@ describe('chooseTransport', () => {
     expect(
       chooseTransport(
         {
-          RESEND_API_KEY: 're_x',
+          BREVO_API_KEY: 'xkeysib-x',
           EMAIL_FROM: 'a@b.co',
           CI: 'true',
           NEXT_PUBLIC_SUPABASE_URL: LOCAL,
@@ -95,7 +95,7 @@ describe('chooseTransport', () => {
     ).toBe('local');
     const hosted = chooseTransport(
       {
-        RESEND_API_KEY: 're_x',
+        BREVO_API_KEY: 'xkeysib-x',
         EMAIL_FROM: 'a@b.co',
         CI: 'true',
         NEXT_PUBLIC_SUPABASE_URL: HOSTED,
@@ -108,11 +108,11 @@ describe('chooseTransport', () => {
   it('fails closed without a key for a hosted Supabase', () => {
     const c = chooseTransport({ NEXT_PUBLIC_SUPABASE_URL: HOSTED }, f);
     expect(c.transport).toBeNull();
-    expect(c.transport === null && c.problem).toMatch(/RESEND_API_KEY is not set/);
+    expect(c.transport === null && c.problem).toMatch(/BREVO_API_KEY is not set/);
     expect(chooseTransport({ NEXT_PUBLIC_SUPABASE_URL: 'not a url' }, f).transport).toBeNull();
     expect(chooseTransport({}, f).transport).toBeNull();
     expect(
-      chooseTransport({ RESEND_API_KEY: '  ', NEXT_PUBLIC_SUPABASE_URL: HOSTED }, f).transport,
+      chooseTransport({ BREVO_API_KEY: '  ', NEXT_PUBLIC_SUPABASE_URL: HOSTED }, f).transport,
     ).toBeNull();
   });
 
@@ -120,7 +120,7 @@ describe('chooseTransport', () => {
     for (const from of [undefined, '', 'Compliance OS', 'no-reply@'])
       expect(
         chooseTransport(
-          { RESEND_API_KEY: 're_x', EMAIL_FROM: from, NEXT_PUBLIC_SUPABASE_URL: HOSTED },
+          { BREVO_API_KEY: 'xkeysib-x', EMAIL_FROM: from, NEXT_PUBLIC_SUPABASE_URL: HOSTED },
           f,
         ).transport,
       ).toBeNull();
@@ -148,60 +148,81 @@ describe('parseFrom', () => {
   });
 });
 
-describe('deliver with Resend', () => {
+describe('deliver with Brevo', () => {
   const env = {
-    RESEND_API_KEY: 're_test_key',
+    BREVO_API_KEY: 'xkeysib-test',
     EMAIL_FROM: 'Compliance OS <no-reply@mail.klarert.com>',
     NEXT_PUBLIC_SUPABASE_URL: HOSTED,
   };
+  const created = { messageId: '<202611151800.1@smtp-relay.mailin.fr>' };
 
-  it('posts the message with the key, the sender, the tag and the idempotency key', async () => {
-    const { fetch, log, result } = run(env);
-    expect(await result).toEqual({ sent: true, id: 'msg_1' });
+  it('posts the message with the key, the sender, the tag and the trace key', async () => {
+    const { fetch, log, result } = run(env, fakeFetch(201, created));
+    expect(await result).toEqual({ sent: true, id: created.messageId });
     expect(fetch).toHaveBeenCalledTimes(1);
     const [url, init] = fetch.mock.calls[0]!;
-    expect(url).toBe(RESEND_URL);
-    expect(url).toBe('https://api.resend.com/emails');
+    expect(url).toBe(BREVO_URL);
+    expect(url).toBe('https://api.brevo.com/v3/smtp/email');
     expect(init.method).toBe('POST');
-    expect(init.headers).toMatchObject({
-      Authorization: 'Bearer re_test_key',
-      'Content-Type': 'application/json',
-      'Idempotency-Key': 'invite/1234',
+    expect(init.headers).toEqual({
+      'api-key': 'xkeysib-test',
+      'content-type': 'application/json',
+      accept: 'application/json',
     });
     expect(JSON.parse(String(init.body))).toEqual({
-      from: 'Compliance OS <no-reply@mail.klarert.com>',
-      to: ['grace@example.test'],
+      sender: { email: 'no-reply@mail.klarert.com', name: 'Compliance OS' },
+      to: [
+        {
+          email: 'grace@example.test',
+          contactPixelTrackingConsent: false,
+          removeTrackingPixel: true,
+        },
+      ],
       subject: 'Ada invited you to Acme',
-      text: 'Secret body text',
-      html: '<p>Secret body html</p>',
-      tags: [{ name: 'category', value: 'invite' }],
+      htmlContent: '<p>Secret body html</p>',
+      textContent: 'Secret body text',
+      tags: ['invite'],
+      headers: { 'X-Mailin-custom': 'invite/1234' },
     });
     expect(log).toHaveBeenCalledWith('info', {
       tag: 'invite',
-      transport: 'resend',
+      transport: 'brevo',
       outcome: 'sent',
     });
     expectNoPersonalData(log);
   });
 
-  it('reports a refusal with the status code only', async () => {
-    const { log, result } = run(
-      env,
-      fakeFetch(422, { name: 'validation_error', message: 'Invalid `to`: grace@example.test' }),
+  it('sends a bare address without a name', async () => {
+    const { fetch, result } = run(
+      { ...env, EMAIL_FROM: 'no-reply@mail.klarert.com' },
+      fakeFetch(201, created),
     );
-    expect(await result).toEqual({ sent: false, reason: 'rejected' });
-    expect(log).toHaveBeenCalledWith('error', {
-      tag: 'invite',
-      transport: 'resend',
-      outcome: 'rejected',
-      status: 422,
+    await result;
+    expect(JSON.parse(String(fetch.mock.calls[0]![1].body)).sender).toEqual({
+      email: 'no-reply@mail.klarert.com',
     });
-    expectNoPersonalData(log);
   });
 
-  it('treats rate limits and server errors as unavailable', async () => {
-    expect(await run(env, fakeFetch(429)).result).toEqual({ sent: false, reason: 'unavailable' });
-    expect(await run(env, fakeFetch(503)).result).toEqual({ sent: false, reason: 'unavailable' });
+  it.each([
+    [
+      400,
+      'rejected',
+      { code: 'invalid_parameter', message: 'email is not valid: grace@example.test' },
+    ],
+    [401, 'rejected', { code: 'unauthorized', message: 'Key not found' }],
+    [429, 'unavailable', { code: 'too_many_requests', message: 'grace@example.test' }],
+    [503, 'unavailable', { message: 'Service unavailable' }],
+  ] as const)('reports %i as %s with the status code only', async (status, reason, body) => {
+    const { log, result } = run(env, fakeFetch(status, body));
+    expect(await result).toEqual({ sent: false, reason });
+    expect(log).toHaveBeenCalledWith('error', {
+      tag: 'invite',
+      transport: 'brevo',
+      outcome: reason,
+      status,
+    });
+    expectNoPersonalData(log);
+    expect(logged(log)).not.toContain(body.message);
   });
 
   it('never throws on a network error or timeout', async () => {
@@ -212,7 +233,7 @@ describe('deliver with Resend', () => {
     expect(await result).toEqual({ sent: false, reason: 'unavailable' });
     expect(log).toHaveBeenCalledWith('error', {
       tag: 'invite',
-      transport: 'resend',
+      transport: 'brevo',
       outcome: 'unavailable',
       error: 'TypeError',
     });
@@ -270,14 +291,14 @@ describe('deliver fails closed', () => {
       tag: 'invite',
       outcome: 'not_configured',
       message:
-        'RESEND_API_KEY is not set: no email is sent until RESEND_API_KEY and EMAIL_FROM are set',
+        'BREVO_API_KEY is not set: no email is sent until BREVO_API_KEY and EMAIL_FROM are set',
     });
     expectNoPersonalData(log);
   });
 
   it('sends nothing with a key but no sender', async () => {
     const { fetch, log, result } = run({
-      RESEND_API_KEY: 're_x',
+      BREVO_API_KEY: 'xkeysib-x',
       NEXT_PUBLIC_SUPABASE_URL: HOSTED,
     });
     expect(await result).toEqual({ sent: false, reason: 'not_configured' });

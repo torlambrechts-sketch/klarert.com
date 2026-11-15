@@ -1,5 +1,6 @@
 // Email transports (docs/09 §10). One interface, `send(message)`, and two transports:
-// - Resend (https://api.resend.com/emails, EU domain region) when RESEND_API_KEY is set;
+// - Brevo's transactional API (https://api.brevo.com/v3/smtp/email; Brevo keeps data in the EU) when BREVO_API_KEY
+//   is set;
 // - local Mailpit, the Supabase local stack's mail catcher, through its HTTP send API, only when the Supabase URL is
 //   on this machine (local development and CI, where e2e reads the mail back).
 // Anything else fails closed: nothing is sent, the caller is told, and one clear error is logged. Real mail never
@@ -17,7 +18,11 @@ export interface EmailMessage {
   text: string;
   html: string;
   tag: EmailTag;
-  /** The same key never sends twice (Resend keeps it 24 hours), e.g. `invite/<id>`. */
+  /**
+   * One key per intended email, e.g. `invite/<id>`. Brevo has no idempotency key (checked 15 Nov 2026), so it is sent
+   * as `X-Mailin-custom` to trace the message in Brevo's logs, and duplicates are prevented on our side: one send per
+   * invite created (an address has one open invite), resends counted and rate-limited in the database (0070).
+   */
   idempotencyKey: string;
 }
 
@@ -30,14 +35,14 @@ export type SendResult =
     };
 
 export interface EmailTransport {
-  readonly name: 'resend' | 'local';
+  readonly name: 'brevo' | 'local';
   send(message: EmailMessage): Promise<SendResult & { status?: number }>;
 }
 
 type Fetch = (input: string, init: RequestInit) => Promise<Response>;
 export type EmailEnv = Readonly<Record<string, string | undefined>>;
 
-export const RESEND_URL = 'https://api.resend.com/emails';
+export const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
 /** Supabase's local Mailpit web port (supabase/config.toml [local_smtp]); MAILPIT_URL overrides it. */
 export const LOCAL_MAILPIT_URL = 'http://127.0.0.1:54324';
 const LOCAL_FROM = 'Compliance OS <no-reply@mail.klarert.com>';
@@ -55,38 +60,47 @@ export function parseFrom(from: string | undefined): { name: string; email: stri
   return { name: (named?.[1] ?? '').trim().replace(/^"(.*)"$/, '$1'), email };
 }
 
-/** Too many requests and server errors can pass; anything else the provider refused. */
+/** Too many requests and server errors can pass; anything else (400 bad request, 401 bad key) was refused. */
 const outcome = (status: number): 'rejected' | 'unavailable' =>
   status === 429 || status >= 500 ? 'unavailable' : 'rejected';
 
-export function resendTransport(opts: {
+export function brevoTransport(opts: {
   apiKey: string;
   from: string;
   fetch: Fetch;
 }): EmailTransport {
+  const sender = parseFrom(opts.from)!;
   return {
-    name: 'resend',
+    name: 'brevo',
     async send(m) {
-      const res = await opts.fetch(RESEND_URL, {
+      const res = await opts.fetch(BREVO_URL, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${opts.apiKey}`,
-          'Content-Type': 'application/json',
-          'Idempotency-Key': m.idempotencyKey,
+          'api-key': opts.apiKey,
+          'content-type': 'application/json',
+          accept: 'application/json',
         },
         body: JSON.stringify({
-          from: opts.from,
-          to: [m.to],
+          sender: sender.name
+            ? { email: sender.email, name: sender.name }
+            : { email: sender.email },
+          // no open pixel (honoured on Brevo Enterprise plans) and opens and clicks anonymised (docs/09 §10)
+          to: [{ email: m.to, contactPixelTrackingConsent: false, removeTrackingPixel: true }],
           subject: m.subject,
-          text: m.text,
-          html: m.html,
-          tags: [{ name: 'category', value: m.tag }],
+          htmlContent: m.html,
+          textContent: m.text,
+          tags: [m.tag],
+          headers: { 'X-Mailin-custom': m.idempotencyKey },
         }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       if (!res.ok) return { sent: false, reason: outcome(res.status), status: res.status };
-      const body = (await res.json().catch(() => null)) as { id?: unknown } | null;
-      return { sent: true, id: typeof body?.id === 'string' ? body.id : null, status: res.status };
+      const body = (await res.json().catch(() => null)) as { messageId?: unknown } | null;
+      return {
+        sent: true,
+        id: typeof body?.messageId === 'string' ? body.messageId : null,
+        status: res.status,
+      };
     },
   };
 }
@@ -122,11 +136,11 @@ export type TransportChoice = { transport: EmailTransport } | { transport: null;
 const inCi = (env: EmailEnv) => !!env.CI && env.CI !== 'false' && !env.VERCEL;
 
 /**
- * Resend when RESEND_API_KEY is set (and EMAIL_FROM is an address), outside CI. Otherwise Mailpit, only when the
+ * Brevo when BREVO_API_KEY is set (and EMAIL_FROM is an address), outside CI. Otherwise Mailpit, only when the
  * Supabase URL is on this machine. Otherwise none: the problem says what to set.
  */
 export function chooseTransport(env: EmailEnv, fetch: Fetch): TransportChoice {
-  const key = env.RESEND_API_KEY?.trim();
+  const key = env.BREVO_API_KEY?.trim();
   const local = isLocalUrl(env.NEXT_PUBLIC_SUPABASE_URL);
   if (key && !inCi(env)) {
     const from = env.EMAIL_FROM?.trim();
@@ -136,7 +150,7 @@ export function chooseTransport(env: EmailEnv, fetch: Fetch): TransportChoice {
         problem:
           'EMAIL_FROM is missing or not an email address: no email is sent until it is set (for example "Compliance OS <no-reply@mail.klarert.com>")',
       };
-    return { transport: resendTransport({ apiKey: key, from, fetch }) };
+    return { transport: brevoTransport({ apiKey: key, from, fetch }) };
   }
   if (local)
     return {
@@ -149,8 +163,8 @@ export function chooseTransport(env: EmailEnv, fetch: Fetch): TransportChoice {
   return {
     transport: null,
     problem: key
-      ? 'RESEND_API_KEY is ignored in CI and Supabase is not local: no email is sent'
-      : 'RESEND_API_KEY is not set: no email is sent until RESEND_API_KEY and EMAIL_FROM are set',
+      ? 'BREVO_API_KEY is ignored in CI and Supabase is not local: no email is sent'
+      : 'BREVO_API_KEY is not set: no email is sent until BREVO_API_KEY and EMAIL_FROM are set',
   };
 }
 
