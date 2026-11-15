@@ -42,6 +42,11 @@ test('every response says who may frame it, how to read its type and what to sen
     expect(h['x-content-type-options'], path).toBe('nosniff');
     expect(h['referrer-policy'], path).toBe('strict-origin-when-cross-origin');
     expect(h['x-powered-by'], path).toBeUndefined();
+    // SA-7: no camera, microphone, location …; HTTPS only for two years
+    expect(h['permissions-policy'], path).toContain('camera=()');
+    expect(h['permissions-policy'], path).toContain('microphone=()');
+    expect(h['permissions-policy'], path).toContain('geolocation=()');
+    expect(h['strict-transport-security'], path).toBe('max-age=63072000; includeSubDomains');
   }
   // a public form's link is its key: never sent as a referrer (docs/05 §3.3)
   const form = await request.get('/f/no-such-token', { maxRedirects: 0 });
