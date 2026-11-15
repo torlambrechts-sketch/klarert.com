@@ -307,6 +307,7 @@ Phase 2 (open; a separate task):
 - [x] Platform › Design (docs/05 §4): Sheets and Connections tables (the default and the only view under 760 px) and the map in folder columns; filters and views in the URL (`?app=`, `?group=` …); a sheet opens its Design tab; an app's screens link to its design
 - [x] Leaves the system: every outside destination, the fields sent, personal-data flags, addresses masked; owners, admins and auditors (open question to the owner)
 - [x] Export for auditors: `/[org]/design/print` (one sheet, the workspace with its filters, or the data-flow record), printed to PDF from the browser (no server-side PDF path exists to reuse)
+- [x] Owner decision (15 Nov 2026): exporting the data-flow record is logged as the audit exports are (`audit.exported`, kind `data_flow_record`, who, when and the filters, never an address or a value); migration 0049 extends `log_audit_export` (owners, admins and auditors for this kind, granted to `authenticated` only), pgTAP `0039_data_flow_export_log.sql`, e2e in `design.spec.ts`. The flow and workspace prints are not logged
 - [x] e2e `tests/e2e/design.spec.ts`: the Core nonconformities list with a pack automation and the intake form, an automation edited in the side window and its activity log entry, the Map toggle, the overall map and table with the app filter, keyboard only, 390 px, a viewer reading only, the export
 - [ ] Later (not v1): the clause coverage lens; inbound webhooks and the API (owner sign-off and a security review); a free canvas was rejected
 

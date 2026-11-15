@@ -17,6 +17,7 @@ import {
 } from '@/engine/flow';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { requireMember } from '@/server/auth';
+import { logDataFlowExport } from '@/server/commands/design';
 import { readDesignWorld } from '@/server/design/read';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +26,9 @@ export const metadata = { title: 'Design export · Compliance OS' };
 // The export for auditors (docs/05 §4, owner decision 15 Nov 2026): a printable page of one sheet's flow
 // (?sheet=<id>), of the workspace's design with the page's filters, or of the "Leaves the system" record (?part=leaves),
 // server-rendered from the same derivation. It prints to PDF from the browser (the shell is hidden in print), as the
-// statement of applicability does: there is no server-side PDF path to reuse.
+// statement of applicability does: there is no server-side PDF path to reuse. Exporting the data-flow record is logged
+// as the audit exports are (`audit.exported`, kind data_flow_record, with the filters used); the plain flow print and
+// the workspace print are not.
 
 const th = 'px-2 py-1.5 font-medium';
 const td = 'px-2 py-1.5 align-top';
@@ -84,6 +87,42 @@ export default async function DesignPrintPage({
         </p>
       </main>
     );
+
+  // the data-flow record is an export for auditors: who exported it, when and with which filters goes in the log
+  if (!flow && part === 'leaves' && leaves) {
+    const logged = await logDataFlowExport({
+      org,
+      app: filter.app,
+      pack: filter.pack,
+      group: filter.group,
+      domain: filter.domain,
+      differs: filter.differs,
+      sheets: kept.length,
+      destinations: leaves.length,
+    });
+    if (!logged.ok)
+      return (
+        <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+          <PageHeader crumb={<ListCrumb section="Design" page="Export" />} title="Design export" />
+          <div
+            role="alert"
+            className="border-line flex flex-col items-start gap-3 rounded-lg border p-5"
+          >
+            <p className="m-0">
+              The export could not be recorded in the activity log, so it was not made.{' '}
+              {logged.error.message}
+            </p>
+            <Link
+              href={`/${org}/design/print?${new URLSearchParams([...filterQuery(filter), ['part', 'leaves']]).toString()}`}
+              className="border-line hover:bg-soft text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium"
+              prefetch={false}
+            >
+              Retry
+            </Link>
+          </div>
+        </main>
+      );
+  }
 
   return (
     <main

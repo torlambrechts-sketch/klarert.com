@@ -33,6 +33,7 @@ the body (admin-only branches, item and field locks, own rows).
 | `updateDashboard` | `dashboards.ts` | `updateDashboardInput` | editor | admin-only branch |
 | `deleteDashboard` | `dashboards.ts` | `deleteDashboardInput` | editor |  |
 | `readDesign` | `design.ts` | `readDesignInput` | member | configuration only; restricted field names and webhook addresses masked before it leaves the server |
+| `logDataFlowExport` | `design.ts` | `dataFlowExportInput` | member | owners, admins and auditors only (also in `log_audit_export`, 0049); logs the filters and counts, never an address or a value |
 | `seedDashboard` | `dashboards.ts` | `seedDashboardInput` | editor | admin-only branch |
 | `itemDocuments` | `documents.ts` | `itemDocumentsInput` | member |  |
 | `searchDocuments` | `documents.ts` | `searchDocumentsInput` | member |  |

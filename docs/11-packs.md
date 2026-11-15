@@ -256,7 +256,7 @@ Exports for an auditor or a management review, made from the workspace as it is 
 
 **Access.** Everything is read with the person's own client: restricted sheets they cannot open are left out (the read me counts them without naming them), restricted fields they are not listed on are dropped from registers and read "Restricted" in the SoA and the log, and their files are not listed.
 
-**Logged.** Every export writes `audit.exported` on the workspace chain through `log_audit_export(org, kind, scope)` (0034): kind `soa.print`, `soa.csv`, `audit_pack`, `management_review` or `management_review.item`, and the scope (framework, sheet, folder or install, period, counts, chains ok and broken). Members only (an auditor's access ends at its end date); the scope is a flat object of known keys with scalar values. Downloads are POST only and refused from another site.
+**Logged.** Every export writes `audit.exported` on the workspace chain through `log_audit_export(org, kind, scope)` (0034): kind `soa.print`, `soa.csv`, `audit_pack`, `management_review`, `management_review.item` or `data_flow_record` (Platform › Design's "Leaves the system" export, owners, admins and auditors, 0049, docs/05 §4), and the scope (framework, sheet, folder or install, period, counts, chains ok and broken). Members only (an auditor's access ends at its end date); the scope is a flat object of known keys with scalar values. Downloads are POST only and refused from another site.
 
 ## Archive
 

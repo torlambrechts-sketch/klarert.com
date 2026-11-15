@@ -84,7 +84,7 @@ UI (optimistic) ─► Server Action ─► src/server/commands/<command>.ts
 | `workflow_submit(item, workflow, comment?, automation?, submitter?)` (0040) | Submit for approval, the `start_workflow` action (§19) | `workflow.submitted`, then the step field and status as `value.changed` |
 | `workflow_decide(instance, decision, comment?)` (0040) | Approve / Reject (people only) | `workflow.decided` (who, step, round, decision, comment), `workflow.approved` / `workflow.rejected`, `value.changed`, `item.locked` |
 | `workflow_withdraw(instance, comment?)` (0040) | Withdraw (the submitter, owners and admins) | `workflow.withdrawn`, the step field back to draft |
-| `log_audit_export(org, kind, scope)` (0034) | audit exports (members, auditors too) | `audit.exported` on the workspace chain with the kind and a flat scope of known keys (docs/11 Audit outputs) |
+| `log_audit_export(org, kind, scope)` (0034, 0049) | audit exports (members, auditors too); the data-flow record (`data_flow_record`, 0049) only owners, admins and auditors | `audit.exported` on the workspace chain with the kind and a flat scope of known keys (docs/11 Audit outputs); for the data-flow record the Design filters (`app`, `pack`, `folder_id`, `domain`, `differs`) and the `sheets` and `destinations` counts (docs/05 §4) |
 
 Structure tables (folders, sheets, fields, groups, views, automations) are written directly by commands with the user's Supabase client under RLS; triggers log them to the sheet's chain (`sheets.insert`, `fields.update` …), ignoring bookkeeping columns.
 
