@@ -369,6 +369,32 @@ test('the export prints the sheet’s flow and the data-flow record', async ({ p
   expect(logged).not.toContain('Supplier fee');
 });
 
+test('CAPA 1.2.0 on Core: its form on Core’s register is unchanged, and no sheet differs from its pack', async ({
+  page,
+}, info) => {
+  desktopOnly(info.project.name);
+  // the optional-requirement case (docs/11): start-capa 1.2.0 in a Core workspace makes no register of its own
+  const slug = seedWorkspace('dsc', { empty: true });
+  install(slug, 'core', '1.3.0', 'starter');
+  install(slug, 'start-capa', '1.2.0');
+  const org = one(`select id from orgs where slug = '${slug}'`);
+  const nc = one(
+    `select s.id from sheets s join pack_installs i on i.id = s.pack_install_id
+      where s.org_id = '${org}' and i.pack_key = 'core' and s.pack_ref = 'nc'`,
+  );
+  await signIn(page, 'maria@example.com', `/${slug}/s/${nc}?view=design`);
+  await page.goto(`/${slug}/s/${nc}?view=design`);
+  await expect(row(page, /^Raise a nonconformity/)).toContainText(
+    'From Corrective action (CAPA) · unchanged',
+  );
+  await expect(row(page, /^Report a nonconformity/)).toContainText(
+    'From Core registers · unchanged',
+  );
+  await expect(page.getByTestId('design-list')).not.toContainText('· changed');
+  await page.goto(`/${slug}/design?differs=1`);
+  await expect(page.getByText('No sheets match these filters.')).toBeVisible();
+});
+
 test('at 390 px: the list, a full-screen side window with Back, and the Connections table only', async ({
   page,
 }, info) => {
