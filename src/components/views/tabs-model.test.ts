@@ -179,6 +179,9 @@ describe('tab layout (settings.tabs)', () => {
     const layout = applyTabLayout(tabs, [{ id: 'table' }, { id: 'design' }]);
     expect(words(layout.shown).slice(0, 2)).toEqual(['Table', 'Design']);
     expect(words(layout.hidden)).toEqual([]);
+    // shown, it is stored; hidden and not renamed, it is the default and not stored
+    expect(layoutEntries(layout.all).map((t) => t.id)).toContain('design');
+    expect(layoutEntries(applyTabLayout(tabs, null).all).map((t) => t.id)).not.toContain('design');
   });
 
   it('never hides the Table, shows a view backing a built-in tab once, and round-trips the set', () => {

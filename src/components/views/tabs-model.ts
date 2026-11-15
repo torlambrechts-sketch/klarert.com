@@ -200,11 +200,23 @@ export function applyTabLayout(tabs: ViewTabs, config: readonly SheetTab[] | nul
 export function layoutEntries(
   laid: readonly Pick<LaidTab, 'entryId' | 'hidden' | 'label' | 'name'>[],
 ): SheetTab[] {
-  return laid.map((t) => ({
-    id: t.entryId,
-    ...(t.hidden ? { hidden: true } : {}),
-    ...(t.label !== t.name ? { label: t.label } : {}),
-  }));
+  return (
+    laid
+      // a built-in that starts under More (Design), still hidden and not renamed, is the default: not stored
+      .filter(
+        (t) =>
+          !(
+            (HIDDEN_BY_DEFAULT as readonly string[]).includes(t.entryId) &&
+            t.hidden &&
+            t.label === t.name
+          ),
+      )
+      .map((t) => ({
+        id: t.entryId,
+        ...(t.hidden ? { hidden: true } : {}),
+        ...(t.label !== t.name ? { label: t.label } : {}),
+      }))
+  );
 }
 
 /** A tab as the editor needs it (serialisable: the settings page builds it on the server). */
