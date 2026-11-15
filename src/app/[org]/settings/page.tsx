@@ -19,6 +19,7 @@ import {
 import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
 import { ArchivePack, PackPreview, PackSettings } from './packs';
+import { RequireTwoStep } from './security';
 import { PackUpgrade } from './pack-upgrade';
 import { listPacks, packSetups, testModePacks } from '@/server/commands/packs';
 import { TestModeBanner } from '@/components/packs/test-mode-banner';
@@ -52,6 +53,7 @@ const TABS = [
   { id: 'frameworks', label: 'Frameworks' },
   { id: 'retention', label: 'Retention' },
   { id: 'archived', label: 'Archived' },
+  { id: 'security', label: 'Security' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 
@@ -97,7 +99,7 @@ export default async function SettingsPage({
   const { org } = await params;
   const { tab: rawTab } = await searchParams;
   const tab: Tab = TABS.some((t) => t.id === rawTab) ? (rawTab as Tab) : 'members';
-  const { supabase, workspace, role, user } = await requireMember(org);
+  const { supabase, workspace, role, user, twoStep } = await requireMember(org);
   const timeZone = workspace.time_zone;
 
   if (!isAdminRole(role)) {
@@ -142,7 +144,7 @@ export default async function SettingsPage({
       <PageHeader
         crumb={workspace.name}
         title="Workspace admin"
-        description="Members and roles, teams and job roles, entities and sites, packs, frameworks, retention, archived folders and sheets."
+        description="Members and roles, teams and job roles, entities and sites, packs, frameworks, retention, archived folders and sheets, and security."
       />
       <PageTabs
         label="Settings sections"
@@ -167,6 +169,19 @@ export default async function SettingsPage({
       {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
       {tab === 'frameworks' ? <FrameworksTab org={org} /> : null}
       {tab === 'retention' ? <RetentionTab org={org} today={today} /> : null}
+      {tab === 'security' ? (
+        <Card
+          title="Two-step sign-in"
+          description="A second step after the password or email link: a code from an authenticator app on the person's phone."
+        >
+          <RequireTwoStep
+            org={org}
+            required={workspace.requireTwoStep}
+            isOwner={role === 'owner'}
+            ownerHasTwoStep={twoStep.level === 'aal2'}
+          />
+        </Card>
+      ) : null}
       {tab === 'archived' ? (
         <ArchivedTab
           db={supabase}

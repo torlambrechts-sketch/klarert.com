@@ -6,6 +6,7 @@ import * as members from '@/server/commands/members';
 import * as packs from '@/server/commands/packs';
 import * as retention from '@/server/commands/retention';
 import * as structure from '@/server/commands/structure';
+import * as twoStep from '@/server/commands/two-step';
 import type { Result } from '@/server/result';
 
 // Each action maps FormData to its command's input; the command validates with Zod and authorises.
@@ -175,4 +176,12 @@ export async function saveRetentionRulesAction(input: {
   retention: unknown;
 }) {
   return retentionCall(retention.saveRetentionRules, input);
+}
+
+// Security (docs/09 §8): "Require two-step sign-in for this workspace" (owners). The whole workspace layout is
+// revalidated: the setting decides who may open it.
+export async function setWorkspaceTwoStepAction(input: { org: string; required: boolean }) {
+  const result = await twoStep.setWorkspaceTwoStep(input);
+  if (result.ok) revalidatePath(`/${input.org}`, 'layout');
+  return result;
 }

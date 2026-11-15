@@ -270,12 +270,15 @@ max_frequency = "5s"
 # [auth.sms.test_otp]
 # 14152127777 = "123456"
 
-# Configure logged in session timeouts.
-# [auth.sessions]
+# Configure logged in session timeouts (SA-17, docs/09 §8). The hosted project needs the same values
+# (Authentication › Sessions). A session ends 12 hours after sign-in (one working day), or after 2 hours in
+# which its refresh token was not used. An open tab refreshes the 1-hour access token about once an hour, so the
+# inactivity timeout must stay above jwt_expiry: it signs out laptops that were closed or tabs left shut.
+[auth.sessions]
 # Force log out after the specified duration.
-# timebox = "24h"
+timebox = "12h"
 # Force log out if the user has been inactive longer than the specified duration.
-# inactivity_timeout = "8h"
+inactivity_timeout = "2h"
 
 # This hook runs before a new user is created and allows developers to reject the request based on the incoming user object.
 # [auth.hook.before_user_created]
@@ -300,10 +303,10 @@ auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
 # Control how many MFA factors can be enrolled at once per user.
 max_enrolled_factors = 10
 
-# Control MFA via App Authenticator (TOTP)
+# Control MFA via App Authenticator (TOTP): two-step sign-in (SA-6, docs/09 §8). On in the hosted project too.
 [auth.mfa.totp]
-enroll_enabled = false
-verify_enabled = false
+enroll_enabled = true
+verify_enabled = true
 
 # Configure MFA via Phone Messaging
 [auth.mfa.phone]

@@ -10,7 +10,10 @@ export interface CommandInfo {
   name: string;
   /** The schema whose safeParse validates the input, or null. */
   schema: string | null;
-  /** member | editor | admin (withOrg), signed in (getSession), public (allow-listed), or null. */
+  /**
+   * member | editor | admin (withOrg), signed in (getSession), first sign-in step done (getSignIn: the two-step code
+   * page), public (allow-listed), or null.
+   */
   role: string | null;
   /** Further checks in the body (admin-only branches, locks, ownership). */
   extra: string[];
@@ -58,9 +61,11 @@ export function inventory(root = process.cwd()): CommandInfo[] {
         ? withOrg[1]!
         : /getSession\(\)/.test(body)
           ? 'signed in'
-          : name in PUBLIC_COMMANDS
-            ? 'public (token)'
-            : null;
+          : /getSignIn\(\)/.test(body)
+            ? 'first step signed in'
+            : name in PUBLIC_COMMANDS
+              ? 'public (token)'
+              : null;
       const extra: string[] = [];
       if (/isAdminRole\(/.test(body)) extra.push('admin-only branch');
       if (/lockedFor\(|locked/.test(body)) extra.push('locks');

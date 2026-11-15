@@ -80,6 +80,11 @@ export function TopBar({
               <span className="text-muted-foreground text-label-12 font-normal">{me.email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={`/account?next=${encodeURIComponent(`/${current.slug}`)}`}>
+                Your account
+              </Link>
+            </DropdownMenuItem>
             {canManage ? (
               <DropdownMenuItem asChild>
                 <Link href={`/${current.slug}/settings`}>Workspace admin</Link>

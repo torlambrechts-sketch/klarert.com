@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { safeNext as safePath } from '@/lib/safe-next';
-import { getMyWorkspaces, getSession } from '@/server/auth';
+import { getMyWorkspaces, getSession, signInPath } from '@/server/auth';
 import { CreateWorkspaceForm, ProfileForm } from './forms';
 
 export const metadata = { title: 'Get started · Compliance OS' };
@@ -14,7 +14,7 @@ export default async function OnboardingPage({
   const { next } = await searchParams;
   const safeNext = safePath(next) ?? undefined;
   const session = await getSession();
-  if (!session) redirect('/login');
+  if (!session) redirect(await signInPath());
   const workspaces = session.profile ? await getMyWorkspaces() : [];
 
   return (
