@@ -32,6 +32,7 @@ the body (admin-only branches, item and field locks, own rows).
 | `createDashboard` | `dashboards.ts` | `createDashboardInput` | editor | admin-only branch |
 | `updateDashboard` | `dashboards.ts` | `updateDashboardInput` | editor | admin-only branch |
 | `deleteDashboard` | `dashboards.ts` | `deleteDashboardInput` | editor |  |
+| `readDesign` | `design.ts` | `readDesignInput` | member | configuration only; restricted field names and webhook addresses masked before it leaves the server |
 | `seedDashboard` | `dashboards.ts` | `seedDashboardInput` | editor | admin-only branch |
 | `itemDocuments` | `documents.ts` | `itemDocumentsInput` | member |  |
 | `searchDocuments` | `documents.ts` | `searchDocumentsInput` | member |  |
