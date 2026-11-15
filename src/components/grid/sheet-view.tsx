@@ -364,12 +364,12 @@ function SheetBody(props: SheetViewProps) {
               <>
                 <span
                   data-testid="system-board"
-                  title={`System board · installed by ${props.system.source}`}
+                  title={`System sheet · installed by ${props.system.source}`}
                   className="bg-soft text-ink text-label-12 flex min-w-[4.5rem] items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
                 >
                   <Lock className="size-3 shrink-0" aria-hidden />
                   <span className="min-w-0 truncate">
-                    System board
+                    System sheet
                     <span className="hidden sm:inline"> · installed by {props.system.source}</span>
                   </span>
                 </span>

@@ -248,7 +248,7 @@ export function FilesTab(p: FilesTabProps) {
       if (!field) {
         if (!p.canEdit) {
           toast.error(
-            'This sheet has no field that links to that register. Ask an editor or admin.',
+            'This sheet has no field that links to that sheet. Ask an editor or admin.',
           );
           continue;
         }
@@ -450,7 +450,7 @@ export function FilesTab(p: FilesTabProps) {
           </p>
         ) : docs.length === 0 ? (
           <p className="text-muted-foreground text-copy-13 m-0">
-            No linked documents. Link a policy or procedure from the register.
+            No linked documents. Link a policy or procedure from a documents sheet.
           </p>
         ) : (
           <ul className="m-0 flex list-none flex-col gap-1.5 p-0" aria-label="Linked documents">
@@ -513,7 +513,7 @@ export function FilesTab(p: FilesTabProps) {
                       size="sm"
                       variant="ghost"
                       className="min-h-11 sm:min-h-8"
-                      aria-label={`Open ${d.name} in the register`}
+                      aria-label={`Open ${d.name} in its sheet`}
                       onClick={() =>
                         router.push(
                           `/${org}/s/${d.sheetId}?item=${encodeURIComponent(d.displayId)}`,

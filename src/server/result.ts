@@ -151,7 +151,7 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   [
     /only owners and admins change the documents register/,
     'forbidden',
-    'Only owners and admins can change whether a sheet is a documents register.',
+    'Only owners and admins can change whether a sheet is a documents sheet.',
   ],
   [/bad file field|bad file path/, 'invalid', 'This file cannot be added to this field.'],
   [/group not in sheet/, 'not_found', 'This group no longer exists.'],

@@ -113,9 +113,9 @@ export function SheetSettingsForm({
               className="mt-0.5 size-4"
             />
             <div className="flex flex-col gap-0.5">
-              <Label htmlFor={holdId}>Run automations when a row is finished</Label>
+              <Label htmlFor={holdId}>Run automations when an item is finished</Label>
               <p className="text-muted-foreground text-copy-13">
-                Edits in the table and the item panel wait until you move to another row, press Done
+                Edits in the table and the item panel wait until you move to another item, press Done
                 or close the item. Switch off to run automations on every saved change.
               </p>
             </div>

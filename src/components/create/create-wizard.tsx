@@ -11,7 +11,6 @@ import {
   ArrowRight,
   FileText,
   LayoutDashboard,
-  ListPlus,
   Puzzle,
   RotateCcw,
   Search,
@@ -40,11 +39,12 @@ import type { CreateRequest } from './create-provider';
 // The Create wizard (docs/05 §4 Create): a full-screen picker in the shell, at most three steps with a stepper.
 // (1) the goal box and the cards; (2) a starting point (a ready-made set with its preview, an app and the set that
 // brings it, a sheet start, a sheet to add to, a recipe); (3) a ready-made set's name, owner, review date, folder,
-// settings (when its pack declares any) and level, then Create. Sheets, entries, automations, forms and dashboards hand
+// settings (when its pack declares any) and level, then Create. Sheets, automations, forms and dashboards hand
 // over to the screens that already make them, and an app is created as the set that carries it, so there is one code
 // path each. Nothing is written before Create.
 
-export type CardId = 'solve' | 'app' | 'sheet' | 'entry' | 'automation' | 'form' | 'dashboard';
+// No card adds an item: "+ New" in the sheet's header is the one way to add one (owner decision 15 Nov 2026, UX-4).
+export type CardId = 'solve' | 'app' | 'sheet' | 'automation' | 'form' | 'dashboard';
 
 const CARDS: { id: CardId; title: string; outcome: string; icon: React.ReactNode }[] = [
   {
@@ -64,12 +64,6 @@ const CARDS: { id: CardId; title: string; outcome: string; icon: React.ReactNode
     title: 'Sheet',
     outcome: 'A table to keep track of anything, one row per item.',
     icon: <Sheet aria-hidden />,
-  },
-  {
-    id: 'entry',
-    title: 'Entry',
-    outcome: 'Add one item to a sheet you already have.',
-    icon: <ListPlus aria-hidden />,
   },
   {
     id: 'automation',
@@ -544,17 +538,6 @@ export function CreateWizard({
                 }
                 hrefOf={sheetHref}
                 onGo={onClose}
-              />
-            ) : card === 'entry' ? (
-              <SheetPicker
-                heading="Add an entry to"
-                description="Your most recently used sheets come first."
-                sheets={opts!.sheets}
-                query={sheetQuery}
-                setQuery={setSheetQuery}
-                disabled={!opts!.canEdit ? 'Viewers cannot add items. Ask an editor.' : null}
-                onPick={(id) => go(`/${org}/s/${id}?new=1`)}
-                onNewSheet={() => pickCard('sheet')}
               />
             ) : card === 'form' ? (
               <SheetPicker

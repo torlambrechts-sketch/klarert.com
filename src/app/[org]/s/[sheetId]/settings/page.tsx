@@ -222,7 +222,7 @@ export default async function SheetSettingsPage({
       <section id="retention" className="scroll-mt-4">
         <Card
           title="Retention"
-          description="How long this sheet keeps personal data. When a record's period ends it goes to Workspace admin › Retention, where an owner or admin approves the erasure, postpones it or places a legal hold."
+          description="How long this sheet keeps personal data. When an item's period ends it goes to Workspace admin › Retention, where an owner or admin approves the erasure, postpones it or places a legal hold."
         >
           <RetentionSettingsSection
             org={org}
@@ -296,7 +296,7 @@ export default async function SheetSettingsPage({
       <section id="new-item" className="scroll-mt-4">
         <Card
           title="New item form"
-          description="What “+ New”, Create › Entry and the N key ask when someone adds an item to this sheet."
+          description="What “+ New” and the N key ask when someone adds an item to this sheet."
         >
           <NewItemFormSetting
             org={org}

@@ -69,7 +69,7 @@ export function LinkDocumentDialog({
       >
         <DialogTitle className="text-heading-16 m-0">Link a document</DialogTitle>
         <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-copy-13 m-0">
-          Controlled documents from the documents registers. The item always shows their last
+          Controlled documents from the documents sheets. The item always shows their last
           approved version.
         </DialogDescription>
         <label className="border-input focus-within:border-focus flex items-center gap-2 rounded-md border px-2.5">

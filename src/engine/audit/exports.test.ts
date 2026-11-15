@@ -68,7 +68,7 @@ describe('exports list', () => {
       atIso: '2026-11-15T09:42:00Z',
       at: '15 Nov 2026, 09:42',
       filters: ['Folder: ISMS', 'Period 16 Nov 2025 to 15 Nov 2026', 'With 3 evidence files'],
-      covered: '12 registers · 450 log entries · 30 chains checked, 29 ok, 1 broken',
+      covered: '12 sheets · 450 log entries · 30 chains checked, 29 ok, 1 broken',
     });
   });
 
