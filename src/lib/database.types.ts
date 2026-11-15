@@ -589,14 +589,14 @@ isOneToOne: false
                   ]
                 },"invites": {
                   Row: {
-                    "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string | null,"id": string,"invited_by": string | null,"link_expires_at": string,"org_id": string,"role": Database["public"]['Enums']["member_role"],"token": string
+                    "accepted_at": string | null,"created_at": string,"email": string,"expires_at": string | null,"id": string,"invited_by": string | null,"link_expires_at": string,"org_id": string,"resend_count": number,"resent_at": string | null,"role": Database["public"]['Enums']["member_role"],"token": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"link_expires_at"?: string,"org_id": string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
+                    "accepted_at"?: string | null,"created_at"?: string,"email": string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"link_expires_at"?: string,"org_id": string,"resend_count"?: number,"resent_at"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
                   }
                   Update: {
-                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"link_expires_at"?: string,"org_id"?: string,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
+                    "accepted_at"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string | null,"id"?: string,"invited_by"?: string | null,"link_expires_at"?: string,"org_id"?: string,"resend_count"?: number,"resent_at"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"token"?: string
                   }
                   Relationships: [
                     {
@@ -2540,6 +2540,11 @@ isOneToOne: false
       } },
 "release_item":
 { Args: { "p_item": string }; Returns: Json
+                           },
+"resend_invite":
+{ Args: { "p_invite": string }; Returns: {
+              "email": string,"expires_at": string,"invite_id": string,"invited_by_name": string,"link_expires_at": string,"org_name": string,"resend_count": number,"role": Database["public"]['Enums']["member_role"],"time_zone": string,"token": string
+            }[]
                            },
 "restore_file":
 { Args: { "p_file": string }; Returns: undefined
