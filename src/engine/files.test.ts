@@ -5,8 +5,12 @@ import {
   fileVersions,
   formatBytes,
   freshnessView,
+  hourlyTick,
+  PENDING_UPLOAD_MAX_AGE_MS,
   safeFilename,
+  stalePendingUploads,
   storagePath,
+  storagePathOrg,
   toHex,
   validUntilFor,
 } from './files';
@@ -78,5 +82,51 @@ describe('fileVersions', () => {
       { current: v3, older: [v2, v1] },
       { current: other, older: [] },
     ]);
+  });
+});
+
+describe('abandoned uploads (the scheduler, hourly)', () => {
+  const ORG = 'aaaaaaaa-0000-4000-8000-000000000001';
+  const OTHER = 'bbbbbbbb-0000-4000-8000-000000000002';
+  const NOW = new Date('2026-11-15T12:05:00Z');
+  const path = (org: string, file = 'f1') => storagePath(org, 'item-1', file, 'scan.pdf');
+
+  it('storagePathOrg reads the workspace of an item file path only', () => {
+    expect(storagePathOrg(path(ORG))).toBe(ORG);
+    expect(storagePathOrg(`org/${ORG}/logo.png`)).toBeNull();
+    expect(storagePathOrg(`org/not-a-uuid/item/i/f/a.pdf`)).toBeNull();
+    expect(storagePathOrg(`org/${ORG}/item/i/f/`)).toBeNull();
+    expect(storagePathOrg(`tmp/${ORG}/item/i/f/a.pdf`)).toBeNull();
+  });
+
+  it('picks uploads an hour old or more, by workspace, and leaves the rest', () => {
+    const got = stalePendingUploads(
+      [
+        { orgId: ORG, path: path(ORG, 'old'), writtenAt: '2026-11-15T11:05:00Z' },
+        { orgId: ORG, path: path(ORG, 'older'), writtenAt: '2026-11-14T09:00:00Z' },
+        { orgId: OTHER, path: path(OTHER, 'old'), writtenAt: '2026-11-15T10:00:00Z' },
+        // 59 minutes: may still be confirmed
+        { orgId: ORG, path: path(ORG, 'young'), writtenAt: '2026-11-15T11:06:00Z' },
+        // a path of another shape, or of another workspace than the row says
+        { orgId: ORG, path: `org/${ORG}/elsewhere.pdf`, writtenAt: '2026-11-01T00:00:00Z' },
+        { orgId: ORG, path: path(OTHER, 'x'), writtenAt: '2026-11-01T00:00:00Z' },
+        { orgId: ORG, path: path(ORG, 'bad-date'), writtenAt: 'yesterday' },
+        // confirmed meanwhile
+        { orgId: ORG, path: path(ORG, 'kept'), writtenAt: '2026-11-01T00:00:00Z' },
+      ],
+      NOW,
+      new Set([path(ORG, 'kept')]),
+    );
+    expect([...got.keys()]).toEqual([ORG, OTHER]);
+    expect(got.get(ORG)).toEqual([path(ORG, 'old'), path(ORG, 'older')]);
+    expect(got.get(OTHER)).toEqual([path(OTHER, 'old')]);
+    expect(PENDING_UPLOAD_MAX_AGE_MS).toBe(60 * 60 * 1000);
+  });
+
+  it('runs on the first scheduler tick of each hour', () => {
+    expect(hourlyTick(new Date('2026-11-15T12:00:00Z'))).toBe(true);
+    expect(hourlyTick(new Date('2026-11-15T12:14:59Z'))).toBe(true);
+    expect(hourlyTick(new Date('2026-11-15T12:15:00Z'))).toBe(false);
+    expect(hourlyTick(new Date('2026-11-15T12:45:00Z'))).toBe(false);
   });
 });

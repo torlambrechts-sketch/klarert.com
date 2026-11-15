@@ -1719,6 +1719,15 @@ isOneToOne: false
 "_need_sheet":
 { Args: { "p_min": string,"p_sheet": string }; Returns: undefined
                            },
+"_note_is_personal":
+{ Args: { "p_action": string,"p_actor_kind": string }; Returns: boolean
+                           },
+"_note_masked":
+{ Args: { "p_note": string }; Returns: boolean
+                           },
+"_note_system":
+{ Args: { "p_note": string }; Returns: boolean
+                           },
 "_notice_complete":
 { Args: { "n": Json }; Returns: boolean
                            },
@@ -1776,7 +1785,7 @@ isOneToOne: false
 { Args: { "p_kind": string,"p_salt": string,"v": Json }; Returns: Json
                            },
 "_public_field_config":
-{ Args: { "p_config": Json }; Returns: Json
+{ Args: { "p_config": Json,"p_type": string }; Returns: Json
                            },
 "_public_form_hidden_types":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
@@ -2795,6 +2804,11 @@ isOneToOne: false
 "sheet_levels":
 { Args: { "p_sheets": (string)[] }; Returns: {
               "level": string,"sheet_id": string
+            }[]
+                           },
+"stale_pending_uploads":
+{ Args: { "p_before": string,"p_limit"?: number }; Returns: {
+              "name": string,"org_id": string,"written_at": string
             }[]
                            },
 "submit_internal_form":
