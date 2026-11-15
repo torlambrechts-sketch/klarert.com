@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
+import { openedByResetLink } from '@/lib/passwords';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/lib/database.types';
 import {
@@ -38,6 +39,8 @@ export const getSignIn = cache(async () => {
     user: data.user,
     twoStep: twoStepState(data.user.factors, aalOf(claims)),
     signedInAt: signedInAt(claims),
+    /** Opened by a password reset link: may set a new password without the current one (docs/09 §11). */
+    resetLink: openedByResetLink(claims),
   };
 });
 
@@ -45,13 +48,13 @@ export const getSignIn = cache(async () => {
 export const getSession = cache(async () => {
   const signIn = await getSignIn();
   if (!signIn || signIn.twoStep.needsCode) return null;
-  const { supabase, user, twoStep } = signIn;
+  const { supabase, user, twoStep, resetLink } = signIn;
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, display_name, initials, color')
     .eq('id', user.id)
     .maybeSingle();
-  return { supabase, user, profile, twoStep };
+  return { supabase, user, profile, twoStep, resetLink };
 });
 
 /** Where to send someone who is not (fully) signed in: the sign-in page, or the code page when only the code is owed. */

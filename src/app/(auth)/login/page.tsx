@@ -54,6 +54,20 @@ export default async function LoginPage({
       ) : (
         <PasswordForm key={mode} next={safeNext} mode={mode} />
       )}
+      {mode === 'signin' ? (
+        <p className="text-label-13 -mt-2">
+          <Link
+            className={linkClass}
+            href={
+              safeNext
+                ? `/login/forgot-password?next=${encodeURIComponent(safeNext)}`
+                : '/login/forgot-password'
+            }
+          >
+            Forgot password
+          </Link>
+        </p>
+      ) : null}
       <nav aria-label="Other ways to sign in" className="text-label-13 flex flex-col gap-1">
         {mode !== 'signin' ? (
           <Link className={linkClass} href={href('signin')}>
