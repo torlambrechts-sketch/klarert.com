@@ -1,0 +1,78 @@
+{
+  "requires": { "pack": "start-capa", "range": "^1.2.0" },
+  "app": {
+    "key": "capa",
+    "title": "CAPA",
+    "description": "Report problems, work on your corrective actions and verify that they worked, on the Core registers.",
+    "icon": "wrench",
+    "sections": [
+      {
+        "title": "Work",
+        "screens": [
+          {
+            "key": "report",
+            "kind": "form",
+            "title": "Report a problem",
+            "description": "Say what is wrong. It goes to Nonconformities and CAPA, at the stage Containment.",
+            "sheet": "core:nc",
+            "form": "startcapa_report",
+            "roles": ["owner", "admin", "member"]
+          },
+          {
+            "key": "my-actions",
+            "kind": "item",
+            "title": "My actions",
+            "description": "Actions assigned to you that are not done, soonest first.",
+            "sheet": "core:actions",
+            "filters": [
+              { "fieldKey": "owner", "op": "includes_any_of", "value": ["{me}"] },
+              { "fieldKey": "status", "op": "is_not_done" }
+            ],
+            "sort": [{ "fieldKey": "due", "direction": "asc" }],
+            "show": ["status", "due"],
+            "empty": "No open actions are assigned to you."
+          },
+          {
+            "key": "approvals",
+            "kind": "item",
+            "title": "Needs my approval",
+            "description": "Nonconformities at Verification where you check that the actions worked.",
+            "sheet": "core:nc",
+            "filters": [
+              { "fieldKey": "verifier", "op": "includes_any_of", "value": ["{me}"] },
+              { "fieldKey": "stage", "op": "is_any_of", "value": ["opt_verification"] }
+            ],
+            "sort": [{ "fieldKey": "due_date", "direction": "asc" }],
+            "show": ["grade", "due_date"],
+            "empty": "Nothing waits for your verification."
+          }
+        ]
+      },
+      {
+        "title": "Overview",
+        "screens": [
+          {
+            "key": "all",
+            "kind": "view",
+            "title": "All nonconformities",
+            "sheet": "core:nc"
+          },
+          {
+            "key": "overview",
+            "kind": "dashboard",
+            "title": "Overview",
+            "dashboard": "capa_core_overview"
+          },
+          {
+            "key": "workflow",
+            "kind": "workflow",
+            "title": "Workflow",
+            "sheet": "core:nc",
+            "fieldKey": "stage",
+            "roles": ["owner", "admin"]
+          }
+        ]
+      }
+    ]
+  }
+}

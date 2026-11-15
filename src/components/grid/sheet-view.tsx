@@ -316,10 +316,19 @@ function SheetBody(props: SheetViewProps) {
       )}
     >
       <ShellCrumb>
-        <nav aria-label="Breadcrumb" className="text-label-14 flex min-w-0 items-center gap-2.5">
+        {/* the crumb keeps priority (owner decision 15 Nov 2026): it takes the width it needs and the chips get what is
+            left (their box grows from nothing), ending in "…" with the full text in a tooltip. Truncation is CSS only,
+            so screen readers read every word; in a very narrow bar "Used by …" is only read, not shown */}
+        <nav
+          aria-label="Breadcrumb"
+          className="text-label-14 flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden"
+        >
           {props.folderName ? (
             <>
-              <span className="text-muted-foreground flex min-w-0 items-center gap-2">
+              <span
+                className="text-muted-foreground flex min-w-0 items-center gap-2"
+                title={props.folderName}
+              >
                 <Folder className="size-[15px] shrink-0" aria-hidden />
                 <span className="truncate">{props.folderName}</span>
               </span>
@@ -328,39 +337,54 @@ function SheetBody(props: SheetViewProps) {
               </span>
             </>
           ) : null}
-          <span className="text-ink flex min-w-0 items-center gap-2" aria-current="page">
+          <span
+            className="text-ink flex min-w-0 items-center gap-2"
+            aria-current="page"
+            title={sheetName}
+            data-testid="crumb-sheet"
+          >
             <Sheet className="size-[15px] shrink-0" aria-hidden />
             <span className="truncate font-medium">{sheetName}</span>
           </span>
-          {props.restricted ? (
-            <span className="bg-soft text-muted-foreground text-label-12 flex shrink-0 items-center gap-1 rounded-full px-[9px] py-0.5 font-medium">
-              <Lock className="size-3" aria-hidden /> Restricted
-            </span>
-          ) : null}
-          {props.archived || data?.sheet.isLibrary ? (
-            <span className="bg-soft text-muted-foreground text-label-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
-              {props.archived ? 'Archived' : 'Library'}
-            </span>
-          ) : null}
-          {props.system ? (
-            <>
-              <span
-                data-testid="system-board"
-                className="bg-soft text-ink text-label-12 flex shrink-0 items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
-              >
-                <Lock className="size-3" aria-hidden /> System board
-                <span className="hidden sm:inline">· installed by {props.system.source}</span>
+          <span
+            data-testid="crumb-chips"
+            className="@container/chips flex min-w-[4.5rem] flex-[1_1_0] items-center gap-2.5 overflow-hidden"
+          >
+            {props.restricted ? (
+              <span className="bg-soft text-muted-foreground text-label-12 flex shrink-0 items-center gap-1 rounded-full px-[9px] py-0.5 font-medium">
+                <Lock className="size-3" aria-hidden /> Restricted
               </span>
-              {data ? (
+            ) : null}
+            {props.archived || data?.sheet.isLibrary ? (
+              <span className="bg-soft text-muted-foreground text-label-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
+                {props.archived ? 'Archived' : 'Library'}
+              </span>
+            ) : null}
+            {props.system ? (
+              <>
                 <span
-                  data-testid="system-used-by"
-                  className="border-line text-muted-foreground text-label-12 hidden shrink-0 rounded-full border px-[9px] py-0.5 font-medium md:inline"
+                  data-testid="system-board"
+                  title={`System board · installed by ${props.system.source}`}
+                  className="bg-soft text-ink text-label-12 flex min-w-[4.5rem] items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
                 >
-                  {usedByText(data.fields)}
+                  <Lock className="size-3 shrink-0" aria-hidden />
+                  <span className="min-w-0 truncate">
+                    System board
+                    <span className="hidden sm:inline"> · installed by {props.system.source}</span>
+                  </span>
                 </span>
-              ) : null}
-            </>
-          ) : null}
+                {data ? (
+                  <span
+                    data-testid="system-used-by"
+                    title={usedByText(data.fields)}
+                    className="border-line text-muted-foreground text-label-12 hidden min-w-[4.5rem] truncate rounded-full border px-[9px] py-0.5 font-medium md:block @max-[12rem]/chips:sr-only"
+                  >
+                    {usedByText(data.fields)}
+                  </span>
+                ) : null}
+              </>
+            ) : null}
+          </span>
         </nav>
       </ShellCrumb>
       <PageHeader

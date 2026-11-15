@@ -1,6 +1,7 @@
 import { monthPoints, periodLabel, sheetHistory, type SheetHistory } from '../history';
 import { plural } from '../shared';
 import type { Figure, SheetSource, Tone, WidgetTypeDef } from '../types';
+import { countItems } from '../../nouns';
 
 /** Open items in up to this many sheets follow the done figure (all sheets). */
 const MAX_OPEN = 3;
@@ -107,7 +108,7 @@ export const keyFigures: WidgetTypeDef = {
     const figures: Figure[] = [];
     const notOpen = (h: SheetHistory, label: string) => {
       const a = h.at(data.today);
-      return `${a.open} of ${plural(a.total, label)} not done`;
+      return `${a.open} of ${countItems(a.total, label)} not done`;
     };
 
     if (deciding.length > 0) {
@@ -129,7 +130,7 @@ export const keyFigures: WidgetTypeDef = {
     }
     if (one) {
       const h = histories[0]!.h;
-      const label = one.sheet.itemLabel.toLowerCase();
+      const label = one.sheet.itemLabel;
       if (h.decides)
         figures.push(
           figure(
@@ -152,7 +153,7 @@ export const keyFigures: WidgetTypeDef = {
             null,
             points,
             (d) => h.at(d).total,
-            `${plural(h.at(data.today).total, label)} in ${one.sheet.name}`,
+            `${countItems(h.at(data.today).total, label)} in ${one.sheet.name}`,
             link(one),
           ),
         );
@@ -164,14 +165,14 @@ export const keyFigures: WidgetTypeDef = {
           null,
           points,
           (d) => h.at(d).added(start),
-          `${plural(h.at(data.today).added(start), label)} added since 1 ${points[0]?.label ?? ''}`,
+          `${countItems(h.at(data.today).added(start), label)} added since 1 ${points[0]?.label ?? ''}`,
           link(one),
         ),
       );
     } else {
       const list = (deciding.length > 0 ? deciding : histories).slice(0, MAX_OPEN);
       for (const { s, h } of list) {
-        const label = s.sheet.itemLabel.toLowerCase();
+        const label = s.sheet.itemLabel;
         figures.push(
           h.decides
             ? figure(
@@ -191,7 +192,7 @@ export const keyFigures: WidgetTypeDef = {
                 null,
                 points,
                 (d) => h.at(d).total,
-                `${plural(h.at(data.today).total, label)} in ${s.sheet.name}`,
+                `${countItems(h.at(data.today).total, label)} in ${s.sheet.name}`,
                 link(s),
               ),
         );

@@ -81,6 +81,15 @@ const archived = (key: string, version: string): PackManifest =>
     ) as unknown,
   );
 
+/**
+ * The version that marked the fields: the newest, or the archived one when a later version of the same major followed
+ * (Supplier management 3.1.1 fixed a widget after 3.1.0).
+ */
+function markedVersion(key: string): PackManifest {
+  const newest = packByKey(key);
+  return newest.version === MARKED[key]!.to ? newest : archived(key, MARKED[key]!.to);
+}
+
 /** The libraries a pack builds on, adopted, each requirement an item. */
 function libraries(packs: PackManifest[]) {
   const fws = packs.flatMap((p) => p.frameworks ?? []).filter((f) => !f.optional);
@@ -100,7 +109,7 @@ function libraries(packs: PackManifest[]) {
 function update(key: string) {
   const m = MARKED[key]!;
   const from = archived(key, m.from);
-  const to = packByKey(key);
+  const to = markedVersion(key);
   if (key === 'core') {
     const coreP = planPackInstall(from, emptySnapshot(), env, { level: 'full' }).payload!;
     return planPackUpgrade({
@@ -134,8 +143,10 @@ describe.each(Object.keys(MARKED))('%s asks for its key fields when an item is a
   const pack = packByKey(key);
 
   it(`is ${m.to}, a minor version of ${m.from}, and meets the quality bar`, () => {
-    expect(pack.version).toBe(m.to);
+    expect(markedVersion(key).version).toBe(m.to);
     expect(m.to.split('.')[0]).toBe(m.from.split('.')[0]);
+    // the newest is that version or a later one of the same major
+    expect(pack.version.split('.')[0]).toBe(m.to.split('.')[0]);
     expect(packQualityProblems(pack)).toEqual([]);
   });
 

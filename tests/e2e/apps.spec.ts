@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
@@ -74,7 +75,7 @@ test('install the CAPA pack, report a problem in its app and find it in My actio
     page,
     `pack_installs?org_id=eq.${org!.id}&pack_key=eq.start-capa&select=ref_map,version`,
   );
-  expect(install!.version).toBe('1.1.0');
+  expect(install!.version).toBe('1.2.0');
   const subs = await rest<{ name: string }[]>(
     page,
     `items?sheet_id=eq.${install!.ref_map['sheet:capa.subitems']}&select=name&order=sub_seq`,
@@ -96,4 +97,146 @@ test('install the CAPA pack, report a problem in its app and find it in My actio
   await expect(page.getByText('Nothing waits for your verification.')).toBeVisible();
   await page.goto(`/${slug}/apps/capa/overview`);
   await expect(page.getByRole('heading', { name: 'Open nonconformities' })).toBeVisible();
+});
+
+// ── Owner decision (15 Nov 2026): CAPA reuses Core's register (docs/11 Optional requirements, docs/13 CAPA on Core).
+// In a workspace with the Core registers, Create › App › CAPA makes no second register: the app's screens and its
+// overview read Core's Nonconformities and CAPA, so they show the open nonconformities already there.
+
+const SHOTS = process.env.CAPA_SHOTS;
+
+/** A pack installed as a workspace that had it before (service role, tests/e2e/install-pack-version.ts). */
+function installVersion(slug: string, key: string, version: string, level: string) {
+  const out = execFileSync(
+    'pnpm',
+    [
+      'exec',
+      'tsx',
+      '--env-file-if-exists=.env.local',
+      'tests/e2e/install-pack-version.ts',
+      slug,
+      key,
+      version,
+      level,
+    ],
+    { encoding: 'utf8', stdio: 'pipe', timeout: 90_000 },
+  );
+  return (JSON.parse(out) as { refMap: Record<string, string> }).refMap;
+}
+
+test.describe('CAPA on the Core registers', () => {
+  test.use(SHOTS ? { deviceScaleFactor: 2 } : {});
+  test.beforeEach(({}, info) => test.skip(info.project.name !== 'chromium', 'desktop walkthrough'));
+
+  test('Create › App › CAPA in a Core workspace makes no second register and shows Core’s open items', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    const slug = seedWorkspace('apcore', { empty: true });
+    const core = installVersion(slug, 'core', '1.3.0', 'starter');
+    await signIn(page, 'maria@example.com', `/${slug}/home`);
+    await page.goto(`/${slug}/home`);
+
+    // ── three nonconformities in Core's register: two open, one closed
+    const nc = core['sheet:nc']!;
+    const fields = await rest<{ id: string; key: string }[]>(
+      page,
+      `fields?sheet_id=eq.${nc}&select=id,key`,
+    );
+    const groups = await rest<{ id: string; name: string }[]>(
+      page,
+      `groups?sheet_id=eq.${nc}&select=id,name`,
+    );
+    const field = (k: string) => fields.find((f) => f.key === k)!.id;
+    const group = (n: string) => groups.find((g) => g.name === n)!.id;
+    const rows: [string, string, string, string][] = [
+      ['Open', 'Calibration overdue on scale 3', 'opt_containment', 'a0'],
+      ['Open', 'Supplier certificate expired', 'opt_action_plan', 'a1'],
+      ['Closed', 'Training record missing', 'opt_closed', 'a2'],
+    ];
+    for (const [g, name, stage, position] of rows)
+      await rest(page, 'rpc/create_item', {
+        method: 'POST',
+        body: {
+          p_sheet: nc,
+          p_group: group(g),
+          p_name: name,
+          p_position: position,
+          p_values: { [field('stage')]: stage },
+        },
+      });
+
+    // ── Create › App › CAPA: it uses Core's registers and makes no register of its own
+    const wizard = page.getByRole('dialog', { name: 'Create' });
+    await expect(async () => {
+      await page.keyboard.press('Control+k');
+      await expect(wizard).toBeVisible({ timeout: 1_000 });
+    }).toPass();
+    await wizard.getByTestId('create-card-app').click();
+    await wizard.getByTestId('create-app-capa').click();
+    const preview = wizard.getByTestId('create-app-preview');
+    await expect(preview.getByTestId('create-app-uses')).toHaveText(
+      'Uses sheets you already have: Nonconformities and CAPA (Core registers), Actions (Core registers).',
+    );
+    await expect(preview.getByTestId('create-summary')).toHaveText('Creates 1 dashboard · 1 app.');
+    await expect(preview.getByTestId('create-uses')).toContainText('No second register is made.');
+    await expect(preview.getByRole('list', { name: 'Work screens' })).toContainText(
+      'Report a problem · Form on Nonconformities and CAPA',
+    );
+    await wizard.getByTestId('create-next').click();
+    await wizard.getByTestId('create-submit').click();
+    await expect(page).toHaveURL(new RegExp(`/${slug}/apps/capa(/[a-z-]+)?$`), {
+      timeout: 60_000,
+    });
+
+    // ── no second register: the install made no sheet, and its form is on Core's register
+    const [org] = await rest<{ id: string }[]>(page, `orgs?slug=eq.${slug}&select=id`);
+    const [install] = await rest<
+      { id: string; version: string; ref_map: Record<string, string> }[]
+    >(
+      page,
+      `pack_installs?org_id=eq.${org!.id}&pack_key=eq.start-capa&status=eq.installed&select=id,version,ref_map`,
+    );
+    expect(install!.version).toBe('1.2.0');
+    expect(Object.keys(install!.ref_map).filter((r) => r.startsWith('sheet:'))).toEqual([]);
+    expect(install!.ref_map['view:core:nc.form.startcapa_report']).toBeTruthy();
+    expect(
+      await rest(page, `sheets?org_id=eq.${org!.id}&pack_install_id=eq.${install!.id}&select=id`),
+    ).toEqual([]);
+    expect(
+      await rest(
+        page,
+        `sheets?org_id=eq.${org!.id}&name=eq.Corrective%20action%20(CAPA)&select=id`,
+      ),
+    ).toEqual([]);
+
+    // ── the app reads Core's register: its six screens, Core's items, Core's open count
+    await expect(
+      page.getByRole('navigation', { name: 'CAPA screens' }).getByRole('link'),
+    ).toHaveText([
+      'Report a problem',
+      'My actions',
+      'Needs my approval',
+      'All nonconformities',
+      'Overview',
+      'Workflow',
+    ]);
+    await page.goto(`/${slug}/apps/capa/all`);
+    await expect(page).toHaveURL(new RegExp(`/${slug}/apps/capa/all$`));
+    for (const [, name] of rows) await expect(page.getByText(name).first()).toBeVisible();
+
+    await page.goto(`/${slug}/apps/capa/overview`);
+    const open = page.getByRole('listitem', { name: 'Open nonconformities' });
+    await expect(open).toContainText('2');
+    await expect(open).toContainText('of 3 nonconformities in Nonconformities and CAPA');
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/capa-on-core-overview.png` });
+
+    // ── Create again: CAPA is ready here, on Core's register
+    await expect(async () => {
+      await page.keyboard.press('Control+k');
+      await expect(wizard).toBeVisible({ timeout: 1_000 });
+    }).toPass();
+    await wizard.getByTestId('create-card-app').click();
+    await expect(wizard.getByTestId('create-app-capa')).toContainText('Ready');
+  });
 });

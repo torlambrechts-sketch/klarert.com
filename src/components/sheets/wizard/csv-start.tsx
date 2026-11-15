@@ -9,6 +9,7 @@ import { CSV_LIMITS, csvImportable, parseCsv, planColumns } from '@/engine/field
 import { typesByFamily } from '@/engine/fields/registry';
 import { BasicsFields, useBasics, useCreate, type WizardContext } from './basics';
 import { TypeSelect } from './columns-start';
+import { itemsWord } from '@/engine/nouns';
 
 const IMPORTABLE = typesByFamily((t) => csvImportable(t.id));
 
@@ -147,9 +148,8 @@ export function CsvStart({ ctx }: { ctx: WizardContext }) {
           </h2>
           <p className="text-muted-foreground text-copy-13">
             {rows.length === 1 ? '1 row' : `${rows.length.toLocaleString('en-GB')} rows`} will
-            become {basics.values.itemLabel.toLowerCase() || 'item'}s named from “
-            {parsed.table.header[0]}”. Check the type of each column; a value that does not fit its
-            type is left empty.
+            become {itemsWord(basics.values.itemLabel)} named from “{parsed.table.header[0]}”. Check
+            the type of each column; a value that does not fit its type is left empty.
           </p>
           {plan.length === 0 ? (
             <p className="text-muted-foreground text-copy-13">

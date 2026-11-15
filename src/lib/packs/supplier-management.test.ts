@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   planPackInstall,
   planPackUpgrade,
@@ -10,9 +10,13 @@ import {
   type PackSnapshot,
 } from '@/engine/packs';
 import { extendsAgainst, neededLevel } from '@/engine/packs/extend';
-import { afterInstall, refMapOf } from '@/engine/packs/installed.fixture';
+import { computeWidget } from '@/engine/dashboards';
+import { FIELD_TYPES } from '@/engine/fields/registry';
+import { installFieldTypes } from '@/engine/fields/resolve';
+import { afterInstall, installedStateOf, refMapOf } from '@/engine/packs/installed.fixture';
 import { startsInTestMode } from '@/engine/packs/safety';
-import type { Json } from '@/engine/types';
+import { makeCtx, makeField, makeItem, sheet as fixtureSheet } from '@/engine/testing/fixtures';
+import type { Condition, Json } from '@/engine/types';
 import { repoPacks } from './catalogue';
 import { packManifestSchema } from './manifest';
 import { packQualityProblems } from './quality';
@@ -23,6 +27,7 @@ import { packQualityProblems } from './quality';
 // in the catalogue for the workspaces that have it and is tested on its fixture; the 1.0.0 → 1.1.0 upgrade (P6) is
 // kept as a test of the upgrade planner on the fixtures.
 type Row = Record<string, Json>;
+beforeAll(() => installFieldTypes(Object.values(FIELD_TYPES)));
 const packs = repoPacks();
 const pack = packs.find((p) => p.key === 'supplier-management')!;
 const core = packs.find((p) => p.key === 'core')!;
@@ -245,7 +250,7 @@ describe('Supplier management add-on 3.0.0 on the Core Suppliers register', () =
   };
 
   it('is a new major that extends Core Suppliers instead of shipping a supplier register', () => {
-    expect(m.version).toBe('3.1.0');
+    expect(m.version).toBe('3.1.1');
     // Core's Suppliers register came with 1.1.0
     expect(m.requires).toEqual([{ pack: 'core', range: '^1.1.0' }]);
     expect(packQualityProblems(m)).toEqual([]);
@@ -572,6 +577,108 @@ function installV1() {
   };
   return state;
 }
+
+describe('Supplier management 3.1.1: Met checks with expired evidence', () => {
+  const w = pack.dashboards.flatMap((d) => d.widgets).find((x) => x.ref === 'w_expired')!;
+  const check = pack.sheets.find((s) => s.ref === 'check')!;
+
+  it('is a count of Met checks whose evidence expired, the condition of the Expired evidence view', () => {
+    // 3.1.0 had an Overdue widget filtered to Met: Overdue leaves out done items and Met is done, so it read 0
+    expect(w).toEqual({
+      ref: 'w_expired',
+      type: 'count',
+      title: 'Met checks with expired evidence',
+      sheetRef: 'check',
+      conditions: [
+        { fieldKey: 'status', op: 'is_any_of', value: ['opt_met'] },
+        { fieldKey: 'evidence_expiry', op: 'before', value: 'today' },
+      ],
+    });
+    const view = check.views.find((v) => v.name === 'Expired evidence')!;
+    expect((view.config as { filters: unknown[] }).filters).toContainEqual(w.conditions![1]);
+    expect(check.fields.find((f) => f.key === 'status')!.config).toMatchObject({
+      options: expect.arrayContaining([
+        { id: 'opt_met', label: 'Met', color: 'green', done: true },
+      ]),
+    });
+  });
+
+  it('counts a Met check with expired evidence, not one still valid or one not met', () => {
+    const fields = check.fields
+      .filter((f) => f.key === 'status' || f.key === 'evidence_expiry')
+      .map((f, i) =>
+        makeField(f.type, f.config ?? {}, {
+          key: f.key,
+          id: `f-${f.key}`,
+          name: f.name,
+          position: `a${i}`,
+        }),
+      );
+    const items = [
+      makeItem({ 'f-status': 'opt_met', 'f-evidence_expiry': '2026-10-01' }, { id: 'expired' }),
+      makeItem({ 'f-status': 'opt_met', 'f-evidence_expiry': '2027-10-01' }, { id: 'valid' }),
+      makeItem({ 'f-status': 'opt_not_met', 'f-evidence_expiry': '2026-10-01' }, { id: 'not-met' }),
+    ];
+    const ctx = makeCtx({ fields, items });
+    const source = { sheet: fixtureSheet, fields, items, ctx };
+    const result = computeWidget(
+      {
+        id: 'w_expired',
+        type: 'count',
+        title: w.title,
+        sheetId: fixtureSheet.id,
+        conditions: w.conditions as Condition[],
+      },
+      {
+        today: '2026-11-11',
+        timeZone: 'Europe/London',
+        months: 6,
+        sheet: (id) => (id === fixtureSheet.id ? source : undefined),
+        sheets: () => [source],
+        changes: [],
+        evidence: [],
+        runs: [],
+      },
+    );
+    expect(result).toMatchObject({ kind: 'stat', value: 1 });
+  });
+
+  it('updates 3.1.0 without a conflict: only the widget changes', () => {
+    const from = packManifestSchema.parse(
+      JSON.parse(
+        readFileSync(
+          join(process.cwd(), 'tests/e2e/fixtures/catalogue/supplier-management@3.1.0.json'),
+          'utf8',
+        ),
+      ),
+    );
+    expect(from.version).toBe('3.1.0');
+    const { snap } = withCore();
+    const p = planPackInstall(from, snap, env).payload!;
+    const all = afterInstall(snap, p, 'inst-addon');
+    for (const f of Object.values(all.foreign ?? {}))
+      for (const x of f.fields) if (p.fields.some((y) => y.id === x.id)) x.installId = 'inst-addon';
+    const up = planPackUpgrade({
+      from: { manifest: from, hash: 'h-from' },
+      to: { manifest: pack, hash: 'h-to' },
+      state: installedStateOf(p, 'inst-addon'),
+      snapshot: { ...all, installs: all.installs.filter((i) => i.id !== 'inst-addon') },
+      env,
+    });
+    expect(up.preview.blockers).toEqual([]);
+    expect(up.preview.conflicts).toEqual([]);
+    expect(up.state).toBe('ready');
+    expect(up.preview.added).toEqual([]);
+    expect(up.preview.archived).toEqual([]);
+    expect(up.preview.changed.map((c) => `${c.kind}:${c.ref}`)).toEqual(['dashboard:overview']);
+    const dash = up.payload!.update.dashboards[0]!;
+    const widgets = (dash.config as { widgets: Row[] }).widgets;
+    expect(widgets.find((x) => x.id === 'w_expired')).toMatchObject({
+      type: 'count',
+      conditions: w.conditions,
+    });
+  });
+});
 
 describe('upgrading a 1.0.0 workspace to 1.1.0 (P6, on the fixtures)', () => {
   it('adds the checks sheet, the new fields, library requirements and automations', () => {

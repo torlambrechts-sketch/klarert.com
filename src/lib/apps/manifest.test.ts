@@ -1,15 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { repoApps, repoPacks, withApps } from '@/lib/packs/catalogue';
+import { manifestFor } from '@/engine/packs/optional';
 import { parsePack } from '@/lib/packs/manifest';
 import { appManifestSchema, appProblems, parseAppFile } from './manifest';
 
-const pack = () => repoPacks().find((p) => p.key === 'start-capa')!;
+// CAPA in a workspace without the Core registers: its own register (docs/11 Optional requirements)
+const pack = () =>
+  manifestFor(
+    repoPacks().find((p) => p.key === 'start-capa')!,
+    [],
+  );
 const capa = () => pack().apps!.find((a) => a.key === 'capa')!;
 
 describe('app manifest', () => {
   it('the CAPA app joins the CAPA pack and every ref resolves', () => {
     const p = pack();
-    expect(p.version).toBe('1.1.0');
+    expect(p.version).toBe('1.2.0');
     const app = capa();
     expect(app.sections.flatMap((s) => s.screens.map((x) => [x.key, x.kind]))).toEqual([
       ['report', 'form'],

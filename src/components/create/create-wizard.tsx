@@ -357,7 +357,8 @@ export function CreateWizard({
     !!ready &&
     !!opts?.canInstall &&
     !blocked &&
-    keptSheets > 0;
+    // a set on registers the workspace has may make no sheet of its own (CAPA on Core's register)
+    (keptSheets > 0 || ready.uses.length > 0);
 
   const primary =
     step === 1 ? null : setFlow && step === 2 ? (

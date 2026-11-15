@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { FillForm, FormBuilder, StatusChip } from './form-builder';
 import { copyText, internalUrl, publicUrl, type FormLinkRow } from './form-share';
 import { viewsKey, type ViewsState } from './use-views';
+import { itemsWord } from '@/engine/nouns';
 
 // The Forms tab (docs/05 §3.3): every form of the sheet as a card (status, Public/Internal, link, answers, last
 // answer). Owners and admins open a card to build the form and use its menu (duplicate, copy to another sheet,
@@ -268,7 +269,7 @@ function FormsList({
         <div>
           <h2 className="text-heading-20">Forms</h2>
           <p className="text-copy-13 text-muted-foreground">
-            Each form adds {data.sheet.itemLabel.toLowerCase()}s to this sheet.
+            Each form adds {itemsWord(data.sheet.itemLabel)} to this sheet.
           </p>
         </div>
         {isAdmin ? (

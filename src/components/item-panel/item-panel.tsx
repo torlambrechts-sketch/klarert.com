@@ -221,6 +221,8 @@ export function ItemPanel(props: ItemPanelProps) {
           data-item-panel
           aria-describedby={undefined}
           data-wide={wide}
+          // drawn over the right of the top bar: the crumb ends before it (shell-crumb.tsx)
+          data-covers-top-bar=""
           onOpenAutoFocus={(e) => {
             e.preventDefault();
             titleRef.current?.focus();

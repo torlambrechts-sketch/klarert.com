@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { appScreens, resolveApps, type AppInstall, type ResolvedApp } from '@/engine/apps/resolve';
+import { installCase, manifestFor } from '@/engine/packs/optional';
 import type { PackManifest } from '@/engine/packs/types';
 import type { Role } from '@/engine/types';
 import { parsePack } from '@/lib/packs/manifest';
@@ -50,7 +51,14 @@ export const getApps = cache(async (orgId: string, role: Role): Promise<Resolved
   const list: AppInstall[] = installs.flatMap((i) => {
     const row = (packs ?? []).find((p) => p.key === i.pack_key && p.version === i.version);
     if (!row || !hasApps(row.manifest)) return [];
-    const manifest = manifestOf(row.key, row.version, row.manifest);
+    const parsedManifest = manifestOf(row.key, row.version, row.manifest);
+    // the case the install was made in (docs/11 Optional requirements): CAPA on Core's register or on its own
+    const manifest =
+      parsedManifest &&
+      manifestFor(
+        parsedManifest,
+        installCase(parsedManifest, (i.ref_map ?? {}) as Record<string, string>),
+      );
     if (!manifest?.apps?.length) return [];
     return [
       {
