@@ -179,7 +179,7 @@ test.describe('CAPA on the Core registers', () => {
       'Uses sheets you already have: Nonconformities and CAPA (Shared registers), Actions (Shared registers).',
     );
     await expect(preview.getByTestId('create-summary')).toHaveText('Creates 1 dashboard · 1 app.');
-    await expect(preview.getByTestId('create-uses')).toContainText('No second register is made.');
+    await expect(preview.getByTestId('create-uses')).toContainText('No second sheet is made.');
     await expect(preview.getByRole('list', { name: 'Work screens' })).toContainText(
       'Report a problem · Form on Nonconformities and CAPA',
     );
