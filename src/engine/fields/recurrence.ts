@@ -112,6 +112,7 @@ export const recurrence = base<RecurrenceValue, Record<string, never>>({
   defaultConfig: () => ({}),
   defaultWidth: 170,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: true,
   triggers: ['field_changed', 'date_arrives'],

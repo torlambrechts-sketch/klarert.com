@@ -51,6 +51,7 @@ export const yesno = base<YesNo, YesNoConfig>({
   defaultConfig: () => ({ allowNA: true }),
   defaultWidth: 90,
   formAllowed: true,
+  publicConfigKeys: ['allowNA'],
   kanbanCapable: true,
   calendarCapable: false,
   triggers: ['field_changed', 'field_becomes'],

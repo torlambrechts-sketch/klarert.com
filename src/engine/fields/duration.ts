@@ -83,6 +83,7 @@ export const duration = base<DurationValue, DurationConfig>({
   defaultConfig: () => ({ unit: 'days' }),
   defaultWidth: 100,
   formAllowed: true,
+  publicConfigKeys: ['unit'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'number_above', 'number_below'],

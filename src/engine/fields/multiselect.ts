@@ -56,6 +56,7 @@ export const multiselect: FieldTypeDef<V, MultiselectConfig> = base<V, Multisele
   }),
   defaultWidth: 180,
   formAllowed: true,
+  publicConfigKeys: ['options'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'field_becomes'],

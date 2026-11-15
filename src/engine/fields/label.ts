@@ -53,6 +53,8 @@ export function labelType(spec: {
     defaultConfig: () => ({ options: spec.defaultOptions.map((o) => ({ ...o })) }),
     defaultWidth: spec.defaultWidth,
     formAllowed: spec.formAllowed ?? true,
+    // a public form shows the options (labels, colours, done) and nothing else (docs/02 §16)
+    ...((spec.formAllowed ?? true) ? { publicConfigKeys: ['options'] } : {}),
     kanbanCapable: spec.kanbanCapable ?? true,
     calendarCapable: false,
     triggers: spec.triggers ?? ['field_changed', 'field_becomes'],
