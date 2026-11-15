@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { changeEmail, changePassword } from '@/server/commands/account';
 import {
   finishTwoStepSetup,
   removeTwoStepApp,
@@ -28,4 +29,24 @@ export async function removeTwoStepAppAction(input: {
   const r = await removeTwoStepApp(input);
   if (r.ok) revalidatePath('/', 'layout');
   return r;
+}
+
+export async function changeEmailAction(
+  _: unknown,
+  form: FormData,
+): Promise<Result<{ newEmail: string }>> {
+  const r = await changeEmail({ email: form.get('email') });
+  if (r.ok) revalidatePath('/account');
+  return r;
+}
+
+export async function changePasswordAction(
+  _: unknown,
+  form: FormData,
+): Promise<Result<{ othersSignedOut: boolean }>> {
+  return changePassword({
+    current: form.get('current'),
+    password: form.get('password'),
+    confirm: form.get('confirm'),
+  });
 }
