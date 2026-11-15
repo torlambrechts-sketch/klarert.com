@@ -244,7 +244,7 @@ test.describe('desktop', () => {
     await approve(page, 'First issue');
     await expect(
       page.getByText(
-        'the author cannot approve their own document. Ask another person to approve it.',
+        'The author cannot approve their own document. Ask another person to approve it.',
       ),
     ).toBeVisible();
 

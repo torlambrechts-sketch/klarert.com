@@ -173,23 +173,23 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   ],
 ];
 
+const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
 export function fromDbError(error: { message: string; code?: string }): Result<never> {
   // the sub-item gate (0020) writes its own message for people: which sub-items are still open
   const gate = error.message.match(/subitems open: (.*)/);
   if (gate) return fail('blocked', gate[1]!.trim());
   // forms (0022) write their refusals for people, prefixed "form: "
-  // the documents register's workflow (0023) words its refusals for people, prefixed "document: "
+  // the documents register's workflow (0023) words its refusals for people, prefixed "document: ", mostly in lower
+  // case after the prefix: the toast starts with a capital (sentence case), as the approvals' do
   const doc = error.message.match(/document: (.*)/);
-  if (doc) return fail('blocked', doc[1]!.trim());
+  if (doc) return fail('blocked', sentence(doc[1]!.trim()));
   // access control (0026–0028) words its refusals for people, prefixed "access: "
   const access = error.message.match(/^access: (.*)/);
   if (access) return fail('forbidden', access[1]!.trim());
   // approval workflows (0040) word their refusals for people, prefixed "approval: "
   const approval = error.message.match(/approval: (.*)/);
-  if (approval) {
-    const text = approval[1]!.trim();
-    return fail('blocked', text.charAt(0).toUpperCase() + text.slice(1));
-  }
+  if (approval) return fail('blocked', sentence(approval[1]!.trim()));
   const form = error.message.match(/^form: (.*)/);
   if (form) return fail('invalid', form[1]!.trim());
   const parent = error.message.match(/restore the parent first: (\S+)/);
