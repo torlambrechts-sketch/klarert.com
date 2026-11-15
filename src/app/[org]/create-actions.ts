@@ -27,6 +27,7 @@ export async function createBundleAction(input: {
   name: string;
   ownerId: string;
   reviewBy: string;
+  settings?: Record<string, string>;
 }) {
   const result = await bundles.createBundle(input);
   if (result.ok) revalidatePath(`/${input.org}`, 'layout');

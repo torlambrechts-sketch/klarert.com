@@ -1,5 +1,6 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
+import { appStarts, type AppStart } from '@/engine/create/apps';
 import { isFrameworkPack } from '@/engine/frameworks/pack';
 import { levelSummaries, manifestAtLevel, defaultLevel } from '@/engine/packs/levels';
 import {
@@ -11,6 +12,8 @@ import {
   type AppNeeds,
   type BundlePart,
 } from '@/engine/packs/select';
+import { cleanSettings } from '@/engine/packs/settings';
+import type { PackSetting } from '@/engine/packs/types';
 import type { Json } from '@/engine/types';
 import {
   bundleDetailsInput,
@@ -20,6 +23,7 @@ import {
 } from '@/lib/schemas/bundles';
 import { RECIPES } from '@/lib/recipes';
 import { STARTS } from '@/lib/starts';
+import { getApps } from '@/server/apps/read';
 import { isAdminRole, isEditorRole } from '@/server/auth';
 import { planInstall, readCatalogue, readPack, requiredFirst } from '@/server/packs/install';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
@@ -54,6 +58,8 @@ export interface CreateOptions {
   canEdit: boolean;
   me: string;
   packs: CreatePack[];
+  /** The App card (docs/13): the apps of the catalogue and of live installs, with the path to each. */
+  apps: AppStart[];
   starts: { id: string; title: string; description: string }[];
   recipes: { id: string; title: string }[];
   /** Sheets the person can open, the ones with the latest item changes first. */
@@ -86,12 +92,12 @@ export async function createOptions(input: unknown): Promise<Result<CreateOption
     'member',
     async ({ supabase, orgId, role, user }) => {
       try {
-        const [catalogue, installs, firstSheets, sheets, recent, folders, members] =
+        const [catalogue, installs, firstSheets, sheets, recent, folders, members, resolved] =
           await Promise.all([
             readCatalogue(supabase),
             supabase
               .from('pack_installs')
-              .select('id, pack_key, bundle_name')
+              .select('id, pack_key, version, bundle_name')
               .eq('org_id', orgId)
               .eq('status', 'installed'),
             supabase
@@ -126,6 +132,8 @@ export async function createOptions(input: unknown): Promise<Result<CreateOption
               .from('memberships')
               .select('user_id, role, profiles!inner(display_name)')
               .eq('org_id', orgId),
+            // the apps live installs carry, resolved for this person (docs/13): the ones that open already
+            getApps(orgId, role),
           ]);
         for (const r of [installs, firstSheets, sheets, recent, folders, members])
           if (r.error) return fromDbError(r.error);
@@ -134,39 +142,57 @@ export async function createOptions(input: unknown): Promise<Result<CreateOption
         for (const r of recent.data ?? [])
           if (!rank.has(r.sheet_id)) rank.set(r.sheet_id, rank.size);
         const sheetRows = (sheets.data ?? []).filter((s) => !s.is_library);
+        const offered = catalogue.filter((c) => !isFrameworkPack(c.manifest));
         return ok({
           canInstall: isAdminRole(role),
           canEdit: isEditorRole(role),
           me: user.id,
-          packs: catalogue
-            .filter((c) => !isFrameworkPack(c.manifest))
-            .map((c) => {
-              const at = manifestAtLevel(c.manifest, defaultLevel(c.manifest));
-              const install = live.get(c.key);
-              return {
-                key: c.key,
-                version: c.version,
-                title: c.title,
-                description: c.description,
-                hash: c.hash,
-                inside: insideText(bundleParts(at), appsAfter(at, []).length),
-                levels: (c.manifest.levels ?? []).map((l) => ({
-                  key: l.key,
-                  name: l.name,
-                  description: l.description,
-                })),
-                installed: install
-                  ? {
-                      installId: install.id,
-                      name: install.bundle_name ?? c.title,
-                      sheetId:
-                        (firstSheets.data ?? []).find((s) => s.pack_install_id === install.id)
-                          ?.id ?? null,
-                    }
-                  : null,
-                apps: (c.manifest.apps ?? []).map((a) => a.key),
-              };
-            }),
+          packs: offered.map((c) => {
+            const at = manifestAtLevel(c.manifest, defaultLevel(c.manifest));
+            const install = live.get(c.key);
+            return {
+              key: c.key,
+              version: c.version,
+              title: c.title,
+              description: c.description,
+              hash: c.hash,
+              inside: insideText(bundleParts(at), appsAfter(at, []).length),
+              levels: (c.manifest.levels ?? []).map((l) => ({
+                key: l.key,
+                name: l.name,
+                description: l.description,
+              })),
+              installed: install
+                ? {
+                    installId: install.id,
+                    name: install.bundle_name ?? c.title,
+                    sheetId:
+                      (firstSheets.data ?? []).find((s) => s.pack_install_id === install.id)?.id ??
+                      null,
+                  }
+                : null,
+              apps: (c.manifest.apps ?? []).map((a) => a.key),
+            };
+          }),
+          apps: appStarts({
+            catalogue: offered,
+            installs: (installs.data ?? []).map((i) => ({
+              packKey: i.pack_key,
+              version: i.version,
+            })),
+            resolved: resolved.map((a) => ({
+              key: a.key,
+              title: a.title,
+              description: a.description,
+              icon: a.icon,
+              packKey: a.packKey,
+              sections: a.sections.map((sec) => ({
+                title: sec.title,
+                screens: sec.screens.map((sc) => ({ title: sc.title, kind: sc.kind })),
+              })),
+            })),
+            role,
+          }),
           starts: STARTS.filter((s) => s.fields).map((s) => ({
             id: s.id,
             title: s.title,
@@ -213,12 +239,19 @@ export interface BundleDetails {
   packFolders: string[];
   /** Frameworks the pack builds on: their requirement libraries are adopted first when missing. */
   frameworks: string[];
+  /**
+   * The pack's settings (docs/11 Pack settings, e.g. NIS2's country): chosen in Create's Details step with the same
+   * picker and checks as Workspace admin › Packs, recorded with the set in one transaction. Empty when it has none.
+   */
+  settings: PackSetting[];
   /** Owners and admins: the planner's check against this workspace (renamed prefixes, warnings, blockers). */
   check: {
     state: 'ready' | 'installed' | 'blocked';
     conflicts: string[];
     warnings: string[];
     renamedPrefixes: { sheet: string; from: string; to: string }[];
+    /** Required packs installed (or raised to a level) first: "Installs Core registers 1.3.0 (Full) first." */
+    installsFirst: string[];
   } | null;
 }
 
@@ -241,18 +274,25 @@ export async function bundleDetails(input: unknown): Promise<Result<BundleDetail
       try {
         let check: BundleDetails['check'] = null;
         if (isAdminRole(role)) {
+          const firsts = await requiredFirst(supabase, orgId, pack.manifest, undefined, levelKey);
           const plan = await planInstall(supabase, orgId, pack, {
             userId: user.id,
             now: new Date(),
             newId: randomUUID,
             level: levelKey,
-            installFirst: await requiredFirst(supabase, orgId, pack.manifest, undefined, levelKey),
+            installFirst: firsts,
           });
           check = {
             state: plan.state,
             conflicts: plan.preview.conflicts,
             warnings: plan.preview.warnings,
             renamedPrefixes: plan.preview.renamedPrefixes,
+            // the same words as the Packs install dialog
+            installsFirst: firsts.map((d) =>
+              d.raise
+                ? `Adds ${d.levelName ?? d.level} to ${d.title} first.`
+                : `Installs ${d.title} ${d.version}${d.levelName ? ` (${d.levelName})` : ''} first.`,
+            ),
           };
         }
         const level = m.levels?.find((l) => l.key === levelKey);
@@ -273,6 +313,7 @@ export async function bundleDetails(input: unknown): Promise<Result<BundleDetail
           canChooseFolder: canChooseFolder(at),
           packFolders: at.folders.map((f) => f.name),
           frameworks: (m.frameworks ?? []).map((f) => `${f.key} ${f.version}`),
+          settings: m.settings ?? [],
           check,
         });
       } catch (e) {
@@ -306,6 +347,7 @@ const BUNDLE_ERRORS: [RegExp, string][] = [
   [/bundle: already reviewed/, 'It is already marked reviewed.'],
   [/bundle: archived/, 'This set is archived.'],
   [/bundle not found/, 'This set no longer exists.'],
+  [/unknown pack setting or choice/, 'Choose one of the listed options.'],
 ];
 
 function bundleError(error: { message: string; code?: string }): Result<never> {
@@ -338,7 +380,17 @@ export async function createBundle(input: unknown): Promise<Result<CreatedBundle
         ),
       };
       if (!chosen.manifest.sheets.length) return fail('invalid', 'Keep at least one sheet.');
-      const env = { userId: user.id, now: new Date(), newId: randomUUID, level: levelKey };
+      // only the pack's own settings and choices (docs/11 Pack settings), as installPack does
+      const settings = cleanSettings(pack.manifest, p.data.settings ?? {});
+      if (Object.keys(settings).length !== Object.keys(p.data.settings ?? {}).length)
+        return fail('invalid', 'Choose one of the listed options.');
+      const env = {
+        userId: user.id,
+        now: new Date(),
+        newId: randomUUID,
+        level: levelKey,
+        settings,
+      };
       // the packs it requires (the Core registers) are installed first (docs/11 Extends)
       const firsts = await requiredFirst(supabase, orgId, chosen.manifest, undefined, levelKey);
       let plan = await planInstall(supabase, orgId, chosen, { ...env, installFirst: firsts });
@@ -371,7 +423,13 @@ export async function createBundle(input: unknown): Promise<Result<CreatedBundle
       const { data, error } = await supabase.rpc('create_bundle', {
         p_org: orgId,
         p_plan: plan.payload as unknown as Json,
-        p_bundle: { name: p.data.name, owner_id: p.data.ownerId, review_by: p.data.reviewBy },
+        // the choices are recorded with the set in the same transaction (0047); the plan already wrote the defaults
+        p_bundle: {
+          name: p.data.name,
+          owner_id: p.data.ownerId,
+          review_by: p.data.reviewBy,
+          settings,
+        },
       });
       if (error) return bundleError(error);
       const out = data as { install_id: string; ref_map: Record<string, string> };

@@ -1,5 +1,5 @@
 {
-  "notes": "Goal matching for the Create wizard (docs/05 §4 Create). Keyword ranking only: nothing is sent anywhere. A target is a pack key (the catalogue, docs/11), a wizard start id (templates/starts.json), an app key (docs/13, matched to the pack that carries it) or an automation recipe id (templates/automation-recipes.json). Targets are listed best first.",
+  "notes": "Goal matching for the Create wizard (docs/05 §4 Create). Keyword ranking only: nothing is sent anywhere. A target is a pack key (the catalogue, docs/11), a wizard start id (templates/starts.json), an app key (docs/13, offered as an app on the App card, created with the pack that carries it) or an automation recipe id (templates/automation-recipes.json). Targets are listed best first.",
   "intents": [
     {
       "id": "complaints",
@@ -43,6 +43,7 @@
       "targets": [
         { "kind": "app", "id": "capa" },
         { "kind": "pack", "id": "first-sheet-corrective-actions" },
+        { "kind": "app", "id": "isms-capa" },
         { "kind": "recipe", "id": "checklist-no" }
       ]
     },
@@ -94,7 +95,10 @@
       "label": "Information security",
       "chip": false,
       "keywords": ["iso 27001", "27001", "isms", "information security", "security", "statement of applicability", "soa", "assets", "access control"],
-      "targets": [{ "kind": "pack", "id": "iso-27001" }]
+      "targets": [
+        { "kind": "pack", "id": "iso-27001" },
+        { "kind": "app", "id": "isms-capa" }
+      ]
     },
     {
       "id": "environment",

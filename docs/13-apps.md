@@ -9,6 +9,8 @@ An **app** is navigation over a pack's sheets, forms and dashboards: named scree
 | A pack manifest's `apps` (docs/11) | Installed with the pack, e.g. `templates/packs/iso-27001.json` → ISMS CAPA |
 | `templates/apps/*.json` | `{ requires: { pack, range }, app }`: added to the `apps` of the pack it requires by `withApps` (`src/lib/packs/catalogue.ts`) before the manifest is checked. A missing pack or a version out of range is an error. `capa.json` → the CAPA app in `start-capa` |
 
+**Starting an app from Create** (owner decision, 14 Nov 2026; docs/05 §4 Create › App): Create lists the apps of the catalogue's packs and of the live installs (`appStarts`, `src/engine/create/apps.ts`) and gives each the shortest valid path: open it when a live install carries it, create the set that carries it (the same preview, `createBundle` and `create_bundle` as Solve a problem, Core installed first when the app reads Core's registers, the registers the workspace already has named in the preview), or Workspace admin › Packs when its pack is live without it (an update, or parts left out). Owners and admins create; others preview and ask. Goal matching (`templates/intents.json`) finds apps as apps.
+
 So at run time an app is always part of a pack version in the `packs` catalogue; changing an app means a new pack version (docs/11: a version is written once). A workspace sees an app once a live install (`pack_installs.status = 'installed'`) of that version exists. No migration: the install's `ref_map` already names every sheet, sub-item sheet, view, form and dashboard it made.
 
 ## The manifest
