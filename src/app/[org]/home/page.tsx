@@ -62,6 +62,8 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
   const summary = mine ? homeSummary(mine.work, mine.today) : null;
   const canEdit = isEditorRole(role);
   const canManage = isAdminRole(role);
+  // auditors see only their Start here panel: no first-run Next steps, no Getting started (owner decision 15 Nov 2026)
+  const firstRun = role !== 'auditor';
 
   const stepLink = (id: ChecklistStepId): { href: string; label: string } | null => {
     const sheet = home?.firstSheetId ? `/${org}/s/${home.firstSheetId}` : null;
@@ -144,11 +146,11 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
 
       <TestModeNotice org={org} packs={quiet} />
 
-      {nextSteps(setups).map((n) => (
+      {(firstRun ? nextSteps(setups) : []).map((n) => (
         <NextStepCard key={n.installId} org={org} next={n} />
       ))}
 
-      {home && !checklistDone(home.checklist) ? (
+      {firstRun && home && !checklistDone(home.checklist) ? (
         <Card
           headingId="getting-started"
           title="Getting started"

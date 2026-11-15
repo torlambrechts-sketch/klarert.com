@@ -203,4 +203,19 @@ test('Home shows one Next step per standard and one test-mode banner', async ({ 
   await expect(cards).toHaveCount(1);
   await page.reload();
   await expect(page.getByTestId('next-step-card')).toHaveCount(1);
+
+  // an auditor gets no first-run cards and no Getting started (owner decision 15 Nov 2026)
+  localSql(
+    `update memberships m set role = 'auditor', expires_at = now() + interval '30 days'
+       from orgs o, auth.users u
+      where m.org_id = o.id and o.slug = '${slug}' and m.user_id = u.id and u.email = 'vic@example.com'`,
+  );
+  const vic = await page.context().browser()!.newPage();
+  await signIn(vic, 'vic@example.com', `/${slug}/home`);
+  await vic.goto(`/${slug}/home`);
+  await expect(vic.getByTestId('home-summary')).toBeVisible();
+  await expect(vic.getByTestId('next-step-card')).toHaveCount(0);
+  await expect(vic.getByTestId('checklist')).toHaveCount(0);
+  await expect(vic.getByTestId('test-mode-banner')).toHaveCount(0);
+  await vic.close();
 });
