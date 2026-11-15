@@ -53,7 +53,7 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Shared registers 1.3.0 (Standard) first.',
+    'Installs Shared registers 1.3.0 (Recommended) first.',
     { timeout: 30_000 },
   );
   await expect(dialog.getByTestId('adopts-framework')).toHaveCount(0);

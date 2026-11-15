@@ -29,7 +29,7 @@ test('install the GDPR add-on on Core and erase a request record under its reten
     .getByRole('list', { name: 'Available packs' })
     .getByRole('listitem')
     .filter({ hasText: TITLE });
-  await expect(row).toContainText('Standard or Everything');
+  await expect(row).toContainText('Recommended or Everything');
   const dialog = page.getByRole('dialog');
   // the first click may land before the page is interactive
   await expect(async () => {
@@ -37,17 +37,17 @@ test('install the GDPR add-on on Core and erase a request record under its reten
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Shared registers 1.3.0 (Standard) first.',
+    'Installs Shared registers 1.3.0 (Recommended) first.',
   );
   await expect(dialog.getByTestId('adopts-framework')).toContainText('GDPR');
   await expect(dialog.getByTestId('extends-list')).toContainText('Risk register');
   await shot(page, '01-install-dialog');
   await dialog.getByRole('button', { name: 'Install' }).click();
-  await expect(dialog.getByRole('status')).toContainText(`Installed ${TITLE} (Standard).`, {
+  await expect(dialog.getByRole('status')).toContainText(`Installed ${TITLE} (Recommended).`, {
     timeout: 90_000,
   });
   await expect(dialog.getByRole('status')).toContainText(
-    'Installed Shared registers 1.3.0 (Standard) first.',
+    'Installed Shared registers 1.3.0 (Recommended) first.',
   );
   await dialog.getByRole('button', { name: 'Done' }).click();
 

@@ -1,13 +1,14 @@
 // The words people see for packs (docs/05 Words, docs/11, owner decision 15 Nov 2026). The catalogue keeps its
 // manifests as written (keys, titles and versions do not change): this maps the pack vocabulary to plain words at
 // display time. "Add-on" becomes "standard", "Core registers" becomes "Shared registers" and the levels Foundations,
-// Starter and Full become Basic, Standard and Everything. Pure: text in, text out.
+// Starter and Full become Basic, Recommended and Everything ("standard" means a standard such as ISO 27001, so no
+// level is called that: owner decision 15 Nov 2026). Pure: text in, text out.
 import type { PackManifest } from './types';
 
 /** The level names people see, by the name a manifest gives. */
 const LEVEL_NAMES: Record<string, string> = {
   Foundations: 'Basic',
-  Starter: 'Standard',
+  Starter: 'Recommended',
   Full: 'Everything',
 };
 
@@ -21,14 +22,14 @@ export function packTitle(title: string): string {
   return t === CORE_TITLE ? SHARED_TITLE : t;
 }
 
-/** A level name as people see it: Foundations → Basic, Starter → Standard, Full → Everything; others unchanged. */
+/** A level name as people see it: Foundations → Basic, Starter → Recommended, Full → Everything; others unchanged. */
 export function levelName(name: string): string {
   return LEVEL_NAMES[name] ?? name;
 }
 
 /**
- * Whole phrases first, in order, then single words. Each pair is [what the manifest says, what people read]. The
- * level names in running text read "the Standard level" so they are not taken for a standard such as ISO 9001.
+ * Whole phrases first, in order, then single words. Each pair is [what the manifest says, what people read]. A level
+ * at the start of a sentence reads "The Recommended level" so it is not taken for a sheet or a standard.
  */
 const PHRASES: [RegExp, string][] = [
   [/\s*\(add-on\)/g, ''],
@@ -43,13 +44,13 @@ const PHRASES: [RegExp, string][] = [
   [/\bthe Core registers\b/g, 'the shared registers'],
   [/\bCore registers\b/g, SHARED_TITLE],
   [/\bEverything in Foundations plus\b/g, 'Everything in Basic plus'],
-  [/\bEverything in Starter plus\b/g, 'Everything in Standard plus'],
-  [/\bStarter has no\b/g, 'The Standard level has no'],
+  [/\bEverything in Starter plus\b/g, 'Everything in Recommended plus'],
+  [/\bStarter has no\b/g, 'The Recommended level has no'],
   [/\badd Full for\b/g, 'add the Everything level for'],
   [/\bFull adds\b/g, 'The Everything level adds'],
   [/\bin Full\b/g, 'at the Everything level'],
   [/\(Full\b/g, '(Everything'],
-  [/\(Starter\b/g, '(Standard'],
+  [/\(Starter\b/g, '(Recommended'],
   [/\(Foundations\b/g, '(Basic'],
 ];
 

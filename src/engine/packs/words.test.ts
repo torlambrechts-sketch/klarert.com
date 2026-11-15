@@ -9,11 +9,12 @@ describe('pack words people see (docs/05 Words)', () => {
     expect(packTitle('CAPA')).toBe('CAPA');
   });
 
-  it('names the levels Basic, Standard and Everything', () => {
+  it('names the levels Basic, Recommended and Everything, never Standard', () => {
     expect(levelName('Foundations')).toBe('Basic');
-    expect(levelName('Starter')).toBe('Standard');
+    expect(levelName('Starter')).toBe('Recommended');
     expect(levelName('Full')).toBe('Everything');
     expect(levelName('Custom')).toBe('Custom');
+    for (const n of ['Foundations', 'Starter', 'Full']) expect(levelName(n)).not.toMatch(/standard/i);
   });
 
   it('rewrites running text', () => {
@@ -21,13 +22,16 @@ describe('pack words people see (docs/05 Words)', () => {
       'Installs the shared registers (Everything) first.',
     );
     expect(packProse('Everything in Starter plus contractors.')).toBe(
-      'Everything in Standard plus contractors.',
+      'Everything in Recommended plus contractors.',
+    );
+    expect(packProse('Installs the Core registers (Starter) first.')).toBe(
+      'Installs the shared registers (Recommended) first.',
     );
     expect(packProse('Full adds a transfers sheet.')).toBe(
       'The Everything level adds a transfers sheet.',
     );
     expect(packProse('Starter has no drill log: or add Full for the sheet.')).toBe(
-      'The Standard level has no drill log: or add the Everything level for the sheet.',
+      'The Recommended level has no drill log: or add the Everything level for the sheet.',
     );
     expect(packProse('the add-on brings what only a quality system needs')).toBe(
       'the standard brings what only a quality system needs',
@@ -63,7 +67,7 @@ describe('pack words people see (docs/05 Words)', () => {
     expect(m.title).toBe('Shared registers');
     expect(m.description).toBe('Standards extend these registers.');
     expect(m.levels).toEqual([
-      { key: 'starter', name: 'Standard', description: 'Everything in Basic plus incidents.' },
+      { key: 'starter', name: 'Recommended', description: 'Everything in Basic plus incidents.' },
     ]);
     expect(m.setup!.description).toBe('Four steps on the shared registers.');
     expect(m.setup!.steps[0]!.ref).toBe('transfers');

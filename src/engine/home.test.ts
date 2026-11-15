@@ -40,7 +40,7 @@ const step = (number: number, done: boolean): SetupStepProgress => ({
 const setup = (installId: string, title: string, done: boolean[]): StandardSetup => ({
   installId,
   title,
-  level: installId === 'gdpr' ? { name: 'Standard' } : null,
+  level: installId === 'gdpr' ? { name: 'Recommended' } : null,
   progress: {
     title: `${title} setup`,
     description: '',
@@ -58,7 +58,7 @@ describe('nextSteps', () => {
       setup('iso-27001', 'ISO/IEC 27001:2022 ISMS', [false, false]),
     ]);
     expect(cards.map((c) => [c.standard, c.step.number, c.level])).toEqual([
-      ['GDPR privacy', 2, 'Standard'],
+      ['GDPR privacy', 2, 'Recommended'],
       ['ISO/IEC 27001:2022 ISMS', 1, null],
     ]);
     expect(cards[0]!.line).toBe('Step 2 of 4 · 50% done');

@@ -11,11 +11,24 @@ describe('catalogue packs in plain words', () => {
     expect(shown.version).toBe(m!.version);
     expect(shown.sheets).toBe(m!.sheets);
     expect(shown.levels!.map((l) => l.key)).toEqual(m!.levels!.map((l) => l.key));
-    expect(shown.levels!.map((l) => l.name)).toEqual(['Basic', 'Standard', 'Everything']);
+    expect(shown.levels!.map((l) => l.name)).toEqual(['Basic', 'Recommended', 'Everything']);
+  });
+
+  it('names every level Basic, Recommended or Everything, never Standard', () => {
+    // "standard" means a standard such as ISO 27001 (owner decision 15 Nov 2026), so no level may read Standard
+    for (const m of repoPacks()) {
+      const shown = manifestForPeople(m);
+      for (const l of shown.levels ?? []) {
+        expect(['Basic', 'Recommended', 'Everything'], `${m.key}: ${l.name}`).toContain(l.name);
+        expect(l.name, `${m.key}: ${l.name}`).not.toMatch(/standard/i);
+      }
+    }
   });
 
   it('leaves no pack vocabulary in any catalogue pack people read', () => {
-    const banned = /\badd-ons?\b|\bCore registers\b|\b(Foundations|Starter|Full)\b/i;
+    // the manifest words, and the old level name in running text ("(Standard)", "the Standard level", "in Standard")
+    const banned =
+      /\badd-ons?\b|\bCore registers\b|\b(Foundations|Starter|Full)\b|\(Standard\b|\bStandard level\b|\bin Standard\b/i;
     for (const m of repoPacks()) {
       const shown = manifestForPeople(m);
       const texts = [

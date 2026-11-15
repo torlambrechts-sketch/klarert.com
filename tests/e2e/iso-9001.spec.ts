@@ -29,7 +29,7 @@ test('install the ISO 9001 add-on on Core and find it in the shared registers', 
   const i = await installAddon(page, slug, {
     title: TITLE,
     key: 'iso-9001',
-    coreLevel: 'Standard',
+    coreLevel: 'Recommended',
     library: 'ISO 9001:2026',
     shot,
   });

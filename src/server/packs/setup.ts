@@ -51,7 +51,7 @@ export async function readSetups(
     const row = packs.find((p) => p.key === i.pack_key && p.version === i.version);
     if (!row) return [];
     try {
-      // in the words people see (engine/packs/words.ts): "Shared registers", Basic / Standard / Everything
+      // in the words people see (engine/packs/words.ts): "Shared registers", Basic / Recommended / Everything
       const manifest = manifestForPeople(parsePack(row.manifest));
       return manifest.setup ? [{ install: i, manifest, title: packTitle(row.title) }] : [];
     } catch {

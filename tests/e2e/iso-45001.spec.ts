@@ -30,7 +30,7 @@ test('install the ISO 45001 add-on on Core and find it in the shared registers',
   const i = await installAddon(page, slug, {
     title: TITLE,
     key: 'iso-45001',
-    coreLevel: 'Standard',
+    coreLevel: 'Recommended',
     library: 'ISO 45001:2018',
     shot,
   });

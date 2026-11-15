@@ -3,7 +3,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// The Design area (docs/05 §3.8 and §4; owner decision 15 Nov 2026) on the Shared registers 1.3.0 (Standard) and the
+// The Design area (docs/05 §3.8 and §4; owner decision 15 Nov 2026) on the Shared registers 1.3.0 (Recommended) and the
 // CAPA app's pack: the Nonconformities and CAPA sheet's flow (manual entry asking the pack's intake form, the forms,
 // the pack's automation in test mode, the CAPA closure workflow, links, a Slack webhook with a dead letter) with
 // health and pack provenance; an automation edited in the side window through the existing builder and logged; the

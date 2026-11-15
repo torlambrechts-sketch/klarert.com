@@ -39,7 +39,7 @@ test.describe('desktop', () => {
     );
     await shot(page, '01-preview');
     await dialog.getByRole('button', { name: 'Install' }).click();
-    await expect(dialog.getByRole('status')).toContainText(`Installed ${ADDON} (Standard).`, {
+    await expect(dialog.getByRole('status')).toContainText(`Installed ${ADDON} (Recommended).`, {
       timeout: 90_000,
     });
     await expect(dialog.getByRole('status')).toContainText(

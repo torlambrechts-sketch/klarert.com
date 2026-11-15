@@ -320,7 +320,7 @@ Phase 2 (open; a separate task):
 - [x] Words: "sheet" and "item" in every screen and message; a noun table in docs/05 §6.5. The Create wizard's Entry card is removed: "+ New" in the sheet header is the one way to add an item (UX-4, UX-7)
 - [x] Menu in four groups, Work, Registers, Reports, Build; Build for editors and up, Workspace admin for admins and owners; no "Platform"; one search (the top bar's, `/`), the menu filter removed (UX-1, UX-2, UX-5)
 - [x] Phone: one Menu (bottom bar), one Search and one Inbox (top bar), 44 px bottom bar cells and menu rows (UX-6, UX-15)
-- [x] Standards vocabulary at display time (`src/engine/packs/words.ts`, docs/11 Words people see): standard, Shared registers, Basic / Standard / Everything; no manifest or version changed (A1, A6)
+- [x] Standards vocabulary at display time (`src/engine/packs/words.ts`, docs/11 Words people see): standard, Shared registers, Basic / Recommended / Everything (Recommended, not Standard, since 15 Nov 2026); no manifest or version changed (A1, A6)
 - [x] Home: one Next step per installed standard (`nextSteps`) and one test-mode banner with one link (UX-3, A2)
 - [x] The app's Dialog for deleting an approval workflow, reduced motion, 2 px focus rings on inputs, the 13.5 and 9.5 type steps rounded, global-error on the tokens (UX-8, UX-11, UX-12, UX-14)
 - [x] e2e `tests/e2e/simple-ui.spec.ts`: the menu by role (owner, editor, viewer), one Menu, Search and Inbox at 390 px, Home's Next steps and banner
