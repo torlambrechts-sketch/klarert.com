@@ -133,12 +133,12 @@ export interface SheetLayout {
   labels: { side: MapSide; title: string; x: number; y: number }[];
 }
 
-const SW = 200;
+const SW = 184;
 const SH = 56;
 const GAP = 12;
 const HUB_W = 240;
 const HUB_H = 88;
-const SIDE_GAP = 96;
+const SIDE_GAP = 72;
 
 /** Relations (links both ways) above, logic below, other inputs left, other outputs right. */
 export function sideOf(step: FlowStep): MapSide | null {

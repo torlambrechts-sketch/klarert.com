@@ -26,6 +26,7 @@ import {
   GripVertical,
   Lock,
   Pencil,
+  Network,
   SquareKanban,
   Star,
   Table,
@@ -47,6 +48,7 @@ const ICONS: Record<ViewType, typeof Table> = {
   table: Table,
   insights: ChartColumn,
   kanban: SquareKanban,
+  design: Network,
   calendar: Calendar,
   form: FileText,
 };

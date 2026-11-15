@@ -142,7 +142,7 @@ export function FieldSettings({
   );
 }
 
-function FieldSettingsBody({
+export function FieldSettingsBody({
   field,
   ctx,
   env,

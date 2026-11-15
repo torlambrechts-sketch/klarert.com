@@ -121,7 +121,8 @@ describe('tab layout (settings.tabs)', () => {
       'Overdue',
       'Audit table',
     ]);
-    expect(layout.hidden).toEqual([]);
+    // the Design tab starts under More until an owner or admin shows it (docs/05 §3.8)
+    expect(words(layout.hidden)).toEqual(['Design']);
     // only my own personal views
     expect(words(layout.personal)).toEqual(['My open']);
     expect(applyTabLayout(buildTabs([], 'u1', false), null).shown.map((t) => t.label)).toEqual([
@@ -144,7 +145,7 @@ describe('tab layout (settings.tabs)', () => {
       { id: 'v-audit' },
     ]);
     expect(words(layout.shown)).toEqual(['By status', 'Table', 'Dashboard', 'Late', 'Audit table']);
-    expect(words(layout.hidden)).toEqual(['Calendar', 'Forms']);
+    expect(words(layout.hidden)).toEqual(['Calendar', 'Forms', 'Design']);
     // a hidden tab still resolves by its id (?view=calendar)
     expect(resolveActive(tabs, 'calendar')?.id).toBe('calendar');
     expect(layout.shown[0]).toMatchObject({ entryId: 'kanban', view: { id: 'v-board' } });
@@ -165,8 +166,19 @@ describe('tab layout (settings.tabs)', () => {
       'Forms',
       'Overdue',
     ]);
-    expect(words(layout.hidden)).toEqual(['Audit table']);
+    expect(words(layout.hidden)).toEqual(['Audit table', 'Design']);
     expect(words(layout.personal)).toEqual(['My open']);
+  });
+
+  it('shows the Design tab once the tab set lists it as shown, and opens it by its id either way', () => {
+    expect(resolveActive(tabs, 'design')).toMatchObject({
+      id: 'design',
+      type: 'design',
+      saved: null,
+    });
+    const layout = applyTabLayout(tabs, [{ id: 'table' }, { id: 'design' }]);
+    expect(words(layout.shown).slice(0, 2)).toEqual(['Table', 'Design']);
+    expect(words(layout.hidden)).toEqual([]);
   });
 
   it('never hides the Table, shows a view backing a built-in tab once, and round-trips the set', () => {

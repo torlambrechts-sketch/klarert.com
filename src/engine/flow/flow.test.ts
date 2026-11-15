@@ -821,3 +821,14 @@ describe('packDrift', () => {
     });
   });
 });
+
+describe('the world that leaves the server', () => {
+  it('carries a webhook’s host only, and still derives the same destination', () => {
+    const m = maskWorld(world());
+    const json = JSON.stringify(m);
+    expect(json).not.toContain('SECRETTOKEN');
+    expect(json).toContain('hooks.slack.com/…');
+    expect(maskUrl('hooks.slack.com/…')).toBe('hooks.slack.com/…');
+    expect(leavesRows(m, viewer)[0]!.host).toBe('hooks.slack.com/…');
+  });
+});

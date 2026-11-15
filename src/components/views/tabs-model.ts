@@ -1,6 +1,12 @@
 // The sheet's view tabs (docs/01 FR-26): which saved or built-in view backs the Table tab and each "More" entry,
 // which saved views get tabs of their own, and the view a URL id opens. Pure, so it is unit-tested.
-import { toViewType, VIEW_TYPE_LABEL, type SavedView, type ViewType } from '@/engine/views/config';
+import {
+  HIDDEN_BY_DEFAULT,
+  toViewType,
+  VIEW_TYPE_LABEL,
+  type SavedView,
+  type ViewType,
+} from '@/engine/views/config';
 import { BUILTIN_TAB_ORDER, isBuiltinTab, type SheetTab } from '@/engine/views/tabs';
 
 export interface ActiveView {
@@ -14,13 +20,16 @@ export interface ActiveView {
 }
 
 /** The built-in tabs after the Table, in tab order. */
-export const BUILTIN_TABS = ['insights', 'kanban', 'calendar', 'form'] as const;
+export const BUILTIN_TABS = ['insights', 'kanban', 'calendar', 'form', 'design'] as const;
 export type BuiltinTab = (typeof BUILTIN_TABS)[number];
 
 export interface ViewTabs {
   /** The Table tab: the first shared table view, else the built-in one. */
   table: ActiveView;
-  /** Insights, Kanban, Calendar and Form: the first shared view of that type, else the built-in one. */
+  /**
+   * Insights, Kanban, Calendar and Form: the first shared view of that type, else the built-in one. Design: always
+   * the built-in one (nothing to save, docs/05 §3.8).
+   */
   more: Record<BuiltinTab, ActiveView>;
   /** Other saved views, each its own tab. */
   others: ActiveView[];
@@ -59,7 +68,7 @@ export function buildTabs(views: SavedView[], userId: string, canEdit: boolean):
   const gridBase = sorted.find((v) => v.legacyType === 'grid' && v.ownerId === null);
   const merged = gridBase && gridBase.id !== tableBase?.id ? gridBase : null;
   const firstOf = (type: BuiltinTab) => {
-    const v = base(type);
+    const v = type === 'design' ? undefined : base(type);
     return v ? asActive(v) : builtin(type);
   };
   const forms = sorted.filter((v) => v.type === 'form' && v.ownerId === null).map(asActive);
@@ -71,6 +80,7 @@ export function buildTabs(views: SavedView[], userId: string, canEdit: boolean):
       calendar: firstOf('calendar'),
       // one tab for all the sheet's forms; who may change them is decided per form (owners and admins)
       form: { ...builtin('form'), name: forms.length > 1 ? `Forms (${forms.length})` : 'Forms' },
+      design: builtin('design'),
     },
     others: sorted
       .filter((v) => v.id !== tableBase?.id && v.id !== merged?.id && v.type !== 'form')
@@ -166,10 +176,12 @@ export function applyTabLayout(tabs: ViewTabs, config: readonly SheetTab[] | nul
     laid.unshift(lay('table', tabs.table));
     used.add(tabs.table.id);
   }
+  // built-ins the set does not list (all of them without a set): shown, except those that start under More
   for (const [i, view] of builtins.entries())
     if (!used.has(view.id)) {
       used.add(view.id);
-      laid.push(lay(BUILTIN_TAB_ORDER[i]!, view));
+      const id = BUILTIN_TAB_ORDER[i]!;
+      laid.push(lay(id, view, HIDDEN_BY_DEFAULT.includes(id) ? { id, hidden: true } : undefined));
     }
   for (const view of shared)
     if (!used.has(view.id)) {

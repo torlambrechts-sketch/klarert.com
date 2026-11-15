@@ -5,9 +5,13 @@ import type { FlowAutomation, FlowField, FlowForm, FlowWorld } from './types';
 export const RESTRICTED_FIELD = 'Restricted field';
 export const UNREADABLE_SHEET = 'A sheet you cannot open';
 
+/** An address already masked to its host. */
+const MASKED = /^[^/\s]+\/…$/;
+
 /** "hooks.slack.com/…": the host of an https address, never its path, query or secret. */
 export function maskUrl(url: unknown): string {
   if (typeof url !== 'string' || !url.trim()) return 'No address yet';
+  if (MASKED.test(url)) return url;
   try {
     const u = new URL(url.trim());
     return `${u.hostname}/…`;
@@ -75,10 +79,15 @@ function maskOnce(world: FlowWorld): FlowWorld {
       set.add(f.key);
       hiddenKeys.set(f.sheetId, set);
     }
-  if (!hiddenNames.length && !hiddenKeys.size) return world;
+  // a webhook's address stays on the server: only its host leaves
   const automations: FlowAutomation[] = world.automations.map((a) => ({
     ...a,
     name: scrub(a.name, hiddenNames),
+    actions: a.actions.map((x) =>
+      x.type === 'webhook' && typeof x.url === 'string' && !MASKED.test(x.url)
+        ? { ...x, url: maskUrl(x.url) }
+        : x,
+    ),
   }));
   const forms: FlowForm[] = world.forms.map((form) => {
     const keys = hiddenKeys.get(form.sheetId);
