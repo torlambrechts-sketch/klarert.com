@@ -9,6 +9,7 @@ import {
   filterChoices,
   filterGraph,
   hasFilter,
+  leavesRows,
   workspaceGraph,
   type FlowViewer,
   type FlowWorld,
@@ -18,13 +19,14 @@ import type { Role } from '@/engine/types';
 import { Segmented, toolbarSelectClass } from '@/components/shell/data-list';
 import { Button } from '@/components/ui/button';
 import { HealthLine } from './flow-bits';
+import { LeavesLane } from './leaves-lane';
 import { WorkspaceMap } from './workspace-map';
-import { filterQuery, type DesignParams } from './params';
+import { canSeeLeaves, filterQuery, type DesignParams } from './params';
 
 // Platform › Design (docs/05 §4; owner decision 15 Nov 2026): the whole workspace as a map of sheets and as a
 // Connections table (the accessible default and the only view under 760 px), from the same derivation as each sheet's
 // Design tab. Filters are in the URL, so an app's or a folder's design is a link: ?app=, ?pack=, ?group=, ?domain=,
-// ?differs=1; ?show=map draws the map. A sheet opens its Design tab.
+// ?differs=1; ?show=map draws the map. A sheet opens its Design tab. Below: "Leaves the system".
 
 function useNarrow() {
   const [narrow, setNarrow] = useState(false);
@@ -76,6 +78,16 @@ export function WorkspaceDesign({
   );
   const rows = useMemo(() => connectionRows(shown), [shown]);
   const kept = shown.nodes.filter((n) => !n.context);
+  const leaves = useMemo(
+    () =>
+      leavesRows(
+        world,
+        viewer,
+        kept.map((n) => n.id),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [world, viewer, shown],
+  );
   const show = narrow ? 'table' : (params.show ?? 'table');
   const go = (next: DesignParams) => {
     const q = filterQuery(next).toString();
@@ -212,7 +224,7 @@ export function WorkspaceDesign({
             <h2 id="design-sheets" className="text-heading-16 m-0">
               Sheets
             </h2>
-            <div className="border-line overflow-x-auto rounded-lg border">
+            <div className="border-line relative overflow-x-auto rounded-lg border">
               <table className="text-copy-13 w-full border-collapse" data-testid="design-sheets">
                 <thead className="bg-subtle text-muted-foreground text-label-12 text-left">
                   <tr>
@@ -278,7 +290,7 @@ export function WorkspaceDesign({
                 No links, created items or buttons between these sheets yet.
               </p>
             ) : (
-              <div className="border-line overflow-x-auto rounded-lg border">
+              <div className="border-line relative overflow-x-auto rounded-lg border">
                 <table
                   className="text-copy-13 w-full border-collapse"
                   data-testid="design-connections"
@@ -340,6 +352,18 @@ export function WorkspaceDesign({
             )}
           </section>
         </>
+      )}
+
+      {canSeeLeaves(role) ? (
+        <LeavesLane
+          org={org}
+          rows={leaves}
+          exportHref={`/${org}/design/print?${new URLSearchParams([...filterQuery(filter), ['part', 'leaves']]).toString()}`}
+        />
+      ) : (
+        <p className="text-muted-foreground text-copy-13 m-0">
+          Owners, admins and auditors see where data leaves the workspace.
+        </p>
       )}
     </div>
   );

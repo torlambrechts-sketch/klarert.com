@@ -139,6 +139,7 @@ const GAP = 12;
 const HUB_W = 240;
 const HUB_H = 88;
 const SIDE_GAP = 72;
+const PER_ROW = 3;
 
 /** Relations (links both ways) above, logic below, other inputs left, other outputs right. */
 export function sideOf(step: FlowStep): MapSide | null {
@@ -158,10 +159,16 @@ export function layoutSheetMap(flow: SheetFlow): SheetLayout {
   const colH = (n: number) => (n ? n * SH + (n - 1) * GAP : 0);
   const rowW = (n: number) => (n ? n * SW + (n - 1) * GAP : 0);
   const LABEL = 24;
-  const topH = top.length ? LABEL + SH + SIDE_GAP / 2 : 0;
-  const bottomH = bottom.length ? SIDE_GAP / 2 + LABEL + SH : 0;
+  // relations and logic wrap after PER_ROW boxes, so a busy sheet grows down, not sideways
+  const lines = (n: number) => Math.ceil(n / PER_ROW);
+  const topH = top.length ? LABEL + colH(lines(top.length)) + SIDE_GAP / 2 : 0;
+  const bottomH = bottom.length ? SIDE_GAP / 2 + LABEL + colH(lines(bottom.length)) : 0;
   const middleH = Math.max(HUB_H, colH(left.length) + LABEL, colH(right.length) + LABEL);
-  const centreW = Math.max(HUB_W, rowW(top.length), rowW(bottom.length));
+  const centreW = Math.max(
+    HUB_W,
+    rowW(Math.min(PER_ROW, top.length)),
+    rowW(Math.min(PER_ROW, bottom.length)),
+  );
   const width =
     PAD * 2 + (left.length ? SW + SIDE_GAP : 0) + centreW + (right.length ? SIDE_GAP + SW : 0);
   const height = PAD * 2 + topH + middleH + bottomH;
@@ -186,11 +193,27 @@ export function layoutSheetMap(flow: SheetFlow): SheetLayout {
   };
   const row = (list: FlowStep[], side: 'top' | 'bottom', y: number, labelY: number) => {
     if (!list.length) return;
-    const x0 = cx - rowW(list.length) / 2;
-    labels.push({ side, title: side === 'top' ? 'Relations' : 'Logic', x: x0, y: labelY });
-    list.forEach((step, i) =>
-      nodes.push({ id: step.id, side, step, x: x0 + i * (SW + GAP), y, w: SW, h: SH }),
-    );
+    const first = Math.min(PER_ROW, list.length);
+    labels.push({
+      side,
+      title: side === 'top' ? 'Relations' : 'Logic',
+      x: cx - rowW(first) / 2,
+      y: labelY,
+    });
+    list.forEach((step, i) => {
+      const line = Math.floor(i / PER_ROW);
+      const inLine = Math.min(PER_ROW, list.length - line * PER_ROW);
+      const x0 = cx - rowW(inLine) / 2;
+      nodes.push({
+        id: step.id,
+        side,
+        step,
+        x: x0 + (i % PER_ROW) * (SW + GAP),
+        y: y + line * (SH + GAP),
+        w: SW,
+        h: SH,
+      });
+    });
   };
   column(left, 'left', PAD);
   column(right, 'right', cx + centreW / 2 + SIDE_GAP);

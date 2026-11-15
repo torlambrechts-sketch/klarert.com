@@ -726,6 +726,11 @@ describe('layout', () => {
     const left = l.nodes.filter((n) => n.side === 'left');
     expect(Math.max(...left.map((n) => n.x + n.w))).toBeLessThan(l.hub.x);
     expect(l.paths).toHaveLength(l.nodes.length);
+    // seven logic steps wrap into lines of three, so the map grows down, not sideways
+    const bottom = l.nodes.filter((n) => n.side === 'bottom');
+    expect(bottom).toHaveLength(7);
+    expect(new Set(bottom.map((n) => n.y)).size).toBe(3);
+    expect(l.width).toBeLessThanOrEqual(1120);
   });
 });
 

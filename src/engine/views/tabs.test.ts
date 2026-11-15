@@ -141,7 +141,9 @@ describe('template tabs', () => {
   });
 
   it('counts a set without the Design tab the same as one with it hidden (it starts under More)', () => {
-    expect(sameTabs([{ id: 'table' }], [{ id: 'table' }, { id: 'design', hidden: true }])).toBe(true);
+    expect(sameTabs([{ id: 'table' }], [{ id: 'table' }, { id: 'design', hidden: true }])).toBe(
+      true,
+    );
     expect(sameTabs([{ id: 'table' }], [{ id: 'table' }, { id: 'design' }])).toBe(false);
   });
 

@@ -120,7 +120,8 @@ export const builtinTabs = (): SheetTab[] =>
  */
 export function withDefaultHidden(tabs: readonly SheetTab[]): SheetTab[] {
   const out = tabs.map(cleanTab);
-  for (const id of HIDDEN_BY_DEFAULT) if (!out.some((t) => t.id === id)) out.push({ id, hidden: true });
+  for (const id of HIDDEN_BY_DEFAULT)
+    if (!out.some((t) => t.id === id)) out.push({ id, hidden: true });
   return out;
 }
 
