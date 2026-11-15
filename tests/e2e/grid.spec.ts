@@ -224,11 +224,18 @@ test('status rules block until the field is filled; comment on value posts an up
     `item_updates?item_id=eq.${item!.id}&select=body,kind`,
   );
   expect(updates).toEqual([{ body: 'Waiting for the supplier.', kind: 'update' }]);
-  const log = await rest<{ note: string }[]>(
+  // the comment is free text about people: the log keeps a marker, the item's readers read it beside it (0065)
+  const log = await rest<{ id: number; note: string }[]>(
     page,
-    `activity_log?item_id=eq.${item!.id}&action=eq.value.changed&note=not.is.null&select=note`,
+    `activity_log?item_id=eq.${item!.id}&action=eq.value.changed&note=not.is.null&select=id,note`,
   );
-  expect(log.map((l) => l.note)).toContain('Waiting for the supplier.');
+  expect(log.length).toBeGreaterThan(0);
+  expect(log.every((l) => /^\{"\$personal": "[0-9a-f]{64}"\}$/.test(l.note))).toBe(true);
+  const kept = await rest<{ new_value: string }[]>(
+    page,
+    `personal_activity?slot=eq.note&activity_id=in.(${log.map((l) => l.id).join(',')})&select=new_value`,
+  );
+  expect(kept.map((k) => k.new_value)).toContain('Waiting for the supplier.');
 });
 
 test('add a field from the picker, change its settings and change its type with a preview', async ({
