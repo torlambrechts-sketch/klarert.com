@@ -66,7 +66,8 @@ export async function installAddon(
   );
   // Core first, at the level the add-on needs
   expect(installs.map((i) => [i.pack_key, i.level])).toEqual([
-    ['core', opts.coreLevel.toLowerCase()],
+    // the level's key as stored: people read Standard and Everything, the manifest keys are starter and full
+    ['core', opts.coreLevel === 'Everything' ? 'full' : 'starter'],
     [opts.key, 'starter'],
   ]);
   return { org: org!.id, core: installs[0]!.id, addon: installs[1]!.id };
