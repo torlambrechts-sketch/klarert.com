@@ -23,3 +23,27 @@ in this order:
 
 To rotate: add the new value with `vault.update_secret` and change the Vercel variable in the same minute; requests
 signed with the old value are refused from then on. Without the Vault secret every write by a person is refused.
+
+## Email (Resend, docs/09 §10)
+
+Invites are sent by email through Resend. Without these steps nothing is sent: admins see "The email could not be
+sent. Copy the link instead." and invites still work by copying the link. No migration or database setting is needed.
+
+1. Create an account at resend.com (the owner's company account).
+2. Resend › Domains › Add domain: `mail.klarert.com`, region **EU (Ireland)**. Only the subdomain: mail for
+   `klarert.com` itself is not touched.
+3. At the DNS host of `klarert.com`, add the records Resend lists for `mail.klarert.com` exactly as shown (an MX and a
+   TXT record for the sending subdomain, used for bounces and SPF, and a TXT record with the DKIM key; Resend also
+   suggests a DMARC TXT record, which is recommended). Then press Verify in Resend and wait until the domain shows
+   Verified.
+4. Resend › API keys › Create API key: permission **Sending access**, domain `mail.klarert.com` only. Copy it once.
+5. Vercel › the project › Settings › Environment Variables, for **Production** and **Preview**:
+   - `RESEND_API_KEY` = the key (mark it Sensitive);
+   - `EMAIL_FROM` = `Compliance OS <no-reply@mail.klarert.com>` (any address on the verified domain).
+   Redeploy so the functions pick them up.
+6. Check: invite your own second address from Workspace admin › Members. The toast says "Invite sent to …". The
+   Vercel function log shows `{"source":"email","tag":"invite","transport":"resend","outcome":"sent"}`; without the
+   key it shows `RESEND_API_KEY is not set: no email is sent …`.
+
+To rotate the key: create a new one, change `RESEND_API_KEY` in Vercel, redeploy, then delete the old key in Resend.
+Preview deployments send real mail to the addresses invited there; leave the key out of Preview if that is not wanted.
