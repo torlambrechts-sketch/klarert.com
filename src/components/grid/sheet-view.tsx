@@ -313,10 +313,18 @@ function SheetBody(props: SheetViewProps) {
       )}
     >
       <ShellCrumb>
-        <nav aria-label="Breadcrumb" className="text-label-14 flex min-w-0 items-center gap-2.5">
+        {/* the crumb keeps priority: the chips give way first (they shrink fifty times faster) and truncate, with the
+            full text in a tooltip; truncation is CSS only, so screen readers read every word */}
+        <nav
+          aria-label="Breadcrumb"
+          className="text-label-14 flex min-w-0 items-center gap-2.5 overflow-hidden"
+        >
           {props.folderName ? (
             <>
-              <span className="text-muted-foreground flex min-w-0 items-center gap-2">
+              <span
+                className="text-muted-foreground flex min-w-0 items-center gap-2"
+                title={props.folderName}
+              >
                 <Folder className="size-[15px] shrink-0" aria-hidden />
                 <span className="truncate">{props.folderName}</span>
               </span>
@@ -325,7 +333,12 @@ function SheetBody(props: SheetViewProps) {
               </span>
             </>
           ) : null}
-          <span className="text-ink flex min-w-0 items-center gap-2" aria-current="page">
+          <span
+            className="text-ink flex min-w-0 items-center gap-2"
+            aria-current="page"
+            title={sheetName}
+            data-testid="crumb-sheet"
+          >
             <Sheet className="size-[15px] shrink-0" aria-hidden />
             <span className="truncate font-medium">{sheetName}</span>
           </span>
@@ -343,15 +356,20 @@ function SheetBody(props: SheetViewProps) {
             <>
               <span
                 data-testid="system-board"
-                className="bg-soft text-ink text-label-12 flex shrink-0 items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
+                title={`System board · installed by ${props.system.source}`}
+                className="bg-soft text-ink text-label-12 flex max-w-max min-w-[4.5rem] shrink-[50] items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
               >
-                <Lock className="size-3" aria-hidden /> System board
-                <span className="hidden sm:inline">· installed by {props.system.source}</span>
+                <Lock className="size-3 shrink-0" aria-hidden />
+                <span className="min-w-0 truncate">
+                  System board
+                  <span className="hidden sm:inline"> · installed by {props.system.source}</span>
+                </span>
               </span>
               {data ? (
                 <span
                   data-testid="system-used-by"
-                  className="border-line text-muted-foreground text-label-12 hidden shrink-0 rounded-full border px-[9px] py-0.5 font-medium md:inline"
+                  title={usedByText(data.fields)}
+                  className="border-line text-muted-foreground text-label-12 hidden max-w-max min-w-[4.5rem] shrink-[50] truncate rounded-full border px-[9px] py-0.5 font-medium md:inline"
                 >
                   {usedByText(data.fields)}
                 </span>
