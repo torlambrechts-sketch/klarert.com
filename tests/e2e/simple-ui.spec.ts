@@ -14,7 +14,11 @@ const SHOTS = process.env.SIMPLE_SHOTS;
 
 async function shot(page: Page, name: string) {
   if (!SHOTS) return;
-  const size = test.info().project.name === 'phone' ? '390' : 'desktop';
+  const phone = test.info().project.name === 'phone';
+  const size = phone ? '390' : 'desktop';
+  // the whole menu in view on a desktop, and the page loaded behind it
+  if (!phone) await page.setViewportSize({ width: 1280, height: 960 });
+  await expect(page.getByTestId('home-summary')).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/${name}-${size}.png`, fullPage: false });
 }
 
@@ -38,11 +42,17 @@ const headings = (menu: Locator) => menu.getByRole('heading', { level: 2 });
 const group = (menu: Locator, name: string) => menu.getByRole('region', { name, exact: true });
 
 test.describe('the side menu by role', () => {
+  // a fresh workspace of the seed (Maria owner, James editor, Vic viewer; the folder "Your sheets" with two sheets)
+  let slug = '';
+  test.beforeAll(({}, info) => {
+    slug = seedWorkspace(info.project.name === 'phone' ? 'smmp' : 'smm');
+  });
+
   test('an owner sees Work, Registers, Reports and Build with Workspace admin', async ({
     page,
   }) => {
-    await signIn(page, 'maria@example.com', '/meridian/home');
-    await page.goto('/meridian/home');
+    await signIn(page, 'maria@example.com', `/${slug}/home`);
+    await page.goto(`/${slug}/home`);
     const menu = await openMenu(page);
     await expect(headings(menu)).toHaveText(['Work', 'Registers', 'Reports', 'Build']);
     await expect(group(menu, 'Work').getByRole('link')).toContainText(['Home', 'My work']);
@@ -65,8 +75,8 @@ test.describe('the side menu by role', () => {
   });
 
   test('an editor sees Build without Workspace admin', async ({ page }) => {
-    await signIn(page, 'james@example.com', '/meridian/home');
-    await page.goto('/meridian/home');
+    await signIn(page, 'james@example.com', `/${slug}/home`);
+    await page.goto(`/${slug}/home`);
     const menu = await openMenu(page);
     await expect(headings(menu)).toHaveText(['Work', 'Registers', 'Reports', 'Build']);
     await expect(group(menu, 'Build').getByRole('link')).toHaveText([
@@ -78,8 +88,8 @@ test.describe('the side menu by role', () => {
   });
 
   test('a viewer sees no Build', async ({ page }) => {
-    await signIn(page, 'vic@example.com', '/meridian/home');
-    await page.goto('/meridian/home');
+    await signIn(page, 'vic@example.com', `/${slug}/home`);
+    await page.goto(`/${slug}/home`);
     const menu = await openMenu(page);
     await expect(headings(menu)).toHaveText(['Work', 'Registers', 'Reports']);
     await expect(group(menu, 'Build')).toHaveCount(0);
