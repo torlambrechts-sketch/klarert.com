@@ -242,6 +242,7 @@ Owner-approved design (advisory board, all seven agreed, 14 Nov 2026). docs/05 �
 - [x] Owner decision (14 Nov 2026): an **App** card next to Solve a problem lists the apps of the catalogue and of live installs (`appStarts`, `src/engine/create/apps.ts`) with the shortest path to each: open it, create the set that carries it (same preview, `createBundle`, `create_bundle`; Core first when it reads Core's registers, the registers you already have named), or Workspace admin › Packs when its pack is live without it; owners and admins create, others preview; goal matching finds apps as apps (`templates/intents.json`); an add-on app's screens over the Core registers count in the preview (`appNeeds`)
 - [x] Owner decision (14 Nov 2026): pack settings in Create's Details step (a section, not a fourth step: docs/05 §4 Create) with the same picker and unverified notice as Packs › Settings; migration 0047 `create_bundle` records `bundle.settings` with `set_pack_settings` in the same transaction; editable later in Packs
 - [x] Tests: `src/lib/create/apps.test.ts`, `src/lib/create/intents.test.ts`, `src/lib/packs/select.test.ts`, pgTAP `0037_create_bundle_settings.sql`, e2e `tests/e2e/create-wizard.spec.ts` (App card by keyboard only, NIS2 with Norway then Packs, 390 px)
+- [x] Owner decision (15 Nov 2026): CAPA reuses Core's register. `start-capa` 1.2.0 has an optional requirement on Core (docs/11 Optional requirements): in a Core workspace Create › App › CAPA makes no second register and the app works on Nonconformities and CAPA; without Core it keeps its own. Tests `src/lib/packs/capa.test.ts`, e2e `tests/e2e/apps.spec.ts`
 
 ### Approval workflows  [Opus]
 Owner-approved (14 Nov 2026), moved here from After the MVP. docs/04 §13, docs/02 §19, docs/05 (My work, item panel, Sheet settings), docs/11 (manifests).
@@ -313,6 +314,8 @@ Phase 2 (open; a separate task):
 - [x] Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace. Built as the general pack settings mechanism (docs/11 Pack settings); every country entry ships unverified until someone checks it.
 
 Later: consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
+
+Later (owner decision 15 Nov 2026): the script Content-Security-Policy with nonces and a stricter HSTS, after the demo, as their own change.
 
 ---
 

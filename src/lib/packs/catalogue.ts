@@ -2,6 +2,7 @@
 // two wizard starts wrapped as packs. App files (templates/apps/*.json, docs/13) join the pack they name before the
 // manifest is checked, so the catalogue carries them. The seed writes them into the `packs` catalogue table; the app
 // reads the table.
+import capaOnCoreApp from '../../../templates/apps/capa-on-core.json';
 import capaApp from '../../../templates/apps/capa.json';
 import firstSheet from '../../../templates/first-sheet.json';
 import core from '../../../templates/packs/core.json';
@@ -25,7 +26,11 @@ import { startToPack, templateToPack } from './wrap';
 export const START_PACKS = ['capa', 'documents', 'incident', 'audit'] as const;
 
 /** The app files of the repository (templates/apps/*.json). */
-export const repoApps = (): AppFile[] => [parseAppFile(capaApp)];
+export const repoApps = (): AppFile[] => [
+  parseAppFile(capaApp),
+  // the same app key on Core's register (docs/11 Optional requirements): each belongs to one case of start-capa
+  parseAppFile(capaOnCoreApp),
+];
 
 /** Each app file added to the pack it requires; a pack missing or at a version out of range is an error. */
 export function withApps(packs: PackManifest[], files: AppFile[]): PackManifest[] {

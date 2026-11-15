@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ShellCrumb } from './shell-crumb';
 
@@ -43,37 +42,8 @@ export function PageHeader({
   );
 }
 
-export type PageTab = { id: string; label: string; href: string };
-
-export function PageTabs({
-  label,
-  tabs,
-  active,
-  className,
-}: {
-  label: string;
-  tabs: PageTab[];
-  active: string;
-  className?: string;
-}) {
-  return (
-    <nav aria-label={label} className={cn('border-line border-b', className)}>
-      <ul className="m-0 flex [scrollbar-width:none] list-none gap-[22px] overflow-x-auto p-0">
-        {tabs.map((t) => (
-          <li key={t.id}>
-            <Link
-              href={t.href}
-              aria-current={t.id === active ? 'page' : undefined}
-              className="text-muted-foreground hover:text-ink aria-[current=page]:text-ink text-label-14 relative flex h-10 items-center px-px whitespace-nowrap outline-offset-[-2px] aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:-bottom-px aria-[current=page]:after:h-0.5 aria-[current=page]:after:rounded-sm aria-[current=page]:after:bg-[var(--ink)]"
-            >
-              {t.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
+// the tabs scroll the current one into view, so they are a client component of their own
+export { PageTabs, type PageTab } from './page-tabs';
 
 /** A card in the Geist material: 8 px radius, 1 px border, no shadow. */
 export function Card({

@@ -1,6 +1,7 @@
 // Field-level projections: read a field's value wherever it lives and project it (docs/02 §2, docs/03 §1).
 // Everything that needs "the value of field X on item Y" goes through here, never through a type switch.
 import { itemStatusField } from '../fields/item-status';
+import { unsetValueOf } from '../frameworks/unset';
 import { resolveFieldType } from '../fields/resolve';
 import type { AnyFieldType, ValueKind } from '../fields/types';
 import type { Ctx, Field, Item, Json } from '../types';
@@ -16,7 +17,8 @@ export function valueOf(item: Item, field: Field, ctx: Ctx): unknown {
   const def = defOf(field);
   if (def.storage === 'values') {
     const raw = item.values[field.id];
-    return raw === undefined ? null : raw;
+    // a requirement library's unset implementation status reads "Not started" (frameworks/unset.ts); nothing is written
+    return raw === undefined || raw === null ? unsetValueOf(field, ctx) : raw;
   }
   return def.compute ? (def.compute(item, field, ctx) ?? null) : null;
 }

@@ -1,6 +1,7 @@
 import { defOf } from '../../values';
-import { matchingItems, plural, sourceOf } from '../shared';
+import { matchingItems, sourceOf } from '../shared';
 import type { HeatCell, WidgetTypeDef } from '../types';
+import { countItems } from '../../nouns';
 
 /** risk_heatmap: items placed on the grid of a matrix field (likelihood by impact), counted per cell. */
 export const riskHeatmap: WidgetTypeDef = {
@@ -50,7 +51,7 @@ export const riskHeatmap: WidgetTypeDef = {
       rows,
       levels: [...levels.values()].sort((a, b) => a.rank - b.rank),
       total,
-      meta: `${field.name} · ${plural(total, s.source.sheet.itemLabel.toLowerCase())}`,
+      meta: `${field.name} · ${countItems(total, s.source.sheet.itemLabel)}`,
       link: { to: 'sheet', sheetId: s.source.sheet.id },
     };
   },
