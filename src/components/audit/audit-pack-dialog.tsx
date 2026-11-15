@@ -105,9 +105,9 @@ export function AuditPackDialog({
         <div className="flex flex-col gap-1 pr-8">
           <DialogTitle className="text-heading-20">Audit pack</DialogTitle>
           <DialogDescription className="text-copy-14 text-muted-foreground">
-            A zip with the statement of applicability, every sheet in scope as CSV, an index of
-            the evidence, and the activity log of the period with its hash chains checked. Only what
-            you can see goes in.
+            A zip with the statement of applicability, every sheet in scope as CSV, an index of the
+            evidence, and the activity log of the period with its hash chains checked. Only what you
+            can see goes in.
           </DialogDescription>
         </div>
         <form
@@ -183,8 +183,7 @@ export function AuditPackDialog({
               </p>
             ) : (
               <p className="text-label-12 text-muted-foreground m-0">
-                The activity log extract covers these days. Sheets and evidence are as they are
-                now.
+                The activity log extract covers these days. Sheets and evidence are as they are now.
               </p>
             )}
           </fieldset>

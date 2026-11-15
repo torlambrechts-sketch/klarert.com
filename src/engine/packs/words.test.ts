@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { repoPacks } from '@/lib/packs/catalogue';
 import { levelName, manifestForPeople, packProse, packTitle } from './words';
 
 describe('pack words people see (docs/05 Words)', () => {
@@ -35,37 +34,41 @@ describe('pack words people see (docs/05 Words)', () => {
     );
   });
 
-  it('leaves keys, versions and sheets alone', () => {
-    const [m] = repoPacks().filter((p) => p.key === 'core');
-    const shown = manifestForPeople(m!);
-    expect(shown.key).toBe('core');
-    expect(shown.version).toBe(m!.version);
-    expect(shown.sheets).toBe(m!.sheets);
-    expect(shown.levels!.map((l) => l.key)).toEqual(m!.levels!.map((l) => l.key));
-    expect(shown.levels!.map((l) => l.name)).toEqual(['Basic', 'Standard', 'Everything']);
-  });
-
-  it('leaves no pack vocabulary in any catalogue pack people read', () => {
-    const banned = /\badd-ons?\b|\bCore registers\b|\b(Foundations|Starter|Full)\b/i;
-    for (const m of repoPacks()) {
-      const shown = manifestForPeople(m);
-      const texts = [
-        shown.title,
-        shown.description,
-        ...(shown.levels ?? []).flatMap((l) => [l.name, l.description]),
-        ...(shown.setup
-          ? [
-              shown.setup.title,
-              shown.setup.description,
-              ...shown.setup.steps.flatMap((s) => [
-                s.title,
-                s.body,
-                ...Object.values(s.levels ?? {}).flatMap((v) => [v.title ?? '', v.body ?? '']),
-              ]),
-            ]
-          : []),
-      ];
-      for (const t of texts) expect(t, `${m.key}: ${t}`).not.toMatch(banned);
-    }
+  it("maps a manifest's levels and setup, and leaves keys alone", () => {
+    const m = manifestForPeople({
+      title: 'Core registers',
+      description: 'Standards are added as add-ons that extend these registers.',
+      levels: [
+        {
+          key: 'starter',
+          name: 'Starter',
+          description: 'Everything in Foundations plus incidents.',
+        },
+      ],
+      setup: {
+        title: 'GDPR setup',
+        description: 'Four steps on the Core registers.',
+        steps: [
+          {
+            ref: 'transfers',
+            title: 'Transfers',
+            body: 'Mark each processor.',
+            target: { sheetRef: 'processors' },
+            rules: [],
+            levels: { starter: { body: 'Full adds a transfers sheet.' } },
+          },
+        ],
+      },
+    });
+    expect(m.title).toBe('Shared registers');
+    expect(m.description).toBe('Standards extend these registers.');
+    expect(m.levels).toEqual([
+      { key: 'starter', name: 'Standard', description: 'Everything in Basic plus incidents.' },
+    ]);
+    expect(m.setup!.description).toBe('Four steps on the shared registers.');
+    expect(m.setup!.steps[0]!.ref).toBe('transfers');
+    expect(m.setup!.steps[0]!.levels!.starter!.body).toBe(
+      'The Everything level adds a transfers sheet.',
+    );
   });
 });

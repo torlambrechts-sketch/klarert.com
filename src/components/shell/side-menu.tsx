@@ -129,10 +129,10 @@ function NavLink({
 function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: Ws[] }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center max-[759.98px]:h-11 gap-[9px] rounded-md px-2 text-left outline-offset-[-2px]">
+      <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center gap-[9px] rounded-md px-2 text-left outline-offset-[-2px] max-[759.98px]:h-11">
         <span
           aria-hidden
-          className="bg-ink text-primary-foreground text-label-9.5 flex size-[22px] shrink-0 items-center justify-center rounded-full font-semibold"
+          className="bg-ink text-primary-foreground text-label-11 flex size-[22px] shrink-0 items-center justify-center rounded-full font-semibold"
         >
           {initialsOf(current.name)}
         </span>
@@ -190,7 +190,10 @@ function Group({
     <>
       {separator ? <div className="bg-line mx-1 my-2.5 h-px shrink-0" /> : null}
       <section aria-labelledby={id} className="flex flex-col">
-        <h2 id={id} className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
+        <h2
+          id={id}
+          className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium"
+        >
           {title}
         </h2>
         <ul className="flex flex-col gap-px">{children}</ul>

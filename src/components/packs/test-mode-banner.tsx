@@ -67,7 +67,7 @@ export function TestModeBanner({ org, packs }: { org: string; packs: TestModeBan
       id="test-mode"
       aria-labelledby={ids.heading}
       data-testid="test-mode-banner"
-      className="scroll-mt-16 border-warn/40 bg-warn-soft flex flex-col gap-3 rounded-lg border px-5 py-4"
+      className="border-warn/40 bg-warn-soft flex scroll-mt-16 flex-col gap-3 rounded-lg border px-5 py-4"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <FlaskConical className="text-warn size-5 shrink-0" aria-hidden />

@@ -704,7 +704,7 @@ export function MenuSheets(props: MenuSheetsProps) {
         })}
         <DragOverlay dropAnimation={null}>
           {dragging && dragging.kind !== 'empty' ? (
-            <div className="bg-background-100 border-line shadow-menu text-label-13.5 text-ink flex h-8 items-center gap-2 rounded-md border px-2">
+            <div className="bg-background-100 border-line shadow-menu text-label-13 text-ink flex h-8 items-center gap-2 rounded-md border px-2">
               {dragging.kind === 'folder' ? (
                 <Folder className="text-muted-foreground size-4" aria-hidden />
               ) : null}
@@ -784,7 +784,7 @@ function RenameInput({
     onDone(v);
   };
   return (
-    <div className="border-focus bg-background-100 flex h-8 items-center gap-2 rounded-md border px-2">
+    <div className="border-focus bg-background-100 focus-within:ring-focus flex h-8 items-center gap-2 rounded-md border px-2 focus-within:ring-2">
       {icon}
       <input
         ref={input}
@@ -805,7 +805,7 @@ function RenameInput({
           }
         }}
         onBlur={(e) => finish(e.currentTarget.value)}
-        className="text-ink text-label-13.5 placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
+        className="text-ink text-label-13 placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
       />
     </div>
   );
@@ -1031,7 +1031,7 @@ function SheetRow({
           title="Restricted. Ask an owner to give you access."
           className={cn(
             itemClass,
-            'text-muted-foreground text-label-13.5 h-8 min-w-0 flex-1 cursor-default gap-[9px] px-2',
+            'text-muted-foreground text-label-13 h-8 min-w-0 flex-1 cursor-default gap-[9px] px-2',
           )}
         >
           <SheetCode code={sheet.code} />
@@ -1051,7 +1051,7 @@ function SheetRow({
           onDoubleClick={canEdit ? () => setRenaming({ kind: 'sheet', id: sheet.id }) : undefined}
           data-testid={`rail-sheet-${sheet.code}`}
           data-menu-row={sheet.id}
-          className={cn(itemClass, 'group/item text-label-13.5 h-8 min-w-0 flex-1 gap-[9px] px-2')}
+          className={cn(itemClass, 'group/item text-label-13 h-8 min-w-0 flex-1 gap-[9px] px-2')}
           title={sheet.name}
         >
           <SheetCode code={sheet.code} />
@@ -1392,7 +1392,7 @@ function MoveToDialog({
           placeholder="Find a folder"
           aria-label="Find a folder"
           autoComplete="off"
-          className="border-line text-ink placeholder:text-muted-foreground focus:border-focus text-label-14 bg-background-100 h-9 rounded-md border px-2.5 outline-none"
+          className="border-line text-ink placeholder:text-muted-foreground focus:border-focus text-label-14 bg-background-100 focus-visible:ring-focus h-9 rounded-md border px-2.5 outline-none focus-visible:ring-2"
         />
         <ul aria-label="Folders" className="flex max-h-72 flex-col gap-px overflow-y-auto">
           {options.length === 0 ? (
@@ -1457,7 +1457,7 @@ function ArchiveDialog({
         {folder && count > 0 ? (
           <ul aria-label="Sheets archived with the folder" className="flex flex-col gap-1 pl-1">
             {folder.sheets.map((s) => (
-              <li key={s.id} className="text-label-13.5 flex items-center gap-2">
+              <li key={s.id} className="text-label-13 flex items-center gap-2">
                 <SheetCode code={s.code} /> {s.name}
               </li>
             ))}

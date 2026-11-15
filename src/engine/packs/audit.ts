@@ -25,8 +25,7 @@ const titleOf = (v: Obj) =>
 /** "Installed Supplier management 1.0.0: 3 sheets, …" / "Archived Supplier management 1.0.0: …". */
 export function packLogText(action: string, newValue: Json | null): string {
   const v = obj(newValue);
-  const name =
-    `${titleOf(v)} ${String(v.version ?? '')}`.trim();
+  const name = `${titleOf(v)} ${String(v.version ?? '')}`.trim();
   const c = obj(v.counts);
   if (action === 'pack.installed' || action === 'pack.extended') {
     const counts: PackCounts = {

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export const selectClass =
-  'border-input h-9 w-full rounded-md border bg-background-100 px-2 text-label-13 outline-none focus-visible:ring-[3px] focus-visible:ring-focus/25 aria-invalid:border-destructive';
+  'border-input h-9 w-full rounded-md border bg-background-100 px-2 text-label-13 outline-none focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus aria-invalid:border-destructive';
 
 /** Labelled control with an error or hint line. */
 export function Field({

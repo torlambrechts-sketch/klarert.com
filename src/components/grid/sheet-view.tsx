@@ -78,7 +78,7 @@ import {
 
 /** The page header's actions: the board design's 36 px buttons with 15 px icons. */
 const headerButton =
-  "text-label-13.5 h-9 gap-1.5 px-3.5 has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-[15px]";
+  "text-label-13 h-9 gap-1.5 px-3.5 has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-[15px]";
 
 export interface SheetViewProps {
   org: string;

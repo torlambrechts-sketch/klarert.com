@@ -643,7 +643,7 @@ function GoalStep({
         >
           What do you need to handle?
         </h2>
-        <label className="border-line focus-within:border-focus flex h-12 items-center gap-2 rounded-lg border px-3 focus-within:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]">
+        <label className="border-line focus-within:border-focus focus-within:ring-focus flex h-12 items-center gap-2 rounded-lg border px-3 focus-within:ring-2">
           <Search className="text-muted-foreground size-5 shrink-0" aria-hidden />
           <input
             autoFocus
@@ -969,7 +969,7 @@ function SheetList({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a sheet"
           aria-label="Find a sheet"
-          className="border-line focus-visible:border-focus text-label-14 h-10 w-full max-w-[420px] rounded-md border px-3 outline-none"
+          className="border-line focus-visible:border-focus text-label-14 focus-visible:ring-focus h-10 w-full max-w-[420px] rounded-md border px-3 outline-none focus-visible:ring-2"
         />
       ) : null}
       {sheets.length === 0 ? (

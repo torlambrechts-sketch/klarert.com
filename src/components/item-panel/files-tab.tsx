@@ -247,9 +247,7 @@ export function FilesTab(p: FilesTabProps) {
       let field = fieldById.get(docFields.find((f) => f.targetSheetId === sheetId)?.id ?? '');
       if (!field) {
         if (!p.canEdit) {
-          toast.error(
-            'This sheet has no field that links to that sheet. Ask an editor or admin.',
-          );
+          toast.error('This sheet has no field that links to that sheet. Ask an editor or admin.');
           continue;
         }
         const made = await addDocumentsFieldAction({

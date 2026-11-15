@@ -37,9 +37,7 @@ export function NextStepCard({ org, next }: { org: string; next: NextStep }) {
         headingId={headingId}
         title={
           <>
-            <span className="text-muted-foreground text-label-13 block font-medium">
-              Next step
-            </span>
+            <span className="text-muted-foreground text-label-13 block font-medium">Next step</span>
             {next.standard}
           </>
         }

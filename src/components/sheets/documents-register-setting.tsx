@@ -34,9 +34,7 @@ export function DocumentsRegisterSetting({
       return toast.error(r.error.message);
     }
     toast(
-      next
-        ? 'This sheet is now a documents sheet.'
-        : 'This sheet is no longer a documents sheet.',
+      next ? 'This sheet is now a documents sheet.' : 'This sheet is no longer a documents sheet.',
     );
     router.refresh();
   };

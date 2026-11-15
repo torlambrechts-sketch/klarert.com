@@ -32,7 +32,10 @@ export function levelName(name: string): string {
  */
 const PHRASES: [RegExp, string][] = [
   [/\s*\(add-on\)/g, ''],
-  [/Standards are added as add-ons that extend these registers/g, 'Standards extend these registers'],
+  [
+    /Standards are added as add-ons that extend these registers/g,
+    'Standards extend these registers',
+  ],
   [/\badd-ons\b/g, 'standards'],
   [/\badd-on\b/g, 'standard'],
   [/\bAdd-ons\b/g, 'Standards'],
@@ -60,10 +63,12 @@ export function packProse(text: string): string {
  * setup checklist's title, description and steps. Keys, refs, sheets and everything an install writes stay as they
  * are, so planning and hashes do not change.
  */
-export function manifestForPeople<M extends Pick<PackManifest, 'title' | 'description'> & {
-  levels?: PackManifest['levels'];
-  setup?: PackManifest['setup'];
-}>(m: M): M {
+export function manifestForPeople<
+  M extends Pick<PackManifest, 'title' | 'description'> & {
+    levels?: PackManifest['levels'];
+    setup?: PackManifest['setup'];
+  },
+>(m: M): M {
   return {
     ...m,
     title: packTitle(m.title),
