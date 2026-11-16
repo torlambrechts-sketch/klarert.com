@@ -63,11 +63,11 @@ test('the only owner of a workspace is refused, and the workspace named', async 
     `You are the only owner of ${name}. Make someone else owner of ${name} or delete it first.`,
   );
 
-  // nothing happened: still signed in, still the owner
+  // nothing happened: still signed in, still in the workspace
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
-  await page.goto('/');
-  await expect(page.getByText(name).first()).toBeVisible();
+  await page.goto('/account');
+  await expect(page.getByRole('link', { name: `Back to ${name}` })).toBeVisible();
 });
 
 test('a member deletes their account: signed out, cannot sign in, their item shows "Former member"', async ({
@@ -75,7 +75,8 @@ test('a member deletes their account: signed out, cannot sign in, their item sho
 }, info) => {
   test.setTimeout(150_000);
   const phone = info.project.name === 'phone' ? { viewport: { width: 390, height: 844 } } : {};
-  const ownerCtx = await browser.newContext(phone);
+  // the owner checks the sheet on a desktop; the member deletes their account at the project's size
+  const ownerCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const owner = await ownerCtx.newPage();
   const company = `Leavers ${unique()}`;
   const slug = await newWorkspace(owner, 'Ada Lovelace', company);
@@ -138,8 +139,8 @@ test('a member deletes their account: signed out, cannot sign in, their item sho
   await expect(sheet.cell(owner, 'Fix the lock', 'Created by')).toContainText('Former member');
   await expect(sheet.cell(owner, 'Fix the lock', 'Created by')).not.toContainText('Mia');
   await owner.goto(`/${slug}/settings`);
-  await expect(owner.getByText('Ada Lovelace', { exact: true }).first()).toBeVisible();
-  await expect(owner.getByText('Mia Member', { exact: true })).toHaveCount(0);
+  await expect(owner.getByRole('combobox', { name: 'Role for Ada Lovelace' })).toBeVisible();
+  await expect(owner.getByRole('combobox', { name: 'Role for Mia Member' })).toHaveCount(0);
 
   await ctx.close();
   await ownerCtx.close();
