@@ -17,13 +17,14 @@ import {
 } from 'lucide-react';
 import type { AiValue } from '@/engine/fields/ai';
 import type { FormulaConfig } from '@/engine/fields/formula';
+import { metaKind, type MetaConfig } from '@/engine/fields/meta';
 import { subitemLabel, subitemProgress } from '@/engine/subitems';
 import { ProgressChip } from '@/components/subitems/progress-chip';
 import { buttonKey, useRunningButtons } from '@/components/automations/running-buttons';
 import { Button } from '@/components/ui/button';
 import { computedUI, Muted, OptionCell, TextCell } from './kit';
 import { LinkCell, LinkEditor } from './links';
-import { Chip, displayText, EditorFrame, ExplainEditor, Text } from './shared';
+import { Chip, displayText, EditorFrame, ExplainEditor, PeopleNames, Text } from './shared';
 import type { FieldTypeUI } from './types';
 
 // Linked, computed and system types (docs/03 §3.4). Computed values are read-only: their editor explains where the
@@ -194,6 +195,15 @@ export const autoidUI = computedUI({
 
 export const metaUI = computedUI({
   icon: History,
+  // created by / updated by: the person's avatar and name, "Former member" once they have left (as people cells)
+  Cell: (p) =>
+    metaKind(p.field.config as MetaConfig) === 'people' &&
+    typeof p.value === 'string' &&
+    p.value ? (
+      <PeopleNames ids={[p.value]} ctx={p.ctx} />
+    ) : (
+      <TextCell {...p} />
+    ),
   explain: ({ field }) => {
     const which = (field.config as { which: string }).which;
     return (
