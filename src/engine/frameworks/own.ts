@@ -561,6 +561,16 @@ export const ownLicence = (source: string, workspace: string) =>
   `Provided by ${source}. Owned by ${workspace}.`;
 
 /**
+ * The licence note of an own framework with the workspace's current name (owner decision 16 Nov 2026): the stored note
+ * names the workspace as it was at publish time, so a renamed workspace is shown by its name now. Any other note is
+ * returned as it is.
+ */
+export function withCurrentOwner(licence: string, workspace: string): string {
+  const m = /^(Provided by [\s\S]*\.) Owned by [\s\S]*\.$/.exec(licence);
+  return m ? `${m[1]} Owned by ${workspace}.` : licence;
+}
+
+/**
  * The framework a draft publishes, as frameworkToPack and frameworkHash read it: `titles: 'customer'`, the licence
  * note naming the source and the workspace, a statement of applicability over every requirement, and its own pack
  * key for a later edition (so editions are adopted side by side).

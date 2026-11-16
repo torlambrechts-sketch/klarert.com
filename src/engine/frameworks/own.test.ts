@@ -18,6 +18,7 @@ import {
   publishDecision,
   toFramework,
   trimDraft,
+  withCurrentOwner,
   type DraftRequirement,
   type FrameworkDraft,
 } from './own';
@@ -447,5 +448,26 @@ describe('keys, the framework and its library pack', () => {
     const d = draftFromFramework(f);
     expect(trimDraft(d).requirements).toEqual(rows);
     expect(publishDecision(f.requirements, d.requirements).kind).toBe('unchanged');
+  });
+});
+
+describe('withCurrentOwner', () => {
+  it('shows the workspace by its current name', () => {
+    expect(
+      withCurrentOwner(
+        ownLicence('Acme MSA, schedule 3', 'Old Name Ltd'),
+        'Meridian Components Ltd',
+      ),
+    ).toBe('Provided by Acme MSA, schedule 3. Owned by Meridian Components Ltd.');
+  });
+  it('keeps a source with full stops in it', () => {
+    expect(withCurrentOwner(ownLicence('ISO 9001 v. 2. draft', 'A'), 'B')).toBe(
+      'Provided by ISO 9001 v. 2. draft. Owned by B.',
+    );
+  });
+  it('leaves catalogue notes alone', () => {
+    expect(withCurrentOwner('Requirements in our own words.', 'B')).toBe(
+      'Requirements in our own words.',
+    );
   });
 });

@@ -2,6 +2,7 @@
 // into the global tables (service role: the seed), and reading them back for the commands. Given a Supabase client,
 // so the seed and the commands share it; no 'server-only' import.
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { withCurrentOwner } from '@/engine/frameworks/own';
 import { frameworkPackKey, frameworkPackVersion, requirementKey } from '@/engine/frameworks/refs';
 import {
   EDITION_KEYS,
@@ -250,6 +251,16 @@ export async function readFrameworks(db: Db, orgId?: string): Promise<CatalogueF
     }),
   ]);
   must(fw, 'frameworks');
+  // an own framework's licence note names its workspace as it is now, not as it was at publish (owner decision
+  // 16 Nov 2026); a workspace the person can read is one they belong to (RLS)
+  const ownOrgs = [
+    ...new Set((fw.data ?? []).map((f) => f.org_id).filter((o): o is string => !!o)),
+  ];
+  const orgNames = new Map<string, string>();
+  if (ownOrgs.length) {
+    const orgs = await db.from('orgs').select('id, name').in('id', ownOrgs);
+    for (const o of orgs.data ?? []) orgNames.set(o.id, o.name);
+  }
   const count = new Map<string, number>();
   for (const r of reqs) {
     const k = `${r.framework_key}@${r.framework_version}`;
@@ -266,7 +277,10 @@ export async function readFrameworks(db: Db, orgId?: string): Promise<CatalogueF
       publisher: f.publisher,
       kind: f.kind as FrameworkKind,
       source: f.source,
-      licence: f.licence,
+      licence:
+        f.org_id && orgNames.has(f.org_id)
+          ? withCurrentOwner(f.licence, orgNames.get(f.org_id)!)
+          : f.licence,
       url: f.url ?? '',
       packKey: f.pack_key,
       packVersion: f.pack_version,
