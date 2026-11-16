@@ -420,9 +420,17 @@ export function accessText(
       return `Added an auditor${n?.expires_at ? ` until ${String(n.expires_at).slice(0, 10)}` : ''}`;
     case 'member.changed':
       return `Changed a member's role to ${String(n?.role ?? '')}`;
-    case 'member.removed':
-      // 0071: delete my account ends every membership of the person, logged with how
-      return n?.how === 'account deleted' ? 'A member deleted their account' : 'Removed a member';
+    case 'member.removed': {
+      // 0071: delete my account ends every membership of the person, logged with how; 0072: a user deleted
+      // by support in the Supabase dashboard, which may leave the workspace without an owner (ownerless)
+      const line =
+        n?.how === 'account deleted'
+          ? 'A member deleted their account'
+          : n?.how === 'account deleted by support'
+            ? "Support deleted a member's account"
+            : 'Removed a member';
+      return n?.ownerless === true ? `${line}. The workspace now has no owner` : line;
+    }
     // invites (0070): the entry holds the invite id and the role, never the address
     case 'invite.created':
       return `Invited someone as ${roleWord(n)}`;

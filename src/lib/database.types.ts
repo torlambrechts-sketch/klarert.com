@@ -1459,6 +1459,9 @@ isOneToOne: false
 "_access_changed":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"_account_close":
+{ Args: { "p_by_support": boolean,"p_user": string }; Returns: number
+                           },
 "_archive_pack_rows":
 { Args: { "p_install": string }; Returns: Json
                            },
