@@ -23,8 +23,28 @@ import type { Json } from '@/engine/types';
 import type { Database } from '@/lib/database.types';
 import { parsePack } from '@/lib/packs/manifest';
 import { packHash } from '@/lib/packs/hash';
+import { fetchAllPages } from '@/lib/sheet-query';
 
 type Db = SupabaseClient<Database>;
+
+/**
+ * Every row of a list read, a page at a time past the API's 1000-row cap (supabase/config.toml max_rows): a workspace
+ * may hold more sheets, members, fields or items than one response carries, and a plan made from a cut list would
+ * reuse a position or miss a row. The query must end with a unique order and take the range.
+ */
+export async function every<T>(
+  what: string,
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  try {
+    return await fetchAllPages(page);
+  } catch (e) {
+    throw new Error(`${what}: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
 
 function must<T>(r: { data: T; error: { message: string } | null }, what: string): T {
   if (r.error) throw new Error(`${what}: ${r.error.message}`);
@@ -42,17 +62,21 @@ export interface CataloguePack {
 
 /** The newest version of every pack in the catalogue (the `packs` table), manifests checked again. */
 export async function readCatalogue(db: Db): Promise<CataloguePack[]> {
-  const rows = must(
-    await db.from('packs').select('key, version, title, description, hash, manifest'),
-    'packs',
+  const rows = await every('packs', (a, b) =>
+    db
+      .from('packs')
+      .select('key, version, title, description, hash, manifest')
+      .order('key')
+      .order('version')
+      .range(a, b),
   );
-  const newest = new Map<string, NonNullable<typeof rows>[number]>();
+  const newest = new Map<string, (typeof rows)[number]>();
   const v = (s: string) =>
     s
       .split('.')
       .map((n) => n.padStart(6, '0'))
       .join('.');
-  for (const r of rows ?? []) {
+  for (const r of rows) {
     const cur = newest.get(r.key);
     if (!cur || v(r.version) > v(cur.version)) newest.set(r.key, r);
   }
@@ -81,40 +105,82 @@ export async function loadSnapshot(
   orgId: string,
   manifest?: PackManifest,
 ): Promise<{ snapshot: PackSnapshot; timeZone: string }> {
-  const [org, sheets, folders, installs, members, emails, jobRoles, teams, dashboards, libraries] =
-    await Promise.all([
-      db.from('orgs').select('time_zone').eq('id', orgId).single(),
-      db.from('sheets').select('id_prefix, position, parent_sheet_id').eq('org_id', orgId),
-      db.from('folders').select('id, name, position, archived_at').eq('org_id', orgId),
+  const [
+    org,
+    sheetRows,
+    folderRows,
+    installRows,
+    members,
+    emails,
+    jobRoles,
+    teams,
+    dashboards,
+    libraries,
+  ] = await Promise.all([
+    db.from('orgs').select('time_zone').eq('id', orgId).single(),
+    every('sheets', (a, b) =>
+      db
+        .from('sheets')
+        .select('id_prefix, position, parent_sheet_id')
+        .eq('org_id', orgId)
+        .order('id')
+        .range(a, b),
+    ),
+    every('folders', (a, b) =>
+      db
+        .from('folders')
+        .select('id, name, position, archived_at')
+        .eq('org_id', orgId)
+        .order('id')
+        .range(a, b),
+    ),
+    every('pack installs', (a, b) =>
       db
         .from('pack_installs')
         .select('id, pack_key, version, status, level, ref_map')
-        .eq('org_id', orgId),
+        .eq('org_id', orgId)
+        .order('id')
+        .range(a, b),
+    ),
+    every('members', (a, b) =>
       db
         .from('memberships')
         .select('user_id, profiles!inner(display_name, initials, color)')
-        .eq('org_id', orgId),
-      db.rpc('pack_member_emails', { p_org: orgId }),
-      db.from('job_roles').select('id, name').eq('org_id', orgId),
-      db.from('teams').select('id, name').eq('org_id', orgId),
-      db.from('dashboards').select('position').eq('org_id', orgId),
-      // adopted framework libraries (docs/12): a pack's widgets and setup steps may read them
+        .eq('org_id', orgId)
+        .order('user_id')
+        .range(a, b),
+    ),
+    every('member emails', (a, b) =>
+      db.rpc('pack_member_emails', { p_org: orgId }).order('user_id').range(a, b),
+    ),
+    every('job roles', (a, b) =>
+      db.from('job_roles').select('id, name').eq('org_id', orgId).order('id').range(a, b),
+    ),
+    every('teams', (a, b) =>
+      db.from('teams').select('id, name').eq('org_id', orgId).order('id').range(a, b),
+    ),
+    every('dashboards', (a, b) =>
+      db.from('dashboards').select('position').eq('org_id', orgId).order('id').range(a, b),
+    ),
+    // adopted framework libraries (docs/12): a pack's widgets and setup steps may read them
+    every('libraries', (a, b) =>
       db
         .from('sheets')
         .select('id, settings')
         .eq('org_id', orgId)
         .eq('is_library', true)
         .is('archived_at', null)
-        .is('parent_sheet_id', null),
-    ]);
-  const email = new Map((must(emails, 'member emails') ?? []).map((e) => [e.user_id, e.email]));
+        .is('parent_sheet_id', null)
+        .order('id')
+        .range(a, b),
+    ),
+  ]);
+  const email = new Map(emails.map((e) => [e.user_id, e.email]));
   const last = (rows: { position: string }[]) =>
     rows
       .map((r) => r.position)
       .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
       .at(-1) ?? null;
-  const sheetRows = must(sheets, 'sheets') ?? [];
-  const installRows = must(installs, 'pack installs') ?? [];
   const foreign = manifest ? await loadForeign(db, orgId, manifest, installRows) : null;
   return {
     timeZone: must(org, 'workspace')?.time_zone ?? 'Europe/London',
@@ -122,12 +188,12 @@ export async function loadSnapshot(
       ...(foreign ?? {}),
       orgId,
       prefixes: sheetRows.flatMap((s) => (s.id_prefix ? [s.id_prefix] : [])),
-      folders: (must(folders, 'folders') ?? []).map((f) => ({
+      folders: folderRows.map((f) => ({
         id: f.id,
         name: f.name,
         archived: !!f.archived_at,
       })),
-      installs: (must(installs, 'pack installs') ?? []).map((i) => ({
+      installs: installRows.map((i) => ({
         id: i.id,
         packKey: i.pack_key,
         version: i.version,
@@ -135,25 +201,25 @@ export async function loadSnapshot(
         level: i.level ?? null,
         refMap: (i.ref_map ?? {}) as Record<string, string>,
       })),
-      libraries: (must(libraries, 'libraries') ?? []).flatMap((s) => {
+      libraries: libraries.flatMap((s) => {
         const fw = (s.settings as { framework?: { key?: unknown; version?: unknown } } | null)
           ?.framework;
         return typeof fw?.key === 'string' && typeof fw.version === 'string'
           ? [{ library: `${fw.key}@${fw.version}`, sheetId: s.id }]
           : [];
       }),
-      members: (must(members, 'members') ?? []).map((m) => ({
+      members: members.map((m) => ({
         id: m.user_id,
         name: m.profiles.display_name,
         initials: m.profiles.initials,
         color: m.profiles.color,
         email: email.get(m.user_id) ?? '',
       })),
-      jobRoles: must(jobRoles, 'job roles') ?? [],
-      teams: must(teams, 'teams') ?? [],
+      jobRoles,
+      teams,
       lastSheetPosition: last(sheetRows.filter((s) => !s.parent_sheet_id)),
-      lastFolderPosition: last(must(folders, 'folders') ?? []),
-      lastDashboardPosition: last(must(dashboards, 'dashboards') ?? []),
+      lastFolderPosition: last(folderRows),
+      lastDashboardPosition: last(dashboards),
     },
   };
 }
@@ -175,53 +241,76 @@ async function loadForeign(
   const depIds = deps.map((d) => d.id);
   const keyOf = new Map(deps.map((d) => [d.id, d.pack_key]));
   const [sheets, folders] = await Promise.all([
-    db
-      .from('sheets')
-      .select('id, pack_ref, pack_install_id, name, item_label, id_prefix, settings')
-      .eq('org_id', orgId)
-      .in('pack_install_id', depIds)
-      .is('parent_sheet_id', null)
-      .is('archived_at', null),
-    db
-      .from('folders')
-      .select('id, pack_ref, pack_install_id')
-      .eq('org_id', orgId)
-      .in('pack_install_id', depIds)
-      .is('archived_at', null),
+    every('sheets', (a, b) =>
+      db
+        .from('sheets')
+        .select('id, pack_ref, pack_install_id, name, item_label, id_prefix, settings')
+        .eq('org_id', orgId)
+        .in('pack_install_id', depIds)
+        .is('parent_sheet_id', null)
+        .is('archived_at', null)
+        .order('id')
+        .range(a, b),
+    ),
+    every('folders', (a, b) =>
+      db
+        .from('folders')
+        .select('id, pack_ref, pack_install_id')
+        .eq('org_id', orgId)
+        .in('pack_install_id', depIds)
+        .is('archived_at', null)
+        .order('id')
+        .range(a, b),
+    ),
   ]);
   const wanted = new Set(foreignSheets(m).map((f) => foreignKey(f.pack, f.sheet)));
-  const targets = (must(sheets, 'sheets') ?? []).filter((s) =>
+  const targets = sheets.filter((s) =>
     wanted.has(foreignKey(keyOf.get(s.pack_install_id ?? '') ?? '', s.pack_ref ?? '')),
   );
   const foreignFolders: Record<string, string> = {};
-  for (const f of must(folders, 'folders') ?? [])
+  for (const f of folders)
     foreignFolders[foreignKey(keyOf.get(f.pack_install_id ?? '') ?? '', f.pack_ref ?? '')] = f.id;
   if (!targets.length) return { foreign: {}, foreignFolders };
   const ids = targets.map((s) => s.id);
-  const [fields, groups, views, items] = await Promise.all([
-    db
-      .from('fields')
-      .select(
-        'id, sheet_id, key, name, type, config, required, locked, description, position, pack_install_id',
-      )
-      .in('sheet_id', ids)
-      .is('archived_at', null),
-    db
-      .from('groups')
-      .select('id, sheet_id, pack_ref, pack_install_id, name, color, position')
-      .in('sheet_id', ids),
-    db.from('views').select('sheet_id, position').in('sheet_id', ids),
-    db.from('items').select('group_id, position').in('sheet_id', ids).is('archived_at', null),
+  const [fieldRows, groupRows, viewRows, itemRows] = await Promise.all([
+    every('fields', (a, b) =>
+      db
+        .from('fields')
+        .select(
+          'id, sheet_id, key, name, type, config, required, locked, description, position, pack_install_id',
+        )
+        .in('sheet_id', ids)
+        .is('archived_at', null)
+        .order('id')
+        .range(a, b),
+    ),
+    every('groups', (a, b) =>
+      db
+        .from('groups')
+        .select('id, sheet_id, pack_ref, pack_install_id, name, color, position')
+        .in('sheet_id', ids)
+        .order('id')
+        .range(a, b),
+    ),
+    every('views', (a, b) =>
+      db.from('views').select('sheet_id, position').in('sheet_id', ids).order('id').range(a, b),
+    ),
+    // every live item of those sheets: a new item goes after the last one of its group, past the first 1000 too
+    every('items', (a, b) =>
+      db
+        .from('items')
+        .select('group_id, position')
+        .in('sheet_id', ids)
+        .is('archived_at', null)
+        .order('id')
+        .range(a, b),
+    ),
   ]);
   const last = (rows: { position: string }[]) =>
     rows
       .map((r) => r.position)
       .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
       .at(-1) ?? null;
-  const fieldRows = must(fields, 'fields') ?? [];
-  const groupRows = must(groups, 'groups') ?? [];
-  const viewRows = must(views, 'views') ?? [];
-  const itemRows = must(items, 'items') ?? [];
   const foreign: Record<string, ForeignSheet> = {};
   for (const s of targets) {
     const pack = keyOf.get(s.pack_install_id ?? '') ?? '';
@@ -291,15 +380,15 @@ export async function requiredFirst(
 ): Promise<InstallFirst[]> {
   if (!m.requires.length) return [];
   const cat = catalogue ?? (await readCatalogue(db));
-  const installs =
-    must(
-      await db
-        .from('pack_installs')
-        .select('pack_key, version, level, status')
-        .eq('org_id', orgId)
-        .eq('status', 'installed'),
-      'pack installs',
-    ) ?? [];
+  const installs = await every('pack installs', (a, b) =>
+    db
+      .from('pack_installs')
+      .select('pack_key, version, level, status')
+      .eq('org_id', orgId)
+      .eq('status', 'installed')
+      .order('id')
+      .range(a, b),
+  );
   const out: InstallFirst[] = [];
   for (const r of m.requires) {
     // an optional requirement is never installed for you (docs/11 Optional requirements); live, it is raised as any
@@ -362,8 +451,8 @@ export async function loadRequirementItems(
   keys: string[],
 ): Promise<Record<string, string>> {
   if (!keys.length || !libraries.length) return {};
-  const rows = must(
-    await db
+  const rows = await every('library items', (a, b) =>
+    db
       .from('items')
       .select('id, requirement_ref')
       .eq('org_id', orgId)
@@ -372,11 +461,12 @@ export async function loadRequirementItems(
         libraries.map((l) => l.sheetId),
       )
       .in('requirement_ref', keys)
-      .is('archived_at', null),
-    'library items',
+      .is('archived_at', null)
+      .order('id')
+      .range(a, b),
   );
   return Object.fromEntries(
-    (rows ?? []).flatMap((r) => (r.requirement_ref ? [[r.requirement_ref, r.id] as const] : [])),
+    rows.flatMap((r) => (r.requirement_ref ? [[r.requirement_ref, r.id] as const] : [])),
   );
 }
 

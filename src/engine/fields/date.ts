@@ -17,6 +17,7 @@ export const date = base<string, DateConfig>({
   defaultConfig: () => ({ relative: true }),
   defaultWidth: 160,
   formAllowed: true,
+  publicConfigKeys: ['relative'],
   kanbanCapable: false,
   calendarCapable: true,
   triggers: ['field_changed', 'date_arrives'],

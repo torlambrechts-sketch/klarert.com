@@ -27,7 +27,7 @@ export type InviteCreated = {
 };
 
 /**
- * Create an invite and email it (board review A4, docs/09 §10). The email is sent by the server after the admin is
+ * Create an invite and email it (board review A4, docs/09 §11). The email is sent by the server after the admin is
  * authorised; it needs no database privilege. When it cannot be sent the invite still exists and the result says so.
  */
 export async function createInvite(input: unknown): Promise<Result<InviteCreated>> {

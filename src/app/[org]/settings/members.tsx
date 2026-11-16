@@ -59,7 +59,7 @@ export function InviteForm({
 }) {
   const [sent, setSent] = useState<InviteCreated | null>(null);
   const [role, setRole] = useState<Role>('editor');
-  // one toast per invite: whether the email went out (docs/09 §10)
+  // one toast per invite: whether the email went out (docs/09 §11)
   useEffect(() => {
     if (!sent) return;
     if (sent.emailSent) toast(`Invite sent to ${sent.email}`);

@@ -1,7 +1,7 @@
 import 'server-only';
 import { deliver, emailConfigured, type EmailMessage, type SendResult } from './transport';
 
-// The email module (docs/09 §10): server-only, no database access and no service role. Callers authorise first (a
+// The email module (docs/09 §11): server-only, no database access and no service role. Callers authorise first (a
 // command), build the content with a template (./templates) and send it here. Later steps (reminders, policy
 // read-and-accept requests, notifications) add a template and a tag; the interface stays `sendEmail(message)`.
 

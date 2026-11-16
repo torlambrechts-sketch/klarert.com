@@ -423,20 +423,41 @@ pgTAP file that runs the attack as `authenticated` and shows it refused.
 
 1. **Command gate secret** (0053): set it in Vault and Vercel before applying 0053 (scripts/hosted/README.md); without
    it every write by a person is refused.
-2. **Pending uploads never confirmed** (closed tab during upload) stay in the bucket, readable only by their
-   uploader. A daily cleanup by the scheduler (service role) would remove those older than an hour.
-3. **Personal data still in clear in the log:** display names in `member.*` notes (access-provisioning evidence),
-   free-text notes on value changes and approval comments. They need an owner decision on what counts as personal.
-4. **Restricted `ack` / `signature` fields:** clearing such a value goes to `restricted_values` by delete, which the
-   attestation guard does not see (clearing a signature is allowed anyway; clearing others' acknowledgements of a
-   restricted ack field is not stopped).
-5. **Public form configs** are filtered by a deny-list of internal keys (`_public_field_config`); a new field type
-   with an internal id in its config must add its key there.
+2. ~~**Pending uploads never confirmed**~~: removed by the scheduler every hour once an hour old (0067, §10).
+3. ~~**Personal data still in clear in the log**~~: notes of value changes and approval comments are masked like
+   comment bodies (0065, §10). Display names in `member.*` notes stay in clear as access-provisioning evidence (owner
+   decision 15 Nov 2026, docs/02 §18).
+4. **Restricted `ack` / `signature` fields — accepted (owner decision 15 Nov 2026):** clearing such a value goes to
+   `restricted_values` by delete, which the attestation guard does not see (clearing a signature is allowed anyway;
+   clearing others' acknowledgements of a restricted ack field is not stopped). Accepted for now; no change.
+5. ~~**Public form configs** filtered by a deny-list~~: an allow-list per field type from the field registry (0066,
+   §10).
 6. ~~Two-step setting from the app~~: `setWorkspaceTwoStep` calls `set_require_two_step` (done when the branches
    merged).
 
+## 10. Security follow-ups (15 Nov 2026, branch `claude/security-followups`)
 
-## 10. Email (15 Nov 2026, branch `claude/email-invites`)
+The open items of §9.1 the owner decided on 15 Nov 2026, and two reads that stopped at the API's 1 000-row cap.
+
+| Item | Now | Migration | Tests |
+|---|---|---|---|
+| §9.1.3 Free text in the log | A person's note on a value change and every approval comment become a personal-data marker; the note and its salt live in `personal_activity` (slot `note`, under the entry's field). Retention erasure with `comments` (and anonymise) erases them; the tombstone counts them in `log_values_erased` and the notes still in clear in `earlier_entries_in_clear`; `verify_activity_chain` checks each against its marker. Entries written before 0065 cannot change (append-only): their notes stay in clear and are counted. System notes (automations, pack operations, the framework edition move) and member names in `member.*` notes stay in clear (docs/02 §18) | 0065 | pgTAP `0058_note_masking.sql`; engine `activity.test.ts`, `audit.test.ts`; e2e first-sheet, approvals |
+| §9.1.2 Abandoned uploads | The scheduler (service role, the existing 15-minute cron route, first tick of each hour) lists objects no `files` row holds that are over an hour old (`stale_pending_uploads`, service role only, never younger than an hour) and removes them through the Storage API; a log line per workspace. There is no pending row to remove: `files` is written only on confirmation | 0067 | pgTAP `0057_pending_upload_cleanup.sql`; `files.test.ts`, `pending-uploads.test.ts` |
+| Audit pack hash columns | `activity/log.csv` carries every hashed input as hashed (`org_id`, `chain_seq`, `hash_v`, `at_utc`, the jsonb text of the values, the note as JSON …) and `activity/method.txt` the v1 and v2 recipe, so an auditor recomputes each hash without the database (docs/02 §6) | — | `hash-recipe.test.ts` (fixture made by the database's own functions), pgTAP `0056_audit_hash_recipe.sql`, e2e audit-outputs recomputes every row of a real pack |
+| Paging past 1 000 rows | Pack planning (install: the workspace snapshot, the required packs' sheets, fields, groups, views and items, the library items; upgrade: what the install made, the items it created, the catalogue) and the CSV importer's member list read every page (`fetchAllPages`, `every` in `src/server/packs/install.ts`, `fetchPeople`). Before, a register over 1 000 items could get a new item at a position already taken, or an upgrade miss rows it made | — | `src/server/packs/paging.test.ts`, `src/lib/sheet-query.test.ts` (the capped fake client) |
+| §10.1.1 Approval comments outside the log (owner decision 15 Nov 2026: erase them with comments) | `retention_execute` with `comments` (and anonymise) sets `workflow_decisions.comment` and `workflow_instances.submit_comment` to null for the item; the tombstone counts them (`approval_comments_erased`). `workflow_decisions_append_only` allows that and nothing else: inside erasure only (`app.retention_op`, transaction-local, set by `retention_execute`), comment to null only, every other column unchanged; `workflow_instances_comment_guard` the same for the submit comment. The decision itself stays | 0068 | pgTAP `0059_approval_comment_erasure.sql` |
+| §10.1.2 Field type conversion notes (owner decision 15 Nov 2026: log them as the system's) | `changeFieldType` writes converted values through `convert_item_value` (SECURITY INVOKER: `set_item_values` with the caller's rights and every check, `app.system_note` on for that call); the note "Field type changed to <type>" is built in the database from a type's name (pattern checked, never free text) and stays in clear | 0069 | pgTAP `0060_field_conversion_note.sql`; `type-label.test.ts` (every type label passes the pattern) |
+| §9.1.5 Public form configs | `_public_field_config(type, config)` keeps only the keys the type lists in `publicConfigKeys` (field registry); unknown types and keys show nothing. `public-config.test.ts` fails when the SQL list and the registry differ, when a public type has no list, or when a list names an internal key | 0066 | pgTAP `0055_public_config_allow_list.sql`, `0053_low_findings.sql`; `public-config.test.ts` |
+
+### 10.1 Decided (owner, 15 Nov 2026)
+
+1. ~~**Approval comments outside the log**~~: erased with comments (0068, above).
+2. ~~**Field type conversion notes**~~: logged as the system's, in clear (0069, above).
+3. **Other notes stay in clear:** archive notes, retention reasons (postpone, legal hold), the notes on retention
+   tombstones and file archive notes are kept in clear in the log. Only value-change comments and approval comments
+   are masked (0065).
+
+## 11. Email (15 Nov 2026, branch `claude/email-invites`)
 
 Invites are sent by email (board review A4). The module is `src/server/email/`, server-only, and is the one way the
 app sends mail; reminders, read-and-accept requests and notifications will add a template and a tag to it.
@@ -502,7 +523,7 @@ copy-link; see `scripts/hosted/README.md` › Email):
 | `EMAIL_FROM` | The sender, e.g. `Compliance OS <no-reply@mail.klarert.com>` |
 | `MAILPIT_URL` | Local only, optional: Mailpit's web address if not `http://127.0.0.1:54324` |
 
-### 10.1 Open (for the owner)
+### 11.1 Open (for the owner)
 
 1. **Creating invites is not rate-limited.** An admin can create (and revoke and create again) any number of invites,
    each one an email. Brevo's own sending limits apply. A per-workspace daily limit can be added if abuse appears.

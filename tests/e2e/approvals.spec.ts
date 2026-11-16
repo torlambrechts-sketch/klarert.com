@@ -222,9 +222,15 @@ test('define, submit, approve from My work, a rejection back to step 1, locked',
       'item.locked',
     ].join(','),
   );
+  // the comment is a personal-data marker in the log and kept beside it for the item's readers (0065)
   expect(
     localSql(
-      `select note from activity_log where item_id = '${item}' and action = 'workflow.decided' and new_value->>'decision' = 'rejected'`,
+      `select note ~ '^\\{"\\$personal": "[0-9a-f]{64}"\\}$' from activity_log where item_id = '${item}' and action = 'workflow.decided' and new_value->>'decision' = 'rejected'`,
+    ).trim(),
+  ).toBe('t');
+  expect(
+    localSql(
+      `select pa.new_value #>> '{}' from personal_activity pa join activity_log a on a.id = pa.activity_id where a.item_id = '${item}' and a.action = 'workflow.decided' and a.new_value->>'decision' = 'rejected' and pa.slot = 'note'`,
     ).trim(),
   ).toBe('Add the rollback plan');
 

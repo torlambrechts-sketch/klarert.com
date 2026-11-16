@@ -6,6 +6,7 @@ import {
   chainSummary,
   chainTable,
   CHAIN_METHOD,
+  HASH_RECIPE,
   compileManagementReview,
   evidenceTable,
   filesToInclude,
@@ -421,7 +422,7 @@ export async function buildAuditPack(input: unknown): Promise<Result<AuditPackRe
         );
         const summary = chainSummary(chains);
         put('activity/chains.csv', toCsv(chainTable(chains), { bom: true }));
-        put('activity/method.txt', `${CHAIN_METHOD}\n`);
+        put('activity/method.txt', `${CHAIN_METHOD}\n\n${HASH_RECIPE}\n`);
 
         const readme = packReadme({
           workspace: ws.name,

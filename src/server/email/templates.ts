@@ -1,4 +1,4 @@
-// Email templates (docs/09 §10): pure functions from data to subject, plain text and HTML. Plain and accessible: one
+// Email templates (docs/09 §11): pure functions from data to subject, plain text and HTML. Plain and accessible: one
 // column, real text, the link written out as well as linked, no images, no remote resources and no tracking. English
 // sentence case; dates as 11 Nov 2026 in the workspace's time zone. Every value from people (workspace and person
 // names) is escaped in the HTML and stripped of line breaks in the subject.

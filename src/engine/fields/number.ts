@@ -49,6 +49,7 @@ export const number = base<number, NumberConfig>({
   defaultConfig: () => ({ unit: '', decimals: 2 }),
   defaultWidth: 84,
   formAllowed: true,
+  publicConfigKeys: ['unit', 'decimals', 'bands', 'higherIsBetter'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'number_above', 'number_below'],

@@ -60,6 +60,7 @@ export const question = base<string, QuestionConfig>({
   }),
   defaultWidth: 160,
   formAllowed: true,
+  publicConfigKeys: ['question', 'options', 'weight'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

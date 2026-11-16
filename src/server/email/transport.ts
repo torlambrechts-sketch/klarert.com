@@ -1,4 +1,4 @@
-// Email transports (docs/09 §10). One interface, `send(message)`, and two transports:
+// Email transports (docs/09 §11). One interface, `send(message)`, and two transports:
 // - Brevo's transactional API (https://api.brevo.com/v3/smtp/email; Brevo keeps data in the EU) when BREVO_API_KEY
 //   is set;
 // - local Mailpit, the Supabase local stack's mail catcher, through its HTTP send API, only when the Supabase URL is
@@ -84,7 +84,7 @@ export function brevoTransport(opts: {
           sender: sender.name
             ? { email: sender.email, name: sender.name }
             : { email: sender.email },
-          // no open pixel (honoured on Brevo Enterprise plans) and opens and clicks anonymised (docs/09 §10)
+          // no open pixel (honoured on Brevo Enterprise plans) and opens and clicks anonymised (docs/09 §11)
           to: [{ email: m.to, contactPixelTrackingConsent: false, removeTrackingPixel: true }],
           subject: m.subject,
           htmlContent: m.html,

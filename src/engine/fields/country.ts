@@ -122,6 +122,7 @@ export const country: FieldTypeDef<string, CountryConfig> = base<string, Country
   defaultConfig: () => ({}),
   defaultWidth: 140,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

@@ -384,11 +384,18 @@ export async function readEvidence(
 
 // ───────────────────────── activity ─────────────────────────
 
+// the values also as the database prints them (`::text`): the hash covers that text, which JSON parsing would change
+// (key order, number scale), so the audit pack carries it for an auditor to recompute each hash (docs/02 §6)
 const ACTIVITY_COLUMNS =
-  'id, at, chain_key, item_id, sheet_id, actor_kind, actor_id, action, field_id, old_value, new_value, note, prev_hash, hash';
+  'id, org_id, at, chain_key, chain_seq, hash_v, item_id, sheet_id, actor_kind, actor_id, action, field_id, old_value, new_value, old_value_text:old_value::text, new_value_text:new_value::text, note, prev_hash, hash';
 
 type ActivityRow = {
   id: number;
+  org_id: string;
+  chain_seq: number | null;
+  hash_v: number;
+  old_value_text: string | null;
+  new_value_text: string | null;
   at: string;
   chain_key: string;
   item_id: string | null;
@@ -406,6 +413,11 @@ type ActivityRow = {
 
 const toEntry = (r: ActivityRow): ActivityEntry => ({
   id: r.id,
+  orgId: r.org_id,
+  chainSeq: r.chain_seq,
+  hashV: r.hash_v,
+  oldValueText: r.old_value_text,
+  newValueText: r.new_value_text,
   at: r.at,
   chainKey: r.chain_key,
   itemId: r.item_id,

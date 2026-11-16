@@ -10,6 +10,7 @@ import type { Json } from '@/engine/types';
 import type { Database } from '@/lib/database.types';
 import { parsePack } from '@/lib/packs/manifest';
 import {
+  every,
   loadRequirementItems,
   loadSnapshot,
   manifestRequirementKeys,
@@ -22,8 +23,6 @@ function must<T>(r: { data: T; error: { message: string } | null }, what: string
   if (r.error) throw new Error(`${what}: ${r.error.message}`);
   return r.data;
 }
-
-const MAX_ROWS = 9999;
 
 /** One version of a pack from the catalogue (the catalogue keeps every version an install may point at). */
 export async function readPackVersion(
@@ -81,7 +80,9 @@ export function updatesFor(
 
 /** Every pack version in the catalogue (key and version only): updates pick theirs with updateTarget. */
 export async function readPackVersions(db: Db): Promise<{ key: string; version: string }[]> {
-  return must(await db.from('packs').select('key, version'), 'pack versions') ?? [];
+  return every('pack versions', (a, b) =>
+    db.from('packs').select('key, version').order('key').order('version').range(a, b),
+  );
 }
 
 const position = (rows: { position: string }[]) =>
@@ -109,82 +110,117 @@ export async function loadInstalledState(
   orgId: string,
   install: { id: string; version: string; level: string | null; ref_map: unknown },
 ): Promise<InstalledState> {
-  const [folders, sheets, automations, dashboards] = await Promise.all([
-    db.from('folders').select('id, pack_ref, name, archived_at').eq('pack_install_id', install.id),
-    db
-      .from('sheets')
-      .select(
-        'id, pack_ref, name, description, item_label, folder_id, parent_sheet_id, archived_at, settings',
-      )
-      .eq('org_id', orgId)
-      .eq('pack_install_id', install.id),
-    db
-      .from('automations')
-      .select('id, pack_ref, sheet_id, name, enabled, trigger, conditions, actions')
-      .eq('pack_install_id', install.id),
-    db
-      .from('dashboards')
-      .select('id, pack_ref, name, config, archived_at')
-      .eq('pack_install_id', install.id),
+  // every page of each list (past the API's 1000-row cap): a register may hold thousands of items, and an upgrade
+  // planned from a cut list would add again what is there or put a new item where another already is
+  const [folders, sheetRows, automations, dashboards] = await Promise.all([
+    every('folders', (a, b) =>
+      db
+        .from('folders')
+        .select('id, pack_ref, name, archived_at')
+        .eq('pack_install_id', install.id)
+        .order('id')
+        .range(a, b),
+    ),
+    every('sheets', (a, b) =>
+      db
+        .from('sheets')
+        .select(
+          'id, pack_ref, name, description, item_label, folder_id, parent_sheet_id, archived_at, settings',
+        )
+        .eq('org_id', orgId)
+        .eq('pack_install_id', install.id)
+        .order('id')
+        .range(a, b),
+    ),
+    every('automations', (a, b) =>
+      db
+        .from('automations')
+        .select('id, pack_ref, sheet_id, name, enabled, trigger, conditions, actions')
+        .eq('pack_install_id', install.id)
+        .order('id')
+        .range(a, b),
+    ),
+    every('dashboards', (a, b) =>
+      db
+        .from('dashboards')
+        .select('id, pack_ref, name, config, archived_at')
+        .eq('pack_install_id', install.id)
+        .order('id')
+        .range(a, b),
+    ),
   ]);
-  const sheetRows = must(sheets, 'sheets') ?? [];
   const sheetIds = sheetRows.map((s) => s.id);
   const none = ['00000000-0000-0000-0000-000000000000'];
   // its own rows on other packs' sheets (docs/11 Extends) are read on those sheets too
   const [extFields, extItems] = await Promise.all([
-    db.from('fields').select('sheet_id').eq('pack_install_id', install.id).range(0, MAX_ROWS),
-    db.from('items').select('sheet_id').eq('pack_install_id', install.id).range(0, MAX_ROWS),
-  ]);
-  const extSheets = [
-    ...new Set(
-      [...(must(extFields, 'fields') ?? []), ...(must(extItems, 'items') ?? [])].map(
-        (r) => r.sheet_id,
-      ),
+    every('fields', (a, b) =>
+      db
+        .from('fields')
+        .select('sheet_id')
+        .eq('pack_install_id', install.id)
+        .order('id')
+        .range(a, b),
     ),
-  ].filter((id) => !sheetIds.includes(id));
-  const ids = sheetIds.length || extSheets.length ? [...sheetIds, ...extSheets] : none;
-  const [fields, groups, views, items, created] = await Promise.all([
-    db
-      .from('fields')
-      .select(
-        'id, pack_ref, pack_install_id, sheet_id, key, name, type, description, required, locked, config, archived_at, position',
-      )
-      .in('sheet_id', ids)
-      .range(0, MAX_ROWS),
-    db
-      .from('groups')
-      .select('id, pack_ref, pack_install_id, sheet_id, name, color, position')
-      .in('sheet_id', ids)
-      .range(0, MAX_ROWS),
-    db
-      .from('views')
-      .select('id, pack_ref, pack_install_id, sheet_id, name, type, config, position')
-      .in('sheet_id', ids)
-      .range(0, MAX_ROWS),
-    db
-      .from('items')
-      .select(
-        'id, pack_ref, pack_install_id, sheet_id, group_id, name, values, archived_at, requirement_ref, position',
-      )
-      .in('sheet_id', ids)
-      .range(0, MAX_ROWS),
-    db
-      .from('activity_log')
-      .select('item_id, new_value, id')
-      .eq('org_id', orgId)
-      .eq('action', 'item.created')
-      .in('sheet_id', ids)
-      .order('id')
-      .range(0, MAX_ROWS),
+    every('items', (a, b) =>
+      db.from('items').select('sheet_id').eq('pack_install_id', install.id).order('id').range(a, b),
+    ),
   ]);
-  const own = <T extends { pack_install_id: string | null }>(rows: T[] | null) =>
-    (rows ?? []).filter((r) => r.pack_install_id === install.id);
-  const fieldRows = must(fields, 'fields') ?? [];
-  const groupRows = must(groups, 'groups') ?? [];
-  const viewRows = must(views, 'views') ?? [];
-  const itemRows = must(items, 'items') ?? [];
+  const extSheets = [...new Set([...extFields, ...extItems].map((r) => r.sheet_id))].filter(
+    (id) => !sheetIds.includes(id),
+  );
+  const ids = sheetIds.length || extSheets.length ? [...sheetIds, ...extSheets] : none;
+  const [fieldRows, groupRows, viewRows, itemRows, created] = await Promise.all([
+    every('fields', (a, b) =>
+      db
+        .from('fields')
+        .select(
+          'id, pack_ref, pack_install_id, sheet_id, key, name, type, description, required, locked, config, archived_at, position',
+        )
+        .in('sheet_id', ids)
+        .order('id')
+        .range(a, b),
+    ),
+    every('groups', (a, b) =>
+      db
+        .from('groups')
+        .select('id, pack_ref, pack_install_id, sheet_id, name, color, position')
+        .in('sheet_id', ids)
+        .order('id')
+        .range(a, b),
+    ),
+    every('views', (a, b) =>
+      db
+        .from('views')
+        .select('id, pack_ref, pack_install_id, sheet_id, name, type, config, position')
+        .in('sheet_id', ids)
+        .order('id')
+        .range(a, b),
+    ),
+    every('items', (a, b) =>
+      db
+        .from('items')
+        .select(
+          'id, pack_ref, pack_install_id, sheet_id, group_id, name, values, archived_at, requirement_ref, position',
+        )
+        .in('sheet_id', ids)
+        .order('id')
+        .range(a, b),
+    ),
+    every('activity', (a, b) =>
+      db
+        .from('activity_log')
+        .select('item_id, new_value, id')
+        .eq('org_id', orgId)
+        .eq('action', 'item.created')
+        .in('sheet_id', ids)
+        .order('id')
+        .range(a, b),
+    ),
+  ]);
+  const own = <T extends { pack_install_id: string | null }>(rows: T[]) =>
+    rows.filter((r) => r.pack_install_id === install.id);
   const createdBy = new Map<string, Record<string, Json>>();
-  for (const e of must(created, 'activity') ?? [])
+  for (const e of created)
     if (e.item_id && !createdBy.has(e.item_id) && e.new_value && typeof e.new_value === 'object')
       createdBy.set(e.item_id, e.new_value as Record<string, Json>);
   const clientItems = new Map<string, number>();
@@ -198,7 +234,7 @@ export async function loadInstalledState(
     version: install.version,
     level: install.level,
     refMap: (install.ref_map ?? {}) as Record<string, string>,
-    folders: (must(folders, 'folders') ?? []).map((f) => ({
+    folders: folders.map((f) => ({
       id: f.id,
       ref: f.pack_ref ?? '',
       name: f.name,
@@ -265,7 +301,7 @@ export async function loadInstalledState(
           : null,
       };
     }),
-    automations: (must(automations, 'automations') ?? []).map((a) => ({
+    automations: automations.map((a) => ({
       id: a.id,
       ref: a.pack_ref ?? '',
       sheetId: a.sheet_id,
@@ -275,7 +311,7 @@ export async function loadInstalledState(
       conditions: a.conditions as Json,
       actions: a.actions as Json,
     })),
-    dashboards: (must(dashboards, 'dashboards') ?? []).map((d) => ({
+    dashboards: dashboards.map((d) => ({
       id: d.id,
       ref: d.pack_ref ?? '',
       name: d.name,
@@ -361,30 +397,31 @@ async function loadExtenders(
   orgId: string,
   packKey: string,
 ): Promise<{ title: string; manifest: CataloguePack['manifest'] }[]> {
-  const installs =
-    must(
-      await db
-        .from('pack_installs')
-        .select('pack_key, version')
-        .eq('org_id', orgId)
-        .eq('status', 'installed')
-        .neq('pack_key', packKey),
-      'pack installs',
-    ) ?? [];
+  const installs = await every('pack installs', (a, b) =>
+    db
+      .from('pack_installs')
+      .select('pack_key, version')
+      .eq('org_id', orgId)
+      .eq('status', 'installed')
+      .neq('pack_key', packKey)
+      .order('id')
+      .range(a, b),
+  );
   if (!installs.length) return [];
   // only the catalogue rows that name this pack in requires, at the versions installed here
-  const rows =
-    must(
-      await db
-        .from('packs')
-        .select('key, version, title, manifest')
-        .in(
-          'key',
-          installs.map((i) => i.pack_key),
-        )
-        .contains('manifest', { requires: [{ pack: packKey }] }),
-      'packs',
-    ) ?? [];
+  const rows = await every('packs', (a, b) =>
+    db
+      .from('packs')
+      .select('key, version, title, manifest')
+      .in(
+        'key',
+        installs.map((i) => i.pack_key),
+      )
+      .contains('manifest', { requires: [{ pack: packKey }] })
+      .order('key')
+      .order('version')
+      .range(a, b),
+  );
   return rows
     .filter((r) => installs.some((i) => i.pack_key === r.key && i.version === r.version))
     .map((r) => ({ title: r.title, manifest: parsePack(r.manifest) }));

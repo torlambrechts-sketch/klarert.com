@@ -2,8 +2,10 @@
 // person's session. Registers leave out the fields the person may not see (not even a "Restricted" column), the log
 // extract masks restricted values, and the chain report says, per item, what verify_activity_chain found. Pure.
 import { formatDateTime, isoDateInZone } from '../fields/helpers';
+import { isMaskedNote } from '../access';
 import { hiddenFor, visibleTextOf } from '../values';
 import type { Ctx, Field, Item, Json } from '../types';
+import { HASH_COLUMNS, hashCells, type HashedEntry } from './hash-recipe';
 
 /** A file's bytes are put in the zip only up to these sizes; above them the index lists the file alone. */
 export const AUDIT_FILE_LIMITS = { perFile: 10 * 1024 * 1024, total: 100 * 1024 * 1024 } as const;
@@ -143,7 +145,7 @@ export function evidenceTable(files: EvidenceFile[], timeZone: string): string[]
 
 // ───────────────────────── activity log extract ─────────────────────────
 
-export interface ActivityEntry {
+export interface ActivityEntry extends HashedEntry {
   id: number;
   at: string;
   chainKey: string;
@@ -174,6 +176,12 @@ export function logValueText(v: Json | null): string {
         ? 'Personal data'
         : x,
   );
+}
+
+/** A logged note in words: a note kept out of the log (docs/02 §18, 0065) reads "Personal data". */
+export function logNoteText(note: string | null): string {
+  if (note === null) return '';
+  return isMaskedNote(note) ? 'Personal data' : note;
 }
 
 /**
@@ -219,6 +227,8 @@ export function activityTable(
       'Chain',
       'Previous hash',
       'Hash',
+      // every hashed input as the database hashed it (the recipe is in activity/method.txt)
+      ...HASH_COLUMNS,
     ],
     ...entries.map((e) => [
       String(e.id),
@@ -230,10 +240,11 @@ export function activityTable(
       names.field(e.fieldId),
       logValueText(e.oldValue),
       logValueText(e.newValue),
-      e.note ?? '',
+      logNoteText(e.note),
       e.chainKey,
       e.prevHash,
       e.hash,
+      ...hashCells(e),
     ]),
   ];
 }
@@ -349,11 +360,14 @@ export function packReadme(m: PackMeta): string {
     '',
     'Access',
     'The pack holds only what the person who made it may see. Restricted sheets and restricted fields they are not',
-    'listed on are left out; restricted values in the log read "Restricted".',
+    'listed on are left out; restricted values in the log read "Restricted", and personal data kept out of the log',
+    '(personal fields, comments, notes of value changes and approval comments) reads "Personal data".',
     ...(m.leftOut.length ? ['', 'Left out', ...m.leftOut.map((l) => `- ${l}`)] : []),
     '',
     'How the hash chains were checked',
     CHAIN_METHOD,
+    'To recompute any hash yourself, use the columns org_id to note_json at the end of activity/log.csv and the',
+    'recipe in activity/method.txt.',
     '',
     'Files',
     ...m.files.map((f) => `- ${f}`),

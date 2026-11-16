@@ -24,7 +24,7 @@ in this order:
 To rotate: add the new value with `vault.update_secret` and change the Vercel variable in the same minute; requests
 signed with the old value are refused from then on. Without the Vault secret every write by a person is refused.
 
-## Email (Brevo, docs/09 §10)
+## Email (Brevo, docs/09 §11)
 
 Invites are sent by email through Brevo's transactional API (the owner's existing account; Brevo keeps data in the EU,
 in France and Germany). Without these steps nothing is sent: admins see "The email could not be sent. Copy the link
@@ -39,7 +39,7 @@ instead." and invites still work by copying the link. No migration or database s
    `no-reply@mail.klarert.com` (an address on the authenticated domain).
 3. Brevo › Transactional › Settings (tracking): turn off open tracking and click tracking if the account allows it.
    The app already asks for no open pixel and anonymised clicks per message, but only the account setting stops
-   Brevo rewriting the accept link (docs/09 §10).
+   Brevo rewriting the accept link (docs/09 §11).
 4. Brevo › SMTP & API › API keys › Generate a new API key, named for example `klarert-vercel`. Copy it once.
 5. Vercel › the project › Settings › Environment Variables, for **Production only** (owner decision 15 Nov 2026:
    previews never email real people; there an invite falls back to its copy-link):

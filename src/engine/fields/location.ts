@@ -47,6 +47,7 @@ export const location = base<LocationValue, Record<string, never>>({
   defaultConfig: () => ({}),
   defaultWidth: 170,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

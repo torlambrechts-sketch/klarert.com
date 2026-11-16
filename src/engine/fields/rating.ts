@@ -34,6 +34,7 @@ export const rating = base<number, RatingConfig>({
   defaultConfig: () => ({ scale: 5 }),
   defaultWidth: 110,
   formAllowed: true,
+  publicConfigKeys: ['scale'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'number_above', 'number_below'],

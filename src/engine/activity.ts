@@ -1,6 +1,6 @@
 // Activity log lines (docs/05 §3.4, FR-28/FR-39): one readable sentence per entry of an item's chain. Pure: the
 // lookups for fields, groups, items and people are passed in; values are shown with the field type's toText.
-import { isErasedValue, isMaskedValue } from './access';
+import { isErasedNote, isErasedValue, isMaskedNote, isMaskedValue } from './access';
 import { formatDate } from './fields/helpers';
 import { resolveFieldType } from './fields/resolve';
 import type { Ctx, Field, Json } from './types';
@@ -58,6 +58,16 @@ function valueText(field: Field | undefined, v: Json | null, look: ActivityLooku
 
 const fieldName = (field: Field | undefined) => field?.name ?? 'A deleted field';
 const quote = (s: string) => `“${s}”`;
+
+/**
+ * A comment or approval note: quoted, or, when the log keeps it as personal data (0065, docs/02 §18), "erased" once
+ * retention erased it and "Restricted" when this reader may not read it (or the caller did not look it up).
+ */
+function noteWords(note: string): string {
+  if (isErasedNote(note)) return ERASED;
+  if (isMaskedNote(note)) return RESTRICTED;
+  return quote(note);
+}
 
 function ids(v: Json | null): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
@@ -152,7 +162,7 @@ function approvalText(e: ActivityEntry): string {
   const v = objOf(e.newValue);
   const name = v && typeof v.workflow === 'string' ? v.workflow : 'an approval workflow';
   const note = e.note
-    ? ` · ${e.action === 'workflow.decided' ? 'Comment' : 'Note'}: ${quote(e.note)}`
+    ? ` · ${e.action === 'workflow.decided' ? 'Comment' : 'Note'}: ${noteWords(e.note)}`
     : '';
   switch (e.action) {
     case 'workflow.submitted': {
@@ -215,7 +225,7 @@ export function activityText(e: ActivityEntry, look: ActivityLookup): string {
   const field = e.fieldId ? look.field(e.fieldId) : undefined;
   // files of the item's Files tab have no field
   const files = e.fieldId ? fieldName(field) : 'Files';
-  const comment = e.note && e.action === 'value.changed' ? ` · Comment: ${quote(e.note)}` : '';
+  const comment = e.note && e.action === 'value.changed' ? ` · Comment: ${noteWords(e.note)}` : '';
   const retention = retentionText(e);
   if (retention) return retention;
   // links and files of a restricted field: what changed is not shown to everyone
