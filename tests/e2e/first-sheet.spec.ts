@@ -2,12 +2,14 @@ import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { nextAnswer } from './automation-helpers';
 import {
+  actionsSettled,
   idsOf,
   isoIn,
   localSql,
   popoverGone,
   seedWorkspace,
   shortDate,
+  trackActions,
   ukDate,
 } from './first-sheet-helpers';
 import { MIN_FILL_MS, OPEN_PUBLIC_FORM, rest, signIn } from './helpers';
@@ -432,6 +434,7 @@ test.describe('Part B · automations on the reference template', () => {
 
   /** Signed in as someone, with the workspace's ids at hand. */
   async function as(page: Page, email: string) {
+    trackActions(page);
     await signIn(page, email, `/${slug}/home`);
     await expect(page).toHaveURL(new RegExp(`/${slug}/home`));
     const ids = await idsOf(page, slug);
@@ -464,21 +467,16 @@ test.describe('Part B · automations on the reference template', () => {
 
   /**
    * Edits in the panel hold the row's automations until the person finishes it. Close the panel (that finishes the
-   * row), wait for the server to answer, then open the same item again. The finished row's automations report in a
-   * toast: pass `toast` to see it before the item is opened again (a page load clears toasts).
+   * row, once its last edit has landed), wait until the server has answered every action, then open the same item
+   * again. The finished row's automations report in a toast: pass `toast` to see it before the item is opened again
+   * (a page load clears toasts).
    */
   async function finishPanel(page: Page, toast?: string | RegExp) {
     const url = new URL(page.url());
     const item = url.searchParams.get('item');
-    const answered = page
-      .waitForResponse(
-        (r) => r.request().method() === 'POST' && !!r.request().headers()['next-action'],
-        { timeout: 15_000 },
-      )
-      .catch(() => null);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await answered;
+    await actionsSettled(page);
     if (toast) await expect(page.getByText(toast).first()).toBeVisible();
     if (item) {
       url.searchParams.set('item', item);

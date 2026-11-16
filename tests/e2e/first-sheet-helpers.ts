@@ -112,3 +112,40 @@ export async function idsOf(page: Page, slug: string): Promise<Ids> {
 export async function popoverGone(page: Page) {
   await expect(page.locator('[data-radix-popper-content-wrapper]')).toHaveCount(0);
 }
+
+const inFlight = new WeakMap<Page, { open: Set<object>; last: number }>();
+
+/** Count the page's Server Action requests from now on (idempotent), for `actionsSettled`. */
+export function trackActions(page: Page) {
+  if (inFlight.has(page)) return;
+  const state = { open: new Set<object>(), last: Date.now() };
+  inFlight.set(page, state);
+  const isAction = (r: { method(): string; headers(): Record<string, string> }) =>
+    r.method() === 'POST' && !!r.headers()['next-action'];
+  page.on('request', (r) => {
+    if (!isAction(r)) return;
+    state.open.add(r);
+    state.last = Date.now();
+  });
+  const done = (r: object) => {
+    if (!state.open.delete(r)) return;
+    state.last = Date.now();
+  };
+  page.on('requestfinished', done);
+  page.on('requestfailed', done);
+}
+
+/**
+ * Wait until no Server Action of the page has been on its way for `quietMs`: the answers to the edits and the ones
+ * they start (closing the panel finishes the row once its last edit has landed, use-sheet.ts holds).
+ */
+export async function actionsSettled(page: Page, quietMs = 500, timeoutMs = 15_000) {
+  const state = inFlight.get(page);
+  if (!state) throw new Error('actionsSettled needs trackActions(page) first');
+  await expect
+    .poll(() => state.open.size === 0 && Date.now() - state.last >= quietMs, {
+      timeout: timeoutMs,
+      intervals: [100],
+    })
+    .toBe(true);
+}
