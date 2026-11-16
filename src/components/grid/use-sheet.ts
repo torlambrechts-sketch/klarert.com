@@ -362,9 +362,17 @@ export function useSheetActions(org: string, sheetId: string) {
     heldRef.current.set(itemId, Date.now());
     setHeld(new Set(heldRef.current.keys()));
   }, []);
+  // Edits that may come back held are counted per row while they are on their way. A row finished in that window
+  // (panel closed right after an edit, before the answer) is finished once its last edit has landed; otherwise the
+  // hold would only be released by the idle timer or the scheduler.
+  const holdingRef = useRef(new Map<string, number>());
+  const finishWhenLandedRef = useRef(new Set<string>());
   const finishItem = useCallback(
     async (itemId: string) => {
-      if (!heldRef.current.delete(itemId)) return;
+      if (!heldRef.current.delete(itemId)) {
+        if (holdingRef.current.has(itemId)) finishWhenLandedRef.current.add(itemId);
+        return;
+      }
       setHeld(new Set(heldRef.current.keys()));
       try {
         const r = await finishItemAction({ org, sheetId, itemId });
@@ -390,7 +398,8 @@ export function useSheetActions(org: string, sheetId: string) {
   /** Finish every held row except `keep` (the row the person is on now). */
   const finishAll = useCallback(
     (keep?: string | null) => {
-      for (const id of [...heldRef.current.keys()]) if (id !== keep) void finishItem(id);
+      const ids = new Set([...heldRef.current.keys(), ...holdingRef.current.keys()]);
+      for (const id of ids) if (id !== keep) void finishItem(id);
     },
     [finishItem],
   );
@@ -398,6 +407,21 @@ export function useSheetActions(org: string, sheetId: string) {
   // "Editing" marker appearing) never runs the cleanup and releases rows early
   const finishRef = useRef({ finishItem, finishAll });
   finishRef.current = { finishItem, finishAll };
+  /** A held edit of the row is on its way (a new edit means the person is on the row again). */
+  const startHolding = useCallback((itemId: string) => {
+    holdingRef.current.set(itemId, (holdingRef.current.get(itemId) ?? 0) + 1);
+    finishWhenLandedRef.current.delete(itemId);
+  }, []);
+  /** A held edit of the row has landed: finish the row if that was asked for meanwhile. */
+  const stopHolding = useCallback((itemId: string) => {
+    const left = (holdingRef.current.get(itemId) ?? 1) - 1;
+    if (left > 0) {
+      holdingRef.current.set(itemId, left);
+      return;
+    }
+    holdingRef.current.delete(itemId);
+    if (finishWhenLandedRef.current.delete(itemId)) void finishRef.current.finishItem(itemId);
+  }, []);
   useEffect(() => {
     const idle = setInterval(() => {
       const now = Date.now();
@@ -455,6 +479,7 @@ export function useSheetActions(org: string, sheetId: string) {
         );
       }
       const mutationId = newMutationId();
+      if (change.hold) startHolding(item.id);
       try {
         const r = await run(() =>
           setValuesAction({
@@ -490,9 +515,10 @@ export function useSheetActions(org: string, sheetId: string) {
         return { ok: false, error };
       } finally {
         pending.done(item.id);
+        if (change.hold) stopHolding(item.id);
       }
     },
-    [get, markHeld, org, patch, pending, restoreItems, run, sheetId],
+    [get, markHeld, org, patch, pending, restoreItems, run, sheetId, startHolding, stopHolding],
   );
 
   /** Paste, clear and bulk edit. Undo puts the previous values back. */
