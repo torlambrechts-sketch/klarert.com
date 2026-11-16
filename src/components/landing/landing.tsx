@@ -52,11 +52,11 @@ export function Actions({ size = 'lg' }: { size?: 'default' | 'lg' }) {
 function Stats() {
   const facts = siteFacts();
   return (
-    <dl className="m-0 grid grid-cols-2 gap-y-6 sm:grid-cols-4">
+    <dl className="m-0 grid grid-cols-2 gap-y-6 sm:grid-cols-4 lg:max-w-md lg:grid-cols-2">
       {STATS.map((s, i) => (
         <div
           key={s.key}
-          className={`border-line flex flex-col gap-1 pr-4 ${i % 2 === 1 ? 'border-l pl-5' : ''} ${i > 0 ? 'sm:border-l sm:pl-5' : ''}`}
+          className={`border-line flex flex-col gap-1 pr-4 ${i % 2 === 1 ? 'border-l pl-5' : ''} ${i === 2 ? 'sm:border-l sm:pl-5 lg:border-l-0 lg:pl-0' : ''}`}
         >
           <dt className="text-muted-foreground text-label-13">{s.label}</dt>
           <dd className="text-heading-24 order-first m-0">{facts[s.key as keyof typeof facts]}</dd>
