@@ -1,5 +1,6 @@
 import 'server-only';
 import { getSession } from '@/server/auth';
+import { packTitle } from '@/engine/packs/words';
 
 // The set a sheet was created with by the Create wizard (docs/11 Bundles): its name, owner and review state, read
 // with the person's client (RLS: members read their workspace's installs). Sheets installed from Workspace admin ›
@@ -60,8 +61,8 @@ export async function getSheetBundle(orgId: string, sheetId: string): Promise<Sh
     (id && profiles?.find((p) => p.id === id)?.display_name) || 'Former member';
   return {
     installId: inst.id,
-    name: inst.bundle_name ?? pack?.title ?? inst.pack_key,
-    source: `${pack?.title ?? inst.pack_key} ${inst.version}`,
+    name: inst.bundle_name ?? (pack ? packTitle(pack.title) : inst.pack_key),
+    source: `${pack ? packTitle(pack.title) : inst.pack_key} ${inst.version}`,
     ownerId: inst.owner_id,
     ownerName: name(inst.owner_id),
     reviewBy: inst.review_by,

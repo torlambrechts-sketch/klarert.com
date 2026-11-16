@@ -8,7 +8,7 @@ import { rest, signIn } from './helpers';
 // "ISO 27001 view", the example risk links to Annex A, the notifying automations are in test mode, the treatment
 // plan carries the Risk acceptance workflow and the ISMS CAPA app reads Core's nonconformities.
 
-const TITLE = 'ISO/IEC 27001:2022 ISMS (add-on)';
+const TITLE = 'ISO/IEC 27001:2022 ISMS';
 const SHOTS = process.env.ISO27001_SHOTS;
 const CORE12_SHOTS = process.env.CORE12_SHOTS;
 const shot = async (page: Page, name: string) => {
@@ -36,7 +36,7 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.3.0 (Full) first.',
+    'Installs Shared registers 1.3.0 (Everything) first.',
     { timeout: 30_000 },
   );
   await expect(dialog.getByTestId('adopts-framework')).toContainText(
@@ -51,7 +51,7 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
     timeout: 120_000,
   });
   await expect(dialog.getByRole('status')).toContainText(
-    'Installed Core registers 1.3.0 (Full) first.',
+    'Installed Shared registers 1.3.0 (Everything) first.',
   );
   await dialog.getByRole('button', { name: 'Done' }).click();
 

@@ -17,7 +17,7 @@ import { rest, signIn } from './helpers';
 // view with the add-on's obligations; the communication SLA escalation starts in test mode; the aspects carry the
 // Significance approval workflow.
 
-const TITLE = 'ISO 14001 environment (add-on)';
+const TITLE = 'ISO 14001 environment';
 const shot = shots(process.env.PACK_SHOTS, 'iso-14001');
 
 test('install the ISO 14001 add-on on Core and find it in the shared registers', async ({
@@ -30,7 +30,7 @@ test('install the ISO 14001 add-on on Core and find it in the shared registers',
   const i = await installAddon(page, slug, {
     title: TITLE,
     key: 'iso-14001',
-    coreLevel: 'Full',
+    coreLevel: 'Everything',
     library: 'ISO 14001:2026',
     shot,
   });

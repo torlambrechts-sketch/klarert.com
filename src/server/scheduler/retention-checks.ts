@@ -127,5 +127,5 @@ export function retentionCheckMessage(s: RetentionCheckSummary): string {
   if (s.sheets === 0) return 'No sheet in this workspace has a retention rule yet.';
   if (s.due === 0) return 'Retention checked. Nothing is due.';
   if (s.queued === 0) return 'Retention checked. Everything due is already in the queue.';
-  return `Retention checked. ${s.queued} ${s.queued === 1 ? 'record was' : 'records were'} added to the queue.`;
+  return `Retention checked. ${s.queued} ${s.queued === 1 ? 'item was' : 'items were'} added to the queue.`;
 }

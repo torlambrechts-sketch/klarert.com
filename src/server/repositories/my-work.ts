@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { activityLine, isItemEntry, type ActivityEntry } from '@/engine/activity';
-import { checklist, type ChecklistStep } from '@/engine/home';
+import { checklist, type ChecklistStep, type InstalledPack } from '@/engine/home';
 import { buildMyWork, type MyWork, type OpenRequest, type WorkSource } from '@/engine/my-work';
 import { emptySheetData, sheetCtx, todayIn } from '@/engine/sheet-data';
 import type { Item } from '@/engine/types';
@@ -149,6 +149,8 @@ export interface HomeData {
   firstSheetId: string | null;
   firstItem: { sheetId: string; displayId: string } | null;
   recent: RecentActivity[];
+  /** The workspace's live pack installs: Getting started hides once a standard is among them (showGettingStarted). */
+  packs: InstalledPack[];
 }
 
 export interface RecentActivity {
@@ -166,7 +168,7 @@ export const getHome = cache(async (orgId: string, timeZone: string): Promise<Ho
   if (!session) return null;
   const db = session.supabase;
   const head = { count: 'exact' as const, head: true };
-  const [sheets, items, statusFields, members, invites, automations, firstSheet, recent] =
+  const [sheets, items, statusFields, members, invites, automations, firstSheet, recent, packs] =
     await Promise.all([
       db.from('sheets').select('id', head).eq('org_id', orgId).is('archived_at', null).then(count),
       db.from('items').select('id', head).eq('org_id', orgId).is('archived_at', null).then(count),
@@ -199,6 +201,7 @@ export const getHome = cache(async (orgId: string, timeZone: string): Promise<Ho
         .order('id', { ascending: false })
         .limit(RECENT_MAX * 3)
         .then(must),
+      installedPacks(db, orgId),
     ]);
   const firstSheetId = firstSheet[0]?.id ?? null;
   let firstItem: HomeData['firstItem'] = null;
@@ -224,6 +227,7 @@ export const getHome = cache(async (orgId: string, timeZone: string): Promise<Ho
     }),
     firstSheetId,
     firstItem,
+    packs,
     recent: await recentActivity(
       db,
       orgId,
@@ -232,6 +236,28 @@ export const getHome = cache(async (orgId: string, timeZone: string): Promise<Ho
     ),
   };
 });
+
+/** The live pack installs, each with its installed manifest's system flag and whether it has a guided setup. */
+async function installedPacks(db: Db, orgId: string): Promise<InstalledPack[]> {
+  const installs = must(
+    await db
+      .from('pack_installs')
+      .select('pack_key, version')
+      .eq('org_id', orgId)
+      .eq('status', 'installed'),
+  );
+  if (!installs.length) return [];
+  const rows = must(
+    await db
+      .from('packs')
+      .select('key, version, system:manifest->system, setup:manifest->setup->>title')
+      .in('key', [...new Set(installs.map((i) => i.pack_key))]),
+  );
+  return installs.map((i) => {
+    const row = rows.find((r) => r.key === i.pack_key && r.version === i.version);
+    return { key: i.pack_key, system: row?.system === true, setup: !!row?.setup };
+  });
+}
 
 type LogRow = {
   id: number;

@@ -6,16 +6,22 @@ import {
   Circle,
   CircleCheck,
   MessageSquareText,
-  Plus,
   UserRound,
 } from 'lucide-react';
 import { AuditorStart } from '@/components/home/auditor-start';
 import { WorkList } from '@/components/my-work/work-row';
-import { SetupCard } from '@/components/packs/setup-card';
-import { TestModeBanner } from '@/components/packs/test-mode-banner';
+import { NextStepCard } from '@/components/packs/setup-card';
+import { TestModeNotice } from '@/components/packs/test-mode-banner';
 import { Card, PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
-import { checklistDone, greeting, homeSummary, hourIn, type ChecklistStepId } from '@/engine/home';
+import {
+  greeting,
+  homeSummary,
+  hourIn,
+  nextSteps,
+  showGettingStarted,
+  type ChecklistStepId,
+} from '@/engine/home';
 import { BUCKET_LABEL, type Bucket } from '@/engine/my-work';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
@@ -24,8 +30,10 @@ import { getHome, getMyWork } from '@/server/repositories/my-work';
 
 export const metadata = { title: 'Home · Compliance OS' };
 
-// Home (docs/05 §4): greeting and a one-line summary, My work tiles, Getting started (computed; hidden once done),
-// Needs you, Next 30 days and Recent activity. Folders are organised in the side menu. Every number comes from the workspace's data.
+// Home (docs/05 §4): greeting and a one-line summary, My work tiles, one test-mode banner, one Next step per installed
+// standard (engine/home.ts nextSteps), Getting started (computed; hidden once done or once a standard is installed:
+// showGettingStarted), Needs you, Next 30 days and Recent activity. No "New sheet" button: sheets start from Create
+// and the "+" next to Registers in the side menu (owner decision 15 Nov 2026). Every number comes from the data.
 
 const TILES: { bucket: Bucket; icon: typeof AlertTriangle }[] = [
   { bucket: 'overdue', icon: AlertTriangle },
@@ -55,12 +63,15 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
   const summary = mine ? homeSummary(mine.work, mine.today) : null;
   const canEdit = isEditorRole(role);
   const canManage = isAdminRole(role);
+  // auditors see only their Start here panel: no first-run Next steps, no Getting started (owner decision 15 Nov 2026)
+  const firstRun = role !== 'auditor';
 
   const stepLink = (id: ChecklistStepId): { href: string; label: string } | null => {
     const sheet = home?.firstSheetId ? `/${org}/s/${home.firstSheetId}` : null;
     switch (id) {
       case 'sheet':
-        return canEdit ? { href: `/${org}/s/new`, label: 'New sheet' } : null;
+        // the way to start is Create (owner decision 15 Nov 2026): it opens at the Sheet card
+        return canEdit ? { href: `/${org}/s/new`, label: 'Open Create' } : null;
       case 'items':
         return canEdit && sheet ? { href: sheet, label: 'Open the sheet' } : null;
       case 'status':
@@ -91,15 +102,6 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
           <span data-testid="home-summary">
             {summary ? summary.line : 'Your work could not be loaded.'}
           </span>
-        }
-        actions={
-          canEdit ? (
-            <Button asChild>
-              <CreateSheetLink org={org}>
-                <Plus aria-hidden /> New sheet
-              </CreateSheetLink>
-            </Button>
-          ) : null
         }
       />
 
@@ -143,23 +145,22 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
         </nav>
       ) : null}
 
-      <TestModeBanner org={org} packs={quiet} />
+      <TestModeNotice org={org} packs={quiet} />
 
-      {setups.map((s) => (
-        <SetupCard
-          key={s.installId}
-          org={org}
-          installId={s.installId}
-          progress={s.progress}
-          levelName={s.level?.name ?? null}
-        />
+      {(firstRun ? nextSteps(setups) : []).map((n) => (
+        <NextStepCard key={n.installId} org={org} next={n} />
       ))}
 
-      {home && !checklistDone(home.checklist) ? (
+      {home &&
+      showGettingStarted({
+        auditor: role === 'auditor',
+        packs: home.packs,
+        steps: home.checklist,
+      }) ? (
         <Card
           headingId="getting-started"
           title="Getting started"
-          description={`${home.checklist.filter((s) => s.done).length} of ${home.checklist.length} done. This list goes away once every step is done.`}
+          description={`${home.checklist.filter((s) => s.done).length} of ${home.checklist.length} done. This list goes away once every step is done or a standard is installed.`}
         >
           <ul className="m-0 flex list-none flex-col gap-1 p-0" data-testid="checklist">
             {home.checklist.map((s) => {

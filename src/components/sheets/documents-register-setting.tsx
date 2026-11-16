@@ -34,9 +34,7 @@ export function DocumentsRegisterSetting({
       return toast.error(r.error.message);
     }
     toast(
-      next
-        ? 'This sheet is now a documents register.'
-        : 'This sheet is no longer a documents register.',
+      next ? 'This sheet is now a documents sheet.' : 'This sheet is no longer a documents sheet.',
     );
     router.refresh();
   };
@@ -51,7 +49,7 @@ export function DocumentsRegisterSetting({
       />
       <div className="flex flex-col gap-0.5">
         <label htmlFor="documents-register" className="text-label-14 font-medium">
-          Documents register
+          Documents sheet
         </label>
         <p id="documents-register-help" className="text-muted-foreground text-copy-13 m-0">
           Items are controlled documents. Approved is the status&apos;s done option: approving needs

@@ -30,7 +30,7 @@ export function defaultReviewDate(now: Date): string {
 }
 
 const input =
-  'border-line hover:border-line-strong focus-visible:border-focus text-label-14 h-10 w-full rounded-md border bg-background-100 px-3 outline-none focus-visible:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]';
+  'border-line hover:border-line-strong focus-visible:border-focus text-label-14 h-10 w-full rounded-md border bg-background-100 px-3 outline-none focus-visible:ring-2 focus-visible:ring-focus';
 
 export function BundleDetailsForm({
   details,

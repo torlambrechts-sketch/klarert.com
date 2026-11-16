@@ -24,7 +24,7 @@ import { LeavesLane } from './leaves-lane';
 import { WorkspaceMap } from './workspace-map';
 import { canSeeLeaves, filterQuery, type DesignParams } from './params';
 
-// Platform › Design (docs/05 §4; owner decision 15 Nov 2026): the whole workspace as a map of sheets and as a
+// Build › Design (docs/05 §4; owner decision 15 Nov 2026): the whole workspace as a map of sheets and as a
 // Connections table (the accessible default and the only view under 760 px), from the same derivation as each sheet's
 // Design tab. Filters are in the URL, so an app's or a folder's design is a link: ?app=, ?pack=, ?group=, ?domain=,
 // ?differs=1; ?show=map draws the map. A sheet opens its Design tab. Below: "Leaves the system".

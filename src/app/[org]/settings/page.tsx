@@ -813,7 +813,7 @@ async function FrameworksTab({ org }: { org: string }) {
       </Card>
       <Card
         title="Audit outputs"
-        description="An audit pack for a folder or a pack: the statement of applicability, the registers, an evidence index and the activity log of a period with its hash chains checked. Members and auditors find the same on Audit outputs."
+        description="An audit pack for a folder or a pack: the statement of applicability, the sheets, an evidence index and the activity log of a period with its hash chains checked. Members and auditors find the same on Audit outputs."
       >
         {outputs.ok ? (
           <div className="flex flex-wrap items-center gap-3">
@@ -946,7 +946,7 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
     <>
       <Card
         title="Review queue"
-        description="Records whose retention period has ended under a sheet's rules. Nothing is erased until you approve it: approve, postpone with a reason, or place a legal hold."
+        description="Items whose retention period has ended under a sheet's rules. Nothing is erased until you approve it: approve, postpone with a reason, or place a legal hold."
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-muted-foreground text-copy-13 m-0">
@@ -967,7 +967,7 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
               : ''}
           </p>
         ) : (
-          <ul className="divide-line flex flex-col divide-y" aria-label="Records to review">
+          <ul className="divide-line flex flex-col divide-y" aria-label="Items to review">
             {open.map((q) => (
               <li
                 key={q.id}
@@ -996,7 +996,7 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
       </Card>
       <Card
         title="Retention rules"
-        description="Each sheet's rules decide when its records are due. Change them in the sheet's settings. Periods shipped by packs are suggestions: set your own."
+        description="Each sheet's rules decide when its items are due. Change them in the sheet's settings. Periods shipped by packs are suggestions: set your own."
       >
         {sheets.length === 0 ? (
           <p className="text-muted-foreground text-copy-13 m-0">

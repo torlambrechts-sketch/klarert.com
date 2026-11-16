@@ -163,7 +163,7 @@ export function GlobalSearch({ org }: { org: string }) {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        className="border-line placeholder:text-muted-foreground bg-background-100 text-label-14 focus-visible:border-focus h-8 w-full min-w-0 rounded-md border pr-8 pl-8 outline-none focus-visible:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]"
+        className="border-line placeholder:text-muted-foreground bg-background-100 text-label-14 focus-visible:border-focus focus-visible:ring-focus h-8 w-full min-w-0 rounded-md border pr-8 pl-8 outline-none focus-visible:ring-2"
       />
       {open ? (
         <button

@@ -16,7 +16,7 @@ import { rest, signIn } from './helpers';
 // register shows the ISO 9001 view and the add-on's example; the complaint SLA escalation starts in test mode; the
 // Processes sheet carries the Process approval workflow; the headline dashboard reads the Core registers.
 
-const TITLE = 'ISO 9001 quality (add-on)';
+const TITLE = 'ISO 9001 quality';
 const shot = shots(process.env.PACK_SHOTS, 'iso-9001');
 
 test('install the ISO 9001 add-on on Core and find it in the shared registers', async ({
@@ -29,7 +29,7 @@ test('install the ISO 9001 add-on on Core and find it in the shared registers', 
   const i = await installAddon(page, slug, {
     title: TITLE,
     key: 'iso-9001',
-    coreLevel: 'Starter',
+    coreLevel: 'Recommended',
     library: 'ISO 9001:2026',
     shot,
   });

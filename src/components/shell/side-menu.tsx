@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -12,7 +12,6 @@ import {
   Inbox,
   LayoutDashboard,
   Plus,
-  Search,
   SlidersHorizontal,
   PanelLeft,
   Network,
@@ -35,10 +34,12 @@ import { MenuRegisters } from './menu-registers';
 import { MenuSheets } from './menu-sheets';
 import { CreateButton, CreateSheetLink } from '@/components/create/create-provider';
 
-// The side menu (docs/05 §2.1): workspace switcher, "Find" to filter the menu, Home and My work, Insights (Dashboards,
-// Evidence library, Audit outputs), Apps (the installed packs' apps, docs/13), one collapsible section per folder with its sheets (menu-sheets.tsx: "+", "…" menus, rename,
-// drag and drop), then Workflow, Automations, Design and Workspace admin. 256 px on desktop; on phones the same
-// menu opens as a sheet from the bottom bar. Closed folders are remembered per browser.
+// The side menu (docs/05 §2.1, owner decision 15 Nov 2026): workspace switcher and Create (editors and up), then four
+// groups. Work: Home, My work and the installed packs' apps (docs/13). Registers: the shared registers' domains, then the workspace's own
+// folders and sheets (menu-sheets.tsx: "+", "…" menus, rename, drag and drop). Reports: Dashboards, Evidence library,
+// Audit outputs. Build (editors and up): Workflow, Automations, Design and Workspace admin (admins and owners). One
+// search, in the top bar ("/"). 256 px on desktop; on phones the same menu opens as a sheet from the bottom bar.
+// Closed folders are remembered per browser.
 
 export type Ws = { id: string; name: string; slug: string };
 
@@ -95,7 +96,6 @@ function NavLink({
   onNavigate,
   testId,
   className,
-  hidden,
 }: {
   href: string;
   label: string;
@@ -105,9 +105,7 @@ function NavLink({
   onNavigate?: () => void;
   testId?: string;
   className?: string;
-  hidden?: boolean;
 }) {
-  if (hidden) return null;
   return (
     <li>
       <Link
@@ -131,10 +129,10 @@ function NavLink({
 function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: Ws[] }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center gap-[9px] rounded-md px-2 text-left outline-offset-[-2px]">
+      <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center gap-[9px] rounded-md px-2 text-left outline-offset-[-2px] max-[759.98px]:h-11">
         <span
           aria-hidden
-          className="bg-ink text-primary-foreground text-label-9.5 flex size-[22px] shrink-0 items-center justify-center rounded-full font-semibold"
+          className="bg-ink text-primary-foreground text-label-11 flex size-[22px] shrink-0 items-center justify-center rounded-full font-semibold"
         >
           {initialsOf(current.name)}
         </span>
@@ -173,21 +171,36 @@ function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: W
   );
 }
 
-/** Focus "Find" with F unless the person is typing somewhere. */
-function useFindKey(input: React.RefObject<HTMLInputElement | null>, enabled: boolean) {
-  useEffect(() => {
-    if (!enabled) return;
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.key !== 'f' && e.key !== 'F') || e.metaKey || e.ctrlKey || e.altKey) return;
-      const t = e.target as HTMLElement | null;
-      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-      if (document.querySelector('[role="dialog"]')) return;
-      e.preventDefault();
-      input.current?.focus();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [input, enabled]);
+/** A group of the side menu (docs/05 §2.1): its heading, then its rows. */
+function Group({
+  id,
+  title,
+  children,
+  after,
+  separator = true,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+  /** More rows after the group's own list (Work: the apps, their own list "Apps"). */
+  after?: React.ReactNode;
+  separator?: boolean;
+}) {
+  return (
+    <>
+      {separator ? <div className="bg-line mx-1 my-2.5 h-px shrink-0" /> : null}
+      <section aria-labelledby={id} className="flex flex-col">
+        <h2
+          id={id}
+          className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium"
+        >
+          {title}
+        </h2>
+        <ul className="flex flex-col gap-px">{children}</ul>
+        {after}
+      </section>
+    </>
+  );
 }
 
 export function SideMenu({
@@ -202,16 +215,11 @@ export function SideMenu({
   onNavigate,
 }: SideMenuProps) {
   const path = usePathname();
-  const findRef = useRef<HTMLInputElement>(null);
-  useFindKey(findRef, !onNavigate);
-  const [find, setFind] = useState('');
   const [closed, setClosed] = useState<Set<string>>(() => new Set());
   useEffect(() => setClosed(readClosed()), []);
 
   const activeSheet = path.match(new RegExp(`^/${org}/s/([0-9a-f-]{36})`))?.[1] ?? null;
   const is = (p: string) => path === `/${org}/${p}` || path.startsWith(`/${org}/${p}/`);
-  const q = find.trim().toLowerCase();
-  const hit = (label: string) => !q || label.toLowerCase().includes(q);
 
   const toggle = (id: string) =>
     setClosed((was) => {
@@ -232,7 +240,7 @@ export function SideMenu({
   const empty = nav.registers.length === 0 && nav.folders.length === 0 && nav.unfiled.length === 0;
   // "New sheet" opens Create at the Sheet card (docs/05 §4 Create): one way to make a sheet
   const newSheet =
-    canEdit && !empty && hit('New sheet') ? (
+    canEdit && !empty ? (
       <ul className="flex flex-col gap-px">
         <li>
           <CreateSheetLink
@@ -248,52 +256,48 @@ export function SideMenu({
         </li>
       </ul>
     ) : null;
-  const anyInsights = hit('Dashboards') || hit('Evidence library') || hit('Audit outputs');
-  const shownApps = apps.filter((a) => hit(a.title));
-  const anyPlatform =
-    hit('Workflow') || hit('Automations') || hit('Design') || (canManage && hit('Workspace admin'));
+  // ids per menu: the desktop menu and the phone sheet can both be in the page
+  const ids = onNavigate ? 'menu-phone' : 'menu';
 
   return (
     <nav aria-label="Side menu" className="flex h-full flex-col px-2 pt-2.5 pb-4">
       <WorkspaceSwitcher current={current} workspaces={workspaces} />
-      <CreateButton onOpen={onNavigate} className="mt-2" />
-      <label className="border-line text-muted-foreground focus-within:border-focus bg-background-100 my-2 mb-2.5 flex h-[34px] cursor-text items-center gap-2 rounded-md border pr-1.5 pl-2.5 focus-within:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]">
-        <Search className="size-4 shrink-0" aria-hidden />
-        <input
-          ref={findRef}
-          type="search"
-          value={find}
-          onChange={(e) => setFind(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setFind('');
-              e.currentTarget.blur();
-            }
-          }}
-          placeholder="Find"
-          aria-label="Find in menu"
-          autoComplete="off"
-          className="text-ink placeholder:text-muted-foreground text-label-14 min-w-0 flex-1 bg-transparent outline-none [&::-webkit-search-cancel-button]:hidden"
-        />
-        {onNavigate ? null : (
-          <kbd
-            aria-hidden
-            className="border-line bg-subtle text-label-11-mono rounded-[4px] border px-[5px] leading-[18px]"
-          >
-            F
-          </kbd>
-        )}
-      </label>
+      {/* Create: editors, admins and owners, the same check as Build (owner decision 15 Nov 2026) */}
+      {canEdit ? (
+        <CreateButton onOpen={onNavigate} className="mt-2 mb-2.5" />
+      ) : (
+        <div aria-hidden className="h-2" />
+      )}
 
       <div className="flex min-h-0 flex-1 [scrollbar-width:thin] flex-col overflow-x-hidden overflow-y-auto">
-        <ul className="flex flex-col gap-px">
+        {/* Work: Home, My work and the installed packs' apps (docs/13) */}
+        <Group
+          id={`${ids}-work`}
+          title="Work"
+          separator={false}
+          after={
+            apps.length ? (
+              <ul className="mt-px flex flex-col gap-px" aria-label="Apps">
+                {apps.map((a) => (
+                  <NavLink
+                    key={a.key}
+                    href={`/${org}/apps/${a.key}/${a.screen}`}
+                    label={a.title}
+                    icon={<AppIcon icon={a.icon} className={iconClass} />}
+                    active={is(`apps/${a.key}`)}
+                    onNavigate={onNavigate}
+                  />
+                ))}
+              </ul>
+            ) : null
+          }
+        >
           <NavLink
             href={`/${org}/home`}
             label="Home"
             icon={<Home className={iconClass} aria-hidden />}
             active={is('home')}
             onNavigate={onNavigate}
-            hidden={!hit('Home')}
           />
           <NavLink
             href={`/${org}/my-work`}
@@ -301,7 +305,6 @@ export function SideMenu({
             icon={<Inbox className={iconClass} aria-hidden />}
             active={is('my-work')}
             onNavigate={onNavigate}
-            hidden={!hit('My work')}
             trailing={
               myWorkCount > 0 ? (
                 <span className="border-line bg-background-100 text-muted-foreground text-label-11-mono rounded-full border px-1.5 leading-[17px]">
@@ -311,153 +314,96 @@ export function SideMenu({
               ) : null
             }
           />
-        </ul>
-
-        {anyInsights ? (
-          <>
-            <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
-            {q ? null : (
-              <h2 className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
-                Insights
-              </h2>
-            )}
-            <ul className="flex flex-col gap-px">
-              <NavLink
-                href={`/${org}/dashboards`}
-                label="Dashboards"
-                icon={<LayoutDashboard className={iconClass} aria-hidden />}
-                active={is('dashboards')}
-                onNavigate={onNavigate}
-                hidden={!hit('Dashboards')}
-              />
-              <NavLink
-                href={`/${org}/evidence`}
-                label="Evidence library"
-                icon={<FileCheck2 className={iconClass} aria-hidden />}
-                active={is('evidence')}
-                onNavigate={onNavigate}
-                hidden={!hit('Evidence library')}
-              />
-              <NavLink
-                href={`/${org}/audit`}
-                label="Audit outputs"
-                icon={<ClipboardCheck className={iconClass} aria-hidden />}
-                active={is('audit')}
-                onNavigate={onNavigate}
-                hidden={!hit('Audit outputs')}
-              />
-            </ul>
-          </>
-        ) : null}
-
-        {shownApps.length ? (
-          <>
-            <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
-            {q ? null : (
-              <h2 className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
-                Apps
-              </h2>
-            )}
-            <ul className="flex flex-col gap-px" aria-label="Apps">
-              {shownApps.map((a) => (
-                <NavLink
-                  key={a.key}
-                  href={`/${org}/apps/${a.key}/${a.screen}`}
-                  label={a.title}
-                  icon={<AppIcon icon={a.icon} className={iconClass} />}
-                  active={is(`apps/${a.key}`)}
-                  onNavigate={onNavigate}
-                />
-              ))}
-            </ul>
-          </>
-        ) : null}
+        </Group>
 
         <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
-        {/* the Core registers' domains, then the workspace's own sheets (docs/05 §2.1) */}
-        <MenuRegisters
-          org={org}
-          registers={nav.registers}
-          activeSheet={activeSheet}
-          q={q}
-          hit={hit}
-          isClosed={(id) => closed.has(id)}
-          toggle={toggle}
-          onNavigate={onNavigate}
-        />
-        {nav.registers.length && !q ? <div className="h-2.5 shrink-0" /> : null}
-        <MenuSheets
-          title={nav.registers.length ? 'Your sheets' : 'Sheets'}
-          org={org}
-          nav={nav}
-          activeSheet={activeSheet}
-          q={q}
-          hit={hit}
-          isClosed={(id) => closed.has(id)}
-          toggle={toggle}
-          setOpen={setOpen}
-          canEdit={canEdit}
-          canManage={canManage}
-          onNavigate={onNavigate}
-        />
-        {newSheet}
+        {/* Registers: the shared registers' domains, then the workspace's own folders and sheets (docs/05 §2.1) */}
+        <section aria-labelledby={`${ids}-registers`} className="flex flex-col">
+          <MenuSheets
+            title="Registers"
+            headingId={`${ids}-registers`}
+            lead={
+              <MenuRegisters
+                org={org}
+                registers={nav.registers}
+                activeSheet={activeSheet}
+                isClosed={(id) => closed.has(id)}
+                toggle={toggle}
+                onNavigate={onNavigate}
+              />
+            }
+            org={org}
+            nav={nav}
+            activeSheet={activeSheet}
+            isClosed={(id) => closed.has(id)}
+            toggle={toggle}
+            setOpen={setOpen}
+            canEdit={canEdit}
+            canManage={canManage}
+            onNavigate={onNavigate}
+          />
+          {newSheet}
+        </section>
 
-        {anyPlatform ? (
-          <>
-            <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
-            {q ? null : (
-              <h2 className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium">
-                Platform
-              </h2>
-            )}
-            <ul className="flex flex-col gap-px">
+        {/* Reports: every role, auditors included */}
+        <Group id={`${ids}-reports`} title="Reports">
+          <NavLink
+            href={`/${org}/dashboards`}
+            label="Dashboards"
+            icon={<LayoutDashboard className={iconClass} aria-hidden />}
+            active={is('dashboards')}
+            onNavigate={onNavigate}
+          />
+          <NavLink
+            href={`/${org}/evidence`}
+            label="Evidence library"
+            icon={<FileCheck2 className={iconClass} aria-hidden />}
+            active={is('evidence')}
+            onNavigate={onNavigate}
+          />
+          <NavLink
+            href={`/${org}/audit`}
+            label="Audit outputs"
+            icon={<ClipboardCheck className={iconClass} aria-hidden />}
+            active={is('audit')}
+            onNavigate={onNavigate}
+          />
+        </Group>
+
+        {/* Build: editors, admins and owners; Workspace admin: admins and owners. Viewers and auditors never see it. */}
+        {canEdit ? (
+          <Group id={`${ids}-build`} title="Build">
+            <NavLink
+              href={`/${org}/workflow`}
+              label="Workflow"
+              icon={<Workflow className={iconClass} aria-hidden />}
+              active={is('workflow')}
+              onNavigate={onNavigate}
+            />
+            <NavLink
+              href={`/${org}/automations`}
+              label="Automations"
+              icon={<Zap className={iconClass} aria-hidden />}
+              active={is('automations')}
+              onNavigate={onNavigate}
+            />
+            <NavLink
+              href={`/${org}/design`}
+              label="Design"
+              icon={<Network className={iconClass} aria-hidden />}
+              active={is('design')}
+              onNavigate={onNavigate}
+            />
+            {canManage ? (
               <NavLink
-                href={`/${org}/workflow`}
-                label="Workflow"
-                icon={<Workflow className={iconClass} aria-hidden />}
-                active={is('workflow')}
+                href={`/${org}/settings`}
+                label="Workspace admin"
+                icon={<SlidersHorizontal className={iconClass} aria-hidden />}
+                active={is('settings')}
                 onNavigate={onNavigate}
-                hidden={!hit('Workflow')}
               />
-              <NavLink
-                href={`/${org}/automations`}
-                label="Automations"
-                icon={<Zap className={iconClass} aria-hidden />}
-                active={is('automations')}
-                onNavigate={onNavigate}
-                hidden={!hit('Automations')}
-              />
-              <NavLink
-                href={`/${org}/design`}
-                label="Design"
-                icon={<Network className={iconClass} aria-hidden />}
-                active={is('design')}
-                onNavigate={onNavigate}
-                hidden={!hit('Design')}
-              />
-              {canManage ? (
-                <NavLink
-                  href={`/${org}/settings`}
-                  label="Workspace admin"
-                  icon={<SlidersHorizontal className={iconClass} aria-hidden />}
-                  active={is('settings')}
-                  onNavigate={onNavigate}
-                  hidden={!hit('Workspace admin')}
-                />
-              ) : null}
-            </ul>
-          </>
-        ) : null}
-        {q &&
-        !anyPlatform &&
-        !anyInsights &&
-        shownApps.length === 0 &&
-        !hit('Home') &&
-        !hit('My work') &&
-        [...nav.registers, ...nav.folders, { name: 'Other sheets', sheets: nav.unfiled }].every(
-          (s) => !s.sheets.some((x) => hit(x.name)) && !hit(s.name),
-        ) ? (
-          <p className="text-muted-foreground text-copy-13 px-2.5 py-2">Nothing matches.</p>
+            ) : null}
+          </Group>
         ) : null}
       </div>
       {onNavigate ? null : <CollapseToggle />}

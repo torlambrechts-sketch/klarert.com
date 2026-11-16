@@ -42,7 +42,7 @@ test.describe('desktop', () => {
     await signIn(page, 'maria@example.com', `/${slug}/home`);
     const nav = menu(page);
 
-    await nav.getByRole('heading', { name: 'Sheets', exact: true }).hover();
+    await nav.getByRole('heading', { name: 'Registers', exact: true }).hover();
     await nav.getByRole('button', { name: 'Add a sheet or folder' }).click();
     await expect(
       // folders can be restricted (Access, docs/02 §16): the note says where (docs/05 §2.1)
@@ -58,7 +58,7 @@ test.describe('desktop', () => {
     await name.press('Enter');
     await expect(page.getByText('Folder created.')).toBeVisible();
     // new folders go to the top
-    await expect(nav.getByRole('region').first()).toHaveAccessibleName('Risk');
+    await expect(folder(nav, 'Registers').getByRole('region').first()).toHaveAccessibleName('Risk');
 
     // inline rename: double-click, Escape cancels; F2, Enter saves
     await nav.getByRole('button', { name: 'Risk', exact: true }).dblclick();
@@ -204,7 +204,7 @@ test.describe('desktop', () => {
     const slug = seedWorkspace('fo-roles');
     await signIn(page, 'james@example.com', `/${slug}/home`);
     const nav = menu(page);
-    await nav.getByRole('heading', { name: 'Sheets', exact: true }).hover();
+    await nav.getByRole('heading', { name: 'Registers', exact: true }).hover();
     await nav.getByRole('button', { name: 'Add a sheet or folder' }).click();
     await expect(page.getByRole('menuitem', { name: 'New sheet' })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: 'New folder' })).toHaveCount(0);

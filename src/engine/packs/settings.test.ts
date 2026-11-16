@@ -170,7 +170,7 @@ describe('pack settings', () => {
         fields: 7,
       }),
     ).toBe(
-      'Changed the settings of NIS2 cybersecurity (add-on) (Country of main establishment: Norway): 7 defaults updated.',
+      'Changed the settings of NIS2 cybersecurity (Country of main establishment: Norway): 7 defaults updated.',
     );
   });
 });

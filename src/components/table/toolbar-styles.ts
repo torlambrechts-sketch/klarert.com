@@ -10,7 +10,7 @@ export const toolbarPlaceholder = 'text-muted-foreground';
 
 /** An outline button of the toolbar (Filter, Columns, Actions, Automations): 13.5 px medium words, 15 px icons. */
 export const toolbarButton =
-  "h-[38px] px-3.5 has-[>svg]:px-3.5 text-label-13.5 font-medium shadow-none [&_svg:not([class*='size-'])]:size-[15px]";
+  "h-[38px] px-3.5 has-[>svg]:px-3.5 text-label-13 font-medium shadow-none [&_svg:not([class*='size-'])]:size-[15px]";
 
 /** The small count after a control's words ("+7", "3"). */
 export const toolbarCount =

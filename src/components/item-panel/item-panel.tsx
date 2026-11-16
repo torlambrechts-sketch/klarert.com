@@ -375,7 +375,7 @@ export function ItemPanel(props: ItemPanelProps) {
                   <input
                     autoFocus
                     aria-label={`${ctx.sheet.itemLabel} name`}
-                    className="border-input focus-visible:border-focus text-heading-20 min-w-0 flex-1 rounded-md border px-2 py-1 outline-none"
+                    className="border-input focus-visible:border-focus text-heading-20 focus-visible:ring-focus min-w-0 flex-1 rounded-md border px-2 py-1 outline-none focus-visible:ring-2"
                     value={name}
                     maxLength={500}
                     onChange={(e) => setName(e.target.value)}
