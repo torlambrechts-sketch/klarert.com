@@ -107,6 +107,7 @@ test('signed in, / still goes on to onboarding, then to the workspace', async ({
   await signIn(page, freshEmail('landing'));
   await completeProfile(page, 'Ada Lovelace');
   await expect(page.getByRole('heading', { name: 'Create a workspace' })).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', NOINDEX);
 
   // a profile but no workspace yet: onboarding
   await page.goto('/');
@@ -122,4 +123,166 @@ test('signed in, / still goes on to onboarding, then to the workspace', async ({
   await expect(
     page.getByRole('heading', { level: 1, name: /Run your management system/ }),
   ).toHaveCount(0);
+  // app pages are kept out of search engines (the root layout's default)
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', NOINDEX);
+});
+
+// ── the public pages around the product site (owner decisions, 16 Nov 2026) ──
+
+const NOINDEX = /^noindex, nofollow/;
+const LEGAL = [
+  { path: '/privacy', title: 'Privacy notice', link: 'Privacy notice', signUp: 'privacy notice' },
+  { path: '/terms', title: 'Terms', link: 'Terms', signUp: 'terms' },
+] as const;
+
+for (const legal of LEGAL)
+  test(`${legal.path} is a draft, indexed, reachable from the footer and the sign-up form`, async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page
+      .getByRole('contentinfo')
+      .getByRole('link', { name: legal.link, exact: true })
+      .click();
+    await expect(page).toHaveURL(new RegExp(`${legal.path}$`));
+    await expect(page.getByRole('heading', { level: 1, name: legal.title })).toBeVisible();
+    const draft = page.getByRole('note', { name: 'Draft' });
+    await expect(draft).toBeVisible();
+    await expect(draft).toContainText('Draft, to be reviewed.');
+    // placeholders are marked, never filled with a guess
+    await expect(page.locator('mark[data-placeholder]').first()).toContainText(/^\[.+\]$/);
+    // the tags as served (a client-side visit can stream a second copy of the metadata into the body)
+    await page.reload();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /^index, follow/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      `https://www.klarert.com${legal.path}`,
+    );
+    await expect(
+      page.getByRole('contentinfo').getByRole('link', { name: 'support@klarert.com' }),
+    ).toHaveAttribute('href', 'mailto:support@klarert.com');
+    // the two pages link to each other
+    const other = LEGAL.find((l) => l.path !== legal.path)!;
+    await expect(
+      page.getByRole('article').getByRole('link', { name: other.signUp, exact: true }).last(),
+    ).toHaveAttribute('href', other.path);
+
+    // the sign-up form links here; signing in does not carry the line
+    await page.goto('/login?mode=signup');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', NOINDEX);
+    await expect(page.getByText('By creating an account you agree to the')).toBeVisible();
+    await page.getByRole('link', { name: legal.signUp, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${legal.path}$`));
+    await page.goto('/login');
+    await expect(page.getByText('By creating an account you agree to the')).toHaveCount(0);
+  });
+
+test('the privacy notice: sections in order, the facts, no sideways scroll, no axe violations', async ({
+  page,
+}) => {
+  await page.goto('/privacy');
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText([
+    'Who we are',
+    'What we collect',
+    'Why we use it',
+    'Where it is stored',
+    'Subprocessors',
+    'How long it is kept',
+    'Your rights',
+    'Contact',
+  ]);
+  for (const fact of [
+    'Frankfurt',
+    'fra1',
+    'Brevo',
+    'Former member',
+    'hash-chained',
+    'no analytics',
+  ])
+    await expect(page.getByRole('article')).toContainText(fact);
+  const { scroll, client } = await page.evaluate(() => ({
+    scroll: document.documentElement.scrollWidth,
+    client: document.documentElement.clientWidth,
+  }));
+  expect(scroll).toBeLessThanOrEqual(client);
+  const result = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze();
+  const bad = result.violations
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    .map((v) => `${v.impact} ${v.id}: ${v.nodes.map((n) => n.html.slice(0, 120)).join(' | ')}`);
+  expect(bad).toEqual([]);
+});
+
+test('robots.txt and sitemap.xml list only the public pages', async ({ request }) => {
+  const robots = await request.get('/robots.txt');
+  expect(robots.status()).toBe(200);
+  const lines = (await robots.text()).split('\n').map((l) => l.trim());
+  const values = (key: string) =>
+    lines.filter((l) => l.startsWith(`${key}:`)).map((l) => l.slice(key.length + 1).trim());
+  const assets = ['/_next/static/', '/favicon.ico', '/opengraph-image'];
+  expect(values('Allow').filter((v) => !assets.includes(v))).toEqual([
+    '/$',
+    '/privacy$',
+    '/terms$',
+  ]);
+  expect(values('Disallow')).toEqual(['/']);
+  expect(values('Sitemap')).toEqual(['https://www.klarert.com/sitemap.xml']);
+
+  const sitemap = await request.get('/sitemap.xml');
+  expect(sitemap.status()).toBe(200);
+  const locs = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  expect(locs).toEqual([
+    'https://www.klarert.com',
+    'https://www.klarert.com/privacy',
+    'https://www.klarert.com/terms',
+  ]);
+});
+
+test('/opengraph-image is a 1200×630 PNG, named by the public pages', async ({ page, request }) => {
+  const res = await request.get('/opengraph-image');
+  expect(res.status()).toBe(200);
+  expect(res.headers()['content-type']).toBe('image/png');
+  const png = await res.body();
+  expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1200, 630]);
+
+  for (const path of ['/', '/privacy', '/terms']) {
+    await page.goto(path);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      /^https:\/\/www\.klarert\.com\/opengraph-image/,
+    );
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+      'content',
+      'summary_large_image',
+    );
+  }
+});
+
+test('the sign-in pages are noindex, / is not', async ({ page }) => {
+  for (const path of ['/login', '/login?mode=signup', '/login?mode=link']) {
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', NOINDEX);
+  }
+  await page.goto('/');
+  await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute('content', /noindex/);
+});
+
+test('the public pages and the sign-up form ask nothing of other hosts', async ({
+  page,
+  baseURL,
+}) => {
+  const foreign: string[] = [];
+  const origin = new URL(baseURL!).origin;
+  page.on('request', (req) => {
+    const url = new URL(req.url());
+    if (!['data:', 'blob:'].includes(url.protocol) && url.origin !== origin)
+      foreign.push(req.url());
+  });
+  for (const path of ['/', '/privacy', '/terms', '/login?mode=signup']) {
+    await page.goto(path);
+    await page.waitForLoadState('networkidle');
+  }
+  expect(foreign).toEqual([]);
 });
