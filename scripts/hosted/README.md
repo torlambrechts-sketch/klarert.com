@@ -19,6 +19,7 @@ in this order:
 2. Vercel (Production and Preview): set `SUPABASE_COMMAND_SECRET` to it and redeploy. The app then signs its writes;
    the database ignores the header until 0053 is applied.
 3. Supabase dashboard › Project settings › Vault (or SQL): `select vault.create_secret('<value>', 'klarert_command_secret');`
+   (The secret's name keeps "klarert" after the rename to Keptrow: migration 0053 reads it by this name, docs/14.)
 4. Apply 0053 (`apply.py`). It sets `pgrst.db_pre_request` on the `authenticator` role and reloads PostgREST.
 
 To rotate: add the new value with `vault.update_secret` and change the Vercel variable in the same minute; requests
@@ -30,21 +31,24 @@ Invites are sent by email through Brevo's transactional API (the owner's existin
 in France and Germany). Without these steps nothing is sent: admins see "The email could not be sent. Copy the link
 instead." and invites still work by copying the link. No migration or database setting is needed.
 
-1. Brevo › Senders, Domains & Dedicated IPs › Domains › Add a domain: `mail.klarert.com` (or `klarert.com`), and
-   choose to authenticate it. At the DNS host of `klarert.com`, add the records Brevo lists exactly as shown: the
-   `brevo-code` TXT record (ownership), the DKIM record(s) and the DMARC TXT record (if `klarert.com` already has a
+The product is Keptrow on keptrow.com (docs/14). Until the rename goes live the hosted project still sends from
+`mail.klarert.com`; keep that domain authenticated in Brevo through the 12-month transition.
+
+1. Brevo › Senders, Domains & Dedicated IPs › Domains › Add a domain: `mail.keptrow.com`, and
+   choose to authenticate it. At the DNS host of `keptrow.com`, add the records Brevo lists exactly as shown: the
+   `brevo-code` TXT record (ownership), the DKIM record(s) and the DMARC TXT record (if `keptrow.com` already has a
    DMARC record, keep it and do not add a second one for the same name). Press Authenticate in Brevo and wait until
    the domain shows Authenticated.
-2. Brevo › Senders, Domains & Dedicated IPs › Senders › Add a sender: name `Compliance OS`, address
-   `no-reply@mail.klarert.com` (an address on the authenticated domain).
+2. Brevo › Senders, Domains & Dedicated IPs › Senders › Add a sender: name `Keptrow`, address
+   `no-reply@mail.keptrow.com` (an address on the authenticated domain).
 3. Brevo › Transactional › Settings (tracking): turn off open tracking and click tracking if the account allows it.
    The app already asks for no open pixel and anonymised clicks per message, but only the account setting stops
    Brevo rewriting the accept link (docs/09 §11).
-4. Brevo › SMTP & API › API keys › Generate a new API key, named for example `klarert-vercel`. Copy it once.
+4. Brevo › SMTP & API › API keys › Generate a new API key, named for example `keptrow-vercel`. Copy it once.
 5. Vercel › the project › Settings › Environment Variables, for **Production only** (owner decision 15 Nov 2026:
    previews never email real people; there an invite falls back to its copy-link):
    - `BREVO_API_KEY` = the key (mark it Sensitive);
-   - `EMAIL_FROM` = `Compliance OS <no-reply@mail.klarert.com>` (the sender from step 2).
+   - `EMAIL_FROM` = `Keptrow <no-reply@mail.keptrow.com>` (the sender from step 2).
    Redeploy so the functions pick them up.
 6. Check: invite your own second address from Workspace admin › Members. The toast says "Invite sent to …". The
    Vercel function log shows `{"source":"email","tag":"invite","transport":"brevo","outcome":"sent"}`; without the
@@ -62,7 +66,7 @@ used. The subjects and HTML live in the repo (`supabase/templates/*.html`, subje
 
 `python3 scripts/hosted/auth-config.py --dry-run` prints, key by key, what differs on the hosted project; without
 `--dry-run` it PATCHes the Management API (`/v1/projects/{ref}/config/auth`). It sets `site_url`
-(`https://www.klarert.com`), `password_min_length` (12), `mailer_secure_email_change_enabled` (on), the subject and
+(`https://www.keptrow.com`; run it only at go-live, docs/14 step 6), `password_min_length` (12), `mailer_secure_email_change_enabled` (on), the subject and
 HTML of the four templates, and the security alerts for a changed password or email address
 (`mailer_notifications_{password_changed,email_changed}_enabled` on, `mailer_subjects_*_notification` and
 `mailer_templates_*_notification_content` from `[auth.email.notification.*]`), and lists the settings it leaves alone.
@@ -79,8 +83,8 @@ project sends through Brevo.
    - host `smtp-relay.brevo.com`, port `587`
    - username: the Brevo SMTP login
    - password: the Brevo SMTP key
-   - sender email `no-reply@mail.klarert.com`, sender name `Compliance OS`
-   The sending domain `mail.klarert.com` must be authenticated in Brevo (SPF, DKIM, DMARC), as for invites.
+   - sender email `no-reply@mail.keptrow.com`, sender name `Keptrow`
+   The sending domain `mail.keptrow.com` must be authenticated in Brevo (SPF, DKIM, DMARC), as for invites.
 3. Supabase dashboard › Authentication › Rate limits › **Rate limit for sending emails**: about **30 per hour**. The
    limit counts every auth email of the project together. Sign-up is open without a bot check, and Forgot password
    answers the same for every address, so a script could otherwise make Supabase send mail to any number of

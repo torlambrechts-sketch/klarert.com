@@ -75,8 +75,8 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
     an inline confirm ("Remove this app? Two-step sign-in turns off …" for the last one, naming the workspaces that
     require it; **Remove app** in red and **Keep it**, which has focus). Then **Set up two-step sign-in** (black) or
     **Add another authenticator app**. Setting up shows three numbered steps in place: 1. the QR code (180 px, alt
-    text "QR code to scan with your authenticator app") with app examples and the name it adds ("Compliance OS
-    (<email>)"); 2. the key in groups of four (`text-label-13-mono`) with **Copy key**; 3. "Enter the 6-digit code
+    text "QR code to scan with your authenticator app") with app examples and the name it adds ("Keptrow
+    (<email>)"; apps set up before the rename keep "Compliance OS", docs/14); 2. the key in groups of four (`text-label-13-mono`) with **Copy key**; 3. "Enter the 6-digit code
     the app shows" (focused, numeric, one-time-code autocomplete), then **Turn on two-step sign-in** and **Cancel**.
     A wrong code says "That code is not right. Enter the code the app shows now." under the field and focuses it
     again. Done: the toast "Two-step sign-in is on.", the chip turns On, and **If you lose your phone**: add a spare

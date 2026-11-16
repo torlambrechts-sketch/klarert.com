@@ -326,11 +326,16 @@ Supabase Auth MFA with an authenticator app (TOTP). The words in the product are
 
 - **Your account** (`/account`, docs/05 §1): set up an app (QR code, the key to type by hand, the first code),
   add a spare, remove one, and recovery guidance. There are no recovery codes (Supabase's are experimental): a spare
-  app or the saved key is the way back. Otherwise the person asks their workspace owner, who contacts Compliance OS
+  app or the saved key is the way back. Otherwise the person asks their workspace owner, who contacts Keptrow
   support. Support confirms who they are (from an owner of the same workspace, by a channel other than the account
   itself), then deletes the factor in the Supabase dashboard (Authentication › Users › the user › MFA factors). The
   app does not reset factors, because that would need a fifth service-role place (CLAUDE.md rule 6). Revisit
   Supabase recovery codes once they are stable (decided 15 Nov 2026).
+- **The app's label** is the issuer `Keptrow` (`ISSUER`, `src/server/commands/two-step.ts`; "Compliance OS" before
+  the rename, docs/14). It is written only into the `otpauth://` address of a new set-up's QR code and key. Supabase
+  Auth stores a factor's secret and friendly name, not the issuer, and checks a code against the secret alone, so the
+  rename never touches enrolled factors: apps set up before it keep the label "Compliance OS" and keep working;
+  removing the app and adding it again shows the new name.
 - **At sign-in:** a person with an app who signed in with a password or an email link holds an `aal1` session.
   `getSession()` (`src/server/auth.ts`) treats that session as signed out, so every page, server read and command
   refuses it; pages send it to `/login/two-step`, commands answer "Enter the code from your authenticator app to
@@ -381,9 +386,11 @@ characters: public forms refuse every submission until it is set`. There is no f
   place of the PDF (tried 15 Nov 2026).
 - **Headers (SA-7, in part):** `Permissions-Policy` turns off camera, microphone, geolocation, payment, USB and the
   other features the app does not use; `Strict-Transport-Security: max-age=63072000; includeSubDomains`. HSTS
-  `includeSubDomains` applies only to names under the host that sends it (`*.www.klarert.com`), never to the apex
-  `klarert.com` (another product) or its other subdomains, so it is safe whatever they serve; `preload` would need
-  the apex to send it and is left out. The nonce-based script CSP comes after the demo.
+  `includeSubDomains` applies only to names under the host that sends it (`*.www.keptrow.com`), never to the apex
+  `keptrow.com` or its other subdomains (`mail.keptrow.com` is Brevo's), so it is safe whatever they serve; `preload`
+  would need the apex to send it and is left out. The header names no domain, so the rename to Keptrow (docs/14)
+  changes nothing in `next.config.ts`; browsers that hold the policy for `www.klarert.com` keep it, and that host now
+  only answers with HTTPS 301 redirects to `www.keptrow.com`. The nonce-based script CSP comes after the demo.
 
 ### 8.6 CI (E1)
 
@@ -520,7 +527,7 @@ copy-link; see `scripts/hosted/README.md` › Email):
 | Variable | Value |
 |---|---|
 | `BREVO_API_KEY` | A Brevo API key (SMTP & API › API keys), used only by the server |
-| `EMAIL_FROM` | The sender, e.g. `Compliance OS <no-reply@mail.klarert.com>` |
+| `EMAIL_FROM` | The sender, `Keptrow <no-reply@mail.keptrow.com>` (docs/14) |
 | `MAILPIT_URL` | Local only, optional: Mailpit's web address if not `http://127.0.0.1:54324` |
 
 ### 11.1 Open (for the owner)
@@ -576,7 +583,7 @@ Screens in docs/05 §1.1.
   did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
   the plain-text part from the HTML. Invites are our own email (§11); reauthentication is not used. The hosted project
   gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ) and sends through
-  Brevo SMTP, which the owner sets up (`scripts/hosted/README.md` › Auth emails), sender "Compliance OS".
+  Brevo SMTP, which the owner sets up (`scripts/hosted/README.md` › Auth emails), sender "Keptrow".
 - **Security alerts** (owner decision 16 Nov 2026): Supabase Auth's notification emails for a changed password and a
   changed email address are on (`[auth.email.notification.password_changed]` and `.email_changed]` in
   `supabase/config.toml`; hosted `mailer_notifications_*_enabled`, set by `auth-config.py`). Templates
@@ -584,7 +591,7 @@ Screens in docs/05 §1.1.
   the others: what changed, for which address (the email alert goes to the old address and names both), that it was
   sent at the moment of the change (Supabase passes no time to the template; the email's own date is the time),
   "If this was not you, reset your password now" with the Forgot password link (`{{ .SiteURL }}/login/forgot-password`),
-  "If this was not you, contact support@klarert.com straight away." (owner decision 16 Nov 2026, the address as plain
+  "If this was not you, contact support@keptrow.com straight away." (owner decision 16 Nov 2026, the address as plain
   text) and to tell the owner of their workspace. `auth-config.py` refuses a notification template without the Forgot
   password link or the support address. Supabase Auth sends them after a change through Your account and after Set
   a new password.
@@ -676,4 +683,4 @@ Screens in docs/05 §1.1.
    (as 0065 did for value notes) from now on; entries already written cannot change.
 3. **The email change alert** links to Forgot password, whose link goes to the new address, which the person may no
    longer control. Supabase offers no way to undo an email change from the old address; the alert now names
-   support@klarert.com (and still the workspace owner) as the way back.
+   support@keptrow.com (and still the workspace owner) as the way back.

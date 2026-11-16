@@ -2,6 +2,8 @@
 
 A **pack** is an installable bundle of the core as data (CLAUDE.md: data, not code): folders, sheets with fields, groups, views, forms, tab sets and column groups, sub-items, example items, documents and library items, links, automations and dashboards. Installing a pack writes ordinary rows; nothing in the app knows a pack's content. Milestones P1–P7 in docs/06; tables and RPCs in docs/02 §15.
 
+**Product name (16 Nov 2026).** Pack manifests name no product or domain: the rename to Keptrow (docs/14) changed no manifest and no installed pack, and the public `/frameworks` page reads the catalogue under the Keptrow brand.
+
 ## Where packs come from
 
 | Source | Becomes |

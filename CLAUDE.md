@@ -1,4 +1,4 @@
-# Compliance OS — Sheets MVP
+# Keptrow — Sheets MVP
 
 Read this file first, every session. It tells you what we are building, how the repo is organised and the rules you must follow. The detail lives in `docs/`.
 

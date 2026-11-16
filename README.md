@@ -1,4 +1,6 @@
-# Compliance OS · Sheets MVP
+# Keptrow · Sheets MVP
+
+Keptrow — the compliance spreadsheet, on [www.keptrow.com](https://www.keptrow.com) (formerly "Compliance OS" on klarert.com; the rename and its go-live steps are in `docs/14-rename-keptrow.md`).
 
 Instruction pack for Claude Code. It contains everything needed to build the spreadsheet core (57 field types, views, item panel, automations and triggers, audit trail) and to load the first spreadsheet.
 
@@ -22,6 +24,7 @@ Instruction pack for Claude Code. It contains everything needed to build the spr
 | `docs/05-ui-layout.md` | Routes, shell, views, item panel, phones, tokens |
 | `docs/06-build-plan.md` | Milestones M0–M10 with prompts and acceptance boxes |
 | `docs/07-first-sheet.md` | The first spreadsheet, end to end |
+| `docs/14-rename-keptrow.md` | The rename to Keptrow: what changed, what keeps "klarert", the go-live runbook |
 | `supabase/migrations/` | `0001_core.sql` (smoke-tested in PGlite / Postgres 18 with a stubbed auth schema) and `0002_storage_realtime.sql` (Supabase-only) |
 | `scripts/test-migration.mjs` | Runs `0001_core.sql` in PGlite and exercises items, values, links, locks, forms and the hash chain |
 | `templates/` | Wizard starts, the first sheet template, automation recipes |
