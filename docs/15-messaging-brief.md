@@ -1,393 +1,582 @@
-# 15 · Messaging brief
+# 15 · Messaging brief (v2)
 
-The positioning and messaging brief for the public site, sales and onboarding copy. It is written for **Keptrow**,
-the planned name of the product called "Compliance OS" today; the rename waits on a trademark search. Until it is
-cleared, swap the name back wherever copy ships. The company stays Klarert.
+The messaging brief for the public site, sign-up, onboarding and sales conversations. It is self-contained: a designer
+or a design tool can work from this file alone.
 
-Written by the nine-person advisory board (docs/10) on 16 Nov 2026, from the docs, the build plan (docs/06) and the
-code on main. It describes only what is built; anything else is marked **coming**. The site copy lives in
-`src/components/landing/content.ts` and its numbers in `src/lib/site/catalogue.ts`; this brief is the source for
-rewriting both.
+## What changed in v2
 
-## 1. One-line promise
+- Rebuilt around the visitor and their first win. New order: one promise, three proof pillars, start from your
+  standard, how it works in 3 steps, objections, CTA.
+- Applies the messaging review (docs/reviews/2026-11-messaging-review.md): setups have 4 to 8 steps, not 8; automations
+  a standard brings start in test mode; only invites are emailed; no one-click CSV export of a sheet.
+- Adds the owner decisions of 16 Nov 2026: the name, the sign-up promise and the analytics line.
+- New: pitches, benefit ladders, jobs to be done, standard blocks, FAQ, microcopy, "say this, not that", design notes.
+- Cut: the 10-row differentiator table (now six values plus supporting), the long competitor table, the site tables.
 
-|     | Headline                                                     | Subhead                                                                                                                                                                                                                                               |
-| --- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A   | Record it once. Prove it for every standard.                 | Keptrow is a shared spreadsheet for your management system. A risk, an incident or a document is recorded once and counts for ISO 27001, ISO 9001, ISO 14001, ISO 45001, GDPR and NIS2. Every change lands in an activity log your auditor can check. |
-| B   | The freedom of a spreadsheet. The proof an auditor asks for. | Your registers, actions and evidence in sheets your team already knows how to use, with automations that keep work moving and a record of every change that cannot be quietly rewritten.                                                              |
-| C   | Compliance work, without the folder of files.                | Ready-made registers for six standards, shaped to how you work, hosted in the EU.                                                                                                                                                                     |
+## 0. Facts every page depends on
 
-**The board's pick: A**, with B's idea carried into the second section of the home page.
+| Topic | Decision (16 Nov 2026) |
+|---|---|
+| Name | **Keptrow**, by Klarert. The site and app still say **"Compliance OS"** until the trademark search is clear. Copy reads the name from one place, so the switch is one change. |
+| Sign-up promise | **"Free while in early access. No card needed."** Paid plans come with notice: "We will give you [notice period] notice before paid plans start." There is no pricing yet. |
+| Analytics | **"No third-party analytics or trackers."** We keep anonymous first-party counts only (visits, CTA clicks), with no cookies and no third party. |
+| Hosting | App and database in Frankfurt, EU. |
 
-- One promise with an outcome (less duplicate work, a stronger audit), not a feature.
-- No competitor in section 7 makes this claim in this form: shared registers under every standard, plus a log anyone
-  can verify. "Prove it" sets up the proof the page then shows: the log, the SoA and the audit pack.
-- Dissent: the founder and the adoption specialist note that most small buyers start with one standard, so "every
-  standard" can read as "not for me yet". The subhead must start with the spreadsheet, and the page must show a
-  one-standard start in the first scroll. The language expert prefers B for readers who have never been audited.
+## 1. Positioning
 
-## 2. Core message
+**Promise.** Record it once. Prove it for every standard.
 
-Most management systems live in spreadsheets, inboxes and shared drives. The same risk is typed into three files, one
-per standard, and the copies drift apart. Evidence sits in email. Before every audit, someone spends a week working out
-who changed what, and when.
+**Category.** The compliance spreadsheet. Qualifier for ISO readers: "for your management system". Not "GRC platform"
+(heavy) and not "compliance automation" (that category means connectors we do not have).
 
-Keptrow keeps your registers in one shared spreadsheet that the whole team works in. Each standard adds its columns,
-requirement library, forms and automations to the same registers, so a risk or an incident is recorded once and counts
-everywhere it applies. Automations chase dates and owners. Every change is written to an activity log that is
-hash-chained per item, so a changed entry shows.
+**The enemy.** One file per standard. The same risk typed three times, copies that drift, evidence in email, and a week
+of searching before every audit.
 
-What changes: less re-typing, no hunt before the audit, and proof you can hand over on the day.
+**Who it is for first.** SMEs preparing for or keeping one of our six standards, and their consultants. Most start
+with one standard.
 
-## 3. What makes us unique
+**Who it is not for (say so).** Software companies whose main goal is SOC 2; teams that need automated evidence from
+many connected cloud tools today; enterprises that need SSO, an API and integrations on day one.
 
-Competitors have some of these. None we know of has all of them together, and the combination is the point: the
-freedom of a spreadsheet with the proof of a system of record.
+**Message hierarchy (every page follows it):**
 
-| #   | Differentiator                                           | What it means in Keptrow                                                                                                                                                                                                                                                                                                                                | Why the buyer cares                                                                                             | Proof in the product                                                         | Sales line                                                                   |
-| --- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| 1   | One shared set of registers for every standard           | The shared registers (Core pack 1.3.0: documents, risks, incidents, nonconformities and CAPA, actions, suppliers and more) sit under every standard. A standard installs as an add-on that adds its columns, views and Standards tag to them. Cross-walks link requirements that ask for the same thing                                                 | No duplicate risk registers. One incident can count for ISO 27001, GDPR and NIS2 at once                        | The "Used by …" chip on a shared register; "Also satisfies" on a requirement | "Record a risk once. It counts for every standard that uses it."             |
-| 2   | A real spreadsheet                                       | 58 field types, from text and dates to risk matrices, statutory clocks, evidence with expiry and formulas. Table, Board, Calendar, Forms and Insights on every sheet; one level of sub-items; paste from Excel                                                                                                                                          | People work in it without training, and the structure fits the work rather than the other way round             | The field picker's four families; the Table's keyboard editing               | "If your team can use a spreadsheet, they can use Keptrow."                  |
-| 3   | Standards install as data you own                        | A standard is a pack: ordinary sheets, fields, forms, automations and dashboards you can change. Updates use a three-way comparison: your changes are kept, and a conflict asks you ("Keep mine" is the default). Archiving a standard never deletes items or the log                                                                                   | No lock-in to a vendor's template. You can tailor it and still take our updates                                 | "Update available" and Keep mine on Workspace admin › Packs                  | "Change anything. Keep your changes when we update."                         |
-| 4   | Automations you can watch                                | When a field changes, a date arrives, a form is sent, an approval is decided or a button is pressed; if conditions match; then set a value, notify, request an update, create an item, start an approval or send a webhook. Each run is in the run log. Chains stop at three levels. New pack automations that notify start in test mode                | Work moves without chasing, and you can see why something happened                                              | 18 triggers, 16 actions; a test run reads "Would notify Maria"               | "Reminders and follow-ups run themselves, and every run is written down."    |
-| 5   | An activity log anyone can verify                        | Every change is written in the same database transaction, append-only and hash-chained per item. Verify recomputes the chain. The audit pack carries the log with every hashed input and the method, so an auditor can recompute each hash without our software                                                                                         | An auditor can trust the record without trusting us                                                             | "Verify audit trail" in the item panel; `method.txt` in the audit pack       | "Your audit trail does not ask to be believed. It can be checked."           |
-| 6   | Built for the audit itself                               | A read-only auditor role with an end date, after which access ends by itself. A statement of applicability built from the requirement library. An audit pack (zip): SoA, registers, evidence index with SHA-256, the log with chains checked. Management review inputs compiled from your data. Every export is logged                                  | Audit preparation becomes handing over links and files                                                          | The auditor's Start here panel; the Exports list                             | "Give your auditor read-only access that ends by itself."                    |
-| 7   | Privacy built in                                         | Mark fields as personal data; values are masked in the log and can be erased without breaking the chain. Retention rules per sheet with a review queue, postpone with a reason, and legal hold. Notes on value changes and approval comments are masked too. Restricted fields show "Restricted" everywhere. Sheets of personal data install restricted | GDPR duties are met inside the tool that holds the data                                                         | The retention review queue; "Restricted" in place of a value                 | "Erase personal data without breaking your audit trail."                     |
-| 8   | EU-hosted and locked down                                | Database and app in Frankfurt. Two-step sign-in with an authenticator app, which an owner can require for the whole workspace. Row level security on every table. No analytics or trackers; fonts served from our own domain                                                                                                                            | Answers the first security questions a compliance buyer asks of any vendor                                      | Workspace admin › Security › Require two-step sign-in                        | "Hosted in Frankfurt. Two-step sign-in. No trackers."                        |
-| 9   | Apps, approvals and a data-flow map over the same sheets | Apps give one job a few screens (the CAPA app: Report a problem, My actions, Needs my check). Approval workflows with ordered steps, time limits and a block on approving your own item. Build › Design maps what feeds each sheet, what acts on it and what leaves the workspace                                                                       | Front-line staff get simple screens; admins see the whole system; privacy teams get a data-flow record to print | The CAPA app on a phone; Build › Design's map                                | "Simple screens for the people doing the work, and a map of it all for you." |
-| 10  | Licence-safe requirement libraries                       | Libraries hold reference numbers and official short titles only; purpose, guidance, audit questions and typical evidence are our own words. Each library shows its edition status (current, withdrawn, revision in progress)                                                                                                                            | Safe to use and to share with clients; never a copy of a paid standard                                          | The licence note on every library; edition badges                            | "Guidance in plain words, and we tell you when an edition changes."          |
+1. **Promise:** record it once, prove it for every standard.
+2. **Three proof pillars:**
+   - *One set of registers:* a risk or incident counts for every standard that uses it.
+   - *A spreadsheet you can change:* your team already knows how to use it.
+   - *Proof your auditor can check:* an activity log anyone can verify, plus the SoA and the audit pack.
+3. **Start from your standard:** pick one; its registers, example items and setup checklist install in one step.
+4. **How it works in 3 steps:** workspace, standard, first item and team.
+5. **Objections:** price, auditor, data out, Excel, SOC 2, security, time.
+6. **CTA:** Create your workspace. Free while in early access. No card needed.
 
-The no-code point (the brief's last candidate) is not a separate differentiator: it is the proof behind 2, 3 and 9.
+Every section points at sign-up: a button, or the answer to the question that stops it.
 
-## 4. Flexibility: the middle path
+**Alternatives** (never disparage, never quote their figures): against Excel, one copy and a log of every change;
+against SOC 2 tools, ISO beyond security; against GRC suites, a set instead of a project; against OneTrust, GDPR on
+the same registers as ISO; against monday.com or Notion, standards, the SoA and a verifiable log built in.
 
-**Structure where it counts, freedom everywhere else.** Rigid tools give you their idea of your management system. A
-blank spreadsheet gives you no idea at all. Keptrow ships a structure that holds up in an audit and lets you change
-the rest.
+## 2. The hero
 
-**What a customer can change without us** (editors, unless marked admin):
+**Winner (from the review): record once.**
 
-- Sheets: create from a start, from a CSV, or by copying one; name, item label, ID prefix, folder, groups and colours.
-- Fields: add any of the 58 types; rename, reorder, hide, set required, defaults, validation, help text, "ask when
-  adding", visibility rules and status rules ("when Status becomes Closed, require Root cause").
-- Views: saved Table views, Board, Calendar, Insights layouts, filters and sorts, personal or shared; the tabs a sheet
-  shows (admin).
-- Forms: internal or public, with their own questions, opening dates and limits.
-- Automations: build from scratch or from a recipe, switch them on or off; move pack automations from test to live (admin).
-- Approval workflows: steps, approvers, time limits, what a rejection does (admin).
-- Dashboards: widgets and layout.
-- Access: restrict folders, sheets and fields to chosen people (admin).
-- Standards: install at the level you need, add the next level later, take updates or keep your version, archive (admin).
+| Part | Copy |
+|---|---|
+| Eyebrow | The compliance spreadsheet for ISO, GDPR and NIS2 |
+| Headline | Record it once. Prove it for every standard. |
+| Subhead | A shared spreadsheet for your management system. Start with one standard; a risk or incident you record counts for the next one too. |
+| Primary CTA | Create your workspace |
+| Secondary CTA | See how it works (scrolls to the 3 steps) |
+| Reassurance | Free while in early access. No card needed. Hosted in Frankfurt, EU. |
 
-**What stays fixed, on purpose:** the activity log (append-only); a field's key once created; a requirement's reference
-in a library; the system columns of the shared registers (hide or rename them, never delete or retype them, so every
-standard keeps working); the loop guard; the self-approval block unless a workflow allows it.
+The standard picker (section 6) is the very next section, so a one-standard buyer sees their start in the first scroll.
 
-|                       | Rigid GRC tool                     | Keptrow                              | Blank spreadsheet            |
-| --------------------- | ---------------------------------- | ------------------------------------ | ---------------------------- |
-| Structure             | The vendor's, changed by a project | Ready-made, changed by you           | None until you build it      |
-| Audit trail           | Usually yes                        | Hash-chained per item, verifiable    | Version history at best      |
-| Standards content     | Yes, often locked                  | Yes, as data you can edit and update | No                           |
-| First useful register | After a set-up project             | One step, from a ready-made set      | Quick, then the copies drift |
-| Who changes it        | The admin or a consultant          | Editors and admins                   | Anyone, without a record     |
+**Alternative B: spreadsheet plus proof.**
+Eyebrow "For ISO 27001, ISO 9001, GDPR and NIS2". Headline "Your spreadsheet, with the proof auditors ask for".
+Subhead "Registers, actions and evidence in sheets your team already knows how to use. Every change goes into an
+activity log your auditor can verify." CTAs and reassurance as the winner.
+*Use when* traffic is mostly first-time or Excel-heavy ("ISO spreadsheet", "risk register template"), or readers
+have never been audited.
 
-## 5. Customer value by persona
+**Alternative C: start from your standard.**
+Eyebrow "Ready-made registers for six standards". Headline "Pick your standard. Its registers are ready." Subhead
+"ISO 27001, ISO 9001, ISO 14001, ISO 45001, GDPR or NIS2: install it as sheets you can change, with example items and
+a guided setup." Primary CTA "Start with your standard" (scrolls to the picker); secondary "See every standard".
+*Use when* most visitors arrive with a standard in mind (paid search, a consultant's link), or once the picker deep
+link is built (review A1).
 
-| Persona                                   | Pains                                                                                     | What they get                                                                                                                                                         | Outcome                                                                       | Proof point                                                                |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Compliance or ISO lead                    | One file per standard; chasing owners; rebuilding the audit file every year               | Shared registers, automations for reviews and overdue work, My work, the audit pack                                                                                   | Runs several standards from one place and spends audit week on the audit      | Next step card per standard on Home; 8-step setup checklists               |
-| CISO                                      | Needs control over risk and evidence without another rigid tool; must pass vendor reviews | ISO 27001:2022 with 93 Annex A controls, risk treatment, NIS2 measures, restricted fields, two-step sign-in, EU hosting                                               | A security programme that also stands up to its own scrutiny                  | Cross-walks Annex A ↔ NIS2 Art. 21(2); RLS on every table                  |
-| Quality, HSE or environment manager       | Nonconformities, complaints, hazards and aspects in separate trackers; CAPA that stalls   | ISO 9001:2026, 14001:2026 and 45001:2018 add-ons on the same registers; CAPA app; approvals; complaint and incident cascades                                          | Problems are reported, acted on and closed with proof of effectiveness        | CAPA closure workflow; "Report a problem" on a phone                       |
-| DPO                                       | Records of processing in one place, breaches in another; erasure breaks the audit trail   | GDPR add-on: records of processing, data subject requests with deadlines, breaches with the 72-hour clock, DPIAs; retention and erasure; Design's "Leaves the system" | Can show where personal data goes and prove deadlines were met                | Statutory clock field; erasure keeps the chain intact                      |
-| SME CEO or CFO                            | Pays for audits and consultants; fears a failed certification and a costly tool           | One tool for several standards, ready-made sets, read-only auditor access                                                                                             | Fewer tools and less consultant time per audit (no figures promised)          | A standard installs at the Recommended level in one step                   |
-| External ISO consultant with many clients | Rebuilds the same templates per client; clients' files drift                              | The same packs in every client workspace, tailored per client, updated without losing changes; switch between workspaces                                              | Repeatable delivery and clients who keep their system alive after the project | Three-way updates; workspace switcher. Multi-client overview is **coming** |
-| Auditor                                   | Screenshots, emailed spreadsheets, no way to check history                                | Read-only role with an end date, Start here panel, SoA, evidence library, verifiable log, audit pack                                                                  | Samples and checks the record directly                                        | Access ends by itself; exports logged; hashes recomputable                 |
+**How to test.** Five-second tests with five quality or security managers first. Then the winner against B, then
+the two primary CTAs, one at a time, on first-party counts. Do not call a winner on a few dozen sign-ups.
 
-**How to lead with each:** the ISO lead with "record once" and a register they recognise on the first screen; the
-CISO with EU hosting, two-step sign-in and the verifiable log, honest that SSO and an API are coming; the quality
-manager with the CAPA app and a closure that waits for the effectiveness check; the DPO with the 72-hour clock and
-erasure that keeps the chain; the CEO or CFO with one tool across standards, never with savings figures; the
-consultant with tailoring that survives updates; the auditor, a strong voice though not a buyer, with Verify and the
-audit pack's method file.
+## 3. Elevator pitches
 
-## 6. Features and functionality (built)
+Written to be said out loud by a founder or a consultant.
 
-### Sheets and the 58 field types
+**10 seconds.**
+"Keptrow is the compliance spreadsheet. You record a risk or an incident once, it counts for every standard you work
+to, and your auditor can check every change."
 
-- **Sheets with groups, items and IDs** (CA-014): every register has its own place and every item a stable reference.
-- **Basic input (18):** text, long text, comment, number, value (money), percentage, yes/no, checkbox, date, date and
-  time, duration, timeline, recurrence, rating, email, phone, URL, location: capture anything a register needs.
-- **Choice and people (10):** status, dropdown, multi-select, people, role, team, entity and site, country,
-  classification, severity: options and people stored by id, so renaming never rewrites a value.
-- **Compliance (19):** requirement, control link, evidence, attachment, signature, acknowledgement, justification,
-  applicability, finding, checklist, question, risk matrix, maturity, measurement, statutory clock, protected text,
-  personal data marker, retention, version: the fields compliance work needs, built in.
-- **Linked and computed (11):** link to items, lookup, rollup, formula, progress, auto ID, created and updated,
-  workflow step, button, AI proposal (stores a proposed value for a person to accept; nothing generates it yet),
-  sub-items: registers that connect and calculate.
-- **Field rules:** required, validation, defaults, status rules, visibility rules, locked fields: the structure
-  enforces itself.
-- **Sheet wizard and Create:** start blank, from a register, tracker, log, inspection or a compliance start, from a
-  CSV, or from a goal ("What do you need to handle?"): a useful first sheet without building from scratch.
+**30 seconds.**
+"Most small companies run ISO in spreadsheets: one file per standard, the same risk typed three times, evidence in
+email, and a week of searching before every audit. Keptrow keeps those registers in one shared spreadsheet your team
+already knows how to use. You pick your standard, say ISO 27001, and it installs as sheets with example items and a
+setup checklist. Every change goes into an activity log your auditor can verify. It is free while in early access, no
+card needed, and hosted in Frankfurt."
 
-### Views
+**2 minutes.**
+"If you have been through an ISO audit, you know where the time goes: not on the work, on finding it. The risk
+register is one file, the incident log another, the suppliers a third, and when GDPR or ISO 9001 arrives you start a
+fourth that repeats half of the first. Evidence is in someone's inbox.
 
-- **Table:** spreadsheet editing with the keyboard, copy and paste with Excel, column groups, saved views.
-- **Board, Calendar, Forms, Insights:** drag work between stages, see dates, collect input, chart a sheet.
-- **Filters, sort, search and saved views,** personal or shared. **Phones:** cards at 390 px.
+Keptrow is a shared spreadsheet built for that work. It ships one set of registers: risks, incidents, nonconformities,
+documents, suppliers, actions. Each standard installs on top, adding its columns, its requirement library and a short
+setup checklist. Add ISO 9001 next to ISO 27001 and you do not start again; a risk recorded once counts for both.
 
-### Items and sub-items
+It feels like a spreadsheet: add a column, paste from Excel, change anything. But it keeps the proof. Every change goes
+into an activity log chained per item, so a changed entry shows, and your auditor can check that without trusting us.
+On audit day they get read-only access that ends by itself, the statement of applicability and an audit pack.
 
-- **Item panel:** details, linked items both ways, updates with @mentions, the activity log: the whole story of one
-  item in one place.
-- **Sub-items** (one level, own fields and IDs such as CA-014.2) with roll-ups: break a CAPA into steps.
-- **New item dialog** asking only the key fields; **bulk edit, archive and restore**; **realtime** updates.
+What it is not: a SOC 2 tool, and it does not pull evidence from your cloud systems. Email reminders and single
+sign-on are coming; reminders show in the app today.
 
-### Forms
+It is free while in early access, no card needed, hosted in Frankfurt. Pick your standard and you will see its
+registers in your own workspace in one sitting."
 
-- **Internal and public forms** with opening dates, answer limits, a QR code, spam checks and a rate limit: let anyone
-  report a problem without an account.
-- **Stepped intake forms** ("Step 2 of 3"): guide people through a report.
+*Consultant variant (last line):* "Set up your first client in their own workspace, tailor it, and keep their changes
+when we update the standard."
 
-### Automations
+## 4. Core values: benefit ladders
 
-- **18 triggers:** item created, form sent, field changed or becomes a value, number above or below, date arrives,
-  statutory clock warning, evidence expiring, button, checklist "No", sub-item events, approval decided, approved,
-  rejected or overdue.
-- **Conditions:** the same operators as filters.
-- **16 actions:** set a field, notify, request an update, create an item, update linked items, move, assign, lock, post
-  an update, webhook (Slack, Teams or generic), raise a version, create or update sub-items, set the parent's field,
-  keep supplier checks in step, start an approval.
-- **Schedules** (once per item per occurrence), **buttons**, **recipes**, **test mode**, **pause per item**,
-  **loop guard** (three levels), the **run log** with every step's outcome, and the **in-app inbox**.
+Six values drive sign-up. Each climbs from the feature to the line a salesperson says.
 
-### Approvals and workflow
+### 4.1 Record once, count everywhere
 
-- **Approval workflows:** ordered steps, approvers by person, field, job role or team, any one or all, time limits,
-  what a rejection does, lock on approval, no approving your own item: sign-off an auditor accepts.
-- **Needs my approval** in My work; the **Workflow** page shows each sheet's lifecycle.
+| Rung | Copy |
+|---|---|
+| Feature | Shared registers under every standard; each standard adds its columns and requirement library. Cross-walks link requirements that ask the same. |
+| What it means | A risk, an incident or a supplier lives in one place, whatever standard asks for it. |
+| Outcome | No drifting copies; the second standard is a smaller job than the first. |
+| Proof | The "Used by ISO 27001, ISO 9001, NIS2" chip on a register; "Also satisfies" on a requirement. |
+| Sales hook | "Record a risk once. It counts for every standard that uses it." |
 
-### Packs and the catalogue
+### 4.2 Start from your standard
 
-| Set                         | Version | Edition it builds on                                                                                     |
-| --------------------------- | ------- | -------------------------------------------------------------------------------------------------------- |
-| Shared registers (Core)     | 1.3.0   | the base for all                                                                                         |
-| ISO/IEC 27001 ISMS          | 2.3.0   | ISO/IEC 27001:2022 (with Amd 1:2024)                                                                     |
-| ISO 9001 quality            | 2.3.0   | ISO 9001:2026                                                                                            |
-| ISO 14001 environment       | 2.2.0   | ISO 14001:2026                                                                                           |
-| ISO 45001 health and safety | 1.3.0   | ISO 45001:2018 (revision at DIS, expected 2027)                                                          |
-| GDPR privacy                | 2.2.0   | Regulation (EU) 2016/679                                                                                 |
-| NIS2 cybersecurity          | 1.1.0   | Directive (EU) 2022/2555, with country settings for 27 EU and 3 EEA countries (unverified until checked) |
-| Supplier management         | 3.1.1   | links to 27001, 9001 and GDPR                                                                            |
+| Rung | Copy |
+|---|---|
+| Feature | Ready-made sets for ISO/IEC 27001, ISO 9001, ISO 14001, ISO 45001, GDPR, NIS2 and supplier management, installed in one step, at Basic, Recommended or Everything where offered. |
+| What it means | No blank page: example items and a setup checklist of 4 to 8 steps. |
+| Outcome | Your first useful register on day one, and a clear next step instead of a project plan. |
+| Proof | Home's Next step card per installed standard; items marked "Example:" in every set. |
+| Sales hook | "Pick your standard. Its registers are ready." |
 
-Levels read Basic, Recommended and Everything. **Requirement libraries in the catalogue:** ISO/IEC 27001:2022,
-ISO 9001:2015 (withdrawn) and :2026, ISO 14001:2015 (withdrawn) and :2026, ISO 45001:2018, GDPR, NIS2. Each set has a
-setup checklist, a headline dashboard, intake forms and approval workflows.
+### 4.3 A spreadsheet you can change, and keep updated
 
-### Requirement libraries, SoA and coverage
+| Rung | Copy |
+|---|---|
+| Feature | 58 field types, five views, paste from Excel, CSV import. Standards install as ordinary sheets; updates keep your changes ("Keep mine" is the default). |
+| What it means | Something familiar, tailored without a consultant or a vendor ticket. |
+| Outcome | People use it without training, and your tailoring survives our updates. |
+| Proof | The field picker; "Update available" and "Keep mine" in Workspace admin. |
+| Sales hook | "If your team can use a spreadsheet, they can use Keptrow." |
 
-- **Adopt a framework:** a library sheet with applicability, justification, implementation status, owner and evidence.
-- **Statement of applicability** as a saved view, printable and exportable as CSV.
-- **Cross-walks** (Klarert mapping v1): "Also satisfies" and one-click suggested equivalents.
-- **Coverage** per framework; **edition status** badges and a guided **move to a new edition**.
+### 4.4 An activity log your auditor can verify
 
-### Evidence and files
+| Rung | Copy |
+|---|---|
+| Feature | Every change is logged in the same transaction, append-only and hash-chained per item. Verify recomputes the chain. |
+| What it means | Nobody, including us, can quietly rewrite history: a changed entry shows. |
+| Outcome | The auditor trusts the record without trusting the vendor. |
+| Proof | "Verify audit trail" in the item panel; `method.txt` in the audit pack. |
+| Sales hook | "Your audit trail does not ask to be believed. It can be checked." |
 
-- **Files with SHA-256** checked before and after upload, **versions** kept on replace, up to 25 MB.
-- **Evidence with expiry:** current, expiring within 30 days or expired, in words; the **Evidence library** across
-  sheets; automations before expiry.
+### 4.5 Ready for audit day
 
-### Activity log and audit pack
+| Rung | Copy |
+|---|---|
+| Feature | A read-only auditor role with an end date; the SoA; an audit pack (zip) with every register as CSV, an evidence index with SHA-256 fingerprints and the log. |
+| What it means | You hand over links and one file, not a folder of screenshots. |
+| Outcome | Audit week is spent on the audit. |
+| Proof | The auditor's Start here panel; the Exports list. |
+| Sales hook | "Give your auditor read-only access that ends by itself." |
 
-- **Append-only, hash-chained per item, Verify** in the panel.
-- **Audit pack** (zip), **SoA export**, **management review inputs**, **data-flow record**; the **Exports** list.
+### 4.6 EU-hosted and private by design
 
-### Retention and GDPR
+| Rung | Copy |
+|---|---|
+| Feature | Hosted in Frankfurt; requirable two-step sign-in; row level security; restricted fields; erasure that keeps the chain; no third-party analytics or trackers. |
+| What it means | You pass your own vendor check; GDPR duties happen where the data is. |
+| Outcome | Security and privacy questions answered before the trial, not after. |
+| Proof | Workspace admin › Security › Require two-step sign-in; "Restricted" in place of a value. |
+| Sales hook | "Hosted in Frankfurt. Two-step sign-in. No third-party trackers." |
 
-- **Personal data fields,** masked in the log; **retention rules** per sheet; **review queue**, postpone, **legal
-  hold**; **erasure** that keeps the chain; a daily check and Check now.
+### 4.7 Supporting values (real, but not why people sign up)
 
-### Roles, access and invites
+For Platform and standard pages:
 
-- **Owner, admin, editor, viewer, auditor** (with an end date); **restricted folders, sheets and fields**.
-- **Invites by email** with a link that lasts 14 days; resend; logged.
+- **Automations you can watch:** when, if, then, with a run log; a standard's start in test mode.
+- **In-app notifications:** an inbox and My work; only invites are emailed today.
+- **Approvals:** ordered steps, time limits, no approving your own item.
+- **Apps:** the CAPA app, "Report a problem" and "My actions" on a phone.
+- **Forms:** public, with a QR code, no account needed.
+- **Evidence with expiry,** **retention and erasure,** the **Design map,** and **licence-safe libraries** in our own words.
 
-### Security
+## 5. Jobs to be done, by persona
 
-- **EU hosting** (Frankfurt), **two-step sign-in** (requirable), **row level security**, passwords
-  of at least 12 characters, **no trackers**.
+### Compliance or ISO lead
+- **Trigger:** a second standard was added to this year's plan, or the surveillance audit is booked.
+- **Pain, in their words:** "I keep three risk registers that should be one, and I chase owners by email."
+- **What changes:** one set of registers under every standard; reminders and requests in the app; a Next step card per standard.
+- **First win in 10 minutes:** their standard installed, its risk register open with example items, setup step 1 in view.
+- **The line that makes them click:** "Start with one standard. Add the next on the same registers."
 
-### Apps, Design, dashboards, Home and My work
+### CISO
+- **Trigger:** a customer asks for ISO 27001, or NIS2 now applies to the company.
+- **Pain:** "I need control over risk and evidence without buying another rigid tool I then have to defend."
+- **What changes:** the 93 Annex A controls as a library, risk treatment, NIS2 cross-walks, restricted fields, EU hosting.
+- **First win:** the ISO 27001 set installed; "Decide which controls apply" open on the library that builds the SoA.
+- **Line:** "Your statement of applicability, built from the controls you mark."
+- Be honest: SSO and an API are coming, not built.
 
-- **Apps:** CAPA and ISMS CAPA, working on a phone.
-- **Design:** a list and a map of each sheet's inputs, logic and outputs, with health in words; what leaves the
-  workspace.
-- **Dashboards:** key figures, risk heat map, follow-up, counts, overdue.
-- **Home:** one Next step per installed standard; **My work:** approvals, overdue, due soon, requests to me.
-- **Search** with `/`.
+### Quality, HSE or environment manager
+- **Trigger:** a nonconformity from the last audit is still open, or ISO 9001:2026 or ISO 14001:2026 is on the agenda.
+- **Pain:** "Complaints, nonconformities and hazards are in three trackers, and CAPA stalls after containment."
+- **What changes:** 9001, 14001 and 45001 on the same registers; CAPA that closes only after the effectiveness check.
+- **First win:** their standard installed, the first example complaint, hazard or aspect visible, and "Decide what applies" as step 1.
+- **Line:** "Problems reported on a phone, closed with proof the fix worked."
 
-### Import and export
+### DPO
+- **Trigger:** a breach scare, a data subject request with a deadline, or a records-of-processing review.
+- **Pain:** "Records of processing are in one place, breaches in another, and erasing data would break our audit trail."
+- **What changes:** processing, requests and breaches with their clocks in one set; erasure that keeps the chain.
+- **First win:** the GDPR set installed; "Record your processing" open with an example record.
+- **Line:** "Erase personal data without breaking your audit trail."
 
-- **CSV import** with type guessing; **paste from Excel**; **copy a sheet**.
-- **Export:** SoA CSV and print, the audit pack (every register as CSV), management review inputs, the data-flow
-  record. A one-click CSV export of any single sheet is not built.
+### SME CEO or CFO
+- **Trigger:** a large customer or tender asks for a certificate, or the consultant's invoice arrives.
+- **Pain:** "I pay for audits and consultants, and I do not want another expensive tool nobody uses."
+- **What changes:** one tool across standards, ready-made sets, read-only access for the auditor; free while in early access.
+- **First win:** a workspace with the first standard installed and a colleague invited, with no card given.
+- **Line:** "Free while in early access. No card needed." Never promise savings figures.
 
-### Coming next (do not present as built)
+### Consultant with many clients
+- **Trigger:** a new client signs, and the template folder comes out again.
+- **Pain:** "I rebuild the same templates per client, and after I leave their files drift."
+- **What changes:** the same sets in every client workspace, tailored, updated without losing changes.
+- **First win:** a client workspace with their standard installed and the client invited.
+- **Line:** "The same registers in every client workspace, and their changes survive updates."
+- Be honest: a multi-client overview is coming; the workspace switcher is what exists.
 
-- Policy lifecycle: write, approve, publish and read-and-accept with re-attestation.
+### Auditor (not a buyer; a strong voice)
+- **Trigger:** the client sends a link instead of a zip of spreadsheets.
+- **Pain:** "Screenshots and emailed files, and no way to check what changed."
+- **What changes:** read-only access with an end date, the SoA, the evidence library, a log they can verify.
+- **First win:** opening an item's activity log and pressing Verify.
+- **Line:** "Check the record yourself. The method is in the pack."
+
+## 6. Start from your standard
+
+For the picker and the standard pages. A first win says only what an install does today: sheets on the shared
+registers, the requirement library, example items, a setup checklist, and automations in test mode.
+
+### ISO/IEC 27001
+- **Headline:** ISO/IEC 27001:2022, in a spreadsheet your team knows
+- Scope, risk treatment plan and the 93 Annex A controls as a library you work through
+- A statement of applicability built from it, printable and exportable as CSV
+- NIS2 measures cross-walked where they ask the same thing
+- **First win:** ISMS scope and risk treatment sheets with examples, the ISMS CAPA app, and a 4-step setup starting with "Define the scope".
+- **CTA:** Set up ISO 27001
+
+### ISO 9001
+- **Headline:** ISO 9001:2026 quality registers, ready to change
+- Processes, customer feedback and complaints, external providers
+- Nonconformities and CAPA, with closure that waits for the effectiveness check
+- Measuring equipment on a calibration cycle
+- **First win:** quality sheets with examples on the shared registers, and a 5-step setup starting with "Decide what applies".
+- **CTA:** Set up ISO 9001
+
+### ISO 14001
+- **Headline:** Environmental aspects, obligations and monitoring in one place
+- Aspects rated for significance
+- Compliance obligations in the shared legal register
+- The ISO 14001:2026 library; 2015 shown as withdrawn
+- **First win:** aspects, monitoring and communications sheets with examples, and a 4-step setup starting with "Decide what applies".
+- **CTA:** Set up ISO 14001
+
+### ISO 45001
+- **Headline:** Hazards, incidents and actions on shared registers
+- Hazard identification with the people who do the work
+- Injuries and near misses as incidents, with actions
+- Worker consultation and emergency drills on record
+- **First win:** a hazard register (HIRA) and consultation sheet with examples, and a 4-step setup starting with "Decide what applies".
+- **CTA:** Set up ISO 45001
+
+### GDPR
+- **Headline:** Records of processing, requests and breaches, with their deadlines
+- Records of processing, and processors with their DPAs
+- Data subject requests with a deadline; breaches with the 72-hour clock
+- Retention and erasure that keep the audit trail intact
+- **First win:** records of processing, requests, breaches and DPIA sheets with examples, and an 8-step setup starting with "Record your processing".
+- **CTA:** Set up GDPR
+
+### NIS2
+- **Headline:** NIS2 scope, measures and incident reports in one set
+- A scope check per legal entity, with country settings
+- The Art. 21 risk-management measures as controls
+- Incident reports with their 24-hour, 72-hour and one-month deadlines
+- **First win:** scope, incident report and management decision sheets, and a 6-step setup starting with "Check each entity is in scope". Country details show "Not verified yet" until checked; say so.
+- **CTA:** Set up NIS2
+
+### For consultants
+- **Headline:** The same registers in every client workspace
+- Install the client's standard, then tailor it to how they work
+- Take our updates; their changes are kept and conflicts ask
+- Give the client's auditor read-only access that ends by itself
+- **First win:** a client workspace with their standard installed and the client invited as owner or admin.
+- **CTA:** Set up your first client workspace
+
+## 7. How it works in 3 steps
+
+This matches the product today.
+
+1. **Create your workspace.** Sign up with your email, add your name and your organisation's name. Free while in early
+   access, no card.
+2. **Pick and install your standard.** Open Create and choose your standard. It installs as ordinary sheets on the
+   shared registers, with example items and a setup checklist. Nothing is created until you press Create.
+3. **Add your first item and invite your team.** Replace an example with your own risk, complaint or record, then
+   invite a colleague. The invite arrives by email; everything else happens in the app.
+
+*Under the steps:* "Your setup checklist takes it from there, one step at a time."
+
+Once the picker deep link is built (review A1), step 2 reads "Your standard is ready to install" and opens preselected.
+
+## 8. Questions before you start (FAQ next to the CTA)
+
+**What does it cost?**
+Nothing while in early access, and no card is needed. Paid plans will come with [notice period] notice, and we will
+publish them first.
+
+**What does our auditor see?**
+Only what you give them: read-only access that ends on the date you set, the statement of applicability, an evidence
+index with fingerprints and a log they can verify themselves. Whether they accept it is always their decision.
+
+**Can we get our data out? Are we locked in?**
+Every register exports as CSV in the audit pack, with the log and the evidence index. A one-click export of a single
+sheet is not built yet. Standards install as ordinary sheets you own, and archiving one never deletes your items.
+
+**We use Excel.**
+Good: Keptrow works like it. Paste straight in or import a CSV. You gain one copy instead of many, and a record of
+every change.
+
+**Do you cover SOC 2?**
+No. SOC 2 is not in our catalogue. If it is your main goal, a SOC 2 tool is the better fit.
+
+**Is it secure? Where is it hosted?**
+In Frankfurt, EU. Two-step sign-in can be required for everyone, every table has row level security, sensitive fields
+can be restricted, and there are no third-party analytics or trackers.
+
+**How long does it take to start?**
+A workspace takes a few minutes. Installing a standard is one step; its setup checklist has 4 to 8 steps that move as
+fast as your own decisions.
+
+CTA under the FAQ: **Create your workspace** · Free while in early access. No card needed.
+
+## 9. Features and functionality (built)
+
+One line each: what it is, then why it matters. Numbers come from the code.
+
+**Sheets and fields**
+- Sheets with groups, items and stable IDs (CA-014): every item has a reference.
+- 58 field types, including risk matrix, statutory clock and evidence with expiry: built in, not built by you.
+- Field rules (required, validation, status and visibility rules): the structure enforces itself.
+- Options and people stored by id: renaming never rewrites a value.
+- Sub-items with roll-ups: break a CAPA into steps.
+- Create: start blank, from a CSV, a ready-made start or a goal.
+
+**Views and items**
+- Table with keyboard editing and Excel copy and paste: the spreadsheet you know.
+- Board, Calendar, Forms and Insights: the same data, the way the job needs.
+- Saved views, filters and sorts, personal or shared.
+- Item panel with links, updates, @mentions and the activity log: one item's whole story.
+- Bulk edit, archive and restore; realtime; cards on a phone.
+
+**Standards and libraries**
+- Six standards and supplier management on shared registers, at Basic, Recommended or Everything where offered.
+- A setup checklist of 4 to 8 steps and a Next step card on Home: always a clear next move.
+- Requirement libraries in our own words, with edition badges.
+- Statement of applicability as a view, printable and exportable as CSV.
+- Cross-walks: "Also satisfies" and suggested equivalents.
+- Updates that keep your changes; archiving never deletes items or the log.
+
+**Automations and approvals**
+- 18 triggers and 16 actions (when, if, then): follow-ups without chasing.
+- Schedules, buttons, recipes, test mode and a run log: you see why something happened.
+- Loop guard at three levels: nothing runs away.
+- Webhooks to Slack, Teams or any URL.
+- Approval workflows with time limits and no self-approval: sign-off an auditor accepts.
+- In-app inbox and My work: approvals, overdue, due soon, requests.
+
+**Forms, evidence and apps**
+- Internal and public forms with a QR code: anyone can report without an account.
+- Files checked with SHA-256, versions kept, up to 25 MB.
+- Evidence with expiry, and an Evidence library across sheets.
+- CAPA and ISMS CAPA apps: simple screens on a phone.
+- Dashboards: key figures, risk heat map, overdue.
+
+**Audit and privacy**
+- Activity log, hash-chained per item, with Verify: a changed entry shows.
+- Audit pack, SoA export, management review inputs, data-flow record; every export logged.
+- Auditor role with an end date and a Start here panel.
+- Personal data masked in the log; retention rules, legal hold, erasure that keeps the chain.
+- Design: a map of what feeds, acts on and leaves each sheet.
+
+**Access and security**
+- Owner, admin, editor, viewer and auditor; restricted folders, sheets and fields.
+- Invites by email, valid 14 days.
+- Frankfurt hosting; requirable two-step sign-in; row level security; 12-character passwords.
+- No third-party analytics or trackers; fonts served from our own domain.
+
+**Import and export**
+- CSV import, paste from Excel, copy a sheet: bring what you have.
+- Export through the audit pack (every register as CSV) and the SoA CSV. No single-sheet export yet.
+
+### Coming next (never present as built)
+
+- One-click CSV export of a single sheet.
 - Email notifications and digests (only invites are emailed today).
-- Single sign-on (Microsoft, Google), then SAML and SCIM.
-- Readiness score per standard with what to fix first.
-- Public API and inbound webhooks.
-- Plans, trial and billing.
-- A frozen, approved SoA; gates for internal audit and management review.
-- Multi-client overview for consultants; private and client packs.
-- An auditor app; a trust page; supplier questionnaires (board suggestions, not committed).
-- Approval reassignment and delegation; standards in scope per workspace; a clause coverage lens.
+- A standard picked on the site carried through sign-up into Create.
+- Plans and billing (paid plans with [notice period] notice).
+- Single sign-on (Microsoft, Google), then SAML and SCIM; a public API and inbound webhooks.
+- Policy lifecycle with read-and-accept; a readiness score per standard.
+- A frozen, approved SoA; multi-client overview for consultants.
 
-## 7. Competitive framing
+## 10. Claims we may and may not make
 
-We describe competitors by their general positioning, never with figures we cannot source. Never disparage.
+**We may say:** anything section 9 lists as built (numbers from the code); "Free while in early access"; "No card
+needed"; "No third-party analytics or trackers"; "Hosted in Frankfurt, EU"; "an activity log you can verify",
+"tamper-evident"; "helps you prepare for certification"; "built to WCAG 2.1 AA as a target, with automated
+accessibility checks".
 
-| Alternative               | Where they are strong                                                                                                       | Where Keptrow wins                                                                                                                                                                        | When Keptrow is not the right fit                                                        |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Vanta, Drata, Secureframe | SOC 2 and security certifications for software companies; automated evidence from cloud, identity and HR tools; trust pages | ISO management systems beyond security (quality, environment, health and safety); shared registers across standards; a structure you change yourself; EU hosting; a log anyone can verify | You need SOC 2 or automated evidence from many connected systems now                     |
-| Classic GRC suites        | Breadth for large enterprises; deep configuration; established with risk and audit teams                                    | Ready from a ready-made set, not a project; no consultant needed to change a field; plain words                                                                                           | You need enterprise-wide risk across many business units with SSO and integrations today |
-| OneTrust                  | Broad privacy, consent and trust programmes                                                                                 | Privacy and ISO standards on the same registers; retention and erasure inside the record; smaller to adopt                                                                                | You need cookie consent, a consent platform or large-scale data mapping                  |
-| Excel and SharePoint      | Free, familiar, flexible                                                                                                    | The same familiarity with field types, automations, an audit trail, the SoA and standards content                                                                                         | Your whole system is a handful of short lists and nobody audits it                       |
-| monday.com and Notion     | Flexible work management loved by teams                                                                                     | Standards, requirement libraries, the SoA, approvals, retention and a verifiable log built in                                                                                             | You need general project management, not a management system                             |
-
-**Category line:** a compliance spreadsheet, or "the management system spreadsheet". Not "GRC platform" (sounds heavy)
-and not "compliance automation" (that category means connectors).
-
-## 8. Claims
-
-**We may say** anything section 6 lists as built, in the words of section 3, with the numbers read from the code (58
-field types, 18 triggers, 16 actions, three levels of loop guard, seven ready-made sets). Two wordings need care:
-"an activity log you can verify" (not "tamper-proof"), and "built to WCAG 2.1 AA as a target, with automated
-accessibility checks" (never "certified accessible").
-
-**We must never say:**
-
-- "ISO certified", "ISO approved", "SOC 2 compliant", "GDPR certified" or any certification Klarert does not hold.
-- "Guarantees certification" or "audit-ready in N days".
+**We may not say:**
+- "No trackers" or "no analytics" with nothing after it. We keep first-party counts; say "no third-party".
+- "Free forever", any price, plan name or a notice period before it is decided.
+- "ISO certified", "ISO approved", "SOC 2 compliant", "GDPR certified", or any certification Klarert does not hold.
+- "Guarantees certification", "compliant out of the box", "audit-ready in N days".
 - "AI-powered" or any AI claim. The AI proposal field stores a value; nothing generates it.
-- Customer names, logos, testimonials, user counts, time or money saved: none exist yet.
-- Integrations or connectors beyond outbound webhooks to Slack, Teams or any URL.
-- SSO, an API, email notifications, a readiness score or policy attestation as available.
-- "Unlimited", uptime figures, response-time promises or performance numbers.
-- "Tamper-proof". Say "a changed entry shows" or "tamper-evident".
+- Customer names, logos, testimonials, user counts, time or money saved. None exist yet.
+- Integrations beyond outbound webhooks to Slack, Teams or a URL.
+- SSO, an API, email reminders, a readiness score, policy attestation or one-click sheet export as available.
+- "Reminders run themselves", "8-step setup", "tamper-proof", "immutable", "unlimited", uptime or speed figures.
+- Names of sub-processors, until the DPA and the list are published.
 
-**Naming ISO standards:**
+**Naming standards:** number and edition ("ISO/IEC 27001:2022", "ISO 9001:2026"). Never quote or closely paraphrase
+clause or control text; reference numbers and official short titles only. State edition status when it matters
+("ISO 14001:2015 was withdrawn in April 2026"). Never use ISO's logo. Certification bodies certify; we do not.
 
-- Use the number and edition: "ISO/IEC 27001:2022", "ISO 9001:2026". "ISO/IEC 27001" for 27001; "ISO" alone for the
-  others.
-- Never quote clause or control text, and never paraphrase it closely. Reference numbers and official short titles
-  only, as the libraries do (docs/12).
-- Say "helps you prepare for certification", never "makes you compliant". Certification bodies certify; we do not.
-- Say an edition's status when it matters ("ISO 14001:2015 was withdrawn in April 2026").
-- Do not use ISO's logo.
+## 11. Microcopy kit
 
-## 9. Objections and answers
+Every line is under 12 words.
 
-| Objection                                | Answer                                                                                                                                                                                                     |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "We already use Excel."                  | Good: Keptrow works like it, and you can paste straight in or import a CSV. What you gain is one copy instead of many, reminders that run themselves, and a record of every change your auditor can check. |
-| "We need SOC 2."                         | SOC 2 is not in our catalogue today. Keptrow is built for ISO management systems, GDPR and NIS2. If SOC 2 is your main goal, a SOC 2 tool is the better fit.                                               |
-| "Is our data safe?"                      | It is hosted in Frankfurt. Two-step sign-in can be required for everyone. Every table has row level security, sensitive fields can be restricted, and there are no trackers.                               |
-| "Can it do X?"                           | If X is a register, a tracker or a review cycle, almost certainly: add the fields, a form and an automation yourself. If X is an integration, SSO or an API, it is coming; ask us.                         |
-| "What about price?"                      | Plans are not published yet. Talk to us at support@klarert.com. (Placeholder until pricing is decided.)                                                                                                    |
-| "Do we have to use your templates?"      | No. Change anything, or start blank. When we update a standard, your changes are kept and conflicts ask you.                                                                                               |
-| "Will the auditor accept it?"            | The auditor gets read-only access, the statement of applicability, an evidence index with fingerprints and a log they can verify themselves. The decision is always theirs.                                |
-| "We are a small team with one standard." | Start with that standard at the Recommended level. Add the next standard later on the same registers.                                                                                                      |
+| Context | Copy |
+|---|---|
+| Hero primary | Create your workspace |
+| Hero secondary | See how it works |
+| Header | Sign in · Create workspace |
+| Under every primary CTA | Free while in early access. No card needed. |
+| Standard tile | Start with ISO 27001 |
+| Standard page | Set up ISO 27001 in your workspace |
+| After the FAQ | Create your workspace |
+| Closing section | Start with one standard |
+| Consultant page | Set up your first client workspace |
+| Pricing page | Create your workspace · Talk to us |
+| Sign-up heading | Create your workspace |
+| Sign-up helper (no standard) | Free while in early access. No card needed. Hosted in Frankfurt. |
+| Sign-up helper (with standard) | Next, you can set up ISO 27001. |
+| Sign-up links | Email me a link instead · I have an account |
+| After sign-up, email check | Check your email. Open the link to continue. |
+| Onboarding first screen, heading | First, your name |
+| Onboarding first screen, helper | It shows on items you own and changes you make. |
+| Onboarding workspace screen, heading | Name your workspace |
+| Onboarding workspace screen, helper | Usually your organisation's name. You can change it later. |
+| Onboarding button | Create workspace |
+| Home, no standard yet | Set up your first standard |
+| Home, its helper | Adds registers, example items and a setup checklist. |
+| Home, after first install | Reminders are in test mode. Review and turn them on. |
+| Home, needs-you empty | Nothing needs you yet. Add an item to start. |
+| Home, recent activity empty | Changes to items show here, each one logged. |
+| Home, invite step | Invite a colleague to work with you |
+| Invite email subject | {Inviter} invited you to {workspace} on Keptrow |
+| Invite subject, to test | {Inviter} wants your help with {workspace}'s registers |
 
-## 10. Voice and words
+Until the rename, "Keptrow" in shipped copy reads as "Compliance OS".
 
-**Tone:** calm, plain and exact. Short sentences. The customer's nouns: register, risk, action, evidence, audit. We
-show, we do not shout. No exclamation marks, sentence case everywhere, dates as 11 Nov 2026, times in 24 hours.
+## 12. Voice and words
 
-| We say                                                       | We avoid                                                                           |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| sheet, item; register inside a proper name ("Risk register") | record, entry or row for an item; board for a sheet                                |
-| standard                                                     | add-on, pack (in words people read)                                                |
-| shared registers                                             | Core                                                                               |
-| Basic, Recommended, Everything                               | Foundations, Starter, Full                                                         |
-| activity log you can verify                                  | immutable, blockchain, tamper-proof                                                |
-| two-step sign-in                                             | MFA, 2FA                                                                           |
-| automation, when, if, then                                   | workflow engine, AI                                                                |
-| helps you prepare for an audit                               | guarantees, compliant out of the box                                               |
-| hosted in the EU, in Frankfurt                               | sovereign cloud                                                                    |
-| —                                                            | powerful, seamless, robust, next-generation, revolutionary, effortless, AI-powered |
+**Tone:** calm, plain, exact. Short sentences, the customer's nouns (register, risk, action, evidence, audit). Sentence
+case, no exclamation marks, dates as 11 Nov 2026, 24-hour times. A quality manager in Lyon reads the hero once and can
+say it back.
 
-**Plain words for the jargon:**
+**Say this, not that**
 
-- **SoA (statement of applicability):** the list of every control in a standard, with whether it applies to you, why
-  or why not, and how far you have put it in place.
-- **CAPA (corrective and preventive action):** what you do when something goes wrong: contain it, find the cause, fix
-  it, and check the fix worked.
-- **Hash-chained:** each entry in the log carries a fingerprint of itself and of the entry before it. Change one entry
-  and the chain no longer adds up, so the change shows.
+| Say this | Not that |
+|---|---|
+| Record it once | Single source of truth |
+| The compliance spreadsheet | GRC platform, compliance automation |
+| Standard | Pack, add-on |
+| Shared registers | Core |
+| Basic, Recommended, Everything | Foundations, Starter, Full |
+| Sheet, item; "Risk register" as a name | Board, row, record, entry |
+| An activity log you can verify | Immutable, blockchain, tamper-proof |
+| A changed entry shows | Cannot be changed |
+| Two-step sign-in | MFA, 2FA |
+| Automation: when, if, then | Workflow engine, AI |
+| Run on their own once you switch them on | Run themselves |
+| In the app | Notifications (with email implied) |
+| A guided setup; 4 to 8 steps | 8-step setup |
+| Helps you prepare for certification | Guarantees certification, compliant out of the box |
+| Hosted in Frankfurt, EU | Sovereign cloud |
+| No third-party analytics or trackers | No trackers at all |
+| Free while in early access | Free forever, free trial |
+| Every register exports as CSV in the audit pack | Export anything in one click |
+| Create your workspace | Get started, Sign up now |
+| Plain words | Powerful, seamless, robust, effortless, next-generation |
+
+**Plain words for the jargon** (use the gloss on first mention):
+
+- **SoA:** the list of every control in a standard, whether it applies to you, why, and how far you have put it in place.
+- **CAPA:** what you do when something goes wrong: contain it, find the cause, fix it, check the fix worked.
+- **Hash-chained:** each log entry carries a fingerprint of itself and the entry before. Change one and the chain no longer adds up.
 - **Cross-walk:** a note that two requirements in different standards ask for the same thing.
 - **Requirement library:** a standard's requirements as a list you work through, in our own words.
 
-## 11. Site structure for the redesign
+## 13. Hand-off notes for Claude Design
 
-**Visual style:** light and airy, white with soft blue glows, real product UI as cards (taken from the app, not
-mock-ups), generous space, Geist type. No dot patterns, no stock photos, no badges we have not earned.
+**Visual direction.** White, full width, generous space. Soft blue glows behind key cards, never behind text. Real
+product UI as cards, from the app, with the fictional "Meridian Components Ltd". Geist type. No dots, stock photos,
+standards-body logos or unearned badges. Statuses carry words and a symbol. Design at 390 px first.
 
-**Pages:** Home, Platform, Frameworks, Pricing (placeholder). Later: For consultants, For auditors.
+**Home: make the visitor feel "this is my work, already organised", and pick a standard.**
 
-### Home
+| # | Section | Feel | Do | Visual |
+|---|---|---|---|---|
+| 1 | Hero (section 2) | "I get it in one read" | Click Create your workspace | Risk register card in Table view with the "Used by ISO 27001, ISO 9001, NIS2" chip |
+| 2 | Which standard are you working on? | "They have mine" | Pick a tile | Six standard tiles with edition and setup step 1; a seventh, "Something else: start blank" |
+| 3 | How it works in 3 steps (section 7) | "This is not a project" | Create your workspace | Three real screenshots: sign-up, Create's preview, Home's Next step card |
+| 4 | One file per standard does not hold | "That is exactly us" | Read on | Three file cards fading into one register |
+| 5 | The freedom of a spreadsheet. The proof an auditor asks for. | "Familiar, but safer" | Read on | Field picker beside the activity log showing "Chain intact" |
+| 6 | Record once | "The second standard is cheaper" | See every standard | Requirement card with "Also satisfies" |
+| 7 | Proof on audit day | "I will look prepared" | See how it works | Verify result card; SoA table card |
+| 8 | Hosted in Frankfurt. Two-step sign-in. No third-party trackers. | "It passes my vendor check" | Read about security | Four fact cards |
+| 9 | Questions before you start (section 8) | "No catch" | Create your workspace | A plain list, open by default on price |
+| 10 | Start with one standard | "Low risk to try" | Create your workspace; Talk to us | Home's Next step card |
 
-| #   | Section              | Message to land                                                                  | CTA                                     | Visual idea                                                                                                 |
-| --- | -------------------- | -------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 1   | Hero                 | Record it once. Prove it for every standard.                                     | Create your workspace; See the platform | A risk register card in Table view with a "Used by ISO 27001, ISO 9001, NIS2" chip, a soft blue glow behind |
-| 2   | The problem          | Three files, evidence in inboxes, an audit rebuilt every year                    | none                                    | Three small cards fading into one register                                                                  |
-| 3   | The middle path      | The freedom of a spreadsheet, the proof an auditor asks for                      | none                                    | Split card: a field picker on the left, the activity log with "Chain intact" on the right                   |
-| 4   | Record once          | One register, every standard; cross-walks show what else a requirement satisfies | Explore the standards                   | A requirement card with "Also satisfies" listing three standards                                            |
-| 5   | Work moves by itself | When, if, then, with a run log                                                   | See automations                         | The automation sentence card and a run log row "Would notify Maria"                                         |
-| 6   | Proof on audit day   | Verify, the SoA, the audit pack, auditor access that ends                        | See audit outputs                       | The Verify result card and an SoA table card                                                                |
-| 7   | Privacy and security | Frankfurt, two-step sign-in, restricted fields, erasure that keeps the chain     | Read about security                     | Four fact cards, each with a small product detail                                                           |
-| 8   | Standards band       | Seven ready-made sets on shared registers, libraries in our own words            | See every set                           | A row of quiet name tiles with editions, no logos                                                           |
-| 9   | Start                | Start with one standard; add the next on the same registers                      | Create your workspace; Talk to us       | The Home "Next step · Step 1 of 8" card                                                                     |
+**Standard pages: "built for my standard".** Section 6 headline and CTA, its sheets and setup steps as real cards,
+record once, the edition note, the FAQ, the CTA again.
 
-### Platform
+**Platform: "everything is real".** One section per group of section 9, each with one real UI card; Coming next,
+labelled, then the CTA.
 
-Hero ("Everything Keptrow does today, in plain words"), then one section per group in section 6, in this order:
-sheets and field types, views, automations, approvals, activity log and audit pack, requirement libraries and SoA,
-evidence, retention and GDPR, roles and auditor, security, apps and Design, import and export. Each section: the
-message, three points, one real UI card. End with "Coming next" as a plain list, labelled as such, and the CTA. The
-message for the page: one engine, one set of sheets, one log.
+**Pricing: "no catch".** The free line, what every workspace includes, the [notice period] line, Talk to us. No
+prices or plan names.
 
-### Frameworks
+**Sign-up and onboarding: "almost there".** One heading, one helper, fewest fields, no status shown as an error.
 
-Hero ("Ready-made sets for the standards you work to"); the shared registers first (the base); then the sets grouped
-by Security and privacy, Quality, environment and safety, Supply chain, each with version, edition, what it adds and
-what it shares; then the libraries with edition status badges; then the licence note. CTA: Create your workspace.
-Visual: a stacked diagram in words, shared registers at the bottom and standards as layers on top.
+## 14. Panel notes
 
-### Pricing (placeholder)
+**Growth marketer.** The free line under every CTA is the biggest single fix. Judge tests on weeks, not days.
+Dissent: make Alternative C the default the day the picker deep link ships; a preselected standard beats any headline.
 
-"Plans are on the way." What every workspace includes today (from section 6), auditors read-only, and a contact
-link. No prices, no plan names, no "free forever". CTA: Talk to us.
+**Copywriter.** Every subhead is under 25 words and every claim has a proof. Keep "hash-chained" off Home.
 
-## 12. Board notes
+**Brand strategist.** Own "the compliance spreadsheet" and "record it once"; name the enemy on every page. Launch
+Keptrow in one change, keeping "by Klarert" in titles for the first months.
 
-1. **Compliance officer / ISO lead auditor.** "Prove it" is fair only because the log, the SoA and the audit pack are
-   real. Keep "helps you prepare"; never imply we certify. Show the evidence index, auditors trust fingerprints.
-2. **UI/UX designer.** Use real UI cards at a size people can read, one idea per card. Every status in the visuals
-   needs words and a symbol, as in the app. Check the hero at 390 px first.
-3. **Adoption specialist.** Show the first five minutes: pick a standard, see a register, add an item. Lead with one
-   standard; "every standard" is the second thought, not the first hurdle.
-4. **Senior web developer.** Keep numbers flowing from the code (`src/lib/site/catalogue.ts`), not typed into copy.
-   The rename touches `BRAND` and `SITE` in `content.ts` and the email sender; plan it as one change.
-5. **Compliance SaaS founder.** Sell to ISO-certifying SMEs and consultants first, not the SOC 2 buyer. Dissent: the
-   headline's "every standard" oversells for a one-standard buyer; keep the multi-standard proof below the fold.
-6. **Security and privacy / DPO.** Put the privacy facts in the first half of the page. Say "tamper-evident", never
-   "tamper-proof". Do not name sub-processors until the DPA and the list are published.
-7. **Multi-client ISO consultant.** Tailor and update without losing changes is my reason to switch. Do not promise a
-   multi-client overview until it exists; the workspace switcher is enough to mention.
-8. **B2B SaaS marketing consultant.** One promise, the combination as the moat, proof under every claim. The category
-   is "the management system spreadsheet"; stay out of "compliance automation".
-9. **Sales messaging and language expert.** Reading level is right when a quality manager in Lyon reads the hero once
-   and can say it back. Dissent: I would lead with B for first-time visitors; test A against B once traffic allows.
+**Adoption expert.** The promise now matches the first run only partly: Home still teaches spreadsheet basics until
+"Set up your first standard" ships. Until then, step 2 of "How it works" must say "Open Create", as written. Tell
+people their reminders are in test mode right after install, or they will think nothing works.
+
+**Sceptical SME buyer.** "Free while in early access" helps, but I will ask what it costs after: fill in the notice
+period before launch. Show me a real screen and a named person behind the company.
+
+**SEO.** One page per standard plus a consultant page, each with a keyword-led title ("ISO 27001 risk register
+template" intent). Template pages may use reference numbers and short titles only. Dissent: the 10-second pitch should
+name a standard; "every standard you work to" does not match any search.
