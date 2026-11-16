@@ -537,7 +537,8 @@ copy-link; see `scripts/hosted/README.md` › Email):
 
 Forgot password, Your account › Email address, Password and Delete my account, the auth emails and the security
 alerts. Everything runs on the person's own session through Supabase Auth or our own RPC; no new service-role place
-(CLAUDE.md rule 6). One migration: 0071 (Delete my account). Screens in docs/05 §1.1.
+(CLAUDE.md rule 6). Two migrations: 0071 (Delete my account) and 0072 (a user deleted in the Supabase dashboard).
+Screens in docs/05 §1.1.
 
 - **Forgot password** (`requestPasswordReset`, `src/app/(auth)/login/actions.ts`): `resetPasswordForEmail` with
   `redirectTo` = `/auth/callback?next=/login/new-password` (plus the page's own `next`, through `safeNext`). The
@@ -582,8 +583,10 @@ alerts. Everything runs on the person's own session through Supabase Auth or our
   `supabase/templates/password_changed_notification.html` and `email_changed_notification.html`, in the plain style of
   the others: what changed, for which address (the email alert goes to the old address and names both), that it was
   sent at the moment of the change (Supabase passes no time to the template; the email's own date is the time),
-  "If this was not you, reset your password now" with the Forgot password link (`{{ .SiteURL }}/login/forgot-password`)
-  and to tell the owner of their workspace. Supabase Auth sends them after a change through Your account and after Set
+  "If this was not you, reset your password now" with the Forgot password link (`{{ .SiteURL }}/login/forgot-password`),
+  "If this was not you, contact support@klarert.com straight away." (owner decision 16 Nov 2026, the address as plain
+  text) and to tell the owner of their workspace. `auth-config.py` refuses a notification template without the Forgot
+  password link or the support address. Supabase Auth sends them after a change through Your account and after Set
   a new password.
 - **Delete my account** (owner decision 16 Nov 2026: option a, a nameless profile as tombstone; migration 0071,
   `deleteMyAccount` in `src/server/commands/account.ts`, the card in `src/components/account/delete-account.tsx`).
@@ -594,7 +597,8 @@ alerts. Everything runs on the person's own session through Supabase Auth or our
      array in the error's detail; the app says "Make someone else owner of A or delete it first.";
   2. refuses a session that is not `aal2` when the person has a verified factor (as `_aal_ok`, 0063); the app sends
      them to the two-step page and back to the open dialog;
-  3. removes every membership; `memberships_audit` logs each as `member.removed` on the workspace chain with
+  3. removes every membership (the clean-up is `_account_close`, shared with the dashboard path below; internal, not
+     executable by any API role); `memberships_audit` logs each as `member.removed` on the workspace chain with
      `new_value = {"how": "account deleted"}` (the log reads "A member deleted their account"). The note keeps their
      name as every `member.*` note does (owner decision 15 Nov 2026, docs/02 §18). `memberships_guard` lets the
      person remove their own owner membership in this one operation (`app.member_op = 'account_deleted'`), still
@@ -615,8 +619,33 @@ alerts. Everything runs on the person's own session through Supabase Auth or our
   account's, calls the RPC on the person's own session and signs out (`scope: 'local'`; Supabase Auth answers "user
   not found" and the client still clears the cookies), then redirects to `/account-deleted`. Meta "Created by" /
   "Updated by" cells now use the people cell, so they read "Former member" like people fields.
+- **A user deleted in the Supabase dashboard** (owner decision 16 Nov 2026, migration 0072). Authentication › Users ›
+  Delete user (or the Admin API's `DELETE /admin/users/{id}`) deletes the `auth.users` row as Supabase Auth's own
+  database role. A BEFORE DELETE trigger on `auth.users` (`auth_users_account_closed`, function
+  `auth_users_close_account()` in `public`, SECURITY DEFINER, `search_path` set, not executable by any API role) runs
+  the same clean-up as Delete my account, `_account_close(user, by_support => true)`, under the same per-person
+  advisory lock: every membership goes, each logged `member.removed` with `new_value = {"how": "account deleted by
+  support"}` (actor `system`; the log reads "Support deleted a member's account"), the profile becomes "Former member"
+  / "?" and `deleted_at` is set. It does nothing when the profile is already marked deleted, which is how Delete my
+  account's own deletion of the auth user passes through it, or when the user has no profile.
+  **The only owner is not refused on this path:** support cannot be asked to pick a new owner first, so the workspace
+  is left without an owner. Its `member.removed` entry carries `"ownerless": true` (the log reads "… The workspace now
+  has no owner"). `memberships_guard` lets this one operation through without the owner check and the
+  at-least-one-owner check: only while `app.member_op = 'account_deleted_by_support'` and `app.member_op_user` names
+  the membership's person, both transaction-local and set only by `_account_close`. A workspace without an owner keeps
+  working for its admins, editors and viewers; what only an owner may do (make someone owner, invite an owner,
+  restrict a sheet, folder or field, require two-step sign-in) waits until support makes a member owner again as the
+  service role (`scripts/hosted/README.md` › Deleting a user). Delete my account still refuses the only owner.
+- **Risk:** deleting a user in the Supabase dashboard is now safe (as above), but still prefer Delete my account: it
+  asks the only owner to hand over first, asks for a two-step session when the person has an authenticator app, and
+  logs the person as the actor. Support deletes in the dashboard only when the person cannot (lost access, a request
+  by email), and then makes sure every workspace they owned alone gets a new owner. "Soft delete" in the Admin API
+  only marks the auth user and does not run the trigger; use a hard delete.
 - Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`, `src/lib/delete-account.test.ts`; pgTAP
-  `supabase/tests/0071_delete_account.sql`; e2e `tests/e2e/delete-account.spec.ts` (desktop and 390 px: the only owner
+  `supabase/tests/0071_delete_account.sql` and `0072_account_deleted_by_support.sql` (a dashboard deletion as
+  `postgres`: memberships gone and logged, profile anonymised, created by still resolves, the log unchanged, the only
+  owner's deletion logged as ownerless, the guard flag covers only the person it names, Delete my account still works
+  and the trigger then adds nothing, the functions not executable by `anon`, `authenticated` or `service_role`); e2e `tests/e2e/delete-account.spec.ts` (desktop and 390 px: the only owner
   refused with the workspace named; a member deletes their account, cannot sign in with the password again, and their
   item's "Created by" reads "Former member") and `tests/e2e/account-auth.spec.ts` (desktop and
   390 px) through Mailpit: a reset for a known and an unknown address (the same answer), the link, the rules, the new
@@ -630,16 +659,21 @@ alerts. Everything runs on the person's own session through Supabase Auth or our
 2. **A session opened by a reset link — accepted (owner decision 16 Nov 2026):** it may set a password without the
    current one for as long as it lasts (12 hours at most, §8.3), also after the first change. No change.
 3. ~~**Supabase's "password changed" and "email changed" notices are off**~~: on, with our templates (above).
+4. **A user deleted in the Supabase dashboard (owner decision 16 Nov 2026):** handled as Delete my account, by a
+   trigger (0072, above). The only owner is not refused there: the workspace is left without an owner and the removal
+   is logged with `ownerless`. Delete my account keeps refusing the only owner.
+5. **What else a deleted person leaves behind (owner decision 16 Nov 2026): left as it is.** Delete my account (and a
+   dashboard deletion) removes memberships only, as removing a member does. Rows keyed to the person stay under the
+   tombstone profile: team memberships, sheet and folder access grants, their private saved views, their
+   notifications, edit holds and open invites they sent (the invite page then reads "Former member invited you").
+   None is reachable by anyone without a membership.
 
 ### 12.2 Open (for the owner)
 
-1. **What else a deleted person leaves behind.** Delete my account removes memberships only, as removing a member
-   does. Rows keyed to the person stay under the tombstone profile: team memberships, sheet and folder access grants,
-   their private saved views, their notifications, edit holds and open invites they sent (the invite page then reads
-   "Former member invited you"). None is reachable by anyone without a membership, but they are personal data.
+1. ~~**What else a deleted person leaves behind**~~: decided, left as it is (§12.1 item 5).
 2. **The name in `member.*` notes** stays in clear in the append-only log (decided 15 Nov 2026 for access evidence);
    a person who deletes their account may expect it gone. Erasing it would need a personal-data slot for member notes
    (as 0065 did for value notes) from now on; entries already written cannot change.
 3. **The email change alert** links to Forgot password, whose link goes to the new address, which the person may no
-   longer control. Supabase offers no way to undo an email change from the old address; contacting the workspace
-   owner (and support) is the way back.
+   longer control. Supabase offers no way to undo an email change from the old address; the alert now names
+   support@klarert.com (and still the workspace owner) as the way back.

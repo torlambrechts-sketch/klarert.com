@@ -92,3 +92,32 @@ project sends through Brevo.
 
 Then run `auth-config.py` (the main session does) and send yourself a reset link from `/login/forgot-password` to
 check the sender, the subject and that the link opens Set a new password.
+
+## Deleting a user (migration 0072, docs/09 §12)
+
+Prefer **Delete my account** (Your account): it asks the only owner of a workspace to hand over first, asks for a
+two-step session when the person has an authenticator app, and logs the person as the one who left.
+
+Deleting a user in the Supabase dashboard (Authentication › Users › Delete user) is safe from 0072: a trigger on
+`auth.users` removes their memberships (logged `member.removed`, "account deleted by support"), renames the profile
+"Former member" and marks it deleted, so everything they made still shows "Former member". Use it only when the person
+cannot delete their account themselves, and use a hard delete (the Admin API's soft delete does not run the trigger).
+
+**Risk:** the dashboard path does not refuse the only owner of a workspace. That workspace is left without an owner
+(its log entry says "The workspace now has no owner"), and nobody in it can then make someone owner, invite an owner,
+restrict sheets or fields, or change two-step sign-in. Before deleting, find the workspaces they own alone:
+
+```sql
+select o.id, o.name from memberships m join orgs o on o.id = m.org_id
+ where m.user_id = '<user id>' and m.role = 'owner'
+   and not exists (select 1 from memberships x where x.org_id = m.org_id and x.role = 'owner' and x.user_id <> m.user_id);
+```
+
+Afterwards, give each such workspace an owner again, with the agreement of that workspace's people. `memberships_guard`
+lets only an owner or the service role change who owns a workspace, so the statement runs as the service role in one
+transaction (logged `member.changed` by the system):
+
+```sql
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update memberships set role = 'owner' where org_id = '<workspace id>' and user_id = '<new owner id>';
+```
