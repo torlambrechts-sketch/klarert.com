@@ -122,6 +122,7 @@ export const checklist = base<ChecklistValue, ChecklistConfig>({
   defaultConfig: () => ({ lines: [{ id: 'l1', text: 'First check', noteOnNo: true }] }),
   defaultWidth: 150,
   formAllowed: true,
+  publicConfigKeys: ['lines'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'number_above', 'number_below', 'checklist_no'],

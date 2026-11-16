@@ -26,6 +26,7 @@ import {
   setColumnGroupsInput,
   updateSheetInput,
 } from '@/lib/schemas/sheets';
+import { fetchPeople } from '@/lib/sheet-query';
 import { startById } from '@/lib/starts';
 import type { ServerClient } from '@/lib/supabase/server';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
@@ -383,10 +384,8 @@ export async function importCsv(input: unknown): Promise<Result<ImportResult>> {
       });
       if (!created.ok) return created;
 
-      const { data: members } = await supabase
-        .from('memberships')
-        .select('user_id, profiles!inner(display_name, initials, color)')
-        .eq('org_id', orgId);
+      // every member, past the API's 1000-row cap: a people column matches names against all of them
+      const people = await fetchPeople(supabase, orgId);
       const now = new Date();
       const ctx = basicCtx({
         today: now.toISOString().slice(0, 10),
@@ -401,12 +400,7 @@ export async function importCsv(input: unknown): Promise<Result<ImportResult>> {
           idPrefix: v.idPrefix,
           isLibrary: false,
         },
-        people: (members ?? []).map((m) => ({
-          id: m.user_id,
-          name: m.profiles.display_name,
-          initials: m.profiles.initials,
-          color: m.profiles.color,
-        })),
+        people,
         newId: optionId,
       });
       const csvFields: CsvField[] = cols.map((c, i) => ({

@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { strFromU8, unzipSync } from 'fflate';
+import { activityHashInput } from '@/engine/audit/hash-recipe';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
@@ -136,6 +138,14 @@ test('export the SoA, make an audit pack and compile the review inputs', async (
   );
   expect(workspaceRows.every((r) => r[3] === '' && r[10] === `sheet:${org!.id}`)).toBe(true);
   expect(workspaceRows.some((r) => r[4] === 'Maria Pereira')).toBe(true);
+  // an auditor recomputes every hash from its row alone (activity/method.txt, docs/02 §6)
+  expect(strFromU8(zip['activity/method.txt']!)).toContain('How to recompute a hash');
+  for (const r of entries) {
+    const row = Object.fromEntries(head!.map((h, i) => [h, r[i] ?? '']));
+    expect(createHash('sha256').update(activityHashInput(row), 'utf8').digest('hex')).toBe(
+      row.Hash,
+    );
+  }
 
   // ── management review inputs for the period
   await page.goto(`/${slug}/audit`);

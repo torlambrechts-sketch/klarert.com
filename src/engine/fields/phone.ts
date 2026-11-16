@@ -39,6 +39,7 @@ export const phone = base<string, PhoneConfig>({
   defaultConfig: () => ({ defaultCountry: 'GB' }),
   defaultWidth: 140,
   formAllowed: true,
+  publicConfigKeys: ['defaultCountry'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

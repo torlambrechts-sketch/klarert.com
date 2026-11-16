@@ -65,6 +65,7 @@ export const value = base<MoneyValue, ValueConfig>({
   defaultConfig: () => ({ currency: 'EUR', allowOther: false }),
   defaultWidth: 120,
   formAllowed: true,
+  publicConfigKeys: ['currency', 'allowOther'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'number_above', 'number_below'],

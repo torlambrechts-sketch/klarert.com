@@ -76,6 +76,7 @@ export const pdmarker = base<string[], PdMarkerConfig>({
   defaultConfig: () => ({}),
   defaultWidth: 180,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

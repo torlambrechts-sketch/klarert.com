@@ -39,6 +39,7 @@ export const maturity = base<number, MaturityConfig>({
   defaultConfig: () => ({}),
   defaultWidth: 130,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: true,
   calendarCapable: false,
   triggers: ['field_changed', 'field_becomes'],

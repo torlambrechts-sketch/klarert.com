@@ -21,6 +21,7 @@ export const percent = base<number, PercentConfig>({
   defaultConfig: () => ({ bar: true }),
   defaultWidth: 96,
   formAllowed: true,
+  publicConfigKeys: ['bar'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'number_above', 'number_below'],

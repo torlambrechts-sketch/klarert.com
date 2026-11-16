@@ -47,6 +47,7 @@ export const version = base<string, VersionConfig>({
   defaultConfig: () => ({}),
   defaultWidth: 90,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

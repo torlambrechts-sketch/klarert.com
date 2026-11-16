@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import './fields/registry';
 import { status } from './fields/status';
+import { ERASED_NOTE } from './access';
 import {
   activityLine,
   activityText,
@@ -119,6 +120,28 @@ describe('activity lines', () => {
     [
       { fieldId: 'f-status', oldValue: 'opt_wip', newValue: 'opt_done', note: 'Checked on site' },
       'Status: Working on it → Done · Comment: “Checked on site”',
+    ],
+    // a comment kept out of the log (0065): not looked up or not readable here, and erased under retention
+    [
+      {
+        fieldId: 'f-status',
+        oldValue: 'opt_wip',
+        newValue: 'opt_done',
+        note: `{"$personal": "${'ab'.repeat(32)}"}`,
+      },
+      'Status: Working on it → Done · Comment: Restricted',
+    ],
+    [
+      { fieldId: 'f-status', oldValue: 'opt_wip', newValue: 'opt_done', note: ERASED_NOTE },
+      'Status: Working on it → Done · Comment: erased',
+    ],
+    [
+      {
+        action: 'workflow.decided',
+        newValue: { workflow: 'Sign-off', step: 'Review', step_index: 0, decision: 'approved' },
+        note: `{"$personal": "${'cd'.repeat(32)}"}`,
+      },
+      'Approved step 1, Review of Sign-off · Comment: Restricted',
     ],
     [{ fieldId: 'f-gone', oldValue: 'a', newValue: 'b' }, 'A deleted field: a → b'],
     [{ action: 'item.renamed', oldValue: 'Old', newValue: 'New' }, 'Renamed: “Old” → “New”'],

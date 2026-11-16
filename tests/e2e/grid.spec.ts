@@ -224,11 +224,18 @@ test('status rules block until the field is filled; comment on value posts an up
     `item_updates?item_id=eq.${item!.id}&select=body,kind`,
   );
   expect(updates).toEqual([{ body: 'Waiting for the supplier.', kind: 'update' }]);
-  const log = await rest<{ note: string }[]>(
+  // the comment is free text about people: the log keeps a marker, the item's readers read it beside it (0065)
+  const log = await rest<{ id: number; note: string }[]>(
     page,
-    `activity_log?item_id=eq.${item!.id}&action=eq.value.changed&note=not.is.null&select=note`,
+    `activity_log?item_id=eq.${item!.id}&action=eq.value.changed&note=not.is.null&select=id,note`,
   );
-  expect(log.map((l) => l.note)).toContain('Waiting for the supplier.');
+  expect(log.length).toBeGreaterThan(0);
+  expect(log.every((l) => /^\{"\$personal": "[0-9a-f]{64}"\}$/.test(l.note))).toBe(true);
+  const kept = await rest<{ new_value: string }[]>(
+    page,
+    `personal_activity?slot=eq.note&activity_id=in.(${log.map((l) => l.id).join(',')})&select=new_value`,
+  );
+  expect(kept.map((k) => k.new_value)).toContain('Waiting for the supplier.');
 });
 
 test('add a field from the picker, change its settings and change its type with a preview', async ({
@@ -280,6 +287,15 @@ test('add a field from the picker, change its settings and change its type with 
   await expect(page.getByText('Type changed.')).toBeVisible();
   await expect(scoreCell('One').getByRole('img', { name: '3 of 5 stars' })).toBeVisible();
   await expect(scoreCell('Two').getByRole('img', { name: '5 of 5 stars' })).toBeVisible();
+  // the conversion's note is the system's, in clear (0069), not a masked comment
+  const sheetId = new URL(page.url()).pathname.split('/').at(-1);
+  const notes = await rest<{ note: string }[]>(
+    page,
+    `activity_log?sheet_id=eq.${sheetId}&action=eq.value.changed&note=not.is.null&select=note`,
+  );
+  expect(notes.map((n) => n.note)).toEqual(
+    expect.arrayContaining(['Field type changed to Rating']),
+  );
 });
 
 test('bulk archive with Undo, and dragging a row to another group', async ({ page }) => {

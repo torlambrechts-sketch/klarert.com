@@ -131,6 +131,7 @@ export const datetime = base<string, Record<string, never>>({
   defaultConfig: () => ({}),
   defaultWidth: 150,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: true,
   triggers: ['field_changed', 'date_arrives'],

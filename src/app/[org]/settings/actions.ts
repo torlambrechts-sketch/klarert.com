@@ -24,6 +24,7 @@ function bind<T>(command: (input: unknown) => Promise<Result<T>>) {
 
 export const createInviteAction = bind(members.createInvite);
 export const revokeInviteAction = bind(members.revokeInvite);
+export const resendInviteAction = bind(members.resendInvite);
 export const changeRoleAction = bind(members.changeRole);
 export const removeMemberAction = bind(members.removeMember);
 export const createTeamAction = bind(structure.createTeam);

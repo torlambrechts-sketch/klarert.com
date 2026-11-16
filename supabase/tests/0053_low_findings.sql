@@ -100,9 +100,10 @@ reset role;
 select is(_wf_resolve((select i from items i where id = '98000005-0000-0000-0000-000000000002'),
                       '{"kind":"field","fieldKey":"hr_contact"}'), '{}'::uuid[],
   'L7: an approval step never takes its approvers from a restricted field');
-select is(_public_field_config('{"options":[{"id":"o1"}],"targetSheetId":"x","allowedUserIds":["u"],"expr":"1"}'),
+-- since 0066 an allow-list per field type (supabase/tests/0055_public_config_allow_list.sql)
+select is(_public_field_config('status', '{"options":[{"id":"o1"}],"targetSheetId":"x","allowedUserIds":["u"],"expr":"1"}'),
   '{"options":[{"id":"o1"}]}'::jsonb, 'L2: public forms get a field''s options, not its internal ids or formulas');
-select ok(position('_public_field_config(fd.config)' in pg_get_functiondef('get_public_form(text)'::regprocedure)) > 0,
+select ok(position('_public_field_config(fd.type, fd.config)' in pg_get_functiondef('get_public_form(text)'::regprocedure)) > 0,
   'L2: get_public_form uses it');
 
 select * from finish();

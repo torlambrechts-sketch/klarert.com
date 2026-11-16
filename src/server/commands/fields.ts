@@ -572,16 +572,18 @@ export async function changeFieldType(input: unknown): Promise<Result<TypeChange
         }
         target = toField(data);
       }
-      // write converted values, logged per value; locked items fail for editors and are counted
+      // write converted values, logged per value; locked items fail for editors and are counted. The note is the
+      // system's ("Field type changed to …"), so convert_item_value logs it in clear (0069), not as a comment
       let failed = 0;
       const writes = [...plan.values.entries()];
       for (let i = 0; i < writes.length; i += 10) {
         const results = await Promise.all(
           writes.slice(i, i + 10).map(([itemId, value]) =>
-            supabase.rpc('set_item_values', {
+            supabase.rpc('convert_item_value', {
               p_item: itemId,
-              p_patch: { [target.id]: value } as DbJson,
-              p_note: `Field type changed to ${fieldType(v.to)!.label}`,
+              p_field: target.id,
+              p_value: value as DbJson,
+              p_type_label: fieldType(v.to)!.label,
             }),
           ),
         );

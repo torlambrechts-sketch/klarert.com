@@ -84,6 +84,7 @@ export const measurement = base<Reading[], MeasurementConfig>({
   defaultConfig: () => ({ unit: '', target: null, direction: 'down' }),
   defaultWidth: 150,
   formAllowed: true,
+  publicConfigKeys: ['unit', 'target', 'direction'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'number_above', 'number_below'],

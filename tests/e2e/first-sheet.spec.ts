@@ -351,11 +351,19 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
     `item_updates?item_id=eq.${ca2.id}&select=body`,
   );
   expect(updates).toEqual([{ body: 'Waiting for the safety engineer' }]);
-  const notes = await rest<{ note: string }[]>(
+  // the comment is free text about people: the log keeps a marker, the item's readers read it beside it (0065)
+  const notes = await rest<{ id: number; note: string | null }[]>(
     page,
-    `activity_log?item_id=eq.${ca2.id}&action=eq.value.changed&select=note`,
+    `activity_log?item_id=eq.${ca2.id}&action=eq.value.changed&select=id,note`,
   );
-  expect(notes.map((n) => n.note)).toContain('Waiting for the safety engineer');
+  const commented = notes.filter((n) => n.note);
+  expect(commented.length).toBeGreaterThan(0);
+  expect(commented.every((n) => /^\{"\$personal": "[0-9a-f]{64}"\}$/.test(n.note!))).toBe(true);
+  const kept = await rest<{ new_value: string }[]>(
+    page,
+    `personal_activity?slot=eq.note&activity_id=in.(${commented.map((n) => n.id).join(',')})&select=new_value`,
+  );
+  expect(kept.map((k) => k.new_value)).toContain('Waiting for the safety engineer');
 
   // ── 9. Grid: paste a date and "not a date" into the Due date cells of CA-001..002
   await cell(page, 'Burrs on bracket 44-210', 4).click();

@@ -79,6 +79,7 @@ export const retention = base<RetentionValue, RetentionConfig>({
   defaultConfig: () => ({ years: 6, fromFieldKey: null }),
   defaultWidth: 160,
   formAllowed: true,
+  publicConfigKeys: ['years', 'fromFieldKey'],
   kanbanCapable: false,
   calendarCapable: true,
   triggers: ['field_changed', 'date_arrives'],

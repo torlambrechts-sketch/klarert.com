@@ -12,6 +12,7 @@ import {
   filesToInclude,
   inPeriod,
   isWorkspaceEntry,
+  logNoteText,
   logValueText,
   mergeEntries,
   packReadme,
@@ -24,6 +25,7 @@ import {
   type ChainResult,
 } from './pack';
 import { buildSoa, soaCsv, soaHtml, soaTable, SOA_COLUMNS, type SoaHeader } from './soa';
+import { HASH_COLUMNS } from './hash-recipe';
 
 describe('csv', () => {
   it('quotes commas, quotes and line breaks', () => {
@@ -281,12 +283,19 @@ describe('audit pack tables', () => {
       '{"values":{"f1":"Personal data"}}',
     );
     expect(logValueText('text')).toBe('text');
+    // a comment on a value change or an approval comment kept out of the log (0065)
+    expect(logNoteText(`{"$personal": "${'0f'.repeat(32)}"}`)).toBe('Personal data');
+    expect(logNoteText('Pack update')).toBe('Pack update');
+    expect(logNoteText(null)).toBe('');
     const t = activityTable(
       [
         {
           id: 7,
+          orgId: 'o-1',
           at: '2026-05-01T10:00:00Z',
           chainKey: 'i-1',
+          chainSeq: 1,
+          hashV: 2,
           itemId: 'i-1',
           sheetId: 's-1',
           actorKind: 'user',
@@ -295,6 +304,8 @@ describe('audit pack tables', () => {
           fieldId: 'f-1',
           oldValue: null,
           newValue: 'x',
+          oldValueText: null,
+          newValueText: '"x"',
           note: null,
           prevHash: 'genesis',
           hash: 'h1',
@@ -322,12 +333,31 @@ describe('audit pack tables', () => {
       'i-1',
       'genesis',
       'h1',
+      // the hashed inputs as hashed (docs/02 §6)
+      'o-1',
+      's-1',
+      'i-1',
+      '1',
+      '2',
+      '2026-05-01T10:00:00.000000Z',
+      'user',
+      'u-maria',
+      'f-1',
+      'null',
+      '"x"',
+      '',
     ]);
+    expect(t[0]!.slice(13)).toEqual([...HASH_COLUMNS]);
   });
 
   it('workspace entries are rows of the sheet "Workspace", masked like item entries, in id order', () => {
     const entry = (id: number, more: Partial<ActivityEntry>): ActivityEntry => ({
       id,
+      orgId: 'o-1',
+      chainSeq: id,
+      hashV: 2,
+      oldValueText: null,
+      newValueText: null,
       at: '2026-05-01T10:00:00Z',
       chainKey: 'sheet:o-1',
       itemId: null,

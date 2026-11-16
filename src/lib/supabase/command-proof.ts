@@ -10,6 +10,15 @@ export const LOCAL_COMMAND_SECRET = 'klarert-local-command-secret';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]', 'host.docker.internal']);
 
+/** True when the URL points at this machine (the local Supabase stack); false for anything else or a bad URL. */
+export function isLocalUrl(url: string | undefined): boolean {
+  try {
+    return LOCAL_HOSTS.has(new URL(url ?? '').hostname);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The secret to sign with: SUPABASE_COMMAND_SECRET, else the local development value when the Supabase URL is on this
  * machine. Null otherwise: no header is sent and the database refuses the write (fail closed).
@@ -17,11 +26,7 @@ const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]', 'host.doc
 export function commandSecret(env: { secret?: string; supabaseUrl: string }): string | null {
   const s = env.secret?.trim();
   if (s) return s;
-  try {
-    return LOCAL_HOSTS.has(new URL(env.supabaseUrl).hostname) ? LOCAL_COMMAND_SECRET : null;
-  } catch {
-    return null;
-  }
+  return isLocalUrl(env.supabaseUrl) ? LOCAL_COMMAND_SECRET : null;
 }
 
 /** The user id (`sub`) of a bearer JWT, unverified: the database binds the proof to the session it verifies. */

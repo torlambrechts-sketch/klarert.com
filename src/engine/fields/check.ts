@@ -26,6 +26,7 @@ export const check = base<boolean, Record<string, never>>({
   defaultConfig: () => ({}),
   defaultWidth: 76,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'field_becomes'],

@@ -100,6 +100,21 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   ],
   [/invite expired/, 'forbidden', 'This invite has ended. Ask for a new one.'],
   [
+    /invite resend: too soon/,
+    'conflict',
+    'This invite was sent again less than 10 minutes ago. Wait a few minutes, or copy the link instead.',
+  ],
+  [
+    /invite resend: limit reached/,
+    'conflict',
+    'This invite has been sent again 5 times. Copy the link instead, or revoke it and invite again.',
+  ],
+  [
+    /invite resend: link expired/,
+    'conflict',
+    'This invite link has ended. Revoke it and invite the person again.',
+  ],
+  [
     /memberships_auditor_expires|invites_auditor_expires/,
     'invalid',
     "Choose the day an auditor's access ends.",

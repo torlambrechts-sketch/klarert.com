@@ -48,6 +48,7 @@ export const justification = base<string, JustificationConfig>({
   defaultConfig: () => ({ whenFieldKey: 'applicability', whenValues: ['not_applicable'] }),
   defaultWidth: 200,
   formAllowed: true,
+  publicConfigKeys: ['whenFieldKey', 'whenValues'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

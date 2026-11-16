@@ -41,6 +41,55 @@ export function safeFilename(name: string): string {
 export const storagePath = (orgId: string, itemId: string, fileId: string, filename: string) =>
   `org/${orgId}/item/${itemId}/${fileId}/${filename}`;
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** The workspace of an item file's storage path (storagePath's shape), or null for any other path. */
+export function storagePathOrg(path: string): string | null {
+  const [root, org, kind, item, file, ...name] = path.split('/');
+  if (root !== 'org' || kind !== 'item' || !org || !UUID.test(org)) return null;
+  if (!item || !file || name.length === 0 || name.some((p) => p === '')) return null;
+  return org;
+}
+
+/** An upload that is never confirmed is removed once it is this old (docs/02 §8, the scheduler's hourly job). */
+export const PENDING_UPLOAD_MAX_AGE_MS = 60 * 60 * 1000;
+
+/** An object in the files bucket that no `files` row holds yet, as the database lists it. */
+export interface PendingUpload {
+  orgId: string;
+  path: string;
+  /** When the object was last written (ISO). */
+  writtenAt: string;
+}
+
+/**
+ * Which pending uploads to remove now, by workspace: item-file paths of that workspace, written at least
+ * PENDING_UPLOAD_MAX_AGE_MS before `now`, and not confirmed (`confirmed` holds the paths `files` rows hold; the
+ * database already leaves those out, this checks again). Everything else stays: a path of another shape, a younger
+ * upload that may still be confirmed, an object whose path names another workspace than the row says.
+ */
+export function stalePendingUploads(
+  candidates: readonly PendingUpload[],
+  now: Date,
+  confirmed: ReadonlySet<string> = new Set(),
+): Map<string, string[]> {
+  const cutoff = now.getTime() - PENDING_UPLOAD_MAX_AGE_MS;
+  const out = new Map<string, string[]>();
+  for (const c of candidates) {
+    const written = Date.parse(c.writtenAt);
+    if (!Number.isFinite(written) || written > cutoff) continue;
+    if (storagePathOrg(c.path) !== c.orgId || confirmed.has(c.path)) continue;
+    out.set(c.orgId, [...(out.get(c.orgId) ?? []), c.path]);
+  }
+  return out;
+}
+
+/**
+ * Whether the scheduler tick at `now` runs the hourly jobs: the first tick of each hour (the cron runs every 15
+ * minutes, so a tick a few minutes late still counts, and a missed hour is caught up by the next).
+ */
+export const hourlyTick = (now: Date, everyMinutes = 15) => now.getUTCMinutes() < everyMinutes;
+
 /**
  * Whether a file matches a field's accept list: extensions (".pdf"), MIME types ("application/pdf") or MIME
  * families ("image/*"). An empty list accepts everything.
