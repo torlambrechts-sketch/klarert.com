@@ -43,7 +43,7 @@ export async function createClient() {
 
 /**
  * A client with no cookies and no stored session, on the anon key: only to check a person's current password before
- * it changes (Your account › Password, docs/09 §11). The session it opens is ended by the command right after.
+ * it changes (Your account › Password, docs/09 §12). The session it opens is ended by the command right after.
  */
 export function createPasswordCheckClient() {
   return createSupabaseClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {

@@ -1,6 +1,6 @@
 import { safeNext } from './safe-next';
 
-// Where the email-link callback (`/auth/callback`) sends a person (docs/05 §1, docs/09 §11). Supabase Auth's links
+// Where the email-link callback (`/auth/callback`) sends a person (docs/05 §1, docs/09 §12). Supabase Auth's links
 // (sign-in, confirm sign-up, reset password, change email) land there with a code, with an error, or, for the first of
 // the two links of an email change, with only a message. Pure.
 

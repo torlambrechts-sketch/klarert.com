@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
-select plan(57);
+select plan(58);
 
 -- people: owner (o), editor who submits (e), second editor (e2), viewer (v), outsider (x), auditor (a)
 insert into auth.users (id, email) values
@@ -183,8 +183,13 @@ select results_eq($$ select locked, lock_reason, "values"->>'a9a9a9a9-3333-0000-
   'approved: locked, the step field done, the status set');
 select results_eq($$ select status, end_reason, ended_by from workflow_instances where id = (select id from i1) $$,
   $$ values ('approved'::text, 'approved'::text, '00000000-0000-0000-0000-0000000a9001'::uuid) $$, 'the instance ended');
-select results_eq($$ select action, actor_id, note, new_value->>'step', new_value->>'decision'
-                       from activity_log where item_id = (select id from it1) and action like 'workflow.%' order by id $$,
+-- since 0065 the comment is a personal-data marker in the log, kept beside it in personal_activity (slot note)
+select results_eq($$ select a.action, a.actor_id,
+                            coalesce((select pa.new_value #>> '{}' from personal_activity pa
+                                       where pa.activity_id = a.id and pa.slot = 'note'), a.note),
+                            a.new_value->>'step', a.new_value->>'decision'
+                       from activity_log a where a.item_id = (select id from it1) and a.action like 'workflow.%'
+                      order by a.id $$,
   $$ values ('workflow.submitted'::text, '00000000-0000-0000-0000-0000000a9002'::uuid, 'Ready for review'::text, null::text, null::text),
             ('workflow.decided', '00000000-0000-0000-0000-0000000a9003', 'Reads well', 'Review', 'approved'),
             ('workflow.decided', '00000000-0000-0000-0000-0000000a9004', null, 'Approval', 'approved'),
@@ -194,6 +199,9 @@ select results_eq($$ select action, actor_id, note, new_value->>'step', new_valu
             ('workflow.decided', '00000000-0000-0000-0000-0000000a9001', 'Approved for use', 'Approval', 'approved'),
             ('workflow.approved', '00000000-0000-0000-0000-0000000a9001', null, null, null) $$,
   'every decision is in the item''s log: who, step, decision, comment');
+select is((select count(*)::int from activity_log where item_id = (select id from it1) and action like 'workflow.%'
+            and note is not null and note !~ '^\{"\$personal": "[0-9a-f]{64}"\}$'), 0,
+  'no approval comment is in the log in clear (0065)');
 select is((select count(*)::int from activity_log where item_id = (select id from it1) and action = 'item.locked'), 1,
   'the lock is logged');
 select is((verify_activity_chain((select id::text from it1)))->>'ok', 'true', 'the item''s hash chain verifies');

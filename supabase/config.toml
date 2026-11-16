@@ -222,7 +222,7 @@ web3 = 30
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
-# Your account › Email address relies on it (docs/09 §11). Supabase Auth asks for both links only while
+# Your account › Email address relies on it (docs/09 §12). Supabase Auth asks for both links only while
 # confirmations are on: locally (enable_confirmations = false) one link completes the change; the hosted project needs
 # "Confirm email" on for both to be asked.
 double_confirm_changes = true
@@ -247,7 +247,7 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Auth emails (docs/09 §11): plain HTML, no images, no tracking; Supabase Auth derives the plain-text part. The hosted
+# Auth emails (docs/09 §12): plain HTML, no images, no tracking; Supabase Auth derives the plain-text part. The hosted
 # project gets the same subjects and HTML from scripts/hosted/auth-config.py. Invites are our own email (Brevo), so
 # the invite template is not used; nor is reauthentication (secure_password_change is off: Your account asks for the
 # current password). A running local stack picks changes up after `supabase stop && supabase start`.

@@ -51,6 +51,7 @@ export const comment = base<CommentValue, Record<string, never>>({
   defaultConfig: () => ({}),
   defaultWidth: 200,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

@@ -97,7 +97,7 @@ export async function signUpWithPassword(_: unknown, form: FormData): Promise<Re
 }
 
 /**
- * Forgot password (docs/05 §1, docs/09 §11): Supabase Auth emails a reset link that opens a session through the
+ * Forgot password (docs/05 §1, docs/09 §12): Supabase Auth emails a reset link that opens a session through the
  * callback and lands on Set a new password. The answer is the same whether or not an account uses the address, and
  * also when Supabase Auth refuses (a second request within its limit is refused for existing accounts only), so the
  * form cannot tell anyone which addresses have accounts.

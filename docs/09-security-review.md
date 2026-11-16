@@ -423,20 +423,117 @@ pgTAP file that runs the attack as `authenticated` and shows it refused.
 
 1. **Command gate secret** (0053): set it in Vault and Vercel before applying 0053 (scripts/hosted/README.md); without
    it every write by a person is refused.
-2. **Pending uploads never confirmed** (closed tab during upload) stay in the bucket, readable only by their
-   uploader. A daily cleanup by the scheduler (service role) would remove those older than an hour.
-3. **Personal data still in clear in the log:** display names in `member.*` notes (access-provisioning evidence),
-   free-text notes on value changes and approval comments. They need an owner decision on what counts as personal.
-4. **Restricted `ack` / `signature` fields:** clearing such a value goes to `restricted_values` by delete, which the
-   attestation guard does not see (clearing a signature is allowed anyway; clearing others' acknowledgements of a
-   restricted ack field is not stopped).
-5. **Public form configs** are filtered by a deny-list of internal keys (`_public_field_config`); a new field type
-   with an internal id in its config must add its key there.
+2. ~~**Pending uploads never confirmed**~~: removed by the scheduler every hour once an hour old (0067, §10).
+3. ~~**Personal data still in clear in the log**~~: notes of value changes and approval comments are masked like
+   comment bodies (0065, §10). Display names in `member.*` notes stay in clear as access-provisioning evidence (owner
+   decision 15 Nov 2026, docs/02 §18).
+4. **Restricted `ack` / `signature` fields — accepted (owner decision 15 Nov 2026):** clearing such a value goes to
+   `restricted_values` by delete, which the attestation guard does not see (clearing a signature is allowed anyway;
+   clearing others' acknowledgements of a restricted ack field is not stopped). Accepted for now; no change.
+5. ~~**Public form configs** filtered by a deny-list~~: an allow-list per field type from the field registry (0066,
+   §10).
 6. ~~Two-step setting from the app~~: `setWorkspaceTwoStep` calls `set_require_two_step` (done when the branches
    merged).
 
+## 10. Security follow-ups (15 Nov 2026, branch `claude/security-followups`)
 
-## 11. Account essentials (15 Nov 2026, branch `claude/auth-essentials`)
+The open items of §9.1 the owner decided on 15 Nov 2026, and two reads that stopped at the API's 1 000-row cap.
+
+| Item | Now | Migration | Tests |
+|---|---|---|---|
+| §9.1.3 Free text in the log | A person's note on a value change and every approval comment become a personal-data marker; the note and its salt live in `personal_activity` (slot `note`, under the entry's field). Retention erasure with `comments` (and anonymise) erases them; the tombstone counts them in `log_values_erased` and the notes still in clear in `earlier_entries_in_clear`; `verify_activity_chain` checks each against its marker. Entries written before 0065 cannot change (append-only): their notes stay in clear and are counted. System notes (automations, pack operations, the framework edition move) and member names in `member.*` notes stay in clear (docs/02 §18) | 0065 | pgTAP `0058_note_masking.sql`; engine `activity.test.ts`, `audit.test.ts`; e2e first-sheet, approvals |
+| §9.1.2 Abandoned uploads | The scheduler (service role, the existing 15-minute cron route, first tick of each hour) lists objects no `files` row holds that are over an hour old (`stale_pending_uploads`, service role only, never younger than an hour) and removes them through the Storage API; a log line per workspace. There is no pending row to remove: `files` is written only on confirmation | 0067 | pgTAP `0057_pending_upload_cleanup.sql`; `files.test.ts`, `pending-uploads.test.ts` |
+| Audit pack hash columns | `activity/log.csv` carries every hashed input as hashed (`org_id`, `chain_seq`, `hash_v`, `at_utc`, the jsonb text of the values, the note as JSON …) and `activity/method.txt` the v1 and v2 recipe, so an auditor recomputes each hash without the database (docs/02 §6) | — | `hash-recipe.test.ts` (fixture made by the database's own functions), pgTAP `0056_audit_hash_recipe.sql`, e2e audit-outputs recomputes every row of a real pack |
+| Paging past 1 000 rows | Pack planning (install: the workspace snapshot, the required packs' sheets, fields, groups, views and items, the library items; upgrade: what the install made, the items it created, the catalogue) and the CSV importer's member list read every page (`fetchAllPages`, `every` in `src/server/packs/install.ts`, `fetchPeople`). Before, a register over 1 000 items could get a new item at a position already taken, or an upgrade miss rows it made | — | `src/server/packs/paging.test.ts`, `src/lib/sheet-query.test.ts` (the capped fake client) |
+| §10.1.1 Approval comments outside the log (owner decision 15 Nov 2026: erase them with comments) | `retention_execute` with `comments` (and anonymise) sets `workflow_decisions.comment` and `workflow_instances.submit_comment` to null for the item; the tombstone counts them (`approval_comments_erased`). `workflow_decisions_append_only` allows that and nothing else: inside erasure only (`app.retention_op`, transaction-local, set by `retention_execute`), comment to null only, every other column unchanged; `workflow_instances_comment_guard` the same for the submit comment. The decision itself stays | 0068 | pgTAP `0059_approval_comment_erasure.sql` |
+| §10.1.2 Field type conversion notes (owner decision 15 Nov 2026: log them as the system's) | `changeFieldType` writes converted values through `convert_item_value` (SECURITY INVOKER: `set_item_values` with the caller's rights and every check, `app.system_note` on for that call); the note "Field type changed to <type>" is built in the database from a type's name (pattern checked, never free text) and stays in clear | 0069 | pgTAP `0060_field_conversion_note.sql`; `type-label.test.ts` (every type label passes the pattern) |
+| §9.1.5 Public form configs | `_public_field_config(type, config)` keeps only the keys the type lists in `publicConfigKeys` (field registry); unknown types and keys show nothing. `public-config.test.ts` fails when the SQL list and the registry differ, when a public type has no list, or when a list names an internal key | 0066 | pgTAP `0055_public_config_allow_list.sql`, `0053_low_findings.sql`; `public-config.test.ts` |
+
+### 10.1 Decided (owner, 15 Nov 2026)
+
+1. ~~**Approval comments outside the log**~~: erased with comments (0068, above).
+2. ~~**Field type conversion notes**~~: logged as the system's, in clear (0069, above).
+3. **Other notes stay in clear:** archive notes, retention reasons (postpone, legal hold), the notes on retention
+   tombstones and file archive notes are kept in clear in the log. Only value-change comments and approval comments
+   are masked (0065).
+
+## 11. Email (15 Nov 2026, branch `claude/email-invites`)
+
+Invites are sent by email (board review A4). The module is `src/server/email/`, server-only, and is the one way the
+app sends mail; reminders, read-and-accept requests and notifications will add a template and a tag to it.
+
+- **Shape.** `templates.ts` is pure: data in, `{ subject, text, html }` out. Plain and accessible: one column, real
+  text, `lang="en"`, the link both linked and written out, no images, no remote resources, no tracking pixels or
+  click tracking. Names from people are escaped in the HTML and kept to one line in the subject. Dates read
+  `29 Nov 2026` in the workspace's time zone. `transport.ts` holds the interface
+  `send({ to, subject, text, html, tag, idempotencyKey })`, the transports and the choice; `index.ts` wires it to
+  `process.env`, `fetch` and the log (`sendEmail(message)`, `canSendEmail()`). It never throws: the result is
+  `{ sent: true, id }` or `{ sent: false, reason: 'not_configured' | 'rejected' | 'unavailable' }`.
+- **Transports.** *Brevo* (owner decision 15 Nov 2026: the owner's existing account; Brevo keeps data in the EU,
+  France and Germany): `POST https://api.brevo.com/v3/smtp/email` with the headers `api-key: $BREVO_API_KEY`,
+  `content-type` and `accept: application/json`; body `sender` (from `EMAIL_FROM`, its name when one is given), `to`,
+  `subject`, `htmlContent`, `textContent`, `tags: [tag]` and `headers: { "X-Mailin-custom": <key> }`. Success is 201
+  with a `messageId`; 400 (bad request) and 401 (bad key) are refusals, 429 and 5xx "try later"; each is logged with
+  the tag and the status code only. **Brevo has no idempotency key** (its API reference, checked 15 Nov 2026,
+  documents none), so the key travels as `X-Mailin-custom` (to find the message in Brevo's logs) and duplicates are
+  prevented on our side: the app never retries a send; an invite is emailed once when it is created, and an address
+  has at most one open invite per workspace (`invites_open_email_idx`), so a double click fails before a second send;
+  resends are counted and rate-limited in the database (below). **Tracking:** each recipient is sent with
+  `contactPixelTrackingConsent: false` (opens and clicks anonymised) and `removeTrackingPixel: true` (no open pixel,
+  honoured on Brevo Enterprise plans only). Brevo has no per-message switch for click tracking; the owner turns open
+  and click tracking off for transactional email in the Brevo account (scripts/hosted/README.md › Email), otherwise
+  Brevo adds a pixel and rewrites the accept link through its tracking domain. *Local*: Mailpit, the Supabase local stack's mail
+  catcher, through its HTTP send API (`$MAILPIT_URL/api/v1/send`, default `http://127.0.0.1:54324`, the
+  `[local_smtp]` port in `supabase/config.toml`; the SMTP port is not published to the host). The e2e tests read the
+  mail back from Mailpit (`appMail` in `tests/e2e/helpers.ts`; app mail is tagged, sign-in links from Supabase Auth
+  are not).
+- **Choice, failing closed.** Brevo when `BREVO_API_KEY` is set and `EMAIL_FROM` is an address. Otherwise Mailpit,
+  only when `NEXT_PUBLIC_SUPABASE_URL` is on this machine (the same test as the command gate's local secret,
+  `isLocalUrl` in `src/lib/supabase/command-proof.ts`). Otherwise nothing is sent and every attempt logs one error
+  that says what to set (`BREVO_API_KEY is not set: no email is sent until BREVO_API_KEY and EMAIL_FROM are set`,
+  or that `EMAIL_FROM` is missing), as public forms do without `FORM_RATE_LIMIT_SALT` (§8.4). **No real mail from
+  CI:** when `CI` is set and `VERCEL` is not (a CI runner, not a Vercel build), the key is ignored, so CI uses Mailpit
+  or sends nothing.
+- **What is logged.** One JSON line per attempt, `source: "email"`: the tag (`invite`, `invite_resend`), the transport
+  and the outcome (`sent`, `rejected`, `unavailable`, `not_configured`), with the provider's status code or the error
+  name on failure. Never the address, the subject or the body: they are personal data. Provider error messages are
+  not logged either (they can echo the address).
+- **No service role, no database.** Sending needs no database privilege. The invite commands authorise the admin
+  (`withOrg`) and write through the person's own client; then the server sends. Rule 6's list is unchanged.
+- **Invites** (`src/server/commands/members.ts`). `createInvite` writes the invite, then emails the workspace name,
+  the inviter's display name, the role with one sentence on what it can do (`ROLE_SUMMARIES`), the accept link, the
+  day the link ends (14 days, 0057) and, for an auditor, the day their access ends. The result says whether the
+  email went (`emailSent`); when it did not, the invite stays and the admin reads "The email could not be sent. Copy
+  the link instead." Copy link stays as the secondary action. Trace key `invite/<id>`.
+- **Sending again, rate-limited** (`resendInvite`, `resend_invite`, migration 0070). Owners and admins send an open invite
+  again: **at most once every 10 minutes and 5 times per invite**, and only while its link works (an ended link is
+  revoked and invited again). The limit is counted in the database (`invites.resend_count`, `resent_at`) under the
+  invite's row lock. Without a transport nothing is counted. Trace key `invite/<id>/resend/<n>`.
+- **Logged on the workspace chain** (0070, `sheet:<org_id>`): `invite.created` (invite id, role, auditor end date,
+  link end date), `invite.resent` (invite id, role, which resend) and `invite.revoked` (an open invite deleted; who
+  and the role). Never the address: the log is append-only, and the invite id links these entries to the
+  `member.added` entry written when the person joins (0057). pgTAP `0070_invite_email.sql`.
+
+Environment variables (server only, Vercel **Production only**, so previews never email real people and fall back to
+copy-link; see `scripts/hosted/README.md` › Email):
+
+| Variable | Value |
+|---|---|
+| `BREVO_API_KEY` | A Brevo API key (SMTP & API › API keys), used only by the server |
+| `EMAIL_FROM` | The sender, e.g. `Compliance OS <no-reply@mail.klarert.com>` |
+| `MAILPIT_URL` | Local only, optional: Mailpit's web address if not `http://127.0.0.1:54324` |
+
+### 11.1 Open (for the owner)
+
+1. **Creating invites is not rate-limited.** An admin can create (and revoke and create again) any number of invites,
+   each one an email. Brevo's own sending limits apply. A per-workspace daily limit can be added if abuse appears.
+2. **Bounces and complaints** are not read back. A Brevo webhook could mark an invite "not delivered"; it would need
+   a public route and its own secret.
+3. **Brevo API keys are not scoped.** A Brevo key can use the whole API of the account (contacts, campaigns), not only
+   sending. Keep it in Vercel only, and consider an IP allow-list in Brevo if the plan offers one (Vercel's egress IPs
+   change unless a static IP add-on is used).
+
+## 12. Account essentials (15 Nov 2026, branch `claude/auth-essentials`)
 
 Forgot password, Your account › Email address and Password, and the auth emails. Everything runs on the person's own
 session through Supabase Auth; no table of ours changes, no migration, and no new service-role place (CLAUDE.md
@@ -476,7 +573,7 @@ rule 6). Screens in docs/05 §1.1.
   confirm sign-up, sign-in link, reset password and change of email. One column, real text, `lang="en"`, the link
   linked and written out, what it does, that it works once for 1 hour (`otp_expiry`, `EMAIL_LINK_EXPIRY`), and "If you
   did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
-  the plain-text part from the HTML. Invites are our own email (§10); reauthentication is not used. The hosted project
+  the plain-text part from the HTML. Invites are our own email (§11); reauthentication is not used. The hosted project
   gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ) and sends through
   Brevo SMTP, which the owner sets up (`scripts/hosted/README.md` › Auth emails), sender "Compliance OS".
 - Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`; e2e `tests/e2e/account-auth.spec.ts` (desktop and
@@ -485,7 +582,7 @@ rule 6). Screens in docs/05 §1.1.
   first); Your account changes the password (a wrong current one refused) and the email address (both addresses
   emailed).
 
-### 11.1 Open (for the owner)
+### 12.1 Open (for the owner)
 
 1. **Delete my account is not built.** `profiles.id` references `auth.users(id) on delete cascade`, and about twenty
    columns reference `profiles(id)` without a delete rule (`items.created_by`, `item_updates.author_id`,

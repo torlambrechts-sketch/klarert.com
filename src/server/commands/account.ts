@@ -15,7 +15,7 @@ import { getSession } from '@/server/auth';
 import { fail, invalid, ok, type Result } from '@/server/result';
 import { log } from './context';
 
-// Your account (docs/05 §1.1, docs/09 §11): the person's own email address and password, through Supabase Auth on
+// Your account (docs/05 §1.1, docs/09 §12): the person's own email address and password, through Supabase Auth on
 // their own session. No table of ours changes and no service role is used. Supabase Auth asks for a two-step (aal2)
 // session to change either when the person has an authenticator app; getSession() only returns such a session.
 
@@ -79,7 +79,7 @@ async function endOtherSessions(
 
 /**
  * Change the email address. Supabase's secure email change sends a link to the current and to the new address; the
- * address changes once both are opened (hosted: "Secure email change" on and "Confirm email" on, docs/09 §11).
+ * address changes once both are opened (hosted: "Secure email change" on and "Confirm email" on, docs/09 §12).
  */
 export async function changeEmail(input: unknown): Promise<Result<{ newEmail: string }>> {
   const p = changeEmailInput.safeParse(input);

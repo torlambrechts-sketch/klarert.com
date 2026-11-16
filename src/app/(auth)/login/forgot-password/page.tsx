@@ -4,7 +4,7 @@ import { ForgotPasswordForm } from './forgot-password-form';
 
 export const metadata = { title: 'Reset your password · Compliance OS' };
 
-// Forgot password (docs/05 §1, docs/09 §11): asks for the email address and sends Supabase Auth's reset link. The
+// Forgot password (docs/05 §1, docs/09 §12): asks for the email address and sends Supabase Auth's reset link. The
 // answer never says whether an account uses the address.
 export default async function ForgotPasswordPage({
   searchParams,

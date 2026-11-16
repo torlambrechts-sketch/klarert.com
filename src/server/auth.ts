@@ -39,7 +39,7 @@ export const getSignIn = cache(async () => {
     user: data.user,
     twoStep: twoStepState(data.user.factors, aalOf(claims)),
     signedInAt: signedInAt(claims),
-    /** Opened by a password reset link: may set a new password without the current one (docs/09 §11). */
+    /** Opened by a password reset link: may set a new password without the current one (docs/09 §12). */
     resetLink: openedByResetLink(claims),
   };
 });

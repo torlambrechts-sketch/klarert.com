@@ -112,6 +112,12 @@ export interface FieldTypeDef<V = unknown, C = unknown> {
    */
   addable?: boolean;
   /**
+   * Types a public form may show (src/engine/fields/public-config.ts): the config keys a signed-out visitor gets
+   * (an allow-list). Every other key, and every key of a type without this list, stays on the server. The SQL in
+   * `_public_field_config` (0066) is checked against these lists by a unit test.
+   */
+  publicConfigKeys?: readonly string[];
+  /**
    * Link-like computed types: the items this field relates the item to (sub-items). Lookups, rollups and progress
    * read them as they read a link field's targets.
    */

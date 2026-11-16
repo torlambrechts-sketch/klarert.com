@@ -47,6 +47,7 @@ import { readSetups, type InstalledSetup } from '@/server/packs/setup';
 import { readFrameworks } from '@/server/frameworks/catalogue';
 import { manifestFor, workspaceCase } from '@/engine/packs/optional';
 import { parsePack } from '@/lib/packs/manifest';
+import { fetchAllPages } from '@/lib/sheet-query';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
 import { adoptForPack } from './frameworks';
@@ -147,18 +148,27 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
             )
             .eq('org_id', orgId)
             .order('installed_at', { ascending: false }),
-          supabase
-            .from('memberships')
-            .select('user_id, profiles!inner(display_name)')
-            .eq('org_id', orgId),
-          supabase
-            .from('sheets')
-            .select('id, pack_install_id, position')
-            .eq('org_id', orgId)
-            .not('pack_install_id', 'is', null)
-            .is('parent_sheet_id', null)
-            .is('archived_at', null)
-            .order('position'),
+          // every page past the API's 1000-row cap: names of whoever installed, each install's first sheet
+          fetchAllPages((a, b) =>
+            supabase
+              .from('memberships')
+              .select('user_id, profiles!inner(display_name)')
+              .eq('org_id', orgId)
+              .order('user_id')
+              .range(a, b),
+          ),
+          fetchAllPages((a, b) =>
+            supabase
+              .from('sheets')
+              .select('id, pack_install_id, position')
+              .eq('org_id', orgId)
+              .not('pack_install_id', 'is', null)
+              .is('parent_sheet_id', null)
+              .is('archived_at', null)
+              .order('position')
+              .order('id')
+              .range(a, b),
+          ),
           supabase
             .from('activity_log')
             .select('id, at, actor_kind, actor_id, action, new_value')
@@ -171,10 +181,8 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
         ]);
         const fwTitle = (k: string, v: string) =>
           fws.find((f) => f.key === k && f.version === v)?.title ?? `${k} ${v}`;
-        for (const r of [installs, members, sheets, log]) if (r.error) return fromDbError(r.error);
-        const names = new Map(
-          (members.data ?? []).map((m) => [m.user_id, m.profiles.display_name]),
-        );
+        for (const r of [installs, log]) if (r.error) return fromDbError(r.error);
+        const names = new Map(members.map((m) => [m.user_id, m.profiles.display_name]));
         const titles = new Map(catalogue.map((c) => [c.key, c.title]));
         const byKey = new Map(catalogue.map((c) => [c.key, c]));
         const liveRows = (installs.data ?? []).filter((i) => i.status === 'installed');
@@ -239,7 +247,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
             installedAt: i.installed_at,
             archivedBy: i.archived_by ? (names.get(i.archived_by) ?? 'Former member') : null,
             archivedAt: i.archived_at,
-            firstSheetId: (sheets.data ?? []).find((s) => s.pack_install_id === i.id)?.id ?? null,
+            firstSheetId: sheets.find((s) => s.pack_install_id === i.id)?.id ?? null,
             ...(() => {
               const l = levelOf(i.pack_key, i.version, i.level ?? null);
               return { level: l.level, nextLevel: i.status === 'installed' ? l.next : null };
@@ -695,15 +703,23 @@ export async function testModePacks(input: unknown): Promise<Result<TestModePack
     'member',
     async ({ supabase, orgId, role }) => {
       if (!isAdminRole(role)) return ok([]);
-      const { data: autos, error } = await supabase
-        .from('automations')
-        .select('pack_install_id')
-        .eq('org_id', orgId)
-        .eq('mode', 'test')
-        .not('pack_install_id', 'is', null);
-      if (error) return fromDbError(error);
+      let autos: { pack_install_id: string | null }[];
+      try {
+        autos = await fetchAllPages((a, b) =>
+          supabase
+            .from('automations')
+            .select('pack_install_id')
+            .eq('org_id', orgId)
+            .eq('mode', 'test')
+            .not('pack_install_id', 'is', null)
+            .order('id')
+            .range(a, b),
+        );
+      } catch (e) {
+        return fromDbError({ message: e instanceof Error ? e.message : String(e) });
+      }
       const counts = new Map<string, number>();
-      for (const a of autos ?? [])
+      for (const a of autos)
         if (a.pack_install_id)
           counts.set(a.pack_install_id, (counts.get(a.pack_install_id) ?? 0) + 1);
       if (!counts.size) return ok([]);

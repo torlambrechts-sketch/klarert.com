@@ -4,7 +4,7 @@ import { mailTo, openLink } from './auth-mail';
 import { freshCode } from './totp';
 
 // Forgot password, Set a new password and Your account › Email address and Password (docs/05 §1 and §1.1,
-// docs/09 §11), through the real emails in Mailpit. Every test makes its own accounts.
+// docs/09 §12), through the real emails in Mailpit. Every test makes its own accounts.
 
 test.describe.configure({ mode: 'default' });
 
@@ -236,7 +236,7 @@ test('Your account: change the password, then the email address', async ({
     expect(mail.text).toContain(newEmail);
     expect(mail.text).toContain('If you did not ask for this, you can ignore this email.');
   }
-  // the local stack has email confirmation off, so Supabase Auth takes one link (hosted: both, docs/09 §11)
+  // the local stack has email confirmation off, so Supabase Auth takes one link (hosted: both, docs/09 §12)
   await openLink(page, toNew.link);
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByTestId('current-email')).toHaveText(newEmail);

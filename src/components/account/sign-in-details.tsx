@@ -9,7 +9,7 @@ import { changeEmailAction, changePasswordAction } from '@/app/account/actions';
 import { EMAIL_LINK_EXPIRY, FORGOT_PASSWORD_PATH } from '@/lib/auth-links';
 import { PASSWORD_HINT } from '@/lib/passwords';
 
-// Your account › Email address and Password (docs/05 §1.1, docs/09 §11). Each card opens its form in place; Cancel
+// Your account › Email address and Password (docs/05 §1.1, docs/09 §12). Each card opens its form in place; Cancel
 // and success close it and give focus back to the button that opened it.
 
 const card = 'border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]';

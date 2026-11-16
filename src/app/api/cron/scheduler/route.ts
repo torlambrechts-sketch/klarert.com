@@ -4,7 +4,9 @@ import { z } from 'zod';
 import type { Database } from '@/lib/database.types';
 import { env } from '@/lib/env';
 import { isCronAuthorised } from '@/server/cron-auth';
+import { hourlyTick } from '@/engine/files';
 import { releaseIdleHolds } from '@/server/scheduler/edit-holds';
+import { removeStalePendingUploads } from '@/server/scheduler/pending-uploads';
 import {
   emptySummary,
   runDateChecks,
@@ -19,7 +21,8 @@ import {
 
 // The scheduler (docs/04 §8): Vercel Cron, every 15 minutes, `GET /api/cron/scheduler` with
 // `Authorization: Bearer ${CRON_SECRET}`. One of the four places allowed the service role (CLAUDE.md rule 6): the
-// client is created here, after the secret matched, and used for date checks of every workspace in turn.
+// client is created here, after the secret matched, and used for date checks of every workspace in turn, the daily
+// retention checks, idle edit holds and, once an hour, abandoned uploads.
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -91,6 +94,35 @@ export async function GET(request: NextRequest) {
       }),
     );
   }
+  // abandoned uploads (docs/02 §8): on the first tick of each hour, objects never confirmed and an hour old go
+  const uploads = { ran: false, workspaces: 0, removed: 0, failed: 0 };
+  if (hourlyTick(now)) {
+    uploads.ran = true;
+    try {
+      for (const s of await removeStalePendingUploads(db, now)) {
+        uploads.workspaces += 1;
+        uploads.removed += s.removed;
+        uploads.failed += s.failed;
+        console.info(
+          JSON.stringify({
+            level: s.failed ? 'warn' : 'info',
+            source: 'scheduler.uploads',
+            org: s.orgId,
+            removed: s.removed,
+            failed: s.failed,
+          }),
+        );
+      }
+    } catch (e) {
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          source: 'scheduler.uploads',
+          message: e instanceof Error ? e.message : String(e),
+        }),
+      );
+    }
+  }
   let releasedHolds = 0;
   try {
     releasedHolds = await releaseIdleHolds(db, now);
@@ -110,6 +142,7 @@ export async function GET(request: NextRequest) {
     ...total,
     releasedHolds,
     retention,
+    uploads,
   };
   console.info(JSON.stringify({ level: 'info', source: 'scheduler', ...body }));
   return NextResponse.json(body);

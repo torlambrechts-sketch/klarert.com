@@ -73,17 +73,26 @@ async function chunked<T>(ids: string[], run: (ids: string[]) => PromiseLike<T[]
 const storageIds = (fields: Field[], storage: string) =>
   fields.filter((f) => resolveFieldType(f.type)?.storage === storage).map((f) => f.id);
 
+/** The workspace's members as people (by name), every page: a workspace may have more than 1000 members. */
+export async function fetchPeople(db: Db, orgId: string): Promise<Person[]> {
+  const members = await fetchAllPages((from, to) =>
+    db
+      .from('memberships')
+      .select('user_id, profiles(id, display_name, initials, color)')
+      .eq('org_id', orgId)
+      .order('user_id')
+      .range(from, to),
+  );
+  return members
+    .flatMap((m) => (m.profiles ? [m.profiles] : []))
+    .map((p) => ({ id: p.id, name: p.display_name, initials: p.initials, color: p.color }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'en-GB'));
+}
+
 /** People, teams, job roles, entities and sites of a workspace, every page of each. */
 export async function fetchDirectory(db: Db, orgId: string) {
-  const [members, teams, tm, jobRoles, entities, sites] = await Promise.all([
-    fetchAllPages((from, to) =>
-      db
-        .from('memberships')
-        .select('user_id, profiles(id, display_name, initials, color)')
-        .eq('org_id', orgId)
-        .order('user_id')
-        .range(from, to),
-    ),
+  const [people, teams, tm, jobRoles, entities, sites] = await Promise.all([
+    fetchPeople(db, orgId),
     fetchAllPages((from, to) =>
       db
         .from('teams')
@@ -130,10 +139,6 @@ export async function fetchDirectory(db: Db, orgId: string) {
         .range(from, to),
     ),
   ]);
-  const people: Person[] = members
-    .flatMap((m) => (m.profiles ? [m.profiles] : []))
-    .map((p) => ({ id: p.id, name: p.display_name, initials: p.initials, color: p.color }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'en-GB'));
   const byTeam = new Map<string, string[]>();
   for (const x of tm) byTeam.set(x.team_id, [...(byTeam.get(x.team_id) ?? []), x.user_id]);
   return {

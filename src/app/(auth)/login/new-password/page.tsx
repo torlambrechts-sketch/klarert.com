@@ -6,7 +6,7 @@ import { NewPasswordForm } from './new-password-form';
 
 export const metadata = { title: 'Set a new password · Compliance OS' };
 
-// Set a new password (docs/05 §1, docs/09 §11): where a reset link lands, through the callback. Only a session the
+// Set a new password (docs/05 §1, docs/09 §12): where a reset link lands, through the callback. Only a session the
 // reset link opened may set a password here; a person with an authenticator app enters its code first (Supabase Auth
 // needs a two-step session to change the password), on the two-step page, which sends them back here.
 export default async function NewPasswordPage({

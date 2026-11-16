@@ -75,6 +75,7 @@ export const riskmatrix = base<RiskValue, RiskMatrixConfig>({
   defaultConfig: () => ({ size: 5, bands: [4, 9, 15], likelihoodLabels: [], impactLabels: [] }),
   defaultWidth: 130,
   formAllowed: true,
+  publicConfigKeys: ['size', 'bands', 'likelihoodLabels', 'impactLabels'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'number_above', 'number_below'],

@@ -25,6 +25,7 @@ export const longtext = base<string, Record<string, never>>({
   defaultConfig: () => ({}),
   defaultWidth: 220,
   formAllowed: true,
+  publicConfigKeys: [],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed'],

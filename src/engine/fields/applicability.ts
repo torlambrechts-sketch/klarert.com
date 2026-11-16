@@ -69,6 +69,7 @@ export const applicability = base<ApplicabilityValue, ApplicabilityConfig>({
   defaultConfig: () => ({ reasonRequiredWhenNot: true }),
   defaultWidth: 150,
   formAllowed: true,
+  publicConfigKeys: ['reasonRequiredWhenNot'],
   kanbanCapable: false,
   calendarCapable: false,
   triggers: ['field_changed', 'field_becomes'],

@@ -9,6 +9,7 @@ import {
   Plus,
   UserRound,
 } from 'lucide-react';
+import { AuditorStart } from '@/components/home/auditor-start';
 import { WorkList } from '@/components/my-work/work-row';
 import { SetupCard } from '@/components/packs/setup-card';
 import { TestModeBanner } from '@/components/packs/test-mode-banner';
@@ -37,7 +38,7 @@ const textLink = 'text-ink text-label-13 font-medium underline-offset-4 hover:un
 
 export default async function HomePage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
-  const { workspace, role, profile } = await requireMember(org);
+  const { workspace, role, profile, supabase } = await requireMember(org);
   const first = profile.display_name.split(/\s+/)[0];
   const [home, mine, setups, quiet] = await Promise.all([
     getHome(workspace.id, workspace.time_zone).catch(() => null),
@@ -102,7 +103,15 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
         }
       />
 
-      {mine ? (
+      {role === 'auditor' ? (
+        <AuditorStart
+          org={org}
+          orgId={workspace.id}
+          db={supabase}
+          expiresAt={workspace.expiresAt}
+          timeZone={workspace.time_zone}
+        />
+      ) : mine ? (
         <nav aria-label="My work at a glance" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {TILES.map(({ bucket, icon: Icon }) => {
             const n = mine.work.counts[bucket];

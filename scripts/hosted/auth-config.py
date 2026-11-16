@@ -1,4 +1,4 @@
-# Set the hosted project's Supabase Auth settings that live in the repo (docs/09 §11, README › Auth emails):
+# Set the hosted project's Supabase Auth settings that live in the repo (docs/09 §12, README › Auth emails):
 # the site URL, the minimum password length, secure email change, and the subject and HTML of each auth email
 # (supabase/templates/*.html, subjects from supabase/config.toml [auth.email.template.*]).
 #
@@ -76,7 +76,7 @@ def main():
         if k in changes:
             line += f" -> {show(want[k])}"
         print(line)
-    # settings this script leaves alone but the auth emails depend on (docs/09 §11)
+    # settings this script leaves alone but the auth emails depend on (docs/09 §12)
     print("\nalso check (not changed here):")
     for k in ["mailer_autoconfirm", "mailer_otp_exp", "uri_allow_list", "smtp_host", "smtp_sender_name",
               "smtp_admin_email", "rate_limit_email_sent", "security_update_password_require_reauthentication"]:
