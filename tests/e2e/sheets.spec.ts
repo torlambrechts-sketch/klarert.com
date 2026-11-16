@@ -94,10 +94,16 @@ test.describe('desktop', () => {
     await expect(fields.getByText('{evidence_link}')).toBeVisible();
     await expect(fields.getByText('Progress', { exact: true })).toHaveCount(0);
 
-    // Find filters the side menu
-    await rail.getByRole('searchbox', { name: 'Find in menu' }).fill(name);
-    await expect(rail.getByRole('link', { name })).toBeVisible();
-    await expect(rail.getByRole('link', { name: 'Home' })).toHaveCount(0);
+    // the one search (the top bar's, "/") finds the sheet; the menu has no filter of its own (docs/05 §2.1)
+    await expect(rail.getByRole('searchbox')).toHaveCount(0);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.keyboard.press('/');
+    const search = page.getByRole('combobox', { name: 'Search sheets, items and people' });
+    await expect(search).toBeFocused();
+    await search.fill(name);
+    await expect(page.getByRole('option', { name: new RegExp(name) }).first()).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
   });
 
   test('CSV import detects types, lets the person change them and creates items', async ({
@@ -290,25 +296,51 @@ test.describe('desktop', () => {
     await page.goto('/meridian/s/new?start=tracker');
     await expect(page.getByText('Viewers cannot create sheets.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Create sheet' })).toHaveCount(0);
+    // no Create button for a viewer, and a way back home (owner decision 15 Nov 2026)
+    await expect(page.getByTestId('create-button')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Back to Home' })).toBeVisible();
   });
 });
 
 test.describe('phone', () => {
   test.beforeEach(({}, info) => test.skip(info.project.name !== 'phone', 'phone layout'));
 
-  test('phone shows the bottom bar and the menu sheet', async ({ page }) => {
+  test('phone shows the bottom bar and the menu sheet: one Menu, one Search, one Inbox', async ({
+    page,
+  }) => {
     await signIn(page, 'james@example.com');
     await expect(page).toHaveURL(/\/meridian\/home$/);
     const bar = page.getByRole('navigation', { name: 'Bottom bar' });
     await expect(bar).toBeVisible();
-    for (const label of ['Home', 'My work', 'Menu', 'Search', 'Inbox'])
-      await expect(bar.getByText(label, { exact: true })).toBeVisible();
+    await expect(bar.getByRole('link')).toHaveText(['Home', 'My work']);
+    await expect(bar.getByRole('button')).toHaveText(['Menu']);
     await expect(page.getByRole('complementary', { name: 'Workspace' })).toBeHidden();
+    // one of each across the top bar and the bottom bar (owner decision 15 Nov 2026, UX-6)
+    const visible = async (loc: ReturnType<Page['getByRole']>) => {
+      let n = 0;
+      for (const el of await loc.all()) if (await el.isVisible()) n += 1;
+      return n;
+    };
+    expect(await visible(page.getByRole('button', { name: /menu$/i }))).toBe(1);
+    expect(await visible(page.getByRole('combobox', { name: /^Search/ }))).toBe(1);
+    expect(await visible(page.getByRole('button', { name: /^Search/ }))).toBe(0);
+    expect(await visible(page.getByRole('button', { name: /^Inbox/ }))).toBe(1);
+    // 44 px touch targets in the bottom bar
+    for (const cell of await bar.locator('a, button').all())
+      expect((await cell.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(page.getByTestId('inbox-button')).toBeVisible();
+    expect((await page.getByTestId('inbox-button').boundingBox())!.height).toBeGreaterThanOrEqual(
+      44,
+    );
 
     await bar.getByRole('button', { name: 'Menu' }).click();
     const menu = page.getByRole('dialog', { name: 'Menu' });
     await expect(menu).toBeVisible();
     await expect(menu.getByRole('link', { name: 'Automations' })).toBeVisible();
+    // menu rows are 44 px touch targets on a phone
+    expect(
+      (await menu.getByRole('link', { name: 'Home' }).boundingBox())!.height,
+    ).toBeGreaterThanOrEqual(44);
     await menu.getByRole('link', { name: 'New sheet', exact: true }).click();
     await expect(menu).toBeHidden();
     // Create opens at the Sheet card (docs/05 §4 Create); Esc closes it
@@ -317,11 +349,12 @@ test.describe('phone', () => {
     await page.keyboard.press('Escape');
     await expect(create).toBeHidden();
 
-    await bar.getByRole('button', { name: 'Search' }).click();
+    await page.getByRole('combobox', { name: 'Search sheets, items and people' }).click();
     await expect(
       page.getByRole('combobox', { name: 'Search sheets, items and people' }),
     ).toBeFocused();
-    await bar.getByRole('button', { name: 'Inbox' }).click();
+    await page.keyboard.press('Escape');
+    await page.getByTestId('inbox-button').click();
     const inbox = page
       .getByRole('dialog')
       .filter({ has: page.getByRole('heading', { name: 'Inbox' }) });

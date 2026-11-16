@@ -147,7 +147,7 @@ test.describe('phone', () => {
 // ── Owner decision (14 Nov 2026): the App card and the settings step (docs/05 §4 Create, docs/11 Pack settings,
 // docs/13). Screenshots go to CREATE_SHOTS when it is set.
 
-const NIS2 = 'NIS2 cybersecurity (add-on)';
+const NIS2 = 'NIS2 cybersecurity';
 // screenshots for review are taken at twice the pixel density
 const SHOT_SCALE = SHOTS ? { deviceScaleFactor: 2 } : {};
 

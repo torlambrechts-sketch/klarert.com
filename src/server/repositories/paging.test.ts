@@ -1,4 +1,4 @@
-// The lists behind the side menu, Platform › Design, dashboard sources, search, Evidence and My work read every page
+// The lists behind the side menu, Build › Design, dashboard sources, search, Evidence and My work read every page
 // past the API's 1000-row cap (supabase/config.toml max_rows): a workspace with more than 1000 sheets, fields or
 // automations loses none of them. The fake answers as PostgREST does, cap included.
 import { describe, expect, it, vi } from 'vitest';
@@ -93,7 +93,7 @@ describe('the side menu: readNav', () => {
   });
 });
 
-describe('Platform › Design: readDesignLists', () => {
+describe('Build › Design: readDesignLists', () => {
   it('reads every sheet, field, form and automation of the workspace', async () => {
     const all = sheets(20);
     const { db, requests } = fakeDb({

@@ -479,15 +479,12 @@
   --text-label-13--line-height: 16px;
   --text-label-12: 12px;
   --text-label-12--line-height: 16px;
-  /* Half steps of the board design (docs/05 §6.2): dense controls, cells and counts in the Table and the shell */
-  --text-label-13\.5: 13.5px;
-  --text-label-13\.5--line-height: 20px;
+  /* Half steps of the board design (docs/05 §6.2): Table dates and scores. 13.5 and 9.5 were rounded to 13 and 11
+     (board review UX-14, 15 Nov 2026). */
   --text-label-12\.5: 12.5px;
   --text-label-12\.5--line-height: 18px;
   --text-label-11: 11px;
   --text-label-11--line-height: 16px;
-  --text-label-9\.5: 9.5px;
-  --text-label-9\.5--line-height: 14px;
 
   --text-copy-24: 24px;
   --text-copy-24--line-height: 36px;
@@ -577,6 +574,19 @@
   }
 }
 
+/* Reduced motion (docs/08, board review UX-11): dialogs, side panels, skeletons, progress bars and chevrons stop
+   moving. Their end state shows at once; nothing depends on an animation finishing. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ───────────── app shell (docs/05 §2, §5) ─────────────
    one 256 px side menu (folders collapse) and the main column; under 760 px a bottom bar and the menu as a sheet. */
 .app-shell {
@@ -632,7 +642,7 @@
   }
   .bottom-bar {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     position: fixed;
     inset: auto 0 0 0;
     height: 64px;

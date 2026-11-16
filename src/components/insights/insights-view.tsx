@@ -69,7 +69,7 @@ import { Segmented, WidgetEditor, type EditorState } from './widget-editor';
 
 const newId = (p: string) => `${p}${Math.random().toString(36).slice(2, 10)}`;
 
-const headButton = 'h-9 text-label-13.5 font-medium [&_svg]:size-3.5';
+const headButton = 'h-9 text-label-13 font-medium [&_svg]:size-3.5';
 
 export function InsightsView({
   org,
@@ -250,7 +250,7 @@ export function InsightsView({
       ) : null}
 
       {empty && !edit ? (
-        <div className="border-line text-muted-foreground text-label-13.5 flex flex-col items-center gap-2 rounded-xl border border-dashed px-5 py-12 text-center">
+        <div className="border-line text-muted-foreground text-label-13 flex flex-col items-center gap-2 rounded-xl border border-dashed px-5 py-12 text-center">
           <b className="text-ink text-label-16 font-semibold">No widgets yet</b>
           <span>Build this view from this sheet or any sheet you can view.</span>
           <Button type="button" className="mt-2" onClick={addFromToolbar}>

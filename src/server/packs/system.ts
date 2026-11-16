@@ -1,5 +1,6 @@
 import 'server-only';
 import { getSession } from '@/server/auth';
+import { packTitle } from '@/engine/packs/words';
 
 // A system board (docs/11 Core registers, docs/05 §3): a shared register a system pack installed. The sheet header
 // says "System board · installed by Core registers 1.1.0". Read with the person's client.
@@ -40,5 +41,5 @@ export async function getSheetSystem(
     .eq('key', inst.pack_key)
     .eq('version', inst.version)
     .maybeSingle();
-  return { source: `${pack?.title ?? inst.pack_key} ${inst.version}` };
+  return { source: `${pack ? packTitle(pack.title) : inst.pack_key} ${inst.version}` };
 }

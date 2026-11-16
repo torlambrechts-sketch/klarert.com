@@ -76,8 +76,8 @@ export function BundlePreview({
           <p className="text-copy-13 mt-1 flex items-start gap-1.5" data-testid="create-uses">
             <Layers className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
             <span>
-              Works on registers you already have: {details.uses.join(', ')}.
-              {c.sheets === 0 ? ' No second register is made.' : ''}
+              Works on sheets you already have: {details.uses.join(', ')}.
+              {c.sheets === 0 ? ' No second sheet is made.' : ''}
             </span>
           </p>
         ) : null}

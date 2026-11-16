@@ -128,10 +128,16 @@ test.describe('desktop', () => {
     await stuckRow.getByRole('switch', { name: `Live: ${stuck}` }).click();
     await expect(page.getByText(`“${stuck}” is live.`).first()).toBeVisible();
     await expect(stuckRow.getByTestId('automation-test-mode')).toHaveCount(0);
+    // Home: the short banner with the total and one link to Workspace admin › Packs, where they are turned on
     await page.goto(`/${slug}/home`);
+    await expect(banner).toContainText('5 automations are in test mode.');
+    await banner.getByRole('link', { name: 'Review and turn on' }).click();
     await expect(banner).toContainText(`5 automations from ${TITLE} are in test mode.`);
     await banner.getByRole('button', { name: `Turn on all automations from ${TITLE}` }).click();
     await expect(page.getByText(`Turned on 5 automations from ${TITLE}.`).first()).toBeVisible();
+    await expect(banner).toHaveCount(0);
+    await page.goto(`/${slug}/home`);
+    await expect(page.getByTestId('home-summary')).toBeVisible();
     await expect(banner).toHaveCount(0);
     const quiet = await rest<unknown[]>(
       page,

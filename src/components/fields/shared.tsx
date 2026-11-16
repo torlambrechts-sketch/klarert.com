@@ -194,7 +194,7 @@ export function Avatar({
         'inline-flex shrink-0 items-center justify-center rounded-full',
         tone === 'solid'
           ? 'text-label-12 border-2 border-white font-bold text-white'
-          : 'text-label-9.5 font-semibold shadow-[0_0_0_2px_var(--background-100)]',
+          : 'text-label-11 font-semibold shadow-[0_0_0_2px_var(--background-100)]',
       )}
       style={{
         width: px,
@@ -320,7 +320,7 @@ export function SaveCancel({
 }
 
 export const inputClass =
-  'border-input h-[32px] w-full rounded-md border bg-background-100 px-2 text-label-13 outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground hover:border-line-strong focus-visible:border-focus focus-visible:ring-[3px] focus-visible:ring-focus/25';
+  'border-input h-[32px] w-full rounded-md border bg-background-100 px-2 text-label-13 outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground hover:border-line-strong focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus';
 
 /**
  * One-line (or multi-line) text editor. Enter saves (Ctrl/Cmd+Enter when multi-line); an input the type cannot read

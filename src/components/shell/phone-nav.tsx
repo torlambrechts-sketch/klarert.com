@@ -2,17 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, Home, Inbox, Menu, Search } from 'lucide-react';
+import { Home, Inbox, Menu } from 'lucide-react';
 import { Dialog, DialogDescription, DialogTitle, SheetContent } from '@/components/ui/dialog';
 import { SideMenu, type SideMenuProps } from './side-menu';
 import { useShell } from './shell-context';
 
 const cell =
-  'flex flex-col items-center justify-center gap-0.5 text-label-12 font-medium text-muted-foreground outline-offset-[-3px] aria-[current=page]:text-ink';
+  'flex min-h-11 flex-col items-center justify-center gap-0.5 text-label-12 font-medium text-muted-foreground outline-offset-[-3px] aria-[current=page]:text-ink';
 
-/** Phones (< 760 px): bottom bar and the full side menu as a left sheet over a scrim (docs/05 §5). */
+/**
+ * Phones (< 760 px, docs/05 §5): the bottom bar (Home, My work, Menu) and the full side menu as a left sheet over a
+ * scrim. Search and the Inbox stay in the top bar, so each job has one control (owner decision 15 Nov 2026, UX-6).
+ */
 export function PhoneNav(props: Omit<SideMenuProps, 'onNavigate'>) {
-  const { menuOpen, setMenuOpen, setInboxOpen, focusSearch } = useShell();
+  const { menuOpen, setMenuOpen } = useShell();
   const path = usePathname();
   const is = (p: string) => path.startsWith(`/${props.org}/${p}`);
   return (
@@ -37,14 +40,6 @@ export function PhoneNav(props: Omit<SideMenuProps, 'onNavigate'>) {
         <button type="button" className={cell} onClick={() => setMenuOpen(true)}>
           <Menu className="size-5" aria-hidden />
           Menu
-        </button>
-        <button type="button" className={cell} onClick={focusSearch}>
-          <Search className="size-5" aria-hidden />
-          Search
-        </button>
-        <button type="button" className={cell} onClick={() => setInboxOpen(true)}>
-          <Bell className="size-5" aria-hidden />
-          Inbox
         </button>
       </nav>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>

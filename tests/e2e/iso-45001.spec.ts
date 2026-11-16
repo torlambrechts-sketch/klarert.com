@@ -17,7 +17,7 @@ import { rest, signIn } from './helpers';
 // miss and its injury form; the high residual risk escalation starts in test mode; the hazards carry the Risk
 // acceptance workflow.
 
-const TITLE = 'ISO 45001 health and safety (add-on)';
+const TITLE = 'ISO 45001 health and safety';
 const shot = shots(process.env.PACK_SHOTS, 'iso-45001');
 
 test('install the ISO 45001 add-on on Core and find it in the shared registers', async ({
@@ -30,7 +30,7 @@ test('install the ISO 45001 add-on on Core and find it in the shared registers',
   const i = await installAddon(page, slug, {
     title: TITLE,
     key: 'iso-45001',
-    coreLevel: 'Starter',
+    coreLevel: 'Recommended',
     library: 'ISO 45001:2018',
     shot,
   });

@@ -1,4 +1,4 @@
-// Auto layout for the two maps (docs/05 §3.8 Map toggle, §4 Platform › Design): no dragging, no stored positions.
+// Auto layout for the two maps (docs/05 §3.8 Map toggle, §4 Build › Design): no dragging, no stored positions.
 // The workspace map is grouped columns (one per Registers domain or folder, in side-menu order, then "No folder");
 // a sheet's map is a hub and spoke (the board's option 1e): the sheet in the centre, inputs left, outputs right,
 // relations above and logic below. Both return boxes and SVG paths in pixels. Pure.

@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { ArrowRight, X } from 'lucide-react';
 import { Card } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
-import type { SetupProgress } from '@/engine/packs/setup';
-import { SetupSummary } from './setup-checklist';
+import type { NextStep } from '@/engine/home';
 
-// Home (docs/05 §4, docs/11 Setup): a pack's setup checklist as a card with the next step, until every step is done
-// or the person dismisses it. Dismissing is a per-viewer convenience kept in this browser; the checklist stays on
-// Workspace admin › Packs.
+// Home's first run (docs/05 §4, docs/11 Setup, owner decision 15 Nov 2026): one "Next step" card per installed
+// standard, the first step of its setup that is not done. The engine picks the step and writes the words
+// (engine/home.ts nextSteps); this card only shows them. Dismissing is a per-viewer convenience kept in this browser;
+// the whole checklist stays on Workspace admin › Packs.
 
 const key = (installId: string) => `klarert.setup-dismissed.${installId}`;
 
@@ -22,60 +22,59 @@ function readDismissed(installId: string): boolean {
   }
 }
 
-export function SetupCard({
-  org,
-  installId,
-  progress,
-  levelName,
-}: {
-  org: string;
-  installId: string;
-  progress: SetupProgress;
-  levelName: string | null;
-}) {
+const textLink =
+  'text-ink text-label-13 inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline';
+
+export function NextStepCard({ org, next }: { org: string; next: NextStep }) {
   const [dismissed, setDismissed] = useState(false);
-  useEffect(() => setDismissed(readDismissed(installId)), [installId]);
-  if (dismissed || progress.done === progress.total) return null;
-  const next = progress.steps.find((s) => !s.done);
-  const headingId = `setup-${installId}`;
+  useEffect(() => setDismissed(readDismissed(next.installId)), [next.installId]);
+  if (dismissed) return null;
+  const headingId = `next-step-${next.installId}`;
+  const { step } = next;
   return (
-    <div className="relative" data-testid="setup-card">
+    <div className="relative" data-testid="next-step-card">
       <Card
         headingId={headingId}
-        title={progress.title}
-        description={`${levelName ? `${levelName}. ` : ''}${progress.description}`}
+        title={`Next step: ${next.standard}`}
         footer={
           <>
             <span>Progress comes from your sheets.</span>
-            <Link
-              href={`/${org}/settings?tab=packs#setup-${installId}`}
-              className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
-            >
-              See all {progress.total} steps
+            <Link href={`/${org}/settings?tab=packs#setup-${next.installId}`} className={textLink}>
+              See all {next.total} steps
             </Link>
           </>
         }
       >
         <div className="flex flex-col gap-3">
-          <SetupSummary progress={progress} />
-          {next ? (
-            <div className="flex flex-col gap-1">
-              <span className="text-label-13 text-muted-foreground">
-                Next: step {next.number} of {progress.total}
-              </span>
-              <span className="text-label-14 font-medium">{next.title}</span>
-              <p className="text-copy-13 text-muted-foreground m-0">{next.body}</p>
-              {next.link ? (
-                <Link
-                  href={`/${org}/s/${next.link.sheetId}${next.link.viewId ? `?view=${next.link.viewId}` : ''}`}
-                  className="text-ink text-label-13 inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline"
-                >
-                  Open {next.link.sheetName}
-                  <ArrowRight className="size-3.5" aria-hidden />
-                </Link>
-              ) : null}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-label-13 text-muted-foreground tabular-nums">
+              {next.line}
+              {next.level ? ` · ${next.level}` : ''}
+            </span>
+            <div
+              role="progressbar"
+              aria-label={`${next.standard}: ${next.percent}% done`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={next.percent}
+              className="bg-soft h-1.5 w-full overflow-hidden rounded"
+            >
+              <div className="bg-ink h-full rounded" style={{ width: `${next.percent}%` }} />
             </div>
-          ) : null}
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-label-14 font-medium">{step.title}</span>
+            <p className="text-copy-13 text-muted-foreground m-0">{step.body}</p>
+            {step.link ? (
+              <Link
+                href={`/${org}/s/${step.link.sheetId}${step.link.viewId ? `?view=${step.link.viewId}` : ''}`}
+                className={textLink}
+              >
+                Open {step.link.sheetName}
+                <ArrowRight className="size-3.5" aria-hidden />
+              </Link>
+            ) : null}
+          </div>
         </div>
       </Card>
       <Button
@@ -83,10 +82,10 @@ export function SetupCard({
         variant="ghost"
         size="icon"
         className="absolute top-3 right-3"
-        aria-label={`Dismiss ${progress.title}`}
+        aria-label={`Dismiss the next step for ${next.standard}`}
         onClick={() => {
           try {
-            window.localStorage.setItem(key(installId), '1');
+            window.localStorage.setItem(key(next.installId), '1');
           } catch {
             // not kept: it shows again next time
           }

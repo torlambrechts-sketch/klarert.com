@@ -93,7 +93,7 @@ export function WidgetBody({
       return (
         <div className="text-muted-foreground text-label-12.5 flex flex-col items-center gap-1 text-center">
           <Lock className="size-[18px]" aria-hidden />
-          <b className="text-ink text-label-13.5 font-semibold">No access</b>
+          <b className="text-ink text-label-13 font-semibold">No access</b>
           <span>This sheet no longer exists or you cannot see it.</span>
         </div>
       );

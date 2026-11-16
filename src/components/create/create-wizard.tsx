@@ -11,7 +11,6 @@ import {
   ArrowRight,
   FileText,
   LayoutDashboard,
-  ListPlus,
   Puzzle,
   RotateCcw,
   Search,
@@ -40,11 +39,12 @@ import type { CreateRequest } from './create-provider';
 // The Create wizard (docs/05 §4 Create): a full-screen picker in the shell, at most three steps with a stepper.
 // (1) the goal box and the cards; (2) a starting point (a ready-made set with its preview, an app and the set that
 // brings it, a sheet start, a sheet to add to, a recipe); (3) a ready-made set's name, owner, review date, folder,
-// settings (when its pack declares any) and level, then Create. Sheets, entries, automations, forms and dashboards hand
+// settings (when its pack declares any) and level, then Create. Sheets, automations, forms and dashboards hand
 // over to the screens that already make them, and an app is created as the set that carries it, so there is one code
 // path each. Nothing is written before Create.
 
-export type CardId = 'solve' | 'app' | 'sheet' | 'entry' | 'automation' | 'form' | 'dashboard';
+// No card adds an item: "+ New" in the sheet's header is the one way to add one (owner decision 15 Nov 2026, UX-4).
+export type CardId = 'solve' | 'app' | 'sheet' | 'automation' | 'form' | 'dashboard';
 
 const CARDS: { id: CardId; title: string; outcome: string; icon: React.ReactNode }[] = [
   {
@@ -64,12 +64,6 @@ const CARDS: { id: CardId; title: string; outcome: string; icon: React.ReactNode
     title: 'Sheet',
     outcome: 'A table to keep track of anything, one row per item.',
     icon: <Sheet aria-hidden />,
-  },
-  {
-    id: 'entry',
-    title: 'Entry',
-    outcome: 'Add one item to a sheet you already have.',
-    icon: <ListPlus aria-hidden />,
   },
   {
     id: 'automation',
@@ -545,17 +539,6 @@ export function CreateWizard({
                 hrefOf={sheetHref}
                 onGo={onClose}
               />
-            ) : card === 'entry' ? (
-              <SheetPicker
-                heading="Add an entry to"
-                description="Your most recently used sheets come first."
-                sheets={opts!.sheets}
-                query={sheetQuery}
-                setQuery={setSheetQuery}
-                disabled={!opts!.canEdit ? 'Viewers cannot add items. Ask an editor.' : null}
-                onPick={(id) => go(`/${org}/s/${id}?new=1`)}
-                onNewSheet={() => pickCard('sheet')}
-              />
             ) : card === 'form' ? (
               <SheetPicker
                 heading="Collect items into"
@@ -660,7 +643,7 @@ function GoalStep({
         >
           What do you need to handle?
         </h2>
-        <label className="border-line focus-within:border-focus flex h-12 items-center gap-2 rounded-lg border px-3 focus-within:shadow-[0_0_0_3px_rgb(161_161_170/0.25)]">
+        <label className="border-line focus-within:border-focus focus-within:ring-focus flex h-12 items-center gap-2 rounded-lg border px-3 focus-within:ring-2">
           <Search className="text-muted-foreground size-5 shrink-0" aria-hidden />
           <input
             autoFocus
@@ -986,7 +969,7 @@ function SheetList({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a sheet"
           aria-label="Find a sheet"
-          className="border-line focus-visible:border-focus text-label-14 h-10 w-full max-w-[420px] rounded-md border px-3 outline-none"
+          className="border-line focus-visible:border-focus text-label-14 focus-visible:ring-focus h-10 w-full max-w-[420px] rounded-md border px-3 outline-none focus-visible:ring-2"
         />
       ) : null}
       {sheets.length === 0 ? (

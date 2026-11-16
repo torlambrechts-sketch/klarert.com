@@ -3,7 +3,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// The New item dialog (docs/05 §3.7, owner decision 14 Nov 2026) on the Core registers 1.3.0 (Starter):
+// The New item dialog (docs/05 §3.7, owner decision 14 Nov 2026) on the Shared registers 1.3.0 (Recommended):
 // Phase A on Nonconformities and CAPA with the standard dialog: keyboard only, a required field, "Ask when adding",
 // More fields, Create and add another, "Discard this item?", the source in the activity log, the "Missing: …" marker
 // and the "Missing required" filter for a row added inline. Phase B: the pack's stepped intake form ("Step 2 of 3"),
