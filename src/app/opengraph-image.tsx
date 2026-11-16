@@ -23,6 +23,25 @@ const TOKENS = {
   goodSoft: '#e5f9eb', // --green-200 (--good-soft)
 } as const;
 
+/**
+ * Text set glyph by glyph. next/og measures text one character at a time but draws a word with the font's kerning,
+ * so Geist's kerning would leave wider gaps after long words; one span per character keeps the spacing even.
+ * `gap` is the space between words, in px.
+ */
+function Words({ text, gap }: { text: string; gap: number }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: gap }}>
+      {text.split(' ').map((word, i) => (
+        <div key={i} style={{ display: 'flex' }}>
+          {[...word].map((ch, j) => (
+            <span key={j}>{ch}</span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const font = (weight: 400 | 600) =>
   readFile(join(process.cwd(), `src/fonts/geist-latin-${weight}-normal.woff`));
 
@@ -44,8 +63,12 @@ export default async function OpengraphImage() {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-        <span style={{ fontSize: 40, fontWeight: 600, letterSpacing: -1 }}>{BRAND.product}</span>
-        <span style={{ fontSize: 26, color: TOKENS.muted }}>by {BRAND.company}</span>
+        <span style={{ display: 'flex', fontSize: 40, fontWeight: 600, letterSpacing: -1 }}>
+          <Words text={BRAND.product} gap={10} />
+        </span>
+        <span style={{ display: 'flex', fontSize: 26, color: TOKENS.muted }}>
+          <Words text={`by ${BRAND.company}`} gap={7} />
+        </span>
       </div>
       <div
         style={{
@@ -53,11 +76,11 @@ export default async function OpengraphImage() {
           fontSize: 76,
           fontWeight: 600,
           lineHeight: 1.08,
-          letterSpacing: -3,
-          maxWidth: 980,
+          letterSpacing: -2,
+          maxWidth: 1000,
         }}
       >
-        {HERO.title}
+        <Words text={HERO.title} gap={20} />
       </div>
       <div
         style={{
@@ -70,7 +93,7 @@ export default async function OpengraphImage() {
           color: TOKENS.muted,
         }}
       >
-        <span>Registers, automations and an activity log you can verify</span>
+        <Words text="Registers, automations and an activity log you can verify" gap={7} />
         <span
           style={{
             display: 'flex',
@@ -81,7 +104,7 @@ export default async function OpengraphImage() {
             fontWeight: 600,
           }}
         >
-          Hosted in the EU
+          <Words text="Hosted in the EU" gap={7} />
         </span>
       </div>
     </div>,

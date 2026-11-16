@@ -1,12 +1,21 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TriangleAlert } from 'lucide-react';
-import { LINKS, SITE } from './content';
+import { HERO, LINKS, SITE } from './content';
 import type { Block, Inline, LegalPage } from './legal';
 import { SiteShell } from './site-chrome';
 
 // The privacy notice and the terms: static Server Components in the public pages' frame, indexed (the root layout
 // is noindex), linked from each other and from the footer. Both are drafts until a lawyer reviews them.
+
+/** The share image (src/app/opengraph-image.tsx); its size and alt text match that file's exports. */
+const SHARE_IMAGE = {
+  url: '/opengraph-image',
+  width: 1200,
+  height: 630,
+  type: 'image/png',
+  alt: `${SITE.title}: ${HERO.title}`,
+};
 
 export function legalMetadata(page: LegalPage): Metadata {
   const title = `${page.title} · ${SITE.title}`;
@@ -16,8 +25,21 @@ export function legalMetadata(page: LegalPage): Metadata {
     description: page.description,
     alternates: { canonical: url },
     robots: { index: true, follow: true },
-    openGraph: { type: 'website', url, siteName: SITE.title, title, description: page.description },
-    twitter: { card: 'summary_large_image', title, description: page.description },
+    // a page's own openGraph replaces the root's, share image included, so the image is named here again
+    openGraph: {
+      type: 'website',
+      url,
+      siteName: SITE.title,
+      title,
+      description: page.description,
+      images: [SHARE_IMAGE],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: page.description,
+      images: [SHARE_IMAGE],
+    },
   };
 }
 
@@ -28,11 +50,7 @@ function Text({ runs }: { runs: Inline[] }) {
     if (typeof run === 'string') return run;
     if ('placeholder' in run)
       return (
-        <mark
-          key={i}
-          data-placeholder
-          className="bg-warn-soft text-warn rounded-sm [box-decoration-break:clone] px-1 font-medium"
-        >
+        <mark key={i} data-placeholder className="bg-warn-soft text-warn rounded-sm font-medium">
           [{run.placeholder}]
         </mark>
       );
