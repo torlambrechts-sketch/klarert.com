@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { RESERVED_SLUG_MESSAGE } from '@/lib/reserved-slugs';
 
 export type CommandError = {
   code:
@@ -60,6 +61,7 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
     'conflict',
     'That web address is taken. Try another.',
   ],
+  [/workspace address reserved/, 'conflict', RESERVED_SLUG_MESSAGE],
   [/invites_open_email_idx/, 'conflict', 'This person already has an open invite.'],
   [/memberships_pkey/, 'conflict', 'This person is already a member.'],
   [/pack already installed/, 'conflict', 'This pack is already installed in this workspace.'],

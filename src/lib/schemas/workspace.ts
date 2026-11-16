@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isReservedSlug, RESERVED_SLUG_MESSAGE } from '@/lib/reserved-slugs';
 
 export const ROLES = ['owner', 'admin', 'editor', 'viewer', 'auditor'] as const;
 export const ROLE_LABELS: Record<(typeof ROLES)[number], string> = {
@@ -66,7 +67,8 @@ export const createWorkspaceInput = z.object({
     .trim()
     .min(2, 'Name must be at least 2 characters.')
     .max(120, 'Name can be at most 120 characters.'),
-  slug: slugInput,
+  // only new addresses: a workspace that already has a reserved one keeps it (orgRef takes any slug)
+  slug: slugInput.refine((s) => !isReservedSlug(s), RESERVED_SLUG_MESSAGE),
   timeZone: z.string().min(1, 'Choose a time zone.'),
 });
 

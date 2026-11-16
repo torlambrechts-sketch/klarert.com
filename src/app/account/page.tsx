@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { TwoStepPanel } from '@/components/account/two-step-panel';
 import { EmailPanel, PasswordPanel, type EmailNotice } from '@/components/account/sign-in-details';
 import { DeleteAccountPanel } from '@/components/account/delete-account';
+import { NamePanel } from '@/components/account/name-panel';
 
 export const metadata = { title: 'Your account · Compliance OS' };
 
 // Your account (docs/05 §1): the person's own settings, outside any workspace so a workspace that requires two-step
-// sign-in can send people here to set it up. Email address, password, two-step sign-in (an authenticator app), this
-// session and Delete my account (`?delete=open` opens its dialog: where the two-step page sends the person back to).
+// sign-in can send people here to set it up. Your name, email address, password, two-step sign-in (an authenticator
+// app), this session and Delete my account (`?delete=open` opens its dialog: where the two-step page sends the person
+// back to).
 export default async function AccountPage({
   searchParams,
 }: {
@@ -40,6 +42,7 @@ export default async function AccountPage({
     emailNotice === 'confirm-other' || emailNotice === 'link-failed' ? emailNotice : null;
   const signInDetails = (
     <>
+      <NamePanel name={session.profile.display_name} />
       <EmailPanel email={session.user.email ?? ''} pendingEmail={pendingEmail} notice={notice} />
       <PasswordPanel />
     </>
