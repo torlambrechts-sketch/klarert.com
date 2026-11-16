@@ -402,6 +402,8 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
+  /* the public site's page container (`rounded-page`): the large rounded surface the pages sit in */
+  --radius-page: 24px;
 
   /* materials: cards are flat (1 px --line border, no shadow); only floating surfaces cast one */
   --shadow-tooltip: 0 1px 1px rgb(0 0 0 / 0.02), 0 4px 8px rgb(0 0 0 / 0.04);
@@ -585,6 +587,13 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ───────────── public site (`/`, /platform, /frameworks, /privacy, /terms and the sign-in pages) ─────────────
+   a very light page with a subtle dotted pattern (owner's reference, Nov 2026): one gray-alpha dot on a 20 px grid */
+@utility bg-dots {
+  background-image: radial-gradient(var(--gray-alpha-300) 1px, transparent 1.5px);
+  background-size: 20px 20px;
 }
 
 /* ───────────── app shell (docs/05 §2, §5) ─────────────
