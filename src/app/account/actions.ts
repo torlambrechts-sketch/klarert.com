@@ -3,7 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ACCOUNT_DELETED_PATH, DELETE_ACCOUNT_RETURN } from '@/lib/delete-account';
-import { changeEmail, changePassword, deleteMyAccount } from '@/server/commands/account';
+import {
+  changeDisplayName,
+  changeEmail,
+  changePassword,
+  deleteMyAccount,
+} from '@/server/commands/account';
+import type { NameChange } from '@/server/commands/profile-core';
 import {
   finishTwoStepSetup,
   removeTwoStepApp,
@@ -29,6 +35,16 @@ export async function removeTwoStepAppAction(input: {
   factorId: string;
 }): Promise<Result<{ factorId: string }>> {
   const r = await removeTwoStepApp(input);
+  if (r.ok) revalidatePath('/', 'layout');
+  return r;
+}
+
+export async function changeDisplayNameAction(
+  _: unknown,
+  form: FormData,
+): Promise<Result<NameChange>> {
+  const r = await changeDisplayName({ displayName: form.get('displayName') });
+  // the name shows in the shell, on avatars and here
   if (r.ok) revalidatePath('/', 'layout');
   return r;
 }
