@@ -421,7 +421,8 @@ export function accessText(
     case 'member.changed':
       return `Changed a member's role to ${String(n?.role ?? '')}`;
     case 'member.removed':
-      return 'Removed a member';
+      // 0071: delete my account ends every membership of the person, logged with how
+      return n?.how === 'account deleted' ? 'A member deleted their account' : 'Removed a member';
     // invites (0070): the entry holds the invite id and the role, never the address
     case 'invite.created':
       return `Invited someone as ${roleWord(n)}`;

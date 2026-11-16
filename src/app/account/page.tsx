@@ -7,18 +7,19 @@ import { getMyWorkspaces, getSignIn, requireProfile } from '@/server/auth';
 import { Button } from '@/components/ui/button';
 import { TwoStepPanel } from '@/components/account/two-step-panel';
 import { EmailPanel, PasswordPanel, type EmailNotice } from '@/components/account/sign-in-details';
+import { DeleteAccountPanel } from '@/components/account/delete-account';
 
 export const metadata = { title: 'Your account · Compliance OS' };
 
 // Your account (docs/05 §1): the person's own settings, outside any workspace so a workspace that requires two-step
-// sign-in can send people here to set it up. Email address, password, two-step sign-in (an authenticator app) and this
-// session.
+// sign-in can send people here to set it up. Email address, password, two-step sign-in (an authenticator app), this
+// session and Delete my account (`?delete=open` opens its dialog: where the two-step page sends the person back to).
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; required?: string; email?: string }>;
+  searchParams: Promise<{ next?: string; required?: string; email?: string; delete?: string }>;
 }) {
-  const { next: rawNext, required, email: emailNotice } = await searchParams;
+  const { next: rawNext, required, email: emailNotice, delete: deleteOpen } = await searchParams;
   const next = safeNext(rawNext);
   const session = await requireProfile(
     next ? `/account?next=${encodeURIComponent(next)}` : '/account',
@@ -107,6 +108,8 @@ export default async function AccountPage({
             </Button>
           </form>
         </section>
+
+        <DeleteAccountPanel email={session.user.email ?? ''} openOnLoad={deleteOpen === 'open'} />
       </div>
     </main>
   );

@@ -406,6 +406,11 @@ describe('the activity log', () => {
     expect(e('invite.revoked', { invite_id: 'i', role: 'viewer' }, null)).toBe(
       'Revoked an invite to join as a viewer',
     );
+    expect(e('member.removed', { user_id: 'u-ed', role: 'editor' }, null)).toBe('Removed a member');
+    // delete my account (0071): the membership ends with the account
+    expect(
+      e('member.removed', { user_id: 'u-ed', role: 'editor' }, { how: 'account deleted' }),
+    ).toBe('A member deleted their account');
     expect(e('item.renamed', null, null)).toBeNull();
   });
 });

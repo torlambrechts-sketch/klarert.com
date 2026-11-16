@@ -10,9 +10,10 @@ import {
   sameTwice,
   sameTwiceIssue,
 } from '@/lib/passwords';
+import { confirmsEmail, onlyOwnerMessage, onlyOwnerOf } from '@/lib/delete-account';
 import { createPasswordCheckClient } from '@/lib/supabase/server';
-import { getSession } from '@/server/auth';
-import { fail, invalid, ok, type Result } from '@/server/result';
+import { getSession, getSignIn } from '@/server/auth';
+import { fail, fromDbError, invalid, ok, type CommandError, type Result } from '@/server/result';
 import { log } from './context';
 
 // Your account (docs/05 §1.1, docs/09 §12): the person's own email address and password, through Supabase Auth on
@@ -171,4 +172,60 @@ export async function setNewPassword(
   return ok({
     othersSignedOut: await endOtherSessions(session, 'set new password: other sessions'),
   });
+}
+
+const deleteAccountInput = z.object({
+  email: z.string({ error: 'Type your email address.' }).max(320),
+});
+const TYPE_EMAIL = 'Type your email address exactly as it is shown.';
+
+/**
+ * Delete my account (docs/05 §1.1, docs/09 §12, migration 0071): `delete_my_account` on the person's own session (no
+ * service role). It refuses the only owner of a workspace and, for a person with an authenticator app, a session
+ * without its code; it removes every membership (logged), leaves a nameless profile ("Former member") so the records
+ * the person made keep their author, and deletes the sign-in. The session is signed out afterwards.
+ * `needsCode`: send the person to the two-step page first.
+ */
+export type DeleteAccountResult =
+  Result<{ deleted: true }> | { ok: false; needsCode: true; error: CommandError };
+
+const needsCode = (): DeleteAccountResult => ({
+  ok: false,
+  needsCode: true,
+  error: { code: 'forbidden', message: CODE_FIRST },
+});
+
+export async function deleteMyAccount(input: unknown): Promise<DeleteAccountResult> {
+  const p = deleteAccountInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const signIn = await getSignIn();
+  if (signIn && owesCode(signIn.twoStep)) return needsCode();
+  const session = await getSession();
+  if (!session) return fail('unauthenticated', 'Sign in again.');
+  if (!confirmsEmail(p.data.email, session.user.email))
+    return fail('invalid', TYPE_EMAIL, { email: TYPE_EMAIL });
+
+  const { error } = await session.supabase.rpc('delete_my_account');
+  log('deleteMyAccount', { user: session.user.id, ok: !error });
+  if (error) {
+    const names = onlyOwnerOf(error);
+    if (names)
+      return fail('conflict', names.length ? onlyOwnerMessage(names) : error.message.slice(9));
+    if (error.code === '42501' && /authenticator app/.test(error.message)) return needsCode();
+    return fromDbError(error);
+  }
+  // the auth user is gone: Supabase Auth answers the sign-out with "user not found", and the client still clears the
+  // session cookies
+  const { error: signOutError } = await session.supabase.auth.signOut({ scope: 'local' });
+  if (signOutError)
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        source: 'account',
+        during: 'delete account: sign out',
+        code: signOutError.code,
+        status: signOutError.status,
+      }),
+    );
+  return ok({ deleted: true });
 }

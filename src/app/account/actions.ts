@@ -1,7 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { changeEmail, changePassword } from '@/server/commands/account';
+import { redirect } from 'next/navigation';
+import { ACCOUNT_DELETED_PATH, DELETE_ACCOUNT_RETURN } from '@/lib/delete-account';
+import { changeEmail, changePassword, deleteMyAccount } from '@/server/commands/account';
 import {
   finishTwoStepSetup,
   removeTwoStepApp,
@@ -49,4 +51,19 @@ export async function changePasswordAction(
     password: form.get('password'),
     confirm: form.get('confirm'),
   });
+}
+
+/**
+ * Delete my account (docs/09 §12): a person who owes their authenticator app's code goes to the two-step page first
+ * and comes back to the open dialog; once deleted, the signed-out person lands on a plain page.
+ */
+export async function deleteMyAccountAction(
+  _: unknown,
+  form: FormData,
+): Promise<Result<{ deleted: true }>> {
+  const r = await deleteMyAccount({ email: form.get('email') ?? '' });
+  if ('needsCode' in r)
+    redirect(`/login/two-step?next=${encodeURIComponent(DELETE_ACCOUNT_RETURN)}`);
+  if (r.ok) redirect(ACCOUNT_DELETED_PATH);
+  return r;
 }
