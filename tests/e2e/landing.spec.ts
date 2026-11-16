@@ -444,7 +444,10 @@ test('klarert.com and www.klarert.com answer 301 to the same path on www.keptrow
     for (const path of ['/', '/privacy', '/login?mode=signup', '/acme/home?x=1']) {
       const res = await request.get(path, { headers: { host }, maxRedirects: 0 });
       expect(res.status(), `${host}${path}`).toBe(301);
-      expect(res.headers()['location'], `${host}${path}`).toBe(`https://www.keptrow.com${path}`);
+      // for `/` Next.js writes the address without its trailing slash; URL reads both the same
+      expect(new URL(res.headers()['location']!).href, `${host}${path}`).toBe(
+        `https://www.keptrow.com${path}`,
+      );
     }
   // this host is served as before
   const own = await request.get('/privacy', { maxRedirects: 0 });
