@@ -8,7 +8,8 @@ import { BRAND, CONTACT, LINKS, NAV } from './content';
 // page with a dotted pattern inside a large rounded container, the header with the active page as a pill, main and
 // the footer. Server Component: the phone menu is a <details>, so the pages ship no client code of their own.
 
-export const WRAP = 'mx-auto w-full max-w-6xl px-4 sm:px-8 lg:px-12';
+// full width (owner decision 16 Nov 2026): the page runs edge to edge; content keeps side padding and stops at 1600 px
+export const WRAP = 'mx-auto w-full max-w-[1600px] px-4 sm:px-8 lg:px-16';
 
 const LINK = 'text-info rounded-sm underline-offset-4 hover:underline';
 
@@ -44,7 +45,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
 /** `path` is the page's own address: it marks the active nav item and resets the phone menu between pages. */
 export function SiteShell({ path, children }: { path: string; children: React.ReactNode }) {
   return (
-    <div className="bg-soft flex min-h-dvh flex-col sm:p-3 lg:p-4">
+    <div className="bg-subtle flex min-h-dvh flex-col">
       <a
         href="#main"
         className="bg-brand text-primary-foreground text-label-14 sr-only rounded-md px-3 py-2 font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
@@ -52,7 +53,7 @@ export function SiteShell({ path, children }: { path: string; children: React.Re
         Skip to content
       </a>
 
-      <div className="bg-subtle bg-dots border-line sm:rounded-page mx-auto flex w-full max-w-[1440px] flex-1 flex-col overflow-clip sm:border">
+      <div className="bg-subtle bg-dots flex w-full flex-1 flex-col overflow-clip">
         <header>
           <div className={`${WRAP} flex h-18 items-center justify-between gap-3 sm:h-20`}>
             <Wordmark />

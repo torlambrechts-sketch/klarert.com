@@ -10,12 +10,12 @@ import { Wordmark } from '@/components/landing/site-chrome';
 // here the h1 reads as a small label over the step's title.
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-soft flex min-h-dvh flex-col sm:p-3 lg:p-4">
-      <div className="bg-subtle bg-dots border-line sm:rounded-page mx-auto flex w-full max-w-[1440px] flex-1 flex-col sm:border">
-        <header className="mx-auto flex h-18 w-full max-w-6xl items-center px-4 sm:h-20 sm:px-8 lg:px-12">
+    <div className="bg-subtle flex min-h-dvh flex-col">
+      <div className="bg-subtle bg-dots flex w-full flex-1 flex-col">
+        <header className="mx-auto flex h-18 w-full max-w-[1600px] items-center px-4 sm:h-20 sm:px-8 lg:px-12">
           <Wordmark />
         </header>
-        <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-4 pt-2 pb-12 sm:px-8 lg:grid-cols-2 lg:gap-16 lg:px-12 lg:pb-20">
+        <div className="mx-auto grid w-full max-w-[1600px] flex-1 items-center gap-10 px-4 pt-2 pb-12 sm:px-8 lg:grid-cols-2 lg:gap-16 lg:px-12 lg:pb-20">
           <main className="bg-card border-line [&_h1]:text-label-13 [&_h1]:text-muted-foreground [&_h2]:text-heading-24 mx-auto w-full max-w-md rounded-xl border p-6 sm:p-8 lg:mx-0 lg:justify-self-end [&_h1]:font-medium">
             {children}
           </main>
