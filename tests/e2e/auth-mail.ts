@@ -8,8 +8,11 @@ const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324';
 type Msg = { ID: string; Created: string; Subject: string; To: { Address: string }[] };
 export type Mail = { subject: string; html: string; text: string; link: string };
 
-/** The newest email to `email` sent at or after `after` (ms), waiting for it to arrive. */
-export async function mailTo(email: string, after: number): Promise<Mail> {
+/**
+ * The newest email to `email` sent at or after `after` (ms), waiting for it to arrive; with `subject`, the newest with
+ * that subject (a security alert and a confirmation link can arrive close together).
+ */
+export async function mailTo(email: string, after: number, subject?: string): Promise<Mail> {
   let mail: Mail | null = null;
   await expect
     .poll(
@@ -18,7 +21,11 @@ export async function mailTo(email: string, after: number): Promise<Mail> {
           `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=5`,
         );
         const { messages } = (await res.json()) as { messages: Msg[] };
-        const msg = messages.find((m) => new Date(m.Created).getTime() >= after - 2000);
+        const msg = messages.find(
+          (m) =>
+            new Date(m.Created).getTime() >= after - 2000 &&
+            (subject === undefined || m.Subject === subject),
+        );
         if (!msg) return null;
         const body = (await (await fetch(`${MAILPIT}/api/v1/message/${msg.ID}`)).json()) as {
           HTML: string;

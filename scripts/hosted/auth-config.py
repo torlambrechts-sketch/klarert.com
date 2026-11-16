@@ -1,6 +1,7 @@
 # Set the hosted project's Supabase Auth settings that live in the repo (docs/09 §12, README › Auth emails):
-# the site URL, the minimum password length, secure email change, and the subject and HTML of each auth email
-# (supabase/templates/*.html, subjects from supabase/config.toml [auth.email.template.*]).
+# the site URL, the minimum password length, secure email change, the subject and HTML of each auth email
+# (supabase/templates/*.html, subjects from supabase/config.toml [auth.email.template.*]) and the security alerts for
+# a changed password or email address ([auth.email.notification.*]: on, subject and HTML).
 #
 #   python3 scripts/hosted/auth-config.py --dry-run   # print what would change, change nothing
 #   python3 scripts/hosted/auth-config.py             # apply
@@ -20,6 +21,11 @@ SITE_URL = "https://www.klarert.com"
 MIN_PASSWORD = 12  # src/lib/passwords.ts MIN_PASSWORD
 # config.toml template name -> Management API key part
 TEMPLATES = ["confirmation", "magic_link", "recovery", "email_change"]
+# config.toml notification name -> Management API key part (mailer_notifications_<n>_enabled,
+# mailer_subjects_<n>_notification, mailer_templates_<n>_notification_content; checked 16 Nov 2026 against the keys
+# Supabase CLI 3.1.0 sends to this endpoint)
+NOTIFICATIONS = ["password_changed", "email_changed"]
+FORGOT_PASSWORD_LINK = "{{ .SiteURL }}/login/forgot-password"
 
 
 def api(method, body=None):
@@ -53,6 +59,19 @@ def desired():
             sys.exit(f"{path}: no {{{{ .ConfirmationURL }}}} link")
         want[f"mailer_subjects_{name}"] = t["subject"]
         want[f"mailer_templates_{name}_content"] = html
+    notifications = config["auth"]["email"]["notification"]
+    for name in NOTIFICATIONS:
+        n = notifications[name]
+        if n.get("enabled") is not True:
+            sys.exit(f"config.toml [auth.email.notification.{name}]: not enabled")
+        path = os.path.normpath(os.path.join(ROOT, n["content_path"]))
+        with open(path, encoding="utf-8") as f:
+            html = f.read()
+        if FORGOT_PASSWORD_LINK not in html:
+            sys.exit(f"{path}: no {FORGOT_PASSWORD_LINK} link")
+        want[f"mailer_notifications_{name}_enabled"] = True
+        want[f"mailer_subjects_{name}_notification"] = n["subject"]
+        want[f"mailer_templates_{name}_notification_content"] = html
     return want
 
 

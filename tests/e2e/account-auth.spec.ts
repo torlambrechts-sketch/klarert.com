@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { completeProfile, freshEmail } from './helpers';
-import { mailTo, openLink } from './auth-mail';
+import { mailTo, openLink, type Mail } from './auth-mail';
 import { freshCode } from './totp';
 
 // Forgot password, Set a new password and Your account › Email address and Password (docs/05 §1 and §1.1,
@@ -10,6 +10,17 @@ test.describe.configure({ mode: 'default' });
 
 const unique = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 const SAME_ANSWER = 'If an account uses that address, we have sent a link to reset your password.';
+const PASSWORD_ALERT = 'Your Compliance OS password was changed';
+const EMAIL_ALERT = 'The email address of your Compliance OS account was changed';
+const CONFIRM_EMAIL = 'Confirm the new email address for Compliance OS';
+
+/** A security alert (Supabase Auth's notification emails, docs/09 §12): plain, with the Forgot password link. */
+function expectAlert(mail: Mail) {
+  expect(mail.text).toContain('If this was not you, reset your password now');
+  expect(mail.text).toContain('tell the owner of your workspace');
+  expect(new URL(mail.link).pathname).toBe('/login/forgot-password');
+  expect(mail.html).not.toMatch(/<img|src=/i);
+}
 
 /** A new password account with a profile, signed in on `page`. */
 async function newAccount(page: Page, name: string) {
@@ -206,10 +217,17 @@ test('Your account: change the password, then the email address', async ({
   await passwordPanel.getByLabel('Current password').fill(password);
   await passwordPanel.getByLabel('New password', { exact: true }).fill(newPassword);
   await passwordPanel.getByLabel('Repeat the new password').fill(newPassword);
+  const changedAt = Date.now();
   await passwordPanel.getByRole('button', { name: 'Change password' }).click();
   await expect(passwordPanel.getByRole('status')).toHaveText(
     'Your password has been changed. You are signed out on your other devices.',
   );
+  // the security alert
+  const passwordAlert = await mailTo(email, changedAt, PASSWORD_ALERT);
+  expect(passwordAlert.text).toContain(
+    `The password of the Compliance OS account for ${email} was changed`,
+  );
+  expectAlert(passwordAlert);
   await expect(passwordPanel.getByRole('button', { name: 'Change password' })).toBeFocused();
   await expectSignedOut(other);
 
@@ -229,18 +247,23 @@ test('Your account: change the password, then the email address', async ({
   );
   await expect(page.getByTestId('current-email')).toHaveText(email);
   if (info.project.name === 'phone') await noSideScroll(page);
-  const toOld = await mailTo(email, started);
-  const toNew = await mailTo(newEmail, started);
+  const toOld = await mailTo(email, started, CONFIRM_EMAIL);
+  const toNew = await mailTo(newEmail, started, CONFIRM_EMAIL);
   for (const mail of [toOld, toNew]) {
-    expect(mail.subject).toBe('Confirm the new email address for Compliance OS');
+    expect(mail.subject).toBe(CONFIRM_EMAIL);
     expect(mail.text).toContain(newEmail);
     expect(mail.text).toContain('If you did not ask for this, you can ignore this email.');
   }
   // the local stack has email confirmation off, so Supabase Auth takes one link (hosted: both, docs/09 §12)
+  const confirmedAt = Date.now();
   await openLink(page, toNew.link);
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByTestId('current-email')).toHaveText(newEmail);
   await expect(page.getByTestId('email-pending')).toHaveCount(0);
+  // the security alert goes to the old address
+  const emailAlert = await mailTo(email, confirmedAt, EMAIL_ALERT);
+  expect(emailAlert.text).toContain(`from ${email} to ${newEmail}`);
+  expectAlert(emailAlert);
 
   // sign in with the new address and the new password
   await page.context().clearCookies();
