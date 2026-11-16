@@ -4,8 +4,9 @@ import { ListCrumb } from '@/components/shell/data-list';
 import { PageHeader } from '@/components/shell/page-header';
 import { requireMember } from '@/server/auth';
 import { readDesignWorld, type DesignRead } from '@/server/design/read';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Design · Compliance OS' };
+export const metadata = { title: `Design · ${BRAND.product}` };
 export const dynamic = 'force-dynamic';
 
 // Build › Design (docs/05 §4, owner decision 15 Nov 2026): every sheet the person can read and how they connect,

@@ -12,7 +12,7 @@ test('signed-out visitors see the product site, and sign-in loads without consol
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await page.goto('/login');
-  await expect(page.getByRole('heading', { level: 1, name: 'Compliance OS' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Keptrow' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -31,7 +31,7 @@ test('fonts are self-hosted, no Google Fonts requests', async ({ page }) => {
 test('an unknown address shows the app’s own 404 page with a way back', async ({ page }) => {
   const res = await page.goto('/auth/no-such-page');
   expect(res?.status()).toBe(404);
-  await expect(page).toHaveTitle('Page not found · Compliance OS');
+  await expect(page).toHaveTitle('Page not found · Keptrow');
   await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
   await page.getByRole('link', { name: 'Go to your workspace' }).click();
   // signed out, `/` is the product site, with its way to sign in

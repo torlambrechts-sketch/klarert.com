@@ -9,8 +9,9 @@ import {
   type DashboardView,
 } from '@/server/repositories/dashboards';
 import { newId } from '@/server/sheet-context';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Dashboards · Compliance OS' };
+export const metadata = { title: `Dashboards · ${BRAND.product}` };
 
 // One dashboard (docs/05 §4): tabs for the workspace's dashboards, then its widgets as cards. The engine computes
 // every widget on the server from the data it needs; editors add, move, remove and rename through the commands.

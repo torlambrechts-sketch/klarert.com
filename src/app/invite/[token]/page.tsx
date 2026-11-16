@@ -2,8 +2,9 @@ import { redirect } from 'next/navigation';
 import { ROLE_LABELS } from '@/lib/schemas/workspace';
 import { getSession, signInPath } from '@/server/auth';
 import { AcceptForm } from './accept-form';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Invitation · Compliance OS' };
+export const metadata = { title: `Invitation · ${BRAND.product}` };
 
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;

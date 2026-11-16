@@ -42,8 +42,9 @@ import { listAuditOutputs, reviewSheetsByInstall } from '@/server/commands/audit
 import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
 import { addDays, addMonths } from '@/engine/fields/helpers';
 import { ArrowUpCircle, Check, ExternalLink, Lock } from 'lucide-react';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Settings · Compliance OS' };
+export const metadata = { title: `Settings · ${BRAND.product}` };
 
 const TABS = [
   { id: 'members', label: 'Members' },

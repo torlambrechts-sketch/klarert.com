@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { BRAND } from '@/lib/brand';
 
-export const metadata: Metadata = { title: 'Page not found · Compliance OS' };
+export const metadata: Metadata = { title: `Page not found · ${BRAND.product}` };
 
 // The app's own 404 (an unknown dashboard, app, screen or path): plain words and a way back, in the Geist styles,
 // instead of the framework's unstyled page. A sheet keeps its own page (s/[sheetId]/not-found.tsx).

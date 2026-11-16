@@ -54,7 +54,7 @@ describe('chooseTransport', () => {
     const c = chooseTransport(
       {
         BREVO_API_KEY: 'xkeysib-x',
-        EMAIL_FROM: 'no-reply@mail.klarert.com',
+        EMAIL_FROM: 'no-reply@mail.keptrow.com',
         NEXT_PUBLIC_SUPABASE_URL: HOSTED,
       },
       f,
@@ -117,7 +117,7 @@ describe('chooseTransport', () => {
   });
 
   it('fails closed when EMAIL_FROM is missing or not an address', () => {
-    for (const from of [undefined, '', 'Compliance OS', 'no-reply@'])
+    for (const from of [undefined, '', 'Keptrow', 'no-reply@'])
       expect(
         chooseTransport(
           { BREVO_API_KEY: 'xkeysib-x', EMAIL_FROM: from, NEXT_PUBLIC_SUPABASE_URL: HOSTED },
@@ -134,14 +134,14 @@ describe('chooseTransport', () => {
 
 describe('parseFrom', () => {
   it('reads a name and an address, or a bare address', () => {
-    expect(parseFrom('Compliance OS <no-reply@mail.klarert.com>')).toEqual({
-      name: 'Compliance OS',
-      email: 'no-reply@mail.klarert.com',
+    expect(parseFrom('Keptrow <no-reply@mail.keptrow.com>')).toEqual({
+      name: 'Keptrow',
+      email: 'no-reply@mail.keptrow.com',
     });
-    expect(parseFrom('"Klarert" <no-reply@mail.klarert.com>')?.name).toBe('Klarert');
-    expect(parseFrom('no-reply@mail.klarert.com')).toEqual({
+    expect(parseFrom('"Keptrow" <no-reply@mail.keptrow.com>')?.name).toBe('Keptrow');
+    expect(parseFrom('no-reply@mail.keptrow.com')).toEqual({
       name: '',
-      email: 'no-reply@mail.klarert.com',
+      email: 'no-reply@mail.keptrow.com',
     });
     expect(parseFrom('nobody')).toBeNull();
     expect(parseFrom(undefined)).toBeNull();
@@ -151,7 +151,7 @@ describe('parseFrom', () => {
 describe('deliver with Brevo', () => {
   const env = {
     BREVO_API_KEY: 'xkeysib-test',
-    EMAIL_FROM: 'Compliance OS <no-reply@mail.klarert.com>',
+    EMAIL_FROM: 'Keptrow <no-reply@mail.keptrow.com>',
     NEXT_PUBLIC_SUPABASE_URL: HOSTED,
   };
   const created = { messageId: '<202611151800.1@smtp-relay.mailin.fr>' };
@@ -170,7 +170,7 @@ describe('deliver with Brevo', () => {
       accept: 'application/json',
     });
     expect(JSON.parse(String(init.body))).toEqual({
-      sender: { email: 'no-reply@mail.klarert.com', name: 'Compliance OS' },
+      sender: { email: 'no-reply@mail.keptrow.com', name: 'Keptrow' },
       to: [
         {
           email: 'grace@example.test',
@@ -194,12 +194,12 @@ describe('deliver with Brevo', () => {
 
   it('sends a bare address without a name', async () => {
     const { fetch, result } = run(
-      { ...env, EMAIL_FROM: 'no-reply@mail.klarert.com' },
+      { ...env, EMAIL_FROM: 'no-reply@mail.keptrow.com' },
       fakeFetch(201, created),
     );
     await result;
     expect(JSON.parse(String(fetch.mock.calls[0]![1].body)).sender).toEqual({
-      email: 'no-reply@mail.klarert.com',
+      email: 'no-reply@mail.keptrow.com',
     });
   });
 
@@ -251,7 +251,7 @@ describe('deliver to local Mailpit', () => {
     const [url, init] = fetch.mock.calls[0]!;
     expect(url).toBe(`${LOCAL_MAILPIT_URL}/api/v1/send`);
     expect(JSON.parse(String(init.body))).toEqual({
-      From: { Email: 'no-reply@mail.klarert.com', Name: 'Compliance OS' },
+      From: { Email: 'no-reply@mail.keptrow.com', Name: 'Keptrow' },
       To: [{ Email: 'grace@example.test' }],
       Subject: 'Ada invited you to Acme',
       Text: 'Secret body text',

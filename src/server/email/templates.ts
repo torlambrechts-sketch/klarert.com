@@ -4,6 +4,7 @@
 // names) is escaped in the HTML and stripped of line breaks in the subject.
 
 import { formatDate, isoDateInZone } from '@/engine/fields/helpers';
+import { BRAND } from '@/lib/brand';
 import { ROLE_LABELS, ROLE_SUMMARIES, type ROLES } from '@/lib/schemas/workspace';
 
 export type Role = (typeof ROLES)[number];
@@ -15,7 +16,7 @@ export interface EmailContent {
 }
 
 /** The product name used in the body (the sender's display name comes from EMAIL_FROM). */
-export const PRODUCT_NAME = 'Compliance OS';
+export const PRODUCT_NAME = BRAND.product;
 
 const ESCAPES: Record<string, string> = {
   '&': '&amp;',

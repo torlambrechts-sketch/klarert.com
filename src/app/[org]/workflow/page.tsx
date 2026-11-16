@@ -3,8 +3,9 @@ import { ListCrumb } from '@/components/shell/data-list';
 import { PageHeader } from '@/components/shell/page-header';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import { getWorkflow, type WorkflowData } from '@/server/repositories/workflow';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Workflow · Compliance OS' };
+export const metadata = { title: `Workflow · ${BRAND.product}` };
 
 // Workflow (docs/05 §4): every sheet's lifecycle by one of its status or label fields, as an expandable list (?sheet
 // opens a sheet, ?field picks its field; the last choice is remembered per browser). Stages are the field's options;

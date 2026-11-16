@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { formatDateTime } from '@/engine/fields/helpers';
 import { loadPublicForm, startStamp, type UnavailableForm } from '@/server/commands/forms';
 import { PublicFormView } from './public-form';
+import { BRAND } from '@/lib/brand';
 
 // Public form (docs/05 §1: no login, no app chrome). The token is the only key; a disabled or unknown token shows a
 // plain notice, a form that does not take answers says why. Never indexed, no referrer (next.config.ts headers too).
@@ -15,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const form = await loadPublicForm((await params).token);
   return {
-    title: form ? `${form.title} · Compliance OS` : 'Form not available',
+    title: form ? `${form.title} · ${BRAND.product}` : 'Form not available',
     robots: { index: false, follow: false },
     referrer: 'no-referrer',
   };
@@ -78,7 +79,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ tok
             </p>
           </section>
         )}
-        <p className="text-muted-foreground text-label-12 text-center">Compliance OS</p>
+        <p className="text-muted-foreground text-label-12 text-center">{BRAND.product}</p>
       </div>
     </main>
   );

@@ -11,9 +11,10 @@ import { canSeeExports } from '@/engine/audit/exports';
 import { addDays, addMonths } from '@/engine/fields/helpers';
 import { requireMember } from '@/server/auth';
 import { listAuditOutputs } from '@/server/commands/audit';
+import { BRAND } from '@/lib/brand';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Audit outputs · Compliance OS' };
+export const metadata = { title: `Audit outputs · ${BRAND.product}` };
 
 // Audit outputs (docs/11 Audit outputs): the statement of applicability of each adopted library, the audit pack and
 // the management review inputs. Every member may export what they can read, auditors too. Owners, admins and auditors

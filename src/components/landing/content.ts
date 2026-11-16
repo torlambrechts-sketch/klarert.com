@@ -5,12 +5,15 @@
 // docs/13 (apps). Numbers come from the code (src/lib/site/facts.ts), never from here.
 // The owner edits the copy here; content.test.ts keeps it tied to the catalogue and the copy rules.
 import type { SiteSetCopy } from '@/engine/packs/site-catalogue';
+import { BRAND, SITE_URL, SUPPORT_EMAIL } from '@/lib/brand';
 
-export const BRAND = { product: 'Compliance OS', company: 'Klarert' } as const;
+// The name, wordmark and descriptor live in src/lib/brand.ts (the app, the emails and two-step read them too).
+export { BRAND };
 
 export const SITE = {
-  url: 'https://www.klarert.com',
-  title: 'Compliance OS by Klarert',
+  url: SITE_URL,
+  /** The home page's title and the site name in shares: "Keptrow — the compliance spreadsheet". */
+  title: BRAND.descriptor,
   description:
     'Run your management system in one shared spreadsheet: registers, automations and an activity log you can verify, hosted in the EU.',
 } as const;
@@ -33,7 +36,7 @@ export const NAV: readonly { href: string; label: string }[] = [
 
 export const HERO = {
   title: 'Run your management system in one shared spreadsheet',
-  lead: 'Compliance OS keeps your registers, actions and evidence in sheets your whole team works in. Automations keep the work moving, and every change is written to an activity log you can verify.',
+  lead: `${BRAND.product} keeps your registers, actions and evidence in sheets your whole team works in. Automations keep the work moving, and every change is written to an activity log you can verify.`,
 } as const;
 
 /** The hero's stats row: `key` names a fact from src/lib/site/facts.ts, which gives the value. */
@@ -194,7 +197,7 @@ export const CLOSING = {
 
 export const PLATFORM_PAGE = {
   title: 'The platform',
-  lead: 'Everything Compliance OS does today, in plain words. Each part is built on the same sheets, the same automations and the same activity log.',
+  lead: `Everything ${BRAND.product} does today, in plain words. Each part is built on the same sheets, the same automations and the same activity log.`,
   description:
     'Sheets with 58 field types, forms, automations, approvals, a hash-chained activity log, the statement of applicability, evidence with expiry, retention, roles and EU hosting.',
 } as const;
@@ -404,7 +407,7 @@ export const AUTH_PANEL = {
 } as const;
 
 /** The one contact address the public pages give (owner decision, 16 Nov 2026). */
-export const CONTACT = { email: 'support@klarert.com' } as const;
+export const CONTACT = { email: SUPPORT_EMAIL } as const;
 
 /** The pages search engines may index; everything else is noindex (root layout). */
 export const PUBLIC_PATHS = ['/', LINKS.privacy, LINKS.terms] as const;

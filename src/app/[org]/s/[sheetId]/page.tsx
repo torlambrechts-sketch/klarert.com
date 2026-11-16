@@ -7,6 +7,7 @@ import { requireMember } from '@/server/auth';
 import { getSheet, getSheetAccess } from '@/server/repositories/sheets';
 import { getSheetBundle } from '@/server/bundles/read';
 import { getSheetSystem } from '@/server/packs/system';
+import { BRAND } from '@/lib/brand';
 
 function defaultViewOf(settings: unknown): string | null {
   const id =
@@ -24,7 +25,7 @@ export async function generateMetadata({
   const { org, sheetId } = await params;
   const { workspace } = await requireMember(org);
   const sheet = await getSheet(workspace.id, sheetId);
-  return { title: `${sheet?.name ?? 'Sheet'} · Compliance OS` };
+  return { title: `${sheet?.name ?? 'Sheet'} · ${BRAND.product}` };
 }
 
 // The sheet page (docs/05 §3): the view tabs and the active view (?view=, else the sheet's default view, else List).

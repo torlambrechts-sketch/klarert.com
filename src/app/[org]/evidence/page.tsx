@@ -17,8 +17,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { requireMember } from '@/server/auth';
 import { fetchEvidence } from '@/server/repositories/evidence';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Evidence library · Compliance OS' };
+export const metadata = { title: `Evidence library · ${BRAND.product}` };
 
 // Evidence library (docs/05 §4): the current version of every file across the sheets, with validity worked out by
 // the engine against today in the workspace time zone. Read-only: files are added and replaced in the item panel.

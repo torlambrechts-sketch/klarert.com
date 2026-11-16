@@ -2,11 +2,12 @@ import { Check } from 'lucide-react';
 import { AUTH_PANEL } from '@/components/landing/content';
 import { Panel, Dot } from '@/components/landing/mock-kit';
 import { Wordmark } from '@/components/landing/site-chrome';
+import { BRAND } from '@/lib/brand';
 
 // The sign-in pages (sign in, create account, email link, forgot password, two-step, new password, account deleted)
 // in the public site's look: the dotted light page in a large rounded container, the wordmark top left, the form card
 // on one side and a calm panel of product facts on the other from 1024 px; one column on phones. Layout only: the
-// pages' words, forms and behaviour are their own. The pages open with "Compliance OS" (h1) and then the step (h2);
+// pages' words, forms and behaviour are their own. The pages open with the product name (h1) and then the step (h2);
 // here the h1 reads as a small label over the step's title.
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +20,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <main className="bg-card border-line [&_h1]:text-label-13 [&_h1]:text-muted-foreground [&_h2]:text-heading-24 mx-auto w-full max-w-md rounded-xl border p-6 sm:p-8 lg:mx-0 lg:justify-self-end [&_h1]:font-medium">
             {children}
           </main>
-          <aside aria-label="About Compliance OS" className="hidden flex-col gap-6 lg:flex">
+          <aside aria-label={`About ${BRAND.product}`} className="hidden flex-col gap-6 lg:flex">
             <p className="text-heading-32 m-0 max-w-[16ch] text-balance">{AUTH_PANEL.title}</p>
             <ul className="m-0 flex list-none flex-col gap-3 p-0">
               {AUTH_PANEL.points.map((p) => (

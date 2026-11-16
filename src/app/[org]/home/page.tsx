@@ -27,8 +27,9 @@ import { formatDateTime } from '@/engine/fields/helpers';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import { packSetups, testModePacks } from '@/server/commands/packs';
 import { getHome, getMyWork } from '@/server/repositories/my-work';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Home · Compliance OS' };
+export const metadata = { title: `Home · ${BRAND.product}` };
 
 // Home (docs/05 §4): greeting and a one-line summary, My work tiles, one test-mode banner, one Next step per installed
 // standard (engine/home.ts nextSteps), Getting started (computed; hidden once done or once a standard is installed:

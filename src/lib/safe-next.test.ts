@@ -25,7 +25,7 @@ describe('safeNext', () => {
     ['protocol-relative', '//evil.com'],
     ['protocol-relative with a path', '//evil.com/acme/home'],
     ['absolute URL', 'https://evil.com'],
-    ['absolute URL to this site', 'https://www.klarert.com/acme'],
+    ['absolute URL to this site', 'https://www.keptrow.com/acme'],
     ['encoded tab', '/%09/evil.com'],
     ['tab', '/\t'],
     ['line feed', '/\n/evil.com'],

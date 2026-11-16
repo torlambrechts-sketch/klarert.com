@@ -84,7 +84,7 @@ describe('privacy notice and terms (drafts)', () => {
   });
 
   it('gives one contact address and links only to our own pages or that address', () => {
-    expect(content.CONTACT.email).toBe('support@klarert.com');
+    expect(content.CONTACT.email).toBe('support@keptrow.com');
     for (const page of pages)
       for (const run of runs(page))
         if (typeof run === 'object' && 'link' in run)

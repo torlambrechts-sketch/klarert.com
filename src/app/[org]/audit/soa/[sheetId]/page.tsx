@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { requireMember } from '@/server/auth';
 import { exportSoa } from '@/server/commands/audit';
 import { PrintButton } from '@/app/poster/[viewId]/print-button';
+import { BRAND } from '@/lib/brand';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Statement of applicability · Compliance OS' };
+export const metadata = { title: `Statement of applicability · ${BRAND.product}` };
 
 // The statement of applicability of an adopted library (docs/11 Audit outputs), server-rendered so it prints to PDF
 // from the browser (the shell is hidden in print). Rows, words and counts come from the engine (buildSoa); the CSV

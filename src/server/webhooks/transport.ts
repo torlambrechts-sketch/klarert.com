@@ -2,6 +2,7 @@ import 'server-only';
 import dns from 'node:dns';
 import https from 'node:https';
 import type { LookupFunction } from 'node:net';
+import { BRAND } from '@/lib/brand';
 import { assertPublicAddress, BlockedUrlError, type Resolver } from './ssrf';
 
 // The webhook transport: one HTTPS POST. Node's https rather than fetch, because the address check must apply to
@@ -47,7 +48,8 @@ export function postJson(
           ...extra,
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(body),
-          'User-Agent': 'ComplianceOS-Webhooks/1.0',
+          // the product name only, renamed with it (docs/14); receivers verify the signature header, never this
+          'User-Agent': `${BRAND.product}-Webhooks/1.0`,
         },
       },
       (res) => {

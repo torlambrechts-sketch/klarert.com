@@ -1,7 +1,8 @@
 // The draft privacy notice and terms (owner decision, 16 Nov 2026). DRAFT, TO BE REVIEWED by a lawyer before launch.
 // Every statement is a fact written down in the repo; where a fact is missing (an address, a registration number,
 // a legal basis), the text holds a placeholder in square brackets instead of a guess. Sources:
-// - EU hosting: docs/01 (Non-functional: Data), CLAUDE.md (Stack), docs/09 §8 (HSTS on www.klarert.com)
+// - EU hosting: docs/01 (Non-functional: Data), CLAUDE.md (Stack), docs/09 §8 (HSTS on www.keptrow.com)
+// - The product is Keptrow (BRAND, docs/14); the legal entity stays a placeholder until the owner fills it in.
 // - Email through Brevo in the EU: docs/09 §11 (invites) and §12 (sign-in and reset emails, security alerts)
 // - No trackers or analytics: docs/01 (no third-party requests from the browser, no analytics)
 // - Two-step sign-in: docs/09 §8.2
@@ -9,7 +10,7 @@
 // - Delete my account: docs/09 §12 (option a, a nameless profile as tombstone; member names kept as access evidence)
 // content.test.ts checks the rules: no exclamation marks, every placeholder listed in PLACEHOLDERS, one contact.
 
-import { CONTACT, LINKS } from './content';
+import { BRAND, CONTACT, LINKS } from './content';
 
 /** A run of text: plain words, a link, or a placeholder the owner or the lawyer fills in. */
 export type Inline = string | { link: string; text: string } | { placeholder: string };
@@ -52,11 +53,10 @@ const P = PLACEHOLDERS;
 
 export const PRIVACY: LegalPage = {
   title: 'Privacy notice',
-  description:
-    'How Compliance OS by Klarert handles personal data: what is stored, where, for how long and your rights.',
+  description: `How ${BRAND.product} handles personal data: what is stored, where, for how long and your rights.`,
   path: LINKS.privacy,
   intro: [
-    'This notice explains what personal data Compliance OS keeps, why, where it is stored and what you can do about it. Last updated: ',
+    `This notice explains what personal data ${BRAND.product} keeps, why, where it is stored and what you can do about it. Last updated: `,
     ph(P.date),
     '.',
   ],
@@ -67,9 +67,9 @@ export const PRIVACY: LegalPage = {
       blocks: [
         {
           p: [
-            'Compliance OS is made by Klarert (',
+            `${BRAND.product} is made by `,
             ph(P.company),
-            ', ',
+            ' (',
             ph(P.address),
             ', registration number ',
             ph(P.registration),
@@ -223,10 +223,10 @@ export const PRIVACY: LegalPage = {
 
 export const TERMS: LegalPage = {
   title: 'Terms',
-  description: 'The terms for using Compliance OS by Klarert.',
+  description: `The terms for using ${BRAND.product}.`,
   path: LINKS.terms,
   intro: [
-    'These terms apply when you create an account or use Compliance OS. Last updated: ',
+    `These terms apply when you create an account or use ${BRAND.product}. Last updated: `,
     ph(P.date),
     '.',
   ],
@@ -237,9 +237,9 @@ export const TERMS: LegalPage = {
       blocks: [
         {
           p: [
-            'Compliance OS is provided by Klarert (',
+            `${BRAND.product} is provided by `,
             ph(P.company),
-            ', ',
+            ' (',
             ph(P.address),
             ', registration number ',
             ph(P.registration),
@@ -254,7 +254,7 @@ export const TERMS: LegalPage = {
       blocks: [
         {
           p: [
-            'Compliance OS is a shared spreadsheet for compliance and operations work: sheets, automations and an activity log, hosted in the EU. Ready-made sets for standards describe each requirement in our own words; they do not include the text of the standards, and using them does not make you certified.',
+            `${BRAND.product} is a shared spreadsheet for compliance and operations work: sheets, automations and an activity log, hosted in the EU. Ready-made sets for standards describe each requirement in our own words; they do not include the text of the standards, and using them does not make you certified.`,
           ],
         },
         { p: ['Plans and prices: ', ph(P.plans), '.'] },

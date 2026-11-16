@@ -36,6 +36,7 @@ export interface WebhookRow {
 }
 
 /** The signature header receivers check (SA-12): HMAC-SHA256 of "<t>.<body>" with the automation's key. */
+// A wire name: receivers already check this header, so it keeps "Klarert" after the rename to Keptrow (docs/14).
 export const SIGNATURE_HEADER = 'X-Klarert-Signature';
 
 export function signatureHeader(

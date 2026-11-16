@@ -9,9 +9,10 @@ import { addDays, addMonths, formatDateTime, isIsoDate } from '@/engine/fields/h
 import { todayIn } from '@/engine/sheet-data';
 import { requireMember } from '@/server/auth';
 import { managementReviewInputs } from '@/server/commands/audit';
+import { BRAND } from '@/lib/brand';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Management review inputs · Compliance OS' };
+export const metadata = { title: `Management review inputs · ${BRAND.product}` };
 
 // Management review inputs (docs/11 Audit outputs): compiled for a period by the pure compileManagementReview from
 // the workspace's sheets (the ISO/IEC 27001 pack's by pack ref), server-rendered so it prints. Editors can add a

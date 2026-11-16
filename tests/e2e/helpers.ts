@@ -40,7 +40,14 @@ async function latestLink(email: string, after: number): Promise<string> {
   return link!;
 }
 
-export type AppMail = { subject: string; text: string; html: string; link: string };
+export type AppMail = {
+  subject: string;
+  text: string;
+  html: string;
+  link: string;
+  /** The sender as Mailpit shows it: display name and address. */
+  from: { name: string; address: string };
+};
 
 /**
  * The newest email the app sent to `email` with `tag` (src/server/email, local Mailpit transport), after `after`
@@ -67,9 +74,16 @@ export async function appMail(
           Subject: string;
           HTML: string;
           Text: string;
+          From: { Name: string; Address: string };
         };
         const link = body.HTML.match(/href="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&') ?? '';
-        mail = { subject: body.Subject, text: body.Text, html: body.HTML, link };
+        mail = {
+          subject: body.Subject,
+          text: body.Text,
+          html: body.HTML,
+          link,
+          from: { name: body.From.Name, address: body.From.Address },
+        };
         return mail;
       },
       { timeout: 15_000, message: `${tag} email to ${email}` },

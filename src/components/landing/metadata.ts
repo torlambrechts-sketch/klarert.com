@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { HERO, SITE } from './content';
+import { BRAND, HERO, SITE } from './content';
 
 /** The share image (src/app/opengraph-image.tsx); its size and alt text match that file's exports. */
 export const SHARE_IMAGE = {
@@ -11,7 +11,7 @@ export const SHARE_IMAGE = {
 };
 
 /**
- * The metadata of an indexed public page other than `/`: "<title> · Compliance OS by Klarert", its canonical
+ * The metadata of an indexed public page other than `/`: "<title> · Keptrow" (`/` carries the descriptor), its canonical
  * address, index and follow (the root layout is noindex), and Open Graph and Twitter tags with the share image (a
  * page's own openGraph replaces the root's, share image included, so the image is named here again).
  */
@@ -20,7 +20,7 @@ export function publicPageMetadata(page: {
   description: string;
   path: string;
 }): Metadata {
-  const title = `${page.title} · ${SITE.title}`;
+  const title = `${page.title} · ${BRAND.product}`;
   const url = `${SITE.url}${page.path}`;
   return {
     title,
@@ -30,7 +30,7 @@ export function publicPageMetadata(page: {
     openGraph: {
       type: 'website',
       url,
-      siteName: SITE.title,
+      siteName: BRAND.product,
       title,
       description: page.description,
       images: [SHARE_IMAGE],

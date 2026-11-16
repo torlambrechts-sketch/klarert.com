@@ -64,10 +64,10 @@ export default async function OpengraphImage() {
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
         <span style={{ display: 'flex', fontSize: 40, fontWeight: 600, letterSpacing: -1 }}>
-          <Words text={BRAND.product} gap={10} />
+          <Words text={BRAND.wordmark} gap={10} />
         </span>
         <span style={{ display: 'flex', fontSize: 26, color: TOKENS.muted }}>
-          <Words text={`by ${BRAND.company}`} gap={7} />
+          <Words text={BRAND.tagline} gap={7} />
         </span>
       </div>
       <div

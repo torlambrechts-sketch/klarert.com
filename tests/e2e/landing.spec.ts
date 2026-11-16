@@ -29,9 +29,13 @@ test('signed out, / is the product site: hero, standards, no errors, nothing fro
   const res = await page.goto('/');
   expect(res?.status()).toBe(200);
   await expect(page).toHaveURL(/\/$/);
-  await expect(page).toHaveTitle('Compliance OS by Klarert');
+  await expect(page).toHaveTitle('Keptrow — the compliance spreadsheet');
   await expect(page.getByRole('heading', { level: 1, name: HERO })).toBeVisible();
-  await expect(page.getByRole('banner').getByText('by Klarert')).toBeVisible();
+  await expect(
+    page.getByRole('banner').getByRole('link', { name: 'Keptrow', exact: true }),
+  ).toBeVisible();
+  // the old company line is gone from the wordmark and the footer
+  await expect(page.getByText(/Klarert/)).toHaveCount(0);
   for (const name of ['ISO/IEC 27001', 'ISO 9001', 'GDPR', 'NIS2', 'Corrective actions'])
     await expect(page.getByRole('listitem').filter({ hasText: name }).first()).toBeVisible();
   // one h1, then h2 sections
@@ -41,13 +45,14 @@ test('signed out, / is the product site: hero, standards, no errors, nothing fro
   // indexed, with a canonical address and Open Graph tags
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    /^https:\/\/www\.klarert\.com\/?$/,
+    /^https:\/\/www\.keptrow\.com\/?$/,
   );
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /^index, follow/);
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
-    'Compliance OS by Klarert',
+    'Keptrow — the compliance spreadsheet',
   );
+  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute('content', 'Keptrow');
 
   await page.waitForLoadState('networkidle');
   expect(errors).toEqual([]);
@@ -158,11 +163,11 @@ for (const legal of LEGAL)
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /^index, follow/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
-      `https://www.klarert.com${legal.path}`,
+      `https://www.keptrow.com${legal.path}`,
     );
     await expect(
-      page.getByRole('contentinfo').getByRole('link', { name: 'support@klarert.com' }),
-    ).toHaveAttribute('href', 'mailto:support@klarert.com');
+      page.getByRole('contentinfo').getByRole('link', { name: 'support@keptrow.com' }),
+    ).toHaveAttribute('href', 'mailto:support@keptrow.com');
     // the two pages link to each other
     const other = LEGAL.find((l) => l.path !== legal.path)!;
     await expect(
@@ -234,7 +239,7 @@ test('robots.txt allows crawling, the sitemap lists only the public pages', asyn
   expect(values('User-Agent')).toEqual(['*']);
   expect(values('Allow')).toEqual(['/']);
   expect(values('Disallow')).toEqual([]);
-  expect(values('Sitemap')).toEqual(['https://www.klarert.com/sitemap.xml']);
+  expect(values('Sitemap')).toEqual(['https://www.keptrow.com/sitemap.xml']);
   // so the pages crawlers can now fetch must say noindex themselves
   // (signed out, the app's pages end on the sign-in page)
   for (const path of ['/login', '/onboarding', '/account', '/no-such-workspace/home']) {
@@ -246,11 +251,11 @@ test('robots.txt allows crawling, the sitemap lists only the public pages', asyn
   expect(sitemap.status()).toBe(200);
   const locs = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   expect(locs).toEqual([
-    'https://www.klarert.com',
-    'https://www.klarert.com/platform',
-    'https://www.klarert.com/frameworks',
-    'https://www.klarert.com/privacy',
-    'https://www.klarert.com/terms',
+    'https://www.keptrow.com',
+    'https://www.keptrow.com/platform',
+    'https://www.keptrow.com/frameworks',
+    'https://www.keptrow.com/privacy',
+    'https://www.keptrow.com/terms',
   ]);
 });
 
@@ -266,7 +271,7 @@ test('/opengraph-image is a 1200×630 PNG, named by the public pages', async ({ 
     await page.goto(path);
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
       'content',
-      /^https:\/\/www\.klarert\.com\/opengraph-image/,
+      /^https:\/\/www\.keptrow\.com\/opengraph-image/,
     );
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
       'content',
@@ -330,8 +335,8 @@ const noSidewaysScroll = async (page: Page) => {
 };
 
 const PRODUCT_PAGES = [
-  { path: '/platform', nav: 'Platform', title: 'Platform · Compliance OS by Klarert' },
-  { path: '/frameworks', nav: 'Frameworks', title: 'Frameworks · Compliance OS by Klarert' },
+  { path: '/platform', nav: 'Platform', title: 'Platform · Keptrow' },
+  { path: '/frameworks', nav: 'Frameworks', title: 'Frameworks · Keptrow' },
 ] as const;
 
 for (const p of PRODUCT_PAGES)
@@ -357,13 +362,13 @@ for (const p of PRODUCT_PAGES)
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /^index, follow/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
-      `https://www.klarert.com${p.path}`,
+      `https://www.keptrow.com${p.path}`,
     );
     await noSidewaysScroll(page);
     expect(await axeBad(page)).toEqual([]);
     await expect(
-      page.getByRole('contentinfo').getByRole('link', { name: 'support@klarert.com' }),
-    ).toHaveAttribute('href', 'mailto:support@klarert.com');
+      page.getByRole('contentinfo').getByRole('link', { name: 'support@keptrow.com' }),
+    ).toHaveAttribute('href', 'mailto:support@keptrow.com');
   });
 
 test('/platform has a section for every part of the product, linked from the landing page', async ({
@@ -416,11 +421,11 @@ test('the sign-in pages: the new frame keeps the form, the terms line on sign-up
   page,
 }) => {
   await page.goto('/login?mode=signup');
-  await expect(page.getByRole('heading', { level: 1, name: 'Compliance OS' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Keptrow' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 2, name: 'Create an account' })).toBeVisible();
   await expect(page.getByText('By creating an account you agree to the')).toBeVisible();
   await expect(
-    page.getByRole('banner').getByRole('link', { name: /Compliance OS/ }),
+    page.getByRole('banner').getByRole('link', { name: 'Keptrow', exact: true }),
   ).toHaveAttribute('href', '/');
   await noSidewaysScroll(page);
   expect(await axeBad(page)).toEqual([]);
@@ -428,4 +433,31 @@ test('the sign-in pages: the new frame keeps the form, the terms line on sign-up
   await expect(page.getByRole('heading', { level: 2, name: 'Sign in' })).toBeVisible();
   await noSidewaysScroll(page);
   expect(await axeBad(page)).toEqual([]);
+});
+
+// ── the rename to Keptrow (owner decision, 16 Nov 2026; docs/14) ──
+
+test('klarert.com and www.klarert.com answer 301 to the same path on www.keptrow.com', async ({
+  request,
+}) => {
+  for (const host of ['klarert.com', 'www.klarert.com'])
+    for (const path of ['/', '/privacy', '/login?mode=signup', '/acme/home?x=1']) {
+      const res = await request.get(path, { headers: { host }, maxRedirects: 0 });
+      expect(res.status(), `${host}${path}`).toBe(301);
+      expect(res.headers()['location'], `${host}${path}`).toBe(`https://www.keptrow.com${path}`);
+    }
+  // this host is served as before
+  const own = await request.get('/privacy', { maxRedirects: 0 });
+  expect(own.status()).toBe(200);
+});
+
+test('the legal pages name Keptrow and leave the company a placeholder', async ({ page }) => {
+  for (const [path, words] of [
+    ['/terms', 'Keptrow is provided by [Company legal name]'],
+    ['/privacy', 'Keptrow is made by [Company legal name]'],
+  ] as const) {
+    await page.goto(path);
+    await expect(page.getByRole('main')).toContainText(words);
+    await expect(page.getByRole('main')).not.toContainText('Klarert');
+  }
 });

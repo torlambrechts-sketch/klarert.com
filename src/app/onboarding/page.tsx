@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation';
 import { safeNext as safePath } from '@/lib/safe-next';
 import { getMyWorkspaces, getSession, signInPath } from '@/server/auth';
 import { CreateWorkspaceForm, ProfileForm } from './forms';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Get started · Compliance OS' };
+export const metadata = { title: `Get started · ${BRAND.product}` };
 
 export default async function OnboardingPage({
   searchParams,

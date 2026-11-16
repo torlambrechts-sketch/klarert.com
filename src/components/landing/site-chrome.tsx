@@ -15,12 +15,8 @@ const LINK = 'text-info rounded-sm underline-offset-4 hover:underline';
 
 export function Wordmark() {
   return (
-    <Link
-      href={LINKS.home}
-      className="text-ink flex min-h-11 flex-col justify-center rounded-sm leading-none sm:flex-row sm:items-baseline sm:gap-1.5"
-    >
-      <span className="text-heading-16">{BRAND.product}</span>
-      <span className="text-muted-foreground text-label-12">by {BRAND.company}</span>
+    <Link href={LINKS.home} className="text-ink flex min-h-11 items-center rounded-sm leading-none">
+      <span className="text-heading-16">{BRAND.wordmark}</span>
     </Link>
   );
 }
@@ -104,9 +100,7 @@ export function SiteShell({ path, children }: { path: string; children: React.Re
           >
             <div className="flex flex-col gap-2">
               <Wordmark />
-              <p className="m-0">
-                © {BRAND.company}. {BRAND.product} is made by {BRAND.company}.
-              </p>
+              <p className="m-0">{BRAND.descriptor}.</p>
               <p className="m-0">
                 Questions:{' '}
                 <a className={LINK} href={`mailto:${CONTACT.email}`}>

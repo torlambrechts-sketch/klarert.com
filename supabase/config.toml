@@ -2,6 +2,8 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
+# Kept as "klarert.com" after the rename to Keptrow (docs/14): it names the local Docker containers and volumes, so
+# changing it would start every developer's local database afresh. It is never shown to anyone.
 project_id = "klarert.com"
 
 [api]
@@ -253,31 +255,31 @@ otp_expiry = 3600
 # current password). A running local stack picks changes up after `supabase stop && supabase start`.
 # The test helpers open the first link in each email: keep the action link first.
 [auth.email.template.confirmation]
-subject = "Confirm your email for Compliance OS"
+subject = "Confirm your email for Keptrow"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.magic_link]
-subject = "Your Compliance OS sign-in link"
+subject = "Your Keptrow sign-in link"
 content_path = "./supabase/templates/magic_link.html"
 
 [auth.email.template.recovery]
-subject = "Reset your Compliance OS password"
+subject = "Reset your Keptrow password"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.email_change]
-subject = "Confirm the new email address for Compliance OS"
+subject = "Confirm the new email address for Keptrow"
 content_path = "./supabase/templates/email_change.html"
 
 # Security alerts (docs/09 §12): Supabase Auth tells the person when their password or email address changed (the
 # email change alert goes to the old address). Same plain style; the link is Forgot password on the site URL.
 [auth.email.notification.password_changed]
 enabled = true
-subject = "Your Compliance OS password was changed"
+subject = "Your Keptrow password was changed"
 content_path = "./supabase/templates/password_changed_notification.html"
 
 [auth.email.notification.email_changed]
 enabled = true
-subject = "The email address of your Compliance OS account was changed"
+subject = "The email address of your Keptrow account was changed"
 content_path = "./supabase/templates/email_changed_notification.html"
 
 [auth.sms]

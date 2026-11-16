@@ -2,6 +2,7 @@ import 'server-only';
 import { z } from 'zod';
 import type { AuthError } from '@supabase/supabase-js';
 import { cleanCode, unfinishedApps, verifiedApps } from '@/lib/two-step';
+import { BRAND } from '@/lib/brand';
 import { getSession, getSignIn } from '@/server/auth';
 import { fail, invalid, ok, type Result } from '@/server/result';
 import { log, withOrg } from './context';
@@ -11,8 +12,13 @@ import { log, withOrg } from './context';
 // never our tables. Entering the code at sign-in raises the session to aal2. The workspace setting lives in
 // orgs.settings.requireTwoStep (owners only).
 
-/** The name the authenticator app shows above the code. */
-const ISSUER = 'Compliance OS';
+/**
+ * The name the authenticator app shows above the code. It goes only into the otpauth:// address of a new set-up's QR
+ * code and typed-in key; Supabase Auth keeps the factor's secret and friendly name, never the issuer, and checks a code
+ * against the secret alone. So the rename (docs/14) changes the label of apps set up from now on; apps set up before
+ * keep showing "Compliance OS" and their codes keep working. Removing and adding the app again picks up the new name.
+ */
+const ISSUER = BRAND.product;
 const MAX_APPS = 10; // supabase/config.toml [auth.mfa] max_enrolled_factors
 
 const code = z

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Landing } from '@/components/landing/landing';
-import { SITE } from '@/components/landing/content';
+import { BRAND, SITE } from '@/components/landing/content';
 import { getMyWorkspaces, getSession, getSignIn } from '@/server/auth';
 
 // `/` is indexed: the public product site (owner decision, 16 Nov 2026). Only it, `/privacy` and `/terms` override
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: SITE.url,
-    siteName: SITE.title,
+    siteName: BRAND.product,
     title: SITE.title,
     description: SITE.description,
   },

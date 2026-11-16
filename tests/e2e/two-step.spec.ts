@@ -47,6 +47,8 @@ async function setUpApp(page: Page, used: Set<number>) {
   await expect(
     setup.getByRole('img', { name: 'QR code to scan with your authenticator app' }),
   ).toBeVisible();
+  // the name the app shows above the code: the issuer, Keptrow (docs/14)
+  await expect(setup).toContainText(/It adds “Keptrow \([^)]+@[^)]+\)”\./);
   const secret = (await setup.getByTestId('two-step-secret').getAttribute('data-secret'))!;
   expect(secret).toMatch(/^[A-Z2-7]{16,}$/);
   // the code field has focus: type the code and press Enter

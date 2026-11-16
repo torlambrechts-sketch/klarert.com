@@ -10,14 +10,14 @@ test.describe.configure({ mode: 'default' });
 
 const unique = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 const SAME_ANSWER = 'If an account uses that address, we have sent a link to reset your password.';
-const PASSWORD_ALERT = 'Your Compliance OS password was changed';
-const EMAIL_ALERT = 'The email address of your Compliance OS account was changed';
-const CONFIRM_EMAIL = 'Confirm the new email address for Compliance OS';
+const PASSWORD_ALERT = 'Your Keptrow password was changed';
+const EMAIL_ALERT = 'The email address of your Keptrow account was changed';
+const CONFIRM_EMAIL = 'Confirm the new email address for Keptrow';
 
 /** A security alert (Supabase Auth's notification emails, docs/09 §12): plain, with the Forgot password link. */
 function expectAlert(mail: Mail) {
   expect(mail.text).toContain('If this was not you, reset your password now');
-  expect(mail.text).toContain('If this was not you, contact support@klarert.com straight away.');
+  expect(mail.text).toContain('If this was not you, contact support@keptrow.com straight away.');
   expect(mail.text).toContain('tell the owner of your workspace');
   expect(new URL(mail.link).pathname).toBe('/login/forgot-password');
   expect(mail.html).not.toMatch(/<img|src=/i);
@@ -119,7 +119,7 @@ test('forgot password: the same answer for every address, the link, a new passwo
 
   const started = await askForReset(page, email);
   const mail = await mailTo(email, started);
-  expect(mail.subject).toBe('Reset your Compliance OS password');
+  expect(mail.subject).toBe('Reset your Keptrow password');
   expect(mail.text).toContain('If you did not ask for this, you can ignore this email.');
   expect(mail.html).not.toMatch(/<img|src=/i);
   await openLink(page, mail.link);
@@ -226,7 +226,7 @@ test('Your account: change the password, then the email address', async ({
   // the security alert
   const passwordAlert = await mailTo(email, changedAt, PASSWORD_ALERT);
   expect(passwordAlert.text).toContain(
-    `The password of the Compliance OS account for ${email} was changed`,
+    `The password of the Keptrow account for ${email} was changed`,
   );
   expectAlert(passwordAlert);
   await expect(passwordPanel.getByRole('button', { name: 'Change password' })).toBeFocused();

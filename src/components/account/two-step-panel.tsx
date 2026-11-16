@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Check, Copy, KeyRound, ShieldCheck, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BRAND } from '@/lib/brand';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -158,7 +159,7 @@ function Recovery() {
         <li>Add a second authenticator app on another device now, so you have a spare.</li>
         <li>Or keep the key you typed in somewhere safe, such as a password manager.</li>
         <li>
-          Without either, you cannot sign in. Ask your workspace owner to contact Compliance OS
+          Without either, you cannot sign in. Ask your workspace owner to contact {BRAND.product}{' '}
           support to reset two-step sign-in for you.
         </li>
       </ul>
@@ -205,8 +206,8 @@ function SetupSteps({
             1. Scan this QR code with an authenticator app
           </p>
           <p className="text-muted-foreground text-copy-13 m-0">
-            For example Google Authenticator, Microsoft Authenticator or 1Password. It adds
-            “Compliance OS ({email})”.
+            For example Google Authenticator, Microsoft Authenticator or 1Password. It adds “
+            {BRAND.product} ({email})”.
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element -- an SVG data URL from Supabase Auth, made per person */}
           <img

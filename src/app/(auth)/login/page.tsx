@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation';
 import { safeNext as safePath } from '@/lib/safe-next';
 import { getSession, getSignIn } from '@/server/auth';
 import { LoginForm, PasswordForm } from './login-form';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Sign in · Compliance OS' };
+export const metadata = { title: `Sign in · ${BRAND.product}` };
 
 type Mode = 'signin' | 'signup' | 'link';
 const MODES: Record<Mode, { title: string; intro: string }> = {
@@ -40,7 +41,7 @@ export default async function LoginPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1>Compliance OS</h1>
+        <h1>{BRAND.product}</h1>
         <h2 className="text-heading-16">{MODES[mode].title}</h2>
         <p className="text-muted-foreground">{MODES[mode].intro}</p>
       </div>

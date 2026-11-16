@@ -3,8 +3,9 @@ import { FirstDashboard } from '@/components/dashboards/first-dashboard';
 import { PageHeader } from '@/components/shell/page-header';
 import { isEditorRole, requireMember } from '@/server/auth';
 import { listDashboards } from '@/server/repositories/dashboards';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Dashboards · Compliance OS' };
+export const metadata = { title: `Dashboards · ${BRAND.product}` };
 
 // Dashboards (docs/05 §4): opens the first dashboard. A workspace without one gets "Compliance overview", built from
 // its sheets by the seedDashboard command, the first time an editor opens the page.

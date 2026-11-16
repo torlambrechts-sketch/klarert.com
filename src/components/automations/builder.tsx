@@ -1277,6 +1277,7 @@ function SigningKey({ org, automationId }: { org: string; automationId: string }
   const id = useId();
   return (
     <div className="mt-2 flex flex-col gap-1.5">
+      {/* the header's wire name keeps "Klarert" after the rename to Keptrow: receivers check it (docs/14) */}
       <p id={id} className="text-muted-foreground text-label-12 m-0">
         Webhooks are signed: the header X-Klarert-Signature is t=(seconds),v1=(HMAC-SHA256 of
         &quot;t.body&quot; with this automation&apos;s signing key). Only owners and admins can see

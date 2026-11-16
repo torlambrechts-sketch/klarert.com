@@ -137,6 +137,9 @@ export interface Crosswalk {
   to: RequirementId;
   relation: Relation;
   note: string;
-  /** Who made the mapping and its version: "Klarert mapping v1". */
+  /**
+   * Who made the mapping and its version: "Klarert mapping v1". Stored with every cross-walk and cited on audit outputs,
+   * so it keeps its name after the rename to Keptrow (docs/14); a new mapping version may carry the new name.
+   */
   source: string;
 }

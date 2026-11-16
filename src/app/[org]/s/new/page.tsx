@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { NewSheetWizard } from '@/components/sheets/wizard/wizard';
 import { isEditorRole, requireMember } from '@/server/auth';
 import { getNav, getWizardData } from '@/server/repositories/sheets';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'New sheet · Compliance OS' };
+export const metadata = { title: `New sheet · ${BRAND.product}` };
 
 export default async function NewSheetPage({
   params,

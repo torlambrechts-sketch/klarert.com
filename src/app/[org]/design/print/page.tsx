@@ -19,9 +19,10 @@ import { formatDateTime } from '@/engine/fields/helpers';
 import { requireMember } from '@/server/auth';
 import { logDataFlowExport } from '@/server/commands/design';
 import { readDesignWorld } from '@/server/design/read';
+import { BRAND } from '@/lib/brand';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Design export · Compliance OS' };
+export const metadata = { title: `Design export · ${BRAND.product}` };
 
 // The export for auditors (docs/05 §4, owner decision 15 Nov 2026): a printable page of one sheet's flow
 // (?sheet=<id>), of the workspace's design with the page's filters, or of the "Leaves the system" record (?part=leaves),

@@ -3,8 +3,9 @@ import { FORGOT_PASSWORD_PATH, NEW_PASSWORD_PATH } from '@/lib/auth-links';
 import { safeNext } from '@/lib/safe-next';
 import { getSignIn } from '@/server/auth';
 import { NewPasswordForm } from './new-password-form';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Set a new password · Compliance OS' };
+export const metadata = { title: `Set a new password · ${BRAND.product}` };
 
 // Set a new password (docs/05 §1, docs/09 §12): where a reset link lands, through the callback. Only a session the
 // reset link opened may set a password here; a person with an authenticator app enters its code first (Supabase Auth
@@ -27,7 +28,7 @@ export default async function NewPasswordPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1>Compliance OS</h1>
+        <h1>{BRAND.product}</h1>
         <h2 className="text-heading-16">Set a new password</h2>
         <p className="text-muted-foreground">For {signIn.user.email}.</p>
       </div>

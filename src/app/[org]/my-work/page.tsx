@@ -17,8 +17,9 @@ import { getMyWork } from '@/server/repositories/my-work';
 import { getMyApprovals } from '@/server/repositories/approvals';
 import { ApprovalInbox } from '@/components/approvals/approval-inbox';
 import type { InboxRow } from '@/engine/approvals';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'My work · Compliance OS' };
+export const metadata = { title: `My work · ${BRAND.product}` };
 
 // My work (docs/01 FR-37, docs/05 §4): KPI tiles that filter, then the rows by date. Filters: ?filter=<bucket> and
 // ?sheet=<id> (the filter chips list both with counts). Filter links are plain anchors: the client router at times

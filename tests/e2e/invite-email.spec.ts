@@ -39,9 +39,11 @@ test('an admin invites by email; the mail names the workspace and role, its link
   const shown = (await owner.getByTestId('invite-link').textContent())!;
 
   const mail = await appMail(invitee, 'invite', { after: sentAt });
-  expect(mail.subject).toBe('Ada Lovelace invited you to Mail Invites Ltd on Compliance OS');
+  expect(mail.subject).toBe('Ada Lovelace invited you to Mail Invites Ltd on Keptrow');
+  // the local sender (EMAIL_FROM unset): the same name and domain as the hosted one (docs/14)
+  expect(mail.from).toEqual({ name: 'Keptrow', address: 'no-reply@mail.keptrow.com' });
   expect(mail.text).toContain(
-    'Ada Lovelace invited you to join the workspace Mail Invites Ltd on Compliance OS as a viewer.',
+    'Ada Lovelace invited you to join the workspace Mail Invites Ltd on Keptrow as a viewer.',
   );
   expect(mail.text).toContain(
     'Viewers see sheets, items and activity, but cannot change anything.',

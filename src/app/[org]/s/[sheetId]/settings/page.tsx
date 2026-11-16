@@ -37,8 +37,9 @@ import {
   getSubitemSheet,
   getViews,
 } from '@/server/repositories/sheets';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Sheet settings · Compliance OS' };
+export const metadata = { title: `Sheet settings · ${BRAND.product}` };
 
 function Card({
   title,

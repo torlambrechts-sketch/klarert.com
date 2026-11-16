@@ -12,6 +12,8 @@ import type { NextStep } from '@/engine/home';
 // (engine/home.ts nextSteps); this card only shows them. Dismissing is a per-viewer convenience kept in this browser;
 // the whole checklist stays on Workspace admin › Packs.
 
+// The browser storage key keeps its pre-rename "klarert." prefix (docs/14): renaming it would bring back every card
+// people have already dismissed.
 const key = (installId: string) => `klarert.setup-dismissed.${installId}`;
 
 function readDismissed(installId: string): boolean {

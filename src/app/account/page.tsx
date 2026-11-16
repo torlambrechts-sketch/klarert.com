@@ -9,8 +9,9 @@ import { TwoStepPanel } from '@/components/account/two-step-panel';
 import { EmailPanel, PasswordPanel, type EmailNotice } from '@/components/account/sign-in-details';
 import { DeleteAccountPanel } from '@/components/account/delete-account';
 import { NamePanel } from '@/components/account/name-panel';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Your account · Compliance OS' };
+export const metadata = { title: `Your account · ${BRAND.product}` };
 
 // Your account (docs/05 §1): the person's own settings, outside any workspace so a workspace that requires two-step
 // sign-in can send people here to set it up. Your name, email address, password, two-step sign-in (an authenticator

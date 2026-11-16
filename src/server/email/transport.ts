@@ -7,6 +7,7 @@
 // leaves CI: there the key is ignored. Logs carry the tag and the outcome only, never an address, subject or body.
 // Pure apart from the injected env, fetch and log, so it is unit-tested with a fake fetch; index.ts wires it in.
 
+import { EMAIL_SENDER } from '@/lib/brand';
 import { isLocalUrl } from '@/lib/supabase/command-proof';
 
 /** What a message is, for logs and the provider's tag: lowercase letters, digits, `_` and `-`. */
@@ -45,7 +46,7 @@ export type EmailEnv = Readonly<Record<string, string | undefined>>;
 export const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
 /** Supabase's local Mailpit web port (supabase/config.toml [local_smtp]); MAILPIT_URL overrides it. */
 export const LOCAL_MAILPIT_URL = 'http://127.0.0.1:54324';
-const LOCAL_FROM = 'Compliance OS <no-reply@mail.klarert.com>';
+const LOCAL_FROM = EMAIL_SENDER;
 const TIMEOUT_MS = 10_000;
 
 const ADDRESS = /^[^\s<>@"]+@[^\s<>@"]+\.[^\s<>@"]+$/;
@@ -147,8 +148,7 @@ export function chooseTransport(env: EmailEnv, fetch: Fetch): TransportChoice {
     if (!from || !parseFrom(from))
       return {
         transport: null,
-        problem:
-          'EMAIL_FROM is missing or not an email address: no email is sent until it is set (for example "Compliance OS <no-reply@mail.klarert.com>")',
+        problem: `EMAIL_FROM is missing or not an email address: no email is sent until it is set (for example "${EMAIL_SENDER}")`,
       };
     return { transport: brevoTransport({ apiKey: key, from, fetch }) };
   }

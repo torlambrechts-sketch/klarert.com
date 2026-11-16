@@ -3,6 +3,8 @@
 // knows the secret, so writes come through the server commands (CLAUDE.md rule 2), with their validation, status
 // rules and automations. Pure apart from the injected clock and HMAC, so it is unit-tested; server.ts wires it in.
 
+// Wire names, matched by the database (migration 0053, Vault secret `klarert_command_secret`): they keep "klarert"
+// after the rename to Keptrow (docs/14). Applied migrations are never edited.
 export const COMMAND_HEADER = 'x-klarert-command';
 
 /** The well-known local development secret (supabase/seed.sql); never used for a hosted Supabase URL. */

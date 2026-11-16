@@ -19,6 +19,7 @@ import { computeDashboard, listDashboards } from '@/server/repositories/dashboar
 import { getSheet, getSheetAccess } from '@/server/repositories/sheets';
 import { getWorkflow } from '@/server/repositories/workflow';
 import { newId } from '@/server/sheet-context';
+import { BRAND } from '@/lib/brand';
 
 // One screen of an installed app (docs/13): /[org]/apps/[app]/[screen]. Every screen renders an existing part of the
 // product over the ids the install resolved: the sheet (Table and its views), an item list, a form, a dashboard or
@@ -38,7 +39,7 @@ async function find(org: string, appKey: string, screenKey: string) {
 export async function generateMetadata({ params }: { params: Params }) {
   const { org, app: appKey, screen: screenKey } = await params;
   const { app, screen } = await find(org, appKey, screenKey);
-  return { title: `${screen?.title ?? 'App'} · ${app?.title ?? 'Apps'} · Compliance OS` };
+  return { title: `${screen?.title ?? 'App'} · ${app?.title ?? 'Apps'} · ${BRAND.product}` };
 }
 
 export default async function AppScreenPage({ params }: { params: Params }) {

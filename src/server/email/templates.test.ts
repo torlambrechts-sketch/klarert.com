@@ -6,7 +6,7 @@ const base: InviteEmailInput = {
   inviter: 'Ada Lovelace',
   role: 'editor',
   email: 'grace@example.test',
-  link: 'https://www.klarert.com/invite/abc123',
+  link: 'https://www.keptrow.com/invite/abc123',
   linkExpiresAt: '2026-11-29T17:00:00.000Z',
   timeZone: 'Europe/Oslo',
 };
@@ -14,9 +14,9 @@ const base: InviteEmailInput = {
 describe('inviteEmail', () => {
   it('names the inviter, the workspace and the role', () => {
     const e = inviteEmail(base);
-    expect(e.subject).toBe('Ada Lovelace invited you to Acme Engineering on Compliance OS');
+    expect(e.subject).toBe('Ada Lovelace invited you to Acme Engineering on Keptrow');
     expect(e.text).toContain(
-      'Ada Lovelace invited you to join the workspace Acme Engineering on Compliance OS as an editor.',
+      'Ada Lovelace invited you to join the workspace Acme Engineering on Keptrow as an editor.',
     );
     expect(e.html).toContain('as an editor.');
   });
@@ -34,9 +34,9 @@ describe('inviteEmail', () => {
 
   it('holds the link, linked and written out, with the expiry date in the workspace time zone', () => {
     const e = inviteEmail(base);
-    expect(e.text).toContain('Accept the invite:\nhttps://www.klarert.com/invite/abc123');
-    expect(e.html).toContain('<a href="https://www.klarert.com/invite/abc123"');
-    expect(e.html.match(/https:\/\/www\.klarert\.com\/invite\/abc123/g)).toHaveLength(2);
+    expect(e.text).toContain('Accept the invite:\nhttps://www.keptrow.com/invite/abc123');
+    expect(e.html).toContain('<a href="https://www.keptrow.com/invite/abc123"');
+    expect(e.html.match(/https:\/\/www\.keptrow\.com\/invite\/abc123/g)).toHaveLength(2);
     expect(e.text).toContain(
       'The link works once, for grace@example.test only, until 29 Nov 2026.',
     );
@@ -69,7 +69,7 @@ describe('inviteEmail', () => {
     expect(e.html).toContain('R&amp;D &lt;script&gt;alert(1)&lt;/script&gt;');
     expect(e.subject).not.toMatch(/[\r\n]/);
     expect(e.subject).toBe(
-      'Eve Bcc: x@evil.test invited you to R&D <script>alert(1)</script> on Compliance OS',
+      'Eve Bcc: x@evil.test invited you to R&D <script>alert(1)</script> on Keptrow',
     );
   });
 

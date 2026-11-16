@@ -18,7 +18,9 @@ from _api import REF
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 URL = f"https://api.supabase.com/v1/projects/{REF}/config/auth"
 
-SITE_URL = "https://www.klarert.com"
+# Keptrow on www.keptrow.com (docs/14). Run only after the DNS, Vercel and Brevo steps there, with SMTP configured:
+# the site URL is where every auth email's links point. Keep the klarert.com redirect URLs in the allow list meanwhile.
+SITE_URL = "https://www.keptrow.com"
 MIN_PASSWORD = 12  # src/lib/passwords.ts MIN_PASSWORD
 # config.toml template name -> Management API key part
 TEMPLATES = ["confirmation", "magic_link", "recovery", "email_change"]
@@ -27,7 +29,7 @@ TEMPLATES = ["confirmation", "magic_link", "recovery", "email_change"]
 # Supabase CLI 3.1.0 sends to this endpoint)
 NOTIFICATIONS = ["password_changed", "email_changed"]
 FORGOT_PASSWORD_LINK = "{{ .SiteURL }}/login/forgot-password"
-SUPPORT_ADDRESS = "support@klarert.com"  # "If this was not you, contact support@klarert.com straight away."
+SUPPORT_ADDRESS = "support@keptrow.com"  # "If this was not you, contact support@keptrow.com straight away."
 
 
 def api(method, body=None):
