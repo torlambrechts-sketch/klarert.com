@@ -10,7 +10,8 @@ Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it
 | `/login/two-step` | two-step sign-in: the code from the person's authenticator app (§1.1). Query: `?next=` |
 | `/login/forgot-password` | Forgot password: asks for the email address and sends a reset link (§1.1). Query: `?next=`, `?error=link` |
 | `/login/new-password` | Set a new password, where a reset link lands (§1.1). Query: `?next=` |
-| `/account` | Your account: email address, password, two-step sign-in and this session (§1.1). Query: `?next=<path>&required=<workspace slug>&email=confirm-other\|link-failed` |
+| `/account` | Your account: email address, password, two-step sign-in, this session and Delete my account (§1.1). Query: `?next=<path>&required=<workspace slug>&email=confirm-other\|link-failed&delete=open` |
+| `/account-deleted` | "Your account has been deleted.": where Delete my account lands, signed out (§1.1) |
 | `/onboarding` | create a workspace or accept an invite |
 | `/[org]` | redirects to `/[org]/home` |
 | `/[org]/home` | Home: Needs you, recent activity, next 30 days, getting-started checklist |
@@ -39,7 +40,8 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
 - **Your account** (`/account`, from the account menu › Your account; outside any workspace, on the soft background
   like onboarding, one 576 px column, full width with 16 px gutters at 390 px): a back link ("Back to <workspace>"),
   the `h1` "Your account" with the name and email, then the cards **Email address**, **Password**, **Two-step
-  sign-in** and **This session** (sent by a workspace that requires two-step sign-in, Two-step sign-in comes first).
+  sign-in**, **This session** and **Delete my account** (sent by a workspace that requires two-step sign-in,
+  Two-step sign-in comes first).
   - **Email address** (docs/09 §12): the address and what it is for, and **Change email** (outline), which opens in
     place "New email address" (focused), **Send confirmation links** and **Cancel** (focus returns to the button).
     "That is already your email address." under the field. Sent: the status line "Waiting for confirmation: <new>.
@@ -78,6 +80,17 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
     session ends), a line that sessions end some hours after sign-in and sooner when away, and **Sign out**.
   - Sent by a workspace that requires it (`?required=<slug>`): a warning line above the cards, "<Workspace> requires
     two-step sign-in. Set it up below to open the workspace.", and **Continue to the workspace** once it is set up.
+  - **Delete my account** (last; docs/09 §12): what happens ("You lose access to every workspace and can no longer
+    sign in. Your name is removed. The records you made stay in each workspace and are shown as made by “Former
+    member”. This cannot be undone.") and **Delete my account** (outline, red text), which opens the Dialog "Delete
+    your account?": the same in short, then "Type <email> to confirm" (focused; the account's address, any case),
+    **Cancel** and **Delete my account** (red). A different address: "Type your email address exactly as it is
+    shown." under the field. The only owner of a workspace is refused in the dialog: "You are the only owner of
+    <Workspace>. Make someone else owner of <Workspace> or delete it first." (several: "… of A and B. Make someone
+    else owner of each of them, or delete them, first."). A person who still owes their authenticator app's code
+    goes to the two-step page and back to the open dialog (`?delete=open`). Done: signed out, on `/account-deleted`
+    (the sign-in card): "Your account has been deleted.", that the records stay without the name, and **Go to sign
+    in**.
 - **Two-step sign-in at sign-in** (`/login/two-step`, the sign-in card): "Two-step sign-in", "Enter the 6-digit code
   from your authenticator app for <email>.", a "Which app?" radio list when there are several, the **6-digit code**
   field (focused; spaces allowed) and **Continue**. Under a rule: "Lost your phone? …" and **Sign in as someone else**

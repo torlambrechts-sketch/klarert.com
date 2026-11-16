@@ -535,9 +535,9 @@ copy-link; see `scripts/hosted/README.md` › Email):
 
 ## 12. Account essentials (15 Nov 2026, branch `claude/auth-essentials`)
 
-Forgot password, Your account › Email address and Password, and the auth emails. Everything runs on the person's own
-session through Supabase Auth; no table of ours changes, no migration, and no new service-role place (CLAUDE.md
-rule 6). Screens in docs/05 §1.1.
+Forgot password, Your account › Email address, Password and Delete my account, the auth emails and the security
+alerts. Everything runs on the person's own session through Supabase Auth or our own RPC; no new service-role place
+(CLAUDE.md rule 6). One migration: 0071 (Delete my account). Screens in docs/05 §1.1.
 
 - **Forgot password** (`requestPasswordReset`, `src/app/(auth)/login/actions.ts`): `resetPasswordForEmail` with
   `redirectTo` = `/auth/callback?next=/login/new-password` (plus the page's own `next`, through `safeNext`). The
@@ -576,19 +576,70 @@ rule 6). Screens in docs/05 §1.1.
   the plain-text part from the HTML. Invites are our own email (§11); reauthentication is not used. The hosted project
   gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ) and sends through
   Brevo SMTP, which the owner sets up (`scripts/hosted/README.md` › Auth emails), sender "Compliance OS".
-- Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`; e2e `tests/e2e/account-auth.spec.ts` (desktop and
+- **Security alerts** (owner decision 16 Nov 2026): Supabase Auth's notification emails for a changed password and a
+  changed email address are on (`[auth.email.notification.password_changed]` and `.email_changed]` in
+  `supabase/config.toml`; hosted `mailer_notifications_*_enabled`, set by `auth-config.py`). Templates
+  `supabase/templates/password_changed_notification.html` and `email_changed_notification.html`, in the plain style of
+  the others: what changed, for which address (the email alert goes to the old address and names both), that it was
+  sent at the moment of the change (Supabase passes no time to the template; the email's own date is the time),
+  "If this was not you, reset your password now" with the Forgot password link (`{{ .SiteURL }}/login/forgot-password`)
+  and to tell the owner of their workspace. Supabase Auth sends them after a change through Your account and after Set
+  a new password.
+- **Delete my account** (owner decision 16 Nov 2026: option a, a nameless profile as tombstone; migration 0071,
+  `deleteMyAccount` in `src/server/commands/account.ts`, the card in `src/components/account/delete-account.tsx`).
+  `profiles_id_fkey` is dropped, so a profile outlives its auth user, and `profiles.deleted_at` marks it.
+  `delete_my_account()` (SECURITY DEFINER, `search_path` set, granted to `authenticated` only) acts on `auth.uid()`
+  alone, in one transaction under a per-person advisory lock:
+  1. refuses the only owner of any workspace: `account: You are the only owner of A, B. …`, with the names as a JSON
+     array in the error's detail; the app says "Make someone else owner of A or delete it first.";
+  2. refuses a session that is not `aal2` when the person has a verified factor (as `_aal_ok`, 0063); the app sends
+     them to the two-step page and back to the open dialog;
+  3. removes every membership; `memberships_audit` logs each as `member.removed` on the workspace chain with
+     `new_value = {"how": "account deleted"}` (the log reads "A member deleted their account"). The note keeps their
+     name as every `member.*` note does (owner decision 15 Nov 2026, docs/02 §18). `memberships_guard` lets the
+     person remove their own owner membership in this one operation (`app.member_op = 'account_deleted'`), still
+     keeping at least one owner, so a workspace that requires two-step sign-in does not block a co-owner without an
+     app;
+  4. anonymises the profile as the app shows a person who left: `display_name` "Former member" and `initials` "?"
+     (the people cells' fallback); there is no avatar column; `color` stays;
+  5. deletes the `auth.users` row; identities, sessions, refresh tokens, factors and one-time tokens go by Supabase
+     Auth's own cascades.
+  It is idempotent: a retry (an access token lives up to an hour after its user is gone) finds nothing to do and
+  succeeds. Such a token cannot bring the profile back: `memberships_join_guard` refuses a deleted profile and the
+  `profiles_self` policy no longer matches it. `automations.acts_as` now references `profiles(id)` (it was
+  `auth.users(id) on delete set null`, whose update would have run `automations_targets_guard` as the leaving person);
+  the runner already stops an automation whose person is no longer a member (0052), naming them "Former member".
+  Every "created by", "author" and "uploaded by" still resolves to the profile; the activity log is not touched (no
+  foreign key on `actor_id`). Nothing joins `auth.users` except `member_emails` (members only, so the person is no
+  longer listed) and `accept_invite` (the caller's own row). The command checks that the typed address is the
+  account's, calls the RPC on the person's own session and signs out (`scope: 'local'`; Supabase Auth answers "user
+  not found" and the client still clears the cookies), then redirects to `/account-deleted`. Meta "Created by" /
+  "Updated by" cells now use the people cell, so they read "Former member" like people fields.
+- Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`, `src/lib/delete-account.test.ts`; pgTAP
+  `supabase/tests/0071_delete_account.sql`; e2e `tests/e2e/delete-account.spec.ts` (desktop and 390 px: the only owner
+  refused with the workspace named; a member deletes their account, cannot sign in with the password again, and their
+  item's "Created by" reads "Former member") and `tests/e2e/account-auth.spec.ts` (desktop and
   390 px) through Mailpit: a reset for a known and an unknown address (the same answer), the link, the rules, the new
   password signs in and the old one does not, another browser signed out; the same with two-step sign-in (code
   first); Your account changes the password (a wrong current one refused) and the email address (both addresses
   emailed).
 
-### 12.1 Open (for the owner)
+### 12.1 Decided (owner)
 
-1. **Delete my account is not built.** `profiles.id` references `auth.users(id) on delete cascade`, and about twenty
-   columns reference `profiles(id)` without a delete rule (`items.created_by`, `item_updates.author_id`,
-   `files.uploaded_by`, `file_access_log.user_id` …). Deleting the auth user would either fail for anyone who ever
-   created something, or delete the profile instead of anonymising it. The activity log itself is not affected (no
-   foreign key on `actor_id`). The data model needs a decision first.
-2. **A session opened by a reset link** may set a password without the current one for as long as it lasts (12 hours
-   at most, §8.3), also after the first change.
-3. **Supabase's "password changed" and "email changed" notices** (`[auth.email.notification.*]`) are off.
+1. ~~**Delete my account is not built**~~: built as option (a), a nameless profile as tombstone (0071, above).
+2. **A session opened by a reset link — accepted (owner decision 16 Nov 2026):** it may set a password without the
+   current one for as long as it lasts (12 hours at most, §8.3), also after the first change. No change.
+3. ~~**Supabase's "password changed" and "email changed" notices are off**~~: on, with our templates (above).
+
+### 12.2 Open (for the owner)
+
+1. **What else a deleted person leaves behind.** Delete my account removes memberships only, as removing a member
+   does. Rows keyed to the person stay under the tombstone profile: team memberships, sheet and folder access grants,
+   their private saved views, their notifications, edit holds and open invites they sent (the invite page then reads
+   "Former member invited you"). None is reachable by anyone without a membership, but they are personal data.
+2. **The name in `member.*` notes** stays in clear in the append-only log (decided 15 Nov 2026 for access evidence);
+   a person who deletes their account may expect it gone. Erasing it would need a personal-data slot for member notes
+   (as 0065 did for value notes) from now on; entries already written cannot change.
+3. **The email change alert** links to Forgot password, whose link goes to the new address, which the person may no
+   longer control. Supabase offers no way to undo an email change from the old address; contacting the workspace
+   owner (and support) is the way back.

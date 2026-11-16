@@ -56,14 +56,17 @@ Preview deployments send real mail to the addresses invited there; leave the key
 ## Auth emails
 
 Supabase Auth sends the sign-in emails itself: confirm sign-up, sign-in link, reset password and change of email
-address (docs/09 §12). Invites are our own email (Brevo, `src/server/email/`), so Supabase's invite template is not
+address, and the security alerts when a password or an email address has changed (docs/09 §12). Invites are our own email (Brevo, `src/server/email/`), so Supabase's invite template is not
 used. The subjects and HTML live in the repo (`supabase/templates/*.html`, subjects in `supabase/config.toml`
 `[auth.email.template.*]`); Supabase Auth makes the plain-text part from the HTML.
 
 `python3 scripts/hosted/auth-config.py --dry-run` prints, key by key, what differs on the hosted project; without
 `--dry-run` it PATCHes the Management API (`/v1/projects/{ref}/config/auth`). It sets `site_url`
-(`https://www.klarert.com`), `password_min_length` (12), `mailer_secure_email_change_enabled` (on) and the subject and
-HTML of the four templates, and lists the settings it leaves alone. It never sets SMTP settings or credentials.
+(`https://www.klarert.com`), `password_min_length` (12), `mailer_secure_email_change_enabled` (on), the subject and
+HTML of the four templates, and the security alerts for a changed password or email address
+(`mailer_notifications_{password_changed,email_changed}_enabled` on, `mailer_subjects_*_notification` and
+`mailer_templates_*_notification_content` from `[auth.email.notification.*]`), and lists the settings it leaves alone.
+It never sets SMTP settings or credentials.
 
 ### The owner's steps: SMTP through Brevo
 
