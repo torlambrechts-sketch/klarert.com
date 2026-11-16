@@ -1,12 +1,17 @@
 import { expect, test } from '@playwright/test';
 
-test('signed-out visitors land on sign-in without console errors', async ({ page }) => {
+test('signed-out visitors see the product site, and sign-in loads without console errors', async ({
+  page,
+}) => {
   const errors: string[] = [];
   page.on('console', (msg) => {
     if (msg.type() === 'error') errors.push(msg.text());
   });
+  // `/` is the product site for signed-out visitors (tests/e2e/landing.spec.ts)
   await page.goto('/');
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await page.goto('/login');
   await expect(page.getByRole('heading', { level: 1, name: 'Compliance OS' })).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -29,7 +34,9 @@ test('an unknown address shows the app’s own 404 page with a way back', async 
   await expect(page).toHaveTitle('Page not found · Compliance OS');
   await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
   await page.getByRole('link', { name: 'Go to your workspace' }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  // signed out, `/` is the product site, with its way to sign in
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('link', { name: 'Sign in' }).first()).toBeVisible();
 });
 
 test('every response says who may frame it, how to read its type and what to send as a referrer', async ({
