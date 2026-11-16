@@ -1,7 +1,8 @@
 # Set the hosted project's Supabase Auth settings that live in the repo (docs/09 §12, README › Auth emails):
 # the site URL, the minimum password length, secure email change, the subject and HTML of each auth email
 # (supabase/templates/*.html, subjects from supabase/config.toml [auth.email.template.*]) and the security alerts for
-# a changed password or email address ([auth.email.notification.*]: on, subject and HTML).
+# a changed password or email address ([auth.email.notification.*]: on, subject and HTML, which must name the Forgot
+# password link and the support address).
 #
 #   python3 scripts/hosted/auth-config.py --dry-run   # print what would change, change nothing
 #   python3 scripts/hosted/auth-config.py             # apply
@@ -26,6 +27,7 @@ TEMPLATES = ["confirmation", "magic_link", "recovery", "email_change"]
 # Supabase CLI 3.1.0 sends to this endpoint)
 NOTIFICATIONS = ["password_changed", "email_changed"]
 FORGOT_PASSWORD_LINK = "{{ .SiteURL }}/login/forgot-password"
+SUPPORT_ADDRESS = "support@klarert.com"  # "If this was not you, contact support@klarert.com straight away."
 
 
 def api(method, body=None):
@@ -69,6 +71,8 @@ def desired():
             html = f.read()
         if FORGOT_PASSWORD_LINK not in html:
             sys.exit(f"{path}: no {FORGOT_PASSWORD_LINK} link")
+        if SUPPORT_ADDRESS not in html:
+            sys.exit(f"{path}: no {SUPPORT_ADDRESS}")
         want[f"mailer_notifications_{name}_enabled"] = True
         want[f"mailer_subjects_{name}_notification"] = n["subject"]
         want[f"mailer_templates_{name}_notification_content"] = html

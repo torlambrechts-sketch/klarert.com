@@ -17,6 +17,7 @@ const CONFIRM_EMAIL = 'Confirm the new email address for Compliance OS';
 /** A security alert (Supabase Auth's notification emails, docs/09 §12): plain, with the Forgot password link. */
 function expectAlert(mail: Mail) {
   expect(mail.text).toContain('If this was not you, reset your password now');
+  expect(mail.text).toContain('If this was not you, contact support@klarert.com straight away.');
   expect(mail.text).toContain('tell the owner of your workspace');
   expect(new URL(mail.link).pathname).toBe('/login/forgot-password');
   expect(mail.html).not.toMatch(/<img|src=/i);
