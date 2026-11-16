@@ -83,6 +83,7 @@ test('paste, fix, publish, adopt, map, revise; another workspace sees none of it
     'Row 3 · Title 1.2: Shorten the title; put the full wording in Text.',
   );
   await expect(problems).toContainText('Row 4 · Ref 1.2: The ref "1.2" is used on row 3 too.');
+  await problems.scrollIntoViewIfNeeded();
   await shot(page, 'paste-validation', project);
   await page.getByRole('button', { name: 'Continue to the grid' }).click();
 
