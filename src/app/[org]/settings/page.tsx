@@ -27,6 +27,7 @@ import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
 import { AdoptFramework } from './frameworks';
 import { MoveToEdition } from './edition-move';
+import { DeleteDraftButton } from './own-editor';
 import { EditionBadge } from '@/components/frameworks/edition-badge';
 import { replacedWarning, statusCheckedText } from '@/engine/frameworks/status';
 import { retentionOverview } from '@/server/commands/retention';
@@ -41,7 +42,7 @@ import {
 import { listAuditOutputs, reviewSheetsByInstall } from '@/server/commands/audit';
 import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
 import { addDays, addMonths } from '@/engine/fields/helpers';
-import { ArrowUpCircle, Check, ExternalLink, Lock } from 'lucide-react';
+import { ArrowUpCircle, Check, ExternalLink, Lock, PenLine, Plus } from 'lucide-react';
 
 export const metadata = { title: 'Settings · Compliance OS' };
 
@@ -168,7 +169,7 @@ export default async function SettingsPage({
       ) : null}
       {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
       {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
-      {tab === 'frameworks' ? <FrameworksTab org={org} /> : null}
+      {tab === 'frameworks' ? <FrameworksTab org={org} timeZone={timeZone} /> : null}
       {tab === 'retention' ? <RetentionTab org={org} today={today} /> : null}
       {tab === 'security' ? (
         <Card
@@ -700,8 +701,20 @@ function CoverageBar({ percent, label }: { percent: number | null; label: string
   );
 }
 
-/** Frameworks (docs/12): adopted frameworks with coverage, and the catalogue to adopt from. */
-async function FrameworksTab({ org }: { org: string }) {
+/** A chip that says a framework is the workspace's own (docs/12 Your own frameworks): text, not colour alone. */
+function YoursChip() {
+  return (
+    <span className="text-label-12 border-line bg-background-100 flex items-center gap-1 rounded border px-1.5 py-0.5">
+      <PenLine className="size-3" aria-hidden /> Yours
+    </span>
+  );
+}
+
+/**
+ * Frameworks (docs/12): adopted frameworks with coverage, the workspace's own frameworks (and drafts), and the
+ * catalogue to adopt from, in that order.
+ */
+async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string }) {
   const [r, outputs] = await Promise.all([listFrameworks({ org }), listAuditOutputs({ org })]);
   if (!r.ok)
     return (
@@ -714,8 +727,13 @@ async function FrameworksTab({ org }: { org: string }) {
         </div>
       </Card>
     );
-  const { frameworks, canAdopt, controlsSheets } = r.data;
+  const { frameworks, canAdopt, controlsSheets, workspace, drafts } = r.data;
   const adopted = frameworks.filter((f) => f.adopted);
+  const catalogue = frameworks.filter((f) => !f.own);
+  // the edition to use of each own framework (a replaced edition is listed under Adopted while it is adopted)
+  const ownList = frameworks.filter((f) => f.own && f.status === 'current');
+  const draftOf = new Map(drafts.map((d) => [d.key, d]));
+  const newDrafts = drafts.filter((d) => !d.published);
   return (
     <>
       <Card
@@ -736,6 +754,7 @@ async function FrameworksTab({ org }: { org: string }) {
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{f.title}</span>
+                    {f.own ? <YoursChip /> : null}
                     <span className="text-muted-foreground text-label-13">
                       {f.adopted!.sheetName}
                     </span>
@@ -812,43 +831,120 @@ async function FrameworksTab({ org }: { org: string }) {
         )}
       </Card>
       <Card
-        title="Audit outputs"
-        description="An audit pack for a folder or a pack: the statement of applicability, the sheets, an evidence index and the activity log of a period with its hash chains checked. Members and auditors find the same on Audit outputs."
+        title={`Your frameworks · ${ownList.length}`}
+        description="Requirement sets your workspace writes: a customer's security schedule, your internal policies, or a code we don't ship. Each gets the same library, statement of applicability, coverage and links to your controls as a catalogue framework."
       >
-        {outputs.ok ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <AuditPackDialog
-              org={org}
-              folders={outputs.data.folders}
-              installs={outputs.data.installs}
-              defaultFrom={addDays(addMonths(outputs.data.today, -12), 1)}
-              defaultTo={outputs.data.today}
-            />
-            <Link
-              href={`/${org}/audit`}
-              className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
-            >
-              All audit outputs
-            </Link>
-          </div>
-        ) : (
-          <div role="alert" className="flex flex-col items-start gap-2">
-            <p className="m-0">{outputs.error.message}</p>
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/${org}/settings?tab=frameworks`}>Retry</Link>
+        {canAdopt ? (
+          <div>
+            <Button asChild>
+              <Link href={`/${org}/settings/own-frameworks`}>
+                <Plus aria-hidden /> Add your own
+              </Link>
             </Button>
           </div>
+        ) : null}
+        {ownList.length === 0 && newDrafts.length === 0 ? (
+          <p className="text-muted-foreground text-copy-13 m-0">
+            No frameworks of your own yet. Paste a list from Excel, upload a CSV file, start blank
+            or copy the structure of a catalogue framework.
+          </p>
+        ) : (
+          <ul className="divide-line flex flex-col divide-y" aria-label="Your frameworks">
+            {ownList.map((f) => {
+              const draft = draftOf.get(f.key);
+              return (
+                <li
+                  key={`${f.key}@${f.version}`}
+                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+                >
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{f.title}</span>
+                      <YoursChip />
+                      {f.adopted ? (
+                        <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                          <Check className="text-good size-3" aria-hidden /> Adopted
+                        </span>
+                      ) : null}
+                      {draft ? (
+                        <span className="text-label-12 bg-soft rounded px-1.5 py-0.5">
+                          Draft changes
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="text-label-13">
+                      {f.requirements} requirements · edition {f.version}, revision {f.revision}
+                    </span>
+                    <span className="text-copy-13">
+                      Written by {workspace}. Not reviewed by Klarert.
+                    </span>
+                    <span className="text-copy-13 text-muted-foreground">{f.licence}</span>
+                  </div>
+                  {canAdopt ? (
+                    <span className="flex shrink-0 flex-wrap gap-2">
+                      <Button asChild variant="outline" size="sm">
+                        <Link
+                          href={`/${org}/settings/own-frameworks?key=${f.key}`}
+                          aria-label={`${draft ? 'Continue the draft of' : 'Change'} ${f.title}`}
+                        >
+                          {draft ? 'Continue draft' : 'Change'}
+                        </Link>
+                      </Button>
+                      <span className={f.adopted ? 'contents' : 'shrink-0'}>
+                        <AdoptFramework
+                          adopted={!!f.adopted}
+                          org={org}
+                          framework={{ key: f.key, version: f.version, title: f.title }}
+                          controls={controlsSheets}
+                        />
+                      </span>
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
+            {newDrafts.map((d) => (
+              <li
+                key={d.key}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+              >
+                <div className="flex min-w-0 flex-col gap-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{d.title}</span>
+                    <YoursChip />
+                    <span className="text-label-12 bg-soft rounded px-1.5 py-0.5">Draft</span>
+                  </span>
+                  <span className="text-label-13 text-muted-foreground">
+                    Not published yet · saved {formatDate(isoDateInZone(d.updatedAt, timeZone))}
+                  </span>
+                </div>
+                {canAdopt ? (
+                  <span className="flex shrink-0 flex-wrap gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <Link
+                        href={`/${org}/settings/own-frameworks?key=${d.key}`}
+                        aria-label={`Continue the draft of ${d.title}`}
+                      >
+                        Continue draft
+                      </Link>
+                    </Button>
+                    <DeleteDraftButton org={org} draftKey={d.key} title={d.title} size="sm" />
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
       <Card
         title="Framework catalogue"
         description="Reference numbers with official short titles, plus our own purpose, guidance, audit questions and typical evidence for each. The text of standards is not included: buy the standard for it. EU laws link to EUR-Lex."
       >
-        {frameworks.length === 0 ? (
+        {catalogue.length === 0 ? (
           <p className="text-muted-foreground text-copy-13">No frameworks are available yet.</p>
         ) : (
           <ul className="divide-line flex flex-col divide-y" aria-label="Framework catalogue">
-            {frameworks.map((f) => (
+            {catalogue.map((f) => (
               <li
                 key={`${f.key}@${f.version}`}
                 className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
@@ -916,6 +1012,35 @@ async function FrameworksTab({ org }: { org: string }) {
               </li>
             ))}
           </ul>
+        )}
+      </Card>
+      <Card
+        title="Audit outputs"
+        description="An audit pack for a folder or a pack: the statement of applicability, the sheets, an evidence index and the activity log of a period with its hash chains checked. Members and auditors find the same on Audit outputs."
+      >
+        {outputs.ok ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <AuditPackDialog
+              org={org}
+              folders={outputs.data.folders}
+              installs={outputs.data.installs}
+              defaultFrom={addDays(addMonths(outputs.data.today, -12), 1)}
+              defaultTo={outputs.data.today}
+            />
+            <Link
+              href={`/${org}/audit`}
+              className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
+            >
+              All audit outputs
+            </Link>
+          </div>
+        ) : (
+          <div role="alert" className="flex flex-col items-start gap-2">
+            <p className="m-0">{outputs.error.message}</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/${org}/settings?tab=frameworks`}>Retry</Link>
+            </Button>
+          </div>
         )}
       </Card>
     </>
