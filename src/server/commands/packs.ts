@@ -177,7 +177,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
             .in('action', [...PACK_ACTIONS])
             .order('id', { ascending: false })
             .limit(20),
-          readFrameworks(supabase).catch(() => []),
+          readFrameworks(supabase, orgId).catch(() => []),
           readPackVersions(supabase),
         ]);
         const fwTitle = (k: string, v: string) =>
@@ -327,7 +327,7 @@ export async function previewPack(input: unknown): Promise<Result<PackPreviewRes
         });
         const actions = { create: 0, reuse: 0, skip: 0, conflict: 0 };
         for (const o of plan.operations) actions[o.action] += 1;
-        const fws = plan.preview.frameworks.length ? await readFrameworks(supabase) : [];
+        const fws = plan.preview.frameworks.length ? await readFrameworks(supabase, orgId) : [];
         const frameworkTitles = Object.fromEntries(
           fws.map((f) => [`${f.key}@${f.version}`, f.title] as const),
         );

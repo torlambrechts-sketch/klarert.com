@@ -96,7 +96,7 @@ export async function readSoa(
   const { data, ctx } = loaded;
   const ids = data.items.map((i) => i.id);
   const [catalogue, views, around] = await Promise.all([
-    readFrameworks(db),
+    readFrameworks(db, who.orgId),
     db
       .from('views')
       .select('name, type, config')
