@@ -2,7 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { NEW_PASSWORD_PATH } from '@/lib/auth-links';
 import { env } from '@/lib/env';
+import { MAX_PASSWORD, newPassword } from '@/lib/passwords';
 import { safeNext } from '@/lib/safe-next';
 import { verifiedApps } from '@/lib/two-step';
 import { createClient } from '@/lib/supabase/server';
@@ -38,11 +40,9 @@ export async function sendMagicLink(
   return ok({ email: parsed.data.email });
 }
 
-const MIN_PASSWORD = 12;
-
 const passwordInput = z.object({
   email: z.email('Enter a valid email address.').trim().toLowerCase(),
-  password: z.string().min(1, 'Enter your password.').max(200),
+  password: z.string().min(1, 'Enter your password.').max(MAX_PASSWORD),
 });
 
 export async function signInWithPassword(_: unknown, form: FormData): Promise<Result<null>> {
@@ -68,10 +68,7 @@ export async function signInWithPassword(_: unknown, form: FormData): Promise<Re
 
 const signUpInput = z.object({
   email: z.email('Enter a valid email address.').trim().toLowerCase(),
-  password: z
-    .string()
-    .min(MIN_PASSWORD, `Use at least ${MIN_PASSWORD} characters.`)
-    .max(200, 'Use at most 200 characters.'),
+  password: newPassword,
 });
 
 export async function signUpWithPassword(_: unknown, form: FormData): Promise<Result<null>> {
@@ -97,4 +94,38 @@ export async function signUpWithPassword(_: unknown, form: FormData): Promise<Re
   if (!data.session)
     return fail('failed', 'Check your email to confirm the account, then sign in.');
   redirect(safeNext(form.get('next')) ?? '/');
+}
+
+/**
+ * Forgot password (docs/05 §1, docs/09 §12): Supabase Auth emails a reset link that opens a session through the
+ * callback and lands on Set a new password. The answer is the same whether or not an account uses the address, and
+ * also when Supabase Auth refuses (a second request within its limit is refused for existing accounts only), so the
+ * form cannot tell anyone which addresses have accounts.
+ */
+export async function requestPasswordReset(
+  _: unknown,
+  form: FormData,
+): Promise<Result<{ email: string }>> {
+  const parsed = input.safeParse({ email: form.get('email'), next: form.get('next') || undefined });
+  if (!parsed.success) return invalid(parsed.error);
+  const landing = new URL(NEW_PASSWORD_PATH, env.NEXT_PUBLIC_APP_URL);
+  if (parsed.data.next) landing.searchParams.set('next', parsed.data.next);
+  const callback = new URL('/auth/callback', env.NEXT_PUBLIC_APP_URL);
+  callback.searchParams.set('next', `${landing.pathname}${landing.search}`);
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: callback.toString(),
+  });
+  // the code and status only, never the address
+  if (error)
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        source: 'auth',
+        during: 'reset password',
+        code: error.code,
+        status: error.status,
+      }),
+    );
+  return ok({ email: parsed.data.email });
 }

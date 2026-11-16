@@ -52,3 +52,72 @@ instead." and invites still work by copying the link. No migration or database s
 
 To rotate the key: generate a new one, change `BREVO_API_KEY` in Vercel, redeploy, then delete the old key in Brevo.
 Preview deployments send real mail to the addresses invited there; leave the key out of Preview if that is not wanted.
+
+## Auth emails
+
+Supabase Auth sends the sign-in emails itself: confirm sign-up, sign-in link, reset password and change of email
+address, and the security alerts when a password or an email address has changed (docs/09 §12). Invites are our own email (Brevo, `src/server/email/`), so Supabase's invite template is not
+used. The subjects and HTML live in the repo (`supabase/templates/*.html`, subjects in `supabase/config.toml`
+`[auth.email.template.*]`); Supabase Auth makes the plain-text part from the HTML.
+
+`python3 scripts/hosted/auth-config.py --dry-run` prints, key by key, what differs on the hosted project; without
+`--dry-run` it PATCHes the Management API (`/v1/projects/{ref}/config/auth`). It sets `site_url`
+(`https://www.klarert.com`), `password_min_length` (12), `mailer_secure_email_change_enabled` (on), the subject and
+HTML of the four templates, and the security alerts for a changed password or email address
+(`mailer_notifications_{password_changed,email_changed}_enabled` on, `mailer_subjects_*_notification` and
+`mailer_templates_*_notification_content` from `[auth.email.notification.*]`), and lists the settings it leaves alone.
+It never sets SMTP settings or credentials.
+
+### The owner's steps: SMTP through Brevo
+
+Supabase's built-in email service only sends to the project's team and only a few emails an hour, so the hosted
+project sends through Brevo.
+
+1. Brevo › SMTP & API › SMTP: note the **SMTP login** and create an **SMTP key** (not an API key; an API key does not
+   work as the SMTP password).
+2. Supabase dashboard › Authentication › Emails › SMTP Settings: turn on **Enable custom SMTP** and enter
+   - host `smtp-relay.brevo.com`, port `587`
+   - username: the Brevo SMTP login
+   - password: the Brevo SMTP key
+   - sender email `no-reply@mail.klarert.com`, sender name `Compliance OS`
+   The sending domain `mail.klarert.com` must be authenticated in Brevo (SPF, DKIM, DMARC), as for invites.
+3. Supabase dashboard › Authentication › Rate limits › **Rate limit for sending emails**: about **30 per hour**. The
+   limit counts every auth email of the project together. Sign-up is open without a bot check, and Forgot password
+   answers the same for every address, so a script could otherwise make Supabase send mail to any number of
+   addresses: that would use up the Brevo plan's sending quota and harm the sending domain's reputation, which
+   invites depend on too. 30 an hour is well above what a small team's real sign-ins and resets need; when it is
+   reached, people asking for a link wait until the hour is over. Raise it as the number of users grows.
+4. In Brevo, keep open and click tracking off for transactional email (as for invites, docs/09 §11), so the links in
+   these emails are not rewritten through a tracking domain and no tracking pixel is added.
+
+Then run `auth-config.py` (the main session does) and send yourself a reset link from `/login/forgot-password` to
+check the sender, the subject and that the link opens Set a new password.
+
+## Deleting a user (migration 0072, docs/09 §12)
+
+Prefer **Delete my account** (Your account): it asks the only owner of a workspace to hand over first, asks for a
+two-step session when the person has an authenticator app, and logs the person as the one who left.
+
+Deleting a user in the Supabase dashboard (Authentication › Users › Delete user) is safe from 0072: a trigger on
+`auth.users` removes their memberships (logged `member.removed`, "account deleted by support"), renames the profile
+"Former member" and marks it deleted, so everything they made still shows "Former member". Use it only when the person
+cannot delete their account themselves, and use a hard delete (the Admin API's soft delete does not run the trigger).
+
+**Risk:** the dashboard path does not refuse the only owner of a workspace. That workspace is left without an owner
+(its log entry says "The workspace now has no owner"), and nobody in it can then make someone owner, invite an owner,
+restrict sheets or fields, or change two-step sign-in. Before deleting, find the workspaces they own alone:
+
+```sql
+select o.id, o.name from memberships m join orgs o on o.id = m.org_id
+ where m.user_id = '<user id>' and m.role = 'owner'
+   and not exists (select 1 from memberships x where x.org_id = m.org_id and x.role = 'owner' and x.user_id <> m.user_id);
+```
+
+Afterwards, give each such workspace an owner again, with the agreement of that workspace's people. `memberships_guard`
+lets only an owner or the service role change who owns a workspace, so the statement runs as the service role in one
+transaction (logged `member.changed` by the system):
+
+```sql
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update memberships set role = 'owner' where org_id = '<workspace id>' and user_id = '<new owner id>';
+```

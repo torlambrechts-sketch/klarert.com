@@ -6,17 +6,20 @@ import { verifiedApps } from '@/lib/two-step';
 import { getMyWorkspaces, getSignIn, requireProfile } from '@/server/auth';
 import { Button } from '@/components/ui/button';
 import { TwoStepPanel } from '@/components/account/two-step-panel';
+import { EmailPanel, PasswordPanel, type EmailNotice } from '@/components/account/sign-in-details';
+import { DeleteAccountPanel } from '@/components/account/delete-account';
 
 export const metadata = { title: 'Your account · Compliance OS' };
 
 // Your account (docs/05 §1): the person's own settings, outside any workspace so a workspace that requires two-step
-// sign-in can send people here to set it up. Two-step sign-in (an authenticator app) and this session.
+// sign-in can send people here to set it up. Email address, password, two-step sign-in (an authenticator app), this
+// session and Delete my account (`?delete=open` opens its dialog: where the two-step page sends the person back to).
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; required?: string }>;
+  searchParams: Promise<{ next?: string; required?: string; email?: string; delete?: string }>;
 }) {
-  const { next: rawNext, required } = await searchParams;
+  const { next: rawNext, required, email: emailNotice, delete: deleteOpen } = await searchParams;
   const next = safeNext(rawNext);
   const session = await requireProfile(
     next ? `/account?next=${encodeURIComponent(next)}` : '/account',
@@ -31,6 +34,16 @@ export default async function AccountPage({
     added: formatDate(isoDateInZone(f.created_at, timeZone)),
   }));
   const requiringNames = workspaces.filter((w) => w.requireTwoStep).map((w) => w.name);
+  // an email change waiting for its links, and how the last link went (/auth/callback, src/lib/auth-links.ts)
+  const pendingEmail = session.user.new_email ?? null;
+  const notice: EmailNotice =
+    emailNotice === 'confirm-other' || emailNotice === 'link-failed' ? emailNotice : null;
+  const signInDetails = (
+    <>
+      <EmailPanel email={session.user.email ?? ''} pendingEmail={pendingEmail} notice={notice} />
+      <PasswordPanel />
+    </>
+  );
 
   return (
     <main className="bg-soft flex min-h-dvh justify-center px-4 py-8 sm:py-12">
@@ -62,12 +75,15 @@ export default async function AccountPage({
           </p>
         ) : null}
 
+        {/* sent here to set up two-step sign-in: that card comes first */}
+        {requiredBy ? null : signInDetails}
         <TwoStepPanel
           apps={apps}
           email={session.user.email ?? ''}
           continueTo={requiredBy ? (next ?? `/${requiredBy.slug}`) : null}
           requiredBy={requiringNames}
         />
+        {requiredBy ? signInDetails : null}
 
         <section
           aria-labelledby="session-heading"
@@ -92,6 +108,8 @@ export default async function AccountPage({
             </Button>
           </form>
         </section>
+
+        <DeleteAccountPanel email={session.user.email ?? ''} openOnLoad={deleteOpen === 'open'} />
       </div>
     </main>
   );

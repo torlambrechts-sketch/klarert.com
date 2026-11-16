@@ -222,6 +222,9 @@ web3 = 30
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
+# Your account › Email address relies on it (docs/09 §12). Supabase Auth asks for both links only while
+# confirmations are on: locally (enable_confirmations = false) one link completes the change; the hosted project needs
+# "Confirm email" on for both to be asked.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = false
@@ -244,16 +247,38 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Auth emails (docs/09 §12): plain HTML, no images, no tracking; Supabase Auth derives the plain-text part. The hosted
+# project gets the same subjects and HTML from scripts/hosted/auth-config.py. Invites are our own email (Brevo), so
+# the invite template is not used; nor is reauthentication (secure_password_change is off: Your account asks for the
+# current password). A running local stack picks changes up after `supabase stop && supabase start`.
+# The test helpers open the first link in each email: keep the action link first.
+[auth.email.template.confirmation]
+subject = "Confirm your email for Compliance OS"
+content_path = "./supabase/templates/confirmation.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./supabase/templates/password_changed_notification.html"
+[auth.email.template.magic_link]
+subject = "Your Compliance OS sign-in link"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Compliance OS password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirm the new email address for Compliance OS"
+content_path = "./supabase/templates/email_change.html"
+
+# Security alerts (docs/09 §12): Supabase Auth tells the person when their password or email address changed (the
+# email change alert goes to the old address). Same plain style; the link is Forgot password on the site URL.
+[auth.email.notification.password_changed]
+enabled = true
+subject = "Your Compliance OS password was changed"
+content_path = "./supabase/templates/password_changed_notification.html"
+
+[auth.email.notification.email_changed]
+enabled = true
+subject = "The email address of your Compliance OS account was changed"
+content_path = "./supabase/templates/email_changed_notification.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.

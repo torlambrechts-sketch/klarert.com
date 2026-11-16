@@ -8,7 +8,10 @@ Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it
 |---|---|
 | `/login` | sign-in: password, create an account, or an email link. Query: `?next=<path on this site>` (`safeNext`) |
 | `/login/two-step` | two-step sign-in: the code from the person's authenticator app (§1.1). Query: `?next=` |
-| `/account` | Your account: two-step sign-in and this session (§1.1). Query: `?next=<path>&required=<workspace slug>` |
+| `/login/forgot-password` | Forgot password: asks for the email address and sends a reset link (§1.1). Query: `?next=`, `?error=link` |
+| `/login/new-password` | Set a new password, where a reset link lands (§1.1). Query: `?next=` |
+| `/account` | Your account: email address, password, two-step sign-in, this session and Delete my account (§1.1). Query: `?next=<path>&required=<workspace slug>&email=confirm-other\|link-failed&delete=open` |
+| `/account-deleted` | "Your account has been deleted.": where Delete my account lands, signed out (§1.1) |
 | `/onboarding` | create a workspace or accept an invite |
 | `/[org]` | redirects to `/[org]/home` |
 | `/[org]/home` | Home: Needs you, recent activity, next 30 days, getting-started checklist |
@@ -36,7 +39,31 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
 
 - **Your account** (`/account`, from the account menu › Your account; outside any workspace, on the soft background
   like onboarding, one 576 px column, full width with 16 px gutters at 390 px): a back link ("Back to <workspace>"),
-  the `h1` "Your account" with the name and email, then two cards.
+  the `h1` "Your account" with the name and email, then the cards **Email address**, **Password**, **Two-step
+  sign-in**, **This session** and **Delete my account** (sent by a workspace that requires two-step sign-in,
+  Two-step sign-in comes first).
+  - **Email address** (docs/09 §12): the address and what it is for, and **Change email** (outline), which opens in
+    place "New email address" (focused), **Send confirmation links** and **Cancel** (focus returns to the button).
+    "That is already your email address." under the field. Sent: the status line "Waiting for confirmation: <new>.
+    We sent a link to <old> and one to <new>. Your email changes once both links are opened. They work for 1 hour."
+    and the button reads **Use another address**. Back from the first of the two links (`?email=confirm-other`): "One
+    link is confirmed. Open the link we sent to the other address to finish." A link that failed
+    (`?email=link-failed`): "That link did not open here: … If the address above has not changed, change it again".
+  - **Password**: one line (signed out on other devices afterwards) and **Change password**, which opens in place
+    **Current password** (focused), **New password** ("At least 12 characters.") and **Repeat the new password**,
+    then **Change password** and **Cancel**. Errors under the fields: "That is not your current password.", "Use at
+    least 12 characters.", "The two passwords are not the same." Done: the status line "Your password has been
+    changed. You are signed out on your other devices." and focus back on the button. Under it: "Forgot it, or never
+    set one? Get a reset link by email" (Forgot password).
+- **Forgot password** (`/login/forgot-password`, the sign-in card; linked as "Forgot password" under the sign-in form):
+  "Reset your password", the **Email** field (focused) and **Send reset link**. Whatever the address, the answer is
+  "Check your email · If an account uses that address, we have sent a link to reset your password. The link works for
+  1 hour. Open it in this browser." **Back to sign in**. A reset link that failed comes back here with "That reset link
+  has expired, was already used or was opened in another browser. Ask for a new one."
+- **Set a new password** (`/login/new-password`, the sign-in card): "For <email>.", **New password** (focused, "At
+  least 12 characters."), **Repeat the new password** and **Set new password**. A person with an authenticator app
+  enters its code on the two-step page first, which brings them back here. Done: "Your password has been changed.",
+  "You are signed out on your other devices. Use the new password there." and **Continue** (to `next`, else Home).
   - **Two-step sign-in** with a status chip, "On" (a tick, green) or "Off", and one line on what it does. When on, the
     apps as rows ("Authenticator app, Added 15 Nov 2026"; numbered when there are several) with **Remove**, which opens
     an inline confirm ("Remove this app? Two-step sign-in turns off …" for the last one, naming the workspaces that
@@ -53,6 +80,17 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
     session ends), a line that sessions end some hours after sign-in and sooner when away, and **Sign out**.
   - Sent by a workspace that requires it (`?required=<slug>`): a warning line above the cards, "<Workspace> requires
     two-step sign-in. Set it up below to open the workspace.", and **Continue to the workspace** once it is set up.
+  - **Delete my account** (last; docs/09 §12): what happens ("You lose access to every workspace and can no longer
+    sign in. Your name is removed. The records you made stay in each workspace and are shown as made by “Former
+    member”. This cannot be undone.") and **Delete my account** (outline, red text), which opens the Dialog "Delete
+    your account?": the same in short, then "Type <email> to confirm" (focused; the account's address, any case),
+    **Cancel** and **Delete my account** (red). A different address: "Type your email address exactly as it is
+    shown." under the field. The only owner of a workspace is refused in the dialog: "You are the only owner of
+    <Workspace>. Make someone else owner of <Workspace> or delete it first." (several: "… of A and B. Make someone
+    else owner of each of them, or delete them, first."). A person who still owes their authenticator app's code
+    goes to the two-step page and back to the open dialog (`?delete=open`). Done: signed out, on `/account-deleted`
+    (the sign-in card): "Your account has been deleted.", that the records stay without the name, and **Go to sign
+    in**.
 - **Two-step sign-in at sign-in** (`/login/two-step`, the sign-in card): "Two-step sign-in", "Enter the 6-digit code
   from your authenticator app for <email>.", a "Which app?" radio list when there are several, the **6-digit code**
   field (focused; spaces allowed) and **Continue**. Under a rule: "Lost your phone? …" and **Sign in as someone else**

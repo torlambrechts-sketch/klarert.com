@@ -1,6 +1,7 @@
 import 'server-only';
 import { createHmac } from 'node:crypto';
 import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { Database } from '@/lib/database.types';
 import { env } from '@/lib/env';
@@ -37,5 +38,15 @@ export async function createClient() {
         }
       },
     },
+  });
+}
+
+/**
+ * A client with no cookies and no stored session, on the anon key: only to check a person's current password before
+ * it changes (Your account › Password, docs/09 §12). The session it opens is ended by the command right after.
+ */
+export function createPasswordCheckClient() {
+  return createSupabaseClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }

@@ -346,7 +346,7 @@ Supabase Auth MFA with an authenticator app (TOTP). The words in the product are
   `set_require_two_step` (owners, `aal2`, logged), which `setWorkspaceTwoStep` calls.
 - Local development: `supabase/config.toml` `[auth.mfa.totp]` enroll and verify on.
 
-Passwords are at least 12 characters (`MIN_PASSWORD`, `src/app/(auth)/login/actions.ts`, and
+Passwords are at least 12 characters (`MIN_PASSWORD`, `src/lib/passwords.ts`, and
 `minimum_password_length` in `supabase/config.toml`). On the hosted project, set the same minimum and turn on leaked
 password protection (Authentication › Passwords). Who must use two-step sign-in is the workspace switch only for now;
 a per-role rule can come later (decided 15 Nov 2026).
@@ -532,3 +532,148 @@ copy-link; see `scripts/hosted/README.md` › Email):
 3. **Brevo API keys are not scoped.** A Brevo key can use the whole API of the account (contacts, campaigns), not only
    sending. Keep it in Vercel only, and consider an IP allow-list in Brevo if the plan offers one (Vercel's egress IPs
    change unless a static IP add-on is used).
+
+## 12. Account essentials (15 Nov 2026, branch `claude/auth-essentials`)
+
+Forgot password, Your account › Email address, Password and Delete my account, the auth emails and the security
+alerts. Everything runs on the person's own session through Supabase Auth or our own RPC; no new service-role place
+(CLAUDE.md rule 6). Two migrations: 0071 (Delete my account) and 0072 (a user deleted in the Supabase dashboard).
+Screens in docs/05 §1.1.
+
+- **Forgot password** (`requestPasswordReset`, `src/app/(auth)/login/actions.ts`): `resetPasswordForEmail` with
+  `redirectTo` = `/auth/callback?next=/login/new-password` (plus the page's own `next`, through `safeNext`). The
+  answer is always "If an account uses that address, we have sent a link to reset your password.", also when Supabase
+  Auth refuses: it refuses a second request within `max_frequency` for existing addresses only, so passing that on
+  would tell which addresses have accounts. Refusals are logged with code and status, never the address.
+- **The callback** (`/auth/callback`, `afterEmailLink` in `src/lib/auth-links.ts`, unit tested): a code opens the
+  session and goes to `next`; a failed reset link goes back to Forgot password (`?error=link`); for Your account, the
+  first of two email change links (only a `message`, no code) gives `?email=confirm-other` and a failed one
+  `?email=link-failed`; every other failure `/login?error=link`. The links use PKCE, so they work in the browser where
+  they were asked for.
+- **Set a new password** (`setNewPassword`, `src/server/commands/account.ts`): only a session that a reset link
+  opened may set a password without the current one. Supabase Auth records that in the token's `amr` as `recovery`
+  (PKCE; checked 15 Nov 2026 on GoTrue 2.197), read by `openedByResetLink` (`src/lib/passwords.ts`) into
+  `getSignIn().resetLink`. Supabase Auth refuses a password or email change from an `aal1` session when the person
+  has a verified factor ("AAL2 session is required to update email or password when MFA is enabled",
+  `insufficient_aal`, checked), so a person with an authenticator app is sent to
+  `/login/two-step?next=/login/new-password` first. New passwords: `MIN_PASSWORD` (12) to 200 characters, typed twice
+  (`newPasswordTwice`). Afterwards `signOut({ scope: 'others' })` ends every other session; the page says whether that
+  worked.
+- **Change password** (`changePassword`): the current password is checked by `signInWithPassword` on a client that
+  keeps no session and no cookies (`createPasswordCheckClient`, anon key); the session it opens is signed out at once.
+  `secure_password_change` (Supabase's emailed reauthentication code) stays off: asking for the current password is
+  the check. Then `updateUser({ password })` on the person's session and `signOut({ scope: 'others' })`. Supabase's
+  refusals in words: same password, too short, and on the hosted project leaked passwords (`passwordRefusal`).
+- **Change email** (`changeEmail`): `updateUser({ email }, { emailRedirectTo: /auth/callback?next=/account })` with
+  `double_confirm_changes` (secure email change): Supabase emails a link to the current and to the new address. The
+  page shows the pending address from the user's `new_email`. Supabase asks for **both** links only while email
+  confirmation is on (`enable_confirmations`, hosted "Confirm email"); with it off, as on the local stack, one link
+  completes the change (checked 15 Nov 2026 on GoTrue 2.197). An address another account uses is refused with "That
+  address cannot be used. Choose another."
+- **Auth emails** (`supabase/templates/*.html`, subjects in `supabase/config.toml` `[auth.email.template.*]`):
+  confirm sign-up, sign-in link, reset password and change of email. One column, real text, `lang="en"`, the link
+  linked and written out, what it does, that it works once for 1 hour (`otp_expiry`, `EMAIL_LINK_EXPIRY`), and "If you
+  did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
+  the plain-text part from the HTML. Invites are our own email (§11); reauthentication is not used. The hosted project
+  gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ) and sends through
+  Brevo SMTP, which the owner sets up (`scripts/hosted/README.md` › Auth emails), sender "Compliance OS".
+- **Security alerts** (owner decision 16 Nov 2026): Supabase Auth's notification emails for a changed password and a
+  changed email address are on (`[auth.email.notification.password_changed]` and `.email_changed]` in
+  `supabase/config.toml`; hosted `mailer_notifications_*_enabled`, set by `auth-config.py`). Templates
+  `supabase/templates/password_changed_notification.html` and `email_changed_notification.html`, in the plain style of
+  the others: what changed, for which address (the email alert goes to the old address and names both), that it was
+  sent at the moment of the change (Supabase passes no time to the template; the email's own date is the time),
+  "If this was not you, reset your password now" with the Forgot password link (`{{ .SiteURL }}/login/forgot-password`),
+  "If this was not you, contact support@klarert.com straight away." (owner decision 16 Nov 2026, the address as plain
+  text) and to tell the owner of their workspace. `auth-config.py` refuses a notification template without the Forgot
+  password link or the support address. Supabase Auth sends them after a change through Your account and after Set
+  a new password.
+- **Delete my account** (owner decision 16 Nov 2026: option a, a nameless profile as tombstone; migration 0071,
+  `deleteMyAccount` in `src/server/commands/account.ts`, the card in `src/components/account/delete-account.tsx`).
+  `profiles_id_fkey` is dropped, so a profile outlives its auth user, and `profiles.deleted_at` marks it.
+  `delete_my_account()` (SECURITY DEFINER, `search_path` set, granted to `authenticated` only) acts on `auth.uid()`
+  alone, in one transaction under a per-person advisory lock:
+  1. refuses the only owner of any workspace: `account: You are the only owner of A, B. …`, with the names as a JSON
+     array in the error's detail; the app says "Make someone else owner of A or delete it first.";
+  2. refuses a session that is not `aal2` when the person has a verified factor (as `_aal_ok`, 0063); the app sends
+     them to the two-step page and back to the open dialog;
+  3. removes every membership (the clean-up is `_account_close`, shared with the dashboard path below; internal, not
+     executable by any API role); `memberships_audit` logs each as `member.removed` on the workspace chain with
+     `new_value = {"how": "account deleted"}` (the log reads "A member deleted their account"). The note keeps their
+     name as every `member.*` note does (owner decision 15 Nov 2026, docs/02 §18). `memberships_guard` lets the
+     person remove their own owner membership in this one operation (`app.member_op = 'account_deleted'`), still
+     keeping at least one owner, so a workspace that requires two-step sign-in does not block a co-owner without an
+     app;
+  4. anonymises the profile as the app shows a person who left: `display_name` "Former member" and `initials` "?"
+     (the people cells' fallback); there is no avatar column; `color` stays;
+  5. deletes the `auth.users` row; identities, sessions, refresh tokens, factors and one-time tokens go by Supabase
+     Auth's own cascades.
+  It is idempotent: a retry (an access token lives up to an hour after its user is gone) finds nothing to do and
+  succeeds. Such a token cannot bring the profile back: `memberships_join_guard` refuses a deleted profile and the
+  `profiles_self` policy no longer matches it. `automations.acts_as` now references `profiles(id)` (it was
+  `auth.users(id) on delete set null`, whose update would have run `automations_targets_guard` as the leaving person);
+  the runner already stops an automation whose person is no longer a member (0052), naming them "Former member".
+  Every "created by", "author" and "uploaded by" still resolves to the profile; the activity log is not touched (no
+  foreign key on `actor_id`). Nothing joins `auth.users` except `member_emails` (members only, so the person is no
+  longer listed) and `accept_invite` (the caller's own row). The command checks that the typed address is the
+  account's, calls the RPC on the person's own session and signs out (`scope: 'local'`; Supabase Auth answers "user
+  not found" and the client still clears the cookies), then redirects to `/account-deleted`. Meta "Created by" /
+  "Updated by" cells now use the people cell, so they read "Former member" like people fields.
+- **A user deleted in the Supabase dashboard** (owner decision 16 Nov 2026, migration 0072). Authentication › Users ›
+  Delete user (or the Admin API's `DELETE /admin/users/{id}`) deletes the `auth.users` row as Supabase Auth's own
+  database role. A BEFORE DELETE trigger on `auth.users` (`auth_users_account_closed`, function
+  `auth_users_close_account()` in `public`, SECURITY DEFINER, `search_path` set, not executable by any API role) runs
+  the same clean-up as Delete my account, `_account_close(user, by_support => true)`, under the same per-person
+  advisory lock: every membership goes, each logged `member.removed` with `new_value = {"how": "account deleted by
+  support"}` (actor `system`; the log reads "Support deleted a member's account"), the profile becomes "Former member"
+  / "?" and `deleted_at` is set. It does nothing when the profile is already marked deleted, which is how Delete my
+  account's own deletion of the auth user passes through it, or when the user has no profile.
+  **The only owner is not refused on this path:** support cannot be asked to pick a new owner first, so the workspace
+  is left without an owner. Its `member.removed` entry carries `"ownerless": true` (the log reads "… The workspace now
+  has no owner"). `memberships_guard` lets this one operation through without the owner check and the
+  at-least-one-owner check: only while `app.member_op = 'account_deleted_by_support'` and `app.member_op_user` names
+  the membership's person, both transaction-local and set only by `_account_close`. A workspace without an owner keeps
+  working for its admins, editors and viewers; what only an owner may do (make someone owner, invite an owner,
+  restrict a sheet, folder or field, require two-step sign-in) waits until support makes a member owner again as the
+  service role (`scripts/hosted/README.md` › Deleting a user). Delete my account still refuses the only owner.
+- **Risk:** deleting a user in the Supabase dashboard is now safe (as above), but still prefer Delete my account: it
+  asks the only owner to hand over first, asks for a two-step session when the person has an authenticator app, and
+  logs the person as the actor. Support deletes in the dashboard only when the person cannot (lost access, a request
+  by email), and then makes sure every workspace they owned alone gets a new owner. "Soft delete" in the Admin API
+  only marks the auth user and does not run the trigger; use a hard delete.
+- Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`, `src/lib/delete-account.test.ts`; pgTAP
+  `supabase/tests/0071_delete_account.sql` and `0072_account_deleted_by_support.sql` (a dashboard deletion as
+  `postgres`: memberships gone and logged, profile anonymised, created by still resolves, the log unchanged, the only
+  owner's deletion logged as ownerless, the guard flag covers only the person it names, Delete my account still works
+  and the trigger then adds nothing, the functions not executable by `anon`, `authenticated` or `service_role`); e2e `tests/e2e/delete-account.spec.ts` (desktop and 390 px: the only owner
+  refused with the workspace named; a member deletes their account, cannot sign in with the password again, and their
+  item's "Created by" reads "Former member") and `tests/e2e/account-auth.spec.ts` (desktop and
+  390 px) through Mailpit: a reset for a known and an unknown address (the same answer), the link, the rules, the new
+  password signs in and the old one does not, another browser signed out; the same with two-step sign-in (code
+  first); Your account changes the password (a wrong current one refused) and the email address (both addresses
+  emailed).
+
+### 12.1 Decided (owner)
+
+1. ~~**Delete my account is not built**~~: built as option (a), a nameless profile as tombstone (0071, above).
+2. **A session opened by a reset link — accepted (owner decision 16 Nov 2026):** it may set a password without the
+   current one for as long as it lasts (12 hours at most, §8.3), also after the first change. No change.
+3. ~~**Supabase's "password changed" and "email changed" notices are off**~~: on, with our templates (above).
+4. **A user deleted in the Supabase dashboard (owner decision 16 Nov 2026):** handled as Delete my account, by a
+   trigger (0072, above). The only owner is not refused there: the workspace is left without an owner and the removal
+   is logged with `ownerless`. Delete my account keeps refusing the only owner.
+5. **What else a deleted person leaves behind (owner decision 16 Nov 2026): left as it is.** Delete my account (and a
+   dashboard deletion) removes memberships only, as removing a member does. Rows keyed to the person stay under the
+   tombstone profile: team memberships, sheet and folder access grants, their private saved views, their
+   notifications, edit holds and open invites they sent (the invite page then reads "Former member invited you").
+   None is reachable by anyone without a membership.
+
+### 12.2 Open (for the owner)
+
+1. ~~**What else a deleted person leaves behind**~~: decided, left as it is (§12.1 item 5).
+2. **The name in `member.*` notes** stays in clear in the append-only log (decided 15 Nov 2026 for access evidence);
+   a person who deletes their account may expect it gone. Erasing it would need a personal-data slot for member notes
+   (as 0065 did for value notes) from now on; entries already written cannot change.
+3. **The email change alert** links to Forgot password, whose link goes to the new address, which the person may no
+   longer control. Supabase offers no way to undo an email change from the old address; the alert now names
+   support@klarert.com (and still the workspace owner) as the way back.

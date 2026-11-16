@@ -202,6 +202,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "automations_acts_as_fkey"
+      columns: ["acts_as"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "automations_created_by_fkey"
       columns: ["created_by"]
 isOneToOne: false
@@ -967,14 +973,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "color": string,"created_at": string,"display_name": string,"id": string,"initials": string
+                    "color": string,"created_at": string,"deleted_at": string | null,"display_name": string,"id": string,"initials": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "color"?: string,"created_at"?: string,"display_name": string,"id": string,"initials": string
+                    "color"?: string,"created_at"?: string,"deleted_at"?: string | null,"display_name": string,"id": string,"initials": string
                   }
                   Update: {
-                    "color"?: string,"created_at"?: string,"display_name"?: string,"id"?: string,"initials"?: string
+                    "color"?: string,"created_at"?: string,"deleted_at"?: string | null,"display_name"?: string,"id"?: string,"initials"?: string
                   }
                   Relationships: [
                     
@@ -1452,6 +1458,9 @@ isOneToOne: false
                            },
 "_access_changed":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"_account_close":
+{ Args: { "p_by_support": boolean,"p_user": string }; Returns: number
                            },
 "_archive_pack_rows":
 { Args: { "p_install": string }; Returns: Json
@@ -2223,6 +2232,9 @@ isOneToOne: false
       } },
 "delete_group":
 { Args: { "p_group": string,"p_positions"?: Json,"p_target"?: string }; Returns: number
+                           },
+"delete_my_account":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "delete_update":
 { Args: { "p_update": string }; Returns: undefined

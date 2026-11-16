@@ -406,6 +406,26 @@ describe('the activity log', () => {
     expect(e('invite.revoked', { invite_id: 'i', role: 'viewer' }, null)).toBe(
       'Revoked an invite to join as a viewer',
     );
+    expect(e('member.removed', { user_id: 'u-ed', role: 'editor' }, null)).toBe('Removed a member');
+    // delete my account (0071): the membership ends with the account
+    expect(
+      e('member.removed', { user_id: 'u-ed', role: 'editor' }, { how: 'account deleted' }),
+    ).toBe('A member deleted their account');
+    // a user deleted by support (0072), the only owner leaving the workspace without one
+    expect(
+      e(
+        'member.removed',
+        { user_id: 'u-ed', role: 'editor' },
+        { how: 'account deleted by support' },
+      ),
+    ).toBe("Support deleted a member's account");
+    expect(
+      e(
+        'member.removed',
+        { user_id: 'u-ow', role: 'owner' },
+        { how: 'account deleted by support', ownerless: true },
+      ),
+    ).toBe("Support deleted a member's account. The workspace now has no owner");
     expect(e('item.renamed', null, null)).toBeNull();
   });
 });
