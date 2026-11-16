@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { LEGACY_REDIRECTS } from './src/lib/site/legacy-domain';
 
 /** Browser features the app never uses, turned off for every page and for anything it frames (SA-7). */
 const PERMISSIONS_POLICY = [
@@ -33,6 +34,10 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: '11mb' },
   },
   poweredByHeader: false,
+  // klarert.com and www.klarert.com: 301 to the same path on www.keptrow.com for at least 12 months (docs/14)
+  async redirects() {
+    return LEGACY_REDIRECTS;
+  },
   async headers() {
     return [
       // every response: no framing by other sites (the file preview frames our own route, so 'self'), no MIME
@@ -50,7 +55,9 @@ const nextConfig: NextConfig = {
           // SA-7: no browser feature the app does not use (it uses none of these; clipboard writes keep the default)
           { key: 'Permissions-Policy', value: PERMISSIONS_POLICY },
           // SA-7: HTTPS only, for two years. includeSubDomains covers only names under the host that sends it
-          // (*.www.klarert.com), not the apex or its other subdomains (docs/09 §8). No preload: that is the apex's.
+          // (*.www.keptrow.com), not the apex or its other subdomains (docs/09 §8). No preload: that is the apex's.
+          // The value names no domain, so the rename changes nothing here; browsers keep the policy they already hold
+          // for www.klarert.com, which only ever answers with HTTPS redirects now.
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
         ],
       },
