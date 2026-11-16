@@ -26,6 +26,7 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 | `docs/12-frameworks.md` | Frameworks: the requirement library, cross-walks, adoption, coverage, the SoA and the licensing rule (never ship ISO/IEC text) (P3) |
 | `docs/13-apps.md` | Apps: the app manifest, screens over pack sheets, the CAPA app (P7) |
 | `docs/15-messaging-brief.md` | Writing site, sales or onboarding copy |
+| `docs/16-front-page-handoff.md` | Designing the public home page |
 | `scripts/hosted/README.md` | Applying migrations, pgTAP and catalogues to the hosted database |
 | `supabase/migrations/0001_core.sql` | The schema. Change it only through new numbered migrations. `node scripts/test-migration.mjs` smoke-tests it without Docker |
 | `templates/*.json` | Sheet templates used by the wizard and the seed |

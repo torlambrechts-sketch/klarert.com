@@ -11,6 +11,9 @@ or a design tool can work from this file alone.
   a standard brings start in test mode; only invites are emailed; no one-click CSV export of a sheet.
 - Adds the owner decisions of 16 Nov 2026: the name, the sign-up promise and the analytics line.
 - New: pitches, benefit ladders, jobs to be done, standard blocks, FAQ, microcopy, "say this, not that", design notes.
+- Front page (16 Nov 2026): the value story in one paragraph, six front-page headlines, the coming-soon values
+  (own frameworks, saved packages) and the positioning line with its rules. The home page brief is now
+  docs/16-front-page-handoff.md.
 - Cut: the 10-row differentiator table (now six values plus supporting), the long competitor table, the site tables.
 
 ## 0. Facts every page depends on
@@ -25,6 +28,16 @@ or a design tool can work from this file alone.
 ## 1. Positioning
 
 **Promise.** Record it once. Prove it for every standard.
+
+**Positioning line (owner decision, 16 Nov 2026).** "Our standards or your own requirements, in one set of
+registers. Save your setup and reuse it in every workspace."
+
+- The first sentence may be used as a live claim only once own frameworks ship (milestone P8, being built now). The
+  second only once saved packages ship (P9, next).
+- Until then, show both only in a band or block labelled "Coming soon". Never present them as live, and never in the
+  hero.
+- The promise above stays. Once P8 ships it may read "Record it once. Prove it for every standard and every customer
+  requirement."
 
 **Category.** The compliance spreadsheet. Qualifier for ISO readers: "for your management system". Not "GRC platform"
 (heavy) and not "compliance automation" (that category means connectors we do not have).
@@ -129,6 +142,29 @@ when we update the standard."
 
 Six values drive sign-up. Each climbs from the feature to the line a salesperson says.
 
+**The value story in one paragraph** (the front-page narrative; docs/16 §2):
+
+> Most teams run their management system in spreadsheets: one file per standard, the same risk typed three times,
+> evidence in email, and a week of searching before every audit. Keptrow is the compliance spreadsheet. It keeps one
+> set of registers for risks, incidents, nonconformities, documents, suppliers and actions. Pick your standard and it
+> installs on top as ordinary sheets, with its requirement library, example items and a short setup checklist. Record
+> a risk once and it counts for every standard that uses it, so your second standard is a smaller job than your first.
+> It works like the spreadsheet your team already knows: add a column, paste from Excel, change anything. And it keeps
+> the proof. Every change goes into an activity log your auditor can verify without trusting us. On audit day you hand
+> over read-only access, the statement of applicability and an audit pack. Free while in early access. Hosted in
+> Frankfurt, EU.
+
+**The six values at a glance** (front-page headlines, each 6 words or fewer):
+
+| Value | Headline | Supporting line |
+|---|---|---|
+| 4.1 | Record it once | A risk or incident counts for every standard that uses it. |
+| 4.2 | Start from your standard | Registers, example items and a setup checklist of 4 to 8 steps. |
+| 4.3 | A spreadsheet you can change | 58 field types, paste from Excel, and updates that keep your changes. |
+| 4.4 | An activity log you can verify | Every change is chained per item, so a changed entry shows. |
+| 4.5 | Ready for audit day | Auditor access that ends by itself, the SoA and an audit pack. |
+| 4.6 | EU-hosted, private by design | Frankfurt hosting, two-step sign-in, no third-party analytics or trackers. |
+
 ### 4.1 Record once, count everywhere
 
 | Rung | Copy |
@@ -189,7 +225,29 @@ Six values drive sign-up. Each climbs from the feature to the line a salesperson
 | Proof | Workspace admin › Security › Require two-step sign-in; "Restricted" in place of a value. |
 | Sales hook | "Hosted in Frankfurt. Two-step sign-in. No third-party trackers." |
 
-### 4.7 Supporting values (real, but not why people sign up)
+### 4.7 Coming soon values (label every use "Coming soon")
+
+Approved by the owner on 16 Nov 2026 (board review of own frameworks and saved packages). Neither is live; each line
+below becomes a live claim only when its milestone ships.
+
+**Your own requirements** (milestone P8, being built now). *Supporting line:* "Add your own requirements: a
+customer's security schedule, your internal policies, or a code we don't ship." *Allowed once shipped:*
+- "They get the same library, statement of applicability, coverage and links to your controls as ISO/IEC 27001."
+- "Map them to ISO/IEC 27001 or NIS2 yourself, and see where one control covers both."
+- On SOC 2: "You can write your own requirement set, for example from a customer's SOC 2 report. We don't ship SOC 2."
+
+*Never:* "SOC 2 support", "supports any framework", "mapped automatically", any AI claim, or that we review or check
+customer frameworks.
+
+**Save your setup** (saved packages, milestone P9, next). *Supporting line:* "Build your method once. Install it in
+every client workspace." *Allowed once shipped:*
+- "Publish a new version; each client takes the update and keeps their own changes."
+- "Personal data and webhook addresses are never copied."
+
+*Never:* "marketplace", "share with anyone", "live sync" or "synced" (an admin applies each update), "multi-client
+overview" (still coming), "white-label".
+
+### 4.8 Supporting values (real, but not why people sign up)
 
 For Platform and standard pages:
 
@@ -447,6 +505,8 @@ accessibility checks".
 - SSO, an API, email reminders, a readiness score, policy attestation or one-click sheet export as available.
 - "Reminders run themselves", "8-step setup", "tamper-proof", "immutable", "unlimited", uptime or speed figures.
 - Names of sub-processors, until the DPA and the list are published.
+- Own frameworks or saved packages as available, or "marketplace", "synced", "supports any framework", "mapped
+  automatically" at any time (section 4.7).
 
 **Naming standards:** number and edition ("ISO/IEC 27001:2022", "ISO 9001:2026"). Never quote or closely paraphrase
 clause or control text; reference numbers and official short titles only. State edition status when it matters
@@ -530,24 +590,33 @@ say it back.
 
 ## 13. Hand-off notes for Claude Design
 
-**Visual direction.** White, full width, generous space. Soft blue glows behind key cards, never behind text. Real
-product UI as cards, from the app, with the fictional "Meridian Components Ltd". Geist type. No dots, stock photos,
-standards-body logos or unearned badges. Statuses carry words and a symbol. Design at 390 px first.
+**Visual direction (owner decision, 16 Nov 2026).** Full width, white background, soft blue glows at the top of the
+page and behind a few key cards, never behind text. No dot pattern. Real product UI shown as cards, with the fictional
+"Meridian Components Ltd", clearly labelled "Example workspace". Large, calm Geist type; dark primary buttons;
+generous whitespace. No stock photos, standards-body logos or unearned badges. Statuses carry words and a symbol.
+Design at 390 px first.
 
-**Home: make the visitor feel "this is my work, already organised", and pick a standard.**
+**Home: the full brief is docs/16-front-page-handoff.md.** It stands alone and is what goes to Claude Design: the
+narrative, the six values, the coming-soon values, exact copy, visuals and layout for 13 sections, microcopy, claims
+guardrails and design tokens in words. Its section order:
 
-| # | Section | Feel | Do | Visual |
-|---|---|---|---|---|
-| 1 | Hero (section 2) | "I get it in one read" | Click Create your workspace | Risk register card in Table view with the "Used by ISO 27001, ISO 9001, NIS2" chip |
-| 2 | Which standard are you working on? | "They have mine" | Pick a tile | Six standard tiles with edition and setup step 1; a seventh, "Something else: start blank" |
-| 3 | How it works in 3 steps (section 7) | "This is not a project" | Create your workspace | Three real screenshots: sign-up, Create's preview, Home's Next step card |
-| 4 | One file per standard does not hold | "That is exactly us" | Read on | Three file cards fading into one register |
-| 5 | The freedom of a spreadsheet. The proof an auditor asks for. | "Familiar, but safer" | Read on | Field picker beside the activity log showing "Chain intact" |
-| 6 | Record once | "The second standard is cheaper" | See every standard | Requirement card with "Also satisfies" |
-| 7 | Proof on audit day | "I will look prepared" | See how it works | Verify result card; SoA table card |
-| 8 | Hosted in Frankfurt. Two-step sign-in. No third-party trackers. | "It passes my vendor check" | Read about security | Four fact cards |
-| 9 | Questions before you start (section 8) | "No catch" | Create your workspace | A plain list, open by default on price |
-| 10 | Start with one standard | "Low risk to try" | Create your workspace; Talk to us | Home's Next step card |
+| # | Section | H2 (or H1) | Feel |
+|---|---|---|---|
+| 1 | Header and nav | – | "I know where I am" |
+| 2 | Hero (section 2) | Record it once. Prove it for every standard. | "I get it in one read" |
+| 3 | Standards band | Ready-made sets for … | "They have mine" |
+| 4 | The problem | One file per standard does not hold | "That is exactly us" |
+| 5 | How it works in 3 steps (section 7) | Your first register in one sitting | "This is not a project" |
+| 6 | The six values (section 4) | The freedom of a spreadsheet. The proof an auditor asks for. | "Familiar, but safer" |
+| 7 | Start from your standard (section 6) | Which standard are you working on? | "They have mine" |
+| 8 | Coming soon (section 4.7) | Your own requirements and your own setup | "They are honest, and it grows with us" |
+| 9 | Proof | Hand over links, not a folder | "I will look prepared" |
+| 10 | Trust and security | Hosted in Frankfurt. Two-step sign-in. No third-party trackers. | "It passes my vendor check" |
+| 11 | FAQ (section 8) | Questions before you start | "No catch" |
+| 12 | Final CTA | Start with one standard | "Low risk to try" |
+| 13 | Footer | – | "A real company" |
+
+The coming-soon band carries the positioning line (section 1) and is the only place it appears until P8 and P9 ship.
 
 **Standard pages: "built for my standard".** Section 6 headline and CTA, its sheets and setup steps as real cards,
 record once, the edition note, the FAQ, the CTA again.
