@@ -1705,7 +1705,9 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
                       <Plus aria-hidden />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80">
+                  {/* the "+" can slide out of view while the picker is open (a column added a moment ago renders
+                      after the scroll): stay whole inside the window rather than clipped at the anchor's edge */}
+                  <PopoverContent align="end" sticky="always" className="w-80">
                     <FieldPicker
                       onPick={(type, name) => {
                         setPickerOpen(false);
