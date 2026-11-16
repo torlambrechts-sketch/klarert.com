@@ -32,6 +32,8 @@ export const LIBRARY_KEYS = {
   guidance: 'guidance',
   questions: 'audit_questions',
   typicalEvidence: 'typical_evidence',
+  /** A workspace's own requirement's full wording (docs/12 Your own frameworks). */
+  text: 'requirement_text',
   /** Added at adoption when a controls sheet is chosen (docs/12): links to its items, both ways. */
   controls: 'controls',
 } as const;
@@ -61,8 +63,12 @@ function partOf(r: Requirement, byRef: Map<string, Requirement>): string {
   return p.kind === 'theme' ? p.title : `${p.ref} ${p.title}`;
 }
 
-/** The sheet's own description: what it is and the licence note (shown under the sheet name). */
+/**
+ * The sheet's own description: what it is and the licence note (shown under the sheet name). A workspace's own
+ * framework's licence note already names its source: "Provided by <source>. Owned by <workspace>."
+ */
 export function libraryDescription(f: Framework): string {
+  if (f.titles === 'customer') return `${f.title}. ${f.licence}`.slice(0, 2000);
   return `${f.title}. ${f.licence} Source: ${f.source}.`.slice(0, 2000);
 }
 
@@ -79,6 +85,7 @@ export function frameworkToPack(f: Framework): PackManifest {
     return { ref, name: t.title.slice(0, 80), color: LABEL_COLORS[i % LABEL_COLORS.length]! };
   });
   const has = {
+    text: f.requirements.some((r) => r.kind !== 'theme' && r.text),
     purpose: f.requirements.some((r) => r.kind !== 'theme' && r.purpose),
     guidance: f.requirements.some((r) => r.guidance),
     questions: f.requirements.some((r) => r.questions.length > 0),
@@ -93,6 +100,7 @@ export function frameworkToPack(f: Framework): PackManifest {
       const values: Record<string, Json> = { [LIBRARY_KEYS.ref]: r.ref };
       const part = partOf(r, byRef);
       if (part) values[LIBRARY_KEYS.partOf] = part;
+      if (r.text) values[LIBRARY_KEYS.text] = r.text;
       if (r.purpose) values[LIBRARY_KEYS.purpose] = r.purpose;
       if (r.guidance) values[LIBRARY_KEYS.guidance] = r.guidance;
       if (r.questions.length) values[LIBRARY_KEYS.questions] = bullets(r.questions);
@@ -126,6 +134,9 @@ export function frameworkToPack(f: Framework): PackManifest {
         description: `The reference number in ${f.title}. It never changes.`,
       },
       { key: k.partOf, name: 'Part of', type: 'text' as const, locked: true },
+      ...(has.text
+        ? [{ key: k.text, name: 'Requirement', type: 'longtext' as const, locked: true }]
+        : []),
       ...(has.purpose
         ? [{ key: k.purpose, name: 'Purpose', type: 'longtext' as const, locked: true }]
         : []),
@@ -182,9 +193,10 @@ export function frameworkToPack(f: Framework): PackManifest {
               name: f.library.soa.name,
               type: 'table' as const,
               config: {
-                filters: [
-                  { fieldKey: k.ref, op: 'starts_with', value: f.library.soa.refStartsWith },
-                ],
+                // an empty prefix: every requirement (a workspace's own framework, docs/12)
+                filters: f.library.soa.refStartsWith
+                  ? [{ fieldKey: k.ref, op: 'starts_with', value: f.library.soa.refStartsWith }]
+                  : [],
                 sort: [],
                 hidden: [k.partOf, k.owner, k.lastReviewed],
               } as Record<string, Json>,

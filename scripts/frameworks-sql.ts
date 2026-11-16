@@ -59,7 +59,7 @@ out.push(
   insert(
     'crosswalks',
     crosswalkRows(repoCrosswalks()),
-    '(from_framework, from_version, from_ref, to_framework, to_version, to_ref)',
+    '(from_framework, from_version, from_ref, to_framework, to_version, to_ref, retired_at)',
   ),
 );
 out.push('commit;', '');

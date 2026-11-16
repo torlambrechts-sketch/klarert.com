@@ -16,6 +16,7 @@ import {
 } from '@/engine/frameworks/types';
 import type { Database } from '@/lib/database.types';
 import { packHash } from '@/lib/packs/hash';
+import { fetchAllPages } from '@/lib/sheet-query';
 
 type Db = SupabaseClient<Database>;
 
@@ -76,6 +77,7 @@ export function requirementRows(f: Framework) {
     kind: r.kind,
     position: r.position,
     title: r.title,
+    ...(r.text ? { text: r.text } : {}),
     purpose: r.purpose,
     guidance: r.guidance,
     questions: r.questions,
@@ -186,7 +188,9 @@ export async function syncFrameworks(
   for (let i = 0; i < rows.length; i += 500)
     must(
       await db.from('crosswalks').upsert(rows.slice(i, i + 500), {
-        onConflict: 'from_framework,from_version,from_ref,to_framework,to_version,to_ref',
+        // one live row per pair (0074: retired rows of a workspace's own mappings keep their timestamps)
+        onConflict:
+          'from_framework,from_version,from_ref,to_framework,to_version,to_ref,retired_at',
         ignoreDuplicates: true,
       }),
       'crosswalks',
@@ -211,26 +215,46 @@ export interface CatalogueFramework extends Omit<EditionInfo, 'statusCheckedOn'>
   packVersion: string;
   /** Requirements that become library items (not themes). */
   requirements: number;
+  /** A workspace's own framework (docs/12 Your own frameworks): its workspace; null for the catalogue's. */
+  orgId: string | null;
 }
 
-/** The catalogue's frameworks, in a stable order (kind, then title), with their requirement counts. */
-export async function readFrameworks(db: Db): Promise<CatalogueFramework[]> {
+/** Only the catalogue and the given workspace's own rows (a person in two workspaces reads both under RLS). */
+const ownerFilter = (orgId: string | undefined, column = 'org_id') =>
+  orgId ? `${column}.is.null,${column}.eq.${orgId}` : null;
+
+/**
+ * The catalogue's frameworks, in a stable order (kind, then title), with their requirement counts. With `orgId`,
+ * also that workspace's own frameworks (and no other workspace's); without, whatever RLS lets the person read.
+ */
+export async function readFrameworks(db: Db, orgId?: string): Promise<CatalogueFramework[]> {
+  const owner = ownerFilter(orgId);
+  let fwq = db
+    .from('frameworks')
+    .select(
+      'key, version, revision, title, short_title, publisher, kind, source, licence, url, pack_key, pack_version, status, superseded_by, transition_ends, revision_stage, revision_expected, status_note, status_checked_on, org_id',
+    );
+  if (owner) fwq = fwq.or(owner);
   const [fw, reqs] = await Promise.all([
-    db
-      .from('frameworks')
-      .select(
-        'key, version, revision, title, short_title, publisher, kind, source, licence, url, pack_key, pack_version, status, superseded_by, transition_ends, revision_stage, revision_expected, status_note, status_checked_on',
-      ),
-    db.from('requirements').select('framework_key, framework_version, kind'),
+    fwq,
+    fetchAllPages<{ framework_key: string; framework_version: string; kind: string }>((a, b) => {
+      let q = db
+        .from('requirements')
+        .select('framework_key, framework_version, kind')
+        .neq('kind', 'theme')
+        .order('framework_key')
+        .order('framework_version')
+        .order('ref');
+      if (owner) q = q.or(owner);
+      return q.range(a, b);
+    }),
   ]);
   must(fw, 'frameworks');
-  must(reqs, 'requirements');
   const count = new Map<string, number>();
-  for (const r of reqs.data ?? [])
-    if (r.kind !== 'theme') {
-      const k = `${r.framework_key}@${r.framework_version}`;
-      count.set(k, (count.get(k) ?? 0) + 1);
-    }
+  for (const r of reqs) {
+    const k = `${r.framework_key}@${r.framework_version}`;
+    count.set(k, (count.get(k) ?? 0) + 1);
+  }
   const order = ['standard', 'regulation', 'law', 'internal'];
   return (fw.data ?? [])
     .map((f) => ({
@@ -243,7 +267,7 @@ export async function readFrameworks(db: Db): Promise<CatalogueFramework[]> {
       kind: f.kind as FrameworkKind,
       source: f.source,
       licence: f.licence,
-      url: f.url,
+      url: f.url ?? '',
       packKey: f.pack_key,
       packVersion: f.pack_version,
       requirements: count.get(`${f.key}@${f.version}`) ?? 0,
@@ -254,6 +278,7 @@ export async function readFrameworks(db: Db): Promise<CatalogueFramework[]> {
       revisionExpected: f.revision_expected,
       statusNote: f.status_note,
       statusCheckedOn: f.status_checked_on,
+      orgId: f.org_id,
     }))
     .sort(
       (a, b) =>
@@ -263,32 +288,100 @@ export async function readFrameworks(db: Db): Promise<CatalogueFramework[]> {
     );
 }
 
-/** Every cross-walk that touches one of `frameworks` (`<key>@<version>`). */
-export async function readCrosswalks(db: Db, frameworks: string[]): Promise<Crosswalk[]> {
+type CrosswalkRow = {
+  id: number;
+  from_framework: string;
+  from_version: string;
+  from_ref: string;
+  to_framework: string;
+  to_version: string;
+  to_ref: string;
+  relation: string;
+  note: string;
+  source: string;
+  org_id: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+const CROSSWALK_COLUMNS =
+  'id, from_framework, from_version, from_ref, to_framework, to_version, to_ref, relation, note, source, org_id, created_by, created_at';
+
+/** Cross-walk rows as the engine reads them; a workspace's own carry who made them (a name) and when. */
+async function toCrosswalks(db: Db, rows: CrosswalkRow[]): Promise<Crosswalk[]> {
+  const people = [
+    ...new Set(rows.flatMap((c) => (c.org_id && c.created_by ? [c.created_by] : []))),
+  ];
+  const names = new Map<string, string>();
+  if (people.length) {
+    const { data } = await db.from('profiles').select('id, display_name').in('id', people);
+    for (const p of data ?? []) names.set(p.id, p.display_name);
+  }
+  return rows.map((c) => ({
+    from: { framework: c.from_framework, version: c.from_version, ref: c.from_ref },
+    to: { framework: c.to_framework, version: c.to_version, ref: c.to_ref },
+    relation: c.relation as Relation,
+    note: c.note,
+    source: c.source,
+    own: c.org_id
+      ? {
+          id: c.id,
+          by: c.created_by ? (names.get(c.created_by) ?? null) : null,
+          at: c.created_at,
+        }
+      : null,
+  }));
+}
+
+/**
+ * Every live cross-walk that touches one of `frameworks` (`<key>@<version>`) at both ends: the catalogue's, and with
+ * `orgId` that workspace's own mappings (never another workspace's; retired ones are left out).
+ */
+export async function readCrosswalks(
+  db: Db,
+  frameworks: string[],
+  orgId?: string,
+): Promise<Crosswalk[]> {
   if (frameworks.length === 0) return [];
   const keys = [...new Set(frameworks.map((f) => f.split('@')[0]!))];
-  const { data, error } = await db
-    .from('crosswalks')
-    .select(
-      'from_framework, from_version, from_ref, to_framework, to_version, to_ref, relation, note, source',
-    )
-    .in('from_framework', keys)
-    .in('to_framework', keys);
-  if (error) throw new Error(`crosswalks: ${error.message}`);
+  const owner = ownerFilter(orgId);
+  const data = await fetchAllPages<CrosswalkRow>((a, b) => {
+    let q = db
+      .from('crosswalks')
+      .select(CROSSWALK_COLUMNS)
+      .in('from_framework', keys)
+      .in('to_framework', keys)
+      .is('retired_at', null)
+      .order('id');
+    if (owner) q = q.or(owner);
+    return q.range(a, b);
+  });
   const wanted = new Set(frameworks);
-  return (data ?? [])
-    .filter(
+  return toCrosswalks(
+    db,
+    data.filter(
       (c) =>
         wanted.has(`${c.from_framework}@${c.from_version}`) &&
         wanted.has(`${c.to_framework}@${c.to_version}`),
-    )
-    .map((c) => ({
-      from: { framework: c.from_framework, version: c.from_version, ref: c.from_ref },
-      to: { framework: c.to_framework, version: c.to_version, ref: c.to_ref },
-      relation: c.relation as Relation,
-      note: c.note,
-      source: c.source,
-    }));
+    ),
+  );
+}
+
+/** The workspace's own live mappings from one of its requirements (docs/12 Your own frameworks), oldest first. */
+export async function readOwnMappings(db: Db, orgId: string, key: string): Promise<Crosswalk[]> {
+  const id = key.match(/^(.+)@([^@#]+)#(.+)$/);
+  if (!id) return [];
+  const { data, error } = await db
+    .from('crosswalks')
+    .select(CROSSWALK_COLUMNS)
+    .eq('org_id', orgId)
+    .is('retired_at', null)
+    .eq('from_framework', id[1]!)
+    .eq('from_version', id[2]!)
+    .eq('from_ref', id[3]!)
+    .order('id');
+  if (error) throw new Error(`crosswalks: ${error.message}`);
+  return toCrosswalks(db, (data ?? []) as CrosswalkRow[]);
 }
 
 /** Requirements of one framework version, in order. */
@@ -297,20 +390,25 @@ export async function readRequirements(
   key: string,
   version: string,
 ): Promise<(Requirement & { key: string })[]> {
-  const { data, error } = await db
-    .from('requirements')
-    .select('ref, parent_ref, kind, position, title, purpose, guidance, questions, evidence, tags')
-    .eq('framework_key', key)
-    .eq('framework_version', version)
-    .order('position');
-  if (error) throw new Error(`requirements: ${error.message}`);
-  return (data ?? []).map((r) => ({
+  const data = await fetchAllPages((a, b) =>
+    db
+      .from('requirements')
+      .select(
+        'ref, parent_ref, kind, position, title, text, purpose, guidance, questions, evidence, tags',
+      )
+      .eq('framework_key', key)
+      .eq('framework_version', version)
+      .order('position')
+      .range(a, b),
+  );
+  return data.map((r) => ({
     key: requirementKey({ framework: key, version, ref: r.ref }),
     ref: r.ref,
     parent: r.parent_ref,
     kind: r.kind as RequirementKind,
     position: r.position,
     title: r.title,
+    ...(r.text ? { text: r.text } : {}),
     purpose: r.purpose,
     guidance: r.guidance,
     questions: r.questions ?? [],
