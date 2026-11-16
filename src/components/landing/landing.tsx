@@ -197,7 +197,7 @@ export function Landing() {
                     className="text-info text-label-14 mt-1 inline-flex min-h-11 items-center gap-1 self-start rounded-sm font-medium underline-offset-4 hover:underline sm:min-h-8"
                   >
                     <span>
-                      More about this<span className="sr-only">: {f.title}</span>
+                      More about this<span className="sr-only"> ({f.title})</span>
                     </span>
                     <ArrowRight aria-hidden="true" className="size-4" />
                   </Link>
