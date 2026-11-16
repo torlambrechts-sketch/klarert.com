@@ -1799,6 +1799,9 @@ isOneToOne: false
 "_public_form_hidden_types":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
                            },
+"_reserved_slugs":
+{ Args: Record<PropertyKey, never>; Returns: (string)[]
+                           },
 "_retention_rule":
 { Args: { "p_rule": string,"p_sheet": string }; Returns: Json
                            },

@@ -3,6 +3,13 @@ import { fromDbError } from './result';
 
 // The database words some refusals for people behind a prefix (docs/02); the toast shows them in sentence case.
 describe('fromDbError', () => {
+  it('says a reserved workspace address is reserved', () => {
+    expect(fromDbError({ message: 'workspace address reserved' })).toEqual({
+      ok: false,
+      error: { code: 'conflict', message: 'That address is reserved. Try another.' },
+    });
+  });
+
   it('starts a documents register refusal with a capital', () => {
     expect(
       fromDbError({
