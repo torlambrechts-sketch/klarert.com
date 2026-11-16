@@ -148,7 +148,7 @@ function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: W
         </DropdownMenuLabel>
         {workspaces.map((w) => (
           <DropdownMenuItem key={w.id} asChild>
-            <Link href={`/${w.slug}`} className="flex items-center gap-2">
+            <Link href={`/${w.slug}/home`} className="flex items-center gap-2">
               <span
                 aria-hidden
                 className="bg-ink text-primary-foreground text-label-12 flex size-[28px] shrink-0 items-center justify-center rounded-full font-medium"

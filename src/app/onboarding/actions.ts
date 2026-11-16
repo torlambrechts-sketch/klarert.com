@@ -31,5 +31,7 @@ export async function createWorkspaceAction(
   });
   if (!result.ok) return result;
   revalidatePath('/', 'layout');
-  redirect(`/${result.data.slug}`);
+  // straight to Home: a second redirect (the workspace index page's) inside a Server Action's response can leave the
+  // router on /{slug} with an empty page
+  redirect(`/${result.data.slug}/home`);
 }

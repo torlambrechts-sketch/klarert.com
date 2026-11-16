@@ -6,5 +6,5 @@ export default async function Root() {
   if (!session) redirect(await signInPath());
   if (!session.profile) redirect('/onboarding');
   const [first] = await getMyWorkspaces();
-  redirect(first ? `/${first.slug}` : '/onboarding');
+  redirect(first ? `/${first.slug}/home` : '/onboarding');
 }

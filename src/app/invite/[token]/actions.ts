@@ -12,5 +12,6 @@ export async function acceptInviteAction(
   const result = await acceptInvite({ token: form.get('token') });
   if (!result.ok) return result;
   revalidatePath('/', 'layout');
-  redirect(`/${result.data.slug}`);
+  // straight to Home, not via the workspace index page's redirect (see onboarding/actions.ts)
+  redirect(`/${result.data.slug}/home`);
 }
