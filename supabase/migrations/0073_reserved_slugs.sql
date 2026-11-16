@@ -13,8 +13,8 @@
 -- 1. the list
 create or replace function _reserved_slugs() returns text[]
 language sql immutable set search_path = public as $$
-  select array['_next', 'account', 'account-deleted', 'api', 'auth', 'f', 'favicon.ico', 'invite', 'login',
-               'onboarding', 'opengraph-image', 'poster', 'privacy', 'robots.txt', 'sitemap.xml', 'terms']::text[]
+  select array['_next', 'account', 'account-deleted', 'api', 'auth', 'f', 'favicon.ico', 'frameworks', 'invite', 'login',
+               'onboarding', 'opengraph-image', 'platform', 'poster', 'privacy', 'robots.txt', 'sitemap.xml', 'terms']::text[]
 $$;
 revoke all on function _reserved_slugs() from public, anon, authenticated, service_role;
 

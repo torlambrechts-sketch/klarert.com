@@ -196,7 +196,9 @@ export const PRIVACY: LegalPage = {
           ],
         },
         {
-          p: ['You can change your name, email address and password yourself, in Your account.'],
+          p: [
+            'You can change your name, email address and password yourself, in Your account. Entries in the access log that were written before a change keep the name used at the time.',
+          ],
         },
         {
           p: [
