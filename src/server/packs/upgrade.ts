@@ -4,6 +4,7 @@
 // person's, RLS applies); no 'server-only' import so scripts can share it.
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { compareVersions, parseVersion } from '@/engine/packs/semver';
+import { manifestForPeople, packProse, packTitle } from '@/engine/packs/words';
 import { planPackUpgrade, type InstalledState, type UpgradePlan } from '@/engine/packs/upgrade';
 import { todayIn } from '@/engine/sheet-data';
 import type { Json } from '@/engine/types';
@@ -40,7 +41,13 @@ export async function readPackVersion(
     'pack version',
   );
   if (!row) return null;
-  return { ...row, manifest: parsePack(row.manifest) };
+  // both sides of an update read the same words, so the plan compares like with like (engine/packs/words.ts)
+  return {
+    ...row,
+    title: packTitle(row.title),
+    description: packProse(row.description),
+    manifest: manifestForPeople(parsePack(row.manifest)),
+  };
 }
 
 /**
@@ -424,7 +431,7 @@ async function loadExtenders(
   );
   return rows
     .filter((r) => installs.some((i) => i.pack_key === r.key && i.version === r.version))
-    .map((r) => ({ title: r.title, manifest: parsePack(r.manifest) }));
+    .map((r) => ({ title: packTitle(r.title), manifest: parsePack(r.manifest) }));
 }
 
 /** Write a ready upgrade plan: upgrade_pack and the sheets' approval workflows (apply_pack_upgrade), all or nothing. */

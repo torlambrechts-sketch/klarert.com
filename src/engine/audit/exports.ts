@@ -134,7 +134,7 @@ function coveredOf(kind: string, s: Scope): string | null {
       const sheets = num(s.sheets);
       const entries = num(s.entries);
       const chains = num(s.chains);
-      if (sheets !== null) parts.push(count(sheets, 'register', 'registers'));
+      if (sheets !== null) parts.push(count(sheets, 'sheet', 'sheets'));
       if (entries !== null) parts.push(count(entries, 'log entry', 'log entries'));
       if (chains !== null) {
         const broken = num(s.chains_broken) ?? 0;

@@ -48,7 +48,7 @@ export interface EditorState {
   widget: InsightWidget;
 }
 
-const selectClass = cn(inputClass, 'h-9 text-label-13.5 px-2.5');
+const selectClass = cn(inputClass, 'h-9 text-label-13 px-2.5');
 
 function Field({
   label,
@@ -181,7 +181,7 @@ export function WidgetEditor({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <SideSheetContent className="text-label-13.5 w-[min(480px,100vw)]">
+      <SideSheetContent className="text-label-13 w-[min(480px,100vw)]">
         <div className="border-soft flex flex-col gap-1 border-b py-5 pr-12 pl-6">
           <DialogTitle className="text-heading-16 m-0">
             {state.mode === 'add' ? 'Add widget' : 'Configure widget'}
@@ -455,10 +455,7 @@ export function WidgetEditor({
             >
               <textarea
                 id={`${id}-text`}
-                className={cn(
-                  inputClass,
-                  'text-label-13.5 h-24 resize-y px-2.5 py-2 leading-[1.5]',
-                )}
+                className={cn(inputClass, 'text-label-13 h-24 resize-y px-2.5 py-2 leading-[1.5]')}
                 maxLength={MAX_NOTE}
                 placeholder="Context, targets or instructions for this view"
                 value={w.text ?? ''}

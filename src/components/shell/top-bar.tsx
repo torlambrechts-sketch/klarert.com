@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,19 +44,11 @@ export function TopBar({
   canManage: boolean;
   timeZone: string;
 }) {
-  const { setMenuOpen, focusSearch } = useShell();
+  const { focusSearch } = useShell();
   useSlashToSearch(focusSearch);
   return (
     <header className="border-line bg-background-100 sticky top-0 z-30 flex h-[48px] items-center gap-2 border-b px-3 sm:gap-2.5 sm:px-[28px] print:hidden">
-      <button
-        type="button"
-        className="phone-only hover:bg-soft flex size-9 shrink-0 items-center justify-center rounded-md"
-        aria-label="Open menu"
-        onClick={() => setMenuOpen(true)}
-      >
-        <Menu className="size-5" aria-hidden />
-      </button>
-
+      {/* phones: the menu opens from the bottom bar's Menu; the top bar keeps Search and the Inbox (docs/05 §5) */}
       {/* the page's breadcrumb (folder / sheet and its badge) is rendered here by <ShellCrumb> */}
       <div id={CRUMB_SLOT} className="desk-only flex min-w-0 flex-1 items-center" />
 

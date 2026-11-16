@@ -9,7 +9,7 @@ import { rest, signIn } from './helpers';
 // management body approval workflow is on its sheet; the CSIRT is the default "Report to"; changing the country to
 // Germany in the pack's settings rewrites the defaults.
 
-const TITLE = 'NIS2 cybersecurity (add-on)';
+const TITLE = 'NIS2 cybersecurity';
 const SHOTS = process.env.NIS2_SHOTS;
 const shot = async (page: Page, name: string) => {
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
@@ -35,7 +35,7 @@ test('install NIS2 with the Norway country rules and change the country later', 
     await expect(dialog).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await expect(dialog.getByTestId('installs-first')).toContainText(
-    'Installs Core registers 1.3.0 (Full) first.',
+    'Installs Shared registers 1.3.0 (Everything) first.',
   );
   const country = dialog.getByLabel('Country of main establishment');
   await country.selectOption({ label: 'Norway' });
@@ -50,7 +50,7 @@ test('install NIS2 with the Norway country rules and change the country later', 
     timeout: 90_000,
   });
   await expect(dialog.getByRole('status')).toContainText(
-    'Installed Core registers 1.3.0 (Full) first.',
+    'Installed Shared registers 1.3.0 (Everything) first.',
   );
   await dialog.getByRole('button', { name: 'Done' }).click();
 
@@ -143,14 +143,12 @@ test('install NIS2 with the Norway country rules and change the country later', 
   await expect(settings.getByTestId('setting-details')).toContainText('BSI');
   await shot(page, '03-settings-dialog');
   await settings.getByRole('button', { name: 'Save settings' }).click();
-  await expect(
-    page.getByText(/Saved the settings of NIS2 cybersecurity \(add-on\)\./),
-  ).toBeVisible();
+  await expect(page.getByText(/Saved the settings of NIS2 cybersecurity\./)).toBeVisible();
   await expect(installed.getByTestId('pack-settings-summary')).toHaveText(
     'Country of main establishment: Germany',
   );
   expect(await recipient()).toMatch(/BSI/);
   await expect(page.getByRole('list', { name: 'Pack activity' })).toContainText(
-    'Changed the settings of NIS2 cybersecurity (add-on) (Country of main establishment: Germany)',
+    'Changed the settings of NIS2 cybersecurity (Country of main establishment: Germany)',
   );
 });

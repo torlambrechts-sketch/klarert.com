@@ -3,7 +3,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
-// The Design area (docs/05 §3.8 and §4; owner decision 15 Nov 2026) on the Core registers 1.3.0 (Starter) and the
+// The Design area (docs/05 §3.8 and §4; owner decision 15 Nov 2026) on the Shared registers 1.3.0 (Recommended) and the
 // CAPA app's pack: the Nonconformities and CAPA sheet's flow (manual entry asking the pack's intake form, the forms,
 // the pack's automation in test mode, the CAPA closure workflow, links, a Slack webhook with a dead letter) with
 // health and pack provenance; an automation edited in the side window through the existing builder and logged; the
@@ -109,7 +109,7 @@ test('the Design tab lists Core nonconformities: inputs, sheet, logic, outputs, 
     'New item dialog asks the form “New nonconformity” in 3 steps',
   );
   await expect(row(page, /^Report a nonconformity/)).toContainText(
-    'From Core registers · unchanged',
+    'From Shared registers · unchanged',
   );
   await expect(row(page, /^New nonconformity/)).toContainText('asked by + New');
   await expect(page.getByTestId('step-coming-later')).toContainText('API / webhook');
@@ -117,7 +117,7 @@ test('the Design tab lists Core nonconformities: inputs, sheet, logic, outputs, 
   await expect(row(page, /^Nonconformities and CAPA/)).toContainText('16 columns');
   const overdue = row(page, /^Nonconformity overdue → tell the owner/);
   await expect(overdue).toContainText('In test mode');
-  await expect(overdue).toContainText('From Core registers · unchanged');
+  await expect(overdue).toContainText('From Shared registers · unchanged');
   await expect(row(page, /^CAPA closure/)).toContainText('Approval workflow');
   await expect(row(page, /^Stage lifecycle/)).toBeVisible();
   await expect(row(page, /^Incidents/)).toContainText('Link · Incident, both ways');
@@ -147,7 +147,7 @@ test('an automation opens in the side window, is saved with the builder and land
   await window.getByRole('button', { name: 'Save as v2' }).click();
   await expect(window).toBeHidden();
   const renamed = row(page, /^Overdue nonconformity → tell the owner/);
-  await expect(renamed).toContainText('From Core registers · changed');
+  await expect(renamed).toContainText('From Shared registers · changed');
   // focus returns to the row
   await expect(renamed).toBeFocused();
   // the change went through the automation commands: version 2 and the schema audit on the sheet's chain
@@ -319,7 +319,7 @@ test('the export prints the sheet’s flow and the data-flow record', async ({ p
   await page.emulateMedia({ media: 'screen' });
   // the workspace export with the page's filter
   await page.goto(`/${w.slug}/design/print?pack=core`);
-  await expect(page.getByTestId('design-print')).toContainText('Scope: Pack: Core registers');
+  await expect(page.getByTestId('design-print')).toContainText('Scope: Pack: Shared registers');
   await expect(page.getByTestId('print-connections')).toContainText('Link field, both ways');
   // the plain flow print and the workspace print are not logged
   expect(exportsLogged()).toBe(before);
@@ -388,7 +388,7 @@ test('CAPA 1.2.0 on Core: its form on Core’s register is unchanged, and no she
     'From Corrective action (CAPA) · unchanged',
   );
   await expect(row(page, /^Report a nonconformity/)).toContainText(
-    'From Core registers · unchanged',
+    'From Shared registers · unchanged',
   );
   await expect(page.getByTestId('design-list')).not.toContainText('· changed');
   await page.goto(`/${slug}/design?differs=1`);

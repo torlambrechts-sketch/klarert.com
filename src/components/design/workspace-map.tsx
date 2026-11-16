@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { ToneSymbol } from './flow-bits';
 import { mapCanvas } from './sheet-map';
 
-// Platform › Design, the map (docs/05 §4): one box per sheet in columns by folder (Registers domains first), lines for
+// Build › Design, the map (docs/05 §4): one box per sheet in columns by folder (Registers domains first), lines for
 // link fields, items created or updated on another sheet and buttons, outside destinations as badges. Laid out
 // automatically, never dragged. A box is a link to the sheet's Design tab; the Connections table is the same content
 // in words and the accessible default.

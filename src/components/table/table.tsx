@@ -2026,7 +2026,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                   {p.actions.held.has(item.id) ? (
                     <span
                       className="flex shrink-0 items-center gap-1"
-                      title="Actions run when you finish this row"
+                      title="Actions run when you finish this item"
                     >
                       <span className="border-line text-ink rounded-full border px-1.5 leading-4">
                         Editing

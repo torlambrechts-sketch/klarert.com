@@ -8,7 +8,7 @@ import { readDesignWorld, type DesignRead } from '@/server/design/read';
 export const metadata = { title: 'Design · Compliance OS' };
 export const dynamic = 'force-dynamic';
 
-// Platform › Design (docs/05 §4, owner decision 15 Nov 2026): every sheet the person can read and how they connect,
+// Build › Design (docs/05 §4, owner decision 15 Nov 2026): every sheet the person can read and how they connect,
 // derived from configuration (never item rows), as a Connections table or a map. Filters in the URL: ?app=, ?pack=,
 // ?group= (a folder, or "none"), ?domain=, ?differs=1, ?show=map; ?focus=<sheet> marks the sheet you came from.
 
@@ -35,7 +35,7 @@ export default async function DesignPage({
         className="pb-[18px]"
         crumb={
           <ListCrumb
-            section="Platform"
+            section="Build"
             page="Design"
             badge={read ? `${sheets} ${sheets === 1 ? 'sheet' : 'sheets'}` : undefined}
           />

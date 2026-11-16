@@ -39,7 +39,7 @@ export function AppFrame({
         <p className="text-muted-foreground text-label-13 m-0 flex flex-wrap items-center gap-1.5 font-medium">
           <AppIcon icon={app.icon} className="size-[15px]" />
           {app.title}
-          {/* the app's sheets and how they connect (Platform › Design filtered by app, docs/05 §4) */}
+          {/* the app's sheets and how they connect (Build › Design filtered by app, docs/05 §4) */}
           <Link
             href={`/${org}/design?app=${encodeURIComponent(app.key)}`}
             className="text-info ml-auto font-normal underline-offset-2 hover:underline"

@@ -17,6 +17,7 @@ import {
   type PackSnapshot,
 } from '@/engine/packs/plan';
 import { satisfies } from '@/engine/packs/semver';
+import { manifestForPeople, packProse, packTitle } from '@/engine/packs/words';
 import type { PackManifest } from '@/engine/packs/types';
 import { todayIn } from '@/engine/sheet-data';
 import type { Json } from '@/engine/types';
@@ -60,7 +61,10 @@ export interface CataloguePack {
   manifest: PackManifest;
 }
 
-/** The newest version of every pack in the catalogue (the `packs` table), manifests checked again. */
+/**
+ * The newest version of every pack in the catalogue (the `packs` table), manifests checked again. Titles, levels and
+ * descriptions come in the words people see (engine/packs/words.ts); keys, versions, hashes and sheets as stored.
+ */
 export async function readCatalogue(db: Db): Promise<CataloguePack[]> {
   const rows = await every('packs', (a, b) =>
     db
@@ -83,7 +87,14 @@ export async function readCatalogue(db: Db): Promise<CataloguePack[]> {
   return [...newest.values()]
     .flatMap((r) => {
       try {
-        return [{ ...r, manifest: parsePack(r.manifest) }];
+        return [
+          {
+            ...r,
+            title: packTitle(r.title),
+            description: packProse(r.description),
+            manifest: manifestForPeople(parsePack(r.manifest)),
+          },
+        ];
       } catch (e) {
         // a manifest this code cannot read any more is left out of the catalogue, not the whole list
         console.warn(

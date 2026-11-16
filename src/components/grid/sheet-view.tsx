@@ -78,7 +78,7 @@ import {
 
 /** The page header's actions: the board design's 36 px buttons with 15 px icons. */
 const headerButton =
-  "text-label-13.5 h-9 gap-1.5 px-3.5 has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-[15px]";
+  "text-label-13 h-9 gap-1.5 px-3.5 has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-[15px]";
 
 export interface SheetViewProps {
   org: string;
@@ -273,7 +273,7 @@ function SheetBody(props: SheetViewProps) {
     }
   };
   const itemLabel = data?.sheet.itemLabel.toLowerCase() ?? 'item';
-  // "+ New", Create › Entry and N open the New item dialog (docs/05 §3.7); the Table's "+ Add item" rows stay
+  // "+ New" and N open the New item dialog (docs/05 §3.7); the Table's "+ Add item" rows stay
   const addNew = () => setNewItem({});
   const canAdd = canEdit && active.type !== 'form' && !!data;
   // N adds an item, unless the person is typing or working in the grid (a key there edits the cell)
@@ -290,7 +290,7 @@ function SheetBody(props: SheetViewProps) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [canAdd]);
-  // ?new=1 (Create › Entry, docs/05 §4): open the add-item flow once the sheet has loaded
+  // ?new=1 (a link to add an item, docs/05 §3.7): open the add-item flow once the sheet has loaded
   const wantsNew = useRef(false);
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -364,12 +364,12 @@ function SheetBody(props: SheetViewProps) {
               <>
                 <span
                   data-testid="system-board"
-                  title={`System board · installed by ${props.system.source}`}
+                  title={`System sheet · installed by ${props.system.source}`}
                   className="bg-soft text-ink text-label-12 flex min-w-[4.5rem] items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
                 >
                   <Lock className="size-3 shrink-0" aria-hidden />
                   <span className="min-w-0 truncate">
-                    System board
+                    System sheet
                     <span className="hidden sm:inline"> · installed by {props.system.source}</span>
                   </span>
                 </span>

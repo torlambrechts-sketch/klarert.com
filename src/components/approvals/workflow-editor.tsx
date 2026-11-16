@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveApprovalWorkflowsAction } from '@/app/[org]/approval-actions';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { inputClass } from '@/components/fields/shared';
 import {
@@ -155,6 +156,8 @@ export function WorkflowEditor({
   );
   const [list, setList] = useState<ApprovalWorkflow[]>(initial);
   const [draft, setDraft] = useState<{ index: number | null; w: ApprovalWorkflow } | null>(null);
+  /** The workflow whose Delete was pressed: the app's confirm dialog, not the browser's (UX-8). */
+  const [deleting, setDeleting] = useState<number | null>(null);
   const [pending, start] = useTransition();
 
   function save(next: ApprovalWorkflow[], done?: () => void) {
@@ -232,8 +235,34 @@ export function WorkflowEditor({
     );
   }
 
+  const doomed = deleting === null ? null : (list[deleting] ?? null);
+
   return (
     <div className="flex flex-col gap-3">
+      <Dialog open={!!doomed} onOpenChange={(o) => (o ? null : setDeleting(null))}>
+        <DialogContent className="gap-3">
+          <DialogTitle className="text-heading-16">Delete {doomed?.name}?</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-copy-13">
+            Items waiting for it keep their approval to the end.
+          </DialogDescription>
+          <div className="flex flex-wrap justify-end gap-2 pt-1">
+            <Button variant="outline" onClick={() => setDeleting(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={pending}
+              onClick={() => {
+                const at = deleting;
+                setDeleting(null);
+                if (at !== null) save(list.filter((_, j) => j !== at));
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {list.length === 0 ? (
         <p className="text-copy-13 text-muted-foreground m-0">
           No approval workflow yet. Add one to send items through review and approval steps, with
@@ -307,14 +336,7 @@ export function WorkflowEditor({
                       size="sm"
                       disabled={pending}
                       aria-label={`Delete ${x.name}`}
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `Delete ${x.name}? Items waiting for it keep their approval to the end.`,
-                          )
-                        )
-                          save(list.filter((_, j) => j !== i));
-                      }}
+                      onClick={() => setDeleting(i)}
                     >
                       Delete
                     </Button>

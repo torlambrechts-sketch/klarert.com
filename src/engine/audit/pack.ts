@@ -353,7 +353,7 @@ export function packReadme(m: PackMeta): string {
     ...(m.soa.length
       ? m.soa.map((s) => `- Statement of applicability: ${s} (CSV and a printable HTML page)`)
       : ['- No statement of applicability: no framework library is in scope.']),
-    `- ${m.registers} registers as CSV, with the fields you can see`,
+    `- ${m.registers} sheets as CSV, with the fields you can see`,
     `- Evidence index: ${m.evidence.listed} files listed, ${m.evidence.included} included (each file up to ${formatBytes(AUDIT_FILE_LIMITS.perFile)}, ${formatBytes(AUDIT_FILE_LIMITS.total)} in all)`,
     `- Activity log: ${m.entries} entries in the period, ${m.workspaceEntries} of them on the workspace chain (sheet "${WORKSPACE_LABEL}": exports, packs, frameworks, folders and settings)`,
     `- Hash chains: ${m.chains.chains} checked, ${m.chains.ok} ok, ${m.chains.broken} broken${m.chains.failed ? `, ${m.chains.failed} not checked` : ''}`,

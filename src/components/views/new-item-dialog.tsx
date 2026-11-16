@@ -25,8 +25,8 @@ import type { SheetActions } from '@/components/grid/use-sheet';
 import { cn } from '@/lib/utils';
 import { Label, Question } from './form-fill';
 
-// The New item dialog (docs/05 §3.7, owner decision 14 Nov 2026): "+ New" in the sheet header, Create › Entry
-// (?new=1), the N key, a Kanban lane's and a Calendar day's "+ Add". It asks the name, the sheet's required fields
+// The New item dialog (docs/05 §3.7, owner decision 14 Nov 2026): "+ New" in the sheet header (also
+// ?new=1), the N key, a Kanban lane's and a Calendar day's "+ Add". It asks the name, the sheet's required fields
 // and the fields marked "Ask when adding", with the rest folded under More fields (Phase A), or the sheet's new-item
 // form, a step at a time (Phase B). Which questions, and whether the answers pass, come from the engine
 // (src/engine/views/new-item.ts), which the createItem command runs again: one call writes the item, its values and

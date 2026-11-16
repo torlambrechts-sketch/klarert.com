@@ -96,7 +96,7 @@ test('update Core 1.0.0 to 1.3.0 with ISO/IEC 27001 and Supplier management inst
   const row = page
     .getByRole('list', { name: 'Installed packs' })
     .getByRole('listitem')
-    .filter({ hasText: 'Core registers' });
+    .filter({ hasText: 'Shared registers' });
   await expect(row.getByTestId('update-available')).toContainText('1.0.0 → 1.3.0');
   await row.getByRole('button', { name: /^Update .* from 1\.0\.0 to 1\.3\.0$/ }).click();
 
@@ -185,7 +185,7 @@ test('update Core 1.1.0 to 1.3.0: Document approval goes to Approve by, the appr
   const row = page
     .getByRole('list', { name: 'Installed packs' })
     .getByRole('listitem')
-    .filter({ hasText: 'Core registers' });
+    .filter({ hasText: 'Shared registers' });
   await expect(row.getByTestId('update-available')).toContainText('1.1.0 → 1.3.0');
   await row.getByRole('button', { name: /^Update .* from 1\.1\.0 to 1\.3\.0$/ }).click();
   const dialog = page.getByRole('dialog');

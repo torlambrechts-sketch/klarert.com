@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { PageHeader } from '@/components/shell/page-header';
+import { Button } from '@/components/ui/button';
 import { NewSheetWizard } from '@/components/sheets/wizard/wizard';
 import { isEditorRole, requireMember } from '@/server/auth';
 import { getNav, getWizardData } from '@/server/repositories/sheets';
@@ -15,13 +17,19 @@ export default async function NewSheetPage({
   const { org } = await params;
   const { start, folder, source } = await searchParams;
   const { workspace, role } = await requireMember(org);
+  // Create is for editors, admins and owners (owner decision 15 Nov 2026): a viewer or auditor who reaches the
+  // wizard by its address is told so and led back to Home
   if (!isEditorRole(role))
     return (
-      <main className="w-full px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
-        <h1>New sheet</h1>
-        <p className="text-muted-foreground mt-2">
-          Viewers cannot create sheets. Ask an editor or admin to create one for you.
+      <main className="flex w-full flex-col items-start gap-3 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+        <h1 className="m-0">New sheet</h1>
+        <p className="text-muted-foreground m-0 max-w-[60ch]">
+          {role === 'auditor' ? 'Auditors' : 'Viewers'} cannot create sheets. Ask an editor or admin
+          to create one for you.
         </p>
+        <Button asChild variant="outline">
+          <Link href={`/${org}/home`}>Back to Home</Link>
+        </Button>
       </main>
     );
   const [nav, data] = await Promise.all([getNav(workspace.id), getWizardData(workspace.id)]);

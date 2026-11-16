@@ -6,17 +6,16 @@ import { cn } from '@/lib/utils';
 import type { NavFolder } from '@/server/repositories/sheets';
 import { SheetCode, iconClass, itemClass } from './menu-bits';
 
-// "Registers" in the side menu (docs/05 §2.1): the domain folders of the Core registers (Management system, Risk and
-// controls, Operations, Privacy and security, Suppliers) in order, each with its shared registers and the sheets
-// add-ons put there. A domain without sheets is not shown. The domains are the packs' own: they are not renamed,
-// moved or archived from the menu (Workspace admin › Packs does that).
+// The shared registers' domains in the side menu (docs/05 §2.1), first under the one "Registers" heading (menu-sheets.tsx
+// owns the heading, then the workspace's own folders follow): the domain folders of the shared registers (Management
+// system, Risk and controls, Operations, Privacy and security, Suppliers) in order, each with its registers and the
+// sheets standards put there. A domain without sheets is not shown. The domains are the packs' own: they are not
+// renamed, moved or archived from the menu (Workspace admin › Packs does that).
 
 export function MenuRegisters({
   org,
   registers,
   activeSheet,
-  q,
-  hit,
   isClosed,
   toggle,
   onNavigate,
@@ -24,30 +23,16 @@ export function MenuRegisters({
   org: string;
   registers: NavFolder[];
   activeSheet: string | null;
-  q: string;
-  hit: (label: string) => boolean;
   isClosed: (id: string) => boolean;
   toggle: (id: string) => void;
   onNavigate?: () => void;
 }) {
-  const shown = registers
-    .map((d) => ({ ...d, sheets: hit(d.name) ? d.sheets : d.sheets.filter((s) => hit(s.name)) }))
-    .filter((d) => d.sheets.length > 0);
+  const shown = registers.filter((d) => d.sheets.length > 0);
   if (!shown.length) return null;
   return (
-    <section aria-labelledby="menu-registers-h" className="flex flex-col">
-      <h2
-        id="menu-registers-h"
-        className={cn(
-          'text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium',
-          q && 'sr-only',
-        )}
-      >
-        Registers
-      </h2>
+    <div className="flex flex-col" data-testid="menu-registers">
       {shown.map((d) => {
-        // while finding, every domain with a match is open
-        const open = !!q || !isClosed(d.id);
+        const open = !isClosed(d.id);
         const listId = `menu-domain-${d.id}`;
         return (
           <section key={d.id} aria-labelledby={`${listId}-h`} className="flex flex-col">
@@ -88,7 +73,7 @@ export function MenuRegisters({
                       title="Restricted. Ask an owner to give you access."
                       className={cn(
                         itemClass,
-                        'text-muted-foreground text-label-13.5 h-8 cursor-default gap-[9px] px-2',
+                        'text-muted-foreground text-label-13 h-8 cursor-default gap-[9px] px-2',
                       )}
                     >
                       <SheetCode code={s.code} />
@@ -113,7 +98,7 @@ export function MenuRegisters({
                       data-testid={`rail-sheet-${s.code}`}
                       className={cn(
                         itemClass,
-                        'group/item text-label-13.5 h-8 min-w-0 gap-[9px] px-2',
+                        'group/item text-label-13 h-8 min-w-0 gap-[9px] px-2',
                       )}
                     >
                       <SheetCode code={s.code} />
@@ -138,6 +123,6 @@ export function MenuRegisters({
           </section>
         );
       })}
-    </section>
+    </div>
   );
 }

@@ -31,6 +31,7 @@ import {
   upgradePackInput,
 } from '@/lib/schemas/packs';
 import { upgradeLines, type UpgradePreview } from '@/engine/packs/upgrade';
+import { packTitle } from '@/engine/packs/words';
 import { isAdminRole } from '@/server/auth';
 import {
   planInstall,
@@ -738,7 +739,7 @@ export async function testModePacks(input: unknown): Promise<Result<TestModePack
           .from('packs')
           .select('key, version, title')
           .in('key', keys);
-        for (const k of packs ?? []) titles.set(`${k.key}@${k.version}`, k.title);
+        for (const k of packs ?? []) titles.set(`${k.key}@${k.version}`, packTitle(k.title));
       }
       return ok(
         (installs ?? []).map((i) => ({

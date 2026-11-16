@@ -1,7 +1,7 @@
-// Shared look of side-menu rows (docs/05 §2.1).
+// Shared look of side-menu rows (docs/05 §2.1). Under 760 px every row is 44 px high, a touch target (UX-15).
 
 export const itemClass =
-  'flex h-[34px] w-full items-center gap-2.5 rounded-md px-2.5 text-left text-label-14 text-ink outline-offset-[-2px] hover:bg-nav-hover hover:text-ink aria-[current=page]:bg-nav-active aria-[current=page]:font-medium aria-[current=page]:text-ink';
+  'flex h-[34px] max-[759.98px]:h-11 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-label-14 text-ink outline-offset-[-2px] hover:bg-nav-hover hover:text-ink aria-[current=page]:bg-nav-active aria-[current=page]:font-medium aria-[current=page]:text-ink';
 
 export const iconClass =
   'text-muted-foreground group-hover/item:text-ink group-aria-[current=page]/item:text-ink size-4 shrink-0';

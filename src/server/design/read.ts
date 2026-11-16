@@ -17,6 +17,7 @@ import { fetchAllPages, fetchDirectory, type Db } from '@/lib/sheet-query';
 import { FIELD_COLUMNS, SHEET_COLUMNS, toField, toSheet } from '@/lib/sheet-rows';
 import { getApps } from '@/server/apps/read';
 import { readDrift } from './drift';
+import { packTitle } from '@/engine/packs/words';
 
 // The configuration the Design area derives from (docs/05 §3.8, §4), read with the person's client so RLS decides:
 // sheets they can read, their fields (restricted ones flagged by field_hidden), shared forms, automations, approval
@@ -288,10 +289,11 @@ export async function readDesignWorld(
       installId: i.id,
       key: i.pack_key,
       version: i.version,
-      title:
+      title: packTitle(
         titles.find((t) => t.key === i.pack_key && t.version === i.version)?.title ??
-        titles.find((t) => t.key === i.pack_key)?.title ??
-        i.pack_key,
+          titles.find((t) => t.key === i.pack_key)?.title ??
+          i.pack_key,
+      ),
     })),
     apps: apps.map((a) => ({
       key: a.key,

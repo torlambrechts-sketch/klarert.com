@@ -138,7 +138,7 @@ test.describe('desktop', () => {
       dialog.getByText('No files yet. Drop evidence, contracts or scans here.'),
     ).toBeVisible();
     await expect(
-      dialog.getByText('No linked documents. Link a policy or procedure from the register.'),
+      dialog.getByText('No linked documents. Link a policy or procedure from a documents sheet.'),
     ).toBeVisible();
 
     // choose one file, drop another

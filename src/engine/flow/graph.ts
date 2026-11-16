@@ -1,4 +1,4 @@
-// The workspace's design (Platform › Design, docs/05 §4): one node per sheet the person can read, lines for link
+// The workspace's design (Build › Design, docs/05 §4): one node per sheet the person can read, lines for link
 // fields, "create item on another sheet" actions, buttons and linked updates, outside destinations as badges. The same
 // derivation as a sheet's flow, across sheets. Filters (app, pack, folder, Registers domain, "differs from pack") keep
 // the matching sheets and the sheets they connect to, as muted context. Pure.

@@ -1,4 +1,4 @@
-// The Design tab and Platform › Design (docs/05 §3.8, owner decision 15 Nov 2026): a sheet's flow and the workspace's
+// The Design tab and Build › Design (docs/05 §3.8, owner decision 15 Nov 2026): a sheet's flow and the workspace's
 // map, DERIVED from configuration only (sheets, fields, forms, automations, approval workflows, links), never stored
 // and never read from item rows. Pure types: the server reads a FlowWorld under the person's RLS, the engine derives.
 import type { Automation, Condition, Field, JobRole, Person, Role, Sheet, Team } from '../types';
