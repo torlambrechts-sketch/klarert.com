@@ -10,6 +10,23 @@ import {
 } from '@/components/forms/form-bits';
 import { sendMagicLink, signInWithPassword, signUpWithPassword } from './actions';
 
+/** Under the forms that can create an account: the password sign-up and the email link. */
+function TermsLine() {
+  return (
+    <p className="text-muted-foreground text-copy-13 m-0">
+      By creating an account you agree to the{' '}
+      <Link className="text-info underline underline-offset-4" href="/terms">
+        terms
+      </Link>{' '}
+      and the{' '}
+      <Link className="text-info underline underline-offset-4" href="/privacy">
+        privacy notice
+      </Link>
+      .
+    </p>
+  );
+}
+
 export function LoginForm({ next }: { next?: string }) {
   const [state, action] = useActionState<FormState<{ email: string }>, FormData>(
     sendMagicLink,
@@ -42,6 +59,8 @@ export function LoginForm({ next }: { next?: string }) {
         state={state}
       />
       <SubmitButton pendingText="Sending link…">Send sign-in link</SubmitButton>
+      {/* a link to an address without an account creates one */}
+      <TermsLine />
     </form>
   );
 }
@@ -85,19 +104,7 @@ export function PasswordForm({ next, mode }: { next?: string; mode: 'signin' | '
       <SubmitButton pendingText={mode === 'signin' ? 'Signing in…' : 'Creating account…'}>
         {mode === 'signin' ? 'Sign in' : 'Create account'}
       </SubmitButton>
-      {mode === 'signup' ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
-          By creating an account you agree to the{' '}
-          <Link className="text-info underline underline-offset-4" href="/terms">
-            terms
-          </Link>{' '}
-          and the{' '}
-          <Link className="text-info underline underline-offset-4" href="/privacy">
-            privacy notice
-          </Link>
-          .
-        </p>
-      ) : null}
+      {mode === 'signup' ? <TermsLine /> : null}
     </form>
   );
 }
