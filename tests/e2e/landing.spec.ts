@@ -1,5 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { PLATFORM_FEATURES } from '@/components/landing/content';
+import { readSiteCatalogue } from '@/lib/site/catalogue';
 import { completeProfile, freshEmail, signIn } from './helpers';
 
 // The public product site at `/` for signed-out visitors (owner decision, 16 Nov 2026). Signed-in people still go
@@ -234,6 +236,8 @@ test('robots.txt and sitemap.xml list only the public pages', async ({ request }
   const locs = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   expect(locs).toEqual([
     'https://www.klarert.com',
+    'https://www.klarert.com/platform',
+    'https://www.klarert.com/frameworks',
     'https://www.klarert.com/privacy',
     'https://www.klarert.com/terms',
   ]);
@@ -247,7 +251,7 @@ test('/opengraph-image is a 1200×630 PNG, named by the public pages', async ({ 
   expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
   expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1200, 630]);
 
-  for (const path of ['/', '/privacy', '/terms']) {
+  for (const path of ['/', '/platform', '/frameworks', '/privacy', '/terms']) {
     await page.goto(path);
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
       'content',
@@ -280,9 +284,137 @@ test('the public pages and the sign-up form ask nothing of other hosts', async (
     if (!['data:', 'blob:'].includes(url.protocol) && url.origin !== origin)
       foreign.push(req.url());
   });
-  for (const path of ['/', '/privacy', '/terms', '/login?mode=signup']) {
+  for (const path of [
+    '/',
+    '/platform',
+    '/frameworks',
+    '/privacy',
+    '/terms',
+    '/login?mode=signup',
+    '/login',
+  ]) {
     await page.goto(path);
     await page.waitForLoadState('networkidle');
   }
   expect(foreign).toEqual([]);
+});
+
+// ── /platform and /frameworks (the product pages around the landing page) ──
+
+const axeBad = async (page: Page) => {
+  const result = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze();
+  return result.violations
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    .map((v) => `${v.impact} ${v.id}: ${v.nodes.map((n) => n.html.slice(0, 120)).join(' | ')}`);
+};
+
+const noSidewaysScroll = async (page: Page) => {
+  const { scroll, client } = await page.evaluate(() => ({
+    scroll: document.documentElement.scrollWidth,
+    client: document.documentElement.clientWidth,
+  }));
+  expect(scroll).toBeLessThanOrEqual(client);
+};
+
+const PRODUCT_PAGES = [
+  { path: '/platform', nav: 'Platform', title: 'Platform · Compliance OS by Klarert' },
+  { path: '/frameworks', nav: 'Frameworks', title: 'Frameworks · Compliance OS by Klarert' },
+] as const;
+
+for (const p of PRODUCT_PAGES)
+  test(`${p.path}: from the header, one h1, the active nav item, indexed, axe, 390 px`, async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const viewport = page.viewportSize();
+    if (viewport && viewport.width < 768) {
+      // phones: the header's menu
+      await page.getByRole('banner').locator('summary').click();
+    }
+    await page.getByRole('banner').getByRole('link', { name: p.nav, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${p.path}$`));
+    await expect(page).toHaveTitle(p.title);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    if (viewport && viewport.width >= 768)
+      await expect(
+        page.getByRole('banner').getByRole('link', { name: p.nav, exact: true }),
+      ).toHaveAttribute('aria-current', 'page');
+
+    await page.reload();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /^index, follow/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      `https://www.klarert.com${p.path}`,
+    );
+    await noSidewaysScroll(page);
+    expect(await axeBad(page)).toEqual([]);
+    await expect(
+      page.getByRole('contentinfo').getByRole('link', { name: 'support@klarert.com' }),
+    ).toHaveAttribute('href', 'mailto:support@klarert.com');
+  });
+
+test('/platform has a section for every part of the product, linked from the landing page', async ({
+  page,
+}) => {
+  await page.goto('/platform');
+  await expect(page.getByRole('heading', { level: 2 })).toContainText(
+    PLATFORM_FEATURES.map((f) => f.title).concat(['Start with your first sheet']),
+  );
+  await page.goto('/');
+  await page
+    .getByRole('main')
+    .getByRole('link', { name: /^More about this\s+\(An activity log you can verify\)$/ })
+    .click();
+  await expect(page).toHaveURL(/\/platform#activity$/);
+  await expect(
+    page.getByRole('heading', { level: 2, name: /activity log you can verify/ }),
+  ).toBeInViewport();
+});
+
+test('/frameworks lists every set and every framework edition of the catalogue', async ({
+  page,
+}) => {
+  const site = readSiteCatalogue();
+  await page.goto('/frameworks');
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Frameworks and ready-made sets' }),
+  ).toBeVisible();
+  for (const g of site.groups)
+    await expect(page.getByRole('heading', { level: 2, name: g.title })).toBeVisible();
+  const sets = [site.foundation!, ...site.groups.flatMap((g) => g.sets)];
+  expect(sets.length).toBeGreaterThanOrEqual(8);
+  for (const s of sets) {
+    const card = page.getByRole('article', { name: s.title, exact: true });
+    await expect(card).toBeVisible();
+    for (const sheet of s.sheets) await expect(card.getByText(sheet.name).first()).toBeVisible();
+    await expect(
+      card.getByRole('link', { name: `Create account to set up ${s.title}` }),
+    ).toHaveAttribute('href', '/login?mode=signup');
+  }
+  for (const l of site.libraries)
+    await expect(page.getByRole('heading', { level: 3, name: l.title, exact: true })).toBeVisible();
+  // the plain words, never the manifest's
+  await expect(page.getByRole('main')).not.toContainText('(add-on)');
+  await expect(page.getByRole('main')).not.toContainText('Core registers');
+  await expect(page.getByRole('main')).toContainText('Withdrawn · replaced by ISO 9001:2026');
+});
+
+test('the sign-in pages: the new frame keeps the form, the terms line on sign-up, no axe violations', async ({
+  page,
+}) => {
+  await page.goto('/login?mode=signup');
+  await expect(page.getByRole('heading', { level: 1, name: 'Compliance OS' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Create an account' })).toBeVisible();
+  await expect(page.getByText('By creating an account you agree to the')).toBeVisible();
+  await expect(
+    page.getByRole('banner').getByRole('link', { name: /Compliance OS/ }),
+  ).toHaveAttribute('href', '/');
+  await noSidewaysScroll(page);
+  expect(await axeBad(page)).toEqual([]);
+  await page.goto('/login');
+  await expect(page.getByRole('heading', { level: 2, name: 'Sign in' })).toBeVisible();
+  await noSidewaysScroll(page);
+  expect(await axeBad(page)).toEqual([]);
 });
