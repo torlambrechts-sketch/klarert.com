@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState, useState } from 'react';
 import {
   SubmitButton,
@@ -84,6 +85,19 @@ export function PasswordForm({ next, mode }: { next?: string; mode: 'signin' | '
       <SubmitButton pendingText={mode === 'signin' ? 'Signing in…' : 'Creating account…'}>
         {mode === 'signin' ? 'Sign in' : 'Create account'}
       </SubmitButton>
+      {mode === 'signup' ? (
+        <p className="text-muted-foreground text-copy-13 m-0">
+          By creating an account you agree to the{' '}
+          <Link className="text-info underline underline-offset-4" href="/terms">
+            terms
+          </Link>{' '}
+          and the{' '}
+          <Link className="text-info underline underline-offset-4" href="/privacy">
+            privacy notice
+          </Link>
+          .
+        </p>
+      ) : null}
     </form>
   );
 }

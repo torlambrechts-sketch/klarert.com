@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { repoPacks } from '@/lib/packs/catalogue';
 import * as content from './content';
+import * as legal from './legal';
 
 const words = (value: unknown): string[] =>
   typeof value === 'string'
@@ -26,5 +27,69 @@ describe('product site copy', () => {
     for (const w of words(content)) expect(w, w).not.toContain('!');
     expect(content.LINKS.createAccount).toBe('/login?mode=signup');
     expect(content.LINKS.signIn).toBe('/login');
+  });
+
+  it('robots and the sitemap list only the public pages', () => {
+    expect([...content.PUBLIC_PATHS]).toEqual(['/', '/privacy', '/terms']);
+  });
+});
+
+describe('privacy notice and terms (drafts)', () => {
+  const pages = [legal.PRIVACY, legal.TERMS];
+  const runs = (page: legal.LegalPage): legal.Inline[] => [
+    ...page.intro,
+    ...page.sections.flatMap((s) => s.blocks.flatMap((b) => ('p' in b ? b.p : b.list.flat()))),
+  ];
+
+  it('follows the copy rules: no exclamation marks', () => {
+    for (const w of words(legal)) expect(w, w).not.toContain('!');
+  });
+
+  it('every placeholder on a page is in PLACEHOLDERS, and every one in PLACEHOLDERS is used', () => {
+    const listed = new Set<string>(Object.values(legal.PLACEHOLDERS));
+    const used = new Set<string>();
+    for (const page of pages)
+      for (const run of runs(page))
+        if (typeof run === 'object' && 'placeholder' in run) {
+          expect(listed, run.placeholder).toContain(run.placeholder);
+          used.add(run.placeholder);
+        }
+    expect([...used].sort()).toEqual([...listed].sort());
+  });
+
+  it('gives one contact address and links only to our own pages or that address', () => {
+    expect(content.CONTACT.email).toBe('support@klarert.com');
+    for (const page of pages)
+      for (const run of runs(page))
+        if (typeof run === 'object' && 'link' in run)
+          expect(['/privacy', '/terms', `mailto:${content.CONTACT.email}`], run.text).toContain(
+            run.link,
+          );
+  });
+
+  it('names exactly the three subprocessors, and the facts the notice rests on', () => {
+    const section = legal.PRIVACY.sections.find((s) => s.id === 'subprocessors')!;
+    const list = section.blocks.find((b) => 'list' in b) as { list: legal.Inline[][] };
+    expect(list.list.map((item) => String(item[0]).split(':')[0])).toEqual([
+      'Supabase',
+      'Vercel',
+      'Brevo',
+    ]);
+    const text = words(legal.PRIVACY).join(' ');
+    for (const fact of ['Frankfurt', 'fra1', 'Former member', 'hash-chained', 'no analytics'])
+      expect(text).toContain(fact);
+  });
+
+  it('the privacy notice has the agreed sections, in order', () => {
+    expect(legal.PRIVACY.sections.map((s) => s.title)).toEqual([
+      'Who we are',
+      'What we collect',
+      'Why we use it',
+      'Where it is stored',
+      'Subprocessors',
+      'How long it is kept',
+      'Your rights',
+      'Contact',
+    ]);
   });
 });

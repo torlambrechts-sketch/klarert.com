@@ -96,4 +96,15 @@ export const CLOSING = {
 export const LINKS = {
   signIn: '/login',
   createAccount: '/login?mode=signup',
+  privacy: '/privacy',
+  terms: '/terms',
 } as const;
+
+/** The one contact address the public pages give (owner decision, 16 Nov 2026). */
+export const CONTACT = { email: 'support@klarert.com' } as const;
+
+/** The pages search engines may index; everything else is noindex (root layout). robots.ts and sitemap.ts read this. */
+export const PUBLIC_PATHS = ['/', LINKS.privacy, LINKS.terms] as const;
+
+/** Not pages: what crawlers fetch to render the public pages and their share card (robots.ts allows them). */
+export const ROBOTS_ASSETS = ['/_next/static/', '/favicon.ico', '/opengraph-image'] as const;
