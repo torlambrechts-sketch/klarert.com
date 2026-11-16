@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { FIELD_TYPE_IDS } from '@/engine/fields/registry';
 import { repoPacks } from '@/lib/packs/catalogue';
 import * as content from './content';
 import * as legal from './legal';
@@ -31,6 +32,31 @@ describe('product site copy', () => {
 
   it('robots and the sitemap list only the public pages', () => {
     expect([...content.PUBLIC_PATHS]).toEqual(['/', '/privacy', '/terms']);
+    expect([...content.SITEMAP_PATHS]).toEqual([
+      '/',
+      '/platform',
+      '/frameworks',
+      '/privacy',
+      '/terms',
+    ]);
+  });
+
+  it('the numbers in the copy are the product’s: field types from the registry', () => {
+    for (const w of words(content))
+      for (const m of w.matchAll(/(\d+) field types/g))
+        expect(Number(m[1]), w).toBe(FIELD_TYPE_IDS.length);
+  });
+
+  it('every platform card links to a section of /platform, each with its own anchor', () => {
+    const anchors = content.PLATFORM_FEATURES.map((f) => f.key);
+    expect(new Set(anchors).size).toBe(anchors.length);
+    for (const f of content.FEATURES) expect(anchors, f.key).toContain(f.key);
+    expect(content.NAV.map((n) => n.href)).toEqual(['/platform', '/frameworks']);
+  });
+
+  it('names no level "Standard" and uses the plain pack words', () => {
+    const text = words(content).join(' ');
+    expect(text).not.toMatch(/\(add-on\)|Core registers|\bStarter\b|\bFoundations\b/);
   });
 });
 
