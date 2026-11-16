@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { completeProfile, freshEmail, signIn } from './helpers';
+import { completeProfile, freshEmail, rest, signIn } from './helpers';
 
 test('sign up, create a workspace, invite a colleague who accepts', async ({ browser }) => {
   const owner = await browser.newPage();
@@ -87,4 +87,39 @@ test('an invite only works for the address it was sent to', async ({ browser }) 
   await expect(other.getByText(/Sign out and sign in as/)).toBeVisible();
   await expect(other.getByRole('button', { name: 'Accept and join' })).toHaveCount(0);
   await ctx.close();
+});
+
+// the app's own page names are not workspace addresses (owner decision, 16 Nov 2026; src/lib/reserved-slugs.ts)
+test('a page name cannot be a workspace address, in the form or by a direct call', async ({
+  page,
+}) => {
+  const slug = `reserved-${Date.now().toString(36)}`;
+  await signIn(page, freshEmail('reserved'));
+  await completeProfile(page, 'Rosa Reserved');
+  await expect(page.getByRole('heading', { name: 'Create a workspace' })).toBeVisible();
+
+  await page.getByLabel('Workspace name').fill('Account');
+  await expect(page.getByLabel('Web address')).toHaveValue('account');
+  await page.getByRole('button', { name: 'Create workspace' }).click();
+  await expect(page.getByText('That address is reserved. Try another.')).toBeVisible();
+  await expect(page.getByLabel('Web address')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page).toHaveURL(/\/onboarding$/);
+
+  // the database refuses it too
+  expect(
+    await rest(page, 'rpc/workspace_slug_available', {
+      method: 'POST',
+      body: { p_slug: 'privacy' },
+    }),
+  ).toBe(false);
+  await expect(
+    rest(page, 'rpc/create_workspace', {
+      method: 'POST',
+      body: { p_name: 'Privacy', p_slug: 'privacy', p_time_zone: 'Europe/London' },
+    }),
+  ).rejects.toThrow(/workspace address reserved/);
+
+  await page.getByLabel('Web address').fill(slug);
+  await page.getByRole('button', { name: 'Create workspace' }).click();
+  await expect(page).toHaveURL(new RegExp(`/${slug}/home$`));
 });

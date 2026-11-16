@@ -39,9 +39,15 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
 
 - **Your account** (`/account`, from the account menu › Your account; outside any workspace, on the soft background
   like onboarding, one 576 px column, full width with 16 px gutters at 390 px): a back link ("Back to <workspace>"),
-  the `h1` "Your account" with the name and email, then the cards **Email address**, **Password**, **Two-step
-  sign-in**, **This session** and **Delete my account** (sent by a workspace that requires two-step sign-in,
-  Two-step sign-in comes first).
+  the `h1` "Your account" with the name and email, then the cards **Your name**, **Email address**, **Password**,
+  **Two-step sign-in**, **This session** and **Delete my account** (sent by a workspace that requires two-step
+  sign-in, Two-step sign-in comes first).
+  - **Your name** (owner decision 16 Nov 2026): the name, "People in your workspaces see this name. Your initials
+    follow it." and **Change name** (outline), which opens in place **Your name** (focused, the current name) with
+    **Save name** and **Cancel** (focus returns to the button). Onboarding's rule: required, trimmed, at most 80
+    characters ("Name is required."); the initials are derived from it as onboarding derives them. Saved: the toast
+    "Your name is saved." (`changeDisplayName`, the person's own `profiles` row under `profiles_self`; a deleted
+    profile is not renamed).
   - **Email address** (docs/09 §12): the address and what it is for, and **Change email** (outline), which opens in
     place "New email address" (focused), **Send confirmation links** and **Cancel** (focus returns to the button).
     "That is already your email address." under the field. Sent: the status line "Waiting for confirmation: <new>.

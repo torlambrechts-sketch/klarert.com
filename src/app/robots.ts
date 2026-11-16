@@ -1,18 +1,14 @@
 import type { MetadataRoute } from 'next';
-import { PUBLIC_PATHS, ROBOTS_ASSETS, SITE } from '@/components/landing/content';
+import { SITE } from '@/components/landing/content';
 
-// Only the public pages are for search engines (owner decision, 16 Nov 2026): `/`, `/privacy` and `/terms`, each
-// exactly (`$`), plus what those pages need to render and share (the built assets, the favicon, the share image).
-// Everything else is disallowed; the app's pages also carry `noindex` from the root layout.
+// Crawlers may fetch everything (owner decision, 16 Nov 2026). What keeps a page out of search results is its
+// `noindex`, which a crawler only sees when it may fetch the page: the root layout makes every page noindex; `/`,
+// /platform, /frameworks, `/privacy` and `/terms` opt in to indexing, and only they are in the sitemap.
 export const dynamic = 'force-static';
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: '*',
-      allow: [...PUBLIC_PATHS.map((p) => `${p}$`), ...ROBOTS_ASSETS],
-      disallow: '/',
-    },
+    rules: { userAgent: '*', allow: '/' },
     sitemap: `${SITE.url}/sitemap.xml`,
   };
 }

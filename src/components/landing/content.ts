@@ -406,7 +406,7 @@ export const AUTH_PANEL = {
 /** The one contact address the public pages give (owner decision, 16 Nov 2026). */
 export const CONTACT = { email: 'support@klarert.com' } as const;
 
-/** The pages robots.txt lets search engines crawl; everything else is noindex (root layout). robots.ts reads this. */
+/** The pages search engines may index; everything else is noindex (root layout). */
 export const PUBLIC_PATHS = ['/', LINKS.privacy, LINKS.terms] as const;
 
 /** The pages the sitemap lists: the public pages plus the product pages (sitemap.ts reads this). */
@@ -417,6 +417,3 @@ export const SITEMAP_PATHS = [
   LINKS.privacy,
   LINKS.terms,
 ] as const;
-
-/** Not pages: what crawlers fetch to render the public pages and their share card (robots.ts allows them). */
-export const ROBOTS_ASSETS = ['/_next/static/', '/favicon.ico', '/opengraph-image'] as const;

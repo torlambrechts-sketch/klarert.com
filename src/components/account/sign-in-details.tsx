@@ -12,9 +12,10 @@ import { PASSWORD_HINT } from '@/lib/passwords';
 // Your account › Email address and Password (docs/05 §1.1, docs/09 §12). Each card opens its form in place; Cancel
 // and success close it and give focus back to the button that opened it.
 
-const card = 'border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]';
+export const card =
+  'border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]';
 
-function GeneralError({ state }: { state: FormState }) {
+export function GeneralError({ state }: { state: FormState }) {
   if (!state || state.ok || state.error.fieldErrors) return null;
   return (
     <p role="alert" className="text-crit text-copy-13 m-0">
@@ -24,7 +25,7 @@ function GeneralError({ state }: { state: FormState }) {
 }
 
 /** Opens a form in place; closing it returns focus to the button that opened it. */
-function useInPlaceForm() {
+export function useInPlaceForm() {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const wasOpen = useRef(false);

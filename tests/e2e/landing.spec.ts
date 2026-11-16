@@ -175,6 +175,11 @@ for (const legal of LEGAL)
     await expect(page.getByText('By creating an account you agree to the')).toBeVisible();
     await page.getByRole('link', { name: legal.signUp, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`${legal.path}$`));
+    // the email link can create an account too: the same line, the same links
+    await page.goto('/login?mode=link');
+    await expect(page.getByText('By creating an account you agree to the')).toBeVisible();
+    await page.getByRole('link', { name: legal.signUp, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${legal.path}$`));
     await page.goto('/login');
     await expect(page.getByText('By creating an account you agree to the')).toHaveCount(0);
   });
@@ -216,20 +221,26 @@ test('the privacy notice: sections in order, the facts, no sideways scroll, no a
   expect(bad).toEqual([]);
 });
 
-test('robots.txt and sitemap.xml list only the public pages', async ({ request }) => {
+test('robots.txt allows crawling, the sitemap lists only the public pages', async ({
+  request,
+  page,
+}) => {
+  // crawlers may fetch everything; noindex keeps the app's pages out of search results (owner decision, 16 Nov 2026)
   const robots = await request.get('/robots.txt');
   expect(robots.status()).toBe(200);
   const lines = (await robots.text()).split('\n').map((l) => l.trim());
   const values = (key: string) =>
     lines.filter((l) => l.startsWith(`${key}:`)).map((l) => l.slice(key.length + 1).trim());
-  const assets = ['/_next/static/', '/favicon.ico', '/opengraph-image'];
-  expect(values('Allow').filter((v) => !assets.includes(v))).toEqual([
-    '/$',
-    '/privacy$',
-    '/terms$',
-  ]);
-  expect(values('Disallow')).toEqual(['/']);
+  expect(values('User-Agent')).toEqual(['*']);
+  expect(values('Allow')).toEqual(['/']);
+  expect(values('Disallow')).toEqual([]);
   expect(values('Sitemap')).toEqual(['https://www.klarert.com/sitemap.xml']);
+  // so the pages crawlers can now fetch must say noindex themselves
+  // (signed out, the app's pages end on the sign-in page)
+  for (const path of ['/login', '/onboarding', '/account', '/no-such-workspace/home']) {
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', NOINDEX);
+  }
 
   const sitemap = await request.get('/sitemap.xml');
   expect(sitemap.status()).toBe(200);

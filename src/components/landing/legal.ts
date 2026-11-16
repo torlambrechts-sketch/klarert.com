@@ -197,7 +197,7 @@ export const PRIVACY: LegalPage = {
         },
         {
           p: [
-            'You can change your email address and password yourself, in Your account. To correct your display name, write to us.',
+            'You can change your name, email address and password yourself, in Your account. Entries in the access log that were written before a change keep the name used at the time.',
           ],
         },
         {

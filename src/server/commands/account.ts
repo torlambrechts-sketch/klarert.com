@@ -15,6 +15,7 @@ import { createPasswordCheckClient } from '@/lib/supabase/server';
 import { getSession, getSignIn } from '@/server/auth';
 import { fail, fromDbError, invalid, ok, type CommandError, type Result } from '@/server/result';
 import { log } from './context';
+import { changeNameInput, changeNameWith, type NameChange } from './profile-core';
 
 // Your account (docs/05 §1.1, docs/09 §12): the person's own email address and password, through Supabase Auth on
 // their own session. No table of ours changes and no service role is used. Supabase Auth asks for a two-step (aal2)
@@ -76,6 +77,31 @@ async function endOtherSessions(
       }),
     );
   return !error;
+}
+
+/**
+ * Change the display name (Your account › Your name). Onboarding's rule and initials, through the person's own
+ * profile row on their own session (profile-core.ts). A deleted profile is not renamed.
+ */
+export async function changeDisplayName(input: unknown): Promise<Result<NameChange>> {
+  const p = changeNameInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const session = await getSession();
+  if (!session) return fail('unauthenticated', 'Sign in again.');
+  return changeNameWith(
+    {
+      update: async (row) => {
+        const { data, error } = await session.supabase
+          .from('profiles')
+          .update(row)
+          .eq('id', session.user.id)
+          .select('id');
+        return { rows: data?.length ?? 0, error };
+      },
+      log: (fields) => log('changeDisplayName', { user: session.user.id, ...fields }),
+    },
+    p.data,
+  );
 }
 
 /**
