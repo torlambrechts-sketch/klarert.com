@@ -82,7 +82,8 @@ jobs:
     name: e2e
     runs-on: ubuntu-latest
     # about 25 minutes of Playwright on a 4-core runner, plus set-up and the build
-    timeout-minutes: 50
+    # the suite (374 tests, one worker) took about 45 minutes on 16 Nov 2026; shard it when it grows further
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
