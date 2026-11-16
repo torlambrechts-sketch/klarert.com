@@ -4,7 +4,8 @@ import { Landing } from '@/components/landing/landing';
 import { SITE } from '@/components/landing/content';
 import { getMyWorkspaces, getSession, getSignIn } from '@/server/auth';
 
-// `/` is the only page indexed: the public product site (owner decision, 16 Nov 2026).
+// `/` is indexed: the public product site (owner decision, 16 Nov 2026). Only it, `/privacy` and `/terms` override
+// the root layout's noindex. The share image is src/app/opengraph-image.tsx.
 export const metadata: Metadata = {
   title: SITE.title,
   description: SITE.description,
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     title: SITE.title,
     description: SITE.description,
   },
-  twitter: { card: 'summary', title: SITE.title, description: SITE.description },
+  twitter: { card: 'summary_large_image', title: SITE.title, description: SITE.description },
 };
 
 export default async function Root() {

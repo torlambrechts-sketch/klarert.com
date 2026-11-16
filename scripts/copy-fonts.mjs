@@ -1,4 +1,5 @@
-// Copies the self-hosted woff2 files from @fontsource into src/fonts (committed; run again after upgrading).
+// Copies the self-hosted woff2 files from @fontsource into src/fonts (committed; run again after upgrading), and the
+// two woff files the share image needs (src/app/opengraph-image.tsx: next/og reads woff, ttf and otf, not woff2).
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -17,5 +18,10 @@ for (const [pkg, name, weights] of sets) {
     const file = `${name}-latin-${w}-normal.woff2`;
     copyFileSync(join(dir, file), new URL(file, out));
   }
+}
+const geistDir = join(dirname(require.resolve('@fontsource/geist/package.json')), 'files');
+for (const w of [400, 600]) {
+  const file = `geist-latin-${w}-normal.woff`;
+  copyFileSync(join(geistDir, file), new URL(file, out));
 }
 console.log('fonts copied to src/fonts');
