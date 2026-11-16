@@ -591,9 +591,21 @@
 
 /* ───────────── public site (`/`, /platform, /frameworks, /privacy, /terms and the sign-in pages) ─────────────
    a very light page with a subtle dotted pattern (owner's reference, Nov 2026): one gray-alpha dot on a 20 px grid */
-@utility bg-dots {
-  background-image: radial-gradient(var(--gray-alpha-300) 1px, transparent 1.5px);
-  background-size: 20px 20px;
+/* the public site's background (owner decision 16 Nov 2026, replacing the dot pattern): a white page with two soft
+   blue glows at the top, from the blue scale; nothing repeats or moves */
+@utility bg-glow {
+  background-color: var(--background-100);
+  background-image:
+    radial-gradient(70% 520px at 50% -80px, var(--blue-300), transparent 72%),
+    radial-gradient(38% 420px at 100% 120px, var(--blue-200), transparent 70%),
+    radial-gradient(30% 360px at 0% 260px, var(--blue-100), transparent 70%);
+  background-repeat: no-repeat;
+}
+
+/* the inside of an illustration panel on the public site: a quiet blue wash instead of dots */
+@utility bg-glow-soft {
+  background-color: var(--background-200);
+  background-image: radial-gradient(80% 70% at 50% 0%, var(--blue-100), transparent 75%);
 }
 
 /* ───────────── app shell (docs/05 §2, §5) ─────────────

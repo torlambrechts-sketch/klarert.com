@@ -147,7 +147,7 @@ export function Stage({ className, children }: { className?: string; children: R
     <div
       aria-hidden="true"
       className={cn(
-        'bg-subtle bg-dots border-line relative flex items-center justify-center overflow-hidden rounded-lg border p-4 sm:p-6',
+        'bg-glow-soft border-line relative flex items-center justify-center overflow-hidden rounded-lg border p-4 sm:p-6',
         className,
       )}
     >
