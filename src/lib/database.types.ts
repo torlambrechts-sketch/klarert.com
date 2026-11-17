@@ -987,16 +987,42 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"packs": {
+                },"pack_shares": {
                   Row: {
-                    "created_at": string,"description": string,"hash": string,"key": string,"manifest": NonNullable<Json>,"owner_org_id": string | null,"title": string,"version": string
+                    "granted_at": string,"granted_by": string | null,"org_id": string,"pack_key": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"description"?: string,"hash": string,"key": string,"manifest": NonNullable<Json>,"owner_org_id"?: string | null,"title": string,"version": string
+                    "granted_at"?: string,"granted_by"?: string | null,"org_id": string,"pack_key": string
                   }
                   Update: {
-                    "created_at"?: string,"description"?: string,"hash"?: string,"key"?: string,"manifest"?: NonNullable<Json>,"owner_org_id"?: string | null,"title"?: string,"version"?: string
+                    "granted_at"?: string,"granted_by"?: string | null,"org_id"?: string,"pack_key"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pack_shares_granted_by_fkey"
+      columns: ["granted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pack_shares_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"packs": {
+                  Row: {
+                    "created_at": string,"description": string,"hash": string,"key": string,"manifest": NonNullable<Json>,"owner_org_id": string | null,"published_at": string | null,"published_by": string | null,"title": string,"version": string,"withdrawn_at": string | null,"withdrawn_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"description"?: string,"hash": string,"key": string,"manifest": NonNullable<Json>,"owner_org_id"?: string | null,"published_at"?: string | null,"published_by"?: string | null,"title": string,"version": string,"withdrawn_at"?: string | null,"withdrawn_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"description"?: string,"hash"?: string,"key"?: string,"manifest"?: NonNullable<Json>,"owner_org_id"?: string | null,"published_at"?: string | null,"published_by"?: string | null,"title"?: string,"version"?: string,"withdrawn_at"?: string | null,"withdrawn_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -1004,6 +1030,18 @@ isOneToOne: false
       columns: ["owner_org_id"]
 isOneToOne: false
       referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "packs_published_by_fkey"
+      columns: ["published_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "packs_withdrawn_by_fkey"
+      columns: ["withdrawn_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -1723,6 +1761,9 @@ isOneToOne: false
 "_form_ts":
 { Args: { "t": string }; Returns: string
                            },
+"_framework_access":
+{ Args: { "p_fw": Omit<Database["public"]['Tables']["frameworks"]['Row'], Database["public"]['Tables']["frameworks"]['ComputedFields']>,"p_org": string }; Returns: string
+                           },
 "_full_values":
 { Args: { "p_item": string,"p_values": Json }; Returns: Json
                            },
@@ -1864,6 +1905,9 @@ isOneToOne: false
 "_personal_mask_keys":
 { Args: { "p_kind": string,"p_salt": string,"v": Json }; Returns: Json
                            },
+"_private_access":
+{ Args: { "p_org": string,"p_pack": Omit<Database["public"]['Tables']["packs"]['Row'], Database["public"]['Tables']["packs"]['ComputedFields']> }; Returns: string
+                           },
 "_public_field_config":
 { Args: { "p_config": Json,"p_type": string }; Returns: Json
                            },
@@ -1875,6 +1919,9 @@ isOneToOne: false
                            },
 "_retention_rule":
 { Args: { "p_rule": string,"p_sheet": string }; Returns: Json
+                           },
+"_semver":
+{ Args: { "p": string }; Returns: (number)[]
                            },
 "_sheet_level_for":
 { Args: { "p_sheet": string,"p_user": string }; Returns: string
@@ -2457,6 +2504,9 @@ isOneToOne: false
               "last_at": string,"responses": number,"view_id": string
             }[]
                            },
+"framework_shared_to_me":
+{ Args: { "p_key": string,"p_owner": string }; Returns: boolean
+                           },
 "get_invite":
 { Args: { "p_token": string }; Returns: {
               "accepted": boolean,"email": string,"expires_at": string,"invited_by_name": string,"org_name": string,"org_slug": string,"role": Database["public"]['Enums']["member_role"]
@@ -2650,11 +2700,23 @@ isOneToOne: false
               "email": string,"user_id": string
             }[]
                            },
+"pack_owner":
+{ Args: { "p_key": string }; Returns: string
+                           },
+"pack_publisher":
+{ Args: { "p_key": string }; Returns: string
+                           },
+"pack_visible":
+{ Args: { "p_key": string,"p_owner": string }; Returns: boolean
+                           },
 "pause_pair_ok":
 { Args: { "p_automation": string,"p_item": string,"p_org": string }; Returns: boolean
                            },
 "publish_framework":
 { Args: { "p_framework": Json,"p_mappings"?: Json,"p_org": string,"p_pack": Json }; Returns: Json
+                           },
+"publish_pack":
+{ Args: { "p_org": string,"p_pack": Json }; Returns: Json
                            },
 "readable_sheet_ids":
 { Args: Record<PropertyKey, never>; Returns: string[]
@@ -2971,6 +3033,9 @@ isOneToOne: false
                            },
 "verify_activity_chain":
 { Args: { "p_chain_key": string }; Returns: Json
+                           },
+"withdraw_pack":
+{ Args: { "p_key": string,"p_org": string }; Returns: Json
                            },
 "workflow_decide":
 { Args: { "p_comment"?: string,"p_decision": string,"p_instance": string }; Returns: Json
