@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { openedByResetLink } from '@/lib/passwords';
 import { createClient } from '@/lib/supabase/server';
+import { isResetLinkSession } from '@/server/reset-link';
 import type { Database } from '@/lib/database.types';
 import {
   aalOf,
@@ -39,8 +40,11 @@ export const getSignIn = cache(async () => {
     user: data.user,
     twoStep: twoStepState(data.user.factors, aalOf(claims)),
     signedInAt: signedInAt(claims),
-    /** Opened by a password reset link: may set a new password without the current one (docs/09 §12). */
-    resetLink: openedByResetLink(claims),
+    /**
+     * Opened by a password reset link: may set a new password without the current one (docs/09 §12). The PKCE link
+     * records `recovery` in the token; a token-hash link is known by its cookie (src/lib/reset-link.ts).
+     */
+    resetLink: openedByResetLink(claims) || (await isResetLinkSession(claims)),
   };
 });
 

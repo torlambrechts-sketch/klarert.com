@@ -8,7 +8,7 @@ Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it
 |---|---|
 | `/login` | sign-in: password, create an account, or an email link. Query: `?next=<path on this site>` (`safeNext`) |
 | `/login/two-step` | two-step sign-in: the code from the person's authenticator app (§1.1). Query: `?next=` |
-| `/login/forgot-password` | Forgot password: asks for the email address and sends a reset link (§1.1). Query: `?next=`, `?error=link` |
+| `/login/forgot-password` | Forgot password: asks for the email address and sends a reset link (§1.1). Query: `?next=`, `?error=link` or `expired` |
 | `/login/new-password` | Set a new password, where a reset link lands (§1.1). Query: `?next=` |
 | `/account` | Your account: email address, password, two-step sign-in, this session and Delete my account (§1.1). Query: `?next=<path>&required=<workspace slug>&email=confirm-other\|link-failed&delete=open` |
 | `/account-deleted` | "Your account has been deleted.": where Delete my account lands, signed out (§1.1) |
@@ -63,9 +63,12 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
     set one? Get a reset link by email" (Forgot password).
 - **Forgot password** (`/login/forgot-password`, the sign-in card; linked as "Forgot password" under the sign-in form):
   "Reset your password", the **Email** field (focused) and **Send reset link**. Whatever the address, the answer is
-  "Check your email · If an account uses that address, we have sent a link to reset your password. The link works for
-  1 hour. Open it in this browser." **Back to sign in**. A reset link that failed comes back here with "That reset link
-  has expired, was already used or was opened in another browser. Ask for a new one."
+  "Check your email · If an account uses that address, we have sent a link to reset your password. The link works
+  once, for 1 hour." **Back to sign in**. A reset link that failed comes back here, in place of the form, with the
+  reason and **Ask for a new link** (focused; back to this form): `?error=link`, a link from Supabase's default email
+  opened in another browser than the one that asked (docs/09 §12), "This link has to be opened in the same browser you
+  asked from, or it has expired. Ask for a new link."; `?error=expired`, "This link has expired or was already used.
+  Ask for a new link."
 - **Set a new password** (`/login/new-password`, the sign-in card): "For <email>.", **New password** (focused, "At
   least 12 characters."), **Repeat the new password** and **Set new password**. A person with an authenticator app
   enters its code on the two-step page first, which brings them back here. Done: "Your password has been changed.",
