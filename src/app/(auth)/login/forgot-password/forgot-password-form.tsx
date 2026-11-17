@@ -18,9 +18,7 @@ export function ForgotPasswordForm({ next }: { next?: string }) {
         <p className="text-muted-foreground m-0">
           If an account uses that address, we have sent a link to reset your password.
         </p>
-        <p className="text-muted-foreground m-0">
-          The link works for {EMAIL_LINK_EXPIRY}. Open it in this browser.
-        </p>
+        <p className="text-muted-foreground m-0">The link works once, for {EMAIL_LINK_EXPIRY}.</p>
       </div>
     );
   }

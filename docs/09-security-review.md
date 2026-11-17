@@ -545,18 +545,41 @@ Screens in docs/05 §1.1.
   answer is always "If an account uses that address, we have sent a link to reset your password.", also when Supabase
   Auth refuses: it refuses a second request within `max_frequency` for existing addresses only, so passing that on
   would tell which addresses have accounts. Refusals are logged with code and status, never the address.
-- **The callback** (`/auth/callback`, `afterEmailLink` in `src/lib/auth-links.ts`, unit tested): a code opens the
-  session and goes to `next`; a failed reset link goes back to Forgot password (`?error=link`); for Your account, the
-  first of two email change links (only a `message`, no code) gives `?email=confirm-other` and a failed one
-  `?email=link-failed`; every other failure `/login?error=link`. The links use PKCE, so they work in the browser where
-  they were asked for.
+- **The callback** (`/auth/callback`, `emailLinkNext` and `afterEmailLink` in `src/lib/auth-links.ts`, unit tested).
+  Our templates (17 Nov 2026, branch `claude/fix-reset-links`) link straight to it:
+  `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=…&next=…&redirect_to={{ .RedirectTo }}`, with `type`
+  `email` for sign-up and sign-in links (`signup` and `magiclink` are the deprecated names), `recovery` (`next`
+  `/login/new-password`) and `email_change` (`next` `/account`), as `verifyOtp` takes them in supabase-js 2.119 and
+  GoTrue 2.197. The callback opens the session with `verifyOtp({ token_hash, type })`, so a link works on any device
+  and never shows the Supabase project's address. `redirect_to` (escaped by Supabase Auth's HTML templates) carries
+  the address the app asked for, whose own `next` is the page's `next` (Forgot password's `?next=`, or where a sign-in
+  link should go); it is used only when the template names no page or the same page, so a reset link always lands on
+  Set a new password, and always through `safeNext`. A token-hash link that Supabase Auth refuses (expired, used)
+  goes back to Forgot password with `?error=expired`; for an email change with no session (the first of two links)
+  `?email=confirm-other`. Supabase's default templates (the hosted project until its templates are applied) link to
+  Supabase Auth's verify step instead, which comes back with a PKCE `code` that only the browser that asked holds the
+  verifier for: opened anywhere else, the exchange fails and Forgot password shows `?error=link`, "This link has to be
+  opened in the same browser you asked from, or it has expired. Ask for a new link." with **Ask for a new link**. For
+  Your account a failed link gives `?email=link-failed`, the first of two (only a `message`) `?email=confirm-other`;
+  every other failure `/login?error=link`.
 - **Set a new password** (`setNewPassword`, `src/server/commands/account.ts`): only a session that a reset link
-  opened may set a password without the current one. Supabase Auth records that in the token's `amr` as `recovery`
-  (PKCE; checked 15 Nov 2026 on GoTrue 2.197), read by `openedByResetLink` (`src/lib/passwords.ts`) into
-  `getSignIn().resetLink`. Supabase Auth refuses a password or email change from an `aal1` session when the person
+  opened may set a password without the current one. Through the PKCE code, Supabase Auth records that in the token's
+  `amr` as `recovery` (checked 15 Nov 2026 on GoTrue 2.197), read by `openedByResetLink` (`src/lib/passwords.ts`).
+  `verifyOtp` records `otp` for every email link, reset and sign-in alike (checked 17 Nov 2026 on GoTrue 2.197, for
+  `recovery`, `magiclink` and `email`, and for Supabase Auth's own verify step without PKCE), so the token cannot tell
+  them apart. The callback therefore sets the httpOnly cookie `klarert-reset-link` when `verifyOtp` with
+  `type=recovery` opened the session: `v1.` and the HMAC-SHA256 of `reset-link.v1.<user id>.<session id>`, keyed by
+  `SUPABASE_COMMAND_SECRET` (the local development value against the local stack; no secret, no cookie), 12 hours
+  (`src/lib/reset-link.ts`, `src/server/reset-link.ts`, unit tested). It holds for that one session: a refreshed token
+  keeps its session id, the two-step code keeps the session, a later sign-in gets a new one. Only the server can make
+  it, and a copied value is no use without the session itself. `getSignIn().resetLink` is the `amr` check or the
+  cookie. Supabase Auth accepts a sign-in link's token with `type=recovery` too (both are its recovery token), so a
+  person holding a fresh sign-in email can open a reset session; that proves the same control of the address as a
+  reset email, which they could ask for anyway. A session from a sign-in link opened normally is no reset session
+  (e2e). Supabase Auth refuses a password or email change from an `aal1` session when the person
   has a verified factor ("AAL2 session is required to update email or password when MFA is enabled",
   `insufficient_aal`, checked), so a person with an authenticator app is sent to
-  `/login/two-step?next=/login/new-password` first. New passwords: `MIN_PASSWORD` (12) to 200 characters, typed twice
+  `/login/two-step?next=/login/new-password` first (the cookie is bound to the session, which the code keeps). New passwords: `MIN_PASSWORD` (12) to 200 characters, typed twice
   (`newPasswordTwice`). Afterwards `signOut({ scope: 'others' })` ends every other session; the page says whether that
   worked.
 - **Change password** (`changePassword`): the current password is checked by `signInWithPassword` on a client that
@@ -572,11 +595,13 @@ Screens in docs/05 §1.1.
   address cannot be used. Choose another."
 - **Auth emails** (`supabase/templates/*.html`, subjects in `supabase/config.toml` `[auth.email.template.*]`):
   confirm sign-up, sign-in link, reset password and change of email. One column, real text, `lang="en"`, the link
-  linked and written out, what it does, that it works once for 1 hour (`otp_expiry`, `EMAIL_LINK_EXPIRY`), and "If you
-  did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
+  (to our own callback, above) linked and written out, what it does, that it works once for 1 hour, on any device
+  (`otp_expiry`, `EMAIL_LINK_EXPIRY`), and "If you did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
   the plain-text part from the HTML. Invites are our own email (§11); reauthentication is not used. The hosted project
-  gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ) and sends through
-  Brevo SMTP, which the owner sets up (`scripts/hosted/README.md` › Auth emails), sender "Compliance OS".
+  gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ; it refuses a
+  template without its callback link or with `{{ .ConfirmationURL }}`) and sends through Brevo SMTP, which the owner
+  sets up (`scripts/hosted/README.md` › Auth emails), sender "Compliance OS". Supabase refuses custom templates
+  without custom SMTP, so until then the hosted project sends Supabase's defaults (PKCE links, see the callback).
 - **Security alerts** (owner decision 16 Nov 2026): Supabase Auth's notification emails for a changed password and a
   changed email address are on (`[auth.email.notification.password_changed]` and `.email_changed]` in
   `supabase/config.toml`; hosted `mailer_notifications_*_enabled`, set by `auth-config.py`). Templates
@@ -648,9 +673,12 @@ Screens in docs/05 §1.1.
   and the trigger then adds nothing, the functions not executable by `anon`, `authenticated` or `service_role`); e2e `tests/e2e/delete-account.spec.ts` (desktop and 390 px: the only owner
   refused with the workspace named; a member deletes their account, cannot sign in with the password again, and their
   item's "Created by" reads "Former member") and `tests/e2e/account-auth.spec.ts` (desktop and
-  390 px) through Mailpit: a reset for a known and an unknown address (the same answer), the link, the rules, the new
-  password signs in and the old one does not, another browser signed out; the same with two-step sign-in (code
-  first); Your account changes the password (a wrong current one refused) and the email address (both addresses
+  390 px) through Mailpit: a reset for a known and an unknown address (the same answer), the link (our own callback)
+  opened in a fresh browser as on another device, the rules, the new password signs in and the old one does not,
+  another browser signed out, the used link refused ("expired"), a sign-in link session refused by Set a new password;
+  the same with two-step sign-in on another device (code first); Supabase's default link (PKCE) opened in another
+  browser shows the same-browser message and **Ask for a new link**, and in the asking browser opens Set a new
+  password; Your account changes the password (a wrong current one refused) and the email address (both addresses
   emailed).
 
 ### 12.1 Decided (owner)

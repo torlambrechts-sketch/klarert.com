@@ -62,9 +62,11 @@ async function viaMailpit(email: string): Promise<Session> {
         HTML: string;
       };
       const link = (body.HTML || body.Text).match(/href="([^"]+)"/)?.[1]?.replaceAll('&amp;', '&');
-      const token = link && new URL(link).searchParams.get('token');
+      // our template links to /auth/callback with `token_hash`; Supabase's default one to its verify step with `token`
+      const params = link ? new URL(link).searchParams : null;
+      const token = params?.get('token_hash') ?? params?.get('token');
       if (token) {
-        const { data, error } = await anon.auth.verifyOtp({ token_hash: token, type: 'magiclink' });
+        const { data, error } = await anon.auth.verifyOtp({ token_hash: token, type: 'email' });
         if (error || !data.session)
           throw new Error(`magic link: ${error?.message ?? 'no session'}`);
         return data.session;
