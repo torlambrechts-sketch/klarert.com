@@ -12,6 +12,10 @@ export const PACK_ACTIONS = [
   'bundle.reviewed',
   'pack.automations_mode',
   'pack.settings_changed',
+  // a workspace's own packs (docs/11 Your own packs)
+  'pack.published',
+  'pack.withdrawn',
+  'pack.shared',
 ] as const;
 
 type Obj = Record<string, Json>;
@@ -49,7 +53,8 @@ export function packLogText(action: string, newValue: Json | null): string {
           : null;
     if (action === 'pack.extended')
       return `Added the ${level ?? 'next'} level to ${name}: ${countsText(counts)}.`;
-    return `Installed ${name}${level ? ` (${level})` : ''}: ${countsText(counts)}.`;
+    const from = v.source === 'private' ? ' (your own pack, from another workspace)' : '';
+    return `Installed ${name}${level ? ` (${level})` : ''}${from}: ${countsText(counts)}.`;
   }
   if (action === 'pack.upgraded') {
     const title = titleOf(v);
@@ -96,6 +101,25 @@ export function packLogText(action: string, newValue: Json | null): string {
       n ? `: ${n} ${n === 1 ? 'default' : 'defaults'} updated` : ''
     }.`;
   }
+  if (action === 'pack.published') {
+    const left = Array.isArray(v.left_out) ? v.left_out.length : 0;
+    const counts = obj(v.counts);
+    const what = [
+      num(counts.sheets)
+        ? `${num(counts.sheets)} ${num(counts.sheets) === 1 ? 'sheet' : 'sheets'}`
+        : '',
+      num(counts.automations)
+        ? `${num(counts.automations)} ${num(counts.automations) === 1 ? 'automation' : 'automations'}`
+        : '',
+    ].filter(Boolean);
+    return `Published ${name}${what.length ? `: ${what.join(', ')}` : ''}${
+      left ? `; ${left} ${left === 1 ? 'thing' : 'things'} left out` : ''
+    }.`;
+  }
+  if (action === 'pack.withdrawn')
+    return `Withdrew ${titleOf(v)}: no new installs. Workspaces that have it keep it.`;
+  if (action === 'pack.shared')
+    return `Installed ${name} in ${typeof v.org_name === 'string' ? v.org_name : 'another workspace'}: its admins can now take updates.`;
   // Create wizard bundles (docs/11 Bundles): the name the person gave, the pack it came from
   const bundle = typeof v.name === 'string' ? v.name : name;
   if (action === 'bundle.created') return `Created ${bundle} via Create from ${name}.`;
