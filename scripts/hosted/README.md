@@ -139,3 +139,25 @@ transaction (logged `member.changed` by the system):
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 update memberships set role = 'owner' where org_id = '<workspace id>' and user_id = '<new owner id>';
 ```
+
+## Purging retired demo copies (migration 0078, docs/17)
+
+The nightly demo rebuild (`.github/workflows/demo-nightly.yml`) renames yesterday's demo workspace aside and then
+removes it with `purge_demo_workspace` (0078). Apply 0078 before the first nightly run; until then the purge step fails
+("Could not find the function public.purge_demo_workspace") and the retired copies stay.
+
+1. `python3 scripts/hosted/apply.py` (applies 0078), then `python3 scripts/hosted/runtests.py` (the pgTAP file
+   `0078_demo_purge.sql` runs in a rolled-back transaction).
+2. Check that no customer workspace is marked as a demo copy (expect no rows, or only `meridian-demo…`):
+   `python3 scripts/hosted/q.py "select slug from orgs where settings ? 'demo'"`.
+3. Check the grants (expect `service_role` only):
+   `python3 scripts/hosted/q.py "select grantee from information_schema.routine_privileges where routine_name = 'purge_demo_workspace'"`.
+
+What 0078 changes on the hosted project: a BEFORE INSERT OR UPDATE trigger on `orgs` (`orgs_demo_flag_guard`: no API
+session may add, change or remove `settings.demo`), a BEFORE INSERT trigger on `activity_log` (`activity_0_purge`:
+inside the purge of one workspace, entries for that workspace are dropped; every other insert is unchanged) and the
+function itself (service role only; it refuses a workspace that is not marked or still has members). It touches no
+existing row. Nothing in the app calls the purge; only `pnpm seed:demo:purge` does, as the service role.
+
+A demo workspace built before 0078 has no mark; the next `DEMO_RESET=1` run marks it as it renames it aside, so the
+purge after it takes it too.

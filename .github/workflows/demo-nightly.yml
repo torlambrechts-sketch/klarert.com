@@ -1,0 +1,80 @@
+name: Demo nightly
+
+# Rebuilds the live demo workspace (Meridian Components Ltd, /meridian-demo) on the hosted project every night, so
+# whatever visitors did to it is gone by the morning (docs/17 The live demo; owner decision 17 Nov 2026). It renames
+# yesterday's copy aside and builds a new one (`pnpm seed:demo` with DEMO_RESET=1), then purges the retired copies
+# (`pnpm seed:demo:purge`, migration 0078), so one live demo workspace remains.
+#
+# Runs on its schedule and on demand only, never on a pull request, so it is not (and cannot be) a required check.
+# It reads the hosted project's keys from the repository's secrets (Settings › Secrets and variables › Actions):
+#   DEMO_SUPABASE_URL, DEMO_SUPABASE_ANON_KEY, DEMO_SUPABASE_SERVICE_ROLE_KEY, DEMO_COMMAND_SECRET, DEMO_PASSWORD,
+#   and optionally DEMO_ADMIN_EMAIL with DEMO_ADMIN_PASSWORD (both or neither).
+# The repository variable DEMO_APP_URL (optional, not a secret) is the address links in the demo point to.
+# Nothing here prints a secret: GitHub masks them, and the steps only ever name them.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+# one rebuild at a time; a second waits rather than cancelling one half-way
+concurrency:
+  group: demo-nightly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rebuild:
+    name: rebuild the demo
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.DEMO_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.DEMO_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEMO_SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_COMMAND_SECRET: ${{ secrets.DEMO_COMMAND_SECRET }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+      DEMO_ADMIN_EMAIL: ${{ secrets.DEMO_ADMIN_EMAIL }}
+      DEMO_ADMIN_PASSWORD: ${{ secrets.DEMO_ADMIN_PASSWORD }}
+      NEXT_PUBLIC_APP_URL: ${{ vars.DEMO_APP_URL || 'https://www.klarert.com' }}
+    steps:
+      - name: Check the secrets are set
+        run: |
+          missing=0
+          for pair in NEXT_PUBLIC_SUPABASE_URL:DEMO_SUPABASE_URL \
+                      NEXT_PUBLIC_SUPABASE_ANON_KEY:DEMO_SUPABASE_ANON_KEY \
+                      SUPABASE_SERVICE_ROLE_KEY:DEMO_SUPABASE_SERVICE_ROLE_KEY \
+                      SUPABASE_COMMAND_SECRET:DEMO_COMMAND_SECRET \
+                      DEMO_PASSWORD:DEMO_PASSWORD; do
+            var="${pair%%:*}"
+            secret="${pair##*:}"
+            if [ -z "${!var}" ]; then
+              echo "::error::The repository secret ${secret} is not set. Add it in Settings › Secrets and variables › Actions."
+              missing=1
+            fi
+          done
+          if { [ -n "$DEMO_ADMIN_EMAIL" ] && [ -z "$DEMO_ADMIN_PASSWORD" ]; } || { [ -z "$DEMO_ADMIN_EMAIL" ] && [ -n "$DEMO_ADMIN_PASSWORD" ]; }; then
+            echo "::error::Set both DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD, or neither."
+            missing=1
+          fi
+          exit $missing
+
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Rebuild the demo workspace
+        run: pnpm seed:demo
+        env:
+          SEED_ALLOW_REMOTE: '1'
+          DEMO_RESET: '1'
+
+      - name: Purge the retired copies
+        run: pnpm seed:demo:purge

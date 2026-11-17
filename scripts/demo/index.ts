@@ -3,15 +3,21 @@
 // `pnpm seed:demo` (scripts/seed.ts --demo), which owns the service role (CLAUDE.md rule 6) and hands it here.
 //
 // The service role is used only for what the seed has always done: people (auth users, profiles, the demo login's
-// password, blocking the others from signing in), memberships, teams, job roles, entity and sites, and looking rows
-// up. Everything else is written by the app's own server commands, as the person named in the content: the workspace
+// password, blocking the others from signing in), memberships, teams, job roles, entity and sites, the demo mark
+// (settings.demo, 0078) and looking rows up. Everything else is written by the app's own server commands, as the person named in the content: the workspace
 // itself (createWorkspace), pack installs and framework adoption, items and their history, links, files, approvals,
 // the library decisions, the own framework, automations switched to live, a management review and the date checks.
 // So the activity log and its hash chains, coverage, the SoA, dashboards and run logs are the real ones.
 //
+// Who signs in (owner decision 17 Nov 2026): the demo login is a read-only viewer (Sam Carter); the owner, Hannah
+// Whitfield (owner@meridian.example), is blocked like the other fictional people and only the seed acts as her. With
+// DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD set, that person is an admin too (the owner's own login for their demos and
+// the screenshots): created with that password when the address is new, otherwise left exactly as it is.
+//
 // Repeatable: a workspace with the demo address is refused unless DEMO_RESET=1, which moves the old one aside (a new
-// address, renamed "retired demo", its members removed) and builds a fresh one. The activity log is append-only, so a
-// workspace is never deleted.
+// address, renamed "retired demo", its members removed) and builds a fresh one. The retired copies are removed by
+// `pnpm seed:demo:purge` (scripts/demo/purge.ts, 0078): the activity log is append-only, and only that purge of a
+// workspace marked as a demo copy deletes it.
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../../src/lib/database.types';
 import { demoClock, todayIn, type DemoClock } from './clock';
@@ -25,12 +31,13 @@ import { privacyContent } from './content/privacy';
 import { qualityContent } from './content/quality';
 import { DEMO_EMAIL, JOB_ROLES, PEOPLE, person } from './people';
 import { sessions } from './session';
+import { DEMO_SLUG, RETIRED_PREFIX } from './slug';
 import { makeWriter, type Writer } from './writer';
 
 type Db = SupabaseClient<Database>;
 
 export const DEMO = {
-  slug: 'meridian-demo',
+  slug: DEMO_SLUG,
   name: 'Meridian Components Ltd',
   timeZone: 'Europe/London',
   entities: [
@@ -76,6 +83,8 @@ export interface DemoEnv {
   reset: boolean;
   /** Today for the demo's dates (DEMO_TODAY), else today in Europe/London. */
   today?: string;
+  /** The owner's own admin login (DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD), when both are set. */
+  admin?: { email: string; password: string };
 }
 
 export interface DemoResult {
@@ -87,6 +96,17 @@ export interface DemoResult {
 
 function log(line: string) {
   console.log(`  · ${line}`);
+}
+
+/** Two-step sign-in factors a visitor added to the shared demo login would lock everyone else out: removed. */
+async function clearFactors(admin: Db, userId: string) {
+  const f = await admin.auth.admin.mfa.listFactors({ userId });
+  if (f.error) throw new Error(`two-step factors of the demo login: ${f.error.message}`);
+  for (const factor of f.data.factors) {
+    const r = await admin.auth.admin.mfa.deleteFactor({ id: factor.id, userId });
+    if (r.error) throw new Error(`two-step factor of the demo login: ${r.error.message}`);
+  }
+  return f.data.factors.length;
 }
 
 async function people(admin: Db, password: string) {
@@ -110,6 +130,10 @@ async function people(admin: Db, password: string) {
         ...(p.email === DEMO_EMAIL ? { password } : {}),
       });
       if (r.error) throw new Error(`user ${p.email}: ${r.error.message}`);
+      if (p.email === DEMO_EMAIL) {
+        const n = await clearFactors(admin, id);
+        if (n) log(`removed ${n} two-step factor(s) a visitor added to the demo login`);
+      }
     }
     const pr = await admin
       .from('profiles')
@@ -118,6 +142,38 @@ async function people(admin: Db, password: string) {
     ids.set(p.ref, id);
   }
   return ids;
+}
+
+/**
+ * The owner's own admin login (optional). A new address is created with DEMO_ADMIN_PASSWORD; an existing account (it
+ * may be the owner's real one) keeps its password, name and everything else: the seed only adds the membership.
+ */
+async function adminLogin(admin: Db, login: { email: string; password: string }) {
+  const email = login.email.trim().toLowerCase();
+  if (PEOPLE.some((p) => p.email === email))
+    throw new Error('DEMO_ADMIN_EMAIL must be an address of your own, not one of the demo people.');
+  const { data, error } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  if (error) throw new Error(`admin login: ${error.message}`);
+  const existing = data.users.find((u) => u.email?.toLowerCase() === email);
+  if (existing) {
+    log('the admin login exists: added as an admin, its password and profile left as they are');
+    return existing.id;
+  }
+  const created = await admin.auth.admin.createUser({
+    email,
+    email_confirm: true,
+    password: login.password,
+  });
+  if (created.error) throw new Error(`admin login: ${created.error.message}`);
+  const pr = await admin
+    .from('profiles')
+    .upsert(
+      { id: created.data.user.id, display_name: 'Demo admin', initials: 'DA', color: 'grey' },
+      { onConflict: 'id', ignoreDuplicates: true },
+    );
+  if (pr.error) throw new Error(`admin login profile: ${pr.error.message}`);
+  log('created the admin login with DEMO_ADMIN_PASSWORD');
+  return created.data.user.id;
 }
 
 /** Nobody but the demo login signs in: the others are blocked (for about 100 years) once their part is written. */
@@ -131,9 +187,16 @@ async function blockOthers(admin: Db, ids: Map<string, string>) {
 
 async function retire(admin: Db, orgId: string) {
   const stamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
+  const cur = await admin.from('orgs').select('settings').eq('id', orgId).single();
+  if (cur.error) throw new Error(`retire the old demo workspace: ${cur.error.message}`);
   const r = await admin
     .from('orgs')
-    .update({ slug: `${DEMO.slug}-retired-${stamp}`, name: `${DEMO.name} (retired demo ${stamp})` })
+    .update({
+      slug: `${RETIRED_PREFIX}${stamp}`,
+      name: `${DEMO.name} (retired demo ${stamp})`,
+      // a copy built before the mark existed gets it here, so the purge can take it (0078)
+      settings: { ...((cur.data.settings ?? {}) as Record<string, unknown>), demo: true },
+    })
     .eq('id', orgId);
   if (r.error) throw new Error(`retire the old demo workspace: ${r.error.message}`);
   const m = await admin.from('memberships').delete().eq('org_id', orgId);
@@ -147,7 +210,7 @@ async function structure(admin: Db, orgId: string, ids: Map<string, string>, c: 
     PEOPLE.map((p) => ({
       org_id: orgId,
       user_id: ids.get(p.ref)!,
-      role: p.role === 'auditor' ? ('auditor' as never) : p.role,
+      role: p.role,
       job_title: p.jobTitle,
       expires_at: ends(p.endsInDays),
     })),
@@ -233,11 +296,9 @@ export async function seedDemo(admin: Db, env: DemoEnv): Promise<DemoResult> {
   }
 
   const ids = await people(admin, env.password);
-  const who = sessions(admin, {
-    url: env.url,
-    anonKey: env.anonKey,
-    passwords: { [DEMO_EMAIL]: env.password },
-  });
+  const adminId = env.admin ? await adminLogin(admin, env.admin) : null;
+  // the seed never acts as the demo login (a viewer): everyone it acts as signs in with a one-time link
+  const who = sessions(admin, { url: env.url, anonKey: env.anonKey });
   const hannah = person('hannah').email;
   await who.actAs(hannah);
   const ws = await onboarding.createWorkspace({
@@ -246,10 +307,22 @@ export async function seedDemo(admin: Db, env: DemoEnv): Promise<DemoResult> {
     timeZone: DEMO.timeZone,
   });
   if (!ws.ok) throw new Error(`create the workspace: ${ws.error.message}`);
-  const org = await admin.from('orgs').select('id').eq('slug', DEMO.slug).single();
+  const org = await admin.from('orgs').select('id, settings').eq('slug', DEMO.slug).single();
   if (org.error) throw new Error(org.error.message);
   const orgId = org.data.id;
+  // the mark the purge checks (0078): set by the seed only, at once, so even a build that fails half-way is purged
+  const mark = await admin
+    .from('orgs')
+    .update({ settings: { ...((org.data.settings ?? {}) as Record<string, unknown>), demo: true } })
+    .eq('id', orgId);
+  if (mark.error) throw new Error(`mark the demo workspace: ${mark.error.message}`);
   await structure(admin, orgId, ids, c);
+  if (adminId) {
+    const am = await admin
+      .from('memberships')
+      .upsert({ org_id: orgId, user_id: adminId, role: 'admin' }, { onConflict: 'org_id,user_id' });
+    if (am.error) throw new Error(`admin login membership: ${am.error.message}`);
+  }
   log(`${PEOPLE.length} people, ${DEMO.entities.length} entities`);
 
   const w: Writer = await makeWriter(admin, who, { slug: DEMO.slug, id: orgId }, {

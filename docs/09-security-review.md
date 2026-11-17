@@ -869,3 +869,45 @@ steps; same signatures and grants) and adds a BEFORE DELETE trigger on `orgs`. N
 `restrictedTo`, so catalogue installs and upgrades behave as before. It needs 0075 first; it is safe before or after
 the app deploy (an older planner sends no `restricted_to`, and the older capture leaves restricted columns out of the
 manifest's restriction, as before).
+
+## 15. The live demo login (17 Nov 2026, branch `claude/live-demo`)
+
+Owner decisions of 17 Nov 2026 (docs/17 The live demo): visitors of the live site sign in to the demo workspace
+(Meridian Components Ltd, `/meridian-demo`) as `demo@meridian.example`, a **viewer**; the owner account
+(`owner@meridian.example`) and the other fictional people cannot sign in; the workspace is rebuilt every night.
+
+**A public demo password is acceptable only because** the account is a read-only viewer, in a workspace whose every
+person, company and record is fictional, and the workspace is rebuilt every night (`demo-nightly.yml`), which also
+resets the login. If any of the three stops being true (the login gets more than viewer rights, real data goes into
+the workspace, or the rebuild stops), take the password off the sign-in page (`NEXT_PUBLIC_DEMO_PASSWORD`) at once.
+The sign-in page shows the demo details only when `NEXT_PUBLIC_DEMO_EMAIL` is set (off by default,
+`src/lib/demo-login.ts`).
+
+What a viewer cannot do, and what enforces it (every rule below is in the database, so it holds whether the request
+comes through the app or straight to Supabase's API with the viewer's token):
+
+| A viewer cannot | Enforced by |
+|---|---|
+| invite anyone, or change members, roles, teams, job roles, entities, sites | RLS `invites_admin`, `memberships_admin`, `teams_admin`, `team_members_admin`, `job_roles_admin`, `entities_admin`, `sites_admin`: `is_admin(org_id)` (0001; `has_role` with the expiry and sign-in rule, 0063). The commands `createInvite`, `resendInvite`, `revokeInvite`, `changeRole`, `removeMember` ask `withOrg(…, 'admin')` first |
+| change the workspace, or mark it as a demo copy | RLS `orgs_admin` (`is_admin`); `orgs_demo_flag_guard` refuses any API session that touches `settings.demo` (0078) |
+| change an item, a value, a link, a file or an approval | no write policy on `items`, `item_links`, `files`: every write goes through a SECURITY DEFINER RPC that calls `_need_sheet(sheet, 'editor')` (0026), and `_sheet_levels` gives a viewer the level `viewer` on open sheets and caps a grant on a restricted sheet at `viewer` (0026, 0063). The command gate refuses writes without the app server's proof (0053) |
+| comment, or change sheets, fields, groups, views shared with others, forms, automations, dashboards, folders | RLS `item_updates_insert`, `sheets_*`, `fields_*`, `groups_write`, `views_write` (shared views: editors), `form_links_write`, `automations_*`, `dashboards_*`, `folders_*`: `is_editor` or `is_admin`, with `editable_sheet_ids()` (0001, 0026) |
+| read or export personal-data registers | the packs install them restricted (data subject requests, personal data breaches, consent records, health surveillance, environmental communications; docs/11); the demo lists the DPO or the HSE manager on them (owners see every sheet). `readable_sheet_ids()` (0026) leaves them out for everyone else, the viewer included, so no read, Insights widget, search or export reaches them. Restricted columns elsewhere read "Restricted" (`restricted_values`, 0027) |
+| read personal data from the log | personal-data values, notes and comments are masked in `activity_log`; the clear values live in `personal_activity`, readable only where the sheet is readable and the field not hidden (0036, 0065) |
+| see the list of exports or the data-flow record | `listAuditExports` and `logDataFlowExport` refuse anyone but owners, admins and auditors (`canSeeExports`, `canSeeLeaves`) |
+
+What a viewer can still do, as any member can: read and export what it can read (the audit pack, the SoA, the
+management review inputs and CSV of the open registers, all fictional and each export logged `audit.exported`),
+change its own profile (`profiles_self`), save its own personal views (`views_write`, `owner_id = auth.uid()`), mark
+its own notifications read (`notifications_mark`), and manage its own account through Supabase Auth: password,
+two-step sign-in, account deletion. Because the login is shared, the last can lock other visitors out until the
+next rebuild, which resets the password, removes two-step factors, restores the name and recreates a deleted login
+(`scripts/demo/index.ts`). An email change needs the old address to confirm (`mailer_secure_email_change_enabled`, on),
+and `.example` receives no mail. Open for the owner: whether the app should refuse account changes for the demo
+address (docs/17 Open).
+
+The purge (0078): `purge_demo_workspace` is executable by `service_role` only (revoked from `public`, `anon`,
+`authenticated`, and refused again inside for those roles), refuses a workspace not marked `settings.demo = true` or
+with members, and runs inside the `app.purge_org` escape hatch the append-only triggers already honour. The service
+role is used in `scripts/seed.ts` only (CLAUDE.md rule 6), which hands it to `scripts/demo/purge.ts`; the workflow
+holds the key as a GitHub secret. pgTAP: `supabase/tests/0078_demo_purge.sql`.
