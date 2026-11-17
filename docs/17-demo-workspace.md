@@ -121,7 +121,7 @@ from `DEMO_PASSWORD`, its name, its block lifted, and any two-step factor a visi
    - optional, both or neither: `DEMO_ADMIN_EMAIL` and `DEMO_ADMIN_PASSWORD` (at least 12 characters; used only when
      the address has no account yet)
    - optional: the repository **variable** (Variables tab, not a secret) `DEMO_APP_URL` if the app is not at
-     `https://www.klarert.com`: links the automations write into the demo point there
+     `https://www.keptrow.com`: links the automations write into the demo point there
 3. **Enable the workflow** once GitHub Actions billing is fixed: Actions › Demo nightly. Scheduled workflows run on
    the default branch only, so it starts once this is merged to `main`.
 4. **The first run by hand**: Actions › Demo nightly › Run workflow (branch `main`). It takes some minutes. Check the

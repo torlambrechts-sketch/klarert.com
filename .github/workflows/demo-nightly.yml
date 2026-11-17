@@ -37,7 +37,7 @@ jobs:
       DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
       DEMO_ADMIN_EMAIL: ${{ secrets.DEMO_ADMIN_EMAIL }}
       DEMO_ADMIN_PASSWORD: ${{ secrets.DEMO_ADMIN_PASSWORD }}
-      NEXT_PUBLIC_APP_URL: ${{ vars.DEMO_APP_URL || 'https://www.klarert.com' }}
+      NEXT_PUBLIC_APP_URL: ${{ vars.DEMO_APP_URL || 'https://www.keptrow.com' }}
     steps:
       - name: Check the secrets are set
         run: |
