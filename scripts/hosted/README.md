@@ -60,6 +60,17 @@ address, and the security alerts when a password or an email address has changed
 used. The subjects and HTML live in the repo (`supabase/templates/*.html`, subjects in `supabase/config.toml`
 `[auth.email.template.*]`); Supabase Auth makes the plain-text part from the HTML.
 
+The four link emails link straight to `{{ .SiteURL }}/auth/callback` with `token_hash`, `type` and `redirect_to`
+(the callback opens the session with `verifyOtp`), so the links show our own address and work on any device.
+Supabase's default templates link to `https://<ref>.supabase.co/auth/v1/verify` and come back with a PKCE code that
+only the browser that asked can use: a reset link opened on a phone then fails with "This link has to be opened in the
+same browser you asked from, or it has expired." Supabase refuses custom templates while the project has no custom
+SMTP, so set up SMTP (below) before running `auth-config.py`. `auth-config.py` refuses a template that still uses
+`{{ .ConfirmationURL }}`.
+
+A reset link opened through `verifyOtp` is recognised by an httpOnly cookie signed with `SUPABASE_COMMAND_SECRET`
+(docs/09 §12): the Vercel Production environment must have that variable (it already needs it for every write).
+
 `python3 scripts/hosted/auth-config.py --dry-run` prints, key by key, what differs on the hosted project; without
 `--dry-run` it PATCHes the Management API (`/v1/projects/{ref}/config/auth`). It sets `site_url`
 (`https://www.klarert.com`), `password_min_length` (12), `mailer_secure_email_change_enabled` (on), the subject and
@@ -91,7 +102,8 @@ project sends through Brevo.
    these emails are not rewritten through a tracking domain and no tracking pixel is added.
 
 Then run `auth-config.py` (the main session does) and send yourself a reset link from `/login/forgot-password` to
-check the sender, the subject and that the link opens Set a new password.
+check the sender, the subject, that the link starts with `https://www.klarert.com/auth/callback?token_hash=` and that
+it opens Set a new password, also when opened on another device (a phone).
 
 ## Deleting a user (migration 0072, docs/09 §12)
 
