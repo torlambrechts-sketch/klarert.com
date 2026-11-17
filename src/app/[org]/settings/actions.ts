@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import * as frameworks from '@/server/commands/frameworks';
 import * as members from '@/server/commands/members';
 import * as packs from '@/server/commands/packs';
+import * as packPublish from '@/server/commands/pack-publish';
 import * as retention from '@/server/commands/retention';
 import * as structure from '@/server/commands/structure';
 import * as twoStep from '@/server/commands/two-step';
@@ -97,6 +98,35 @@ export async function upgradePackAction(input: {
 }) {
   const result = await packs.upgradePack(input);
   if (result.ok) revalidatePath(`/${input.org}`, 'layout');
+  return result;
+}
+
+// "Save your setup" (docs/11 Your own packs): preview the capture, publish a version, withdraw a pack.
+export async function previewPublishAction(input: {
+  org: string;
+  key?: string;
+  excluded: string[];
+}) {
+  return packPublish.previewPublish(input);
+}
+
+export async function publishPackAction(input: {
+  org: string;
+  key?: string;
+  title: string;
+  description: string;
+  version: string;
+  excluded: string[];
+  contentHash: string;
+}) {
+  const result = await packPublish.publishPack(input);
+  if (result.ok) revalidatePath(`/${input.org}/settings`);
+  return result;
+}
+
+export async function withdrawPackAction(input: { org: string; key: string }) {
+  const result = await packPublish.withdrawPack(input);
+  if (result.ok) revalidatePath(`/${input.org}/settings`);
   return result;
 }
 

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   BookOpen,
+  Building2,
   Check,
   Layers,
   Loader2,
@@ -67,6 +68,19 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
   const linked = p.frameworks.filter((f) => f.optional && f.adopted);
   return (
     <div className="flex flex-col gap-4">
+      {data.publisher ? (
+        <p
+          className="border-line bg-soft text-copy-14 m-0 flex gap-2 rounded-md border p-3"
+          data-testid="pack-publisher"
+        >
+          <Building2 className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            Your own pack, published from <span className="font-medium">{data.publisher}</span>. Not
+            reviewed by Klarert. Its automations start in test mode, and it brings no items, people
+            or webhook addresses.
+          </span>
+        </p>
+      ) : null}
       {p.state === 'ready' && p.extendsLevel && p.level ? (
         <p className="text-copy-14 m-0" data-testid="extends-level">
           {p.extendsLevel.name} is installed. {p.level.name} adds only what is missing; your sheets,
