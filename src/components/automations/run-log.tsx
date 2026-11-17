@@ -207,7 +207,7 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
   const [open, setOpen] = useState(false);
   const stepsId = `run-${run.id}-steps`;
   return (
-    <tr className="group hover:[&>td]:bg-subtle">
+    <tr className="group hover:[&>td]:bg-row-hover">
       <td className={cn(td, 'text-muted-foreground text-label-12-mono whitespace-nowrap')}>
         {formatDateTime(run.startedAt, timeZone)}
       </td>

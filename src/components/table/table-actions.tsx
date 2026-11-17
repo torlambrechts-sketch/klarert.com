@@ -46,7 +46,12 @@ import {
 import { cn } from '@/lib/utils';
 import { LockDialog } from './lock-dialog';
 import { positionsAtEnd } from './table-model';
-import { toolbarButton, toolbarCount, toolbarSelect } from '@/components/table/toolbar-styles';
+import {
+  toolbarButton,
+  toolbarCount,
+  toolbarOn,
+  toolbarSelect,
+} from '@/components/table/toolbar-styles';
 
 // The Table's toolbar controls (docs/05 §3.1), one row under the view tabs: "Actions" (bulk actions on the selected
 // rows and Group by), the status and owner filters, Columns and the row density. Filters and density are UI state;
@@ -127,7 +132,7 @@ export function StatusFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={cn(toolbarSelect, picked.length > 0 && 'border-faint')}
+        className={cn(toolbarSelect, picked.length > 0 && toolbarOn)}
         aria-label={`Filter by status: ${label}`}
       >
         {picked.length === 1 ? (
@@ -209,7 +214,7 @@ export function MissingFilter({
       variant="outline"
       aria-pressed={on}
       data-testid="missing-filter"
-      className={cn(toolbarButton, on && 'border-faint bg-soft')}
+      className={cn(toolbarButton, on && toolbarOn)}
       onClick={() => store.getState().setMissingOnly(!on)}
     >
       <TriangleAlert className="text-warn" aria-hidden />
@@ -225,7 +230,7 @@ export function ValueFilterChip() {
   const f = useGrid((s) => s.valueFilter);
   if (!f) return null;
   return (
-    <span className="border-faint bg-background-100 text-label-14 flex h-[38px] max-w-[280px] items-center gap-1 rounded-md border pr-1 pl-3">
+    <span className="border-faint bg-soft text-ink text-label-14 flex h-[38px] max-w-[280px] items-center gap-1 rounded-md border pr-1 pl-3 font-medium">
       <span className="min-w-0 flex-1 truncate">{f.label}</span>
       <button
         type="button"
@@ -255,7 +260,7 @@ export function OwnerFilter({ items, ctx }: { items: Item[]; ctx: Ctx }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={cn(toolbarSelect, picked.length > 0 && 'border-faint')}
+        className={cn(toolbarSelect, picked.length > 0 && toolbarOn)}
         aria-label={`Filter by owner: ${label}`}
       >
         {picked.length === 1 ? (

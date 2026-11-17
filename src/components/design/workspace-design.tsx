@@ -227,7 +227,7 @@ export function WorkspaceDesign({
             </h2>
             <div className="border-line relative overflow-x-auto rounded-lg border">
               <table className="text-copy-13 w-full border-collapse" data-testid="design-sheets">
-                <thead className="bg-subtle text-muted-foreground text-label-12 text-left">
+                <thead className="bg-head text-muted-foreground text-label-12 text-left">
                   <tr>
                     <th scope="col" className="px-3 py-2 font-medium">
                       Sheet
@@ -296,7 +296,7 @@ export function WorkspaceDesign({
                   className="text-copy-13 w-full border-collapse"
                   data-testid="design-connections"
                 >
-                  <thead className="bg-subtle text-muted-foreground text-label-12 text-left">
+                  <thead className="bg-head text-muted-foreground text-label-12 text-left">
                     <tr>
                       <th scope="col" className="px-3 py-2 font-medium">
                         From

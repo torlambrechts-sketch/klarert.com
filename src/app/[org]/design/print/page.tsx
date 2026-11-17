@@ -155,7 +155,7 @@ export default async function DesignPrintPage({
             Flow · {flowCounts(flow.counts)}
           </h2>
           <table className="w-full border-collapse" data-testid="print-flow">
-            <thead className="bg-subtle text-muted-foreground text-label-12 text-left">
+            <thead className="bg-head text-muted-foreground text-label-12 text-left">
               <tr>
                 <th scope="col" className={th}>
                   Step
@@ -204,7 +204,7 @@ export default async function DesignPrintPage({
               Sheets · {kept.length}
             </h2>
             <table className="w-full border-collapse" data-testid="print-sheets">
-              <thead className="bg-subtle text-muted-foreground text-label-12 text-left">
+              <thead className="bg-head text-muted-foreground text-label-12 text-left">
                 <tr>
                   <th scope="col" className={th}>
                     Sheet
@@ -245,7 +245,7 @@ export default async function DesignPrintPage({
               Connections · {graph.edges.length}
             </h2>
             <table className="w-full border-collapse" data-testid="print-connections">
-              <thead className="bg-subtle text-muted-foreground text-label-12 text-left">
+              <thead className="bg-head text-muted-foreground text-label-12 text-left">
                 <tr>
                   <th scope="col" className={th}>
                     From

@@ -117,7 +117,7 @@ export function ListFrame({
   busy?: boolean;
 }) {
   return (
-    <div className="border-line bg-background-100 overflow-hidden rounded-lg border">
+    <div className="border-surface-line bg-surface overflow-hidden rounded-lg border">
       {header}
       <ul aria-label={label} aria-busy={busy || undefined} className="m-0 list-none p-0">
         {children}
@@ -138,7 +138,7 @@ export function ListHeader({
     <div
       aria-hidden
       className={cn(
-        'border-soft text-muted-foreground text-label-12 grid min-h-9 items-center gap-x-3 border-b pr-3 pl-1.5',
+        'border-surface-line bg-head text-muted-foreground text-label-12 grid min-h-9 items-center gap-x-3 border-b pr-3 pl-1.5 font-medium',
         className,
       )}
     >

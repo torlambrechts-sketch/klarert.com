@@ -43,7 +43,7 @@ export default async function OrgLayout({
           <aside className="side-col" aria-label="Workspace">
             <SideMenu {...menuProps} />
           </aside>
-          <div className="flex min-w-0 flex-col">
+          <div className="bg-page flex min-w-0 flex-col">
             <TopBar
               current={workspace}
               canManage={isAdminRole(role)}
