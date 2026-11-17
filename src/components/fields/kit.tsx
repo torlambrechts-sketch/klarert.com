@@ -111,12 +111,14 @@ export function OptionCell({ value, field, ctx, density }: CellProps) {
   const chosen = keys.map((k) => opts.find((o) => o.id === k)).filter((o): o is LabelOption => !!o);
   if (chosen.length === 0)
     return density === 'table' && !Array.isArray(value) ? (
-      // the design's empty badge: a faint outline where the value will go
+      // nothing at rest (an outline read as an input to fill); while the row is hovered, a dashed box where a
+      // click sets the value
       <>
         <Empty />
         <span
           aria-hidden
-          className="absolute inset-x-[6px] inset-y-[9px] rounded-md shadow-[inset_0_0_0_1px_var(--line)]"
+          data-empty-hint
+          className="border-line-strong absolute inset-x-[6px] inset-y-[9px] rounded-md border border-dashed opacity-0 group-hover/row:opacity-100"
         />
       </>
     ) : (

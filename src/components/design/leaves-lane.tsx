@@ -23,7 +23,7 @@ export function LeavesTable({ org, rows }: { org: string; rows: LeaveRow[] }) {
     <div className="border-line relative overflow-x-auto rounded-lg border print:overflow-visible">
       <table className="text-copy-13 w-full min-w-[760px] border-collapse print:min-w-0">
         <caption className="sr-only">Data that leaves the workspace</caption>
-        <thead className="bg-subtle text-muted-foreground text-label-12 text-left">
+        <thead className="bg-head text-muted-foreground text-label-12 text-left">
           <tr>
             <th scope="col" className="px-3 py-2 font-medium">
               Destination

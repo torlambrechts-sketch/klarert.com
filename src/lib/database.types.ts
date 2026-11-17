@@ -2721,6 +2721,9 @@ isOneToOne: false
 "publish_pack":
 { Args: { "p_org": string,"p_pack": Json }; Returns: Json
                            },
+"purge_demo_workspace":
+{ Args: { "p_org": string }; Returns: Json
+                           },
 "readable_sheet_ids":
 { Args: Record<PropertyKey, never>; Returns: string[]
                            },

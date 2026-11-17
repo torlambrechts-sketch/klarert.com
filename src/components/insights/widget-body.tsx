@@ -388,7 +388,7 @@ function ItemList({ model, actions }: { model: ListModel; actions: BodyActions }
           {model.rows.map((r) => (
             <tr
               key={r.itemId}
-              className={cn('hover:[&>td]:bg-subtle', open && 'cursor-pointer')}
+              className={cn('hover:[&>td]:bg-row-hover', open && 'cursor-pointer')}
               onClick={open ? () => open(r.itemId) : undefined}
             >
               <td className="border-soft max-w-[220px] border-b py-2 pr-2 [tr:last-child>&]:border-0">

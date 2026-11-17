@@ -42,7 +42,7 @@ export function Sticky({
     <div
       role={role}
       className={cn(
-        'bg-background-100 sticky left-0 z-[2] flex shrink-0 items-center',
+        'bg-surface sticky left-0 z-[2] flex shrink-0 items-center',
         // once the table scrolls sideways, a plain 1 px line on the name column's edge (no shadow)
         'group-data-[scrolled-left=true]/grid:shadow-[inset_-1px_0_0_var(--line)]',
         className,
@@ -120,7 +120,7 @@ export const TableCell = memo(function TableCell({
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'border-b-line text-ink group-hover/row:bg-subtle bg-background-100 text-label-14 absolute top-0 flex h-full items-center overflow-hidden border-b px-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] has-[[data-box]]:px-2 [&_[data-pill]]:-mx-1.5',
+        'border-b-row-line border-r-col-line text-ink group-hover/row:bg-row-hover bg-surface text-label-14 absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] has-[[data-box]]:px-2 [&_[data-pill]]:-mx-1.5',
         (selected || rowSelected) && 'bg-sel group-hover/row:bg-sel',
         active && 'outline-focus z-[1] outline-2 -outline-offset-2',
       )}

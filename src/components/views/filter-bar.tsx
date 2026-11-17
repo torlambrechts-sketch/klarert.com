@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import {
   toolbarButton,
   toolbarCount,
+  toolbarOn,
   toolbarPlaceholder,
   toolbarSelect,
 } from '@/components/table/toolbar-styles';
@@ -121,7 +122,7 @@ export function FilterButton({
         <Button
           type="button"
           variant="outline"
-          className={toolbarButton}
+          className={cn(toolbarButton, count > 0 && toolbarOn)}
           aria-label={count ? `Filter, ${count} active` : 'Filter'}
         >
           <ListFilter aria-hidden /> Filter
@@ -413,7 +414,7 @@ export function SortButton({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" className={toolbarSelect}>
+        <button type="button" className={cn(toolbarSelect, rules.length > 0 && toolbarOn)}>
           <ArrowDownWideNarrow className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
           <span
             className={cn('min-w-0 flex-1 truncate text-left', !rules.length && toolbarPlaceholder)}

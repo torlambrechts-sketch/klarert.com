@@ -9,6 +9,7 @@ import { NewGroupForm } from '@/components/sheets/new-group-form';
 import { GroupSwatch } from '@/components/sheets/group-swatch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { toolbarOn } from './toolbar-styles';
 
 // "Show one group" (docs/05 §2.2, §3): All groups or one group with its item count, kept in ?group=; editors add a
 // group from the same menu. Replaces the former groups panel.
@@ -72,7 +73,7 @@ export function GroupSelect({
         <PopoverTrigger
           className={cn(
             'border-line hover:bg-subtle bg-background-100 text-label-14 flex h-[38px] max-w-[260px] min-w-[170px] items-center gap-2 rounded-md border pr-2.5 pl-3',
-            current && 'border-faint',
+            current && toolbarOn,
           )}
         >
           {current ? (
@@ -83,7 +84,7 @@ export function GroupSelect({
           <span className="min-w-0 flex-1 truncate text-left">
             {current ? current.name : 'All groups'}
           </span>
-          <span className="bg-soft text-muted-foreground text-label-11.5-mono rounded-[4px] px-[5px] leading-[18px] tabular-nums">
+          <span className="bg-gray-alpha-200 text-muted-foreground text-label-11.5-mono rounded-[4px] px-[5px] leading-[18px] tabular-nums">
             {count(current?.id ?? null)}
           </span>
           <span className="sr-only">, show one group</span>

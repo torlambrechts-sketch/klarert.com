@@ -1,4 +1,7 @@
-// Screenshots of the example workspace for the public site (docs/17): signs in as the demo login and saves crisp
+// Screenshots of the example workspace for the public site (docs/17): signs in as the demo login (a read-only viewer)
+// for what a viewer sees, and as the admin login (DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD, added by `pnpm seed:demo`) for
+// the screens only owners and admins see in full: Workspace admin › Frameworks, the audit pack's exports, the design
+// map's data leaving the workspace and the automations without the read-only note. Saves crisp
 // WebP files to public/site/screens (1440 px wide at 2x, plus 390 px phone shots), and their sizes to
 // src/lib/site/screens.json so the site's images never shift. Everything in them is fictional: nothing is hidden.
 // Run: pnpm seed:demo, start the app, then PORT=<port> pnpm screenshots. Not part of CI (tests/e2e is).
@@ -13,8 +16,14 @@ const OUT = join(ROOT, 'public', 'site', 'screens');
 const MANIFEST = join(ROOT, 'src', 'lib', 'site', 'screens.json');
 const COPY_TO = process.env.SCREENS_COPY_TO;
 const SLUG = process.env.DEMO_SLUG ?? 'meridian-demo';
-const EMAIL = 'demo@meridian.example';
-const PASSWORD = process.env.DEMO_PASSWORD || 'meridian-demo-local';
+const VIEWER = {
+  email: 'demo@meridian.example',
+  password: process.env.DEMO_PASSWORD || 'meridian-demo-local',
+};
+const ADMIN = {
+  email: process.env.DEMO_ADMIN_EMAIL ?? '',
+  password: process.env.DEMO_ADMIN_PASSWORD ?? '',
+};
 
 // sharp comes with Next.js (image optimisation); load it from there rather than adding a dependency
 type Sharp = (input: Buffer) => {
@@ -81,10 +90,10 @@ const ownKey = () =>
     `select settings->'framework'->>'key' from sheets where org_id = '${orgId()}' and is_library and settings->'framework'->>'key' like 'w%-%' limit 1`,
   );
 
-async function signIn(page: Page) {
+async function signIn(page: Page, who: { email: string; password: string } = VIEWER) {
   await page.goto(`/login?next=${encodeURIComponent(`/${SLUG}/home`)}`);
-  await page.getByLabel('Email').fill(EMAIL);
-  await page.getByLabel('Password').fill(PASSWORD);
+  await page.getByLabel('Email').fill(who.email);
+  await page.getByLabel('Password').fill(who.password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL(new RegExp(`/${SLUG}/home`));
 }
@@ -160,6 +169,27 @@ test('the example workspace, desktop', async ({ page }, info) => {
   await expect(page.getByRole('main')).toBeVisible();
   await shoot(page, 'insights');
 
+  const own = library(ownKey(), '1');
+  await page.goto(`/${SLUG}/s/${own}?item=${displayId(own, 'Calibrated gauges')}`);
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page
+    .getByRole('dialog')
+    .getByText('Your mapping')
+    .first()
+    .scrollIntoViewIfNeeded()
+    .catch(() => {});
+  await shoot(page, 'own-framework');
+});
+
+// The screens only owners and admins see in full, as the admin login.
+test('the example workspace, desktop, as the admin', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop');
+  if (!ADMIN.email || !ADMIN.password)
+    throw new Error(
+      'Set DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD (and run `pnpm seed:demo` with them) for the admin screens.',
+    );
+  await signIn(page, ADMIN);
+
   await page.goto(`/${SLUG}/design?show=map`);
   await expect(page.getByRole('main')).toBeVisible();
   await shoot(page, 'design-map');
@@ -195,17 +225,6 @@ test('the example workspace, desktop', async ({ page }, info) => {
   });
   await shoot(page, 'edition-move-preview');
   await move.getByRole('button', { name: 'Cancel' }).click();
-
-  const own = library(ownKey(), '1');
-  await page.goto(`/${SLUG}/s/${own}?item=${displayId(own, 'Calibrated gauges')}`);
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await page
-    .getByRole('dialog')
-    .getByText('Your mapping')
-    .first()
-    .scrollIntoViewIfNeeded()
-    .catch(() => {});
-  await shoot(page, 'own-framework');
 });
 
 // Whole-page shots of the ISO 9001 page for review (PAGE_SHOTS_TO=<dir>), never written to the repository.

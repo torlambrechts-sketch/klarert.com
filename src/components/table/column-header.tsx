@@ -118,7 +118,7 @@ export function ColumnHeader({
       role="columnheader"
       aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
       className={cn(
-        'group/col border-b-soft bg-background-100 relative flex h-full items-center border-b',
+        'group/col border-b-surface-line border-r-col-line bg-head relative flex h-full items-center border-r border-b',
         drop.isOver && !drag.isDragging && 'bg-sel',
         drag.isDragging && 'opacity-50',
       )}
@@ -137,7 +137,7 @@ export function ColumnHeader({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-3 text-left font-normal outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
+            'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-3 text-left font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
             // the system-column mark sits right after the name
             field.locked || field.system ? 'flex-initial pr-0' : 'flex-1 pr-[14px]',
           )}

@@ -94,7 +94,11 @@ export function SubHeaderRow({
   const end = cols.at(-1) ? cols.at(-1)!.left + cols.at(-1)!.width : stickyW;
   return (
     <>
-      <Sticky width={stickyW} role="columnheader" className="bg-subtle border-b-soft border-b">
+      <Sticky
+        width={stickyW}
+        role="columnheader"
+        className="bg-head border-b-surface-line border-b"
+      >
         <span aria-hidden className="relative h-full w-[58px] shrink-0">
           <span className="bg-line-strong absolute top-1/2 bottom-0 left-[30px] w-px" />
         </span>
@@ -104,7 +108,7 @@ export function SubHeaderRow({
         <div
           key={field.id}
           role="columnheader"
-          className="bg-subtle border-b-soft text-muted-foreground text-label-12 absolute top-0 flex h-full items-center truncate border-b px-[14px]"
+          className="bg-head border-b-surface-line text-muted-foreground text-label-12 absolute top-0 flex h-full items-center truncate border-b px-[14px]"
           style={{ left, width }}
         >
           <span className="truncate">{field.name}</span>
@@ -112,7 +116,7 @@ export function SubHeaderRow({
       ))}
       <div
         aria-hidden
-        className="bg-subtle border-b-soft absolute top-0 h-full border-b"
+        className="bg-head border-b-surface-line absolute top-0 h-full border-b"
         style={{ left: end, width: `calc(100% - ${end}px)` }}
       />
     </>
@@ -135,7 +139,10 @@ export const SubItemRow = memo(function SubItemRow(
       <Sticky
         width={p.stickyW}
         role="none"
-        className={cn('border-b-line group-hover/row:bg-subtle border-b', row.match && 'bg-sel')}
+        className={cn(
+          'border-b-row-line group-hover/row:bg-row-hover border-b',
+          row.match && 'bg-sel',
+        )}
       >
         <div
           id={cellId(item.id, 'name')}
@@ -229,7 +236,7 @@ export const SubItemRow = memo(function SubItemRow(
       })}
       <div
         role="gridcell"
-        className="border-b-line bg-background-100 group-hover/row:bg-subtle absolute top-0 flex h-full items-center border-b pl-1"
+        className="border-b-row-line bg-surface group-hover/row:bg-row-hover absolute top-0 flex h-full items-center border-b pl-1"
         // the row's line runs to the card's edge
         style={{ left: end, width: `max(44px, calc(100% - ${end}px))` }}
       >

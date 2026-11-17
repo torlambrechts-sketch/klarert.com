@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { demoLogin } from '@/lib/demo-login';
 import { safeNext as safePath } from '@/lib/safe-next';
 import { getSession, getSignIn } from '@/server/auth';
 import { LoginForm, PasswordForm } from './login-form';
@@ -20,18 +21,22 @@ const MODES: Record<Mode, { title: string; intro: string }> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string; mode?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; mode?: string; demo?: string }>;
 }) {
-  const { next, error, mode: rawMode } = await searchParams;
+  const { next, error, mode: rawMode, demo: rawDemo } = await searchParams;
   const safeNext = safePath(next) ?? undefined;
   if (await getSession()) redirect(safeNext ?? '/');
   // signed in with the first step, the authenticator app's code still owed
   if ((await getSignIn())?.twoStep.needsCode)
     redirect(safeNext ? `/login/two-step?next=${encodeURIComponent(safeNext)}` : '/login/two-step');
   const mode: Mode = rawMode === 'signup' || rawMode === 'link' ? rawMode : 'signin';
-  const href = (m: Mode) => {
+  // the read-only demo login (docs/17): off unless NEXT_PUBLIC_DEMO_EMAIL is set
+  const demo = demoLogin();
+  const showDemo = !!demo && mode === 'signin' && rawDemo === '1';
+  const href = (m: Mode, withDemo = false) => {
     const p = new URLSearchParams();
     if (m !== 'signin') p.set('mode', m);
+    if (withDemo) p.set('demo', '1');
     if (safeNext) p.set('next', safeNext);
     const q = p.toString();
     return q ? `/login?${q}` : '/login';
@@ -50,10 +55,40 @@ export default async function LoginPage({
           That sign-in link has expired or was already used. Sign in again.
         </p>
       ) : null}
+      {showDemo && demo ? (
+        <section
+          aria-labelledby="demo-login-heading"
+          className="border-line text-copy-13 flex flex-col gap-2 rounded-lg border p-4"
+        >
+          <h3 id="demo-login-heading" className="text-label-14 m-0 font-medium">
+            Demo workspace
+          </h3>
+          <p className="text-muted-foreground m-0">
+            Meridian Components Ltd is a fictional example workspace. You can look around but not
+            change anything.
+          </p>
+          <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+            <dt className="text-muted-foreground">Email</dt>
+            <dd className="m-0 break-all" data-testid="demo-email">
+              {demo.email}
+            </dd>
+            <dt className="text-muted-foreground">Password</dt>
+            <dd className="m-0 break-all" data-testid="demo-password">
+              {demo.password ?? 'Ask us for the demo password'}
+            </dd>
+          </dl>
+        </section>
+      ) : null}
       {mode === 'link' ? (
         <LoginForm next={safeNext} />
       ) : (
-        <PasswordForm key={mode} next={safeNext} mode={mode} />
+        <PasswordForm
+          key={`${mode}${showDemo ? '-demo' : ''}`}
+          next={safeNext}
+          mode={mode}
+          initialEmail={showDemo ? demo?.email : undefined}
+          initialPassword={showDemo ? (demo?.password ?? undefined) : undefined}
+        />
       )}
       {mode === 'signin' ? (
         <p className="text-label-13 -mt-2">
@@ -83,6 +118,14 @@ export default async function LoginPage({
         {mode !== 'link' ? (
           <Link className={linkClass} href={href('link')}>
             Email me a sign-in link instead
+          </Link>
+        ) : null}
+        {demo && !showDemo ? (
+          <Link
+            className="text-muted-foreground underline-offset-4 hover:underline"
+            href={href('signin', true)}
+          >
+            Try the demo workspace
           </Link>
         ) : null}
       </nav>

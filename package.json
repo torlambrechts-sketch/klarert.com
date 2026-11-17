@@ -21,6 +21,7 @@
     "db:test": "supabase test db",
     "seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
     "seed:demo": "tsx --require ./scripts/demo/runtime.cjs --env-file-if-exists=.env.local scripts/seed.ts --demo",
+    "seed:demo:purge": "tsx --env-file-if-exists=.env.local scripts/seed.ts --demo-purge",
     "seed:demo:check": "tsx --env-file-if-exists=.env.local scripts/demo/smoke.ts",
     "screenshots": "playwright test -c tests/screens/playwright.config.ts",
     "security:bundle": "node scripts/security/check-client-bundle.mjs",

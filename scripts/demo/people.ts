@@ -1,18 +1,24 @@
 // The people of the demo workspace. All fictional, with example.com addresses (a domain reserved for examples, so no
-// mail reaches anyone). Only the demo login (demo@meridian.example, `.example` is reserved too) has a password; the
-// others are signed out and blocked from signing in when the seed finishes.
+// mail reaches anyone). Only the demo login (demo@meridian.example, `.example` is reserved too) has a password, and it
+// is a read-only viewer (owner decision 17 Nov 2026): visitors of the live site sign in with it. The owner,
+// Hannah Whitfield (owner@meridian.example), holds the workspace and is who the seed acts as for the owner's part; she
+// and the others are signed out and blocked from signing in when the seed finishes. An optional admin login of the
+// owner's own (DEMO_ADMIN_EMAIL) is added by scripts/demo/index.ts and is not one of these people.
 
+/** The demo login: a viewer, the one person here who signs in. */
 export const DEMO_EMAIL = 'demo@meridian.example';
+/** The workspace's owner: never signs in, the seed acts as her. */
+export const OWNER_EMAIL = 'owner@meridian.example';
 
 export type PersonRef =
-  'hannah' | 'priya' | 'daniel' | 'grace' | 'tomasz' | 'ellie' | 'marcus' | 'ruth';
+  'hannah' | 'priya' | 'daniel' | 'grace' | 'tomasz' | 'ellie' | 'marcus' | 'ruth' | 'visitor';
 
 export interface DemoPerson {
   ref: PersonRef;
   name: string;
   initials: string;
   email: string;
-  role: 'owner' | 'admin' | 'editor' | 'auditor';
+  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'auditor';
   /** The job title, matched by the packs' "tell the quality manager" automations (docs/04). */
   jobTitle: string;
   team: string;
@@ -26,7 +32,7 @@ export const PEOPLE: readonly DemoPerson[] = [
     ref: 'hannah',
     name: 'Hannah Whitfield',
     initials: 'HW',
-    email: DEMO_EMAIL,
+    email: OWNER_EMAIL,
     role: 'owner',
     jobTitle: 'Top management',
     team: 'Leadership',
@@ -102,6 +108,17 @@ export const PEOPLE: readonly DemoPerson[] = [
     team: 'Quality',
     color: 'grey',
     endsInDays: 45,
+  },
+  {
+    // the demo login: reads everything a viewer may, changes nothing (docs/17, docs/09 §15)
+    ref: 'visitor',
+    name: 'Sam Carter',
+    initials: 'SC',
+    email: DEMO_EMAIL,
+    role: 'viewer',
+    jobTitle: 'Non-executive director',
+    team: 'Leadership',
+    color: 'blue',
   },
 ];
 

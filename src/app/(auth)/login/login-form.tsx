@@ -65,14 +65,25 @@ export function LoginForm({ next }: { next?: string }) {
   );
 }
 
-export function PasswordForm({ next, mode }: { next?: string; mode: 'signin' | 'signup' }) {
+export function PasswordForm({
+  next,
+  mode,
+  initialEmail,
+  initialPassword,
+}: {
+  next?: string;
+  mode: 'signin' | 'signup';
+  /** Filled in for the demo workspace (src/lib/demo-login.ts). */
+  initialEmail?: string;
+  initialPassword?: string;
+}) {
   const [state, action] = useActionState<FormState<null>, FormData>(
     mode === 'signin' ? signInWithPassword : signUpWithPassword,
     null,
   );
   // Forms reset after an action; an uncontrolled field whose default follows the typed email keeps it across
   // attempts without wiping what was typed before hydration. Errors show inline, next to the form.
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail ?? '');
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
       {next ? <input type="hidden" name="next" value={next} /> : null}
@@ -92,6 +103,7 @@ export function PasswordForm({ next, mode }: { next?: string; mode: 'signin' | '
         name="password"
         type="password"
         autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+        defaultValue={initialPassword}
         hint={mode === 'signup' ? 'At least 12 characters.' : undefined}
         required
         state={state}

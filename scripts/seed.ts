@@ -10,6 +10,9 @@
 // instead of the first-sheet workspace. DEMO_PASSWORD is the demo login's password: required for a non-local
 // Supabase, `meridian-demo-local` by default on the local stack. DEMO_RESET=1 moves an existing demo workspace aside
 // and builds a new one; DEMO_TODAY=YYYY-MM-DD dates the content from another day (default: today, Europe/London).
+// The demo login is a read-only viewer; DEMO_ADMIN_EMAIL with DEMO_ADMIN_PASSWORD (both or neither) adds the owner's
+// own admin login. `pnpm seed:demo:purge` (this file with --demo-purge) removes the retired copies DEMO_RESET leaves
+// (scripts/demo/purge.ts, migration 0078), so the nightly rebuild (.github/workflows/demo-nightly.yml) leaves one.
 import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
@@ -20,6 +23,7 @@ import { frameworkPacks, repoCrosswalks, repoFrameworks } from '../src/lib/frame
 import { syncFrameworks } from '../src/server/frameworks/catalogue';
 import { syncCatalogue } from '../src/server/packs/install';
 import { importTemplate } from '../src/server/templates/importer';
+import { DEMO_SLUG } from './demo/slug';
 
 const env = z
   .object({
@@ -39,10 +43,13 @@ const env = z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
       .optional(),
+    DEMO_ADMIN_EMAIL: z.string().optional(),
+    DEMO_ADMIN_PASSWORD: z.string().optional(),
   })
   .parse(process.env);
 
 const DEMO = process.argv.includes('--demo');
+const PURGE = process.argv.includes('--demo-purge');
 
 const host = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname;
 if (!['127.0.0.1', 'localhost'].includes(host) && env.SEED_ALLOW_REMOTE !== '1') {
@@ -74,6 +81,29 @@ if (DEMO) {
   if (!(globalThis as { __demoCookieJar?: unknown }).__demoCookieJar) {
     console.error('Run the demo with `pnpm seed:demo` (it preloads scripts/demo/runtime.cjs).');
     process.exit(1);
+  }
+}
+
+let demoAdmin: { email: string; password: string } | undefined;
+if (DEMO) {
+  const email = env.DEMO_ADMIN_EMAIL?.trim() ?? '';
+  const password = env.DEMO_ADMIN_PASSWORD ?? '';
+  if (!!email !== !!password) {
+    console.error(
+      'Set both DEMO_ADMIN_EMAIL and DEMO_ADMIN_PASSWORD for the admin login, or neither.',
+    );
+    process.exit(1);
+  }
+  if (email) {
+    if (!z.email().safeParse(email).success) {
+      console.error('DEMO_ADMIN_EMAIL is not an email address.');
+      process.exit(1);
+    }
+    if (password.length < 12) {
+      console.error('DEMO_ADMIN_PASSWORD must be at least 12 characters.');
+      process.exit(1);
+    }
+    demoAdmin = { email, password };
   }
 }
 
@@ -121,6 +151,7 @@ async function userId(email: string): Promise<string> {
 }
 
 async function main() {
+  if (PURGE) return purge();
   // the pack catalogue (docs/11): the repository's packs, each version written once
   // and each framework's library pack, then the requirement catalogue (docs/12)
   const frameworks = repoFrameworks();
@@ -268,6 +299,7 @@ async function demo(newPacks: number, newFrameworks: number) {
     password: demoPassword,
     reset: env.DEMO_RESET === '1',
     today: env.DEMO_TODAY,
+    admin: demoAdmin,
   });
   console.log(
     `Built the demo workspace /${r.slug} in ${Math.round((Date.now() - started) / 1000)} s ` +
@@ -284,10 +316,28 @@ async function demo(newPacks: number, newFrameworks: number) {
     for (const w of r.warnings) console.log(`  - ${w}`);
   }
   console.log(
-    `Sign in as ${'demo@meridian.example'} with ${env.DEMO_PASSWORD ? 'DEMO_PASSWORD' : `the local password ${LOCAL_DEMO_PASSWORD}`}.`,
+    `Sign in as demo@meridian.example (viewer) with ${env.DEMO_PASSWORD ? 'DEMO_PASSWORD' : `the local password ${LOCAL_DEMO_PASSWORD}`}` +
+      `${demoAdmin ? ', or as the admin login (DEMO_ADMIN_EMAIL) with DEMO_ADMIN_PASSWORD' : ''}.`,
   );
   // a machine-readable last line for the smoke test (scripts/demo/smoke.ts)
   console.log(`DEMO_RESULT ${JSON.stringify(r)}`);
+}
+
+/** Removes the retired demo copies (scripts/demo/purge.ts); fails when one marked as a demo copy could not go. */
+async function purge() {
+  const { purgeRetired } = await import('./demo/purge');
+  const r = await purgeRetired(db);
+  for (const p of r.purged)
+    console.log(
+      `Purged /${p.slug}: ${p.items} items, ${p.activity} log entries, ${p.files} files.`,
+    );
+  for (const k of r.kept) console.log(`Kept /${k.slug}: ${k.reason}.`);
+  const live = await db.from('orgs').select('slug').like('slug', `${DEMO_SLUG}%`);
+  if (live.error) throw new Error(live.error.message);
+  console.log(
+    `${r.purged.length} retired demo copies purged. Demo workspaces now: ${live.data.map((o) => `/${o.slug}`).join(', ') || 'none'}.`,
+  );
+  if (r.kept.some((k) => !k.reason.startsWith('not marked'))) process.exit(1);
 }
 
 main().catch((e) => {
