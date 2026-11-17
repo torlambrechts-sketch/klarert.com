@@ -87,9 +87,11 @@ test('save your setup, install it in a client workspace, update it there, withdr
        ('${orgA}', '${capa}', 'contact', 'Client contact', 'text', 'a2', '{"personalData": true}'),
        ('${orgA}', '${capa}', 'due', 'Due', 'date', 'a3', '{}')`,
   );
+  // the column is restricted: only owners, and Maria by name, see it (the people stay in A; the restriction travels)
   localSql(
-    `insert into fields (org_id, sheet_id, key, name, type, position, config)
-     values ('${orgA}', '${risk}', 'client_ref', 'Client reference', 'text', 'zz', '{}')`,
+    `insert into fields (org_id, sheet_id, key, name, type, position, config, restricted_to)
+     values ('${orgA}', '${risk}', 'client_ref', 'Client reference', 'text', 'zz', '{}',
+             '{"roles": [], "userIds": ["${maria}"]}')`,
   );
   localSql(
     `insert into automations (org_id, sheet_id, name, enabled, trigger, conditions, actions) values
@@ -114,6 +116,11 @@ test('save your setup, install it in a client workspace, update it there, withdr
   await expect(leftOut).toContainText('The webhook to hooks.example.com is left out');
   await expect(leftOut).toContainText('Add the address after install');
   await expect(leftOut).toContainText('New → tell Maria: An action told only named people');
+  // a restricted column keeps its restriction: only the people listed on it stay behind
+  await expect(leftOut).toContainText(
+    'Client reference: The people listed on this restricted column are not copied',
+  );
+  await expect(leftOut).not.toContainText('restrict it again');
   await expect(dialog.getByTestId('version-hint')).toContainText('Suggested 1.0.0');
   await expect(dialog.getByRole('checkbox', { name: /^Client onboarding/ }).first()).toBeChecked();
   await expect(leftOut).toContainText(
@@ -174,6 +181,12 @@ test('save your setup, install it in a client workspace, update it there, withdr
       `select new_value->>'source' from activity_log where org_id = '${orgB}' and action = 'pack.installed' and new_value->>'pack_key' = '${key}'`,
     ),
   ).toBe('private');
+  // the restricted column installed restricted, with its roles and nobody listed
+  expect(
+    one(
+      `select restricted_to::text from fields where org_id = '${orgB}' and name = 'Client reference'`,
+    ),
+  ).toBe('{"roles": [], "userIds": []}');
   // every automation starts in test mode (or off); none sends anything out
   expect(
     one(`select count(*) from automations a join pack_installs i on i.id = a.pack_install_id
@@ -230,10 +243,20 @@ test('save your setup, install it in a client workspace, update it there, withdr
     .filter({ hasText: PACK });
   await expect(installedRow).toContainText(`Your own pack, from Workspace ${a}`);
   await expect(installedRow.getByTestId('update-available')).toContainText('1.0.0 → 1.1.0');
+  // the restricted column stays restricted here: an admin of B who is not an owner does not see it
+  expect(
+    await rest<{ field_hidden: boolean }[]>(
+      client,
+      `fields?org_id=eq.${orgB}&name=eq.Client%20reference&select=field_hidden`,
+    ),
+  ).toEqual([{ field_hidden: true }]);
   await installedRow.getByRole('button', { name: /^Update .* from 1\.0\.0 to 1\.1\.0$/ }).click();
   const up = client.getByRole('dialog');
   await expect(up.getByTestId('upgrade-summary')).toBeVisible({ timeout: 60_000 });
   await expect(up.getByRole('list', { name: 'Added' })).toContainText('Client sign-off');
+  await expect(up.getByTestId('upgrade-personal-data')).toContainText(
+    'Sheets with personal data are only visible to the people listed on them; updates to them show for those people.',
+  );
   await shot(client, 'update', project);
   await up.getByRole('button', { name: 'Apply update' }).click();
   await expect(up.getByRole('status')).toContainText('to 1.1.0', { timeout: 60_000 });
