@@ -49,9 +49,9 @@ export const STATS: readonly { key: string; label: string }[] = [
  * stands for; Corrective actions is the Nonconformities and CAPA register of the shared registers and its CAPA app
  * (docs/13).
  */
-export const STANDARDS: readonly { name: string; pack: string }[] = [
+export const STANDARDS: readonly { name: string; pack: string; href?: string }[] = [
   { name: 'ISO/IEC 27001', pack: 'iso-27001' },
-  { name: 'ISO 9001', pack: 'iso-9001' },
+  { name: 'ISO 9001', pack: 'iso-9001', href: '/standards/iso-9001' },
   { name: 'ISO 14001', pack: 'iso-14001' },
   { name: 'ISO 45001', pack: 'iso-45001' },
   { name: 'GDPR', pack: 'gdpr' },
@@ -409,11 +409,17 @@ export const CONTACT = { email: 'support@klarert.com' } as const;
 /** The pages search engines may index; everything else is noindex (root layout). */
 export const PUBLIC_PATHS = ['/', LINKS.privacy, LINKS.terms] as const;
 
+/** A standard's own page on the site, by catalogue key (the /frameworks card and the home page band link to it). */
+export const STANDARD_PAGES: Readonly<Record<string, string>> = {
+  'iso-9001': '/standards/iso-9001',
+};
+
 /** The pages the sitemap lists: the public pages plus the product pages (sitemap.ts reads this). */
 export const SITEMAP_PATHS = [
   '/',
   LINKS.platform,
   LINKS.frameworks,
+  '/standards/iso-9001',
   LINKS.privacy,
   LINKS.terms,
 ] as const;

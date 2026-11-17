@@ -152,7 +152,16 @@ export function Landing() {
           <ul className="m-0 flex list-none flex-wrap items-center gap-x-8 gap-y-3 p-0">
             {STANDARDS.map((s) => (
               <li key={s.name} className="text-label-16 text-ink font-semibold">
-                {s.name}
+                {s.href ? (
+                  <Link
+                    href={s.href}
+                    className="decoration-line-strong inline-flex min-h-11 items-center rounded-sm underline underline-offset-4 hover:decoration-current sm:min-h-8"
+                  >
+                    {s.name}
+                  </Link>
+                ) : (
+                  s.name
+                )}
               </li>
             ))}
           </ul>

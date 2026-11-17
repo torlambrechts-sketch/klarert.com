@@ -36,6 +36,7 @@ describe('product site copy', () => {
       '/',
       '/platform',
       '/frameworks',
+      '/standards/iso-9001',
       '/privacy',
       '/terms',
     ]);
