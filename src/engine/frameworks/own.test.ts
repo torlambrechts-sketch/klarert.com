@@ -17,6 +17,7 @@ import {
   ownLicence,
   publishDecision,
   toFramework,
+  libraryName,
   trimDraft,
   withCurrentOwner,
   type DraftRequirement,
@@ -468,6 +469,21 @@ describe('withCurrentOwner', () => {
   it('leaves catalogue notes alone', () => {
     expect(withCurrentOwner('Requirements in our own words.', 'B')).toBe(
       'Requirements in our own words.',
+    );
+  });
+});
+
+describe('libraryName', () => {
+  it('adds "requirements" once', () => {
+    expect(libraryName('Acme customer quality', 1)).toBe('Acme customer quality requirements');
+    expect(libraryName('Acme customer quality requirements', 1)).toBe(
+      'Acme customer quality requirements',
+    );
+    expect(libraryName('Supplier Requirement', 1)).toBe('Supplier Requirement');
+  });
+  it('names later editions', () => {
+    expect(libraryName('Acme customer quality', 2)).toBe(
+      'Acme customer quality (edition 2) requirements',
     );
   });
 });

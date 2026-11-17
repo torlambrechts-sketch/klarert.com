@@ -51,11 +51,19 @@ describe('reserved workspace addresses', () => {
     expect(RESERVED_SLUGS).toContain('_next');
   });
 
-  it('matches the list the database refuses (migration 0073)', () => {
-    const sql = readFileSync(
-      new URL('../../supabase/migrations/0073_reserved_slugs.sql', import.meta.url),
-      'utf8',
-    );
+  it('matches the list the database refuses (the newest migration that defines it)', () => {
+    const dir = new URL('../../supabase/migrations/', import.meta.url);
+    const newest = readdirSync(dir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort()
+      .filter((f) =>
+        readFileSync(new URL(f, dir), 'utf8').includes(
+          'create or replace function _reserved_slugs()',
+        ),
+      )
+      .pop();
+    expect(newest).toBe('0077_reserved_slug_standards.sql');
+    const sql = readFileSync(new URL(newest!, dir), 'utf8');
     const fn = sql.indexOf('create or replace function _reserved_slugs()');
     const start = sql.indexOf('array[', fn);
     const block = sql.slice(start, sql.indexOf(']', start));

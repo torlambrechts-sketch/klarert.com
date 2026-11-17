@@ -556,6 +556,16 @@ export interface OwnFrameworkMeta {
   today: string;
 }
 
+/**
+ * The library sheet's name: the title plus "requirements", unless the title already ends in "requirement(s)" (owner
+ * decision 17 Nov 2026: "Acme customer quality requirements" stays as it is), with the edition after the first.
+ */
+export function libraryName(title: string, edition: number): string {
+  const t = title.trim();
+  const ed = edition > 1 ? ` (edition ${edition})` : '';
+  return /\brequirements?$/i.test(t) ? `${t}${ed}` : `${t}${ed} requirements`;
+}
+
 /** The licence note of a workspace's own framework (shown on the library, the item panel and the SoA). */
 export const ownLicence = (source: string, workspace: string) =>
   `Provided by ${source}. Owned by ${workspace}.`;
@@ -591,10 +601,7 @@ export function toFramework(draft: FrameworkDraft, meta: OwnFrameworkMeta): Fram
     url: '',
     titles: 'customer',
     library: {
-      name: (edition > 1
-        ? `${title} (edition ${edition}) requirements`
-        : `${title} requirements`
-      ).slice(0, 120),
+      name: libraryName(title, edition).slice(0, 120),
       itemLabel: 'Requirement',
       idPrefix: ownIdPrefix(draft.shortTitle),
       folder: 'Frameworks',

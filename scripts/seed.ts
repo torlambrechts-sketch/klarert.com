@@ -4,6 +4,12 @@
 // Run: pnpm seed   (reads .env.local; refuses non-local Supabase unless SEED_ALLOW_REMOTE=1)
 // Options (environment): SEED_WORKSPACE=<slug> and SEED_WORKSPACE_NAME=<name> seed another workspace with the same
 // people (the first-sheet e2e test uses a fresh one per run); SEED_SHEETS=0 leaves it empty (docs/07 Part A).
+//
+// The demo workspace: `pnpm seed:demo` (this file with --demo, run with scripts/demo/runtime.cjs preloaded) writes the
+// catalogue and then builds Meridian Components Ltd at /meridian-demo (scripts/demo/index.ts, docs/17-demo-workspace.md)
+// instead of the first-sheet workspace. DEMO_PASSWORD is the demo login's password: required for a non-local
+// Supabase, `meridian-demo-local` by default on the local stack. DEMO_RESET=1 moves an existing demo workspace aside
+// and builds a new one; DEMO_TODAY=YYYY-MM-DD dates the content from another day (default: today, Europe/London).
 import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
@@ -26,8 +32,17 @@ const env = z
       .default('meridian'),
     SEED_WORKSPACE_NAME: z.string().min(1).max(120).optional(),
     SEED_SHEETS: z.enum(['0', '1']).default('1'),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(20).optional(),
+    DEMO_PASSWORD: z.string().optional(),
+    DEMO_RESET: z.enum(['0', '1']).default('0'),
+    DEMO_TODAY: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
   })
   .parse(process.env);
+
+const DEMO = process.argv.includes('--demo');
 
 const host = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname;
 if (!['127.0.0.1', 'localhost'].includes(host) && env.SEED_ALLOW_REMOTE !== '1') {
@@ -35,6 +50,31 @@ if (!['127.0.0.1', 'localhost'].includes(host) && env.SEED_ALLOW_REMOTE !== '1')
     `Refusing to seed ${host}. Set SEED_ALLOW_REMOTE=1 to seed a hosted project on purpose.`,
   );
   process.exit(1);
+}
+
+const LOCAL_DEMO_PASSWORD = 'meridian-demo-local';
+let demoPassword = '';
+if (DEMO) {
+  const local = ['127.0.0.1', 'localhost'].includes(host);
+  demoPassword = env.DEMO_PASSWORD || (local ? LOCAL_DEMO_PASSWORD : '');
+  if (!demoPassword) {
+    console.error(
+      'Set DEMO_PASSWORD: the demo login needs a password of its own on a hosted project.',
+    );
+    process.exit(1);
+  }
+  if (demoPassword.length < 12) {
+    console.error('DEMO_PASSWORD must be at least 12 characters.');
+    process.exit(1);
+  }
+  if (!env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('Set NEXT_PUBLIC_SUPABASE_ANON_KEY: the demo is written by signed-in people.');
+    process.exit(1);
+  }
+  if (!(globalThis as { __demoCookieJar?: unknown }).__demoCookieJar) {
+    console.error('Run the demo with `pnpm seed:demo` (it preloads scripts/demo/runtime.cjs).');
+    process.exit(1);
+  }
 }
 
 const template = parseTemplate(
@@ -86,6 +126,7 @@ async function main() {
   const frameworks = repoFrameworks();
   const catalogue = await syncCatalogue(db, [...repoPacks(), ...frameworkPacks(frameworks)]);
   const library = await syncFrameworks(db, frameworks, repoCrosswalks());
+  if (DEMO) return demo(catalogue.added.length, library.added.length);
   const people = [];
   for (const [i, p] of template.people.entries()) {
     const id = await userId(p.email);
@@ -216,6 +257,37 @@ async function main() {
   console.log(
     `Sign in as ${people.map((p) => `${p.email} (${p.role})`).join(', ')} — magic links arrive in Mailpit.`,
   );
+}
+
+async function demo(newPacks: number, newFrameworks: number) {
+  const { seedDemo, TARGETS } = await import('./demo/index');
+  const started = Date.now();
+  const r = await seedDemo(db, {
+    url: env.NEXT_PUBLIC_SUPABASE_URL,
+    anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    password: demoPassword,
+    reset: env.DEMO_RESET === '1',
+    today: env.DEMO_TODAY,
+  });
+  console.log(
+    `Built the demo workspace /${r.slug} in ${Math.round((Date.now() - started) / 1000)} s ` +
+      `(${r.counts.items} items, ${r.counts.packs} packs; catalogue: ${newPacks} new packs, ${newFrameworks} new frameworks).`,
+  );
+  for (const f of r.coverage)
+    console.log(
+      `  ${f.title}: ${f.text}${TARGETS[f.framework] !== undefined ? ` (target about ${TARGETS[f.framework]}%)` : ''}`,
+    );
+  if (r.warnings.length) {
+    console.log(
+      `${r.warnings.length} changes were refused by a status rule and left as they were:`,
+    );
+    for (const w of r.warnings) console.log(`  - ${w}`);
+  }
+  console.log(
+    `Sign in as ${'demo@meridian.example'} with ${env.DEMO_PASSWORD ? 'DEMO_PASSWORD' : `the local password ${LOCAL_DEMO_PASSWORD}`}.`,
+  );
+  // a machine-readable last line for the smoke test (scripts/demo/smoke.ts)
+  console.log(`DEMO_RESULT ${JSON.stringify(r)}`);
 }
 
 main().catch((e) => {
