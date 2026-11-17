@@ -727,3 +727,60 @@ Commands (`pnpm security:commands`):
 - A workspace's own framework and its library pack stay readable by every member, as the catalogue is. A restricted
   library sheet stays restricted (docs/02 §16); the requirement rows themselves are not.
 - Hosted rollout of 0074: see the P8 report (locks while the constraints are added, the renamed `upgrade_pack`).
+
+## 14. Your own packs (17 Nov 2026, branch `claude/p9-private-packs`)
+
+"Save your setup" (docs/11 Your own packs, docs/02 §15, migration 0075; owner decisions of 16 Nov 2026). A workspace
+publishes its setup as a private pack and installs it in other workspaces. This is the first feature that moves
+structure between workspaces, so the board's leakage risks come first:
+
+- **One client's data reaching another (risk 1).** Nothing of a workspace's data is captured: no items (example items
+  come later), so no values at all; no people (a member's id anywhere is removed: recipients, approvers, allowed users,
+  form notifications, filters, defaults), no files, updates, emails, form links or log entries. Webhook addresses are
+  never readable to the person (0056) and the webhook action is left out ("Add the address after install"). Outside
+  email recipients are dropped. The dialog names the publishing workspace and says "Publish from your practice or
+  head-office workspace, not a client's", and every install preview names the publisher. The capture reads the
+  workspace with the person's own client: what RLS or sheet access hides from them is never captured.
+- **Definer functions read past RLS (risk 2).** `install_pack`, `upgrade_pack` and `adopt_framework` check
+  visibility and shares themselves (`_private_access`, `_framework_access`): another workspace's pack installs only
+  where it is shared, or on a first install by an owner or admin of both workspaces; an update never shares. pgTAP
+  0075 covers read, install, update and adopt without a share (an install row forged behind the API's back included),
+  the first install needing an admin of both, editors refused, and withdraw. Messages say "not found" to anyone who
+  cannot see the pack.
+- **Client admins read every version (risk 3).** Once shared, every member of the target workspace reads every version
+  of the pack (the upgrade path needs the base manifest). The dialog says so. Packs are structure only.
+- **What the server sends is checked again.** `publish_pack` re-checks on the JSON what SQL can: the key and its
+  owner, write-once and higher versions, no example items, every automation in test mode, no outbound action, personal
+  data sheets never `restricted: false`, no people, `requires` only our catalogue, `frameworks` ours or the
+  workspace's own. The manifest schema (Zod) and the canonical hash are the command's (`publishPack`), which captures
+  again on the server and refuses a capture that changed since the preview. `parsePack` runs on every read of the
+  catalogue, so a stored manifest is checked again on every use.
+- **Shares and versions cannot be tampered with.** No grants to write `pack_shares`; `pack_shares_guard` lets only
+  `install_pack` insert and refuses every update and delete, also for the database owner. `packs_write_once` refuses
+  every change to a version but its withdrawal.
+- **Audit.** `pack.published` (version, hash, counts, what was left out) and `pack.withdrawn` on the publisher's chain;
+  `pack.shared` (the target workspace) on the publisher's chain; `pack.installed` / `pack.upgraded` with `source:
+  private` and the publisher's id on the target's chain.
+- **No new service-role place.** Reads use the person's client; writes go through definer RPCs granted to
+  `authenticated` only. The policy helpers (`pack_visible`, `framework_shared_to_me`, `pack_owner`,
+  `pack_publisher`) are granted to `authenticated` because RLS calls them; they return booleans, an owner id the
+  person may already read, or the publisher's name for a pack the person can see. `_private_access`,
+  `_framework_access` and `_semver` are nobody's.
+
+Commands (`pnpm security:commands`):
+
+| Command | File | Zod schema | Role check | Also |
+|---|---|---|---|---|
+| `previewPublish` | `pack-publish.ts` | `previewPublishInput` | admin |  |
+| `publishPack` | `pack-publish.ts` | `publishPackInput` | admin |  |
+| `withdrawPack` | `pack-publish.ts` | `withdrawPackInput` | admin |  |
+| `listYourPacks` | `pack-publish.ts` | `listYourPacksInput` | member | admin-only branch |
+
+### 14.1 Open (for the owner)
+
+- A member of the publisher (any role) reads its private packs through RLS, as 0074 decided for own frameworks; only
+  owners and admins see them listed to install and can install them.
+- Restricted columns: who may see one is not carried (the manifest has no place for it); the column installs open and
+  the Left out report says so. No values are copied, so nothing restricted leaks, but the target must restrict it again.
+- Deleting a publisher workspace whose pack is installed elsewhere is refused by the `pack_installs` foreign key to
+  `packs`: what should happen to the installed copies then is open.

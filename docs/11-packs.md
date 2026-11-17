@@ -10,6 +10,7 @@ A **pack** is an installable bundle of the core as data (CLAUDE.md: data, not co
 | `templates/first-sheet.json` | Wrapped by `templateToPack` (`src/lib/packs/wrap.ts`): key = the template id, refs made from names |
 | Wizard starts (`templates/starts.json`) listed in `START_PACKS` | Wrapped by `startToPack`: one sheet, key `start-<id>` (CAPA, Documents and policies). A start's `pack` adds the pack's version, automations and dashboards, and optional requirements with what it adds to their sheets (`requires`, `extends`, `onlyWithout`; the wizard ignores it) |
 | `templates/apps/*.json` | An app for the pack it `requires` (docs/13), added to that pack's `apps` by `withApps` |
+| A workspace's "Save your setup" | A **private pack** owned by that workspace, key `w<8 hex>-<slug>` (Your own packs below) |
 
 `repoPacks()` (`src/lib/packs/catalogue.ts`) parses all of them. The seed (`pnpm seed`, `scripts/seed.ts`) writes them into the global `packs` table; the app reads only that table. A version is written once: change a pack, raise its version. In a hosted environment run the seed's catalogue step (or an equivalent service-role job) after a deploy that adds a pack version.
 
@@ -411,6 +412,89 @@ Owner-approved (board, Nov 2026). Every native pack in `templates/packs` meets i
 | `approvals` | An approval workflow (`sheets[].workflows`, docs/04 §13) on every documents register (document approval), every `register` sheet whose ref or name says risk (risk acceptance) and every `register` or `actions` sheet whose ref or name says nonconformity, corrective, CAPA or is `nc` (CAPA closure) |
 | `starter-size` | The lowest level (the whole pack when it has no levels) installs at most **5** sheets and **1** dashboard |
 | `standard-text` | Never a standard's text (docs/12 Licensing): in a pack building on an ISO framework, example items of sheets other than documents registers and libraries are named "Example: …"; no string anywhere says "the organization shall" |
+
+## Your own packs
+
+Owner decisions of 16 Nov 2026 (advisory board review, part B; milestone P9 in docs/06; tables and RPCs in docs/02 §15
+"A workspace's own packs"). A consultant or a group keeps a practice or head-office workspace, builds their method
+there (often on our shared registers) and saves it as a pack they install in every client or site workspace.
+
+**Ownership.** A private pack belongs to the workspace it is published from (the **publisher**): a row of `packs` with
+`owner_org_id`, key `w<first 8 hex of the publisher's id>-<slug of its name>` (`privatePackKey`, the reserved form of
+0074). It survives the person who made it leaving. The **first install** into another workspace needs a person who is
+an owner or admin of **both** workspaces; it writes a share (`pack_shares`) and logs `pack.shared` on the publisher's
+chain. From then on every owner and admin of that workspace previews and takes updates, without being in the
+publisher. Members of the publisher (any role) can read its packs, as they read its own frameworks; only owners and
+admins see them listed to install.
+
+**Save your setup** (Workspace admin › Packs › Your packs, owners and admins of the publisher; `previewPublish`,
+`publishPack` in `src/server/commands/pack-publish.ts`). The server reads the workspace with the person's own client
+(`loadWorkspaceSnapshot`: what RLS or sheet access hides from them is never captured) and the pure
+`captureManifest(snapshot, selection)` (`src/engine/packs/capture.ts`) makes the manifest:
+
+- **Stable refs** come from the source rows' ids (`s_<10 hex>` sheets, `g_` groups, `f_` forms, `a_` automations,
+  `d_` dashboards, `w_` widgets, `fo_` folders), so a later version matches the earlier objects in the three-way
+  upgrade diff. Field keys stay as they are; views are matched by position, as for every pack.
+- **Workspaces built on our packs.** The pack `requires` every pack of our catalogue the workspace has installed
+  (`^<installed version>`; framework libraries are not packs to require). The person's own sheets (no provenance) are
+  the pack's own sheets. What they added to the sheets of our packs (columns, options of shipped option fields, groups,
+  saved views, forms, automations and approval workflows) becomes `extends` entries: keys, refs and ids go into the
+  pack's namespace (`namespaceOf`, at most 40 characters so a workflow can name them), and every reference is rewritten
+  with them (`{field_key}` in formulas and messages, view filters, sorts and hidden columns, form questions, workflow
+  fields, recipients `field:<key>`, lookups' target keys, link inverses, option ids). Changes to what we shipped
+  (a renamed column, group or sheet, an edited or removed option or column, column groups and tab sets on our
+  registers) are **not carried** in the MVP and are listed in the Left out report. Sub-items, columns on the sub-items
+  and automations on the sub-items of our registers are left out (said); a library sheet's added columns too.
+- **Captured:** folders (the workspace's own; a sheet in one of our domain folders keeps `<pack>:<folder>`), sheets,
+  fields, groups, saved views shared with everyone (personal views stay personal), forms (as drafts, their notices
+  without the review stamps), tab sets and the tab that opens first, column groups, sub-items with their "From
+  template" set, automations (own sheets and their sub-items), approval workflows, dashboards (widgets on a sheet of
+  the pack, of our packs, or on an adopted library), and the workspace's own adopted frameworks through `frameworks`
+  (shared with the pack: `framework_shared_to_me`, adopted at install from the publisher).
+- **Never captured:** items (so no values of people or `personalData` fields), files, updates, the activity log,
+  emails, form link tokens; people anywhere (a member's id is removed: `allowedUserIds`, acknowledgement audiences,
+  people defaults, form notifications, filters on named people, `user:` recipients); who may see a restricted column
+  (`restricted_to`: the manifest has no place for it; said); webhook addresses (the action is left out, "Add the
+  address after install"); outside email recipients.
+- **Converted:** recipients and approvers by job role or team keep the role or team **by name**; an action that told
+  only named people is left out and the automation installs **off** (said); an approval workflow whose approvers are
+  named people is left out (said). A sheet with a `personalData` field is `personalData` and `restricted` (it installs
+  restricted, docs/02 §16) with no items. Every automation is `startInTestMode: true`.
+- **Example items** are not published in this MVP: the dialog says "Example items come later" (owner decision; the
+  board's later work shows each item's text before publishing and turns dates into `$in:N`).
+
+**The dialog** names the publisher ("Published from <workspace>, which owns the pack. Publish from your practice or
+head-office workspace, not a client's."), offers "A new pack" or "A new version of <pack>", the part picker of Create
+(`PartPicker`: unticking a sheet leaves out what needs it, `togglePart`, `closeExclusions`, `selectManifest`), what it
+adds to our registers, the **Left out** report (`leftOutReport`: items and data, webhook addresses, people, outside
+email addresses, restricted and personal data, changes to what we shipped, not in the pack, not available yet), the
+name and description, and the version: `suggestVersion` compares with the last version (1.0.0 first; only wording
+changed: a patch; anything added, removed or changed otherwise: a minor version; nothing changed: nothing to publish).
+A major version warns "Existing copies can't update to a major version". The quality bar (`packQualityProblems`) shows
+as **advice**, never a blocker (owner decision 3), with the standard-text warning that the publisher is responsible for
+licensed text; the manifest schema blocks. `publishPack` captures again, refuses a capture that changed since the
+preview (`contentHash`, without the name, version and namespace), checks the schema and the version, and calls
+`publish_pack`, which re-checks the safety rules on the JSON and logs `pack.published` with the version, hash, counts and
+what was left out.
+
+**Safety rules** (always, whatever the bar): automations start in test mode; outbound actions are off (none are
+published: webhook actions are left out); personal-data sheets install restricted; the manifest schema blocks.
+
+**Your packs** (Workspace admin › Packs): **Save your setup**; the packs published from this workspace with their
+versions (who, when), how many other workspaces have them, and **Withdraw** (`withdraw_pack`: no new installs anywhere;
+installed copies keep working and keep taking updates; a new version of a withdrawn pack stays withdrawn); and, under
+**From your other workspaces**, the private packs of workspaces where the person is an owner or admin, with Preview and
+Install through the ordinary `previewPack` and `installPack` (required packs installed first, the pack's own frameworks
+adopted first from the publisher). Every install preview names the publisher ("Your own pack, published from <workspace>.
+Not reviewed by Klarert."), and the installed pack says "Your own pack, from <workspace>". Private packs are not listed
+under Available packs.
+
+**Updates** use the ordinary Update available, `previewPackUpgrade` and `upgradePack` (Keep mine / Take the pack's):
+any owner or admin of a workspace it is shared to takes them. `pack.installed` and `pack.upgraded` on the target's
+chain say `source: private` and name the publisher's id. Archive is the ordinary `archive_pack`.
+
+**Not in this milestone:** JSON export and import (owner decision 2), example items, carrying changes to what we shipped,
+the multi-workspace view, sharing by invite to workspaces you do not administer.
 
 ## Frameworks
 
