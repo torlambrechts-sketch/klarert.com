@@ -453,11 +453,19 @@ admins see them listed to install.
   (shared with the pack: `framework_shared_to_me`, adopted at install from the publisher).
 - **Never captured:** items (so no values of people or `personalData` fields), files, updates, the activity log,
   emails, form link tokens; people anywhere (a member's id is removed: `allowedUserIds`, acknowledgement audiences,
-  people defaults, form notifications, filters on named people, `user:` recipients); who may see a restricted column
-  (`restricted_to`: the manifest has no place for it; said); webhook addresses (the action is left out, "Add the
-  address after install"); outside email recipients.
+  people defaults, form notifications, filters on named people, `user:` recipients, the people listed on a restricted
+  column: said); webhook addresses (the action is left out, "Add the address after install"); outside email
+  recipients.
+- **Restricted columns** (owner decision 17 Nov 2026) travel with their **roles**: a field whose `restricted_to` is set
+  is captured with `restrictedTo: { roles }` (the manifest's optional field property; admin, editor, viewer or auditor,
+  sorted; owners always see). The people listed on it are never carried (the Left out report says so under People);
+  installs never open the column. `install_pack` restricts the columns it makes (`{ userIds: [], roles }`, logged
+  `field.restricted` on the sheet chain; migration 0076); such a column carries no example values. An update applies a
+  change to the roles where the client has not changed them, opens a column the pack opens (its values move back into
+  the rows) and restricts a column it restricts; where the client changed the roles too it is a conflict, **Keep mine**
+  or **Take the pack's** ("who sees it"). The people the client listed stay while the column stays restricted.
 - **Converted:** recipients and approvers by job role or team keep the role or team **by name**; an action that told
-  only named people is left out and the automation installs **off** (said); an approval workflow whose approvers are
+  only named people is dropped and the automation installs **off** (listed in the Left out report); an approval workflow whose approvers are
   named people is left out (said). A sheet with a `personalData` field is `personalData` and `restricted` (it installs
   restricted, docs/02 §16) with no items. Every automation is `startInTestMode: true`.
 - **Example items** are not published in this MVP: the dialog says "Example items come later" (owner decision; the
@@ -469,7 +477,8 @@ head-office workspace, not a client's."), offers "A new pack" or "A new version 
 adds to our registers, the **Left out** report (`leftOutReport`: items and data, webhook addresses, people, outside
 email addresses, restricted and personal data, changes to what we shipped, not in the pack, not available yet), the
 name and description, and the version: `suggestVersion` compares with the last version (1.0.0 first; only wording
-changed: a patch; anything added, removed or changed otherwise: a minor version; nothing changed: nothing to publish).
+changed: a patch; anything added, **removed** or changed otherwise: a minor version; nothing changed: nothing to
+publish). The pack-name part of a new key (`privatePackKey`) is the slug of the name **cut to 16 characters**.
 A major version warns "Existing copies can't update to a major version". The quality bar (`packQualityProblems`) shows
 as **advice**, never a blocker (owner decision 3), with the standard-text warning that the publisher is responsible for
 licensed text; the manifest schema blocks. `publishPack` captures again, refuses a capture that changed since the
@@ -491,7 +500,25 @@ under Available packs.
 
 **Updates** use the ordinary Update available, `previewPackUpgrade` and `upgradePack` (Keep mine / Take the pack's):
 any owner or admin of a workspace it is shared to takes them. `pack.installed` and `pack.upgraded` on the target's
-chain say `source: private` and name the publisher's id. Archive is the ordinary `archive_pack`.
+chain say `source: private` and name the publisher's id. Archive is the ordinary `archive_pack`. Sheets with personal
+data install restricted to the person installing (and the owners); when the new version has such sheets the update
+dialog says so in one line: "Sheets with personal data are only visible to the people listed on them; updates to them
+show for those people."
+
+**Owner decisions of 16–17 Nov 2026** (recorded as built):
+
+- **Publishing after a withdrawal is allowed, and the pack stays withdrawn.** The new version reaches the copies already
+  installed (they take the fix); new installs stay blocked (`publish_pack` copies `withdrawn_at` onto the new version).
+- **Restricted columns are carried, roles only** (above).
+- **Who reads a private pack.** Every member of the publisher workspace (any role) can read its packs; only owners and
+  admins see them listed to install and install them elsewhere.
+- **A publisher whose pack is installed elsewhere cannot be deleted.** The app has no workspace delete; the database
+  refuses it with a plain message (`orgs_publisher_guard`, 0076: "This workspace published packs that N other
+  workspaces have installed (…). It cannot be deleted while they are installed there."), so any later delete (the GDPR
+  "delete workspace" job, support) gets it instead of a foreign key error.
+- **Personal-data sheets install restricted to the installer**, and the update dialog says so (above).
+- **The builder's small rules**: the pack-name part of the key is cut to 16 characters; removals are a minor version;
+  a notification sent only to named people is dropped and listed.
 
 **Not in this milestone:** JSON export and import (owner decision 2), example items, carrying changes to what we shipped,
 the multi-workspace view, sharing by invite to workspaces you do not administer.

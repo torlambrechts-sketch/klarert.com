@@ -776,11 +776,29 @@ Commands (`pnpm security:commands`):
 | `withdrawPack` | `pack-publish.ts` | `withdrawPackInput` | admin |  |
 | `listYourPacks` | `pack-publish.ts` | `listYourPacksInput` | member | admin-only branch |
 
-### 14.1 Open (for the owner)
+### 14.1 Decided (owner, 16–17 Nov 2026)
 
 - A member of the publisher (any role) reads its private packs through RLS, as 0074 decided for own frameworks; only
-  owners and admins see them listed to install and can install them.
-- Restricted columns: who may see one is not carried (the manifest has no place for it); the column installs open and
-  the Left out report says so. No values are copied, so nothing restricted leaks, but the target must restrict it again.
-- Deleting a publisher workspace whose pack is installed elsewhere is refused by the `pack_installs` foreign key to
-  `packs`: what should happen to the installed copies then is open.
+  owners and admins see them listed to install and can install them. Accepted as built.
+- **Restricted columns are carried, roles only** (0076). The manifest field says `restrictedTo: { roles }`; the
+  people listed on the column are never carried (Zod refuses `userIds` there, and `publish_pack` refuses it on the JSON
+  as it refuses other people). `install_pack` restricts the column it makes, so a column never installs open; it
+  refuses example values, links or files on it (the install's log entries would hold them in clear, since the mask
+  applies to what is restricted when it is written). `upgrade_pack` changes a restriction only on the install's own
+  fields (checked by `_upgrade_pack_rows`), never adds a person (only people already listed may stay), needs what
+  `set_field_restriction` needs (an owner, or an admin with edit access to the sheet) and moves values in one
+  transaction; every change is logged on the sheet chain. `_pack_restrict_field` is granted to nobody. The upgrade
+  planner sends a change only where the client has not changed the roles; otherwise Keep mine / Take the pack's.
+- Deleting a publisher workspace whose pack is installed elsewhere is refused (accepted as built): `orgs_publisher_guard`
+  (0076) says so in words (errcode 23503) before the `pack_installs` foreign key would. No path in the app deletes a
+  workspace today.
+- Publishing after a withdrawal is allowed and the pack stays withdrawn: copies already installed take the new version,
+  new installs stay blocked.
+- Personal-data sheets install restricted to the installer; the update dialog says "Sheets with personal data are only
+  visible to the people listed on them; updates to them show for those people."
+
+Hosted risk of 0076: it replaces `install_pack`, `upgrade_pack` and `publish_pack` (bodies as 0075 plus the new
+steps; same signatures and grants) and adds a BEFORE DELETE trigger on `orgs`. Nothing in the catalogue uses
+`restrictedTo`, so catalogue installs and upgrades behave as before. It needs 0075 first; it is safe before or after
+the app deploy (an older planner sends no `restricted_to`, and the older capture leaves restricted columns out of the
+manifest's restriction, as before).
