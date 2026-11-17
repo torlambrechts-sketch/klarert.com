@@ -2,7 +2,8 @@
 // (DEMO_RESET=1), then checks what a visitor would see. Not part of CI: it needs the local Supabase stack.
 //   - the coverage of ISO 9001:2015 and ISO/IEC 27001:2022 lands near the targets (scripts/demo/index.ts TARGETS)
 //   - every adopted framework reports a coverage
-//   - the demo login signs in with its password; the other people cannot sign in
+//   - the demo login signs in with its password and is a viewer; the other people (the owner too) cannot sign in
+//   - `pnpm seed:demo:purge` leaves one demo workspace: the retired copies are gone
 //   - the activity log of a nonconformity verifies as intact
 // Run: pnpm seed:demo:check   (reads .env.local; local Supabase only)
 import { spawnSync } from 'node:child_process';
@@ -84,6 +85,13 @@ async function main() {
 
   const { data: org } = await demo.from('orgs').select('id').eq('slug', result.slug).single();
   check(!!org, `the demo login is a member of /${result.slug}`);
+  const { data: me } = await demo
+    .from('memberships')
+    .select('role')
+    .eq('org_id', org!.id)
+    .eq('user_id', signedIn.data.user?.id ?? '')
+    .single();
+  check(me?.role === 'viewer', `the demo login is a viewer (${me?.role ?? 'no membership'})`);
   const { data: nc } = await demo
     .from('items')
     .select('id, name')
@@ -95,6 +103,13 @@ async function main() {
     const ok = !error && (chain as { ok?: boolean } | null)?.ok === true;
     check(ok, `the activity log of ${nc.name} verifies as intact`);
   } else check(false, 'NC-2026-019 exists');
+
+  const purge = spawnSync('pnpm', ['seed:demo:purge'], { encoding: 'utf8' });
+  const now = purge.stdout.split('\n').find((l) => l.includes('Demo workspaces now:')) ?? '';
+  check(
+    purge.status === 0 && now.endsWith(`Demo workspaces now: /${result.slug}.`),
+    `the purge leaves one demo workspace (${now.split('now: ')[1] ?? purge.stderr.trim()})`,
+  );
 
   if (failures.length) {
     console.error(`\n${failures.length} check(s) failed.`);
