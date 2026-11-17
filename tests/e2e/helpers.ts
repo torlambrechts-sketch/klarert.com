@@ -87,12 +87,15 @@ export async function appMail(
 const ATTEMPTS = 5;
 
 /**
- * The link's callback names the environment's app URL (localhost:3000 locally), which on a shared machine may be
- * another checkout's server: follow the verify step here and take the code to this server's own callback (the PKCE
- * verifier cookie is this browser's). Anything else is opened as it is.
+ * The link names the auth site URL (localhost:3000 locally), which on a shared machine may be another checkout's
+ * server: open its callback path and query on this server. A link to Supabase Auth's verify step is followed here and
+ * its code taken to this server's own callback (the PKCE verifier cookie is this browser's). Anything else is opened
+ * as it is.
  */
 async function callbackHere(link: string): Promise<string> {
   try {
+    const own = new URL(link);
+    if (own.pathname === '/auth/callback') return `${own.pathname}${own.search}`;
     const res = await fetch(link, { redirect: 'manual' });
     const to = res.headers.get('location');
     const url = to ? new URL(to) : null;

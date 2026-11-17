@@ -42,14 +42,33 @@ export async function mailTo(email: string, after: number, subject?: string): Pr
 }
 
 /**
- * Open an email's link in this browser. The link goes to Supabase Auth's verify step, which redirects to the app URL
- * of the environment (on a shared machine possibly another checkout's server): follow that step here and open the
- * callback on this test's own server, where this browser holds the PKCE verifier cookie.
+ * Open an email's link in this browser. Our templates link to `{{ .SiteURL }}/auth/callback` with the token hash, and
+ * the local site URL (localhost:3000) may be another checkout's server on a shared machine: open the same path and
+ * query on this test's own server. A link to Supabase Auth's verify step (Supabase's default templates, see
+ * `defaultTemplateLink`) is followed here and its callback opened on this server.
  */
 export async function openLink(page: Page, link: string) {
-  const res = await fetch(link, { redirect: 'manual' });
-  const to = res.headers.get('location');
-  const url = to ? new URL(to) : null;
-  if (!url || url.pathname !== '/auth/callback') throw new Error(`unexpected redirect: ${to}`);
+  let url = new URL(link);
+  if (url.pathname !== '/auth/callback') {
+    const res = await fetch(link, { redirect: 'manual' });
+    const to = res.headers.get('location');
+    url = new URL(to ?? link);
+    if (url.pathname !== '/auth/callback') throw new Error(`unexpected redirect: ${to}`);
+  }
   await page.goto(`${url.pathname}${url.search}`);
+}
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321';
+
+/**
+ * The link Supabase's default template would have sent for the same email (`{{ .ConfirmationURL }}`: its verify
+ * step, then back to the app with a PKCE code), as the hosted project sends until our templates are applied there.
+ */
+export function defaultTemplateLink(link: string): string {
+  const ours = new URL(link);
+  const verify = new URL('/auth/v1/verify', SUPABASE_URL);
+  verify.searchParams.set('token', ours.searchParams.get('token_hash')!);
+  verify.searchParams.set('type', ours.searchParams.get('type')!);
+  verify.searchParams.set('redirect_to', ours.searchParams.get('redirect_to')!);
+  return verify.toString();
 }
