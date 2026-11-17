@@ -24,7 +24,7 @@ test('headings, the catalogue’s facts, the CTA carries the standard, nothing f
 
   const res = await page.goto(PATH);
   expect(res?.status()).toBe(200);
-  await expect(page).toHaveTitle('ISO 9001 · Compliance OS by Klarert');
+  await expect(page).toHaveTitle('ISO 9001 · Keptrow');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('ISO 9001');
   for (const h of [
@@ -54,12 +54,12 @@ test('headings, the catalogue’s facts, the CTA carries the standard, nothing f
 
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    `https://www.klarert.com${PATH}`,
+    `https://www.keptrow.com${PATH}`,
   );
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /^index, follow/);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     'content',
-    /^https:\/\/www\.klarert\.com\/opengraph-image/,
+    /^https:\/\/www\.keptrow\.com\/opengraph-image/,
   );
 
   // every screenshot loads, has its size and its caption

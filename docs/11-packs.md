@@ -497,7 +497,7 @@ installed copies keep working and keep taking updates; a new version of a withdr
 **From your other workspaces**, the private packs of workspaces where the person is an owner or admin, with Preview and
 Install through the ordinary `previewPack` and `installPack` (required packs installed first, the pack's own frameworks
 adopted first from the publisher). Every install preview names the publisher ("Your own pack, published from <workspace>.
-Not reviewed by Klarert."), and the installed pack says "Your own pack, from <workspace>". Private packs are not listed
+Not reviewed by Keptrow."), and the installed pack says "Your own pack, from <workspace>". Private packs are not listed
 under Available packs.
 
 **Updates** use the ordinary Update available, `previewPackUpgrade` and `upgradePack` (Keep mine / Take the pack's):

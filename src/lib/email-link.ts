@@ -1,5 +1,6 @@
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { afterEmailLink, emailLinkNext, linkOutcome, type LinkOutcome } from './auth-links';
+import { BRAND } from './brand';
 
 // Opening an email link (docs/09 §12): the one place that turns a link's parameters into a session and a page to go
 // to. Two routes call it: POST `/auth/callback`, the Continue button of `/auth/confirm` (our templates' token-hash
@@ -29,7 +30,7 @@ export type ConfirmCopy = { heading: string; button: string };
 /** What `/auth/confirm` says for each kind of link (owner decision 17 Nov 2026). */
 const CONFIRM_COPY = {
   recovery: { heading: 'Set a new password', button: 'Continue to set a new password' },
-  email: { heading: 'Sign in to Compliance OS', button: 'Continue' },
+  email: { heading: `Sign in to ${BRAND.product}`, button: 'Continue' },
   email_change: { heading: 'Confirm your new email address', button: 'Confirm' },
 } satisfies Record<string, ConfirmCopy>;
 

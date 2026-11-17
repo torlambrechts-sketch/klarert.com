@@ -27,4 +27,4 @@ export const SITE_URL = `https://${SITE_HOST}`;
 export const SUPPORT_EMAIL = 'support@keptrow.com';
 
 /** The sender when EMAIL_FROM is not set locally (Mailpit); hosted, EMAIL_FROM in Vercel says the same. */
-export const EMAIL_SENDER = `${product} <no-reply@mail.keptrow.com>`;
+export const EMAIL_SENDER = `${product} <no-reply@keptrow.com>`;

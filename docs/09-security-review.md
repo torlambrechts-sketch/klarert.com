@@ -387,7 +387,7 @@ characters: public forms refuse every submission until it is set`. There is no f
 - **Headers (SA-7, in part):** `Permissions-Policy` turns off camera, microphone, geolocation, payment, USB and the
   other features the app does not use; `Strict-Transport-Security: max-age=63072000; includeSubDomains`. HSTS
   `includeSubDomains` applies only to names under the host that sends it (`*.www.keptrow.com`), never to the apex
-  `keptrow.com` or its other subdomains (`mail.keptrow.com` is Brevo's), so it is safe whatever they serve; `preload`
+  `keptrow.com` or its other subdomains, so it is safe whatever they serve; `preload`
   would need the apex to send it and is left out. The header names no domain, so the rename to Keptrow (docs/14)
   changes nothing in `next.config.ts`; browsers that hold the policy for `www.klarert.com` keep it, and that host now
   only answers with HTTPS 301 redirects to `www.keptrow.com`. The nonce-based script CSP comes after the demo.
@@ -527,7 +527,7 @@ copy-link; see `scripts/hosted/README.md` › Email):
 | Variable | Value |
 |---|---|
 | `BREVO_API_KEY` | A Brevo API key (SMTP & API › API keys), used only by the server |
-| `EMAIL_FROM` | The sender, `Keptrow <no-reply@mail.keptrow.com>` (docs/14) |
+| `EMAIL_FROM` | The sender, `Keptrow <no-reply@keptrow.com>` on the root domain (docs/14) |
 | `MAILPIT_URL` | Local only, optional: Mailpit's web address if not `http://127.0.0.1:54324` |
 
 ### 11.1 Open (for the owner)
@@ -559,7 +559,7 @@ Screens in docs/05 §1.1.
   a GET that only renders a small page (the auth layout) and never calls `verifyOtp`. It keeps `token_hash`, `type`,
   `next` and `redirect_to` in hidden fields (never logged) and shows one heading and one button by `type`
   (`confirmCopy`, `src/lib/email-link.ts`): `recovery` "Set a new password" / **Continue to set a new password**,
-  `email` "Sign in to Compliance OS" / **Continue**, `email_change` "Confirm your new email address" / **Confirm**,
+  `email` "Sign in to Keptrow" / **Continue**, `email_change` "Confirm your new email address" / **Confirm**,
   and under it "This link works once, for 1 hour." Focus starts on the button; a second click while the first is on
   its way is ignored, so a double click never lands on "expired". A link without its token or with another `type`
   says "This link is not complete" with **Back to sign in**. The page is `noindex` and sends no referrer (metadata

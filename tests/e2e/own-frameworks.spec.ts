@@ -195,7 +195,7 @@ test('paste, fix, publish, adopt, map, revise; another workspace sees none of it
   );
   expect(mapped?.action).toBe('crosswalk.added');
 
-  // the ISO/IEC 27001 requirement shows the mapping apart from Klarert's
+  // the ISO/IEC 27001 requirement shows the mapping apart from the catalogue's
   const [a518] = await rest<{ display_id: string; sheet_id: string }[]>(
     page,
     `items?org_id=eq.${org!.id}&requirement_ref=eq.${encodeURIComponent('iso-27001@2022#A.5.18')}&select=display_id,sheet_id`,
@@ -223,7 +223,7 @@ test('paste, fix, publish, adopt, map, revise; another workspace sees none of it
     .getByRole('listitem')
     .filter({ hasText: NAME });
   await expect(ownRow).toContainText('Yours');
-  await expect(ownRow).toContainText(`Written by ${org!.name}. Not reviewed by Klarert.`);
+  await expect(ownRow).toContainText(`Written by ${org!.name}. Not reviewed by Keptrow.`);
   await expect(page.getByRole('list', { name: 'Framework catalogue' })).not.toContainText(NAME);
   await shot(page, 'frameworks-yours', project);
   await ownRow.getByRole('link', { name: `Change ${NAME}` }).click();

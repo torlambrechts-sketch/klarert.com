@@ -9,8 +9,9 @@
 #   python3 scripts/hosted/auth-config.py             # apply
 #
 # Uses the Management API (GET and PATCH /v1/projects/{ref}/config/auth). The session's network proxy adds the real
-# access token; "dummy" is a placeholder. It never sets SMTP settings or credentials: the owner sets those in the
-# dashboard. Override the project with SUPABASE_PROJECT_REF.
+# access token; "dummy" is a placeholder. Once the owner has set up SMTP in the dashboard (host, port, user and key:
+# never set here), it also sets the sender's address and name (SMTP_SENDER below); without SMTP it leaves them alone.
+# Override the project with SUPABASE_PROJECT_REF.
 import json, os, subprocess, sys, tomllib
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -46,6 +47,9 @@ TEMPLATES = list(TEMPLATE_LINKS)
 NOTIFICATIONS = ["password_changed", "email_changed"]
 FORGOT_PASSWORD_LINK = "{{ .SiteURL }}/login/forgot-password"
 SUPPORT_ADDRESS = "support@keptrow.com"  # "If this was not you, contact support@keptrow.com straight away."
+# The auth emails' sender (owner decision 17 Nov 2026): the root domain keptrow.com, authenticated in Brevo, as the
+# app's own EMAIL_FROM ("Keptrow <no-reply@keptrow.com>", src/lib/brand.ts EMAIL_SENDER). Not the SMTP credentials.
+SMTP_SENDER = {"smtp_admin_email": "no-reply@keptrow.com", "smtp_sender_name": "Keptrow"}
 
 
 def api(method, body=None):
@@ -114,6 +118,10 @@ def main():
         sys.exit(f"unknown arguments: {' '.join(unknown)}")
     want = desired()
     have = api("GET")
+    if have.get("smtp_host"):
+        want.update(SMTP_SENDER)
+    else:
+        print("SMTP is not set up: the sender is left alone (scripts/hosted/README.md › Auth emails)\n")
     changes = {k: v for k, v in want.items() if have.get(k) != v}
     for k in sorted(want):
         mark = "change" if k in changes else "same  "
@@ -123,8 +131,8 @@ def main():
         print(line)
     # settings this script leaves alone but the auth emails depend on (docs/09 §12)
     print("\nalso check (not changed here):")
-    for k in ["mailer_autoconfirm", "mailer_otp_exp", "uri_allow_list", "smtp_host", "smtp_sender_name",
-              "smtp_admin_email", "rate_limit_email_sent", "security_update_password_require_reauthentication"]:
+    for k in ["mailer_autoconfirm", "mailer_otp_exp", "uri_allow_list", "smtp_host", "smtp_port",
+              "smtp_user", "rate_limit_email_sent", "security_update_password_require_reauthentication"]:
         print(f"  {k}: {show(have.get(k))}")
     if not changes:
         print("\nnothing to change")

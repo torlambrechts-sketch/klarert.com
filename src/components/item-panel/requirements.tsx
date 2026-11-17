@@ -189,7 +189,7 @@ export function RequirementLinks({
                 No requirement of another adopted framework maps to this one.
               </p>
             ) : null}
-            {/* Klarert's mapping and the workspace's own are never mixed (docs/12 Your own frameworks) */}
+            {/* The catalogue's mapping and the workspace's own are never mixed (docs/12 Your own frameworks) */}
             {r.alsoSatisfies.some((a) => !a.own) ? (
               <ul aria-label="Also satisfies" className="m-0 flex list-none flex-wrap gap-1 p-0">
                 {r.alsoSatisfies

@@ -16,6 +16,18 @@ describe('klarert.com redirects to www.keptrow.com (docs/14)', () => {
     );
   });
 
+  it('keeps an email link working: /auth/confirm and /auth/callback with the whole query', () => {
+    const confirm =
+      '/auth/confirm?token_hash=0123abcd&type=recovery&next=/login/new-password&redirect_to=https%3A%2F%2Fwww.klarert.com%2Fauth%2Fcallback';
+    expect(legacyRedirectTarget('www.klarert.com', confirm)).toBe(
+      `https://www.keptrow.com${confirm}`,
+    );
+    const callback = '/auth/callback?code=0f1e2d3c&next=%2Faccount';
+    expect(legacyRedirectTarget('klarert.com', callback)).toBe(
+      `https://www.keptrow.com${callback}`,
+    );
+  });
+
   it('reads a Host header as browsers and proxies send it: any case, a port, a trailing dot', () => {
     expect(legacyRedirectTarget('WWW.Klarert.COM', '/terms')).toBe('https://www.keptrow.com/terms');
     expect(legacyRedirectTarget('klarert.com:443', '/')).toBe('https://www.keptrow.com/');

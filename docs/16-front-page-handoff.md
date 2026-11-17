@@ -1,9 +1,10 @@
 # 16 · Front page handoff (for Claude Design)
 
-The brief for the public home page of **Keptrow, the compliance spreadsheet**, by Klarert. Everything a designer
+The brief for the public home page of **Keptrow, the compliance spreadsheet**, on www.keptrow.com. Everything a designer
 needs is here.
 
-**The name.** Design with "Keptrow". The live site says "Compliance OS" until the trademark search is clear.
+**The name.** "Keptrow", read from `BRAND` (`src/lib/brand.ts`); the rename went live on 17 Nov 2026 (docs/14).
+There is no "by Klarert": klarert.com only redirects to www.keptrow.com.
 
 **The one rule.** Every statement is true of the product today, or it sits in the band marked "Coming soon".
 
@@ -195,7 +196,7 @@ mobile).
   - **Your own requirements** · chip **Being built now**. Supporting line plus the two claim lines from section 2.
   - **Save your setup** · chip **Next**. Supporting line plus the two claim lines from section 2.
   - Small print: **Not available yet. We will say here when each one is live.**
-  - Link: **Tell us what you need** (mailto support@klarert.com)
+  - Link: **Tell us what you need** (mailto support@keptrow.com)
 - **Visual:** a subtle grey band with a dashed outline around each block, so it reads as not yet built. No product UI
   cards here.
 - **Desktop:** H2 and body left, two blocks right. **390 px:** stacked.
@@ -262,7 +263,7 @@ mobile).
 
 - **Job:** the last, low-risk push.
 - **Copy:** H2 **Start with one standard**; body **Add the next on the same registers when you are ready.**; buttons
-  **Create your workspace** (dark) and **Talk to us** (outlined, mailto support@klarert.com); small print **Free while
+  **Create your workspace** (dark) and **Talk to us** (outlined, mailto support@keptrow.com); small print **Free while
   in early access. No card needed.**
 - **Visual:** Home's "Next step" card, a faint blue glow behind it. **Desktop:** text left, card right. **390 px:**
   stacked.
@@ -271,10 +272,11 @@ mobile).
 ### 3.13 Footer
 
 - **Job:** close with the facts and legal links.
-- **Copy:** **Keptrow** · The compliance spreadsheet, by Klarert. Links: Platform · Standards · Privacy · Terms ·
-  support@klarert.com. Facts: **Hosted in Frankfurt, EU. No third-party analytics or trackers.** Small print:
-  **Requirement libraries are in our own words; buy the standard for the requirements. Klarert is not affiliated with
-  ISO or IEC. Certification bodies certify; we do not.** © 2026 Klarert.
+- **Copy:** **Keptrow** · Keptrow — the compliance spreadsheet. Links: Platform · Standards · Privacy · Terms ·
+  support@keptrow.com. Facts: **Hosted in Frankfurt, EU. No third-party analytics or trackers.** Small print:
+  **Requirement libraries are in our own words; buy the standard for the requirements. Keptrow is not affiliated with
+  ISO or IEC. Certification bodies certify; we do not.** © 2026 [Company legal name] (the legal entity is still a
+  placeholder, as in `legal.ts`).
 - **Visual:** plain text on subtle grey. **Desktop:** brand left, links right. **390 px:** one column.
 - **Feel and do:** "A real company."
 

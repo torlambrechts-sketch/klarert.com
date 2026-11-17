@@ -138,7 +138,7 @@ IDs are referenced from the build plan. "Must" = MVP.
 
 ## 7. Decisions to confirm with Tor (do not decide alone)
 
-1. Product and domain name: decided 16 Nov 2026, **Keptrow** on www.keptrow.com ("Keptrow — the compliance spreadsheet"; formerly the placeholder "Compliance OS" on klarert.com). Go-live waits for a trademark search and the steps in docs/14.
+1. Product and domain name: decided 16 Nov 2026, **Keptrow** on www.keptrow.com ("Keptrow — the compliance spreadsheet"; formerly the placeholder "Compliance OS" on klarert.com). The owner decided on 17 Nov 2026 to switch now; the trademark search runs in parallel. Go-live steps in docs/14.
 2. Sign-in methods beyond magic link (Microsoft / Google) for the MVP.
 3. Max items per sheet we promise (spec targets 10,000).
 4. Whether editors may create automations or only admins (spec: editors may; admins can lock).

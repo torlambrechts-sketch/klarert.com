@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { confirmCopy } from '@/lib/email-link';
 import { ContinueForm } from './continue-form';
+import { BRAND } from '@/lib/brand';
 
 // Where our auth emails link to (docs/05 §1, docs/09 §12): `/auth/confirm?token_hash=…&type=…&next=…&redirect_to=…`.
 // Link scanners (Microsoft Defender Safe Links and the like) open every link in an email before the person does, so
@@ -26,7 +27,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const copy = confirmCopy(one((await searchParams).type));
   return {
-    title: `${copy?.heading ?? 'Email link'} · Compliance OS`,
+    title: `${copy?.heading ?? 'Email link'} · ${BRAND.product}`,
     robots: { index: false, follow: false },
     referrer: 'no-referrer',
   };
@@ -45,7 +46,7 @@ export default async function ConfirmEmailLinkPage({ searchParams }: { searchPar
     return (
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
-          <h1>Compliance OS</h1>
+          <h1>{BRAND.product}</h1>
           <h2 className="text-heading-16">This link is not complete</h2>
         </div>
         <p role="alert" className="text-crit text-copy-13 m-0" data-testid="email-link-broken">
@@ -61,7 +62,7 @@ export default async function ConfirmEmailLinkPage({ searchParams }: { searchPar
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1>Compliance OS</h1>
+        <h1>{BRAND.product}</h1>
         <h2 className="text-heading-16">{copy.heading}</h2>
       </div>
       <ContinueForm fields={fields} button={copy.button} />

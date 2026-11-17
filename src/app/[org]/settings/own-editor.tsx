@@ -41,6 +41,7 @@ import type { OwnFrameworkEditor, PublishResult } from '@/server/commands/own-fr
 import { AdoptFramework } from './frameworks';
 import { deleteOwnDraftAction, publishOwnFrameworkAction, saveOwnDraftAction } from './own-actions';
 import { KIND_TEXT, ProblemList } from './own-start';
+import { BRAND } from '@/lib/brand';
 
 // The grid of a workspace's own framework (docs/12 Your own frameworks): one row per group or requirement, each row's
 // problems under it (ownFrameworkProblems, with row numbers), saved as a draft whenever the person chooses and
@@ -352,7 +353,7 @@ function PublishDialog({
         <div className="flex flex-col gap-1 pr-8">
           <DialogTitle className="text-heading-20">Publish {clean.title}</DialogTitle>
           <DialogDescription className="text-copy-14 text-muted-foreground">
-            Written by your workspace. Klarert does not review it.
+            Written by your workspace. {BRAND.product} does not review it.
           </DialogDescription>
         </div>
 

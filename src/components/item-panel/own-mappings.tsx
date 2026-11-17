@@ -19,7 +19,7 @@ import type { MappingOption } from '@/server/commands/own-frameworks';
 
 // "Map to …" on a requirement of the workspace's own framework (docs/12 Your own frameworks): the person picks a
 // catalogue requirement (adopted or not), the relation (related unless they choose otherwise) and a note. Each mapping
-// is the workspace's, shown as "Your mapping · person · date" and never mixed with Klarert's mapping. Nothing here
+// is the workspace's, shown as "Your mapping · person · date" and never mixed with the catalogue's mapping. Nothing here
 // suggests or makes a mapping by itself.
 
 const MAX_SHOWN = 12;

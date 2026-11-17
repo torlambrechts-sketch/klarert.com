@@ -20,7 +20,7 @@ or a design tool can work from this file alone.
 
 | Topic | Decision (16 Nov 2026) |
 |---|---|
-| Name | **Keptrow**, by Klarert. The site and app still say **"Compliance OS"** until the trademark search is clear. Copy reads the name from one place, so the switch is one change. |
+| Name | **Keptrow** on www.keptrow.com (owner decision 16 Nov 2026; switched 17 Nov 2026, the trademark search runs in parallel; docs/14). No "by Klarert": klarert.com only redirects. Copy reads the name from one place (`BRAND`, `src/lib/brand.ts`). |
 | Sign-up promise | **"Free while in early access. No card needed."** Paid plans come with notice: "We will give you [notice period] notice before paid plans start." There is no pricing yet. |
 | Analytics | **"No third-party analytics or trackers."** We keep anonymous first-party counts only (visits, CTA clicks), with no cookies and no third party. |
 | Hosting | App and database in Frankfurt, EU. |
@@ -503,7 +503,7 @@ accessibility checks".
 **We may not say:**
 - "No trackers" or "no analytics" with nothing after it. We keep first-party counts; say "no third-party".
 - "Free forever", any price, plan name or a notice period before it is decided.
-- "ISO certified", "ISO approved", "SOC 2 compliant", "GDPR certified", or any certification Klarert does not hold.
+- "ISO certified", "ISO approved", "SOC 2 compliant", "GDPR certified", or any certification we do not hold.
 - "Guarantees certification", "compliant out of the box", "audit-ready in N days".
 - "AI-powered" or any AI claim. The AI proposal field stores a value; nothing generates it.
 - Customer names, logos, testimonials, user counts, time or money saved. None exist yet.
@@ -524,7 +524,7 @@ accessibility checks".
 Never, with P8 or after:
 - "SOC 2 support" or "supports any framework". On SOC 2: "You can write your own requirement set, for example from a customer's SOC 2 report. We don't ship SOC 2."
 - "Mapped automatically" or any AI claim: every mapping of a workspace's own requirements is made by a person.
-- Anything that implies we review or check customer frameworks: the app says "Written by <workspace>. Not reviewed by Klarert."
+- Anything that implies we review or check customer frameworks: the app says "Written by <workspace>. Not reviewed by Keptrow."
 
 **Naming standards:** number and edition ("ISO/IEC 27001:2022", "ISO 9001:2026"). Never quote or closely paraphrase
 clause or control text; reference numbers and official short titles only. State edition status when it matters
@@ -565,7 +565,7 @@ Every line is under 12 words.
 | Invite email subject | {Inviter} invited you to {workspace} on Keptrow |
 | Invite subject, to test | {Inviter} wants your help with {workspace}'s registers |
 
-Until the rename, "Keptrow" in shipped copy reads as "Compliance OS".
+Shipped copy says "Keptrow" through `BRAND.product` (docs/14).
 
 ## 12. Voice and words
 
@@ -656,7 +656,8 @@ Dissent: make Alternative C the default the day the picker deep link ships; a pr
 **Copywriter.** Every subhead is under 25 words and every claim has a proof. Keep "hash-chained" off Home.
 
 **Brand strategist.** Own "the compliance spreadsheet" and "record it once"; name the enemy on every page. Launch
-Keptrow in one change, keeping "by Klarert" in titles for the first months.
+Keptrow in one change, keeping "by Klarert" in titles for the first months. (Not taken: the owner dropped "by
+Klarert" with the rename, docs/14.)
 
 **Adoption expert.** The promise now matches the first run only partly: Home still teaches spreadsheet basics until
 "Set up your first standard" ships. Until then, step 2 of "How it works" must say "Open Create", as written. Tell

@@ -29,6 +29,7 @@ import {
   previewPackAction,
   setPackSettingsAction,
 } from './actions';
+import { BRAND } from '@/lib/brand';
 
 // Workspace admin › Packs (docs/05 §2.1, docs/11): the preview dialog with install and its progress, and Archive
 // with an inline confirm. The words come from the planner (src/engine/packs/plan.ts); nothing is worked out here.
@@ -76,8 +77,8 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
           <Building2 className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
             Your own pack, published from <span className="font-medium">{data.publisher}</span>. Not
-            reviewed by Klarert. Its automations start in test mode, and it brings no items, people
-            or webhook addresses.
+            reviewed by {BRAND.product}. Its automations start in test mode, and it brings no items,
+            people or webhook addresses.
           </span>
         </p>
       ) : null}

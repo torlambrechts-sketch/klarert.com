@@ -1048,7 +1048,7 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
                       {f.requirements} requirements · edition {f.version}, revision {f.revision}
                     </span>
                     <span className="text-copy-13">
-                      Written by {workspace}. Not reviewed by Klarert.
+                      Written by {workspace}. Not reviewed by {BRAND.product}.
                     </span>
                     <span className="text-copy-13 text-muted-foreground">{f.licence}</span>
                   </div>

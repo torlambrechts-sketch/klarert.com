@@ -109,7 +109,7 @@ export interface FrameworkList {
   frameworks: FrameworkCard[];
   /** Sheets that can hold the controls (owners and admins). */
   controlsSheets: ControlsSheet[];
-  /** The workspace's name: "Written by <workspace>. Not reviewed by Klarert." */
+  /** The workspace's name: "Written by <workspace>. Not reviewed by Keptrow." (`BRAND.product`) */
   workspace: string;
   /** Drafts of the workspace's own frameworks (owners and admins). */
   drafts: OwnDraft[];

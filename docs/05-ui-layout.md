@@ -63,9 +63,9 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
     changed. You are signed out on your other devices." and focus back on the button. Under it: "Forgot it, or never
     set one? Get a reset link by email" (Forgot password).
 - **Email link** (`/auth/confirm`, the sign-in card; docs/09 §12): every auth email (sign-in, confirm sign-up, reset
-  password, change of email) links here, so a link scanner that opens the link first does not use it up. "Compliance
-  OS", then one heading and one primary button by the link's kind: reset "Set a new password" / **Continue to set a
-  new password**; sign-in or sign-up "Sign in to Compliance OS" / **Continue**; email change "Confirm your new email
+  password, change of email) links here, so a link scanner that opens the link first does not use it up. "Keptrow"
+  (`BRAND.product`), then one heading and one primary button by the link's kind: reset "Set a new password" / **Continue to set a
+  new password**; sign-in or sign-up "Sign in to Keptrow" / **Continue**; email change "Confirm your new email
   address" / **Confirm**. Under the button: "This link works once, for 1 hour." Focus starts on the button (full width
   under 640 px); a second click while the first is on its way does nothing. The button opens the link and goes where
   it leads (Set a new password, the page asked for, Your account); a used or expired link goes where it did before

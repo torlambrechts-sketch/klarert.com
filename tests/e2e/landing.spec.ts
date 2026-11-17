@@ -463,6 +463,35 @@ test('klarert.com and www.klarert.com answer 301 to the same path on www.keptrow
   expect(own.status()).toBe(200);
 });
 
+test('an email link sent from klarert.com keeps its token and query through the 301', async ({
+  request,
+}) => {
+  // the links of auth emails sent before the switch (supabase/templates: {{ .SiteURL }} was www.klarert.com). The
+  // Continue page's GET is redirected with the query intact; its POST then goes from the page itself on the new host
+  const redirectTo = encodeURIComponent(
+    'https://www.klarert.com/auth/callback?next=%2Facme%2Fhome',
+  );
+  const links = [
+    `/auth/confirm?token_hash=pkce_0123abcd&type=recovery&next=/login/new-password&redirect_to=${redirectTo}`,
+    `/auth/confirm?token_hash=0123abcd&type=email&redirect_to=${redirectTo}`,
+    '/auth/callback?code=0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0&next=%2Faccount',
+  ];
+  for (const host of ['klarert.com', 'www.klarert.com'])
+    for (const link of links) {
+      const res = await request.get(link, { headers: { host }, maxRedirects: 0 });
+      expect(res.status(), `${host}${link}`).toBe(301);
+      const to = new URL(res.headers()['location']!);
+      expect(to.origin, link).toBe('https://www.keptrow.com');
+      expect(to.pathname + to.search, link).toBe(link);
+    }
+  // on the new host the Continue page shows its button and keeps the token in the form
+  const page = await request.get(links[0]!, { maxRedirects: 0 });
+  expect(page.status()).toBe(200);
+  const html = await page.text();
+  expect(html).toContain('Continue to set a new password');
+  expect(html).toContain('pkce_0123abcd');
+});
+
 test('the legal pages name Keptrow and leave the company a placeholder', async ({ page }) => {
   for (const [path, words] of [
     ['/terms', 'Keptrow is provided by [Company legal name]'],

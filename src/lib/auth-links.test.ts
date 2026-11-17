@@ -71,7 +71,7 @@ describe('emailLinkNext', () => {
   });
   it('takes the page the app asked for when the template names none', () => {
     expect(emailLinkNext(null, back('/acme/home?a=1&b=2'))).toBe('/acme/home?a=1&b=2');
-    expect(emailLinkNext(null, 'https://www.klarert.com')).toBeNull();
+    expect(emailLinkNext(null, 'https://www.keptrow.com')).toBeNull();
     expect(emailLinkNext(null, null)).toBeNull();
   });
   it('keeps only paths on this site', () => {

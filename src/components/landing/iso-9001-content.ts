@@ -4,6 +4,7 @@
 // (src/lib/site/standard.ts), never from here. ISO text is never quoted: clause numbers and our own one-line
 // descriptions only (docs/12 Licensing). Screenshots come from the fictional example workspace Meridian Components Ltd
 // (pnpm seed:demo, scripts/screenshots.ts) and are captioned as such.
+import { BRAND } from '@/lib/brand';
 import { LINKS } from './content';
 
 /** The catalogue key of the ISO 9001 standard (templates/packs/iso-9001.json). */
@@ -115,7 +116,7 @@ export const ISO9001_PAGE = {
     points: [
       'Paste the requirements from Excel or start from a blank list',
       'Map each one to an ISO 9001 clause yourself: equivalent, partial or related',
-      'The screens say "Not reviewed by Klarert": the wording is yours',
+      `The screens say "Not reviewed by ${BRAND.product}": the wording is yours`,
     ],
   },
   faq: {
@@ -295,7 +296,7 @@ export const SHOTS = {
 export const FAQ: readonly { q: string; a: string }[] = [
   {
     q: 'Will this get us certified to ISO 9001?',
-    a: 'We help you prepare; a certification body certifies. Compliance OS keeps your registers, decisions, evidence and their history in one place, so the audit is about your system rather than about finding things. Whether you pass is the auditor’s decision.',
+    a: `We help you prepare; a certification body certifies. ${BRAND.product} keeps your registers, decisions, evidence and their history in one place, so the audit is about your system rather than about finding things. Whether you pass is the auditor’s decision.`,
   },
   {
     q: 'Which edition does it use?',

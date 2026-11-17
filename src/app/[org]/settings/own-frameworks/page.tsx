@@ -6,8 +6,9 @@ import { isAdminRole, requireMember } from '@/server/auth';
 import { ownFrameworkEditor } from '@/server/commands/own-frameworks';
 import { OwnFrameworkGrid } from '../own-editor';
 import { OwnFrameworkStart } from '../own-start';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Your framework · Compliance OS' };
+export const metadata = { title: `Your framework · ${BRAND.product}` };
 
 // Workspace admin › Frameworks › Add your own, and the grid of a draft (docs/12 Your own frameworks). Owners and
 // admins only; every command checks again.
@@ -41,7 +42,7 @@ export default async function OwnFrameworkPage({
       <PageHeader
         crumb={crumb}
         title={key ? (r.ok && r.data.draft?.title) || 'Your framework' : 'Add your own framework'}
-        description={`Written by ${workspace.name}. Not reviewed by Klarert. It gets the same library, statement of applicability, coverage and links to your controls as a catalogue framework.`}
+        description={`Written by ${workspace.name}. Not reviewed by ${BRAND.product}. It gets the same library, statement of applicability, coverage and links to your controls as a catalogue framework.`}
       />
       {!r.ok ? (
         <div role="alert" className="flex flex-col items-start gap-2">

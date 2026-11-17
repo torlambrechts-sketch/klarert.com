@@ -4,7 +4,7 @@
 // function, for tests and for reasoning. Pure, and only relative imports, because next.config.ts loads this file.
 import { SITE_URL } from '../brand';
 
-/** The old hosts. The keptrow.com apex is not here: Vercel's primary-domain setting sends it to www (docs/14 step 3). */
+/** The old hosts. The keptrow.com apex is not here: Vercel's primary-domain setting sends it to www (docs/14 §4 step 2). */
 export const LEGACY_HOSTS = ['klarert.com', 'www.klarert.com'] as const;
 
 /** A Next.js `has` host value matches the whole host, as a regular expression. */

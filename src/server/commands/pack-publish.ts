@@ -29,6 +29,7 @@ import { readCatalogue, every } from '@/server/packs/install';
 import { loadWorkspaceSnapshot, readOwnPacks, type OwnPackVersion } from '@/server/packs/capture';
 import { fail, fromDbError, invalid, ok, type Result } from '@/server/result';
 import { withOrg } from './context';
+import { BRAND } from '@/lib/brand';
 
 // "Save your setup" (docs/11 Your own packs, P9). Owners and admins of a workspace capture its setup as a private
 // pack (captureManifest, pure) and publish versions of it with publish_pack, which re-checks the safety rules and
@@ -159,7 +160,7 @@ export async function previewPublish(input: unknown): Promise<Result<PublishPrev
           return `${titleOf(e.pack)} › ${sheetName(e.pack, e.sheet)}: ${list}`;
         });
         const advice = [
-          'You are responsible for any licensed text in your pack, such as the wording of a standard: Klarert does not review it.',
+          `You are responsible for any licensed text in your pack, such as the wording of a standard: ${BRAND.product} does not review it.`,
           ...(parsed ? packQualityProblems(parsed).map((q) => q.message) : []),
         ];
         return ok({

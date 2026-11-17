@@ -43,7 +43,7 @@ describe('emailOtpType and confirmCopy', () => {
       button: 'Continue to set a new password',
     });
     expect(confirmCopy('email')).toEqual({
-      heading: 'Sign in to Compliance OS',
+      heading: 'Sign in to Keptrow',
       button: 'Continue',
     });
     expect(confirmCopy('magiclink')).toEqual(confirmCopy('email'));
@@ -155,11 +155,11 @@ describe('openEmailLink', () => {
 });
 
 describe('sameOriginPost', () => {
-  const host = 'www.klarert.com';
+  const host = 'www.keptrow.com';
   it('takes Sec-Fetch-Site same-origin, also with Origin null (the page sends no referrer)', () => {
     expect(sameOriginPost({ secFetchSite: 'same-origin', origin: 'null', host })).toBe(true);
     expect(
-      sameOriginPost({ secFetchSite: 'same-origin', origin: 'https://www.klarert.com', host }),
+      sameOriginPost({ secFetchSite: 'same-origin', origin: 'https://www.keptrow.com', host }),
     ).toBe(true);
   });
   it('refuses another site, also a sibling subdomain, whatever the Origin says', () => {
@@ -167,15 +167,15 @@ describe('sameOriginPost', () => {
       sameOriginPost({ secFetchSite: 'cross-site', origin: 'https://evil.example', host }),
     ).toBe(false);
     expect(
-      sameOriginPost({ secFetchSite: 'same-site', origin: 'https://app.klarert.com', host }),
+      sameOriginPost({ secFetchSite: 'same-site', origin: 'https://app.keptrow.com', host }),
     ).toBe(false);
     expect(
-      sameOriginPost({ secFetchSite: 'cross-site', origin: 'https://www.klarert.com', host }),
+      sameOriginPost({ secFetchSite: 'cross-site', origin: 'https://www.keptrow.com', host }),
     ).toBe(false);
     expect(sameOriginPost({ secFetchSite: 'none', origin: null, host })).toBe(false);
   });
   it('without Sec-Fetch-Site, needs an Origin of this host', () => {
-    expect(sameOriginPost({ secFetchSite: null, origin: 'https://www.klarert.com', host })).toBe(
+    expect(sameOriginPost({ secFetchSite: null, origin: 'https://www.keptrow.com', host })).toBe(
       true,
     );
     expect(sameOriginPost({ secFetchSite: null, origin: 'https://evil.example', host })).toBe(
@@ -184,7 +184,7 @@ describe('sameOriginPost', () => {
     expect(sameOriginPost({ secFetchSite: null, origin: 'null', host })).toBe(false);
     expect(sameOriginPost({ secFetchSite: null, origin: null, host })).toBe(false);
     expect(
-      sameOriginPost({ secFetchSite: null, origin: 'https://www.klarert.com', host: null }),
+      sameOriginPost({ secFetchSite: null, origin: 'https://www.keptrow.com', host: null }),
     ).toBe(false);
   });
 });

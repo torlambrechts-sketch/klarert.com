@@ -41,7 +41,7 @@ test('an admin invites by email; the mail names the workspace and role, its link
   const mail = await appMail(invitee, 'invite', { after: sentAt });
   expect(mail.subject).toBe('Ada Lovelace invited you to Mail Invites Ltd on Keptrow');
   // the local sender (EMAIL_FROM unset): the same name and domain as the hosted one (docs/14)
-  expect(mail.from).toEqual({ name: 'Keptrow', address: 'no-reply@mail.keptrow.com' });
+  expect(mail.from).toEqual({ name: 'Keptrow', address: 'no-reply@keptrow.com' });
   expect(mail.text).toContain(
     'Ada Lovelace invited you to join the workspace Mail Invites Ltd on Keptrow as a viewer.',
   );

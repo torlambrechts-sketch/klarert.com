@@ -6,6 +6,8 @@
 // that one session only (a refreshed token keeps its session id, a new sign-in gets a new one), and a stolen value is
 // no use without the session itself. Pure apart from the injected HMAC; src/server/reset-link.ts wires it in.
 
+// The cookie keeps its pre-rename name (docs/14 §3): renaming it would only make a person who is half-way through a
+// reset at the deploy ask for a new link, and it is never shown to anyone, so the name stays.
 export const RESET_LINK_COOKIE = 'klarert-reset-link';
 
 /** A session lasts 12 hours at most (supabase/config.toml [auth.sessions] timebox, docs/09 §8.3). */
