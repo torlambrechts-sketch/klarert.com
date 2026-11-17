@@ -1,7 +1,7 @@
 # Set the hosted project's Supabase Auth settings that live in the repo (docs/09 §12, README › Auth emails):
 # the site URL, the minimum password length, secure email change, the subject and HTML of each auth email
 # (supabase/templates/*.html, subjects from supabase/config.toml [auth.email.template.*]; each must link to our
-# /auth/callback with the token hash, TEMPLATE_LINKS below) and the security alerts for
+# /auth/confirm with the token hash, TEMPLATE_LINKS below) and the security alerts for
 # a changed password or email address ([auth.email.notification.*]: on, subject and HTML, which must name the Forgot
 # password link and the support address).
 #
@@ -21,18 +21,21 @@ URL = f"https://api.supabase.com/v1/projects/{REF}/config/auth"
 
 SITE_URL = "https://www.klarert.com"
 MIN_PASSWORD = 12  # src/lib/passwords.ts MIN_PASSWORD
-# config.toml template name -> Management API key part, and the link each must carry. The links go straight to our own
-# /auth/callback with the token hash (the callback opens the session with verifyOtp), so they work on any device and
-# never show the Supabase project's address; Supabase's {{ .ConfirmationURL }} (its verify step and a PKCE code that
-# only the asking browser can use) is refused. `type` is what verifyOtp takes in supabase-js 2.119 / GoTrue 2.197:
+# config.toml template name -> Management API key part, and the link each must carry. The links go to our own
+# /auth/confirm with the token hash: a page with a Continue button, whose click posts to /auth/callback, which opens
+# the session with verifyOtp. So a link scanner that opens every link in an email (Microsoft Defender Safe Links) does
+# not use up the one-time token, the links work on any device, and they never show the Supabase project's address.
+# Supabase's {{ .ConfirmationURL }} (its verify step and a PKCE code that only the asking browser can use) is
+# refused, and so is a link straight to /auth/callback (a scanner's GET would use the token up). `type` is what
+# verifyOtp takes in supabase-js 2.119 / GoTrue 2.197:
 # "email" for sign-up and sign-in links ("signup" and "magiclink" are the deprecated names), "recovery", "email_change".
 # `redirect_to` carries the page the app asked for (src/lib/auth-links.ts emailLinkNext). Docs/09 §12.
-CALLBACK = "{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type="
+CONFIRM = "{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type="
 TEMPLATE_LINKS = {
-    "confirmation": CALLBACK + "email&amp;redirect_to={{ .RedirectTo }}",
-    "magic_link": CALLBACK + "email&amp;redirect_to={{ .RedirectTo }}",
-    "recovery": CALLBACK + "recovery&amp;next=/login/new-password&amp;redirect_to={{ .RedirectTo }}",
-    "email_change": CALLBACK + "email_change&amp;next=/account&amp;redirect_to={{ .RedirectTo }}",
+    "confirmation": CONFIRM + "email&amp;redirect_to={{ .RedirectTo }}",
+    "magic_link": CONFIRM + "email&amp;redirect_to={{ .RedirectTo }}",
+    "recovery": CONFIRM + "recovery&amp;next=/login/new-password&amp;redirect_to={{ .RedirectTo }}",
+    "email_change": CONFIRM + "email_change&amp;next=/account&amp;redirect_to={{ .RedirectTo }}",
 }
 TEMPLATES = list(TEMPLATE_LINKS)
 # config.toml notification name -> Management API key part (mailer_notifications_<n>_enabled,
@@ -71,7 +74,9 @@ def desired():
         with open(path, encoding="utf-8") as f:
             html = f.read()
         if "{{ .ConfirmationURL }}" in html:
-            sys.exit(f"{path}: links to Supabase's verify step ({{{{ .ConfirmationURL }}}}), not to /auth/callback")
+            sys.exit(f"{path}: links to Supabase's verify step ({{{{ .ConfirmationURL }}}}), not to /auth/confirm")
+        if "/auth/callback?token_hash=" in html:
+            sys.exit(f"{path}: links straight to /auth/callback, which a link scanner's GET would use up; link to /auth/confirm")
         if html.count(f'href="{TEMPLATE_LINKS[name]}"') != 1:
             sys.exit(f"{path}: no link {TEMPLATE_LINKS[name]}")
         want[f"mailer_subjects_{name}"] = t["subject"]
