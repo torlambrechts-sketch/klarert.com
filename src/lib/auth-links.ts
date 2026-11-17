@@ -2,9 +2,10 @@ import { safeNext } from './safe-next';
 
 // Where the email-link callback (`/auth/callback`) sends a person (docs/05 §1, docs/09 §12). Supabase Auth's links
 // (sign-in, confirm sign-up, reset password, change email) land there in one of two ways:
-// - our templates (supabase/templates) link straight to the callback with `token_hash`, `type`, the page's `next` and
+// - our templates (supabase/templates) link to `/auth/confirm` with `token_hash`, `type`, the page's `next` and
 //   `redirect_to` (the address the app asked Supabase Auth to send the person back to, which carries the page's own
-//   `next`); the callback opens the session with `verifyOtp`, so the link works on any device;
+//   `next`); its Continue button posts them to the callback, which opens the session with `verifyOtp`, so the link
+//   works on any device and a link scanner's GET does not use it up (src/lib/email-link.ts);
 // - Supabase's default templates (the hosted project until its templates are applied) link to Supabase Auth's verify
 //   step, which comes back with a PKCE `code` (only the browser that asked holds its verifier), with an error, or, for
 //   the first of the two links of an email change, with only a message. Pure.

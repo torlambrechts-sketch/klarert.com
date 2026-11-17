@@ -42,20 +42,56 @@ export async function mailTo(email: string, after: number, subject?: string): Pr
 }
 
 /**
- * Open an email's link in this browser. Our templates link to `{{ .SiteURL }}/auth/callback` with the token hash, and
- * the local site URL (localhost:3000) may be another checkout's server on a shared machine: open the same path and
- * query on this test's own server. A link to Supabase Auth's verify step (Supabase's default templates, see
- * `defaultTemplateLink`) is followed here and its callback opened on this server.
+ * The path and query of an email's link on this test's own server. Our templates link to `{{ .SiteURL }}/auth/confirm`
+ * with the token hash, and the local site URL (localhost:3000) may be another checkout's server on a shared machine. A
+ * link to Supabase Auth's verify step (Supabase's default templates, see `defaultTemplateLink`) is followed here and
+ * its callback (`/auth/callback?code=…`) taken instead.
  */
-export async function openLink(page: Page, link: string) {
+export async function linkHere(link: string): Promise<string> {
   let url = new URL(link);
-  if (url.pathname !== '/auth/callback') {
+  if (url.pathname !== '/auth/confirm' && url.pathname !== '/auth/callback') {
     const res = await fetch(link, { redirect: 'manual' });
     const to = res.headers.get('location');
     url = new URL(to ?? link);
     if (url.pathname !== '/auth/callback') throw new Error(`unexpected redirect: ${to}`);
   }
-  await page.goto(`${url.pathname}${url.search}`);
+  return `${url.pathname}${url.search}`;
+}
+
+/**
+ * What a link scanner (Microsoft Defender Safe Links and the like) does before the person clicks: a plain GET of the
+ * link, outside any browser. It must not use up the token: `/auth/confirm` only shows its page.
+ */
+export async function scanLink(page: Page, link: string) {
+  const res = await page.request.get(await linkHere(link), { maxRedirects: 0 });
+  expect(res.status()).toBe(200);
+  expect(res.headers()['referrer-policy']).toBe('no-referrer');
+  expect(res.headers()['x-robots-tag']).toBe('noindex, nofollow');
+  expect(await res.text()).toContain('This link works once, for 1 hour.');
+}
+
+/**
+ * Open an email's link in this browser as the person does: `/auth/confirm`, then its button (focused; Continue,
+ * Confirm or Continue to set a new password), which opens the link. Supabase's default links go straight to the
+ * callback.
+ */
+export async function openLink(
+  page: Page,
+  link: string,
+  expected?: { heading: string; button: string; check?: () => Promise<void> },
+) {
+  const path = await linkHere(link);
+  await page.goto(path);
+  if (new URL(path, 'http://x').pathname !== '/auth/confirm') return;
+  const button = page.getByTestId('email-link-continue');
+  await expect(button).toBeFocused();
+  if (expected) {
+    await expect(page.getByRole('heading', { level: 2 })).toHaveText(expected.heading);
+    await expect(button).toHaveAccessibleName(expected.button);
+    await expect(page.getByText('This link works once, for 1 hour.')).toBeVisible();
+    await expected.check?.();
+  }
+  await Promise.all([page.waitForURL((u) => u.pathname !== '/auth/confirm'), button.click()]);
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321';
