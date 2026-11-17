@@ -899,7 +899,8 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
     );
   const { frameworks, canAdopt, controlsSheets, workspace, drafts } = r.data;
   const adopted = frameworks.filter((f) => f.adopted);
-  const catalogue = frameworks.filter((f) => !f.own);
+  // another workspace's framework shared with a private pack shows only once adopted (docs/11 Your own packs)
+  const catalogue = frameworks.filter((f) => !f.own && !f.shared);
   // the edition to use of each own framework (a replaced edition is listed under Adopted while it is adopted)
   const ownList = frameworks.filter((f) => f.own && f.status === 'current');
   const draftOf = new Map(drafts.map((d) => [d.key, d]));
