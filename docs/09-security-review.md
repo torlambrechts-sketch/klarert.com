@@ -677,3 +677,53 @@ Screens in docs/05 §1.1.
 3. **The email change alert** links to Forgot password, whose link goes to the new address, which the person may no
    longer control. Supabase offers no way to undo an email change from the old address; the alert now names
    support@klarert.com (and still the workspace owner) as the way back.
+
+## 13. Your own frameworks (16 Nov 2026, branch `claude/p8-own-frameworks`)
+
+A workspace's own frameworks, its mappings to the catalogue and its drafts (docs/12 Your own frameworks, docs/02 §17,
+migration 0074). The catalogue tables were global and readable by everyone; they now hold one workspace's rows too.
+What keeps them inside the workspace:
+
+- **RLS.** `frameworks`, `requirements` and `crosswalks`: `org_id is null or is_member(org_id)`; `packs`:
+  `owner_org_id is null or is_member(owner_org_id)`; `framework_drafts`: owners and admins (`is_admin`). No write
+  grants on any of them. pgTAP 0074 reads each table as an admin of another workspace and gets nothing; the e2e spec
+  does the same through the API as a person outside the workspace.
+- **Definer functions read past RLS, so each checks visibility itself** (board risk 2): `adopt_framework` refuses a
+  framework of another workspace, `install_pack` a pack of another workspace, `upgrade_pack` (now a wrapper of
+  `_upgrade_pack_rows`, also behind `apply_pack_upgrade`) a version of another workspace, and `move_framework_edition`
+  reads only frameworks of the catalogue or its own workspace and only live cross-walks of either. All four are
+  tested with a forged install and forged library sheets in pgTAP 0074. The messages say "not found", never whose.
+- **Writes only through the RPCs.** `publish_framework`, `set_crosswalk`, `retire_crosswalk`, `save_framework_draft`,
+  `delete_framework_draft`: owners and admins of the workspace named in the call, the key's prefix tied to that
+  workspace's id; `own_framework_guard` refuses an own row written any other way (also by the service role). Granted
+  to `authenticated` only; `_own_key_prefix` and `_upgrade_pack_rows` to nobody. No new service-role place.
+- **What the server sends is checked again.** The server builds the framework and its library pack with the engine,
+  but `publish_framework` checks the licence note and publisher against the workspace's own name, the limits, refs,
+  parents and depth, and that the pack is only this framework's library sheet (no automations, dashboards, requires,
+  extends or apps), so a crafted call cannot install anything else through the pack path.
+- **Licensing.** Customer text only in own rows (`requirements.text` and `titles = 'customer'` refused on catalogue
+  rows); publishing records `rights_confirmed` and the source line in `framework.published`.
+- **Audit.** `framework.published` (revision, hash), `crosswalk.added`, `crosswalk.retired`, `framework.draft_saved`
+  and `framework.draft_deleted` on the workspace chain; cross-walks are retired, never changed or deleted.
+- **The 8 hex digits** of the key prefix are not a secret and not unique: two workspaces may share them (about one in
+  four billion per pair). A key taken by another workspace is refused at publish ("the key is not this workspace's")
+  and rows of another workspace are never readable or writable whatever their key.
+
+Commands (`pnpm security:commands`):
+
+| Command | File | Zod schema | Role check | Also |
+|---|---|---|---|---|
+| `ownFrameworkEditor` | `own-frameworks.ts` | `ownFrameworkEditorInput` | admin |  |
+| `createOwnFramework` | `own-frameworks.ts` | `createOwnFrameworkInput` | admin |  |
+| `saveOwnFrameworkDraft` | `own-frameworks.ts` | `saveOwnDraftInput` | admin |  |
+| `deleteOwnFrameworkDraft` | `own-frameworks.ts` | `deleteOwnDraftInput` | admin |  |
+| `publishOwnFramework` | `own-frameworks.ts` | `publishOwnFrameworkInput` | admin |  |
+| `ownMappingOptions` | `own-frameworks.ts` | `ownMappingOptionsInput` | admin |  |
+| `mapOwnRequirement` | `own-frameworks.ts` | `mapOwnRequirementInput` | admin |  |
+| `retireOwnMapping` | `own-frameworks.ts` | `retireOwnMappingInput` | admin |  |
+
+### 13.1 Open (for the owner)
+
+- A workspace's own framework and its library pack stay readable by every member, as the catalogue is. A restricted
+  library sheet stays restricted (docs/02 §16); the requirement rows themselves are not.
+- Hosted rollout of 0074: see the P8 report (locks while the constraints are added, the renamed `upgrade_pack`).

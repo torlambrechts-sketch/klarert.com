@@ -3,6 +3,7 @@
 import * as documents from '@/server/commands/documents';
 import * as files from '@/server/commands/files';
 import * as frameworks from '@/server/commands/frameworks';
+import * as own from '@/server/commands/own-frameworks';
 import * as panel from '@/server/commands/panel';
 import * as updates from '@/server/commands/updates';
 
@@ -27,3 +28,7 @@ export const setDocumentsRegisterAction = async (input: unknown) =>
   documents.setDocumentsRegister(input);
 export const requirementContextAction = async (input: unknown) =>
   frameworks.requirementContext(input);
+// A workspace's own requirement mapped to the catalogue ("Map to …", docs/12 Your own frameworks)
+export const ownMappingOptionsAction = async (input: unknown) => own.ownMappingOptions(input);
+export const mapOwnRequirementAction = async (input: unknown) => own.mapOwnRequirement(input);
+export const retireOwnMappingAction = async (input: unknown) => own.retireOwnMapping(input);

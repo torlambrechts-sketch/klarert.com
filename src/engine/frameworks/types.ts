@@ -20,7 +20,11 @@ export const RELATION_LABEL: Record<Relation, string> = {
 
 /** Where the short titles come from: our own words, or the official short headings (never more, docs/12). */
 export const TITLES_POLICIES = ['own-words', 'official-short'] as const;
-export type TitlesPolicy = (typeof TITLES_POLICIES)[number];
+/**
+ * A catalogue framework's titles policy, or `customer`: a workspace's own framework (docs/12 Your own frameworks),
+ * whose titles and text are the workspace's. Never a catalogue value.
+ */
+export type TitlesPolicy = (typeof TITLES_POLICIES)[number] | 'customer';
 
 /**
  * Where an edition stands at its publisher (docs/12 Standards watch): still the edition to use, withdrawn and
@@ -84,6 +88,11 @@ export interface Requirement {
   /** Typical evidence records, our own words. */
   evidence: string[];
   tags: string[];
+  /**
+   * The full wording of a workspace's own requirement (docs/12 Your own frameworks), at most 4,000 characters. Never
+   * set on a catalogue framework: we never ship a standard's text.
+   */
+  text?: string | null;
 }
 
 export interface FrameworkLibrary {
@@ -139,4 +148,9 @@ export interface Crosswalk {
   note: string;
   /** Who made the mapping and its version: "Klarert mapping v1". */
   source: string;
+  /**
+   * A mapping the workspace made itself ("Your mapping"): who and when. Null or absent for the catalogue's mappings.
+   * The two are shown apart and never mixed (docs/12 Your own frameworks).
+   */
+  own?: { id: number; by: string | null; at: string } | null;
 }

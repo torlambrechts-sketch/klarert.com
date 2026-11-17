@@ -25,6 +25,7 @@ import {
 import type { FrameworkKind, Relation } from '@/engine/frameworks/types';
 import { previewLines, type PackPreview } from '@/engine/packs/plan';
 import { todayIn } from '@/engine/sheet-data';
+import { formatDate, isoDateInZone } from '@/engine/fields/helpers';
 import {
   adoptFrameworkInput,
   editionMoveInput,
@@ -38,6 +39,7 @@ import { isAdminRole, isEditorRole } from '@/server/auth';
 import {
   readCrosswalks,
   readFrameworks,
+  readOwnMappings,
   type CatalogueFramework,
 } from '@/server/frameworks/catalogue';
 import {
@@ -83,6 +85,8 @@ export interface AdoptedFramework {
 }
 
 export interface FrameworkCard extends CatalogueFramework {
+  /** The workspace's own framework (docs/12 Your own frameworks): written by the workspace, not reviewed by us. */
+  own: boolean;
   adopted: AdoptedFramework | null;
   /** Edition status words for the badge (docs/12 Standards watch); null for a current edition. */
   badge: EditionBadge | null;
@@ -90,14 +94,26 @@ export interface FrameworkCard extends CatalogueFramework {
   successor: { key: string; version: string; title: string; adopted: boolean } | null;
 }
 
+export interface OwnDraft {
+  key: string;
+  title: string;
+  updatedAt: string;
+  /** A draft of a framework already published (its next revision or edition). */
+  published: boolean;
+}
+
 export interface FrameworkList {
   canAdopt: boolean;
   frameworks: FrameworkCard[];
   /** Sheets that can hold the controls (owners and admins). */
   controlsSheets: ControlsSheet[];
+  /** The workspace's name: "Written by <workspace>. Not reviewed by Klarert." */
+  workspace: string;
+  /** Drafts of the workspace's own frameworks (owners and admins). */
+  drafts: OwnDraft[];
 }
 
-async function readControlsSheets(db: Db, orgId: string): Promise<ControlsSheet[]> {
+export async function readControlsSheets(db: Db, orgId: string): Promise<ControlsSheet[]> {
   const { data, error } = await db
     .from('sheets')
     .select(SHEET_COLUMNS)
@@ -126,19 +142,30 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
         const now = new Date();
         const timeZone = await timeZoneOf(supabase, orgId);
         const env = { today: todayIn(now, timeZone), now, timeZone, userId: user.id };
-        const [catalogue, libraries, controls, installs, versions] = await Promise.all([
-          readFrameworks(supabase),
-          readLibraries(supabase, orgId, { items: true }),
-          isAdminRole(role) ? readControlsSheets(supabase, orgId) : Promise.resolve([]),
-          supabase
-            .from('pack_installs')
-            .select('id, pack_key, version, status')
-            .eq('org_id', orgId)
-            .eq('status', 'installed')
-            .like('pack_key', 'framework-%'),
-          readPackVersions(supabase).catch(() => []),
-        ]);
+        const [catalogue, libraries, controls, installs, versions, org, drafts] = await Promise.all(
+          [
+            readFrameworks(supabase, orgId),
+            readLibraries(supabase, orgId, { items: true }),
+            isAdminRole(role) ? readControlsSheets(supabase, orgId) : Promise.resolve([]),
+            supabase
+              .from('pack_installs')
+              .select('id, pack_key, version, status')
+              .eq('org_id', orgId)
+              .eq('status', 'installed')
+              .like('pack_key', 'framework-%'),
+            readPackVersions(supabase).catch(() => []),
+            supabase.from('orgs').select('name').eq('id', orgId).maybeSingle(),
+            isAdminRole(role)
+              ? supabase
+                  .from('framework_drafts')
+                  .select('key, body->title, updated_at')
+                  .eq('org_id', orgId)
+                  .order('updated_at', { ascending: false })
+              : Promise.resolve({ data: [], error: null }),
+          ],
+        );
         if (installs.error) throw new Error(installs.error.message);
+        if (drafts.error) throw new Error(drafts.error.message);
         const updates = updatesFor(installs.data ?? [], versions);
         const byId = new Map(catalogue.map((f) => [fwId(f), f]));
         const adoptedIds = new Set(libraries.map((l) => fwId(l.framework)));
@@ -174,6 +201,7 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
             const succ = next ? byId.get(`${next.key}@${next.version}`) : undefined;
             return {
               ...f,
+              own: f.orgId !== null,
               adopted: adopted.get(fwId(f)) ?? null,
               badge: editionBadge(f, succ?.title ?? null),
               successor: succ
@@ -187,6 +215,19 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
             };
           }),
           controlsSheets: controls,
+          workspace: org.data?.name ?? '',
+          drafts: (
+            (drafts.data ?? []) as unknown as {
+              key: string;
+              title: unknown;
+              updated_at: string;
+            }[]
+          ).map((d) => ({
+            key: d.key,
+            title: typeof d.title === 'string' && d.title ? d.title : 'Untitled framework',
+            updatedAt: d.updated_at,
+            published: catalogue.some((f) => f.key === d.key),
+          })),
         });
       } catch (e) {
         console.error(JSON.stringify({ level: 'error', source: 'frameworks', error: String(e) }));
@@ -203,7 +244,7 @@ async function planAdoption(
   userId: string,
   v: { framework: string; version: string; controlsSheetId?: string | null },
 ) {
-  const fw = (await readFrameworks(db)).find(
+  const fw = (await readFrameworks(db, orgId)).find(
     (f) => f.key === v.framework && f.version === v.version,
   );
   if (!fw) return fail('not_found', 'This framework is no longer in the catalogue.');
@@ -365,7 +406,7 @@ async function planMove(
   const timeZone = await timeZoneOf(db, orgId);
   const today = todayIn(now, timeZone);
   const [catalogue, libraries] = await Promise.all([
-    readFrameworks(db),
+    readFrameworks(db, orgId),
     readLibraries(db, orgId, { items: true }),
   ]);
   const from = libraries.find((l) => l.sheet.id === fromSheetId);
@@ -381,7 +422,7 @@ async function planMove(
     return fail('invalid', `Adopt ${succ?.title ?? fw.supersededBy} first, then move to it.`);
   const ids = from.items.map((i) => i.id);
   const [crosswalks, around, evidence] = await Promise.all([
-    readCrosswalks(db, [fwId(fw), fwId(succ)]),
+    readCrosswalks(db, [fwId(fw), fwId(succ)], orgId),
     linksAround(db, ids),
     evidenceCounts(db, from.fields, ids, today),
   ]);
@@ -514,6 +555,24 @@ export interface RequirementChip {
 export interface RelatedChip extends RequirementChip {
   relation: Relation;
   note: string;
+  /** The workspace's own mapping: who and when ("Your mapping · Anna · 3 Dec 2026"); null for ours. */
+  own: { by: string | null; at: string; atText: string } | null;
+}
+
+/** One of the workspace's own mappings from its own requirement ("Map to …"), adopted or not. */
+export interface OwnMapping {
+  id: number;
+  /** The catalogue requirement, `<key>@<version>#<ref>`. */
+  to: string;
+  /** "27001 A.5.1" */
+  label: string;
+  title: string;
+  relation: Relation;
+  note: string;
+  by: string | null;
+  at: string;
+  /** "3 Dec 2026", in the workspace's time zone. */
+  atText: string;
 }
 
 export interface CoveringControl {
@@ -537,6 +596,11 @@ export interface RequirementContext {
     alsoSatisfies: RelatedChip[];
     controls: CoveringControl[];
     covered: boolean;
+    /**
+     * A requirement of the workspace's own framework: its mappings to catalogue requirements and whether this person
+     * may change them (owners and admins). Null on a catalogue requirement.
+     */
+    own: { key: string; mappings: OwnMapping[]; canMap: boolean } | null;
   } | null;
   /** The adopted requirements this item is linked to (a control's "Covers"). */
   covers: RequirementChip[];
@@ -556,6 +620,45 @@ const chip = (r: AdoptedRequirement): RequirementChip => ({
   name: r.name,
   label: r.label,
 });
+
+/** The workspace's own live mappings from one of its requirements, with the catalogue requirement's label and title. */
+const dayOf = (at: string, timeZone: string) => formatDate(isoDateInZone(at, timeZone));
+
+async function ownMappingsOf(
+  db: Db,
+  orgId: string,
+  key: string,
+  catalogue: CatalogueFramework[],
+  timeZone: string,
+): Promise<OwnMapping[]> {
+  const list = await readOwnMappings(db, orgId, key);
+  if (list.length === 0) return [];
+  const short = new Map(catalogue.map((f) => [fwId(f), f.shortTitle]));
+  const { data, error } = await db
+    .from('requirements')
+    .select('framework_key, framework_version, ref, title')
+    .is('org_id', null)
+    .in('framework_key', [...new Set(list.map((c) => c.to.framework))])
+    .in('ref', [...new Set(list.map((c) => c.to.ref))]);
+  if (error) throw new Error(`requirements: ${error.message}`);
+  const titles = new Map(
+    (data ?? []).map((r) => [`${r.framework_key}@${r.framework_version}#${r.ref}`, r.title]),
+  );
+  return list.map((c) => {
+    const to = `${c.to.framework}@${c.to.version}#${c.to.ref}`;
+    return {
+      id: c.own!.id,
+      to,
+      label: `${short.get(`${c.to.framework}@${c.to.version}`) ?? c.to.framework} ${c.to.ref}`,
+      title: titles.get(to) ?? '',
+      relation: c.relation,
+      note: c.note,
+      by: c.own!.by,
+      at: c.own!.at,
+      atText: dayOf(c.own!.at, timeZone),
+    };
+  });
+}
 
 /** Requirements around one item: "Also satisfies" and its controls, or what a control covers and could cover. */
 export async function requirementContext(input: unknown): Promise<Result<RequirementContext>> {
@@ -583,7 +686,7 @@ export async function requirementContext(input: unknown): Promise<Result<Require
         const env = { today: todayIn(now, timeZone), now, timeZone, userId: user.id };
 
         const [catalogue, libraries, ownFields, level] = await Promise.all([
-          readFrameworks(supabase),
+          readFrameworks(supabase, orgId),
           readLibraries(supabase, orgId, { items: true }),
           readFields(supabase, [sheet.id]),
           sheetLevel(supabase, sheet.id),
@@ -594,6 +697,7 @@ export async function requirementContext(input: unknown): Promise<Result<Require
         const crosswalks = await readCrosswalks(
           supabase,
           libraries.map((l) => fwId(l.framework)),
+          orgId,
         );
         const index = crosswalkIndex(crosswalks);
         const byItem = new Map([...adopted.values()].map((r) => [r.itemId, r]));
@@ -609,7 +713,22 @@ export async function requirementContext(input: unknown): Promise<Result<Require
           const row = rows.get(item.id)!;
           const sheetNames = new Map(others.map((o) => [o.sheet.sheet.id, o.sheet.sheet.name]));
           const also = alsoSatisfies(item.requirementRef, index, adopted);
-          for (const a of also) sources.add(a.source);
+          // the workspace's own mappings are shown apart, with who made them; only ours are listed as sources
+          for (const a of also) if (!a.own) sources.add(a.source);
+          const own =
+            fw?.orgId === orgId
+              ? {
+                  key: item.requirementRef,
+                  canMap: isAdminRole(role),
+                  mappings: await ownMappingsOf(
+                    supabase,
+                    orgId,
+                    item.requirementRef,
+                    catalogue,
+                    timeZone,
+                  ),
+                }
+              : null;
           requirement = {
             label: adopted.get(item.requirementRef)!.label,
             framework: fw?.title ?? id.framework,
@@ -620,6 +739,7 @@ export async function requirementContext(input: unknown): Promise<Result<Require
               ...chip(a.requirement),
               relation: a.relation,
               note: a.note,
+              own: a.own ? { by: a.own.by, at: a.own.at, atText: dayOf(a.own.at, timeZone) } : null,
             })),
             controls: row.controlIds.flatMap((cid) => {
               const o = others.find((x) => x.item.id === cid);
@@ -637,6 +757,7 @@ export async function requirementContext(input: unknown): Promise<Result<Require
                 : [];
             }),
             covered: isCovered(row),
+            own,
           };
         }
 
@@ -667,11 +788,14 @@ export async function requirementContext(input: unknown): Promise<Result<Require
         const suggestions = item.requirementRef
           ? []
           : suggestEquivalents(coveredKeys, index, adopted).map((s) => {
-              sources.add(s.source);
+              if (!s.own) sources.add(s.source);
               return {
                 ...chip(s.requirement),
                 relation: s.relation,
                 note: s.note,
+                own: s.own
+                  ? { by: s.own.by, at: s.own.at, atText: dayOf(s.own.at, timeZone) }
+                  : null,
                 via: s.via.map((k) => adopted.get(k)?.label ?? k),
               };
             });

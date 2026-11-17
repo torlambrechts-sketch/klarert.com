@@ -508,6 +508,17 @@ accessibility checks".
 - Own frameworks or saved packages as available, or "marketplace", "synced", "supports any framework", "mapped
   automatically" at any time (section 4.7).
 
+**Your own frameworks (P8; advisory board, owner decisions 16 Nov 2026).** Allowed once P8 ships:
+- Line: "Our standards or your own requirements, in one set of registers." The second sentence, "Save your setup and reuse it in every workspace.", only after P9 (Your packs) ships.
+- "Add your own requirements: a customer's security schedule, your internal policies, or a code we don't ship."
+- "They get the same library, statement of applicability, coverage and links to your controls as ISO/IEC 27001."
+- "Map them to ISO/IEC 27001 or NIS2 yourself."
+
+Never, with P8 or after:
+- "SOC 2 support" or "supports any framework". On SOC 2: "You can write your own requirement set, for example from a customer's SOC 2 report. We don't ship SOC 2."
+- "Mapped automatically" or any AI claim: every mapping of a workspace's own requirements is made by a person.
+- Anything that implies we review or check customer frameworks: the app says "Written by <workspace>. Not reviewed by Klarert."
+
 **Naming standards:** number and edition ("ISO/IEC 27001:2022", "ISO 9001:2026"). Never quote or closely paraphrase
 clause or control text; reference numbers and official short titles only. State edition status when it matters
 ("ISO 14001:2015 was withdrawn in April 2026"). Never use ISO's logo. Certification bodies certify; we do not.

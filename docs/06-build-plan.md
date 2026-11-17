@@ -330,7 +330,17 @@ Phase 2 (open; a separate task):
 ### NIS2 pack
 - [x] Owner decision (14 Nov 2026): NIS2 country rules are a pack setting listing all EU/EEA countries with defaults (registration authority, deadlines, extra fields), chosen per workspace. Built as the general pack settings mechanism (docs/11 Pack settings); every country entry ships unverified until someone checks it.
 
-Later: consultant multi-workspace view, private and forked packs, pack signing and marketplace, SSO.
+### P8 · Your own frameworks  [Opus]
+Owner decisions (16 Nov 2026), all as the advisory board recommended (part A of the review "your own frameworks and saving a setup as a package"); docs/12 Your own frameworks, docs/02 §17.
+- [x] Migration 0074: `org_id` on `frameworks`, `requirements` and `crosswalks` with the reserved key form `w<8 hex>-<slug>`; `requirements.text`; titles `customer`; cross-walks insert-only with `created_by`, `created_at`, `retired_at`; `packs.owner_org_id` (P9's groundwork); `framework_drafts`; reads `org_id is null or is_member(org_id)`; `catalogue_guard` for both kinds of row; RPCs `publish_framework`, `set_crosswalk`, `retire_crosswalk`, `save_framework_draft`, `delete_framework_draft` (owners and admins, `authenticated` only); `adopt_framework`, `install_pack`, `upgrade_pack` and `move_framework_edition` refuse another workspace's framework or pack
+- [x] Engine (pure, tested): `ownFrameworkProblems` (row numbers; ref, title 80, text 4,000, a group plus 4 levels, 2,000 requirements), `importRequirements` (pasted tab-separated or CSV through `parseCsv`), `copyStructure` (refs, hierarchy and kinds only), `publishDecision` (revision or edition), `editionMappingFor`, `toFramework`; `frameworkToPack`, `frameworkHash`, `planEditionMove`, `alsoSatisfies`, `coverageOf` and `buildSoa` reused
+- [x] Commands `src/server/commands/own-frameworks.ts` (authorise → Zod → RPC → log): create, save and delete a draft, publish, map and unmap
+- [x] Workspace admin › Frameworks: Adopted, Your frameworks ("Yours", "Written by <workspace>. Not reviewed by Klarert."), the Catalogue; Add your own: paste or CSV (problems with row numbers), blank, copy a structure; the draft grid with each row's problems; the publish dialog with the licence confirmation and the source line; Adopt through the existing preview and adopt
+- [x] Item panel: "Map to …" on an own requirement (catalogue picker, relation default related, note); "Also satisfies" shows "Your mapping · person · date" apart from Klarert's mapping; the SoA licence note "Provided by <source>. Owned by <workspace>."
+- [x] Tests: `src/engine/frameworks/own.test.ts`, `src/server/frameworks/catalogue.test.ts`, pgTAP `0074_own_frameworks.sql` (key constraint, RLS between workspaces, adopt/install/upgrade/move refused, publish and revision logged, editors refused, catalogue guard, cross-walks insert-only with retire, a new edition), e2e `tests/e2e/own-frameworks.spec.ts` (paste → problems → fix → publish → adopt → library text → SoA note; map to 27001 → "Your mapping"; a reworded revision taken as an update keeping applicability; another workspace sees nothing; 1440 and 390 px)
+- [ ] Later (board): suggested mappings (`suggestMappings`, person accepts each, never "automatic"), .xlsx upload, bulk cross-walk CSV, an e2e for a new edition moved end to end in the browser
+
+Later: consultant multi-workspace view, private and forked packs (P9 next: the board's part B), pack signing and marketplace, SSO.
 
 Later (owner decision 15 Nov 2026): the script Content-Security-Policy with nonces and a stricter HSTS, after the demo, as their own change.
 
