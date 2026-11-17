@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { completeProfile, freshEmail, signIn } from './helpers';
-import { defaultTemplateLink, mailTo, openLink, type Mail } from './auth-mail';
+import { defaultTemplateLink, linkHere, mailTo, openLink, scanLink, type Mail } from './auth-mail';
 import { freshCode } from './totp';
 
 // Forgot password, Set a new password and Your account › Email address and Password (docs/05 §1 and §1.1,
@@ -13,6 +13,9 @@ const SAME_ANSWER = 'If an account uses that address, we have sent a link to res
 const PASSWORD_ALERT = 'Your Compliance OS password was changed';
 const EMAIL_ALERT = 'The email address of your Compliance OS account was changed';
 const CONFIRM_EMAIL = 'Confirm the new email address for Compliance OS';
+const RESET_PAGE = { heading: 'Set a new password', button: 'Continue to set a new password' };
+const SIGN_IN_PAGE = { heading: 'Sign in to Compliance OS', button: 'Continue' };
+const EMAIL_CHANGE_PAGE = { heading: 'Confirm your new email address', button: 'Confirm' };
 const LINK_FAILED =
   'This link has to be opened in the same browser you asked from, or it has expired. Ask for a new link.';
 
@@ -64,10 +67,13 @@ async function freshBrowser(browser: Browser, page: Page) {
   return context.newPage();
 }
 
-/** A reset email: our own link, straight to this site's callback with the token hash, not to Supabase. */
+/**
+ * A reset email: our own link, to this site's Continue page (`/auth/confirm`, which opens the link only on a click)
+ * with the token hash, not to Supabase.
+ */
 function expectOwnResetLink(mail: Mail) {
   const link = new URL(mail.link);
-  expect(link.pathname).toBe('/auth/callback');
+  expect(link.pathname).toBe('/auth/confirm');
   expect(link.searchParams.get('type')).toBe('recovery');
   expect(link.searchParams.get('next')).toBe('/login/new-password');
   expect(link.searchParams.get('token_hash')).toBeTruthy();
@@ -146,9 +152,17 @@ test('forgot password: the same answer for every address, the link on another de
   expect(mail.html).not.toMatch(/<img|src=/i);
   expectOwnResetLink(mail);
 
-  // opened on another device: a browser that never asked for it
+  // opened on another device: a browser that never asked for it. A link scanner opened it first (a plain GET): that
+  // shows the Continue page only and leaves the token unused
   const device = await freshBrowser(browser, page);
-  await openLink(device, mail.link);
+  await scanLink(device, mail.link);
+  await scanLink(device, mail.link);
+  await openLink(device, mail.link, {
+    ...RESET_PAGE,
+    check: async () => {
+      if (info.project.name === 'phone') await noSideScroll(device);
+    },
+  });
   await expect(device).toHaveURL(/\/login\/new-password$/);
   if (info.project.name === 'phone') await noSideScroll(device);
   const newPassword = `Battery staple ${unique()}`;
@@ -157,9 +171,9 @@ test('forgot password: the same answer for every address, the link on another de
   await expect(device).toHaveURL(/\/onboarding$/);
   await device.context().close();
 
-  // the link works once: opened again, it says so and offers a new one
+  // the link works once: Continue a second time says so and offers a new one
   const again = await freshBrowser(browser, page);
-  await openLink(again, mail.link);
+  await openLink(again, mail.link, RESET_PAGE);
   await expect(again).toHaveURL(/\/login\/forgot-password\?error=expired$/);
   await expect(again.getByTestId('reset-link-failed').getByRole('alert')).toHaveText(
     'This link has expired or was already used. Ask for a new link.',
@@ -243,7 +257,8 @@ test('forgot password with two-step sign-in, on another device: the code comes b
   const mail = await mailTo(email, started);
   expectOwnResetLink(mail);
   const device = await freshBrowser(browser, page);
-  await openLink(device, mail.link);
+  await scanLink(device, mail.link);
+  await openLink(device, mail.link, RESET_PAGE);
   // the reset link signs in with the first step only: the code is owed before the password can change
   await expect(device).toHaveURL(/\/login\/two-step\?next=%2Flogin%2Fnew-password$/);
   if (info.project.name === 'phone') await noSideScroll(device);
@@ -337,8 +352,17 @@ test('Your account: change the password, then the email address', async ({
     expect(mail.text).toContain('If you did not ask for this, you can ignore this email.');
   }
   // the local stack has email confirmation off, so Supabase Auth takes one link (hosted: both, docs/09 §12)
+  expect(new URL(toNew.link).pathname).toBe('/auth/confirm');
+  await scanLink(page, toNew.link);
+  await page.reload();
+  await expect(page.getByTestId('current-email')).toHaveText(email);
   const confirmedAt = Date.now();
-  await openLink(page, toNew.link);
+  await openLink(page, toNew.link, {
+    ...EMAIL_CHANGE_PAGE,
+    check: async () => {
+      if (info.project.name === 'phone') await noSideScroll(page);
+    },
+  });
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByTestId('current-email')).toHaveText(newEmail);
   await expect(page.getByTestId('email-pending')).toHaveCount(0);
@@ -351,4 +375,74 @@ test('Your account: change the password, then the email address', async ({
   await page.context().clearCookies();
   await signInWithPassword(page, newEmail, newPassword);
   await expect(page).toHaveURL(/\/onboarding$/);
+});
+
+test('sign-in link: a link scanner and another site cannot use it up; Continue signs in, once', async ({
+  page,
+  browser,
+}, info) => {
+  test.setTimeout(150_000);
+  const { email } = await newAccount(page, 'Sami Scanner');
+  await page.context().clearCookies();
+
+  await page.goto('/login?mode=link');
+  await page.getByLabel('Work email').fill(email);
+  const started = Date.now();
+  await page.getByRole('button', { name: 'Send sign-in link' }).click();
+  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+  const mail = await mailTo(email, started);
+  const link = new URL(mail.link);
+  expect(link.pathname).toBe('/auth/confirm');
+  expect(link.searchParams.get('type')).toBe('email');
+
+  // the scanner's GET shows the page only
+  const device = await freshBrowser(browser, page);
+  await scanLink(device, mail.link);
+
+  // a form on another site (or a request with no browser headers) posting the token to the callback is refused,
+  // and the token stays unused
+  const form = {
+    token_hash: link.searchParams.get('token_hash')!,
+    type: 'email',
+    redirect_to: link.searchParams.get('redirect_to') ?? '',
+  };
+  const posts: Record<string, string>[] = [
+    { Origin: 'https://evil.example', 'Sec-Fetch-Site': 'cross-site' },
+    { Origin: 'null', 'Sec-Fetch-Site': 'cross-site' },
+    {},
+  ];
+  for (const headers of posts) {
+    const res = await device.request.post('/auth/callback', { form, headers, maxRedirects: 0 });
+    expect(res.status()).toBe(303);
+    const to = new URL(res.headers()['location']!);
+    expect(`${to.pathname}${to.search}`).toBe('/login?error=link');
+  }
+
+  // the person's click signs in
+  await openLink(device, mail.link, {
+    ...SIGN_IN_PAGE,
+    check: async () => {
+      if (info.project.name === 'phone') await noSideScroll(device);
+    },
+  });
+  await expect(device).toHaveURL(/\/onboarding$/);
+  await device.context().close();
+
+  // Continue a second time: the link was used
+  const again = await freshBrowser(browser, page);
+  await openLink(again, mail.link, SIGN_IN_PAGE);
+  await expect(again).toHaveURL(/\/login\?error=link$/);
+  await expect(
+    again.getByRole('alert').filter({
+      hasText: 'That sign-in link has expired or was already used. Sign in again.',
+    }),
+  ).toBeVisible();
+  await again.context().close();
+
+  // a link with its token cut off says so, and offers the way back
+  const broken = await freshBrowser(browser, page);
+  await broken.goto(`${(await linkHere(mail.link)).split('?')[0]}?type=email`);
+  await expect(broken.getByTestId('email-link-broken')).toBeVisible();
+  await expect(broken.getByRole('link', { name: 'Back to sign in' })).toBeFocused();
+  await broken.context().close();
 });
