@@ -545,13 +545,40 @@ Screens in docs/05 §1.1.
   answer is always "If an account uses that address, we have sent a link to reset your password.", also when Supabase
   Auth refuses: it refuses a second request within `max_frequency` for existing addresses only, so passing that on
   would tell which addresses have accounts. Refusals are logged with code and status, never the address.
-- **The callback** (`/auth/callback`, `emailLinkNext` and `afterEmailLink` in `src/lib/auth-links.ts`, unit tested).
-  Our templates (17 Nov 2026, branch `claude/fix-reset-links`) link straight to it:
+- **The Continue page** (`/auth/confirm`, owner decision 17 Nov 2026, branch `claude/email-continue`). Microsoft
+  Defender Safe Links and other link scanners open every link in an email before the person does; a link that opened
+  the session on GET was used up by the scanner, and the person's own click then said "expired". Our templates
+  therefore link to `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=…&next=…&redirect_to={{ .RedirectTo }}`:
+  a GET that only renders a small page (the auth layout) and never calls `verifyOtp`. It keeps `token_hash`, `type`,
+  `next` and `redirect_to` in hidden fields (never logged) and shows one heading and one button by `type`
+  (`confirmCopy`, `src/lib/email-link.ts`): `recovery` "Set a new password" / **Continue to set a new password**,
+  `email` "Sign in to Compliance OS" / **Continue**, `email_change` "Confirm your new email address" / **Confirm**,
+  and under it "This link works once, for 1 hour." Focus starts on the button; a second click while the first is on
+  its way is ignored, so a double click never lands on "expired". A link without its token or with another `type`
+  says "This link is not complete" with **Back to sign in**. The page is `noindex` and sends no referrer (metadata
+  and `next.config.ts` headers, as public forms). `auth` is already a reserved workspace address; no new top-level
+  route.
+- **The callback** (`/auth/callback`; `openEmailLink` in `src/lib/email-link.ts`, wired to Supabase Auth in
+  `src/server/email-link.ts`; `emailLinkNext` and `afterEmailLink` in `src/lib/auth-links.ts`; unit tested). One
+  function opens every link, for both methods:
+  - **POST** is the Continue button: `token_hash`, `type`, `next` and `redirect_to` from the form, `verifyOtp`, the
+    reset-link cookie, then a 303 to where the link goes. **CSRF:** only a POST from a page of this site is taken
+    (`sameOriginPost`): `Sec-Fetch-Site` must be `same-origin`, or, from a browser that does not send it, the `Origin`
+    must be this host. Because `/auth/confirm` sends no referrer, browsers post its form with `Origin: null`, so
+    `Sec-Fetch-Site` is what passes it (every current browser sends it; Safari from 16.4); `Origin: null` without it
+    is refused, as is a POST with neither (fail closed). A refused POST goes to `/login?error=link` and leaves the
+    token unused (e2e: a cross-site form, `Origin: null` cross-site, and a bare request).
+  - **GET** takes a PKCE `code` (Supabase's default templates, below), an error, or a message only (the first of two
+    email change links). It also still takes `token_hash` and `type` straight from the link, so emails sent before
+    `/auth/confirm` keep working. **That GET token-hash path can be removed two weeks after the templates are applied
+    to the hosted project** (links work for 1 hour; two weeks covers mail read late); remove it with its unit cases.
+  Before 17 Nov 2026 (branch `claude/fix-reset-links`) our templates linked straight to the callback:
   `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=…&next=…&redirect_to={{ .RedirectTo }}`, with `type`
   `email` for sign-up and sign-in links (`signup` and `magiclink` are the deprecated names), `recovery` (`next`
   `/login/new-password`) and `email_change` (`next` `/account`), as `verifyOtp` takes them in supabase-js 2.119 and
-  GoTrue 2.197. The callback opens the session with `verifyOtp({ token_hash, type })`, so a link works on any device
-  and never shows the Supabase project's address. `redirect_to` (escaped by Supabase Auth's HTML templates) carries
+  GoTrue 2.197; `/auth/confirm` takes the same parameters. The callback opens the session with
+  `verifyOtp({ token_hash, type })` (any other `type` is refused without asking Supabase Auth), so a link works on any
+  device and never shows the Supabase project's address. `redirect_to` (escaped by Supabase Auth's HTML templates) carries
   the address the app asked for, whose own `next` is the page's `next` (Forgot password's `?next=`, or where a sign-in
   link should go); it is used only when the template names no page or the same page, so a reset link always lands on
   Set a new password, and always through `safeNext`. A token-hash link that Supabase Auth refuses (expired, used)
@@ -567,8 +594,8 @@ Screens in docs/05 §1.1.
   `amr` as `recovery` (checked 15 Nov 2026 on GoTrue 2.197), read by `openedByResetLink` (`src/lib/passwords.ts`).
   `verifyOtp` records `otp` for every email link, reset and sign-in alike (checked 17 Nov 2026 on GoTrue 2.197, for
   `recovery`, `magiclink` and `email`, and for Supabase Auth's own verify step without PKCE), so the token cannot tell
-  them apart. The callback therefore sets the httpOnly cookie `klarert-reset-link` when `verifyOtp` with
-  `type=recovery` opened the session: `v1.` and the HMAC-SHA256 of `reset-link.v1.<user id>.<session id>`, keyed by
+  them apart. The callback (the Continue POST, or the transition GET) therefore sets the httpOnly cookie `klarert-reset-link`
+  when `verifyOtp` with `type=recovery` opened the session: `v1.` and the HMAC-SHA256 of `reset-link.v1.<user id>.<session id>`, keyed by
   `SUPABASE_COMMAND_SECRET` (the local development value against the local stack; no secret, no cookie), 12 hours
   (`src/lib/reset-link.ts`, `src/server/reset-link.ts`, unit tested). It holds for that one session: a refreshed token
   keeps its session id, the two-step code keeps the session, a later sign-in gets a new one. Only the server can make
@@ -595,11 +622,12 @@ Screens in docs/05 §1.1.
   address cannot be used. Choose another."
 - **Auth emails** (`supabase/templates/*.html`, subjects in `supabase/config.toml` `[auth.email.template.*]`):
   confirm sign-up, sign-in link, reset password and change of email. One column, real text, `lang="en"`, the link
-  (to our own callback, above) linked and written out, what it does, that it works once for 1 hour, on any device
+  (to our own Continue page, above) linked and written out, what it does, that it works once for 1 hour, on any device
   (`otp_expiry`, `EMAIL_LINK_EXPIRY`), and "If you did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
   the plain-text part from the HTML. Invites are our own email (§11); reauthentication is not used. The hosted project
   gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ; it refuses a
-  template without its callback link or with `{{ .ConfirmationURL }}`) and sends through Brevo SMTP, which the owner
+  template without its `/auth/confirm` link, with `{{ .ConfirmationURL }}`, or linking straight to
+  `/auth/callback?token_hash=`) and sends through Brevo SMTP, which the owner
   sets up (`scripts/hosted/README.md` › Auth emails), sender "Compliance OS". Supabase refuses custom templates
   without custom SMTP, so until then the hosted project sends Supabase's defaults (PKCE links, see the callback).
 - **Security alerts** (owner decision 16 Nov 2026): Supabase Auth's notification emails for a changed password and a
@@ -666,20 +694,27 @@ Screens in docs/05 §1.1.
   logs the person as the actor. Support deletes in the dashboard only when the person cannot (lost access, a request
   by email), and then makes sure every workspace they owned alone gets a new owner. "Soft delete" in the Admin API
   only marks the auth user and does not run the trigger; use a hard delete.
-- Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`, `src/lib/delete-account.test.ts`; pgTAP
+- Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`, `src/lib/email-link.test.ts` (`openEmailLink`
+  with fake Supabase Auth: reset, sign-in, expired, the first of two email change links, a code, an unknown type;
+  `confirmCopy`; `sameOriginPost`), `src/lib/delete-account.test.ts`; pgTAP
   `supabase/tests/0071_delete_account.sql` and `0072_account_deleted_by_support.sql` (a dashboard deletion as
   `postgres`: memberships gone and logged, profile anonymised, created by still resolves, the log unchanged, the only
   owner's deletion logged as ownerless, the guard flag covers only the person it names, Delete my account still works
   and the trigger then adds nothing, the functions not executable by `anon`, `authenticated` or `service_role`); e2e `tests/e2e/delete-account.spec.ts` (desktop and 390 px: the only owner
   refused with the workspace named; a member deletes their account, cannot sign in with the password again, and their
   item's "Created by" reads "Former member") and `tests/e2e/account-auth.spec.ts` (desktop and
-  390 px) through Mailpit: a reset for a known and an unknown address (the same answer), the link (our own callback)
-  opened in a fresh browser as on another device, the rules, the new password signs in and the old one does not,
-  another browser signed out, the used link refused ("expired"), a sign-in link session refused by Set a new password;
+  390 px) through Mailpit, every link opened through `/auth/confirm` and its button (`openLink` in
+  `tests/e2e/auth-mail.ts`; `signIn` in `tests/e2e/helpers.ts` does the same), each after a link scanner's GET
+  (`scanLink`: `page.request`, 200, no referrer, `noindex`) that must leave the token unused: a reset for a known and
+  an unknown address (the same answer), the link (our own Continue page) opened in a fresh browser as on another
+  device, the rules, the new password signs in and the old one does not,
+  another browser signed out, a second Continue on the used link refused ("expired"), a sign-in link session refused
+  by Set a new password; a sign-in link (the scanner's GET and three cross-site or bare POSTs leave it unused,
+  Continue signs in, a second Continue says it was used, a link without its token says so);
   the same with two-step sign-in on another device (code first); Supabase's default link (PKCE) opened in another
   browser shows the same-browser message and **Ask for a new link**, and in the asking browser opens Set a new
   password; Your account changes the password (a wrong current one refused) and the email address (both addresses
-  emailed).
+  emailed; the link scanned first, then **Confirm**).
 
 ### 12.1 Decided (owner)
 
@@ -695,6 +730,10 @@ Screens in docs/05 §1.1.
    tombstone profile: team memberships, sheet and folder access grants, their private saved views, their
    notifications, edit holds and open invites they sent (the invite page then reads "Former member invited you").
    None is reachable by anyone without a membership.
+6. **Email links and link scanners (owner decision 17 Nov 2026):** the auth emails link to the Continue page
+   (`/auth/confirm`), which uses the one-time token only when the person clicks its button (above). The GET
+   token-hash path of `/auth/callback` stays for two weeks after the templates are applied to the hosted project, for
+   emails already sent, and then goes.
 
 ### 12.2 Open (for the owner)
 
