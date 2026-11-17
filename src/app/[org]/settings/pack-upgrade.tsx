@@ -170,6 +170,12 @@ function Body({
         (restorable) and automations turned off. Fields keep their type and every option; your
         items, answers and automation on or off settings stay as they are.
       </p>
+      {p.personalData ? (
+        <p className="text-copy-13 text-muted-foreground m-0" data-testid="upgrade-personal-data">
+          Sheets with personal data are only visible to the people listed on them; updates to them
+          show for those people.
+        </p>
+      ) : null}
       {p.conflicts.length ? (
         <section className="flex flex-col gap-2" aria-labelledby="upgrade-conflicts-title">
           <h3

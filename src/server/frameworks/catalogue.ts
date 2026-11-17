@@ -220,16 +220,26 @@ export interface CatalogueFramework extends Omit<EditionInfo, 'statusCheckedOn'>
   orgId: string | null;
 }
 
-/** Only the catalogue and the given workspace's own rows (a person in two workspaces reads both under RLS). */
-const ownerFilter = (orgId: string | undefined, column = 'org_id') =>
-  orgId ? `${column}.is.null,${column}.eq.${orgId}` : null;
+/**
+ * Only the catalogue and the given workspace's own rows (a person in two workspaces reads both under RLS), and the
+ * frameworks of the publishers in `also` (a private pack's own frameworks, shared with it: docs/11 Your own packs).
+ */
+const ownerFilter = (orgId: string | undefined, column = 'org_id', also: string[] = []) =>
+  orgId
+    ? [`${column}.is.null`, ...[orgId, ...also].map((o) => `${column}.eq.${o}`)].join(',')
+    : null;
 
 /**
  * The catalogue's frameworks, in a stable order (kind, then title), with their requirement counts. With `orgId`,
  * also that workspace's own frameworks (and no other workspace's); without, whatever RLS lets the person read.
  */
-export async function readFrameworks(db: Db, orgId?: string): Promise<CatalogueFramework[]> {
-  const owner = ownerFilter(orgId);
+export async function readFrameworks(
+  db: Db,
+  orgId?: string,
+  /** Publishers whose own frameworks a private pack shares with this workspace (docs/11 Your own packs). */
+  sharedFrom: string[] = [],
+): Promise<CatalogueFramework[]> {
+  const owner = ownerFilter(orgId, 'org_id', sharedFrom);
   let fwq = db
     .from('frameworks')
     .select(

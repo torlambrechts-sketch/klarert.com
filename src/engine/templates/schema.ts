@@ -74,6 +74,15 @@ export const templateField = z.object({
     )
     .optional(),
   visibility: condition.optional(),
+  /**
+   * A restricted column (docs/02 §16; docs/11 Your own packs, owner decision 17 Nov 2026): the workspace roles that
+   * see its values besides the owners. Roles only; people are never carried. install_pack and upgrade_pack write it to
+   * fields.restricted_to as `{ userIds: [], roles }` (0076); it carries no example values.
+   */
+  restrictedTo: z
+    .object({ roles: z.array(z.enum(['admin', 'editor', 'viewer', 'auditor'])).max(4) })
+    .strict()
+    .optional(),
 });
 
 export const templateItem = z.object({
@@ -431,6 +440,9 @@ export const sheetTemplateSchema = z
         problem(at('forms', p.index), p.message);
       for (const [ii, item] of s.items.entries()) {
         if (!groups.has(item.group)) problem(at('items', ii), `Unknown group "${item.group}".`);
+        for (const k of [...Object.keys(item.values), ...Object.keys(item.links ?? {})])
+          if (keys.get(k)?.restrictedTo)
+            problem(at('items', ii), `"${k}" is restricted: example items carry no values for it.`);
         for (const k of Object.keys(item.values))
           if (!keys.has(k)) problem(at('items', ii), `Unknown field "${k}".`);
         for (const [k, targets] of Object.entries(item.links ?? {})) {

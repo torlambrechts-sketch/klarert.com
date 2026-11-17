@@ -727,3 +727,78 @@ Commands (`pnpm security:commands`):
 - A workspace's own framework and its library pack stay readable by every member, as the catalogue is. A restricted
   library sheet stays restricted (docs/02 §16); the requirement rows themselves are not.
 - Hosted rollout of 0074: see the P8 report (locks while the constraints are added, the renamed `upgrade_pack`).
+
+## 14. Your own packs (17 Nov 2026, branch `claude/p9-private-packs`)
+
+"Save your setup" (docs/11 Your own packs, docs/02 §15, migration 0075; owner decisions of 16 Nov 2026). A workspace
+publishes its setup as a private pack and installs it in other workspaces. This is the first feature that moves
+structure between workspaces, so the board's leakage risks come first:
+
+- **One client's data reaching another (risk 1).** Nothing of a workspace's data is captured: no items (example items
+  come later), so no values at all; no people (a member's id anywhere is removed: recipients, approvers, allowed users,
+  form notifications, filters, defaults), no files, updates, emails, form links or log entries. Webhook addresses are
+  never readable to the person (0056) and the webhook action is left out ("Add the address after install"). Outside
+  email recipients are dropped. The dialog names the publishing workspace and says "Publish from your practice or
+  head-office workspace, not a client's", and every install preview names the publisher. The capture reads the
+  workspace with the person's own client: what RLS or sheet access hides from them is never captured.
+- **Definer functions read past RLS (risk 2).** `install_pack`, `upgrade_pack` and `adopt_framework` check
+  visibility and shares themselves (`_private_access`, `_framework_access`): another workspace's pack installs only
+  where it is shared, or on a first install by an owner or admin of both workspaces; an update never shares. pgTAP
+  0075 covers read, install, update and adopt without a share (an install row forged behind the API's back included),
+  the first install needing an admin of both, editors refused, and withdraw. Messages say "not found" to anyone who
+  cannot see the pack.
+- **Client admins read every version (risk 3).** Once shared, every member of the target workspace reads every version
+  of the pack (the upgrade path needs the base manifest). The dialog says so. Packs are structure only.
+- **What the server sends is checked again.** `publish_pack` re-checks on the JSON what SQL can: the key and its
+  owner, write-once and higher versions, no example items, every automation in test mode, no outbound action, personal
+  data sheets never `restricted: false`, no people, `requires` only our catalogue, `frameworks` ours or the
+  workspace's own. The manifest schema (Zod) and the canonical hash are the command's (`publishPack`), which captures
+  again on the server and refuses a capture that changed since the preview. `parsePack` runs on every read of the
+  catalogue, so a stored manifest is checked again on every use.
+- **Shares and versions cannot be tampered with.** No grants to write `pack_shares`; `pack_shares_guard` lets only
+  `install_pack` insert and refuses every update and delete, also for the database owner. `packs_write_once` refuses
+  every change to a version but its withdrawal.
+- **Audit.** `pack.published` (version, hash, counts, what was left out) and `pack.withdrawn` on the publisher's chain;
+  `pack.shared` (the target workspace) on the publisher's chain; `pack.installed` / `pack.upgraded` with `source:
+  private` and the publisher's id on the target's chain.
+- **No new service-role place.** Reads use the person's client; writes go through definer RPCs granted to
+  `authenticated` only. The policy helpers (`pack_visible`, `framework_shared_to_me`, `pack_owner`,
+  `pack_publisher`) are granted to `authenticated` because RLS calls them; they return booleans, an owner id the
+  person may already read, or the publisher's name for a pack the person can see. `_private_access`,
+  `_framework_access` and `_semver` are nobody's.
+
+Commands (`pnpm security:commands`):
+
+| Command | File | Zod schema | Role check | Also |
+|---|---|---|---|---|
+| `previewPublish` | `pack-publish.ts` | `previewPublishInput` | admin |  |
+| `publishPack` | `pack-publish.ts` | `publishPackInput` | admin |  |
+| `withdrawPack` | `pack-publish.ts` | `withdrawPackInput` | admin |  |
+| `listYourPacks` | `pack-publish.ts` | `listYourPacksInput` | member | admin-only branch |
+
+### 14.1 Decided (owner, 16–17 Nov 2026)
+
+- A member of the publisher (any role) reads its private packs through RLS, as 0074 decided for own frameworks; only
+  owners and admins see them listed to install and can install them. Accepted as built.
+- **Restricted columns are carried, roles only** (0076). The manifest field says `restrictedTo: { roles }`; the
+  people listed on the column are never carried (Zod refuses `userIds` there, and `publish_pack` refuses it on the JSON
+  as it refuses other people). `install_pack` restricts the column it makes, so a column never installs open; it
+  refuses example values, links or files on it (the install's log entries would hold them in clear, since the mask
+  applies to what is restricted when it is written). `upgrade_pack` changes a restriction only on the install's own
+  fields (checked by `_upgrade_pack_rows`), never adds a person (only people already listed may stay), needs what
+  `set_field_restriction` needs (an owner, or an admin with edit access to the sheet) and moves values in one
+  transaction; every change is logged on the sheet chain. `_pack_restrict_field` is granted to nobody. The upgrade
+  planner sends a change only where the client has not changed the roles; otherwise Keep mine / Take the pack's.
+- Deleting a publisher workspace whose pack is installed elsewhere is refused (accepted as built): `orgs_publisher_guard`
+  (0076) says so in words (errcode 23503) before the `pack_installs` foreign key would. No path in the app deletes a
+  workspace today.
+- Publishing after a withdrawal is allowed and the pack stays withdrawn: copies already installed take the new version,
+  new installs stay blocked.
+- Personal-data sheets install restricted to the installer; the update dialog says "Sheets with personal data are only
+  visible to the people listed on them; updates to them show for those people."
+
+Hosted risk of 0076: it replaces `install_pack`, `upgrade_pack` and `publish_pack` (bodies as 0075 plus the new
+steps; same signatures and grants) and adds a BEFORE DELETE trigger on `orgs`. Nothing in the catalogue uses
+`restrictedTo`, so catalogue installs and upgrades behave as before. It needs 0075 first; it is safe before or after
+the app deploy (an older planner sends no `restricted_to`, and the older capture leaves restricted columns out of the
+manifest's restriction, as before).

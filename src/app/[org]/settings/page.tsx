@@ -19,9 +19,11 @@ import {
 import { DeleteFolder, RestoreFolder, RestoreSheet } from './archived';
 import { AddByName, AddEntity, DeleteButton, TeamMembers } from './structure';
 import { ArchivePack, PackPreview, PackSettings } from './packs';
+import { SaveSetup, WithdrawPack } from './your-packs';
 import { RequireTwoStep } from './security';
 import { PackUpgrade } from './pack-upgrade';
 import { listPacks, packSetups, testModePacks } from '@/server/commands/packs';
+import { listYourPacks, type YourPacks } from '@/server/commands/pack-publish';
 import { TestModeBanner } from '@/components/packs/test-mode-banner';
 import { SetupSteps, SetupSummary } from '@/components/packs/setup-checklist';
 import { listFrameworks } from '@/server/commands/frameworks';
@@ -42,7 +44,7 @@ import {
 import { listAuditOutputs, reviewSheetsByInstall } from '@/server/commands/audit';
 import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
 import { addDays, addMonths } from '@/engine/fields/helpers';
-import { ArrowUpCircle, Check, ExternalLink, Lock, PenLine, Plus } from 'lucide-react';
+import { ArrowUpCircle, Check, ExternalLink, Lock, PenLine, Plus, X } from 'lucide-react';
 
 export const metadata = { title: 'Settings · Compliance OS' };
 
@@ -428,11 +430,12 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
 
 /** Packs (docs/11): the catalogue, what is installed here and the pack entries of the activity log. */
 async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
-  const [r, setupsResult, reviewSheets, quiet] = await Promise.all([
+  const [r, setupsResult, reviewSheets, quiet, yours] = await Promise.all([
     listPacks({ org }),
     packSetups({ org }),
     reviewSheetsByInstall({ org }),
     testModePacks({ org }).then((x) => (x.ok ? x.data : [])),
+    listYourPacks({ org }),
   ]);
   const reviewLinks = (installId: string): Record<string, { href: string; label: string }> => {
     const sheetId = reviewSheets.ok ? reviewSheets.data[installId] : undefined;
@@ -455,6 +458,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
   return (
     <>
       <TestModeBanner org={org} packs={quiet} />
+      <YourPacksCard org={org} r={yours} timeZone={timeZone} />
       <Card
         title="Available packs"
         description="Ready-made sheets, links, forms, automations and dashboards. Preview a pack to see exactly what it creates here before you install it."
@@ -544,6 +548,11 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                     <span className="font-medium">{i.title}</span>
                     <span className="text-label-12-mono text-muted-foreground">{i.version}</span>
                     {i.level ? <span className="text-label-12">{i.level.name}</span> : null}
+                    {i.publisher ? (
+                      <span className="text-label-12 text-muted-foreground">
+                        Your own pack, from {i.publisher}
+                      </span>
+                    ) : null}
                     <span className="text-label-12 text-muted-foreground">
                       {i.status === 'installed' ? 'Installed' : 'Archived'}
                     </span>
@@ -682,6 +691,167 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
   );
 }
 
+/**
+ * Your packs (docs/11 Your own packs): the packs this workspace published, with their versions, how many workspaces
+ * have them and Withdraw; "Save your setup"; and the packs of the person's other workspaces they may install here.
+ */
+function YourPacksCard({
+  org,
+  r,
+  timeZone,
+}: {
+  org: string;
+  r: Awaited<ReturnType<typeof listYourPacks>>;
+  timeZone: string;
+}) {
+  if (!r.ok)
+    return (
+      <Card title="Your packs">
+        <div role="alert" className="flex flex-col items-start gap-2">
+          <p className="m-0">{r.error.message}</p>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/${org}/settings?tab=packs`}>Retry</Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  const { published, installable, canPublish, workspace }: YourPacks = r.data;
+  return (
+    <Card
+      title="Your packs"
+      description="Build your method once. Install it in every client workspace. Personal data and webhook addresses are never copied."
+    >
+      <div className="flex flex-col gap-4">
+        {canPublish ? (
+          <div className="flex flex-col items-start gap-1.5">
+            <SaveSetup
+              org={org}
+              workspace={workspace}
+              packs={published.map((p) => ({ key: p.key, title: p.title, version: p.version }))}
+            />
+            <span className="text-label-13 text-muted-foreground">
+              Saves this workspace&apos;s sheets, columns, views, forms and automations as a pack
+              owned by {workspace}.
+            </span>
+          </div>
+        ) : null}
+        <section className="flex flex-col gap-1" aria-label={`Published from ${workspace}`}>
+          <h3 className="text-label-13 text-muted-foreground m-0 font-medium">
+            Published from {workspace}
+          </h3>
+          {published.length === 0 ? (
+            <p className="text-muted-foreground text-copy-13 m-0">
+              Nothing published from this workspace yet.
+            </p>
+          ) : (
+            <ul
+              className="divide-line m-0 flex list-none flex-col divide-y p-0"
+              data-testid="published-packs"
+            >
+              {published.map((p) => (
+                <li
+                  key={p.key}
+                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+                >
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{p.title}</span>
+                      <span className="text-label-12-mono text-muted-foreground">{p.version}</span>
+                      {p.withdrawnAt ? (
+                        <span className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                          <X className="size-3" aria-hidden /> Withdrawn
+                        </span>
+                      ) : null}
+                    </span>
+                    {p.description ? (
+                      <span className="text-copy-13 text-muted-foreground">{p.description}</span>
+                    ) : null}
+                    <span className="text-label-13">
+                      Installed in {p.sharedWith} other{' '}
+                      {p.sharedWith === 1 ? 'workspace' : 'workspaces'}
+                      {p.withdrawnAt
+                        ? ` · withdrawn ${formatDateTime(p.withdrawnAt, timeZone)}: no new installs`
+                        : ''}
+                    </span>
+                    <details>
+                      <summary className="text-label-13 text-muted-foreground cursor-pointer">
+                        {p.versions.length} {p.versions.length === 1 ? 'version' : 'versions'}
+                      </summary>
+                      <ul className="text-label-13 text-muted-foreground m-0 mt-1 flex list-none flex-col gap-0.5 p-0">
+                        {p.versions.map((v) => (
+                          <li key={v.version}>
+                            <span className="text-label-12-mono">{v.version}</span> ·{' '}
+                            {v.publishedBy}
+                            {v.publishedAt ? `, ${formatDateTime(v.publishedAt, timeZone)}` : ''}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </div>
+                  {canPublish && !p.withdrawnAt ? (
+                    <div className="shrink-0">
+                      <WithdrawPack org={org} packKey={p.key} title={p.title} />
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        {installable.length ? (
+          <section className="flex flex-col gap-1" aria-label="From your other workspaces">
+            <h3 className="text-label-13 text-muted-foreground m-0 font-medium">
+              From your other workspaces
+            </h3>
+            <ul
+              className="divide-line m-0 flex list-none flex-col divide-y p-0"
+              data-testid="installable-packs"
+            >
+              {installable.map((p) => (
+                <li
+                  key={p.key}
+                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+                >
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{p.title}</span>
+                      <span className="text-label-12-mono text-muted-foreground">{p.version}</span>
+                      {p.installedVersion ? (
+                        <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                          <Check className="text-good size-3" aria-hidden /> Installed
+                        </span>
+                      ) : null}
+                      {p.withdrawn ? (
+                        <span className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                          <X className="size-3" aria-hidden /> Withdrawn
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="text-label-13">
+                      From {p.publisher} · Inside: {p.inside}
+                    </span>
+                    {p.description ? (
+                      <span className="text-copy-13 text-muted-foreground">{p.description}</span>
+                    ) : null}
+                  </div>
+                  {canPublish && !p.installedVersion && !p.withdrawn ? (
+                    <div className="shrink-0">
+                      <PackPreview
+                        org={org}
+                        pack={{ key: p.key, title: p.title, version: p.version }}
+                      />
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
 const KIND_LABEL: Record<string, string> = {
   standard: 'Standard',
   law: 'EU law',
@@ -729,7 +899,8 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
     );
   const { frameworks, canAdopt, controlsSheets, workspace, drafts } = r.data;
   const adopted = frameworks.filter((f) => f.adopted);
-  const catalogue = frameworks.filter((f) => !f.own);
+  // another workspace's framework shared with a private pack shows only once adopted (docs/11 Your own packs)
+  const catalogue = frameworks.filter((f) => !f.own && !f.shared);
   // the edition to use of each own framework (a replaced edition is listed under Adopted while it is adopted)
   const ownList = frameworks.filter((f) => f.own && f.status === 'current');
   const draftOf = new Map(drafts.map((d) => [d.key, d]));

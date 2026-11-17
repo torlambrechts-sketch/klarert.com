@@ -60,3 +60,29 @@ export const upgradePackInput = z.object({
     .record(z.string().regex(/^[a-z]+:[A-Za-z0-9_.-]{1,200}$/), z.enum(['mine', 'theirs']))
     .default({}),
 });
+
+// "Save your setup" (docs/11 Your own packs, src/server/commands/pack-publish.ts). Owners and admins of the publisher.
+const ownKey = z.string().regex(/^w[0-9a-f]{8}-[a-z0-9][a-z0-9-]{0,39}$/);
+/** Part ids left out of the capture (bundleParts): `sheet:<ref>`, `form:<sheet>.<ref>`, `automation:<ref>` … */
+const excluded = z
+  .array(z.string().regex(/^(sheet|form|automation|dashboard):[a-z0-9_.]{1,90}$/))
+  .max(500)
+  .default([]);
+export const listYourPacksInput = z.object({ org: slugInput });
+export const previewPublishInput = z.object({
+  org: slugInput,
+  /** A pack this workspace published: the new version's previous one. None: a new pack. */
+  key: ownKey.optional(),
+  excluded,
+});
+export const publishPackInput = z.object({
+  org: slugInput,
+  key: ownKey.optional(),
+  title: z.string().trim().min(1, 'Give the pack a name.').max(80),
+  description: z.string().trim().max(2000).default(''),
+  version: z.string().regex(/^\d{1,4}\.\d{1,4}\.\d{1,4}$/, 'Use a version like 1.2.0.'),
+  excluded,
+  /** The capture the person previewed: a workspace that changed since is refused. */
+  contentHash: z.string().regex(/^[0-9a-f]{64}$/),
+});
+export const withdrawPackInput = z.object({ org: slugInput, key: ownKey });

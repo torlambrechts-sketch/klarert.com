@@ -44,8 +44,6 @@ export function BundlePreview({
   const kept = details.parts.filter((p) => !off.has(p.id));
   const flagged = kept.filter((p) => p.flags.some((f) => f.kind !== 'restricted'));
   const restricted = kept.filter((p) => p.flags.some((f) => f.kind === 'restricted'));
-  const neededBy = (p: BundlePart) =>
-    details.parts.filter((x) => x.kind === 'sheet' && x.requires.includes(p.id) && !off.has(x.id));
   // a set on registers the workspace has makes no sheet of its own (CAPA on Core's register): no "0 sheets"
   const ownSheets = c.sheets > 0 || details.uses.length === 0;
   const summary = [
@@ -157,62 +155,7 @@ export function BundlePreview({
         </ul>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {GROUPS.map((g) => {
-          const parts = details.parts.filter((p) => p.kind === g.kind);
-          if (!parts.length) return null;
-          return (
-            <fieldset key={g.kind} className="border-line rounded-lg border p-3">
-              <legend className="text-label-13 text-muted-foreground px-1 font-medium">
-                {g.title}
-              </legend>
-              <ul className="flex flex-col gap-1">
-                {parts.map((p) => {
-                  const on = !off.has(p.id);
-                  const needers = g.kind === 'sheet' ? neededBy(p) : [];
-                  return (
-                    <li key={p.id}>
-                      <label className="hover:bg-subtle flex cursor-pointer items-start gap-2.5 rounded-md p-1.5">
-                        <input
-                          type="checkbox"
-                          checked={on}
-                          data-testid={`part-${p.id}`}
-                          onChange={(e) => {
-                            const s = togglePart(details.parts, excluded, p.id, e.target.checked);
-                            onChange(s.excluded, s.note);
-                          }}
-                          className="mt-[3px] size-4 shrink-0 accent-[var(--ink)]"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="text-label-14 flex items-center gap-1.5">
-                            <span className={on ? '' : 'text-muted-foreground line-through'}>
-                              {p.name}
-                            </span>
-                            {p.flags.some((f) => f.kind === 'restricted') ? (
-                              <Lock className="size-3.5" aria-label="Restricted" />
-                            ) : null}
-                            {p.flags.some((f) => f.kind !== 'restricted') ? (
-                              <ShieldAlert
-                                className="text-warn size-3.5"
-                                aria-label="Off until checked"
-                              />
-                            ) : null}
-                          </span>
-                          <span className="text-label-12 text-muted-foreground block">
-                            {[p.sheet, p.detail].filter(Boolean).join(' · ')}
-                            {needers.length
-                              ? ` · needed by ${needers.map((x) => x.name).join(', ')}`
-                              : ''}
-                          </span>
-                        </span>
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
-            </fieldset>
-          );
-        })}
+      <PartPicker parts={details.parts} excluded={excluded} onChange={onChange}>
         {details.apps.length ? (
           <section className="border-line rounded-lg border p-3" aria-label="Apps">
             <h4 className="text-label-13 text-muted-foreground px-1 font-medium">Apps</h4>
@@ -236,7 +179,7 @@ export function BundlePreview({
             </ul>
           </section>
         ) : null}
-      </div>
+      </PartPicker>
 
       {!canInstall ? (
         <p
@@ -248,6 +191,86 @@ export function BundlePreview({
           start a sheet of your own.
         </p>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * The parts of a pack with a tick box each (docs/05 §4 Create, docs/11 Your own packs): unticking a part leaves out
+ * what needs it (togglePart), and the note says so. Children follow the groups (Create adds the apps).
+ */
+export function PartPicker({
+  parts,
+  excluded,
+  onChange,
+  children,
+}: {
+  parts: BundlePart[];
+  excluded: string[];
+  onChange: (excluded: string[], note: string | null) => void;
+  children?: React.ReactNode;
+}) {
+  const off = new Set(excluded);
+  const neededBy = (p: BundlePart) =>
+    parts.filter((x) => x.kind === 'sheet' && x.requires.includes(p.id) && !off.has(x.id));
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {GROUPS.map((g) => {
+        const list = parts.filter((p) => p.kind === g.kind);
+        if (!list.length) return null;
+        return (
+          <fieldset key={g.kind} className="border-line rounded-lg border p-3">
+            <legend className="text-label-13 text-muted-foreground px-1 font-medium">
+              {g.title}
+            </legend>
+            <ul className="flex flex-col gap-1">
+              {list.map((p) => {
+                const on = !off.has(p.id);
+                const needers = g.kind === 'sheet' ? neededBy(p) : [];
+                return (
+                  <li key={p.id}>
+                    <label className="hover:bg-subtle flex cursor-pointer items-start gap-2.5 rounded-md p-1.5">
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        data-testid={`part-${p.id}`}
+                        onChange={(e) => {
+                          const s = togglePart(parts, excluded, p.id, e.target.checked);
+                          onChange(s.excluded, s.note);
+                        }}
+                        className="mt-[3px] size-4 shrink-0 accent-[var(--ink)]"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="text-label-14 flex items-center gap-1.5">
+                          <span className={on ? '' : 'text-muted-foreground line-through'}>
+                            {p.name}
+                          </span>
+                          {p.flags.some((f) => f.kind === 'restricted') ? (
+                            <Lock className="size-3.5" aria-label="Restricted" />
+                          ) : null}
+                          {p.flags.some((f) => f.kind !== 'restricted') ? (
+                            <ShieldAlert
+                              className="text-warn size-3.5"
+                              aria-label="Off until checked"
+                            />
+                          ) : null}
+                        </span>
+                        <span className="text-label-12 text-muted-foreground block">
+                          {[p.sheet, p.detail].filter(Boolean).join(' · ')}
+                          {needers.length
+                            ? ` · needed by ${needers.map((x) => x.name).join(', ')}`
+                            : ''}
+                        </span>
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          </fieldset>
+        );
+      })}
+      {children}
     </div>
   );
 }

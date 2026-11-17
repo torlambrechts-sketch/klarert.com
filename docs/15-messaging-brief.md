@@ -32,8 +32,8 @@ or a design tool can work from this file alone.
 **Positioning line (owner decision, 16 Nov 2026).** "Our standards or your own requirements, in one set of
 registers. Save your setup and reuse it in every workspace."
 
-- The first sentence may be used as a live claim only once own frameworks ship (milestone P8, being built now). The
-  second only once saved packages ship (P9, next).
+- The first sentence may be used as a live claim only once own frameworks ship (milestone P8). The second, "Save your
+  setup and reuse it in every workspace.", is **allowed now**: saved packages shipped with P9 (17 Nov 2026).
 - Until then, show both only in a band or block labelled "Coming soon". Never present them as live, and never in the
   hero.
 - The promise above stays. Once P8 ships it may read "Record it once. Prove it for every standard and every customer
@@ -239,13 +239,19 @@ customer's security schedule, your internal policies, or a code we don't ship." 
 *Never:* "SOC 2 support", "supports any framework", "mapped automatically", any AI claim, or that we review or check
 customer frameworks.
 
-**Save your setup** (saved packages, milestone P9, next). *Supporting line:* "Build your method once. Install it in
-every client workspace." *Allowed once shipped:*
+**Save your setup** (saved packages, milestone P9, **shipped 17 Nov 2026: these lines are allowed now**, no "Coming
+soon" label). *Supporting line:* "Build your method once. Install it in every client workspace." *Allowed:*
+- "Build your method once. Install it in every client workspace."
 - "Publish a new version; each client takes the update and keeps their own changes."
 - "Personal data and webhook addresses are never copied."
+- The positioning line's second sentence, "Save your setup and reuse it in every workspace."
 
-*Never:* "marketplace", "share with anyone", "live sync" or "synced" (an admin applies each update), "multi-client
-overview" (still coming), "white-label".
+What is true behind them (say no more than this): the setup is published from a workspace the person is an owner or
+admin of, and installed in another workspace by someone who is an owner or admin of both; after that the client's own
+admins take each update. Example items are not copied yet.
+
+*Never, with P9 or after:* "marketplace", "share with anyone", "live sync" or "synced" (an admin applies each
+update), "multi-client overview" (still coming), "white-label".
 
 ### 4.8 Supporting values (real, but not why people sign up)
 
@@ -505,11 +511,12 @@ accessibility checks".
 - SSO, an API, email reminders, a readiness score, policy attestation or one-click sheet export as available.
 - "Reminders run themselves", "8-step setup", "tamper-proof", "immutable", "unlimited", uptime or speed figures.
 - Names of sub-processors, until the DPA and the list are published.
-- Own frameworks or saved packages as available, or "marketplace", "synced", "supports any framework", "mapped
-  automatically" at any time (section 4.7).
+- Own frameworks as available before P8 ships, or "marketplace", "share with anyone", "live sync", "synced",
+  "multi-client overview", "white-label", "supports any framework", "mapped automatically" at any time (section 4.7).
+  Saved packages are available since P9 (section 4.7).
 
 **Your own frameworks (P8; advisory board, owner decisions 16 Nov 2026).** Allowed once P8 ships:
-- Line: "Our standards or your own requirements, in one set of registers." The second sentence, "Save your setup and reuse it in every workspace.", only after P9 (Your packs) ships.
+- Line: "Our standards or your own requirements, in one set of registers." The second sentence, "Save your setup and reuse it in every workspace.", is allowed now that P9 (Your packs) has shipped (section 4.7).
 - "Add your own requirements: a customer's security schedule, your internal policies, or a code we don't ship."
 - "They get the same library, statement of applicability, coverage and links to your controls as ISO/IEC 27001."
 - "Map them to ISO/IEC 27001 or NIS2 yourself."
@@ -627,7 +634,8 @@ guardrails and design tokens in words. Its section order:
 | 12 | Final CTA | Start with one standard | "Low risk to try" |
 | 13 | Footer | – | "A real company" |
 
-The coming-soon band carries the positioning line (section 1) and is the only place it appears until P8 and P9 ship.
+The coming-soon band carries the positioning line (section 1) and is the only place it appears until P8 ships. Its second
+sentence and the section 4.7 "Save your setup" lines may now be live claims (P9 shipped).
 
 **Standard pages: "built for my standard".** Section 6 headline and CTA, its sheets and setup steps as real cards,
 record once, the edition note, the FAQ, the CTA again.

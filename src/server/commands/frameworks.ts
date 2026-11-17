@@ -87,6 +87,8 @@ export interface AdoptedFramework {
 export interface FrameworkCard extends CatalogueFramework {
   /** The workspace's own framework (docs/12 Your own frameworks): written by the workspace, not reviewed by us. */
   own: boolean;
+  /** Another workspace's own framework, shared with a private pack installed here (docs/11 Your own packs). */
+  shared: boolean;
   adopted: AdoptedFramework | null;
   /** Edition status words for the badge (docs/12 Standards watch); null for a current edition. */
   badge: EditionBadge | null;
@@ -130,6 +132,15 @@ export async function readControlsSheets(db: Db, orgId: string): Promise<Control
   return controlsSheets(sheets, fields);
 }
 
+/** The publishers of the private packs shared to this workspace (their own frameworks come with them). */
+async function sharedPublishers(db: Db, orgId: string): Promise<string[]> {
+  const { data: shares } = await db.from('pack_shares').select('pack_key').eq('org_id', orgId);
+  const keys = (shares ?? []).map((s) => s.pack_key);
+  if (!keys.length) return [];
+  const { data } = await db.from('packs').select('owner_org_id').in('key', keys);
+  return [...new Set((data ?? []).flatMap((p) => (p.owner_org_id ? [p.owner_org_id] : [])))];
+}
+
 /** The catalogue with what this workspace has adopted and its coverage. Every member may read it. */
 export async function listFrameworks(input: unknown): Promise<Result<FrameworkList>> {
   const p = listFrameworksInput.safeParse(input);
@@ -144,7 +155,7 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
         const env = { today: todayIn(now, timeZone), now, timeZone, userId: user.id };
         const [catalogue, libraries, controls, installs, versions, org, drafts] = await Promise.all(
           [
-            readFrameworks(supabase, orgId),
+            sharedPublishers(supabase, orgId).then((from) => readFrameworks(supabase, orgId, from)),
             readLibraries(supabase, orgId, { items: true }),
             isAdminRole(role) ? readControlsSheets(supabase, orgId) : Promise.resolve([]),
             supabase
@@ -201,7 +212,8 @@ export async function listFrameworks(input: unknown): Promise<Result<FrameworkLi
             const succ = next ? byId.get(`${next.key}@${next.version}`) : undefined;
             return {
               ...f,
-              own: f.orgId !== null,
+              own: f.orgId === orgId,
+              shared: f.orgId !== null && f.orgId !== orgId,
               adopted: adopted.get(fwId(f)) ?? null,
               badge: editionBadge(f, succ?.title ?? null),
               successor: succ
@@ -243,8 +255,10 @@ async function planAdoption(
   orgId: string,
   userId: string,
   v: { framework: string; version: string; controlsSheetId?: string | null },
+  /** The publisher of the private pack that lists this framework (docs/11 Your own packs). */
+  sharedFrom: string[] = [],
 ) {
-  const fw = (await readFrameworks(db, orgId)).find(
+  const fw = (await readFrameworks(db, orgId, sharedFrom)).find(
     (f) => f.key === v.framework && f.version === v.version,
   );
   if (!fw) return fail('not_found', 'This framework is no longer in the catalogue.');
@@ -358,8 +372,16 @@ export async function adoptForPack(
   orgId: string,
   userId: string,
   f: { key: string; version: string },
+  /** A private pack's publisher: its own frameworks the pack lists are adopted with it. */
+  sharedFrom: string[] = [],
 ): Promise<Result<{ title: string; adopted: boolean }>> {
-  const r = await planAdoption(db, orgId, userId, { framework: f.key, version: f.version });
+  const r = await planAdoption(
+    db,
+    orgId,
+    userId,
+    { framework: f.key, version: f.version },
+    sharedFrom,
+  );
   if (!r.ok) return r;
   const { fw, plan } = r.data;
   if (plan.state === 'installed') return ok({ title: fw.title, adopted: false });

@@ -59,6 +59,10 @@ export interface CataloguePack {
   description: string;
   hash: string;
   manifest: PackManifest;
+  /** A workspace's own pack (docs/11 Your own packs): its publisher; null or absent for our catalogue's. */
+  ownerOrgId?: string | null;
+  /** A withdrawn private pack takes no new installs (installed copies keep taking updates). */
+  withdrawnAt?: string | null;
 }
 
 /**
@@ -69,7 +73,7 @@ export async function readCatalogue(db: Db): Promise<CataloguePack[]> {
   const rows = await every('packs', (a, b) =>
     db
       .from('packs')
-      .select('key, version, title, description, hash, manifest')
+      .select('key, version, title, description, hash, manifest, owner_org_id, withdrawn_at')
       .order('key')
       .order('version')
       .range(a, b),
@@ -87,9 +91,12 @@ export async function readCatalogue(db: Db): Promise<CataloguePack[]> {
   return [...newest.values()]
     .flatMap((r) => {
       try {
+        const { owner_org_id, withdrawn_at, ...row } = r;
         return [
           {
-            ...r,
+            ...row,
+            ownerOrgId: owner_org_id,
+            withdrawnAt: withdrawn_at,
             title: packTitle(r.title),
             description: packProse(r.description),
             manifest: manifestForPeople(parsePack(r.manifest)),
