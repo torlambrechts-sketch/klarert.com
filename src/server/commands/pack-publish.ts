@@ -13,7 +13,9 @@ import type { BundlePart } from '@/engine/packs/select';
 import type { PackManifest } from '@/engine/packs/types';
 import { packTitle } from '@/engine/packs/words';
 import type { Json } from '@/engine/types';
-import { packHash } from '@/lib/packs/hash';
+import { createHash } from 'node:crypto';
+import { namespaceOf } from '@/engine/packs/extend';
+import { canonicalJson, packHash } from '@/lib/packs/hash';
 import { parsePack } from '@/lib/packs/manifest';
 import { packQualityProblems } from '@/lib/packs/quality';
 import {
@@ -35,9 +37,19 @@ import { withOrg } from './context';
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-/** The capture's content, without the name, version and wording the person edits: what a preview promised. */
+/**
+ * The capture's content, without the name, version and wording the person edits: what a preview promised. A new pack's
+ * key (and so the namespace of what it adds to our registers) follows the name, so the namespace is left out too.
+ */
 const contentHashOf = (m: PackManifest) =>
-  packHash({ ...m, key: '', version: '', title: '', description: '' });
+  createHash('sha256')
+    .update(
+      canonicalJson({ ...m, key: '', version: '', title: '', description: '' }).replaceAll(
+        namespaceOf(m.key),
+        '\u0000',
+      ),
+    )
+    .digest('hex');
 
 const latestOf = (versions: OwnPackVersion[], key: string) =>
   versions.filter((v) => v.key === key).at(-1) ?? null;
@@ -166,7 +178,11 @@ export async function previewPublish(input: unknown): Promise<Result<PublishPrev
             : null,
           parts: cap.parts,
           excluded: cap.excluded,
-          inside: countsText(counts) || 'Nothing yet',
+          inside:
+            countsText(counts) ||
+            (adds.length
+              ? `additions to ${plural(adds.length, 'register')} of ours`
+              : 'nothing yet'),
           counts,
           requires: m.requires.map((x) => `${packTitle(titleOf(x.pack))} ${x.range}`),
           adds,

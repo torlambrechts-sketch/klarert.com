@@ -12,6 +12,7 @@
 //   out) and outside email addresses. Converted: job roles and teams by name; an automation that loses everyone it
 //   tells installs off; every automation starts in test mode.
 import type { Json, LabelColor } from '../types';
+import { fieldType } from '../fields/registry';
 import { LABEL_COLORS } from '../labels';
 import { toSavedViewType, toViewType } from '../views/config';
 import { inNamespace, namespaceOf, STANDARDS_KEY } from './extend';
@@ -829,6 +830,8 @@ export function captureManifest(snap: WorkspaceSnapshot, opts: CaptureOptions): 
     if (s.restricted) sheet.restricted = true;
     if (fields.some((f) => isObj(f.config) && (f.config as Obj).personalData === true)) {
       sheet.personalData = true;
+      // it installs restricted whatever the manifest says (the safety rule); say so in the manifest and the picker
+      sheet.restricted = true;
       if (!s.restricted)
         left(
           'restricted',
@@ -955,9 +958,16 @@ export function captureManifest(snap: WorkspaceSnapshot, opts: CaptureOptions): 
     const shippedOptionIds = (key: string) => {
       const ids = new Set<string>();
       const mf = ms?.fields.find((x) => x.key === key);
-      for (const o of (isObj(mf?.config) && Array.isArray((mf!.config as Obj).options)
-        ? (mf!.config as Obj).options
-        : []) as Json[])
+      // a shipped field without options of its own has its type's (a severity's Low to Critical)
+      const own = isObj(mf?.config) ? (mf!.config as Obj).options : undefined;
+      const defaults = mf
+        ? (fieldType(mf.type)?.defaultConfig() as Obj | undefined)?.options
+        : undefined;
+      for (const o of (Array.isArray(own)
+        ? own
+        : Array.isArray(defaults)
+          ? defaults
+          : []) as Json[])
         if (isObj(o) && typeof o.id === 'string') ids.add(o.id);
       for (const i of ours.values()) {
         if (key === STANDARDS_KEY && i.manifest.standard) ids.add(i.manifest.standard.id);

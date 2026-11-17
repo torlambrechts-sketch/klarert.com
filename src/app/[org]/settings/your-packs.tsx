@@ -443,7 +443,7 @@ export function SaveSetup({
 
         <div className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="outline" disabled={busy} onClick={() => setOpen(false)}>
-            {step.kind === 'done' ? 'Close' : 'Cancel'}
+            {step.kind === 'done' ? 'Done' : 'Cancel'}
           </Button>
           {step.kind !== 'done' ? (
             <Button type="button" disabled={blocked} onClick={() => data && publish(data)}>
