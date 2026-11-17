@@ -508,7 +508,11 @@ describe('captureManifest on a workspace built on Core', () => {
     expect(text).toContain('The webhook to hooks.example.com is left out');
     expect(text).toContain('Named approver: Its approvers are named people');
     expect(text).toContain('Renamed from "Risk owner"');
-    expect(text).toContain('Client reference: Who may see this restricted column is not carried');
+    // a restricted column is carried with its roles: only the people listed on it are left out
+    expect(text).toContain(
+      'Client reference: The people listed on this restricted column are not copied',
+    );
+    expect(text).not.toContain('restrict it again');
     expect(text).toContain('example items come later');
   });
 
@@ -605,5 +609,111 @@ describe('captureManifest on a workspace built on Core', () => {
       expect.objectContaining({ description: 'Our yearly supplier check, with evidence.' }),
     ]);
     expect(up.payload!.update.sheets[0]).not.toHaveProperty('name');
+  });
+});
+
+// Restricted columns travel with the pack (owner decision 17 Nov 2026): roles only, applied on install, and an update
+// changes them only where the client has not.
+describe('a restricted column in a private pack', () => {
+  const scoreField = (roles: string[] | null) => ({
+    id: 'f-score',
+    sheetId: 'sheet-checks',
+    key: 'score',
+    name: 'Score',
+    type: 'number',
+    config: {},
+    description: null,
+    required: false,
+    locked: false,
+    rules: [],
+    visibility: null,
+    restrictedTo: roles ? { roles, userIds: [U1] } : null,
+    position: 'b1',
+    packInstallId: null,
+  });
+  const capture = (roles: string[] | null, version: string) =>
+    parsePack(
+      captureManifest(workspaceA((s) => s.fields.push(scoreField(roles))).snap, {
+        ...opts,
+        version,
+      }).manifest,
+    );
+  const m1 = capture(['editor', 'admin'], '1.0.0');
+  const coreB = planPackInstall(core, emptySnapshot({ orgId: 'org-b' }), env, {
+    level: 'full',
+  }).payload!;
+  const withCore = afterInstall(emptySnapshot({ orgId: 'org-b' }), coreB, 'inst-core-b');
+  const mine = planPackInstall(m1, withCore, { ...env, hash: 'h1' }, {}).payload! as InstallPayload;
+  const all = afterInstall(withCore, mine, 'inst-mine');
+  type State = ReturnType<typeof installedStateOf>;
+  const upgrade = (m2: typeof m1, edit?: (s: State) => void, theirs = false) => {
+    const state = installedStateOf(mine, 'inst-mine');
+    edit?.(state);
+    const f = state.fields.find((x) => x.key === 'score')!;
+    return planPackUpgrade({
+      from: { manifest: m1, hash: 'h1' },
+      to: { manifest: m2, hash: 'h2' },
+      state,
+      snapshot: { ...all, installs: all.installs.filter((i) => i.id !== 'inst-mine') },
+      env,
+      ...(theirs ? { choices: { [`field:${f.ref}`]: 'theirs' as const } } : {}),
+    });
+  };
+  const score = (s: State) => s.fields.find((x) => x.key === 'score')!;
+  const restrictedRow = (up: ReturnType<typeof upgrade>) =>
+    up.payload!.update.fields.find((f) => 'restricted_to' in f);
+
+  it('carries the roles, never the people, on own sheets and on columns added to ours', () => {
+    expect(m1.sheets[0]!.fields.find((f) => f.key === 'score')!.restrictedTo).toEqual({
+      roles: ['admin', 'editor'],
+    });
+    const ext = m1
+      .extends!.flatMap((e) => e.fields ?? [])
+      .find((f) => f.name === 'Client reference')!;
+    expect(ext.restrictedTo).toEqual({ roles: ['admin'] });
+    expect(JSON.stringify(m1)).not.toContain(U1);
+  });
+
+  it('installs the column restricted to those roles, with nobody listed', () => {
+    expect(mine.fields.find((f) => f.key === 'score')!.restricted_to).toEqual({
+      userIds: [],
+      roles: ['admin', 'editor'],
+    });
+    const ext = mine.fields.find((f) => f.name === 'Client reference')!;
+    expect(ext.restricted_to).toEqual({ userIds: [], roles: ['admin'] });
+    expect(mine.fields.find((f) => f.key === 'supplier')).not.toHaveProperty('restricted_to');
+  });
+
+  it('applies a role change to a column the client has not changed, keeping the people they listed', () => {
+    const up = upgrade(capture(['admin', 'editor', 'viewer'], '1.1.0'), (s) => {
+      score(s).restrictedTo = { userIds: ['client-dpo'], roles: ['admin', 'editor'] };
+    });
+    expect(up.preview.conflicts).toEqual([]);
+    expect(restrictedRow(up)!.restricted_to).toEqual({
+      userIds: ['client-dpo'],
+      roles: ['admin', 'editor', 'viewer'],
+    });
+    expect(up.preview.changed.find((c) => c.name.endsWith('› Score'))?.note).toBe('Who sees it');
+  });
+
+  it('asks Keep mine or Take the pack’s when the client changed the roles too', () => {
+    const m2 = capture(['admin', 'editor', 'viewer'], '1.1.0');
+    const edit = (s: State) => {
+      score(s).restrictedTo = { userIds: [], roles: ['admin'] };
+    };
+    const kept = upgrade(m2, edit);
+    expect(kept.preview.conflicts).toEqual([
+      expect.objectContaining({ kind: 'field', attributes: ['who sees it'], choice: 'mine' }),
+    ]);
+    expect(restrictedRow(kept)).toBeUndefined();
+    expect(restrictedRow(upgrade(m2, edit, true))!.restricted_to).toEqual({
+      userIds: [],
+      roles: ['admin', 'editor', 'viewer'],
+    });
+  });
+
+  it('opens the column when the pack does, and leaves it alone when the pack did not change it', () => {
+    expect(restrictedRow(upgrade(capture(null, '1.1.0')))!.restricted_to).toBeNull();
+    expect(restrictedRow(upgrade(capture(['admin', 'editor'], '1.1.0')))).toBeUndefined();
   });
 });

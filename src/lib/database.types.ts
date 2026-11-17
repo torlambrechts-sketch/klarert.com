@@ -1893,6 +1893,9 @@ isOneToOne: false
 "_pack_owns_workflow":
 { Args: { "p_id": string,"p_pack_key": string }; Returns: boolean
                            },
+"_pack_restrict_field":
+{ Args: { "p_field": string,"p_new": boolean,"p_next": Json }; Returns: undefined
+                           },
 "_pack_row_sheet_ok":
 { Args: { "p_manifest": Json,"p_org": string,"p_row": Json,"p_sheets": (string)[] }; Returns: boolean
                            },

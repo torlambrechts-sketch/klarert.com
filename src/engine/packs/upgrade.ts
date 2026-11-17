@@ -61,6 +61,8 @@ export interface InstalledState {
     required: boolean;
     locked: boolean;
     config: Json;
+    /** fields.restricted_to as the workspace holds it (docs/02 §16); null or absent: not restricted. */
+    restrictedTo?: Json | null;
     archived: boolean;
   }[];
   groups: { id: string; ref: string; sheetId: string; name: string; color: string }[];
@@ -146,6 +148,11 @@ export interface UpgradePreview {
   warnings: string[];
   blockers: string[];
   counts: { added: number; changed: number; archived: number; kept: number; conflicts: number };
+  /**
+   * The new version has sheets with personal data (docs/11 Pack quality bar): they install restricted to the person
+   * installing, so the dialog says who sees their updates.
+   */
+  personalData?: boolean;
 }
 
 export interface UpgradePayload {
@@ -316,7 +323,20 @@ const ATTR_WORDS: Record<string, string> = {
   conditions: 'conditions',
   actions: 'actions',
   group_id: 'group',
+  restricted_to: 'who sees it',
 };
+
+/**
+ * A restricted column's roles as an upgrade compares them (docs/11 Your own packs): sorted, or null when the column is
+ * not restricted. The people a workspace listed are its own: never compared, kept while the column stays restricted.
+ */
+export function restrictionRoles(v: Json | undefined): string[] | null {
+  if (!isObj(v)) return null;
+  const roles = Array.isArray(v.roles)
+    ? v.roles.filter((r): r is string => typeof r === 'string')
+    : [];
+  return [...new Set(roles)].sort();
+}
 
 const sentenceList = (xs: string[]) =>
   xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
@@ -472,6 +492,7 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
     warnings: [],
     blockers: [],
     counts: { added: 0, changed: 0, archived: 0, kept: 0, conflicts: 0 },
+    ...(m.sheets.some((s) => s.personalData === true) ? { personalData: true } : {}),
   };
   // a new version may build on another edition of a framework (docs/11 Frameworks a pack builds on): an update
   // never adopts it and never moves the workspace's library; it says so
@@ -883,14 +904,15 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
       });
       continue;
     }
-    const keys = ['name', 'description', 'required', 'locked'];
-    const bAttrs = pick(b, keys);
-    const tAttrs = pick(t, keys);
+    const keys = ['name', 'description', 'required', 'locked', 'restricted_to'];
+    const bAttrs = { ...pick(b, keys), restricted_to: restrictionRoles(b?.restricted_to) };
+    const tAttrs = { ...pick(t, keys), restricted_to: restrictionRoles(t.restricted_to) };
     const mAttrs: Attrs = {
       name: mine.name,
       description: mine.description,
       required: mine.required,
       locked: mine.locked,
+      restricted_to: restrictionRoles(mine.restrictedTo ?? undefined),
     };
     const top = threeWay(bAttrs, bAttrs, mAttrs, tAttrs, keys);
     // settings, key by key, without the options
@@ -935,6 +957,15 @@ export function planPackUpgrade(input: UpgradeInput): UpgradePlan {
     if (opts.added.length) notes.push(`new options ${sentenceList(opts.added)}`);
     else if (opts.changed) notes.push('options');
     if (configChanged) out.config = config;
+    // the roles the pack names; the people the workspace listed stay while the column stays restricted
+    if ('restricted_to' in out) {
+      const roles = out.restricted_to as string[] | null;
+      const people =
+        isObj(mine.restrictedTo) && Array.isArray(mine.restrictedTo.userIds)
+          ? mine.restrictedTo.userIds
+          : [];
+      out.restricted_to = roles ? { userIds: people, roles } : null;
+    }
     if (!Object.keys(out).length) continue;
     payload.update.fields.push({ id: mine.id, ...(out as Row) });
     preview.changed.push({

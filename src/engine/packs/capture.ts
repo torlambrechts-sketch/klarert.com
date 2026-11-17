@@ -172,6 +172,19 @@ export interface CaptureResult {
   leftOut: LeftOutEntry[];
 }
 
+/**
+ * What a restricted column carries (docs/11 Your own packs): `{ roles }` of fields.restricted_to, the roles a pack may
+ * name (owners always see), sorted; null when the column is not restricted. The people listed are never carried.
+ */
+export function carriedRestriction(v: Json | null | undefined): { roles: string[] } | null {
+  if (!isObj(v)) return null;
+  const roles = (Array.isArray(v.roles) ? v.roles : []).filter(
+    (r): r is string => typeof r === 'string' && (PACK_ROLES as readonly string[]).includes(r),
+  );
+  return { roles: [...new Set(roles)].sort() };
+}
+const PACK_ROLES = ['admin', 'editor', 'viewer', 'auditor'] as const;
+
 // ───────────────────────── refs ─────────────────────────
 
 /** A stable 10-hex digest of a row id (FNV-1a, 40 bits): the same row gives the same ref in every version. */
@@ -438,12 +451,16 @@ export function captureManifest(snap: WorkspaceSnapshot, opts: CaptureOptions): 
     config = dropPeople(config, found) as Obj;
     if (found.any)
       left('people', `${where} › ${f.name}`, 'People named in its settings are not copied.');
-    const restricted = isObj(f.restrictedTo);
-    if (restricted)
+    const restrictedTo = carriedRestriction(f.restrictedTo);
+    if (
+      isObj(f.restrictedTo) &&
+      Array.isArray(f.restrictedTo.userIds) &&
+      f.restrictedTo.userIds.length
+    )
       left(
-        'restricted',
+        'people',
         `${where} › ${f.name}`,
-        'Who may see this restricted column is not carried: restrict it again after install.',
+        'The people listed on this restricted column are not copied: it installs restricted to its roles.',
       );
     const key = keyMap?.get(f.key) ?? f.key;
     const out: Obj = { key, name: f.name, type: f.type };
@@ -465,6 +482,8 @@ export function captureManifest(snap: WorkspaceSnapshot, opts: CaptureOptions): 
     if (isObj(cfg) && Object.keys(cfg).length) out.config = cfg;
     if (Array.isArray(f.rules) && f.rules.length) out.rules = rekey(f.rules, f.sheetId);
     if (isObj(f.visibility)) out.visibility = rekey(f.visibility, f.sheetId);
+    // a restricted column stays restricted (owner decision 17 Nov 2026): its roles, never its people
+    if (restrictedTo) out.restrictedTo = restrictedTo as unknown as Json;
     return out as unknown as PackSheet['fields'][number];
   };
 

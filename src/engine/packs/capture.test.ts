@@ -230,6 +230,34 @@ describe('captureManifest', () => {
     expect(manifest.automations[0]!.actions[0]!.to).toEqual(['jobRole:Auditor', 'team:Quality']);
     expect(leftOut.some((e) => e.kind === 'email')).toBe(true);
   });
+
+  it('carries a restricted column with its roles, never its people', () => {
+    const snap = empty({
+      sheets: [sheet('s1', 'Mine')],
+      fields: [
+        field('f1', 's1', 'name'),
+        {
+          ...field('f2', 's1', 'salary', 'number'),
+          restrictedTo: { userIds: ['u1'], roles: ['viewer', 'admin', 'owner', 'admin'] },
+        },
+        { ...field('f3', 's1', 'notes'), restrictedTo: { userIds: [], roles: [] } },
+      ],
+      memberIds: ['u1'],
+    });
+    const { manifest, leftOut } = captureManifest(snap, opts);
+    const fields = manifest.sheets[0]!.fields;
+    // owners always see: the role list names the others, sorted, once each
+    expect(fields.find((f) => f.key === 'salary')!.restrictedTo).toEqual({
+      roles: ['admin', 'viewer'],
+    });
+    expect(fields.find((f) => f.key === 'notes')!.restrictedTo).toEqual({ roles: [] });
+    expect(fields.find((f) => f.key === 'name')).not.toHaveProperty('restrictedTo');
+    expect(JSON.stringify(manifest)).not.toContain('u1');
+    expect(leftOut.filter((e) => e.kind === 'restricted')).toEqual([]);
+    expect(leftOut.filter((e) => e.kind === 'people')).toEqual([
+      expect.objectContaining({ where: 'Mine › salary' }),
+    ]);
+  });
 });
 
 describe('the left-out report', () => {

@@ -116,6 +116,34 @@ describe('pack manifest', () => {
     );
   });
 
+  it('lets a field name the roles that see it, never people, and no example values', () => {
+    const ok = supplier();
+    ok.sheets[0].fields.find((f: { key: string }) => f.key === 'notes').restrictedTo = {
+      roles: ['admin', 'auditor'],
+    };
+    expect(problems(ok)).toEqual([]);
+    expect(parsePack(ok).sheets[0]!.fields.find((f) => f.key === 'notes')!.restrictedTo).toEqual({
+      roles: ['admin', 'auditor'],
+    });
+    const bad = supplier();
+    const fields = bad.sheets[0].fields as { key: string; restrictedTo?: unknown }[];
+    fields.find((f) => f.key === 'notes')!.restrictedTo = { roles: ['admin'], userIds: ['u1'] };
+    fields.find((f) => f.key === 'owner')!.restrictedTo = { roles: ['owner'] };
+    const list = problems(bad);
+    expect(list.some((p) => p.startsWith('sheets.0.fields.') && p.includes('userIds'))).toBe(true);
+    expect(list.some((p) => p.startsWith('sheets.0.fields.') && p.includes('roles.0'))).toBe(true);
+    // an example item's value for a restricted column (the install's log would hold it in clear)
+    const valued = supplier();
+    valued.sheets[0].fields.find((f: { key: string }) => f.key === 'status').restrictedTo = {
+      roles: [],
+    };
+    expect(problems(valued)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('"status" is restricted: example items carry no values for it.'),
+      ]),
+    );
+  });
+
   it('checks dashboards against the sheets and the widget registry', () => {
     const raw = supplier();
     raw.dashboards[0].widgets.push(
