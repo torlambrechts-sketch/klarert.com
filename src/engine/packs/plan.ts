@@ -241,6 +241,17 @@ export interface PackPlan {
 }
 
 const lower = (s: string) => s.trim().toLowerCase();
+/**
+ * A restricted column's row (docs/02 §16, docs/11 Your own packs): `restricted_to` as install_pack writes it, the
+ * manifest's roles and no people. Nothing when the manifest's field is not restricted.
+ */
+const restrictedRow = (
+  fields: readonly { key: string; restrictedTo?: { roles: string[] } }[],
+  key: string,
+): Row => {
+  const r = fields.find((f) => f.key === key)?.restrictedTo;
+  return r ? { restricted_to: { userIds: [], roles: [...r.roles] } } : {};
+};
 const listWords = (xs: string[]) =>
   xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -669,7 +680,13 @@ export function planPackInstall(
       }
       added.forEach((f, i) => {
         const ref = `${v.key}.${f.key}`;
-        fieldRows.push({ ...(f as unknown as Row), ref, position: fieldKeys[i]!, system: true });
+        fieldRows.push({
+          ...(f as unknown as Row),
+          ref,
+          position: fieldKeys[i]!,
+          system: true,
+          ...restrictedRow(ms.fields, f.key),
+        });
         operations.push({ kind: 'field', ref, name: `${ms.name} › ${f.name}`, action: 'create' });
       });
       engineFields.set(
@@ -828,7 +845,12 @@ export function planPackInstall(
     for (const f of ps.fields) {
       const ref = `${ms.ref}.${f.key}`;
       // a system pack's fields are system columns: hidden, renamed, never deleted, retyped or re-keyed
-      fieldRows.push({ ...(f as unknown as Row), ref, ...(m.system ? { system: true } : {}) });
+      fieldRows.push({
+        ...(f as unknown as Row),
+        ref,
+        ...(m.system ? { system: true } : {}),
+        ...restrictedRow(ms.fields, f.key),
+      });
       operations.push({ kind: 'field', ref, name: `${ms.name} › ${f.name}`, action: 'create' });
     }
     engineFields.set(
@@ -932,6 +954,7 @@ export function planPackInstall(
           locked: false,
           description: null,
           visibility: null,
+          ...restrictedRow(ms.subitems?.fields ?? [], f.key),
         });
       operations.push({
         kind: 'sheet',

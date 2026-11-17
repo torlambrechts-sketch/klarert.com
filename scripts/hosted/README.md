@@ -64,6 +64,21 @@ address, and the security alerts when a password or an email address has changed
 used. The subjects and HTML live in the repo (`supabase/templates/*.html`, subjects in `supabase/config.toml`
 `[auth.email.template.*]`); Supabase Auth makes the plain-text part from the HTML.
 
+The four link emails link to `{{ .SiteURL }}/auth/confirm` with `token_hash`, `type` and `redirect_to` (and `next`
+for reset and email change): a page with one button, whose click posts to `/auth/callback`, which opens the session
+with `verifyOtp`. So the links show our own address, work on any device, and a link scanner (Microsoft Defender Safe
+Links) that opens every link in an email first does not use up the one-time token (docs/09 §12). The callback still
+opens token-hash links by GET for emails sent before this change; that path goes two weeks after the templates are
+applied (docs/09 §12).
+Supabase's default templates link to `https://<ref>.supabase.co/auth/v1/verify` and come back with a PKCE code that
+only the browser that asked can use: a reset link opened on a phone then fails with "This link has to be opened in the
+same browser you asked from, or it has expired." Supabase refuses custom templates while the project has no custom
+SMTP, so set up SMTP (below) before running `auth-config.py`. `auth-config.py` refuses a template that still uses
+`{{ .ConfirmationURL }}`, that links straight to `/auth/callback?token_hash=`, or that lacks its `/auth/confirm` link.
+
+A reset link opened through `verifyOtp` is recognised by an httpOnly cookie signed with `SUPABASE_COMMAND_SECRET`
+(docs/09 §12): the Vercel Production environment must have that variable (it already needs it for every write).
+
 `python3 scripts/hosted/auth-config.py --dry-run` prints, key by key, what differs on the hosted project; without
 `--dry-run` it PATCHes the Management API (`/v1/projects/{ref}/config/auth`). It sets `site_url`
 (`https://www.keptrow.com`; run it only at go-live, docs/14 step 6), `password_min_length` (12), `mailer_secure_email_change_enabled` (on), the subject and
@@ -95,7 +110,10 @@ project sends through Brevo.
    these emails are not rewritten through a tracking domain and no tracking pixel is added.
 
 Then run `auth-config.py` (the main session does) and send yourself a reset link from `/login/forgot-password` to
-check the sender, the subject and that the link opens Set a new password.
+check the sender, the subject, that the link starts with `https://www.klarert.com/auth/confirm?token_hash=`, that it
+shows "Set a new password" with **Continue to set a new password**, and that the button opens Set a new password, also
+when opened on another device (a phone). With a Microsoft 365 mailbox (Defender Safe Links), check that the link still
+works after the scanner has opened it.
 
 ## Deleting a user (migration 0072, docs/09 §12)
 

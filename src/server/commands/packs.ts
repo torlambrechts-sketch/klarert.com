@@ -108,6 +108,8 @@ export interface InstalledPack {
   addOn: { onto: string[]; standard: string | null } | null;
   /** The pack's settings with the workspace's choices (docs/11 Pack settings); null when it has none. */
   settings: { defs: PackSetting[]; values: PackSettingValues; summary: string[] } | null;
+  /** A workspace's own pack (docs/11 Your own packs): the workspace that published it. */
+  publisher: string | null;
 }
 
 export interface PackLogEntry {
@@ -177,9 +179,21 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
             .in('action', [...PACK_ACTIONS])
             .order('id', { ascending: false })
             .limit(20),
-          readFrameworks(supabase).catch(() => []),
+          readFrameworks(supabase, orgId).catch(() => []),
           readPackVersions(supabase),
         ]);
+        // a workspace's own packs (docs/11 Your own packs) are listed under Your packs, not the catalogue; an
+        // installed one names its publisher
+        const privateKeys = [
+          ...new Set(
+            (installs.data ?? []).map((i) => i.pack_key).filter((k) => /^w[0-9a-f]{8}-/.test(k)),
+          ),
+        ];
+        const publishers = new Map<string, string>();
+        for (const k of privateKeys) {
+          const { data: name } = await supabase.rpc('pack_publisher', { p_key: k });
+          if (typeof name === 'string') publishers.set(k, name);
+        }
         const fwTitle = (k: string, v: string) =>
           fws.find((f) => f.key === k && f.version === v)?.title ?? `${k} ${v}`;
         for (const r of [installs, log]) if (r.error) return fromDbError(r.error);
@@ -209,7 +223,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
           canInstall: isAdminRole(role),
           // a framework's library is adopted from Frameworks (docs/12), not listed here
           available: catalogue
-            .filter((c) => !isFrameworkPack(c.manifest))
+            .filter((c) => !isFrameworkPack(c.manifest) && !c.ownerOrgId)
             // each pack in the case it has here (docs/11 Optional requirements): CAPA on Core's register with Core
             .map((c) => ({
               ...c,
@@ -271,6 +285,7 @@ export async function listPacks(input: unknown): Promise<Result<PackList>> {
               const values = cleanSettings(c, (i.settings ?? {}) as PackSettingValues);
               return { defs: c.settings, values, summary: settingsSummary(c, values) };
             })(),
+            publisher: publishers.get(i.pack_key) ?? null,
           })),
           log: (log.data ?? []).map((e) => ({
             id: e.id,
@@ -296,6 +311,8 @@ export interface PackPreviewResult {
   actions: Record<PackOperation['action'], number>;
   /** `<framework>@<version>` → the framework's title, for the frameworks the pack builds on. */
   frameworkTitles: Record<string, string>;
+  /** A workspace's own pack (docs/11 Your own packs): the workspace that published it, named on every preview. */
+  publisher: string | null;
 }
 
 /** What installing a pack would do in this workspace now. Owners and admins. */
@@ -310,6 +327,12 @@ export async function previewPack(input: unknown): Promise<Result<PackPreviewRes
       if (!pack) return fail('not_found', 'This pack is no longer available.');
       if (isFrameworkPack(pack.manifest))
         return fail('invalid', 'Adopt this framework from Workspace admin, Frameworks.');
+      const publisher = await publisherOf(supabase, pack);
+      if (pack.withdrawnAt && pack.ownerOrgId)
+        return fail(
+          'conflict',
+          `${publisher ?? 'Its workspace'} withdrew this pack: it takes no new installs.`,
+        );
       try {
         const plan = await planInstall(supabase, orgId, pack, {
           userId: user.id,
@@ -327,12 +350,15 @@ export async function previewPack(input: unknown): Promise<Result<PackPreviewRes
         });
         const actions = { create: 0, reuse: 0, skip: 0, conflict: 0 };
         for (const o of plan.operations) actions[o.action] += 1;
-        const fws = plan.preview.frameworks.length ? await readFrameworks(supabase) : [];
+        const fws = plan.preview.frameworks.length
+          ? await readFrameworks(supabase, orgId, pack.ownerOrgId ? [pack.ownerOrgId] : [])
+          : [];
         const frameworkTitles = Object.fromEntries(
           fws.map((f) => [`${f.key}@${f.version}`, f.title] as const),
         );
         return ok({
           frameworkTitles,
+          publisher,
           hash: pack.hash,
           preview: plan.preview,
           lines: previewLines(plan.preview),
@@ -378,6 +404,8 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
         return fail('invalid', 'Adopt this framework from Workspace admin, Frameworks.');
       if (pack.hash !== p.data.hash)
         return fail('conflict', 'This pack changed since you previewed it. Preview it again.');
+      if (pack.withdrawnAt && pack.ownerOrgId)
+        return fail('conflict', 'This pack was withdrawn: it takes no new installs.');
       const env = {
         userId: user.id,
         now: new Date(),
@@ -407,7 +435,13 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
       // optional frameworks are never adopted for you: their links are written only where they are adopted
       for (const f of plan.preview.frameworks.filter((x) => !x.adopted && !x.optional)) {
         const [key, version] = f.library.split('@') as [string, string];
-        const r = await adoptForPack(supabase, orgId, user.id, { key, version });
+        const r = await adoptForPack(
+          supabase,
+          orgId,
+          user.id,
+          { key, version },
+          pack.ownerOrgId ? [pack.ownerOrgId] : [],
+        );
         if (!r.ok)
           return fail(r.error.code, `${pack.title} needs ${f.library}: ${r.error.message}`);
         if (r.data.adopted) adopted.push(r.data.title);
@@ -445,6 +479,16 @@ export async function installPack(input: unknown): Promise<Result<InstallResult>
     },
     'installPack',
   );
+}
+
+/** The workspace that published a private pack (docs/11 Your own packs); null for our catalogue's. */
+async function publisherOf(
+  supabase: SupabaseClient<Database>,
+  pack: { key: string; ownerOrgId?: string | null },
+): Promise<string | null> {
+  if (!pack.ownerOrgId) return null;
+  const { data } = await supabase.rpc('pack_publisher', { p_key: pack.key });
+  return typeof data === 'string' ? data : 'Another workspace';
 }
 
 /**

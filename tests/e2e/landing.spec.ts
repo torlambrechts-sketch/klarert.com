@@ -254,6 +254,7 @@ test('robots.txt allows crawling, the sitemap lists only the public pages', asyn
     'https://www.keptrow.com',
     'https://www.keptrow.com/platform',
     'https://www.keptrow.com/frameworks',
+    'https://www.keptrow.com/standards/iso-9001',
     'https://www.keptrow.com/privacy',
     'https://www.keptrow.com/terms',
   ]);
@@ -267,7 +268,14 @@ test('/opengraph-image is a 1200×630 PNG, named by the public pages', async ({ 
   expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
   expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1200, 630]);
 
-  for (const path of ['/', '/platform', '/frameworks', '/privacy', '/terms']) {
+  for (const path of [
+    '/',
+    '/platform',
+    '/frameworks',
+    '/standards/iso-9001',
+    '/privacy',
+    '/terms',
+  ]) {
     await page.goto(path);
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
       'content',
@@ -304,6 +312,7 @@ test('the public pages and the sign-up form ask nothing of other hosts', async (
     '/',
     '/platform',
     '/frameworks',
+    '/standards/iso-9001',
     '/privacy',
     '/terms',
     '/login?mode=signup',

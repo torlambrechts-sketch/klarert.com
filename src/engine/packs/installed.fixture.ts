@@ -195,6 +195,7 @@ export function installedStateOf(
       required: !!f.required,
       locked: !!f.locked,
       config: f.config ?? {},
+      restrictedTo: f.restricted_to ?? null,
       archived: false,
     })),
     groups: p.groups.map((g) => ({

@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
-import { completeProfile, freshEmail } from './helpers';
-import { mailTo, openLink, type Mail } from './auth-mail';
+import { completeProfile, freshEmail, signIn } from './helpers';
+import { defaultTemplateLink, linkHere, mailTo, openLink, scanLink, type Mail } from './auth-mail';
 import { freshCode } from './totp';
 
 // Forgot password, Set a new password and Your account › Email address and Password (docs/05 §1 and §1.1,
@@ -13,6 +13,11 @@ const SAME_ANSWER = 'If an account uses that address, we have sent a link to res
 const PASSWORD_ALERT = 'Your Keptrow password was changed';
 const EMAIL_ALERT = 'The email address of your Keptrow account was changed';
 const CONFIRM_EMAIL = 'Confirm the new email address for Keptrow';
+const RESET_PAGE = { heading: 'Set a new password', button: 'Continue to set a new password' };
+const SIGN_IN_PAGE = { heading: 'Sign in to Keptrow', button: 'Continue' };
+const EMAIL_CHANGE_PAGE = { heading: 'Confirm your new email address', button: 'Confirm' };
+const LINK_FAILED =
+  'This link has to be opened in the same browser you asked from, or it has expired. Ask for a new link.';
 
 /** A security alert (Supabase Auth's notification emails, docs/09 §12): plain, with the Forgot password link. */
 function expectAlert(mail: Mail) {
@@ -51,6 +56,29 @@ async function otherDevice(browser: Browser, page: Page, email: string, password
   await signInWithPassword(other, email, password);
   await expect(other).toHaveURL(/\/onboarding$/);
   return other;
+}
+
+/** A browser with nothing in it, as on another device: it never asked for the link it opens. */
+async function freshBrowser(browser: Browser, page: Page) {
+  const context = await browser.newContext({
+    baseURL: new URL(page.url()).origin,
+    viewport: page.viewportSize(),
+  });
+  return context.newPage();
+}
+
+/**
+ * A reset email: our own link, to this site's Continue page (`/auth/confirm`, which opens the link only on a click)
+ * with the token hash, not to Supabase.
+ */
+function expectOwnResetLink(mail: Mail) {
+  const link = new URL(mail.link);
+  expect(link.pathname).toBe('/auth/confirm');
+  expect(link.searchParams.get('type')).toBe('recovery');
+  expect(link.searchParams.get('next')).toBe('/login/new-password');
+  expect(link.searchParams.get('token_hash')).toBeTruthy();
+  expect(mail.html).not.toContain('/auth/v1/verify');
+  expect(mail.text).toContain('The link works once, for 1 hour, on any device.');
 }
 
 async function expectSignedOut(other: Page) {
@@ -104,11 +132,11 @@ async function setNewPassword(page: Page, password: string) {
   );
 }
 
-test('forgot password: the same answer for every address, the link, a new password, sign in with it', async ({
+test('forgot password: the same answer for every address, the link on another device, a new password, sign in with it', async ({
   page,
   browser,
 }, info) => {
-  test.setTimeout(150_000);
+  test.setTimeout(180_000);
   const { email, password } = await newAccount(page, 'Rory Reset');
   const other = await otherDevice(browser, page, email, password);
   await page.context().clearCookies();
@@ -122,13 +150,35 @@ test('forgot password: the same answer for every address, the link, a new passwo
   expect(mail.subject).toBe('Reset your Keptrow password');
   expect(mail.text).toContain('If you did not ask for this, you can ignore this email.');
   expect(mail.html).not.toMatch(/<img|src=/i);
-  await openLink(page, mail.link);
-  await expect(page).toHaveURL(/\/login\/new-password$/);
-  if (info.project.name === 'phone') await noSideScroll(page);
+  expectOwnResetLink(mail);
+
+  // opened on another device: a browser that never asked for it. A link scanner opened it first (a plain GET): that
+  // shows the Continue page only and leaves the token unused
+  const device = await freshBrowser(browser, page);
+  await scanLink(device, mail.link);
+  await scanLink(device, mail.link);
+  await openLink(device, mail.link, {
+    ...RESET_PAGE,
+    check: async () => {
+      if (info.project.name === 'phone') await noSideScroll(device);
+    },
+  });
+  await expect(device).toHaveURL(/\/login\/new-password$/);
+  if (info.project.name === 'phone') await noSideScroll(device);
   const newPassword = `Battery staple ${unique()}`;
-  await setNewPassword(page, newPassword);
-  await page.getByRole('link', { name: 'Continue' }).click();
-  await expect(page).toHaveURL(/\/onboarding$/);
+  await setNewPassword(device, newPassword);
+  await device.getByRole('link', { name: 'Continue' }).click();
+  await expect(device).toHaveURL(/\/onboarding$/);
+  await device.context().close();
+
+  // the link works once: Continue a second time says so and offers a new one
+  const again = await freshBrowser(browser, page);
+  await openLink(again, mail.link, RESET_PAGE);
+  await expect(again).toHaveURL(/\/login\/forgot-password\?error=expired$/);
+  await expect(again.getByTestId('reset-link-failed').getByRole('alert')).toHaveText(
+    'This link has expired or was already used. Ask for a new link.',
+  );
+  await again.context().close();
 
   // the other browser was signed out; the old password no longer works, the new one does
   await expectSignedOut(other);
@@ -141,15 +191,53 @@ test('forgot password: the same answer for every address, the link, a new passwo
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/\/onboarding$/);
 
+  // a session from a sign-in link (its token also says `otp`) is no reset session: the password changes in Your
+  // account, with the current one
+  await page.context().clearCookies();
+  await signIn(page, email);
+  await page.goto('/login/new-password');
+  await expect(page).toHaveURL(/\/account$/);
+
   // without a session from a reset link, the page sends people to ask for one
   await page.context().clearCookies();
   await page.goto('/login/new-password');
   await expect(page).toHaveURL(/\/login\/forgot-password\?error=link$/);
-  await expect(page.getByRole('alert').filter({ hasText: 'Ask for a new one.' })).toBeVisible();
+  await expect(page.getByTestId('reset-link-failed').getByRole('alert')).toHaveText(LINK_FAILED);
 });
 
-test('forgot password with two-step sign-in: the code comes before the new password', async ({
+test('forgot password with Supabase default email (hosted until our templates are applied): another browser is told why and asks again', async ({
   page,
+  browser,
+}, info) => {
+  test.setTimeout(150_000);
+  const { email } = await newAccount(page, 'Pia Pkce');
+  await page.context().clearCookies();
+
+  // the default email links to Supabase Auth's verify step, which comes back with a code only the asking browser can use
+  let started = await askForReset(page, email);
+  const device = await freshBrowser(browser, page);
+  await openLink(device, defaultTemplateLink((await mailTo(email, started)).link));
+  await expect(device).toHaveURL(/\/login\/forgot-password\?error=link$/);
+  await expect(device.getByTestId('reset-link-failed').getByRole('alert')).toHaveText(LINK_FAILED);
+  if (info.project.name === 'phone') await noSideScroll(device);
+  const askAgain = device.getByRole('link', { name: 'Ask for a new link' });
+  await expect(askAgain).toBeFocused();
+  await device.keyboard.press('Enter');
+  await expect(device).toHaveURL(/\/login\/forgot-password$/);
+  await expect(device.getByLabel('Email')).toBeFocused();
+  await device.context().close();
+
+  // in the browser that asked, the same kind of link opens Set a new password
+  await page.waitForTimeout(2500); // a newer email than the first, past Supabase Auth's 1 s limit
+  started = await askForReset(page, email);
+  await openLink(page, defaultTemplateLink((await mailTo(email, started)).link));
+  await expect(page).toHaveURL(/\/login\/new-password$/);
+  await setNewPassword(page, `Battery staple ${unique()}`);
+});
+
+test('forgot password with two-step sign-in, on another device: the code comes before the new password', async ({
+  page,
+  browser,
 }, info) => {
   test.setTimeout(180_000);
   const used = new Set<number>();
@@ -166,16 +254,24 @@ test('forgot password with two-step sign-in: the code comes before the new passw
   await page.context().clearCookies();
 
   const started = await askForReset(page, email);
-  await openLink(page, (await mailTo(email, started)).link);
+  const mail = await mailTo(email, started);
+  expectOwnResetLink(mail);
+  const device = await freshBrowser(browser, page);
+  await scanLink(device, mail.link);
+  await openLink(device, mail.link, RESET_PAGE);
   // the reset link signs in with the first step only: the code is owed before the password can change
-  await expect(page).toHaveURL(/\/login\/two-step\?next=%2Flogin%2Fnew-password$/);
-  if (info.project.name === 'phone') await noSideScroll(page);
-  await expect(page.getByLabel('6-digit code')).toBeFocused();
-  await page.keyboard.type(await freshCode(secret, used));
-  await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(/\/login\/new-password$/);
+  await expect(device).toHaveURL(/\/login\/two-step\?next=%2Flogin%2Fnew-password$/);
+  if (info.project.name === 'phone') await noSideScroll(device);
+  // without the code, Set a new password is not reachable
+  await device.goto('/login/new-password');
+  await expect(device).toHaveURL(/\/login\/two-step\?next=%2Flogin%2Fnew-password$/);
+  await expect(device.getByLabel('6-digit code')).toBeFocused();
+  await device.keyboard.type(await freshCode(secret, used));
+  await device.keyboard.press('Enter');
+  await expect(device).toHaveURL(/\/login\/new-password$/);
   const newPassword = `Battery staple ${unique()}`;
-  await setNewPassword(page, newPassword);
+  await setNewPassword(device, newPassword);
+  await device.context().close();
 
   // sign in with the new password: the code is still asked for
   await page.context().clearCookies();
@@ -256,8 +352,17 @@ test('Your account: change the password, then the email address', async ({
     expect(mail.text).toContain('If you did not ask for this, you can ignore this email.');
   }
   // the local stack has email confirmation off, so Supabase Auth takes one link (hosted: both, docs/09 §12)
+  expect(new URL(toNew.link).pathname).toBe('/auth/confirm');
+  await scanLink(page, toNew.link);
+  await page.reload();
+  await expect(page.getByTestId('current-email')).toHaveText(email);
   const confirmedAt = Date.now();
-  await openLink(page, toNew.link);
+  await openLink(page, toNew.link, {
+    ...EMAIL_CHANGE_PAGE,
+    check: async () => {
+      if (info.project.name === 'phone') await noSideScroll(page);
+    },
+  });
   await expect(page).toHaveURL(/\/account$/);
   await expect(page.getByTestId('current-email')).toHaveText(newEmail);
   await expect(page.getByTestId('email-pending')).toHaveCount(0);
@@ -270,4 +375,74 @@ test('Your account: change the password, then the email address', async ({
   await page.context().clearCookies();
   await signInWithPassword(page, newEmail, newPassword);
   await expect(page).toHaveURL(/\/onboarding$/);
+});
+
+test('sign-in link: a link scanner and another site cannot use it up; Continue signs in, once', async ({
+  page,
+  browser,
+}, info) => {
+  test.setTimeout(150_000);
+  const { email } = await newAccount(page, 'Sami Scanner');
+  await page.context().clearCookies();
+
+  await page.goto('/login?mode=link');
+  await page.getByLabel('Work email').fill(email);
+  const started = Date.now();
+  await page.getByRole('button', { name: 'Send sign-in link' }).click();
+  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+  const mail = await mailTo(email, started);
+  const link = new URL(mail.link);
+  expect(link.pathname).toBe('/auth/confirm');
+  expect(link.searchParams.get('type')).toBe('email');
+
+  // the scanner's GET shows the page only
+  const device = await freshBrowser(browser, page);
+  await scanLink(device, mail.link);
+
+  // a form on another site (or a request with no browser headers) posting the token to the callback is refused,
+  // and the token stays unused
+  const form = {
+    token_hash: link.searchParams.get('token_hash')!,
+    type: 'email',
+    redirect_to: link.searchParams.get('redirect_to') ?? '',
+  };
+  const posts: Record<string, string>[] = [
+    { Origin: 'https://evil.example', 'Sec-Fetch-Site': 'cross-site' },
+    { Origin: 'null', 'Sec-Fetch-Site': 'cross-site' },
+    {},
+  ];
+  for (const headers of posts) {
+    const res = await device.request.post('/auth/callback', { form, headers, maxRedirects: 0 });
+    expect(res.status()).toBe(303);
+    const to = new URL(res.headers()['location']!);
+    expect(`${to.pathname}${to.search}`).toBe('/login?error=link');
+  }
+
+  // the person's click signs in
+  await openLink(device, mail.link, {
+    ...SIGN_IN_PAGE,
+    check: async () => {
+      if (info.project.name === 'phone') await noSideScroll(device);
+    },
+  });
+  await expect(device).toHaveURL(/\/onboarding$/);
+  await device.context().close();
+
+  // Continue a second time: the link was used
+  const again = await freshBrowser(browser, page);
+  await openLink(again, mail.link, SIGN_IN_PAGE);
+  await expect(again).toHaveURL(/\/login\?error=link$/);
+  await expect(
+    again.getByRole('alert').filter({
+      hasText: 'That sign-in link has expired or was already used. Sign in again.',
+    }),
+  ).toBeVisible();
+  await again.context().close();
+
+  // a link with its token cut off says so, and offers the way back
+  const broken = await freshBrowser(browser, page);
+  await broken.goto(`${(await linkHere(mail.link)).split('?')[0]}?type=email`);
+  await expect(broken.getByTestId('email-link-broken')).toBeVisible();
+  await expect(broken.getByRole('link', { name: 'Back to sign in' })).toBeFocused();
+  await broken.context().close();
 });

@@ -181,7 +181,7 @@ export async function loadInstalledState(
       db
         .from('fields')
         .select(
-          'id, pack_ref, pack_install_id, sheet_id, key, name, type, description, required, locked, config, archived_at, position',
+          'id, pack_ref, pack_install_id, sheet_id, key, name, type, description, required, locked, config, restricted_to, archived_at, position',
         )
         .in('sheet_id', ids)
         .order('id')
@@ -271,6 +271,7 @@ export async function loadInstalledState(
       required: f.required,
       locked: f.locked,
       config: f.config as Json,
+      restrictedTo: (f.restricted_to ?? null) as Json | null,
       archived: !!f.archived_at,
     })),
     groups: own(groupRows).map((g) => ({

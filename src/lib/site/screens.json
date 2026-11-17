@@ -1,0 +1,127 @@
+{
+  "audit-pack": {
+    "file": "audit-pack.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "automation-run-log": {
+    "file": "automation-run-log.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "automations": {
+    "file": "automations.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "calibration": {
+    "file": "calibration.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "calibration-phone": {
+    "file": "calibration-phone.webp",
+    "width": 780,
+    "height": 1688
+  },
+  "capa-item-panel": {
+    "file": "capa-item-panel.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "capa-phone": {
+    "file": "capa-phone.webp",
+    "width": 780,
+    "height": 1688
+  },
+  "complaints": {
+    "file": "complaints.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "dashboards": {
+    "file": "dashboards.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "design-map": {
+    "file": "design-map.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "document-approvals": {
+    "file": "document-approvals.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "edition-move-preview": {
+    "file": "edition-move-preview.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "frameworks-coverage": {
+    "file": "frameworks-coverage.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "frameworks-yours": {
+    "file": "frameworks-yours.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "home-next-steps": {
+    "file": "home-next-steps.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "home-phone": {
+    "file": "home-phone.webp",
+    "width": 780,
+    "height": 1688
+  },
+  "insights": {
+    "file": "insights.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "internal-audits": {
+    "file": "internal-audits.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "iso-9001-library": {
+    "file": "iso-9001-library.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "management-review": {
+    "file": "management-review.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "objectives": {
+    "file": "objectives.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "own-framework": {
+    "file": "own-framework.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "risk-register": {
+    "file": "risk-register.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "soa": {
+    "file": "soa.webp",
+    "width": 2880,
+    "height": 1800
+  },
+  "supplier-evaluation": {
+    "file": "supplier-evaluation.webp",
+    "width": 2880,
+    "height": 1800
+  }
+}

@@ -11,8 +11,8 @@ import { BRAND } from '@/lib/brand';
 // here the h1 reads as a small label over the step's title.
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-subtle flex min-h-dvh flex-col">
-      <div className="bg-subtle bg-dots flex w-full flex-1 flex-col">
+    <div className="bg-background-100 flex min-h-dvh flex-col">
+      <div className="bg-glow flex w-full flex-1 flex-col">
         <header className="mx-auto flex h-18 w-full max-w-[1600px] items-center px-4 sm:h-20 sm:px-8 lg:px-12">
           <Wordmark />
         </header>

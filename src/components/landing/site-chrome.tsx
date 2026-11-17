@@ -41,7 +41,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
 /** `path` is the page's own address: it marks the active nav item and resets the phone menu between pages. */
 export function SiteShell({ path, children }: { path: string; children: React.ReactNode }) {
   return (
-    <div className="bg-subtle flex min-h-dvh flex-col">
+    <div className="bg-background-100 flex min-h-dvh flex-col">
       <a
         href="#main"
         className="bg-brand text-primary-foreground text-label-14 sr-only rounded-md px-3 py-2 font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
@@ -49,7 +49,7 @@ export function SiteShell({ path, children }: { path: string; children: React.Re
         Skip to content
       </a>
 
-      <div className="bg-subtle bg-dots flex w-full flex-1 flex-col overflow-clip">
+      <div className="bg-glow flex w-full flex-1 flex-col overflow-clip">
         <header>
           <div className={`${WRAP} flex h-18 items-center justify-between gap-3 sm:h-20`}>
             <Wordmark />

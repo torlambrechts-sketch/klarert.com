@@ -552,18 +552,68 @@ Screens in docs/05 §1.1.
   answer is always "If an account uses that address, we have sent a link to reset your password.", also when Supabase
   Auth refuses: it refuses a second request within `max_frequency` for existing addresses only, so passing that on
   would tell which addresses have accounts. Refusals are logged with code and status, never the address.
-- **The callback** (`/auth/callback`, `afterEmailLink` in `src/lib/auth-links.ts`, unit tested): a code opens the
-  session and goes to `next`; a failed reset link goes back to Forgot password (`?error=link`); for Your account, the
-  first of two email change links (only a `message`, no code) gives `?email=confirm-other` and a failed one
-  `?email=link-failed`; every other failure `/login?error=link`. The links use PKCE, so they work in the browser where
-  they were asked for.
+- **The Continue page** (`/auth/confirm`, owner decision 17 Nov 2026, branch `claude/email-continue`). Microsoft
+  Defender Safe Links and other link scanners open every link in an email before the person does; a link that opened
+  the session on GET was used up by the scanner, and the person's own click then said "expired". Our templates
+  therefore link to `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=…&next=…&redirect_to={{ .RedirectTo }}`:
+  a GET that only renders a small page (the auth layout) and never calls `verifyOtp`. It keeps `token_hash`, `type`,
+  `next` and `redirect_to` in hidden fields (never logged) and shows one heading and one button by `type`
+  (`confirmCopy`, `src/lib/email-link.ts`): `recovery` "Set a new password" / **Continue to set a new password**,
+  `email` "Sign in to Compliance OS" / **Continue**, `email_change` "Confirm your new email address" / **Confirm**,
+  and under it "This link works once, for 1 hour." Focus starts on the button; a second click while the first is on
+  its way is ignored, so a double click never lands on "expired". A link without its token or with another `type`
+  says "This link is not complete" with **Back to sign in**. The page is `noindex` and sends no referrer (metadata
+  and `next.config.ts` headers, as public forms). `auth` is already a reserved workspace address; no new top-level
+  route.
+- **The callback** (`/auth/callback`; `openEmailLink` in `src/lib/email-link.ts`, wired to Supabase Auth in
+  `src/server/email-link.ts`; `emailLinkNext` and `afterEmailLink` in `src/lib/auth-links.ts`; unit tested). One
+  function opens every link, for both methods:
+  - **POST** is the Continue button: `token_hash`, `type`, `next` and `redirect_to` from the form, `verifyOtp`, the
+    reset-link cookie, then a 303 to where the link goes. **CSRF:** only a POST from a page of this site is taken
+    (`sameOriginPost`): `Sec-Fetch-Site` must be `same-origin`, or, from a browser that does not send it, the `Origin`
+    must be this host. Because `/auth/confirm` sends no referrer, browsers post its form with `Origin: null`, so
+    `Sec-Fetch-Site` is what passes it (every current browser sends it; Safari from 16.4); `Origin: null` without it
+    is refused, as is a POST with neither (fail closed). A refused POST goes to `/login?error=link` and leaves the
+    token unused (e2e: a cross-site form, `Origin: null` cross-site, and a bare request).
+  - **GET** takes a PKCE `code` (Supabase's default templates, below), an error, or a message only (the first of two
+    email change links). It also still takes `token_hash` and `type` straight from the link, so emails sent before
+    `/auth/confirm` keep working. **That GET token-hash path can be removed two weeks after the templates are applied
+    to the hosted project** (links work for 1 hour; two weeks covers mail read late); remove it with its unit cases.
+  Before 17 Nov 2026 (branch `claude/fix-reset-links`) our templates linked straight to the callback:
+  `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=…&next=…&redirect_to={{ .RedirectTo }}`, with `type`
+  `email` for sign-up and sign-in links (`signup` and `magiclink` are the deprecated names), `recovery` (`next`
+  `/login/new-password`) and `email_change` (`next` `/account`), as `verifyOtp` takes them in supabase-js 2.119 and
+  GoTrue 2.197; `/auth/confirm` takes the same parameters. The callback opens the session with
+  `verifyOtp({ token_hash, type })` (any other `type` is refused without asking Supabase Auth), so a link works on any
+  device and never shows the Supabase project's address. `redirect_to` (escaped by Supabase Auth's HTML templates) carries
+  the address the app asked for, whose own `next` is the page's `next` (Forgot password's `?next=`, or where a sign-in
+  link should go); it is used only when the template names no page or the same page, so a reset link always lands on
+  Set a new password, and always through `safeNext`. A token-hash link that Supabase Auth refuses (expired, used)
+  goes back to Forgot password with `?error=expired`; for an email change with no session (the first of two links)
+  `?email=confirm-other`. Supabase's default templates (the hosted project until its templates are applied) link to
+  Supabase Auth's verify step instead, which comes back with a PKCE `code` that only the browser that asked holds the
+  verifier for: opened anywhere else, the exchange fails and Forgot password shows `?error=link`, "This link has to be
+  opened in the same browser you asked from, or it has expired. Ask for a new link." with **Ask for a new link**. For
+  Your account a failed link gives `?email=link-failed`, the first of two (only a `message`) `?email=confirm-other`;
+  every other failure `/login?error=link`.
 - **Set a new password** (`setNewPassword`, `src/server/commands/account.ts`): only a session that a reset link
-  opened may set a password without the current one. Supabase Auth records that in the token's `amr` as `recovery`
-  (PKCE; checked 15 Nov 2026 on GoTrue 2.197), read by `openedByResetLink` (`src/lib/passwords.ts`) into
-  `getSignIn().resetLink`. Supabase Auth refuses a password or email change from an `aal1` session when the person
+  opened may set a password without the current one. Through the PKCE code, Supabase Auth records that in the token's
+  `amr` as `recovery` (checked 15 Nov 2026 on GoTrue 2.197), read by `openedByResetLink` (`src/lib/passwords.ts`).
+  `verifyOtp` records `otp` for every email link, reset and sign-in alike (checked 17 Nov 2026 on GoTrue 2.197, for
+  `recovery`, `magiclink` and `email`, and for Supabase Auth's own verify step without PKCE), so the token cannot tell
+  them apart. The callback (the Continue POST, or the transition GET) therefore sets the httpOnly cookie `klarert-reset-link`
+  when `verifyOtp` with `type=recovery` opened the session: `v1.` and the HMAC-SHA256 of `reset-link.v1.<user id>.<session id>`, keyed by
+  `SUPABASE_COMMAND_SECRET` (the local development value against the local stack; no secret, no cookie), 12 hours
+  (`src/lib/reset-link.ts`, `src/server/reset-link.ts`, unit tested). It holds for that one session: a refreshed token
+  keeps its session id, the two-step code keeps the session, a later sign-in gets a new one. Only the server can make
+  it, and a copied value is no use without the session itself. `getSignIn().resetLink` is the `amr` check or the
+  cookie. Supabase Auth accepts a sign-in link's token with `type=recovery` too (both are its recovery token), so a
+  person holding a fresh sign-in email can open a reset session; that proves the same control of the address as a
+  reset email, which they could ask for anyway. A session from a sign-in link opened normally is no reset session
+  (e2e). Supabase Auth refuses a password or email change from an `aal1` session when the person
   has a verified factor ("AAL2 session is required to update email or password when MFA is enabled",
   `insufficient_aal`, checked), so a person with an authenticator app is sent to
-  `/login/two-step?next=/login/new-password` first. New passwords: `MIN_PASSWORD` (12) to 200 characters, typed twice
+  `/login/two-step?next=/login/new-password` first (the cookie is bound to the session, which the code keeps). New passwords: `MIN_PASSWORD` (12) to 200 characters, typed twice
   (`newPasswordTwice`). Afterwards `signOut({ scope: 'others' })` ends every other session; the page says whether that
   worked.
 - **Change password** (`changePassword`): the current password is checked by `signInWithPassword` on a client that
@@ -579,11 +629,14 @@ Screens in docs/05 §1.1.
   address cannot be used. Choose another."
 - **Auth emails** (`supabase/templates/*.html`, subjects in `supabase/config.toml` `[auth.email.template.*]`):
   confirm sign-up, sign-in link, reset password and change of email. One column, real text, `lang="en"`, the link
-  linked and written out, what it does, that it works once for 1 hour (`otp_expiry`, `EMAIL_LINK_EXPIRY`), and "If you
-  did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
+  (to our own Continue page, above) linked and written out, what it does, that it works once for 1 hour, on any device
+  (`otp_expiry`, `EMAIL_LINK_EXPIRY`), and "If you did not ask for this, you can ignore this email." No images, no remote resources, no tracking. Supabase Auth makes
   the plain-text part from the HTML. Invites are our own email (§11); reauthentication is not used. The hosted project
-  gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ) and sends through
-  Brevo SMTP, which the owner sets up (`scripts/hosted/README.md` › Auth emails), sender "Keptrow".
+  gets the same through `scripts/hosted/auth-config.py` (`--dry-run` prints the keys that differ; it refuses a
+  template without its `/auth/confirm` link, with `{{ .ConfirmationURL }}`, or linking straight to
+  `/auth/callback?token_hash=`) and sends through Brevo SMTP, which the owner
+  sets up (`scripts/hosted/README.md` › Auth emails), sender "Keptrow". Supabase refuses custom templates
+  without custom SMTP, so until then the hosted project sends Supabase's defaults (PKCE links, see the callback).
 - **Security alerts** (owner decision 16 Nov 2026): Supabase Auth's notification emails for a changed password and a
   changed email address are on (`[auth.email.notification.password_changed]` and `.email_changed]` in
   `supabase/config.toml`; hosted `mailer_notifications_*_enabled`, set by `auth-config.py`). Templates
@@ -648,17 +701,27 @@ Screens in docs/05 §1.1.
   logs the person as the actor. Support deletes in the dashboard only when the person cannot (lost access, a request
   by email), and then makes sure every workspace they owned alone gets a new owner. "Soft delete" in the Admin API
   only marks the auth user and does not run the trigger; use a hard delete.
-- Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`, `src/lib/delete-account.test.ts`; pgTAP
+- Tests: `src/lib/passwords.test.ts`, `src/lib/auth-links.test.ts`, `src/lib/email-link.test.ts` (`openEmailLink`
+  with fake Supabase Auth: reset, sign-in, expired, the first of two email change links, a code, an unknown type;
+  `confirmCopy`; `sameOriginPost`), `src/lib/delete-account.test.ts`; pgTAP
   `supabase/tests/0071_delete_account.sql` and `0072_account_deleted_by_support.sql` (a dashboard deletion as
   `postgres`: memberships gone and logged, profile anonymised, created by still resolves, the log unchanged, the only
   owner's deletion logged as ownerless, the guard flag covers only the person it names, Delete my account still works
   and the trigger then adds nothing, the functions not executable by `anon`, `authenticated` or `service_role`); e2e `tests/e2e/delete-account.spec.ts` (desktop and 390 px: the only owner
   refused with the workspace named; a member deletes their account, cannot sign in with the password again, and their
   item's "Created by" reads "Former member") and `tests/e2e/account-auth.spec.ts` (desktop and
-  390 px) through Mailpit: a reset for a known and an unknown address (the same answer), the link, the rules, the new
-  password signs in and the old one does not, another browser signed out; the same with two-step sign-in (code
-  first); Your account changes the password (a wrong current one refused) and the email address (both addresses
-  emailed).
+  390 px) through Mailpit, every link opened through `/auth/confirm` and its button (`openLink` in
+  `tests/e2e/auth-mail.ts`; `signIn` in `tests/e2e/helpers.ts` does the same), each after a link scanner's GET
+  (`scanLink`: `page.request`, 200, no referrer, `noindex`) that must leave the token unused: a reset for a known and
+  an unknown address (the same answer), the link (our own Continue page) opened in a fresh browser as on another
+  device, the rules, the new password signs in and the old one does not,
+  another browser signed out, a second Continue on the used link refused ("expired"), a sign-in link session refused
+  by Set a new password; a sign-in link (the scanner's GET and three cross-site or bare POSTs leave it unused,
+  Continue signs in, a second Continue says it was used, a link without its token says so);
+  the same with two-step sign-in on another device (code first); Supabase's default link (PKCE) opened in another
+  browser shows the same-browser message and **Ask for a new link**, and in the asking browser opens Set a new
+  password; Your account changes the password (a wrong current one refused) and the email address (both addresses
+  emailed; the link scanned first, then **Confirm**).
 
 ### 12.1 Decided (owner)
 
@@ -674,6 +737,10 @@ Screens in docs/05 §1.1.
    tombstone profile: team memberships, sheet and folder access grants, their private saved views, their
    notifications, edit holds and open invites they sent (the invite page then reads "Former member invited you").
    None is reachable by anyone without a membership.
+6. **Email links and link scanners (owner decision 17 Nov 2026):** the auth emails link to the Continue page
+   (`/auth/confirm`), which uses the one-time token only when the person clicks its button (above). The GET
+   token-hash path of `/auth/callback` stays for two weeks after the templates are applied to the hosted project, for
+   emails already sent, and then goes.
 
 ### 12.2 Open (for the owner)
 
@@ -684,3 +751,128 @@ Screens in docs/05 §1.1.
 3. **The email change alert** links to Forgot password, whose link goes to the new address, which the person may no
    longer control. Supabase offers no way to undo an email change from the old address; the alert now names
    support@keptrow.com (and still the workspace owner) as the way back.
+
+## 13. Your own frameworks (16 Nov 2026, branch `claude/p8-own-frameworks`)
+
+A workspace's own frameworks, its mappings to the catalogue and its drafts (docs/12 Your own frameworks, docs/02 §17,
+migration 0074). The catalogue tables were global and readable by everyone; they now hold one workspace's rows too.
+What keeps them inside the workspace:
+
+- **RLS.** `frameworks`, `requirements` and `crosswalks`: `org_id is null or is_member(org_id)`; `packs`:
+  `owner_org_id is null or is_member(owner_org_id)`; `framework_drafts`: owners and admins (`is_admin`). No write
+  grants on any of them. pgTAP 0074 reads each table as an admin of another workspace and gets nothing; the e2e spec
+  does the same through the API as a person outside the workspace.
+- **Definer functions read past RLS, so each checks visibility itself** (board risk 2): `adopt_framework` refuses a
+  framework of another workspace, `install_pack` a pack of another workspace, `upgrade_pack` (now a wrapper of
+  `_upgrade_pack_rows`, also behind `apply_pack_upgrade`) a version of another workspace, and `move_framework_edition`
+  reads only frameworks of the catalogue or its own workspace and only live cross-walks of either. All four are
+  tested with a forged install and forged library sheets in pgTAP 0074. The messages say "not found", never whose.
+- **Writes only through the RPCs.** `publish_framework`, `set_crosswalk`, `retire_crosswalk`, `save_framework_draft`,
+  `delete_framework_draft`: owners and admins of the workspace named in the call, the key's prefix tied to that
+  workspace's id; `own_framework_guard` refuses an own row written any other way (also by the service role). Granted
+  to `authenticated` only; `_own_key_prefix` and `_upgrade_pack_rows` to nobody. No new service-role place.
+- **What the server sends is checked again.** The server builds the framework and its library pack with the engine,
+  but `publish_framework` checks the licence note and publisher against the workspace's own name, the limits, refs,
+  parents and depth, and that the pack is only this framework's library sheet (no automations, dashboards, requires,
+  extends or apps), so a crafted call cannot install anything else through the pack path.
+- **Licensing.** Customer text only in own rows (`requirements.text` and `titles = 'customer'` refused on catalogue
+  rows); publishing records `rights_confirmed` and the source line in `framework.published`.
+- **Audit.** `framework.published` (revision, hash), `crosswalk.added`, `crosswalk.retired`, `framework.draft_saved`
+  and `framework.draft_deleted` on the workspace chain; cross-walks are retired, never changed or deleted.
+- **The 8 hex digits** of the key prefix are not a secret and not unique: two workspaces may share them (about one in
+  four billion per pair). A key taken by another workspace is refused at publish ("the key is not this workspace's")
+  and rows of another workspace are never readable or writable whatever their key.
+
+Commands (`pnpm security:commands`):
+
+| Command | File | Zod schema | Role check | Also |
+|---|---|---|---|---|
+| `ownFrameworkEditor` | `own-frameworks.ts` | `ownFrameworkEditorInput` | admin |  |
+| `createOwnFramework` | `own-frameworks.ts` | `createOwnFrameworkInput` | admin |  |
+| `saveOwnFrameworkDraft` | `own-frameworks.ts` | `saveOwnDraftInput` | admin |  |
+| `deleteOwnFrameworkDraft` | `own-frameworks.ts` | `deleteOwnDraftInput` | admin |  |
+| `publishOwnFramework` | `own-frameworks.ts` | `publishOwnFrameworkInput` | admin |  |
+| `ownMappingOptions` | `own-frameworks.ts` | `ownMappingOptionsInput` | admin |  |
+| `mapOwnRequirement` | `own-frameworks.ts` | `mapOwnRequirementInput` | admin |  |
+| `retireOwnMapping` | `own-frameworks.ts` | `retireOwnMappingInput` | admin |  |
+
+### 13.1 Open (for the owner)
+
+- A workspace's own framework and its library pack stay readable by every member, as the catalogue is. A restricted
+  library sheet stays restricted (docs/02 §16); the requirement rows themselves are not.
+- Hosted rollout of 0074: see the P8 report (locks while the constraints are added, the renamed `upgrade_pack`).
+
+## 14. Your own packs (17 Nov 2026, branch `claude/p9-private-packs`)
+
+"Save your setup" (docs/11 Your own packs, docs/02 §15, migration 0075; owner decisions of 16 Nov 2026). A workspace
+publishes its setup as a private pack and installs it in other workspaces. This is the first feature that moves
+structure between workspaces, so the board's leakage risks come first:
+
+- **One client's data reaching another (risk 1).** Nothing of a workspace's data is captured: no items (example items
+  come later), so no values at all; no people (a member's id anywhere is removed: recipients, approvers, allowed users,
+  form notifications, filters, defaults), no files, updates, emails, form links or log entries. Webhook addresses are
+  never readable to the person (0056) and the webhook action is left out ("Add the address after install"). Outside
+  email recipients are dropped. The dialog names the publishing workspace and says "Publish from your practice or
+  head-office workspace, not a client's", and every install preview names the publisher. The capture reads the
+  workspace with the person's own client: what RLS or sheet access hides from them is never captured.
+- **Definer functions read past RLS (risk 2).** `install_pack`, `upgrade_pack` and `adopt_framework` check
+  visibility and shares themselves (`_private_access`, `_framework_access`): another workspace's pack installs only
+  where it is shared, or on a first install by an owner or admin of both workspaces; an update never shares. pgTAP
+  0075 covers read, install, update and adopt without a share (an install row forged behind the API's back included),
+  the first install needing an admin of both, editors refused, and withdraw. Messages say "not found" to anyone who
+  cannot see the pack.
+- **Client admins read every version (risk 3).** Once shared, every member of the target workspace reads every version
+  of the pack (the upgrade path needs the base manifest). The dialog says so. Packs are structure only.
+- **What the server sends is checked again.** `publish_pack` re-checks on the JSON what SQL can: the key and its
+  owner, write-once and higher versions, no example items, every automation in test mode, no outbound action, personal
+  data sheets never `restricted: false`, no people, `requires` only our catalogue, `frameworks` ours or the
+  workspace's own. The manifest schema (Zod) and the canonical hash are the command's (`publishPack`), which captures
+  again on the server and refuses a capture that changed since the preview. `parsePack` runs on every read of the
+  catalogue, so a stored manifest is checked again on every use.
+- **Shares and versions cannot be tampered with.** No grants to write `pack_shares`; `pack_shares_guard` lets only
+  `install_pack` insert and refuses every update and delete, also for the database owner. `packs_write_once` refuses
+  every change to a version but its withdrawal.
+- **Audit.** `pack.published` (version, hash, counts, what was left out) and `pack.withdrawn` on the publisher's chain;
+  `pack.shared` (the target workspace) on the publisher's chain; `pack.installed` / `pack.upgraded` with `source:
+  private` and the publisher's id on the target's chain.
+- **No new service-role place.** Reads use the person's client; writes go through definer RPCs granted to
+  `authenticated` only. The policy helpers (`pack_visible`, `framework_shared_to_me`, `pack_owner`,
+  `pack_publisher`) are granted to `authenticated` because RLS calls them; they return booleans, an owner id the
+  person may already read, or the publisher's name for a pack the person can see. `_private_access`,
+  `_framework_access` and `_semver` are nobody's.
+
+Commands (`pnpm security:commands`):
+
+| Command | File | Zod schema | Role check | Also |
+|---|---|---|---|---|
+| `previewPublish` | `pack-publish.ts` | `previewPublishInput` | admin |  |
+| `publishPack` | `pack-publish.ts` | `publishPackInput` | admin |  |
+| `withdrawPack` | `pack-publish.ts` | `withdrawPackInput` | admin |  |
+| `listYourPacks` | `pack-publish.ts` | `listYourPacksInput` | member | admin-only branch |
+
+### 14.1 Decided (owner, 16–17 Nov 2026)
+
+- A member of the publisher (any role) reads its private packs through RLS, as 0074 decided for own frameworks; only
+  owners and admins see them listed to install and can install them. Accepted as built.
+- **Restricted columns are carried, roles only** (0076). The manifest field says `restrictedTo: { roles }`; the
+  people listed on the column are never carried (Zod refuses `userIds` there, and `publish_pack` refuses it on the JSON
+  as it refuses other people). `install_pack` restricts the column it makes, so a column never installs open; it
+  refuses example values, links or files on it (the install's log entries would hold them in clear, since the mask
+  applies to what is restricted when it is written). `upgrade_pack` changes a restriction only on the install's own
+  fields (checked by `_upgrade_pack_rows`), never adds a person (only people already listed may stay), needs what
+  `set_field_restriction` needs (an owner, or an admin with edit access to the sheet) and moves values in one
+  transaction; every change is logged on the sheet chain. `_pack_restrict_field` is granted to nobody. The upgrade
+  planner sends a change only where the client has not changed the roles; otherwise Keep mine / Take the pack's.
+- Deleting a publisher workspace whose pack is installed elsewhere is refused (accepted as built): `orgs_publisher_guard`
+  (0076) says so in words (errcode 23503) before the `pack_installs` foreign key would. No path in the app deletes a
+  workspace today.
+- Publishing after a withdrawal is allowed and the pack stays withdrawn: copies already installed take the new version,
+  new installs stay blocked.
+- Personal-data sheets install restricted to the installer; the update dialog says "Sheets with personal data are only
+  visible to the people listed on them; updates to them show for those people."
+
+Hosted risk of 0076: it replaces `install_pack`, `upgrade_pack` and `publish_pack` (bodies as 0075 plus the new
+steps; same signatures and grants) and adds a BEFORE DELETE trigger on `orgs`. Nothing in the catalogue uses
+`restrictedTo`, so catalogue installs and upgrades behave as before. It needs 0075 first; it is safe before or after
+the app deploy (an older planner sends no `restricted_to`, and the older capture leaves restricted columns out of the
+manifest's restriction, as before).

@@ -101,12 +101,16 @@ export async function appMail(
 const ATTEMPTS = 5;
 
 /**
- * The link's callback names the environment's app URL (localhost:3000 locally), which on a shared machine may be
- * another checkout's server: follow the verify step here and take the code to this server's own callback (the PKCE
- * verifier cookie is this browser's). Anything else is opened as it is.
+ * The link names the auth site URL (localhost:3000 locally), which on a shared machine may be another checkout's
+ * server: open its path and query on this server. Our templates link to `/auth/confirm`, whose Continue button opens
+ * the link (docs/09 §12). A link to Supabase Auth's verify step is followed here and its code taken to this server's
+ * own callback (the PKCE verifier cookie is this browser's). Anything else is opened as it is.
  */
-async function callbackHere(link: string): Promise<string> {
+async function linkHere(link: string): Promise<string> {
   try {
+    const own = new URL(link);
+    if (own.pathname === '/auth/confirm' || own.pathname === '/auth/callback')
+      return `${own.pathname}${own.search}`;
     const res = await fetch(link, { redirect: 'manual' });
     const to = res.headers.get('location');
     const url = to ? new URL(to) : null;
@@ -115,6 +119,14 @@ async function callbackHere(link: string): Promise<string> {
   } catch {
     return link;
   }
+}
+
+/** Open a sign-in link: `/auth/confirm`, then Continue. */
+async function openSignInLink(page: Page, link: string) {
+  await page.goto(await linkHere(link));
+  if (new URL(page.url()).pathname !== '/auth/confirm') return;
+  const button = page.getByTestId('email-link-continue');
+  await Promise.all([page.waitForURL((u) => u.pathname !== '/auth/confirm'), button.click()]);
 }
 
 export async function signIn(page: Page, email: string, next?: string) {
@@ -136,7 +148,7 @@ export async function signIn(page: Page, email: string, next?: string) {
       }
     }
     await expect(sent).toBeVisible();
-    await page.goto(await callbackHere(await latestLink(email, started)));
+    await openSignInLink(page, await latestLink(email, started));
     if (!/\/login\?error=/.test(page.url()) || attempt === ATTEMPTS) return;
     await page.waitForTimeout(500 * attempt + Math.random() * 1000);
   }

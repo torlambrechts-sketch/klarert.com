@@ -61,6 +61,8 @@ export interface CrosswalkLink {
   relation: Relation;
   note: string;
   source: string;
+  /** The workspace's own mapping: who and when (docs/12 Your own frameworks); null for the catalogue's. */
+  own: Crosswalk['own'] | null;
 }
 
 /** Both directions of every cross-walk, by requirement key; a pair named twice keeps its stronger relation. */
@@ -74,6 +76,7 @@ export function crosswalkIndex(list: readonly Crosswalk[]): Map<string, Crosswal
       relation: cur ? stronger(cur.relation, c.relation) : c.relation,
       note: cur?.note || c.note,
       source: c.source,
+      own: c.own ?? null,
     });
     index.set(a, m);
   };
@@ -106,6 +109,8 @@ export interface AlsoSatisfies {
   relation: Relation;
   note: string;
   source: string;
+  /** Set for the workspace's own mapping, shown apart from the catalogue's. */
+  own: Crosswalk['own'] | null;
 }
 
 const byStrengthThenOrder = (a: AlsoSatisfies, b: AlsoSatisfies) =>
@@ -123,7 +128,14 @@ export function alsoSatisfies(
   const out: AlsoSatisfies[] = [];
   for (const l of index.get(key) ?? []) {
     const r = adopted.get(l.key);
-    if (r) out.push({ requirement: r, relation: l.relation, note: l.note, source: l.source });
+    if (r)
+      out.push({
+        requirement: r,
+        relation: l.relation,
+        note: l.note,
+        source: l.source,
+        own: l.own,
+      });
   }
   return out.sort(byStrengthThenOrder);
 }

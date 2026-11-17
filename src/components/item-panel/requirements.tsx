@@ -9,6 +9,7 @@ import { RELATION_LABEL } from '@/engine/frameworks/types';
 import type { Ctx, Field, Item, Sheet } from '@/engine/types';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { Button } from '@/components/ui/button';
+import { OwnMappings } from './own-mappings';
 import type {
   RelatedChip,
   RequirementChip,
@@ -187,14 +188,38 @@ export function RequirementLinks({
               <p className="text-muted-foreground text-copy-13 m-0">
                 No requirement of another adopted framework maps to this one.
               </p>
-            ) : (
+            ) : null}
+            {/* Klarert's mapping and the workspace's own are never mixed (docs/12 Your own frameworks) */}
+            {r.alsoSatisfies.some((a) => !a.own) ? (
               <ul aria-label="Also satisfies" className="m-0 flex list-none flex-wrap gap-1 p-0">
-                {r.alsoSatisfies.map((a) => (
-                  <Chip key={a.itemId} chip={a} relation={a.relation} onOpen={open} />
-                ))}
+                {r.alsoSatisfies
+                  .filter((a) => !a.own)
+                  .map((a) => (
+                    <Chip key={a.itemId} chip={a} relation={a.relation} onOpen={open} />
+                  ))}
               </ul>
-            )}
+            ) : null}
+            {r.alsoSatisfies.some((a) => a.own) ? (
+              <ul
+                aria-label="Also satisfies, your mappings"
+                className="m-0 flex list-none flex-col gap-1 p-0"
+              >
+                {r.alsoSatisfies
+                  .filter((a) => a.own)
+                  .map((a) => (
+                    <li key={a.itemId} className="flex min-w-0 flex-col items-start gap-0.5">
+                      <ul className="m-0 flex list-none p-0">
+                        <Chip chip={a} relation={a.relation} onOpen={open} />
+                      </ul>
+                      <span className="text-label-12 text-muted-foreground pl-2">
+                        Your mapping · {a.own!.by ?? 'Former member'} · {a.own!.atText}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            ) : null}
           </div>
+          {r.own ? <OwnMappings org={org} own={r.own} onChanged={() => void q.refetch()} /> : null}
           {r.licence ? (
             <p className="text-label-12 text-muted-foreground m-0">
               {r.framework}. {r.licence}

@@ -235,22 +235,40 @@ isOneToOne: false
                   ]
                 },"crosswalks": {
                   Row: {
-                    "created_at": string,"from_framework": string,"from_ref": string,"from_version": string,"id": number,"note": string,"relation": string,"source": string,"to_framework": string,"to_ref": string,"to_version": string
+                    "created_at": string,"created_by": string | null,"from_framework": string,"from_ref": string,"from_version": string,"id": number,"note": string,"org_id": string | null,"relation": string,"retired_at": string | null,"retired_by": string | null,"source": string,"to_framework": string,"to_ref": string,"to_version": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"from_framework": string,"from_ref": string,"from_version": string,"id"?: never,"note"?: string,"relation": string,"source": string,"to_framework": string,"to_ref": string,"to_version": string
+                    "created_at"?: string,"created_by"?: string | null,"from_framework": string,"from_ref": string,"from_version": string,"id"?: never,"note"?: string,"org_id"?: string | null,"relation": string,"retired_at"?: string | null,"retired_by"?: string | null,"source": string,"to_framework": string,"to_ref": string,"to_version": string
                   }
                   Update: {
-                    "created_at"?: string,"from_framework"?: string,"from_ref"?: string,"from_version"?: string,"id"?: never,"note"?: string,"relation"?: string,"source"?: string,"to_framework"?: string,"to_ref"?: string,"to_version"?: string
+                    "created_at"?: string,"created_by"?: string | null,"from_framework"?: string,"from_ref"?: string,"from_version"?: string,"id"?: never,"note"?: string,"org_id"?: string | null,"relation"?: string,"retired_at"?: string | null,"retired_by"?: string | null,"source"?: string,"to_framework"?: string,"to_ref"?: string,"to_version"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "crosswalks_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "crosswalks_from_framework_from_version_from_ref_fkey"
       columns: ["from_framework","from_version","from_ref"]
 isOneToOne: false
       referencedRelation: "requirements"
       referencedColumns: ["framework_key","framework_version","ref"]
+    },{
+      foreignKeyName: "crosswalks_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "crosswalks_retired_by_fkey"
+      columns: ["retired_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
     },{
       foreignKeyName: "crosswalks_to_framework_to_version_to_ref_fkey"
       columns: ["to_framework","to_version","to_ref"]
@@ -541,19 +559,51 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"frameworks": {
+                },"framework_drafts": {
                   Row: {
-                    "created_at": string,"hash": string,"key": string,"kind": string,"licence": string,"pack_key": string,"pack_version": string,"publisher": string,"revision": number,"revision_expected": string | null,"revision_stage": string | null,"short_title": string,"source": string,"status": string,"status_checked_on": string | null,"status_note": string | null,"superseded_by": string | null,"title": string,"titles": string,"transition_ends": string | null,"url": string,"version": string
+                    "body": NonNullable<Json>,"key": string,"org_id": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"hash": string,"key": string,"kind": string,"licence": string,"pack_key": string,"pack_version": string,"publisher": string,"revision"?: number,"revision_expected"?: string | null,"revision_stage"?: string | null,"short_title": string,"source": string,"status"?: string,"status_checked_on"?: string | null,"status_note"?: string | null,"superseded_by"?: string | null,"title": string,"titles"?: string,"transition_ends"?: string | null,"url": string,"version": string
+                    "body": NonNullable<Json>,"key": string,"org_id": string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"hash"?: string,"key"?: string,"kind"?: string,"licence"?: string,"pack_key"?: string,"pack_version"?: string,"publisher"?: string,"revision"?: number,"revision_expected"?: string | null,"revision_stage"?: string | null,"short_title"?: string,"source"?: string,"status"?: string,"status_checked_on"?: string | null,"status_note"?: string | null,"superseded_by"?: string | null,"title"?: string,"titles"?: string,"transition_ends"?: string | null,"url"?: string,"version"?: string
+                    "body"?: NonNullable<Json>,"key"?: string,"org_id"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "framework_drafts_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "framework_drafts_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"frameworks": {
+                  Row: {
+                    "created_at": string,"hash": string,"key": string,"kind": string,"licence": string,"org_id": string | null,"pack_key": string,"pack_version": string,"publisher": string,"revision": number,"revision_expected": string | null,"revision_stage": string | null,"short_title": string,"source": string,"status": string,"status_checked_on": string | null,"status_note": string | null,"superseded_by": string | null,"title": string,"titles": string,"transition_ends": string | null,"url": string | null,"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"hash": string,"key": string,"kind": string,"licence": string,"org_id"?: string | null,"pack_key": string,"pack_version": string,"publisher": string,"revision"?: number,"revision_expected"?: string | null,"revision_stage"?: string | null,"short_title": string,"source": string,"status"?: string,"status_checked_on"?: string | null,"status_note"?: string | null,"superseded_by"?: string | null,"title": string,"titles"?: string,"transition_ends"?: string | null,"url"?: string | null,"version": string
+                  }
+                  Update: {
+                    "created_at"?: string,"hash"?: string,"key"?: string,"kind"?: string,"licence"?: string,"org_id"?: string | null,"pack_key"?: string,"pack_version"?: string,"publisher"?: string,"revision"?: number,"revision_expected"?: string | null,"revision_stage"?: string | null,"short_title"?: string,"source"?: string,"status"?: string,"status_checked_on"?: string | null,"status_note"?: string | null,"superseded_by"?: string | null,"title"?: string,"titles"?: string,"transition_ends"?: string | null,"url"?: string | null,"version"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "frameworks_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "frameworks_pack_key_pack_version_fkey"
       columns: ["pack_key","pack_version"]
 isOneToOne: false
@@ -937,19 +987,63 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"packs": {
+                },"pack_shares": {
                   Row: {
-                    "created_at": string,"description": string,"hash": string,"key": string,"manifest": NonNullable<Json>,"title": string,"version": string
+                    "granted_at": string,"granted_by": string | null,"org_id": string,"pack_key": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"description"?: string,"hash": string,"key": string,"manifest": NonNullable<Json>,"title": string,"version": string
+                    "granted_at"?: string,"granted_by"?: string | null,"org_id": string,"pack_key": string
                   }
                   Update: {
-                    "created_at"?: string,"description"?: string,"hash"?: string,"key"?: string,"manifest"?: NonNullable<Json>,"title"?: string,"version"?: string
+                    "granted_at"?: string,"granted_by"?: string | null,"org_id"?: string,"pack_key"?: string
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "pack_shares_granted_by_fkey"
+      columns: ["granted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pack_shares_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"packs": {
+                  Row: {
+                    "created_at": string,"description": string,"hash": string,"key": string,"manifest": NonNullable<Json>,"owner_org_id": string | null,"published_at": string | null,"published_by": string | null,"title": string,"version": string,"withdrawn_at": string | null,"withdrawn_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"description"?: string,"hash": string,"key": string,"manifest": NonNullable<Json>,"owner_org_id"?: string | null,"published_at"?: string | null,"published_by"?: string | null,"title": string,"version": string,"withdrawn_at"?: string | null,"withdrawn_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"description"?: string,"hash"?: string,"key"?: string,"manifest"?: NonNullable<Json>,"owner_org_id"?: string | null,"published_at"?: string | null,"published_by"?: string | null,"title"?: string,"version"?: string,"withdrawn_at"?: string | null,"withdrawn_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "packs_owner_org_id_fkey"
+      columns: ["owner_org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "packs_published_by_fkey"
+      columns: ["published_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "packs_withdrawn_by_fkey"
+      columns: ["withdrawn_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"personal_activity": {
                   Row: {
@@ -1019,14 +1113,14 @@ isOneToOne: false
                   ]
                 },"requirements": {
                   Row: {
-                    "evidence": (string)[],"framework_key": string,"framework_version": string,"guidance": string | null,"kind": string,"parent_ref": string | null,"position": number,"purpose": string | null,"questions": (string)[],"ref": string,"tags": (string)[],"title": string
+                    "evidence": (string)[],"framework_key": string,"framework_version": string,"guidance": string | null,"kind": string,"org_id": string | null,"parent_ref": string | null,"position": number,"purpose": string | null,"questions": (string)[],"ref": string,"tags": (string)[],"text": string | null,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "evidence"?: (string)[],"framework_key": string,"framework_version": string,"guidance"?: string | null,"kind": string,"parent_ref"?: string | null,"position": number,"purpose"?: string | null,"questions"?: (string)[],"ref": string,"tags"?: (string)[],"title": string
+                    "evidence"?: (string)[],"framework_key": string,"framework_version": string,"guidance"?: string | null,"kind": string,"org_id"?: string | null,"parent_ref"?: string | null,"position": number,"purpose"?: string | null,"questions"?: (string)[],"ref": string,"tags"?: (string)[],"text"?: string | null,"title": string
                   }
                   Update: {
-                    "evidence"?: (string)[],"framework_key"?: string,"framework_version"?: string,"guidance"?: string | null,"kind"?: string,"parent_ref"?: string | null,"position"?: number,"purpose"?: string | null,"questions"?: (string)[],"ref"?: string,"tags"?: (string)[],"title"?: string
+                    "evidence"?: (string)[],"framework_key"?: string,"framework_version"?: string,"guidance"?: string | null,"kind"?: string,"org_id"?: string | null,"parent_ref"?: string | null,"position"?: number,"purpose"?: string | null,"questions"?: (string)[],"ref"?: string,"tags"?: (string)[],"text"?: string | null,"title"?: string
                   }
                   Relationships: [
                     {
@@ -1041,6 +1135,18 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "requirements"
       referencedColumns: ["framework_key","framework_version","ref"]
+    },{
+      foreignKeyName: "requirements_framework_owner"
+      columns: ["framework_key","framework_version","org_id"]
+isOneToOne: false
+      referencedRelation: "frameworks"
+      referencedColumns: ["key","version","org_id"]
+    },{
+      foreignKeyName: "requirements_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "orgs"
+      referencedColumns: ["id"]
     }
                   ]
                 },"restricted_activity": {
@@ -1655,6 +1761,9 @@ isOneToOne: false
 "_form_ts":
 { Args: { "t": string }; Returns: string
                            },
+"_framework_access":
+{ Args: { "p_fw": Omit<Database["public"]['Tables']["frameworks"]['Row'], Database["public"]['Tables']["frameworks"]['ComputedFields']>,"p_org": string }; Returns: string
+                           },
 "_full_values":
 { Args: { "p_item": string,"p_values": Json }; Returns: Json
                            },
@@ -1749,6 +1858,9 @@ isOneToOne: false
 "_option_done":
 { Args: { "p_field": Omit<Database["public"]['Tables']["fields"]['Row'], Database["public"]['Tables']["fields"]['ComputedFields']>,"p_value": Json }; Returns: boolean
                            },
+"_own_key_prefix":
+{ Args: { "p_org": string }; Returns: string
+                           },
 "_own_recent_update":
 { Args: { "p_update": string }; Returns: {
               "author_id": string | null,
@@ -1781,6 +1893,9 @@ isOneToOne: false
 "_pack_owns_workflow":
 { Args: { "p_id": string,"p_pack_key": string }; Returns: boolean
                            },
+"_pack_restrict_field":
+{ Args: { "p_field": string,"p_new": boolean,"p_next": Json }; Returns: undefined
+                           },
 "_pack_row_sheet_ok":
 { Args: { "p_manifest": Json,"p_org": string,"p_row": Json,"p_sheets": (string)[] }; Returns: boolean
                            },
@@ -1793,6 +1908,9 @@ isOneToOne: false
 "_personal_mask_keys":
 { Args: { "p_kind": string,"p_salt": string,"v": Json }; Returns: Json
                            },
+"_private_access":
+{ Args: { "p_org": string,"p_pack": Omit<Database["public"]['Tables']["packs"]['Row'], Database["public"]['Tables']["packs"]['ComputedFields']> }; Returns: string
+                           },
 "_public_field_config":
 { Args: { "p_config": Json,"p_type": string }; Returns: Json
                            },
@@ -1804,6 +1922,9 @@ isOneToOne: false
                            },
 "_retention_rule":
 { Args: { "p_rule": string,"p_sheet": string }; Returns: Json
+                           },
+"_semver":
+{ Args: { "p": string }; Returns: (number)[]
                            },
 "_sheet_level_for":
 { Args: { "p_sheet": string,"p_user": string }; Returns: string
@@ -1856,6 +1977,9 @@ isOneToOne: false
                            },
 "_submit_form":
 { Args: { "p_actor_id": string,"p_actor_kind": string,"p_channel": string,"p_consent": boolean,"p_name": string,"p_position": string,"p_values": Json,"p_view": string }; Returns: Json
+                           },
+"_upgrade_pack_rows":
+{ Args: { "p_install": string,"p_plan": Json }; Returns: Json
                            },
 "_webhook_host":
 { Args: { "p_url": string }; Returns: string
@@ -2233,6 +2357,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"delete_framework_draft":
+{ Args: { "p_key": string,"p_org": string }; Returns: boolean
+                           },
 "delete_group":
 { Args: { "p_group": string,"p_positions"?: Json,"p_target"?: string }; Returns: number
                            },
@@ -2379,6 +2506,9 @@ isOneToOne: false
 { Args: { "p_sheet": string }; Returns: {
               "last_at": string,"responses": number,"view_id": string
             }[]
+                           },
+"framework_shared_to_me":
+{ Args: { "p_key": string,"p_owner": string }; Returns: boolean
                            },
 "get_invite":
 { Args: { "p_token": string }; Returns: {
@@ -2573,8 +2703,23 @@ isOneToOne: false
               "email": string,"user_id": string
             }[]
                            },
+"pack_owner":
+{ Args: { "p_key": string }; Returns: string
+                           },
+"pack_publisher":
+{ Args: { "p_key": string }; Returns: string
+                           },
+"pack_visible":
+{ Args: { "p_key": string,"p_owner": string }; Returns: boolean
+                           },
 "pause_pair_ok":
 { Args: { "p_automation": string,"p_item": string,"p_org": string }; Returns: boolean
+                           },
+"publish_framework":
+{ Args: { "p_framework": Json,"p_mappings"?: Json,"p_org": string,"p_pack": Json }; Returns: Json
+                           },
+"publish_pack":
+{ Args: { "p_org": string,"p_pack": Json }; Returns: Json
                            },
 "readable_sheet_ids":
 { Args: Record<PropertyKey, never>; Returns: string[]
@@ -2646,11 +2791,20 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"retire_crosswalk":
+{ Args: { "p_id": number,"p_org": string }; Returns: undefined
+                           },
+"save_framework_draft":
+{ Args: { "p_body": Json,"p_key": string,"p_org": string }; Returns: string
+                           },
 "set_access_grant":
 { Args: { "p_kind": string,"p_level": string,"p_target": string,"p_user": string }; Returns: string
                            },
 "set_automation_pause":
 { Args: { "p_automation": string,"p_item": string,"p_paused": boolean }; Returns: boolean
+                           },
+"set_crosswalk":
+{ Args: { "p_from": string,"p_note"?: string,"p_org": string,"p_relation": string,"p_to": string }; Returns: number
                            },
 "set_field_restriction":
 { Args: { "p_field": string,"p_restricted": boolean,"p_roles": (string)[],"p_user_ids": (string)[] }; Returns: Json
@@ -2882,6 +3036,9 @@ isOneToOne: false
                            },
 "verify_activity_chain":
 { Args: { "p_chain_key": string }; Returns: Json
+                           },
+"withdraw_pack":
+{ Args: { "p_key": string,"p_org": string }; Returns: Json
                            },
 "workflow_decide":
 { Args: { "p_comment"?: string,"p_decision": string,"p_instance": string }; Returns: Json

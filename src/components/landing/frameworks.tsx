@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { Check, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ArrowRight, Check, RefreshCw, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { SiteLibrary, SiteSet } from '@/engine/packs/site-catalogue';
 import { readSiteCatalogue } from '@/lib/site/catalogue';
-import { FRAMEWORKS_PAGE, LINKS } from './content';
+import { FRAMEWORKS_PAGE, LINKS, STANDARD_PAGES } from './content';
 import { Closing } from './landing';
 import { SectionHead, SiteShell, WRAP } from './site-chrome';
 
@@ -96,12 +96,20 @@ function SetCard({ set, wide }: { set: SiteSet; wide?: boolean }) {
           <Fact term={set.apps.length === 1 ? 'App' : 'Apps'}>{set.apps.join(', ')}</Fact>
         ) : null}
       </dl>
-      <div className="mt-auto">
+      <div className="mt-auto flex flex-wrap gap-3">
         <Button asChild variant="secondary" className="h-11 sm:h-10">
           <Link href={LINKS.createAccount}>
             Create account<span className="sr-only"> to set up {set.title}</span>
           </Link>
         </Button>
+        {STANDARD_PAGES[set.key] ? (
+          <Button asChild variant="ghost" className="h-11 sm:h-10">
+            <Link href={STANDARD_PAGES[set.key]!}>
+              More about {set.title}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          </Button>
+        ) : null}
       </div>
     </article>
   );

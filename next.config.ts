@@ -83,6 +83,15 @@ const nextConfig: NextConfig = {
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
         ],
       },
+      // the email-link page (docs/09 §12): its address carries a one-time token, so the same as public forms.
+      // Its Continue form then posts with `Origin: null`; the callback checks `Sec-Fetch-Site` instead.
+      {
+        source: '/auth/confirm',
+        headers: [
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
     ];
   },
 };

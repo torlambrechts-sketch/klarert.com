@@ -168,7 +168,12 @@ export function parseCrosswalkFile(raw: unknown): CrosswalkFile {
   );
 }
 
-/** The engine's type is the schema's output (a compile-time check that the two stay the same). */
+/**
+ * The engine's type is the schema's output (a compile-time check that the two stay the same), except that a file in
+ * the repository can never say `titles: "customer"` (a workspace's own framework, docs/12) and never carries a
+ * requirement's text.
+ */
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
-const sameType: Same<z.output<typeof frameworkSchema>, Framework> = true;
+type RepoFramework = Omit<Framework, 'titles'> & { titles: (typeof TITLES_POLICIES)[number] };
+const sameType: Same<z.output<typeof frameworkSchema>, RepoFramework> = true;
 void sameType;
