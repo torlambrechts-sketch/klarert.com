@@ -12,6 +12,13 @@ export const toolbarPlaceholder = 'text-muted-foreground';
 export const toolbarButton =
   "h-[38px] px-3.5 has-[>svg]:px-3.5 text-label-13 font-medium shadow-none [&_svg:not([class*='size-'])]:size-[15px]";
 
-/** The small count after a control's words ("+7", "3"). */
+/** The small count after a control's words ("+7", "3"): a translucent grey, so it shows on white and on the on state. */
 export const toolbarCount =
-  'bg-soft text-muted-foreground text-label-11-mono rounded-[4px] px-[5px] leading-[18px] font-normal tabular-nums';
+  'bg-gray-alpha-200 text-muted-foreground text-label-11-mono rounded-[4px] px-[5px] leading-[18px] font-normal tabular-nums';
+
+/**
+ * A control that narrows or orders what the sheet shows (a filter, a sort, one group, missing required): darker and
+ * medium weight while it is on, with its count or its words saying what is on. Neutral, never a hue (owner decision
+ * 17 Nov 2026), so colour is not the signal.
+ */
+export const toolbarOn = 'border-faint bg-soft hover:bg-soft text-ink font-medium';

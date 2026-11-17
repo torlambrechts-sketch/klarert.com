@@ -121,7 +121,7 @@ export default async function SoaPage({
             <caption className="sr-only">
               Statement of applicability, {framework.title}, {c.total} requirements
             </caption>
-            <thead className="bg-subtle print:table-header-group">
+            <thead className="bg-head print:table-header-group">
               <tr>
                 {SOA_COLUMNS.map((h) => (
                   <th

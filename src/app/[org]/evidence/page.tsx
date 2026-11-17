@@ -211,7 +211,7 @@ export default async function EvidencePage({
               <div className="border-line bg-background-100 overflow-x-auto rounded-lg border">
                 <table className="text-label-13 w-full min-w-[980px] border-collapse">
                   <thead>
-                    <tr className="border-line bg-subtle text-muted-foreground text-label-12 border-b text-left font-medium">
+                    <tr className="border-surface-line bg-head text-muted-foreground text-label-12 border-b text-left font-medium">
                       <th scope="col" className="px-3 py-2 font-medium">
                         File
                       </th>

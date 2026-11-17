@@ -73,7 +73,7 @@ export function NewAutomationRow({
   return (
     <li className="border-line border-b last:border-b-0">
       <div
-        className={cn('bg-subtle grid min-h-14 items-center gap-x-3 pr-3 pl-1.5', AUTOMATION_GRID)}
+        className={cn('bg-head grid min-h-14 items-center gap-x-3 pr-3 pl-1.5', AUTOMATION_GRID)}
       >
         <RowCaret open onClick={onClose} controls={drawer} label="Close the new automation" />
         <span className="col-span-3 flex min-w-0 items-center gap-3 md:col-span-7">

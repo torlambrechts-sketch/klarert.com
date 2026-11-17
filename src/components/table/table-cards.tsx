@@ -149,7 +149,7 @@ export function TableCards({
               style={{ transform: `translateY(${vr.start - v.options.scrollMargin}px)` }}
             >
               {row.kind === 'group' ? (
-                <div className="border-line bg-subtle flex items-center rounded-lg border py-0.5">
+                <div className="border-surface-line bg-surface flex items-center rounded-lg border py-0.5">
                   <GroupTitle
                     group={row.group}
                     count={row.count}
@@ -237,7 +237,7 @@ function ItemCard({
   return (
     <article
       data-testid="item-card"
-      className="border-line hover:border-ink focus-within:border-ink bg-background-100 relative flex w-full flex-col gap-1.5 rounded-lg border p-3"
+      className="border-surface-line hover:border-ink focus-within:border-ink bg-surface relative flex w-full flex-col gap-1.5 rounded-lg border p-3"
       style={{ borderLeft: `4px solid ${colorVar(group.color)}` }}
     >
       <h3 className="m-0">

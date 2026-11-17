@@ -43,7 +43,7 @@ export function PhoneNav(props: Omit<SideMenuProps, 'onNavigate'>) {
         </button>
       </nav>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent className="bg-subtle">
+        <SheetContent className="bg-sidebar">
           <DialogTitle className="sr-only">Menu</DialogTitle>
           <DialogDescription className="sr-only">
             Sheets and pages of this workspace

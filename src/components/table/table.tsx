@@ -1311,7 +1311,8 @@ export function Table({
                     aria-rowindex={ariaRows.index.get(row.key)}
                     className={cn(
                       'absolute top-0 left-0 flex',
-                      row.kind !== 'gap' && 'border-line bg-background-100 overflow-clip border-x',
+                      row.kind !== 'gap' && 'border-surface-line bg-surface overflow-clip border-x',
+                      row.kind === 'header' && 'bg-head',
                       (row.kind === 'item' || row.kind === 'subitem') && 'group/row',
                       first && 'rounded-t-[10px] border-t',
                       last && 'rounded-b-[10px]',
@@ -1393,7 +1394,7 @@ export function Table({
             aria-hidden
             data-scrollbar
             hidden={!wide}
-            className="bg-background-100/95 border-line sticky bottom-0 z-[6] h-[14px] overflow-x-auto overflow-y-hidden border-t"
+            className="bg-page/95 border-line sticky bottom-0 z-[6] h-[14px] overflow-x-auto overflow-y-hidden border-t"
           >
             <div style={{ width: totalW, height: 1 }} />
           </div>
@@ -1556,7 +1557,7 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
       role="gridcell"
       className={cn(
         'flex w-full items-center',
-        !row.collapsed && 'border-b-line border-b',
+        !row.collapsed && 'border-b-row-line border-b',
         drop.isOver && 'bg-sel',
       )}
     >
@@ -1660,7 +1661,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
       <Sticky
         width={p.stickyW}
         role="columnheader"
-        className="border-b-soft items-end self-stretch border-b"
+        className="border-b-surface-line border-r-col-line bg-head items-end self-stretch border-r border-b"
       >
         <span className="flex h-[34px] w-full items-center">
           {p.canEdit ? (
@@ -1677,7 +1678,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
           ) : (
             <span className="w-[58px] shrink-0" />
           )}
-          <span className="text-muted-foreground text-label-12 truncate pl-[4px]">
+          <span className="text-muted-foreground text-label-12 truncate pl-[4px] font-medium">
             {p.ctx.sheet.itemLabel}
           </span>
         </span>
@@ -1689,7 +1690,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
             <div
               key="__trail"
               role="columnheader"
-              className="border-b-soft bg-background-100 absolute flex items-center border-b pl-1"
+              className="border-b-surface-line bg-head absolute flex items-center border-b pl-1"
               style={{ left: vc.start, width: vc.size, ...cell }}
             >
               {p.canEdit ? (
@@ -1725,7 +1726,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
             <div
               key={`stub:${col.groupId}`}
               role="columnheader"
-              className="border-b-soft bg-background-200 absolute border-b"
+              className="border-b-surface-line border-r-col-line bg-head absolute border-r border-b"
               style={{ left: vc.start, width: vc.size, ...cell }}
             >
               <StubHeader col={col} onToggle={p.onToggleGroup} />
@@ -1791,7 +1792,7 @@ function StubCell({
       title={title}
       onClick={() => onToggle(col.groupId)}
       className={cn(
-        'border-b-line bg-background-200 group-hover/row:bg-subtle text-label-13 absolute top-0 flex h-full cursor-pointer items-center overflow-hidden border-b px-[14px] [&_[data-pill]]:-mx-1.5',
+        'border-b-row-line border-r-col-line bg-subtle group-hover/row:bg-row-hover text-label-13 absolute top-0 flex h-full cursor-pointer items-center overflow-hidden border-r border-b px-[14px] [&_[data-pill]]:-mx-1.5',
         selected && 'bg-sel group-hover/row:bg-sel',
       )}
       style={{ left, width }}
@@ -1854,7 +1855,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
         width={p.stickyW}
         role="none"
         className={cn(
-          'border-b-line group-hover/row:bg-subtle border-b',
+          'border-b-row-line border-r-col-line group-hover/row:bg-row-hover border-r border-b',
           isSelected && 'bg-sel group-hover/row:bg-sel',
           p.current && 'bg-soft',
           drop.isOver && 'shadow-[inset_0_2px_0_var(--focus)]',
@@ -2166,7 +2167,7 @@ function RowMenu({
     <div
       role="gridcell"
       className={cn(
-        'border-b-line group-hover/row:bg-subtle bg-background-100 absolute top-0 flex h-full items-center justify-end border-b pr-2',
+        'border-b-row-line group-hover/row:bg-row-hover bg-surface absolute top-0 flex h-full items-center justify-end border-b pr-2',
         selected && 'bg-sel group-hover/row:bg-sel',
       )}
       style={{ left, width }}
@@ -2237,7 +2238,7 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
     <div
       className={cn(
         'flex w-full items-stretch',
-        !p.endOfCard && 'border-b-line border-b',
+        !p.endOfCard && 'border-b-row-line border-b',
         drop.isOver && 'bg-sel',
       )}
     >
@@ -2287,7 +2288,7 @@ function SummaryRow(p: RowProps & { row: Extract<TableRow, { kind: 'summary' }> 
           <div
             key={columnId(bc)}
             role="gridcell"
-            className="bg-background-100 absolute top-0 flex h-full items-center px-[14px]"
+            className="bg-surface absolute top-0 flex h-full items-center px-[14px]"
             style={{ left: vc.start, width: vc.size }}
           >
             {fn ? (
