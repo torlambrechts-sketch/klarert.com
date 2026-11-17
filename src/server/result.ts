@@ -67,6 +67,30 @@ const DB_MESSAGES: [RegExp, CommandError['code'], string][] = [
   [/pack already installed/, 'conflict', 'This pack is already installed in this workspace.'],
   [/pack already archived/, 'conflict', 'This pack is already archived.'],
   [/pack changed/, 'conflict', 'This pack changed since you previewed it. Preview it again.'],
+  // a workspace's own packs (0075, docs/11 Your own packs)
+  [/pack withdrawn/, 'conflict', 'This pack was withdrawn: it takes no new installs.'],
+  [/pack already withdrawn/, 'conflict', 'This pack is already withdrawn.'],
+  [
+    /the first install needs an owner or admin of both workspaces/,
+    'forbidden',
+    'The first install needs someone who is an owner or admin in both workspaces.',
+  ],
+  [
+    /only owners and admins (publish|withdraw) packs/,
+    'forbidden',
+    'Only owners and admins can publish and withdraw packs.',
+  ],
+  [
+    /publish: version .* is not higher/,
+    'conflict',
+    'This version was published already. Choose a higher one.',
+  ],
+  [
+    /publish: example items come later/,
+    'invalid',
+    'Example items come later: publish without them.',
+  ],
+  [/publish: (.*)/, 'invalid', 'This setup cannot be published as it is. Preview it again.'],
   [/pack not found|pack install not found/, 'not_found', 'This pack is no longer available.'],
   [
     /only owners and admins (install|archive) packs/,

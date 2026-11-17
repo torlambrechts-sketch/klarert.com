@@ -243,8 +243,10 @@ async function planAdoption(
   orgId: string,
   userId: string,
   v: { framework: string; version: string; controlsSheetId?: string | null },
+  /** The publisher of the private pack that lists this framework (docs/11 Your own packs). */
+  sharedFrom: string[] = [],
 ) {
-  const fw = (await readFrameworks(db, orgId)).find(
+  const fw = (await readFrameworks(db, orgId, sharedFrom)).find(
     (f) => f.key === v.framework && f.version === v.version,
   );
   if (!fw) return fail('not_found', 'This framework is no longer in the catalogue.');
@@ -358,8 +360,16 @@ export async function adoptForPack(
   orgId: string,
   userId: string,
   f: { key: string; version: string },
+  /** A private pack's publisher: its own frameworks the pack lists are adopted with it. */
+  sharedFrom: string[] = [],
 ): Promise<Result<{ title: string; adopted: boolean }>> {
-  const r = await planAdoption(db, orgId, userId, { framework: f.key, version: f.version });
+  const r = await planAdoption(
+    db,
+    orgId,
+    userId,
+    { framework: f.key, version: f.version },
+    sharedFrom,
+  );
   if (!r.ok) return r;
   const { fw, plan } = r.data;
   if (plan.state === 'installed') return ok({ title: fw.title, adopted: false });
