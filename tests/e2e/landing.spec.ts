@@ -482,7 +482,10 @@ test('an email link sent from klarert.com keeps its token and query through the 
       expect(res.status(), `${host}${link}`).toBe(301);
       const to = new URL(res.headers()['location']!);
       expect(to.origin, link).toBe('https://www.keptrow.com');
-      expect(to.pathname + to.search, link).toBe(link);
+      // Next.js may re-encode a value ("/" as %2F); the parameters read back the same
+      const sent = new URL(link, 'https://www.keptrow.com');
+      expect(to.pathname, link).toBe(sent.pathname);
+      expect([...to.searchParams], link).toEqual([...sent.searchParams]);
     }
   // on the new host the Continue page shows its button and keeps the token in the form
   const page = await request.get(links[0]!, { maxRedirects: 0 });
