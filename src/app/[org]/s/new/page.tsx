@@ -36,7 +36,6 @@ export default async function NewSheetPage({
   return (
     <main className="flex w-full flex-col gap-6 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
-        className="border-line border-b pb-[18px]"
         crumb={workspace.name}
         title="New sheet"
         description="A sheet is a table of items. Every item gets the sheet’s fields; you can change them later."

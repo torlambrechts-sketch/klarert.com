@@ -164,18 +164,16 @@ export function Inbox({
   return (
     <Popover open={inboxOpen} onOpenChange={setInboxOpen}>
       <PopoverTrigger
-        className="hover:bg-soft text-label-14 relative flex h-8 items-center gap-1.5 rounded-md px-2.5 font-medium max-[759.98px]:h-11 max-[759.98px]:min-w-11 max-[759.98px]:justify-center"
+        className="text-navy hover:bg-panel relative flex size-11 items-center justify-center rounded-full transition-colors duration-150"
         aria-label={unread > 0 ? `Inbox ${unread > 99 ? '99+' : unread} unread` : 'Inbox'}
         data-testid="inbox-button"
         data-state-loaded={state.status === 'ready' ? '' : undefined}
       >
-        <Bell className="size-4" aria-hidden />
-        <span className="desk-only">Inbox</span>
-        {/* the visible words read "Inbox 4", the start of the name (WCAG 2.5.3, label in name); flex drops the space */}
-        {unread > 0 ? ' ' : null}
+        <Bell className="size-5" aria-hidden />
+        {/* the orange unread mark (docs/18 §4) carries the count (docs/05 §2.3) */}
         {unread > 0 ? (
           <span
-            className="bg-crit text-label-12 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 font-bold text-white"
+            className="bg-warn-mark text-navy text-label-11 absolute top-1 right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white px-1 font-bold"
             data-testid="inbox-count"
             aria-hidden
           >

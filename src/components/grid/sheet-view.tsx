@@ -309,8 +309,8 @@ function SheetBody(props: SheetViewProps) {
         'flex min-w-0 flex-col px-4 pt-5 sm:px-[28px] sm:pt-[26px]',
         // the Table and Insights scroll with the page; the other views fill the window and scroll inside
         tabular || active.type === 'insights' || active.type === 'design'
-          ? 'min-h-[calc(100dvh-48px)] pb-[24px]'
-          : 'h-[calc(100dvh-48px)] pb-3 max-[759px]:h-[calc(100dvh-112px)]',
+          ? 'min-h-[calc(100dvh-69px)] pb-[24px]'
+          : 'h-[calc(100dvh-69px)] pb-3 max-[759px]:h-[calc(100dvh-133px)]',
       )}
     >
       <ShellCrumb>

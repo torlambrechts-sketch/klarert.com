@@ -1,8 +1,23 @@
 import { cn } from '@/lib/utils';
-import { ShellCrumb } from './shell-crumb';
+import { CRUMB_SLOT } from './shell-crumb';
 
-// Page header and underline tabs shared by every page (docs/05 §2): an optional crumb (shown in the top strip), the h1 (heading-26), one line
-// of description, actions on the right; tabs under it with a 2 px ink underline on the current one.
+// Page header shared by every page (docs/18 §4 hero, docs/05 §2 content): a navy band behind the crumbs (the page's
+// own, or what <ShellCrumb> renders into the slot), the h1 and one line of description, actions on the right. The
+// band runs the full width of the page column. When the element after it is marked `data-hero-overlap` (cards,
+// the Home tiles), the band reaches 88 px under it so that element overlaps the hero.
+
+/** The hero's decoration: three --brand circles at the top right, hidden from screen readers. */
+function HeroDeco() {
+  return (
+    <span aria-hidden className="hero-deco">
+      <svg width="420" height="320" viewBox="0 0 420 320" fill="none">
+        <circle cx="260" cy="140" r="170" stroke="var(--brand)" strokeWidth="2" />
+        <circle cx="300" cy="180" r="110" stroke="var(--brand)" strokeWidth="2" />
+        <circle cx="330" cy="200" r="50" fill="var(--brand)" />
+      </svg>
+    </span>
+  );
+}
 
 export function PageHeader({
   crumb,
@@ -18,25 +33,26 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <div className={cn('flex flex-wrap items-start justify-between gap-x-5 gap-y-3', className)}>
-      <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-1.5">
-        {/* the crumb sits in the top strip on every page, as on a sheet, so titles line up across pages */}
+    <div className={cn('page-hero', className)}>
+      <HeroDeco />
+      <div className="hero-text flex min-w-0 flex-[1_1_320px] flex-col gap-3">
+        {/* crumbs: the page's own, or the slot <ShellCrumb> renders into (a sheet's folder / sheet and chips) */}
         {crumb ? (
-          <ShellCrumb>
-            <div className="text-muted-foreground text-label-14 flex min-w-0 items-center gap-2.5">
-              {crumb}
-            </div>
-          </ShellCrumb>
-        ) : null}
-        <h1 className="m-0 break-words">{title}</h1>
+          <div className="hero-crumbs text-label-14 flex min-w-0 items-center gap-2.5">{crumb}</div>
+        ) : (
+          <div id={CRUMB_SLOT} className="hero-crumbs flex min-w-0 items-center empty:hidden" />
+        )}
+        <h1 className="text-hero m-0 break-words text-white">{title}</h1>
         {description ? (
-          <p className="text-muted-foreground text-copy-14 m-0 max-w-[780px] leading-[21px] text-pretty">
+          <p className="text-hero-sub text-brand-soft m-0 max-w-[760px] text-pretty">
             {description}
           </p>
         ) : null}
       </div>
       {actions ? (
-        <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">{actions}</div>
+        <div className="hero-actions flex max-w-full shrink-0 flex-wrap items-center gap-2">
+          {actions}
+        </div>
       ) : null}
     </div>
   );
@@ -45,7 +61,7 @@ export function PageHeader({
 // the tabs scroll the current one into view, so they are a client component of their own
 export { PageTabs, type PageTab } from './page-tabs';
 
-/** A card in the Geist material: 8 px radius, 1 px border, no shadow. */
+/** A card (docs/18 §5): white, 8 px radius, the light navy shadow; it may overlap the page's hero. */
 export function Card({
   title,
   description,
@@ -67,10 +83,8 @@ export function Card({
   return (
     <section
       aria-labelledby={headingId}
-      className={cn(
-        'border-line bg-background-100 flex min-w-0 flex-col rounded-lg border',
-        className,
-      )}
+      data-hero-overlap
+      className={cn('bg-surface shadow-card rounded-card flex min-w-0 flex-col', className)}
     >
       {title ? (
         <div className="px-[22px] pt-5 pb-1.5">

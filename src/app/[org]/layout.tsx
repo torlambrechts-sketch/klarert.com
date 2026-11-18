@@ -3,6 +3,7 @@ import { PhoneNav } from '@/components/shell/phone-nav';
 import { auditorBanner } from '@/engine/access';
 import { ShellProvider } from '@/components/shell/shell-context';
 import { CreateProvider } from '@/components/create/create-provider';
+import { Rail } from '@/components/shell/rail';
 import { SideMenu } from '@/components/shell/side-menu';
 import { TopBar } from '@/components/shell/top-bar';
 import { getMyWorkspaces, isAdminRole, isEditorRole, requireMember } from '@/server/auth';
@@ -10,7 +11,7 @@ import { getAppsForMenu } from '@/server/apps/read';
 import { getMyWorkBadge } from '@/server/repositories/my-work';
 import { getNav } from '@/server/repositories/sheets';
 
-// App shell (docs/05 §2): the side menu, then the top bar and the page.
+// App shell (docs/18 §4 look, docs/05 §2 content): the top bar, the navy rail, the side panel and the page.
 export default async function OrgLayout({
   children,
   params,
@@ -40,22 +41,24 @@ export default async function OrgLayout({
     <ShellProvider>
       <CreateProvider org={org} canEdit={isEditorRole(role)}>
         <div className="app-shell">
+          <TopBar
+            current={workspace}
+            workspaces={workspaces}
+            canManage={isAdminRole(role)}
+            timeZone={workspace.time_zone}
+            me={{
+              id: user.id,
+              displayName: profile.display_name,
+              initials: profile.initials,
+              color: profile.color,
+              email: user.email ?? '',
+            }}
+          />
+          <Rail org={org} canEdit={isEditorRole(role)} canManage={isAdminRole(role)} />
           <aside className="side-col" aria-label="Workspace">
             <SideMenu {...menuProps} />
           </aside>
-          <div className="bg-page flex min-w-0 flex-col">
-            <TopBar
-              current={workspace}
-              canManage={isAdminRole(role)}
-              timeZone={workspace.time_zone}
-              me={{
-                id: user.id,
-                displayName: profile.display_name,
-                initials: profile.initials,
-                color: profile.color,
-                email: user.email ?? '',
-              }}
-            />
+          <div className="app-main bg-page flex min-w-0 flex-col">
             {role === 'auditor' && workspace.expiresAt ? (
               <p
                 role="status"
@@ -66,7 +69,7 @@ export default async function OrgLayout({
                 {auditorBanner(workspace.expiresAt, workspace.time_zone)}.
               </p>
             ) : null}
-            <div className="min-w-0 flex-1">{children}</div>
+            <div className="app-page min-w-0 flex-1">{children}</div>
           </div>
         </div>
         <PhoneNav {...menuProps} />

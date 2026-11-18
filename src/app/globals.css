@@ -595,6 +595,12 @@
 }
 
 /* ── Keptrow type scale (docs/18 §3), Figtree; body 15 px / 1.4 ── */
+@utility text-logo {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
 @utility text-hero {
   font-size: 40px;
   line-height: 1.15;
@@ -761,56 +767,167 @@
   background-image: radial-gradient(80% 70% at 50% 0%, var(--blue-100), transparent 75%);
 }
 
-/* ───────────── app shell (docs/05 §2, §5) ─────────────
-   one 256 px side menu (folders collapse) and the main column; under 760 px a bottom bar and the menu as a sheet. */
+/* ───────────── app shell (docs/18 §4 look, docs/05 §2 and §5 content) ─────────────
+   a white 69 px top bar across the window; under it the 80 px navy rail, the 288 px side panel and the page. The
+   panel collapses (Ctrl+B, the rail's toggle or its ‹): the rail stays and the page stretches. Under 760 px the
+   rail and the panel give way to the navy bottom bar and the menu sheet (docs/05 §5). */
 .app-shell {
   display: grid;
-  grid-template-columns: 256px minmax(0, 1fr);
+  grid-template-columns: 80px 288px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'top top top'
+    'rail side main';
   min-height: 100dvh;
+  /* the rail and the panel run the full height of a long page, below their sticky contents */
+  background: linear-gradient(
+    to right,
+    var(--navy) 80px,
+    var(--panel) 80px 367px,
+    var(--line) 367px 368px,
+    var(--page) 368px
+  );
 }
-
-.side-col {
+.app-shell > .top-bar {
+  grid-area: top;
+}
+.rail-col {
+  grid-area: rail;
   position: sticky;
-  top: 0;
-  height: 100dvh;
-  z-index: 40;
-  background: var(--sidebar);
+  top: 69px;
+  height: calc(100dvh - 69px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+  background: var(--navy);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.side-col {
+  grid-area: side;
+  position: sticky;
+  top: 69px;
+  height: calc(100dvh - 69px);
+  z-index: 20;
+  background: var(--panel);
   border-right: 1px solid var(--line);
+}
+.app-main {
+  grid-area: main;
+}
+/* the hero's band runs past the page's padding to the column's edges; it stops there */
+.app-page {
+  overflow: clip;
 }
 
 .bottom-bar {
   display: none;
 }
 
-/* collapsed side menu (Ctrl+B): icons only, names as tooltips */
 :root[data-side='collapsed'] .app-shell {
-  grid-template-columns: 60px minmax(0, 1fr);
+  background: linear-gradient(to right, var(--navy) 80px, var(--page) 80px);
+  grid-template-columns: 80px minmax(0, 1fr);
+  grid-template-areas:
+    'top top'
+    'rail main';
 }
-:root[data-side='collapsed'] .side-col [data-side-text],
-:root[data-side='collapsed'] .side-col h2,
-:root[data-side='collapsed'] .side-col kbd,
-:root[data-side='collapsed'] .side-col input[type='search'],
-:root[data-side='collapsed'] .side-col [data-side-trailing] {
+:root[data-side='collapsed'] .side-col {
   display: none;
 }
-:root[data-side='collapsed'] .side-col [data-side-list] {
-  margin-left: 0;
-  padding-left: 0;
-  border-left: 0;
+
+/* ── the hero (docs/18 §4): a navy band behind the page head; the band is painted by border-image so it reaches the
+   column's edges and the page's top padding whatever the page's own padding is ── */
+.page-hero {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  column-gap: 20px;
+  row-gap: 12px;
+  padding: 6px 0 32px;
+  border: 0;
+  color: var(--surface);
+  border-image: linear-gradient(var(--navy) 0 0) fill 0 / /26px 100vw 0;
 }
-:root[data-side='collapsed'] .side-col a,
-:root[data-side='collapsed'] .side-col button,
-:root[data-side='collapsed'] .side-col label {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
+.page-hero:has(+ [data-hero-overlap]) {
+  border-image-outset: 26px 100vw 104px;
+}
+.page-hero + [data-hero-overlap] {
+  position: relative;
+}
+.hero-text {
+  position: relative;
+}
+.hero-actions {
+  position: relative;
+}
+.hero-deco {
+  position: absolute;
+  top: -26px;
+  right: -28px;
+  bottom: 0;
+  width: 420px;
+  max-width: 100vw;
+  overflow: hidden;
+  pointer-events: none;
+}
+.page-hero:has(+ [data-hero-overlap]) .hero-deco {
+  bottom: -104px;
+}
+.hero-deco svg {
+  position: absolute;
+  right: -60px;
+  top: -80px;
+}
+/* crumbs on navy: --brand-soft words, underlined links, the current one white */
+.hero-crumbs {
+  color: var(--brand-soft);
+  font-size: 14px;
+}
+.hero-crumbs a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hero-crumbs .text-muted-foreground,
+.hero-crumbs .text-line-strong,
+.hero-text p .text-muted-foreground {
+  color: var(--brand-soft);
+}
+.hero-crumbs [aria-current='page'] {
+  color: var(--surface);
+}
+/* buttons on navy: plain and link buttons take white words, the filled one a light ring */
+.hero-actions [data-variant='ghost'],
+.hero-actions [data-variant='tertiary'],
+.hero-actions [data-variant='link'] {
+  color: #fff;
+}
+.hero-actions [data-variant='ghost']:hover,
+.hero-actions [data-variant='tertiary']:hover {
+  background: var(--brand-2);
+}
+.hero-actions [data-variant='default'] {
+  box-shadow: inset 0 0 0 1px var(--brand-soft);
+}
+.page-hero :focus-visible {
+  outline-color: var(--surface);
 }
 
 @media (max-width: 759.98px) {
-  .app-shell {
+  .app-shell,
+  :root[data-side='collapsed'] .app-shell {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'top'
+      'main';
     padding-bottom: 64px;
+    background: var(--page);
   }
+  .rail-col,
   .side-col {
     display: none;
   }
@@ -820,8 +937,7 @@
     position: fixed;
     inset: auto 0 0 0;
     height: 64px;
-    background: var(--sidebar);
-    border-top: 1px solid var(--line);
+    background: var(--navy);
     z-index: 45;
   }
   .desk-only {
@@ -834,30 +950,44 @@
     z-index: 60;
     display: flex;
     align-items: center;
-    height: 48px;
+    height: 69px;
     max-width: none;
     padding: 0 12px;
-    background: var(--background-100);
+    background: var(--surface);
     border-bottom: 1px solid var(--line);
   }
   .search-box[data-open] .search-icon {
-    left: 22px;
+    left: 28px;
   }
   .search-box[data-open] .search-cancel {
     display: inline-flex;
   }
   .search-box[data-open] .search-results {
     position: fixed;
-    top: 48px;
+    top: 69px;
     left: 0;
     right: 0;
-    max-height: calc(100dvh - 48px - 64px);
+    max-height: calc(100dvh - 69px - 64px);
     border-radius: 0;
   }
 }
 @media (min-width: 760px) {
   .phone-only {
     display: none !important;
+  }
+}
+/* phones (< 640 px, docs/18 §4): the hero's 24 × 20 px padding and the 30 px title (text-hero) */
+@media (max-width: 639.98px) {
+  .page-hero {
+    padding: 4px 0 24px;
+    border-image-outset: 20px 100vw 0;
+  }
+  .page-hero:has(+ [data-hero-overlap]) {
+    border-image-outset: 20px 100vw 104px;
+  }
+  .hero-deco {
+    top: -20px;
+    right: -16px;
   }
 }
 
@@ -903,7 +1033,18 @@
     display: block;
   }
   .side-col,
+  .rail-col,
+  .top-bar,
+  .hero-deco,
   .bottom-bar {
     display: none;
+  }
+  .page-hero {
+    border-image: none;
+    color: var(--ink);
+  }
+  .page-hero h1,
+  .page-hero p {
+    color: var(--ink);
   }
 }

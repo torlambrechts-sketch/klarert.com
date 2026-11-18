@@ -136,12 +136,12 @@ export function GlobalSearch({ org }: { org: string }) {
     <form
       ref={box}
       role="search"
-      className="search-box relative min-w-0 flex-1 min-[760px]:w-[260px] min-[760px]:flex-none"
+      className="search-box relative max-w-[520px] min-w-0 flex-[1_1_260px]"
       data-open={open ? '' : undefined}
       onSubmit={(e) => e.preventDefault()}
     >
       <Search
-        className="search-icon text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+        className="search-icon text-muted-foreground pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2"
         aria-hidden
       />
       <input
@@ -163,7 +163,7 @@ export function GlobalSearch({ org }: { org: string }) {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        className="border-line placeholder:text-muted-foreground bg-background-100 text-label-14 focus-visible:border-focus focus-visible:ring-focus h-8 w-full min-w-0 rounded-md border pr-8 pl-8 outline-none focus-visible:ring-2"
+        className="border-line-input placeholder:text-muted-foreground bg-surface text-body h-11 w-full min-w-0 rounded-full border pr-10 pl-[46px]"
       />
       {open ? (
         <button
@@ -178,7 +178,7 @@ export function GlobalSearch({ org }: { org: string }) {
         </button>
       ) : (
         <kbd
-          className="text-muted-foreground border-line bg-subtle desk-only text-label-12-mono pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border px-1.5 leading-[18px]"
+          className="text-muted-foreground border-line bg-subtle desk-only text-label-12-mono pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 rounded border px-1.5 leading-[18px]"
           aria-hidden
         >
           /
@@ -188,7 +188,7 @@ export function GlobalSearch({ org }: { org: string }) {
         <button
           type="button"
           aria-label="Clear search"
-          className="hover:bg-soft desk-only absolute top-1/2 right-1 flex size-7 -translate-y-1/2 items-center justify-center rounded-md"
+          className="hover:bg-soft desk-only absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full"
           onClick={() => {
             setText('');
             searchRef.current?.focus();

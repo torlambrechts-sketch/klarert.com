@@ -548,10 +548,7 @@ export function MenuSheets(props: MenuSheetsProps) {
   return (
     <>
       <div className="group/row flex items-center pr-1">
-        <h2
-          id={props.headingId}
-          className="text-muted-foreground text-label-12 flex-1 px-2.5 pt-0.5 pb-1.5 font-medium"
-        >
+        <h2 id={props.headingId} className="text-section-label flex-1 px-4 pt-4 pb-1">
           {title}
         </h2>
         {canEdit ? (
@@ -1035,7 +1032,7 @@ function SheetRow({
           title="Restricted. Ask an owner to give you access."
           className={cn(
             itemClass,
-            'text-muted-foreground text-label-13 h-8 min-w-0 flex-1 cursor-default gap-[9px] px-2',
+            'text-muted-foreground min-w-0 flex-1 cursor-default no-underline hover:no-underline',
           )}
         >
           <SheetCode code={sheet.code} />
@@ -1055,7 +1052,7 @@ function SheetRow({
           onDoubleClick={canEdit ? () => setRenaming({ kind: 'sheet', id: sheet.id }) : undefined}
           data-testid={`rail-sheet-${sheet.code}`}
           data-menu-row={sheet.id}
-          className={cn(itemClass, 'group/item text-label-13 h-8 min-w-0 flex-1 gap-[9px] px-2')}
+          className={cn(itemClass, 'group/item min-w-0 flex-1')}
           title={sheet.name}
         >
           <SheetCode code={sheet.code} />

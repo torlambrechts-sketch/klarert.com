@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
-// The Geist type scale (globals.css: text-heading-*, text-label-*, text-copy-*, with -mono variants) are font sizes
+// The type scales (globals.css: the Keptrow text-hero … text-section-label and the Geist: text-heading-*, text-label-*, text-copy-*, with -mono variants) are font sizes
 // and the Geist materials (shadow-tooltip, shadow-menu, shadow-modal, shadow-fullscreen) are shadows, not colours:
 // without this, `cn('text-label-13', 'text-white')` would drop the size.
 const sizes = (kind: string, steps: number[], mono: number[] = []) => [
@@ -21,10 +21,13 @@ const twMerge = extendTailwindMerge({
               [14, 13, 12.5, 12, 11.5, 11, 10.5],
             ),
             ...sizes('copy', [24, 20, 18, 16, 14, 13], [14, 13]),
+            // the Keptrow type scale (docs/18 §3)
+            ...['logo', 'hero', 'hero-sub', 'figure', 'kpi', 'card-title', 'panel-title', 'nav'],
+            ...['body', 'sub', 'tab', 'section-label'],
           ],
         },
       ],
-      shadow: [{ shadow: ['tooltip', 'menu', 'modal', 'fullscreen'] }],
+      shadow: [{ shadow: ['tooltip', 'menu', 'modal', 'fullscreen', 'card', 'drawer'] }],
     },
   },
 });

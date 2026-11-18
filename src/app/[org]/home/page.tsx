@@ -95,7 +95,6 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
   return (
     <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
       <PageHeader
-        className="border-line mb-2 border-b pb-[18px]"
         crumb={workspace.name}
         title={`${hello}, ${first}`}
         description={
@@ -114,7 +113,11 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
           timeZone={workspace.time_zone}
         />
       ) : mine ? (
-        <nav aria-label="My work at a glance" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <nav
+          aria-label="My work at a glance"
+          data-hero-overlap
+          className="grid grid-cols-2 gap-4 lg:grid-cols-4"
+        >
           {TILES.map(({ bucket, icon: Icon }) => {
             const n = mine.work.counts[bucket];
             return (

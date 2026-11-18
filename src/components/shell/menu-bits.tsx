@@ -1,11 +1,10 @@
-// Shared look of side-menu rows (docs/05 §2.1). Under 760 px every row is 44 px high, a touch target (UX-15).
+// Shared look of side panel rows (docs/18 §4, docs/05 §2.1): 44 px rows, 16 px navy words and an 18 px icon; the
+// active row is --brand and bold; hover underlines.
 
-// the active row carries a 3 px navy marker at its left edge (docs/05 §6.1: --brand marks the active side menu row)
 export const itemClass =
-  'relative flex h-[34px] max-[759.98px]:h-11 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-label-14 text-ink outline-offset-[-2px] hover:bg-nav-hover hover:text-ink aria-[current=page]:bg-nav-active aria-[current=page]:font-medium aria-[current=page]:text-ink aria-[current=page]:shadow-[inset_3px_0_0_var(--brand)]';
+  'relative flex min-h-11 w-full items-center gap-2.5 rounded-md px-4 text-left text-nav text-navy outline-offset-[-3px] underline-offset-4 hover:underline aria-[current=page]:font-bold aria-[current=page]:text-brand';
 
-export const iconClass =
-  'text-muted-foreground group-hover/item:text-ink group-aria-[current=page]/item:text-ink size-4 shrink-0';
+export const iconClass = 'text-navy group-aria-[current=page]/item:text-brand size-[18px] shrink-0';
 
 /**
  * Row controls ("…", drag handle, "+"): shown on hover or focus with a mouse, always on touch screens and phones,

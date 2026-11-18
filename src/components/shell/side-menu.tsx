@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Check,
+  ChevronDown,
+  ChevronLeft,
   ChevronsUpDown,
   FileCheck2,
   ClipboardCheck,
@@ -13,7 +15,6 @@ import {
   LayoutDashboard,
   Plus,
   SlidersHorizontal,
-  PanelLeft,
   Network,
   Workflow,
   Zap,
@@ -33,12 +34,15 @@ import { iconClass, itemClass } from './menu-bits';
 import { MenuRegisters } from './menu-registers';
 import { MenuSheets } from './menu-sheets';
 import { CreateButton, CreateSheetLink } from '@/components/create/create-provider';
+import { useShell } from './shell-context';
 
-// The side menu (docs/05 §2.1, owner decision 15 Nov 2026): workspace switcher and Create (editors and up), then four
+// The side panel (docs/18 §4 look, docs/05 §2.1 content, owner decision 15 Nov 2026): the workspace name with a
+// collapse ‹ (on phones the workspace switcher; on desktop it is in the top bar) and Create (editors and up), then four
 // groups. Work: Home, My work and the installed packs' apps (docs/13). Registers: the shared registers' domains, then the workspace's own
 // folders and sheets (menu-sheets.tsx: "+", "…" menus, rename, drag and drop). Reports: Dashboards, Evidence library,
 // Audit outputs. Build (editors and up): Workflow, Automations, Design and Workspace admin (admins and owners). One
-// search, in the top bar ("/"). 256 px on desktop; on phones the same menu opens as a sheet from the bottom bar.
+// search, in the top bar ("/"). 288 px on desktop beside the rail; on phones the same menu opens as a sheet from the
+// bottom bar.
 // Closed folders are remembered per browser.
 
 export type Ws = { id: string; name: string; slug: string };
@@ -126,22 +130,31 @@ function NavLink({
   );
 }
 
-function WorkspaceSwitcher({ current, workspaces }: { current: Ws; workspaces: Ws[] }) {
+export function WorkspaceSwitcher({
+  current,
+  workspaces,
+  variant = 'panel',
+}: {
+  current: Ws;
+  workspaces: Ws[];
+  /** top: navy words and a chevron in the top bar; panel: the phone menu sheet's first row. */
+  variant?: 'top' | 'panel';
+}) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="hover:bg-soft flex h-[38px] w-full items-center gap-[9px] rounded-md px-2 text-left outline-offset-[-2px] max-[759.98px]:h-11">
-        <span
-          aria-hidden
-          className="bg-ink text-primary-foreground text-label-11 flex size-[22px] shrink-0 items-center justify-center rounded-full font-semibold"
-        >
-          {initialsOf(current.name)}
-        </span>
-        <span data-side-text className="text-label-14 min-w-0 flex-1 truncate font-medium">
-          {current.name}
-        </span>
-        <ChevronsUpDown className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
-        <span className="sr-only">Switch workspace</span>
-      </DropdownMenuTrigger>
+      {variant === 'top' ? (
+        <DropdownMenuTrigger className="text-navy hover:bg-panel text-body flex h-11 max-w-[16rem] items-center gap-2 rounded-full px-3 font-medium transition-colors duration-150">
+          <span className="min-w-0 truncate">{current.name}</span>
+          <ChevronDown className="size-4 shrink-0" aria-hidden />
+          <span className="sr-only">Switch workspace</span>
+        </DropdownMenuTrigger>
+      ) : (
+        <DropdownMenuTrigger className="text-navy hover:bg-brand-soft flex h-11 w-full items-center gap-2.5 rounded-md px-4 text-left outline-offset-[-3px]">
+          <span className="text-panel-title min-w-0 flex-1 truncate">{current.name}</span>
+          <ChevronsUpDown className="size-4 shrink-0" aria-hidden />
+          <span className="sr-only">Switch workspace</span>
+        </DropdownMenuTrigger>
+      )}
       <DropdownMenuContent align="start" className="min-w-60">
         <DropdownMenuLabel className="text-muted-foreground text-label-12 font-medium">
           Your workspaces
@@ -188,12 +201,8 @@ function Group({
 }) {
   return (
     <>
-      {separator ? <div className="bg-line mx-1 my-2.5 h-px shrink-0" /> : null}
-      <section aria-labelledby={id} className="flex flex-col">
-        <h2
-          id={id}
-          className="text-muted-foreground text-label-12 px-2.5 pt-0.5 pb-1.5 font-medium"
-        >
+      <section aria-labelledby={id} className={cn('flex flex-col', separator && 'mt-2')}>
+        <h2 id={id} className="text-section-label px-4 pt-4 pb-1">
           {title}
         </h2>
         <ul className="flex flex-col gap-px">{children}</ul>
@@ -243,11 +252,7 @@ export function SideMenu({
     canEdit && !empty ? (
       <ul className="flex flex-col gap-px">
         <li>
-          <CreateSheetLink
-            org={org}
-            onNavigate={onNavigate}
-            className={cn(itemClass, 'text-muted-foreground text-label-14 h-8 px-2')}
-          >
+          <CreateSheetLink org={org} onNavigate={onNavigate} className={itemClass}>
             <Plus className={iconClass} aria-hidden />
             <span data-side-text className="min-w-0 flex-1 truncate">
               New sheet
@@ -260,11 +265,15 @@ export function SideMenu({
   const ids = onNavigate ? 'menu-phone' : 'menu';
 
   return (
-    <nav aria-label="Side menu" className="flex h-full flex-col px-2 pt-2.5 pb-4">
-      <WorkspaceSwitcher current={current} workspaces={workspaces} />
+    <nav aria-label="Side menu" className="flex h-full flex-col px-4 pt-7 pb-6">
+      {onNavigate ? (
+        <WorkspaceSwitcher current={current} workspaces={workspaces} />
+      ) : (
+        <PanelHead name={current.name} />
+      )}
       {/* Create: editors, admins and owners, the same check as Build (owner decision 15 Nov 2026) */}
       {canEdit ? (
-        <CreateButton onOpen={onNavigate} className="mt-2 mb-2.5" />
+        <CreateButton onOpen={onNavigate} className="mt-3 mb-1" />
       ) : (
         <div aria-hidden className="h-2" />
       )}
@@ -307,7 +316,7 @@ export function SideMenu({
             onNavigate={onNavigate}
             trailing={
               myWorkCount > 0 ? (
-                <span className="border-line bg-background-100 text-muted-foreground text-label-11-mono rounded-full border px-1.5 leading-[17px]">
+                <span className="text-muted-foreground text-label-13 font-medium">
                   {myWorkCount}
                   <span className="sr-only"> waiting</span>
                 </span>
@@ -316,7 +325,6 @@ export function SideMenu({
           />
         </Group>
 
-        <div className="bg-line mx-1 my-2.5 h-px shrink-0" />
         {/* Registers: the shared registers' domains, then the workspace's own folders and sheets (docs/05 §2.1) */}
         <section aria-labelledby={`${ids}-registers`} className="flex flex-col">
           <MenuSheets
@@ -406,51 +414,26 @@ export function SideMenu({
           </Group>
         ) : null}
       </div>
-      {onNavigate ? null : <CollapseToggle />}
     </nav>
   );
 }
 
-/** "Collapse" at the foot of the side menu (Ctrl+B or Cmd+B): icons only, remembered in this browser. */
-function CollapseToggle() {
-  const [collapsed, setCollapsed] = useState(false);
-  useEffect(() => {
-    let saved = false;
-    try {
-      saved = localStorage.getItem('side-collapsed') === '1';
-    } catch {}
-    setCollapsed(saved);
-  }, []);
-  useEffect(() => {
-    document.documentElement.dataset.side = collapsed ? 'collapsed' : 'open';
-    try {
-      localStorage.setItem('side-collapsed', collapsed ? '1' : '0');
-    } catch {}
-  }, [collapsed]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'b') {
-        const t = e.target as HTMLElement | null;
-        if (t?.isContentEditable) return;
-        e.preventDefault();
-        setCollapsed((c) => !c);
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
-  const label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+/** The panel's title (docs/18 §4): the workspace name, 20 px navy, and the collapse ‹ (Ctrl+B). */
+function PanelHead({ name }: { name: string }) {
+  const { toggleSide } = useShell();
   return (
-    <button
-      type="button"
-      onClick={() => setCollapsed((c) => !c)}
-      aria-expanded={!collapsed}
-      aria-label={label}
-      title={`${collapsed ? 'Expand' : 'Collapse'} sidebar (Ctrl+B)`}
-      className={cn(itemClass, 'text-muted-foreground mt-2 shrink-0')}
-    >
-      <PanelLeft className="size-4 shrink-0" aria-hidden />
-      <span data-side-text>Collapse</span>
-    </button>
+    <div className="flex items-center justify-between gap-2 pl-4">
+      <p className="text-panel-title text-navy m-0 min-w-0 truncate">{name}</p>
+      <button
+        type="button"
+        onClick={toggleSide}
+        aria-expanded
+        aria-label="Collapse side menu"
+        title="Collapse side menu (Ctrl+B)"
+        className="text-navy hover:bg-brand-soft flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-150"
+      >
+        <ChevronLeft className="size-5" aria-hidden />
+      </button>
+    </div>
   );
 }
