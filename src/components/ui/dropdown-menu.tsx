@@ -31,16 +31,21 @@ function DropdownMenu({
   );
   React.useEffect(() => {
     if (!open) return;
-    // focus moving into the menu can scroll it into view: only scrolls after it settled close it
-    const since = Date.now();
-    const onScroll = (e: Event) => {
-      if (Date.now() - since < 150) return;
+    // the person scrolling the page (wheel or touch outside the menu) closes it. Not `scroll` events: the page also
+    // scrolls when a menu item changes what it shows (a filter shortens the table and the scroll position clamps)
+    // or when focus brings an item into view, and the menu must stay open then.
+    const onUserScroll = (e: Event) => {
       const t = e.target;
       if (t instanceof Element && t.closest(MENU_CONTENT)) return;
       setOpen(false);
     };
-    window.addEventListener('scroll', onScroll, true);
-    return () => window.removeEventListener('scroll', onScroll, true);
+    const opts = { capture: true, passive: true } as const;
+    window.addEventListener('wheel', onUserScroll, opts);
+    window.addEventListener('touchmove', onUserScroll, opts);
+    return () => {
+      window.removeEventListener('wheel', onUserScroll, opts);
+      window.removeEventListener('touchmove', onUserScroll, opts);
+    };
   }, [open, setOpen]);
   return (
     <DropdownMenuPrimitive.Root
