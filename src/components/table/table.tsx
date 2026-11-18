@@ -103,6 +103,7 @@ import {
   endsCard,
   GROUP_LABEL_H,
   ownLine,
+  fillColumns,
   trailWidth,
   positionsAtEnd,
   rangeOf,
@@ -442,12 +443,27 @@ export function Table({
     [widths, showTrends],
   );
   const stickyW = CHECK_W + nameWidth;
-  // columns keep their widths (wider tables scroll); the trailing column takes the room left in the card
-  const widthOf = baseWidth;
+  // columns fill the card (owner decision 18 Nov 2026, docs/18 C2): field columns grow in proportion to their
+  // default or resized width; the checkbox and name, "+" / "…" and collapsed groups' stubs stay as they are; never
+  // narrower than the base, so wider tables scroll. Recomputed whenever the card's width changes (ResizeObserver).
+  const filled = useMemo(() => {
+    const grow = bodyCols.filter(
+      (c): c is Extract<BodyCol, { kind: 'field' }> => c.kind === 'field',
+    );
+    const stubs = bodyCols.length - grow.length;
+    const out = fillColumns(
+      grow.map((c) => baseWidth(c.field)),
+      stickyW + EDGE + TRAIL + stubs * STUB_W,
+      viewW,
+    );
+    return new Map(grow.map((c, i) => [c.field.id, out[i]!]));
+  }, [bodyCols, baseWidth, stickyW, viewW]);
+  const widthOf = useCallback((f: Field) => filled.get(f.id) ?? baseWidth(f), [filled, baseWidth]);
   const colWidth = useCallback(
-    (c: BodyCol) => (c.kind === 'stub' ? STUB_W : baseWidth(c.field)),
-    [baseWidth],
+    (c: BodyCol) => (c.kind === 'stub' ? STUB_W : widthOf(c.field)),
+    [widthOf],
   );
+  // "+" / "…": 44 px once the columns fill the card; the room left when no field column can grow
   const trailW = useMemo(
     () => trailWidth(bodyCols.map(colWidth), stickyW + EDGE, viewW, TRAIL),
     [bodyCols, colWidth, stickyW, viewW],
@@ -472,7 +488,14 @@ export function Table({
     }));
   }, [labels, runs, bodyCols, colWidth, stickyW]);
   /** A width the person dragged to, in stored terms. */
-  const toBase = useCallback((_f: Field, shown: number) => shown, []);
+  const toBase = useCallback(
+    (f: Field, shown: number) => {
+      // the fill scales a column up: store the width it would have unscaled
+      const scale = widthOf(f) / baseWidth(f);
+      return Math.max(40, Math.round(shown / (scale > 0 ? scale : 1)));
+    },
+    [widthOf, baseWidth],
+  );
 
   const docTop = useDocumentTop(scrollRef);
   // the column header of the card under the top bar stays rendered and pinned there (docs/05 §3.1)
@@ -1342,8 +1365,9 @@ export function Table({
                       row.kind !== 'gap' && 'border-surface-line bg-surface overflow-clip border-x',
                       row.kind === 'header' && 'bg-head',
                       (row.kind === 'item' || row.kind === 'subitem') && 'group/row',
-                      first && 'rounded-t-[10px] border-t',
-                      last && 'rounded-b-[10px]',
+                      // the card's clear edges: 1 px --surface-line, 8 px corners (docs/18 C2)
+                      first && 'rounded-t-lg border-t',
+                      last && 'rounded-b-lg',
                       // item, sub-item and header rows draw their own bottom line
                       last && !ownLine(row.kind) && 'border-b',
                       pinned && 'z-[4]',

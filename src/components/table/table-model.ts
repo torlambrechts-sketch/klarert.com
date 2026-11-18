@@ -111,8 +111,8 @@ export function stickyHeaders(rows: TableRow[]): {
 
 /**
  * The width of the table's trailing column ("+" in the header, "…" in rows): the room the columns leave in the card,
- * at least `min`. Columns keep their widths (docs/05 §3.1); when they do not fit, the trailing column is `min` wide
- * and the table scrolls.
+ * at least `min`. Field columns fill the card (fillColumns), so this is `min` unless no column can grow; when they do
+ * not fit, the trailing column is `min` wide and the table scrolls.
  */
 export function trailWidth(
   widths: number[],
