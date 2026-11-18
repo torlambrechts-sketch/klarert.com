@@ -98,7 +98,12 @@ function FieldsBody({ org, sheetId, userId, timeZone, role, archived }: SheetFie
     );
   if (!data || !ctx || !env)
     return (
-      <div role="status" aria-busy="true" aria-label="Loading the fields" className="flex flex-col gap-2">
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading the fields"
+        className="flex flex-col gap-2"
+      >
         {Array.from({ length: 4 }, (_, i) => (
           <div key={i} className="bg-soft h-9 animate-pulse rounded" />
         ))}

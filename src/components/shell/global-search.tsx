@@ -216,7 +216,12 @@ export function GlobalSearch({ org }: { org: string }) {
               </button>
             </div>
           ) : state.status === 'loading' && options.length === 0 ? (
-            <div role="status" aria-busy="true" aria-label="Searching" className="flex flex-col gap-1 p-1">
+            <div
+              role="status"
+              aria-busy="true"
+              aria-label="Searching"
+              className="flex flex-col gap-1 p-1"
+            >
               {[0, 1, 2].map((i) => (
                 <div key={i} className="bg-soft h-9 animate-pulse rounded" />
               ))}

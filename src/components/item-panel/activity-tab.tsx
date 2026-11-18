@@ -93,7 +93,12 @@ export function ActivityTab({
         </p>
       </div>
       {state === 'loading' && !data ? (
-        <div role="status" aria-busy="true" aria-label="Loading the activity log" className="flex flex-col gap-2">
+        <div
+          role="status"
+          aria-busy="true"
+          aria-label="Loading the activity log"
+          className="flex flex-col gap-2"
+        >
           {[0, 1, 2].map((i) => (
             <div key={i} className="bg-soft h-10 animate-pulse rounded" />
           ))}

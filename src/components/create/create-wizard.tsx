@@ -859,7 +859,12 @@ function SetPreview({
 }) {
   if (!details || details.state === 'loading')
     return (
-      <div role="status" aria-busy="true" aria-label="Loading the preview" className="flex flex-col gap-3">
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading the preview"
+        className="flex flex-col gap-3"
+      >
         <div className="bg-soft h-[72px] animate-pulse rounded-lg" />
         <div className="bg-soft h-[240px] animate-pulse rounded-lg" />
       </div>

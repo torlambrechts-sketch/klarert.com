@@ -61,7 +61,12 @@ export function SubitemsTab({
     );
   if (!handle.state)
     return (
-      <div role="status" aria-busy="true" aria-label="Loading sub-items" className="flex flex-col gap-2">
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading sub-items"
+        className="flex flex-col gap-2"
+      >
         {[0, 1, 2].map((i) => (
           <div key={i} className="bg-soft h-11 animate-pulse rounded-md" />
         ))}

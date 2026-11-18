@@ -128,7 +128,12 @@ export function AccessPanel({
     );
   if (!info)
     return (
-      <div role="status" aria-busy="true" aria-label="Loading access" className="flex flex-col gap-2">
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading access"
+        className="flex flex-col gap-2"
+      >
         <div className="bg-soft h-9 animate-pulse rounded" />
         <div className="bg-soft h-9 animate-pulse rounded" />
         <div className="bg-soft h-24 animate-pulse rounded" />

@@ -151,7 +151,12 @@ export function ExportsList({ org, initial }: { org: string; initial: Result<Aud
 /** The list's skeleton while the first page loads: rows the height of an export, so nothing moves. */
 export function ExportsSkeleton() {
   return (
-    <div role="status" aria-busy="true" aria-label="Loading the exports" className="flex flex-col gap-3 py-1">
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading the exports"
+      className="flex flex-col gap-3 py-1"
+    >
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex flex-col gap-2 py-1">
           <div className="bg-soft h-4 w-40 animate-pulse rounded" />
