@@ -27,6 +27,7 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 | `docs/13-apps.md` | Apps: the app manifest, screens over pack sheets, the CAPA app (P7) |
 | `docs/15-messaging-brief.md` | Writing site, sales or onboarding copy |
 | `docs/16-front-page-handoff.md` | Designing the public home page |
+| `docs/18-table-design-handoff.md` | Rebuilding the Table, its toolbar and menus to the monday.com look; the "more than three related buttons become a dropdown" rule. Behaviour reference: `reference/keptrow-table-prototype.html`. Its §2 records the owner's decisions (18 Nov 2026), now in docs/05 |
 | `scripts/hosted/README.md` | Applying migrations, pgTAP and catalogues to the hosted database |
 | `supabase/migrations/0001_core.sql` | The schema. Change it only through new numbered migrations. `node scripts/test-migration.mjs` smoke-tests it without Docker |
 | `templates/*.json` | Sheet templates used by the wizard and the seed |
