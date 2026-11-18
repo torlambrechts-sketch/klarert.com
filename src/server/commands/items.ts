@@ -5,7 +5,7 @@ import type { LinkConfig } from '@/engine/fields/link';
 import { needsLibraryTarget } from '@/engine/fields/type-change';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { Ctx, Field, Item, Json } from '@/engine/types';
-import { checkCreate, checkWrite, defaultValues, planValues } from '@/engine/writes';
+import { checkCreate, checkWrite, defaultValues, planDuplicate, planValues } from '@/engine/writes';
 import { manualApprovalValues } from '@/engine/documents';
 import { parseViewConfig } from '@/engine/views/config';
 import {
@@ -353,53 +353,19 @@ export async function duplicateItems(input: unknown): Promise<Result<BulkResult>
           skipped.push({ itemId, message: 'This item no longer exists.' });
           continue;
         }
-        const blank: Item = {
-          id: '00000000-0000-0000-0000-000000000000',
-          sheetId: v.sheetId,
-          groupId: item.groupId,
-          seq: 0,
-          displayId: '',
-          name: item.name,
-          values: defaultValues(w.fields, w.ctx),
+        // unique values already taken are left out of the copy
+        const conflicts = await uniqueConflicts(supabase, v.sheetId, null, w.fields, item.values);
+        const plan = planDuplicate(item, w.fields, w.ctx, {
           position,
-          locked: false,
-          createdAt: now,
-          updatedAt: now,
-        };
-        // stored values only: links, files and protected values are not copied
-        const stored = Object.fromEntries(
-          w.fields
-            .filter((f) => resolveFieldType(f.type)?.storage === 'values')
-            .filter((f) => item.values[f.id] !== undefined && item.values[f.id] !== null)
-            .map((f) => [f.id, item.values[f.id]]),
-        );
-        const first = planValues(blank, w.fields, stored, w.ctx, sha256);
-        const rejected = new Set(first.rejected.map((r) => r.fieldId));
-        const plan = rejected.size
-          ? planValues(
-              blank,
-              w.fields,
-              Object.fromEntries(Object.entries(stored).filter(([id]) => !rejected.has(id))),
-              w.ctx,
-              sha256,
-            )
-          : first;
-        const conflicts = await uniqueConflicts(
-          supabase,
-          v.sheetId,
-          null,
-          w.fields,
-          plan.next.values,
-        );
-        const values: Record<string, Json> = { ...plan.next.values };
-        for (const id of conflicts) delete values[id];
-        const check = checkCreate({ ...plan.next, values }, w.fields, w.ctx, {
-          isUnique: () => true,
+          now,
+          hash: sha256,
+          isTaken: (id) => conflicts.has(id),
         });
-        if (check.blocking.length > 0) {
-          skipped.push({ itemId, message: check.blocking.map((i) => i.message).join(' ') });
+        if (!plan.ok) {
+          skipped.push({ itemId, message: plan.message });
           continue;
         }
+        const values = plan.values;
         const { data, error } = await supabase.rpc('create_item', {
           p_sheet: v.sheetId,
           p_group: item.groupId,

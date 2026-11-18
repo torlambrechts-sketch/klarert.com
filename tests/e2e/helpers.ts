@@ -252,5 +252,9 @@ export async function openTab(scope: Page | Locator, name: string | RegExp) {
 export function panelTab(scope: Page | Locator, name: string | RegExp) {
   return scope
     .getByRole('tab', { name })
-    .or(scope.locator('[role="tablist"] [data-testid="overflow-tabs-more"]').filter({ hasText: name }));
+    .or(
+      scope
+        .locator('[role="tablist"] [data-testid="overflow-tabs-more"]')
+        .filter({ hasText: name }),
+    );
 }

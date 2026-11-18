@@ -167,3 +167,59 @@ export function defaultValues(fields: Field[], ctx: Ctx): Record<string, Json> {
   }
   return out;
 }
+
+/**
+ * The values of a duplicate (docs/18 §5, `duplicateItems`): the original's name and stored values, checked as a new
+ * item. Links, files and protected values live elsewhere and are not copied. A value that no longer passes its type,
+ * or a unique value already taken (`isTaken`), is left out; a copy that would break a blocking rule is refused with
+ * the reason. Pure.
+ */
+export function planDuplicate(
+  item: Item,
+  fields: Field[],
+  ctx: Ctx,
+  opts: {
+    position: string;
+    now: string;
+    hash: (s: string) => string;
+    isTaken?: (fieldId: string) => boolean;
+  },
+): { ok: true; values: Record<string, Json> } | { ok: false; message: string } {
+  const blank: Item = {
+    id: '00000000-0000-0000-0000-000000000000',
+    sheetId: item.sheetId,
+    groupId: item.groupId,
+    seq: 0,
+    displayId: '',
+    name: item.name,
+    values: defaultValues(fields, ctx),
+    position: opts.position,
+    locked: false,
+    createdAt: opts.now,
+    updatedAt: opts.now,
+  };
+  const stored = Object.fromEntries(
+    fields
+      .filter((f) => resolveFieldType(f.type)?.storage === 'values')
+      .filter((f) => item.values[f.id] !== undefined && item.values[f.id] !== null)
+      .map((f) => [f.id, item.values[f.id]]),
+  );
+  const first = planValues(blank, fields, stored, ctx, opts.hash);
+  const rejected = new Set(first.rejected.map((r) => r.fieldId));
+  const plan = rejected.size
+    ? planValues(
+        blank,
+        fields,
+        Object.fromEntries(Object.entries(stored).filter(([id]) => !rejected.has(id))),
+        ctx,
+        opts.hash,
+      )
+    : first;
+  const values: Record<string, Json> = {};
+  for (const [id, v] of Object.entries(plan.next.values))
+    if (!opts.isTaken?.(id)) values[id] = v as Json;
+  const check = checkCreate({ ...plan.next, values }, fields, ctx);
+  if (check.blocking.length > 0)
+    return { ok: false, message: check.blocking.map((i) => i.message).join(' ') };
+  return { ok: true, values };
+}

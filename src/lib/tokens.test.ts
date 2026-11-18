@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 // White words on the brand navy and on every solid option colour stay at 4.5:1 or more (docs/05 §6.1, docs/18 C1
 // and C3). Reads the tokens from globals.css, so a changed value fails here.
 
-const css = readFileSync(join(__dirname, 'globals.css'), 'utf8');
+const css = readFileSync(join(__dirname, '../app/globals.css'), 'utf8');
 const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}', css.indexOf(':root {')));
 const tokens = new Map<string, string>();
 for (const m of root.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)) tokens.set(m[1]!, m[2]!.trim());
