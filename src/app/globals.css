@@ -1,13 +1,55 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* ═══════════════ Design system: Geist (docs/05 §6) ═══════════════
-   Light only for now. Every colour is a step on one of Geist's scales below; the app's semantic tokens (--ink,
-   --line, --good …) point at those steps, so a dark theme later only redefines the scales (e.g. under
-   [data-theme='dark']) and the whole app follows. Colour carries meaning only: status and option fills, focus,
-   links and the semantic states (good · warn · crit · info), always next to text or a symbol that says the same. */
+/* ═══════════════ Design system: Keptrow (docs/18 §3, owner decision 18 Nov 2026) ═══════════════
+   The Keptrow tokens below replace the Geist look of docs/05 §6. Components use the semantic names (--ink, --line,
+   --brand, --good …), never hex; the older semantic names point at the Keptrow values so nothing breaks. Colour
+   carries meaning only, always next to text or a symbol that says the same. */
 :root {
-  /* ── Geist scales, light ── */
+  /* ── Keptrow tokens (docs/18 §3) ── */
+  /* brand */
+  --navy: #00005e; /* rail, hero, headings, item panel header, toast */
+  --brand: #0000a0; /* primary buttons, links, active tab line, accents */
+  --brand-2: #2a2ab5; /* buttons on navy (take-action rows) */
+  --brand-2-hover: #3535c2;
+  --brand-soft: #dcedff; /* active rail button, avatars, tags, soft badges, hero sub-text */
+  --sky: #9fc4ec; /* step tops, secondary series, the logo's third bar */
+  /* surfaces */
+  --page: #f2f4f8; /* app background */
+  --panel: #f4f8fd; /* side panel, callouts, hover rows */
+  --surface: #ffffff; /* cards, dialogs, drawers */
+  --kanban-col: #e8edf5;
+  /* text and lines */
+  --ink: #000000;
+  --muted: #474748;
+  --faint: #8a8a8c;
+  --line: #e3e3e3;
+  --line-input: #8a8a8c;
+  --line-soft: #dce3ec;
+  /* states (text on white >= 4.5:1; --warn is a mark colour, its words are --warn-ink) */
+  --ok: #0b6b43;
+  --bad: #b3261e;
+  --warn: #e07b00;
+  --warn-ink: #7a4100;
+  --bad-ink: #9b1c14;
+  --badge-orange-bg: #fff1dc;
+  --badge-red-bg: #fde7e6;
+  --badge-green-bg: #e3f4ee;
+  --badge-green-ink: #0b5a42;
+  /* option colours, solid with white words (Table cells, pickers) */
+  --opt-green: #0b6b43;
+  --opt-orange: #b35a00;
+  --opt-red: #b3261e;
+  --opt-blue: #2f5fc9;
+  --opt-grey: #6b6b6c;
+  --opt-purple: #5b37b0;
+  --opt-teal: #00787a;
+  --opt-high: #c8281e;
+  /* shape */
+  --scrim: rgb(0 0 40 / 0.45);
+  --focus: #3b6fe0; /* 3 px outline, 2 px offset */
+
+  /* ── Geist scales: legacy primitives a few components still name; they move to the tokens above in T1 ── */
   --background-100: #ffffff;
   --background-200: #fafafa;
 
@@ -110,55 +152,33 @@
   --pink-900: #c41562;
   --pink-1000: #45132b;
 
-  /* ── semantic tokens: the only names components use ── */
-  --ink: var(--gray-1000); /* primary text and icons */
-  --muted: var(--gray-900); /* secondary text: 5.7:1 on white, 5.1:1 on gray-100 */
-  --faint: var(--gray-700); /* icons, dividers, empty marks: never body text */
-  --line: var(--gray-alpha-400); /* 1 px borders of cards, tables, controls */
-  --line-strong: var(--gray-alpha-500); /* hover borders, the ring of an empty checkbox */
-  --soft: var(--gray-100); /* fills, skeletons, chips */
-  --subtle: var(
-    --background-200
-  ); /* quiet fills inside white surfaces (collapsed column stubs, hints) */
-  /* navy brand (owner decision 18 Nov 2026, docs/18 C3): primary buttons, the hero band and the active side menu
-     marker; white text on it is 13.9:1 */
-  --navy-900: #0000a0;
-  --navy-1000: #00005e;
-  --brand: var(--navy-900);
-  --brand-hover: var(--navy-1000);
-  --focus: var(--blue-700); /* focus ring, selected cell */
-  --sel: var(
-    --blue-300
-  ); /* selected rows: 1.17:1 blue, always with the ticked checkbox (and the ink bar) */
+  /* ── semantic names components already use, pointed at the Keptrow tokens ── */
+  --line-strong: #c9cdd4; /* hover borders, the ring of an empty checkbox, the Table's right edge */
+  --soft: var(--page); /* fills, skeletons, chips, empty option cells */
+  --subtle: var(--panel); /* quiet fills inside white surfaces (collapsed column stubs, hints) */
+  --navy-900: var(--brand);
+  --navy-1000: var(--navy);
+  --brand-hover: var(--navy);
+  --sel: var(--brand-soft); /* selected rows, always with the ticked checkbox */
+  --sidebar: var(--panel); /* side panel and the phone menu sheet */
+  --surface-line: var(--line-strong); /* card outline and the Table's clear right edge */
+  --row-line: var(--line); /* lines between rows */
+  --col-line: var(--line); /* lines between columns */
+  --head: var(--surface); /* header row fill; muted header words on it */
+  --row-hover: var(--panel); /* opaque, so sticky cells cover what scrolls under them */
+  --nav-hover: var(--panel);
+  --nav-active: var(--brand-soft);
 
-  /* surfaces (Vercel's calm base, owner decision 17 Nov 2026): a light grey page, white sheets on it with a visible
-     outline, a grey header row and quiet column lines. Ratios are against white unless said. */
-  --page: var(--background-200); /* the main column behind every screen */
-  --sidebar: var(
-    --gray-100
-  ); /* side menu and phone bottom bar; icons there stay --muted (5.1:1), never --faint */
-  --surface: var(--background-100); /* sheet and group cards, panels and cards on the page */
-  --surface-line: var(--gray-alpha-500); /* card outline and the header row's bottom line: 1.65:1 */
-  --row-line: var(--gray-alpha-400); /* lines between rows: 1.20:1 */
-  --col-line: var(--gray-alpha-100); /* lines between columns: 1.12:1, a quiet grid */
-  --head: var(--gray-100); /* header row fill; muted header text on it is 5.1:1 */
-  --row-hover: var(
-    --gray-100
-  ); /* gray-alpha-100 on white, made opaque so sticky cells cover what scrolls under */
-  --nav-hover: var(--gray-alpha-100);
-  --nav-active: var(--gray-alpha-200);
-
-  /* semantic states, each with a soft fill for badges and banners (text ≥ 4.5:1 on white and on its fill) */
-  --good: var(--green-900);
-  --good-soft: var(--green-200);
-  --warn: var(--amber-900);
-  --warn-soft: var(--amber-100);
-  --crit: var(--red-900);
-  --crit-ink: var(--red-900);
-  --crit-soft: var(--red-100);
+  /* semantic states, each with a soft fill for badges and banners (words >= 4.5:1 on white and on the fill) */
+  --good: var(--ok);
+  --good-soft: var(--badge-green-bg);
+  --warn-soft: var(--badge-orange-bg);
+  --crit: var(--bad);
+  --crit-ink: var(--bad-ink);
+  --crit-soft: var(--badge-red-bg);
   --crit-line: var(--red-400);
-  --info: var(--blue-900); /* links */
-  --info-soft: var(--blue-100);
+  --info: var(--brand); /* links */
+  --info-soft: var(--brand-soft);
   /* thin progress bars (the Table's date countdown): the bright steps, beside words that say the same */
   --bar-good: var(--green-700);
   --bar-crit: var(--red-700);
@@ -246,38 +266,38 @@
   --meter-4: var(--red-700);
   --meter-off: var(--gray-100);
 
-  /* fills behind white text (solid status blocks, action-needed pills): the label colour, darkened just enough
-     for 4.5:1 where it falls short (WCAG 2.1 AA, M10 axe pass) */
-  --solid-grey: #71767b;
+  /* fills behind white text (solid option cells, action-needed pills): the Keptrow --opt-* colours; the colours
+     without one keep their value, dark enough for 4.5:1 under white words (src/lib/tokens.test.ts) */
+  --solid-green: var(--opt-green);
+  --solid-orange: var(--opt-orange);
+  --solid-red: var(--opt-red);
+  --solid-blue: var(--opt-blue);
+  --solid-grey: var(--opt-grey);
+  --solid-purple: var(--opt-purple);
+  --solid-teal: var(--opt-teal);
+  --solid-high: var(--opt-high);
   --solid-yellow: #907218;
-  --solid-green: #18874e;
-  --solid-orange: #b26009;
   --solid-pink: #c04d87;
-  /* the label colours that already reach 4.5:1 under white words (the Table's solid option cells, docs/18 C1) */
-  --solid-blue: var(--label-blue);
   --solid-navy: var(--label-navy);
-  --solid-teal: var(--label-teal);
-  --solid-red: var(--label-red);
-  --solid-purple: var(--label-purple);
   --solid-dark: var(--label-dark);
 
   /* shadcn/ui variables mapped onto the tokens */
-  --background: var(--background-100);
+  --background: var(--surface);
   --foreground: var(--ink);
-  --card: var(--background-100);
+  --card: var(--surface);
   --card-foreground: var(--ink);
-  --popover: var(--background-100);
+  --popover: var(--surface);
   --popover-foreground: var(--ink);
   --primary: var(--brand);
-  --primary-foreground: var(--background-200);
-  --secondary: var(--background-100);
+  --primary-foreground: var(--surface);
+  --secondary: var(--surface);
   --secondary-foreground: var(--ink);
   --muted-foreground: var(--muted);
-  --accent: var(--gray-alpha-100);
+  --accent: var(--panel);
   --accent-foreground: var(--ink);
   --destructive: var(--crit);
   --border: var(--line);
-  --input: var(--line);
+  --input: var(--line-input);
   --ring: var(--focus);
   --radius: 6px;
 }
@@ -379,6 +399,33 @@
   --color-pink-1000: var(--pink-1000);
 
   --color-ink: var(--ink);
+  --color-navy: var(--navy);
+  --color-brand-2: var(--brand-2);
+  --color-brand-2-hover: var(--brand-2-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-sky: var(--sky);
+  --color-panel: var(--panel);
+  --color-kanban-col: var(--kanban-col);
+  --color-line-input: var(--line-input);
+  --color-line-soft: var(--line-soft);
+  --color-ok: var(--ok);
+  --color-bad: var(--bad);
+  --color-bad-ink: var(--bad-ink);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-mark: var(--warn);
+  --color-badge-orange-bg: var(--badge-orange-bg);
+  --color-badge-red-bg: var(--badge-red-bg);
+  --color-badge-green-bg: var(--badge-green-bg);
+  --color-badge-green-ink: var(--badge-green-ink);
+  --color-opt-green: var(--opt-green);
+  --color-opt-orange: var(--opt-orange);
+  --color-opt-red: var(--opt-red);
+  --color-opt-blue: var(--opt-blue);
+  --color-opt-grey: var(--opt-grey);
+  --color-opt-purple: var(--opt-purple);
+  --color-opt-teal: var(--opt-teal);
+  --color-opt-high: var(--opt-high);
+  --color-scrim: var(--scrim);
   --color-faint: var(--faint);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
@@ -400,7 +447,8 @@
   --color-row-hover: var(--row-hover);
   --color-good: var(--good);
   --color-good-soft: var(--good-soft);
-  --color-warn: var(--warn);
+  /* text-warn and border-warn keep readable words: --warn is the orange mark (warn-mark), its words --warn-ink */
+  --color-warn: var(--warn-ink);
   --color-warn-soft: var(--warn-soft);
   --color-crit: var(--crit);
   --color-crit-ink: var(--crit-ink);
@@ -442,24 +490,25 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
+  /* Keptrow shapes (docs/18 §3): rounded-card, rounded-dialog, rounded-input, rounded-pill */
+  --radius-card: 8px;
+  --radius-dialog: 12px;
+  --radius-input: 4px;
+  --radius-pill: 999px;
   /* the public site's page container (`rounded-page`): the large rounded surface the pages sit in */
   --radius-page: 24px;
 
-  /* materials: cards are flat (1 px --line border, no shadow); only floating surfaces cast one */
+  /* materials (docs/18 §3): cards cast a light navy shadow; menus and drawers a deeper one */
+  --shadow-card: 0 1px 4px rgb(0 0 94 / 0.08);
+  --shadow-drawer: -8px 0 30px rgb(0 0 40 / 0.18);
   --shadow-tooltip: 0 1px 1px rgb(0 0 0 / 0.02), 0 4px 8px rgb(0 0 0 / 0.04);
-  --shadow-menu:
-    0 1px 1px rgb(0 0 0 / 0.02), 0 4px 8px -4px rgb(0 0 0 / 0.04),
-    0 16px 24px -8px rgb(0 0 0 / 0.06);
+  --shadow-menu: 0 8px 28px rgb(0 0 94 / 0.2);
   --shadow-modal:
     0 1px 1px rgb(0 0 0 / 0.02), 0 8px 16px -4px rgb(0 0 0 / 0.04),
     0 24px 32px -8px rgb(0 0 0 / 0.06);
   --shadow-fullscreen:
     0 1px 1px rgb(0 0 0 / 0.02), 0 8px 16px -4px rgb(0 0 0 / 0.04),
     0 24px 32px -8px rgb(0 0 0 / 0.06), 0 32px 64px -16px rgb(0 0 0 / 0.08);
-
-  /* Geist reads heavy above 600: headings and emphasis top out at semibold */
-  --font-weight-bold: 600;
-  --font-weight-extrabold: 600;
 
   /* ── Geist type scale: text-heading-*, text-label-*, text-copy-* (px, independent of the 14 px root) ──
      heading: titles, semibold with negative tracking. label: single-line UI text (controls, cells, menus, meta).
@@ -541,8 +590,71 @@
   --text-copy-13: 13px;
   --text-copy-13--line-height: 18px;
 
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* ── Keptrow type scale (docs/18 §3), Figtree; body 15 px / 1.4 ── */
+@utility text-hero {
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  @media (max-width: 639.98px) {
+    font-size: 30px;
+  }
+}
+@utility text-hero-sub {
+  font-size: 17px;
+  line-height: 1.4;
+}
+@utility text-figure {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+@utility text-kpi {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+@utility text-card-title {
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+@utility text-panel-title {
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+@utility text-nav {
+  font-size: 16px;
+  line-height: 1.3;
+}
+@utility text-body {
+  font-size: 15px;
+  line-height: 1.4;
+}
+@utility text-sub {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+@utility text-tab {
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+@utility text-section-label {
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 /* mono variants of the type scale: ids, codes, counts, keyboard hints */
@@ -601,7 +713,8 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    line-height: 1.45;
+    font-size: 15px;
+    line-height: 1.4;
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
@@ -609,9 +722,9 @@
   h1 {
     @apply text-heading-26;
   }
-  /* Geist focus: a 2 px blue ring clear of the control */
+  /* Keptrow focus (docs/18 §3): a 3 px ring 2 px clear of every focusable control */
   :focus-visible {
-    outline: 2px solid var(--focus);
+    outline: 3px solid var(--focus);
     outline-offset: 2px;
   }
 }

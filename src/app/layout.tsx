@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { OfflineBanner } from '@/components/states/offline-banner';
 import { SITE } from '@/components/landing/content';
 import { Toaster } from '@/components/ui/sonner';
-import { geist, geistMono } from './fonts';
+import { figtree, geistMono } from './fonts';
 import './globals.css';
 
 // Every page is kept out of search engines unless it says otherwise: only `/`, `/privacy` and `/terms` override this
@@ -16,7 +16,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${figtree.variable} ${geistMono.variable}`}
+    >
       <body>
         <OfflineBanner />
         {children}
