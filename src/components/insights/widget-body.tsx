@@ -89,7 +89,7 @@ export function WidgetBody({
       );
     case 'loading':
       return (
-        <div aria-busy="true" aria-label="Loading" className="flex flex-col gap-2">
+        <div role="status" aria-busy="true" aria-label="Loading" className="flex flex-col gap-2">
           {[80, 60, 70].map((w) => (
             <span
               key={w}

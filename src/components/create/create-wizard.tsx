@@ -587,7 +587,7 @@ export function CreateWizard({
 
 function Skeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading" className="flex flex-col gap-4">
+    <div role="status" aria-busy="true" aria-label="Loading" className="flex flex-col gap-4">
       <div className="bg-soft h-[52px] animate-pulse rounded-lg" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -859,7 +859,7 @@ function SetPreview({
 }) {
   if (!details || details.state === 'loading')
     return (
-      <div aria-busy="true" aria-label="Loading the preview" className="flex flex-col gap-3">
+      <div role="status" aria-busy="true" aria-label="Loading the preview" className="flex flex-col gap-3">
         <div className="bg-soft h-[72px] animate-pulse rounded-lg" />
         <div className="bg-soft h-[240px] animate-pulse rounded-lg" />
       </div>

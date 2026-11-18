@@ -60,7 +60,7 @@ export function ChecklistSection({
         ) : null}
       </h3>
       {q.isPending ? (
-        <div aria-busy="true" aria-label={`Loading ${field.name}`} className="flex flex-col gap-1">
+        <div role="status" aria-busy="true" aria-label={`Loading ${field.name}`} className="flex flex-col gap-1">
           <div className="bg-soft h-11 animate-pulse rounded-lg" />
           <div className="bg-soft h-11 animate-pulse rounded-lg" />
         </div>

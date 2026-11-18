@@ -281,7 +281,7 @@ export function UpdatesTab({
         </p>
       )}
       {state === 'loading' ? (
-        <div aria-busy="true" aria-label="Loading updates" className="flex flex-col gap-3">
+        <div role="status" aria-busy="true" aria-label="Loading updates" className="flex flex-col gap-3">
           {[0, 1].map((i) => (
             <div key={i} className="bg-soft h-14 animate-pulse rounded" />
           ))}
