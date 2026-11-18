@@ -262,15 +262,15 @@ the same thing or choose between options of one setting.
 
 ## 11. Acceptance checks
 
-- [ ] Tokens and Figtree in place; no Geist Sans left; no hex in components.
-- [ ] White words on `--brand`, `--navy` and every `--opt-*` colour at least 4.5:1 (tested on the token values).
-- [ ] The shell matches `desktop-01-home.jpg` at 1440 px: top bar, rail, side panel, hero, overlapping first card.
+- [x] Tokens and Figtree in place; no Geist Sans left; no hex in components.
+- [x] White words on `--brand`, `--navy` and every `--opt-*` colour at least 4.5:1 (tested on the token values).
+- [x] The shell matches `desktop-01-home.jpg` at 1440 px: top bar, rail, side panel, hero, overlapping first card.
 - [ ] Every page in §6 matches its reference image at 1440 px (allowing for real content).
-- [ ] At 390 px every page follows `docs/05` §5 navigation in the Keptrow look; nothing scrolls the page sideways.
+- [x] At 390 px every page follows `docs/05` §5 navigation in the Keptrow look; nothing scrolls the page sideways.
 - [ ] No button group on any screen has more than three related buttons (§7).
 - [ ] Every menu: Enter opens, ↑ / ↓ move, Escape closes and focus returns to the trigger; menus in the Table are
       not clipped.
-- [ ] Table: solid option cells with pickers, avatar and name, summary row, proportional width, clear right edge,
+- [x] Table: solid option cells with pickers, avatar and name, summary row, proportional width, clear right edge,
       bulk bar; every change through commands with one activity log entry per item.
 - [ ] The UI definition of done in CLAUDE.md on every screen touched.
 - [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` pass; Playwright screenshots of Home, a sheet, the item

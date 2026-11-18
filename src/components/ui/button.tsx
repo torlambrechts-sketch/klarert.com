@@ -39,7 +39,11 @@ const buttonVariants = cva(
     },
     compoundVariants: [
       // the smaller pills carry a 1 px border (docs/18 §5)
-      { size: ['sm', 'xs', 'icon', 'icon-sm', 'icon-xs'], class: 'border' },
+      {
+        variant: ['default', 'destructive', 'outline', 'secondary'],
+        size: ['sm', 'xs', 'icon', 'icon-sm', 'icon-xs'],
+        class: 'border',
+      },
     ],
     defaultVariants: {
       variant: 'default',
