@@ -897,8 +897,10 @@ export function Table({
     // sub-item rows have their own axis: no ranges across them
     store.getState().focus(cell, e.shiftKey && !at?.isSub);
     focusGrid();
-    if (was && !e.shiftKey) {
-      const field = fieldAt(col, !!at?.isSub);
+    const field = fieldAt(col, !!at?.isSub);
+    // option and people cells open their picker under the cell on the first click (docs/18 §5)
+    const picker = canEdit && !!field && !!fieldUI(field.type).opensOnClick && !e.shiftKey;
+    if ((was || picker) && !e.shiftKey) {
       if (at && field && toggle(at.item, field)) return;
       startEdit(cell);
     }

@@ -111,14 +111,13 @@ export function OptionCell({ value, field, ctx, density }: CellProps) {
   const chosen = keys.map((k) => opts.find((o) => o.id === k)).filter((o): o is LabelOption => !!o);
   if (chosen.length === 0)
     return density === 'table' && !Array.isArray(value) ? (
-      // nothing at rest (an outline read as an input to fill); while the row is hovered, a dashed box where a
-      // click sets the value
+      // an empty one-option cell is a soft fill (docs/18 C1); on hover a dashed box says a click sets the value
       <>
         <Empty />
         <span
           aria-hidden
           data-empty-hint
-          className="border-line-strong absolute inset-x-[6px] inset-y-[9px] rounded-md border border-dashed opacity-0 group-hover/row:opacity-100"
+          className="bg-soft group-hover/row:border-line-strong absolute inset-px border border-dashed border-transparent"
         />
       </>
     ) : (
@@ -201,6 +200,7 @@ export function optionUI(spec: {
 }): FieldTypeUI {
   return {
     icon: spec.icon,
+    opensOnClick: true,
     Cell: (p) => <OptionCell {...p} />,
     Editor: (p) => (
       <OptionPicker
