@@ -143,7 +143,7 @@ export function ColumnHeader({
         onClick={actions.cycleSort}
         title={`Sort by ${field.name}`}
         className={cn(
-          'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-3 text-left font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
+          'hover:text-ink text-muted-foreground text-12 flex h-full min-w-0 items-center gap-1.5 pl-3 text-left font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
           // the system-column mark sits right after the name
           field.locked || field.system ? 'flex-initial pr-0' : 'flex-1 pr-1',
         )}
@@ -168,7 +168,7 @@ export function ColumnHeader({
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="text-muted-foreground hover:text-ink hover:bg-gray-alpha-100 focus-visible:ring-focus data-[state=open]:text-ink mr-1 grid size-6 shrink-0 place-items-center rounded-md opacity-0 outline-none group-focus-within/col:opacity-100 group-hover/col:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 data-[state=open]:opacity-100"
+          className="text-muted-foreground hover:text-ink hover:bg-panel focus-visible:ring-focus data-[state=open]:text-ink mr-1 grid size-6 shrink-0 place-items-center rounded-md opacity-0 outline-none group-focus-within/col:opacity-100 group-hover/col:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 data-[state=open]:opacity-100"
           aria-label={`${field.name} column menu`}
         >
           <ChevronDown className="size-3.5" aria-hidden />
@@ -302,7 +302,7 @@ function LockedMark() {
       </span>
       <span
         role="tooltip"
-        className="bg-ink text-label-12 pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-52 rounded px-2 py-1 font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
+        className="bg-ink text-12 pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-52 rounded px-2 py-1 font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
       >
         {text}
       </span>
@@ -327,7 +327,7 @@ function SystemMark({ text }: { text: string }) {
       </span>
       <span
         role="tooltip"
-        className="bg-ink text-label-12 pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-56 rounded px-2 py-1 font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
+        className="bg-ink text-12 pointer-events-none absolute top-full right-0 z-20 mt-1 hidden w-56 rounded px-2 py-1 font-normal whitespace-normal text-white group-focus-within/lock:block group-hover/lock:block"
       >
         {text}
       </span>

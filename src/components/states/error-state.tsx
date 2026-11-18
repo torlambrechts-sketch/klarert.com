@@ -27,13 +27,13 @@ export function ErrorState({
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col items-start gap-3 px-4 py-12">
       <div role="alert" className="flex flex-col gap-2">
-        <h1 className="text-heading-20">{title}</h1>
+        <h1 className="text-panel-title">{title}</h1>
         <p className="text-muted-foreground m-0">
           Something went wrong on our side or the connection dropped. Your changes that were saved
           are safe. Try again.
         </p>
         {error.digest ? (
-          <p className="text-muted-foreground text-label-12-mono m-0">Reference {error.digest}</p>
+          <p className="text-muted-foreground text-12 m-0 font-mono">Reference {error.digest}</p>
         ) : null}
       </div>
       <div className="flex flex-wrap gap-2">

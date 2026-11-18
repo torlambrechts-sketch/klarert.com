@@ -16,7 +16,7 @@ export function PageSkeleton({
 }) {
   return (
     <main
-      className={`mx-auto flex w-full ${width} flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]`}
+      className={`mx-auto flex w-full ${width} flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]`}
       aria-busy="true"
       aria-label={label}
     >
@@ -35,7 +35,7 @@ export function PageSkeleton({
 export function SheetSkeleton() {
   return (
     <main
-      className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-5 sm:px-[28px] sm:pt-[22px]"
+      className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-5 sm:px-12 sm:pt-[22px]"
       aria-busy="true"
       aria-label="Loading the sheet"
     >

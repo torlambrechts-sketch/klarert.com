@@ -75,7 +75,7 @@ export function ExportsList({ org, initial }: { org: string; initial: Result<Aud
           </Button>
         </div>
       ) : rows.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13 m-0" data-testid="audit-exports-empty">
+        <p className="text-muted-foreground text-13 m-0" data-testid="audit-exports-empty">
           No exports yet. Statements of applicability, audit packs, management review inputs and
           data-flow records show here once someone in this workspace exports one.
         </p>
@@ -93,16 +93,16 @@ export function ExportsList({ org, initial }: { org: string; initial: Result<Aud
               className="focus-visible:outline-focus flex flex-col gap-1 py-3 outline-offset-2 focus-visible:outline-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
             >
               <div className="flex min-w-0 flex-col gap-1">
-                <span className="text-label-14 font-medium">{r.what}</span>
-                <span className="text-copy-13 text-muted-foreground break-words">
+                <span className="text-14 font-medium">{r.what}</span>
+                <span className="text-13 text-muted-foreground break-words">
                   <span className="sr-only">Filters: </span>
                   {r.filters.join(' · ')}
                 </span>
                 {r.covered ? (
-                  <span className="text-label-12 text-muted-foreground">{r.covered}</span>
+                  <span className="text-12 text-muted-foreground">{r.covered}</span>
                 ) : null}
               </div>
-              <div className="text-copy-13 flex shrink-0 flex-wrap gap-x-2 sm:flex-col sm:items-end sm:gap-0 sm:text-right">
+              <div className="text-13 flex shrink-0 flex-wrap gap-x-2 sm:flex-col sm:items-end sm:gap-0 sm:text-right">
                 <span>
                   <span className="sr-only">Exported by </span>
                   {r.who}
@@ -151,7 +151,12 @@ export function ExportsList({ org, initial }: { org: string; initial: Result<Aud
 /** The list's skeleton while the first page loads: rows the height of an export, so nothing moves. */
 export function ExportsSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading the exports" className="flex flex-col gap-3 py-1">
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading the exports"
+      className="flex flex-col gap-3 py-1"
+    >
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex flex-col gap-2 py-1">
           <div className="bg-soft h-4 w-40 animate-pulse rounded" />

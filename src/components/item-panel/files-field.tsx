@@ -134,7 +134,7 @@ export function FilesField({
   return (
     <div className="flex flex-col gap-2 py-1">
       {fresh && current.length > 0 ? (
-        <p className="text-copy-13 flex flex-wrap items-center gap-2">
+        <p className="text-13 flex flex-wrap items-center gap-2">
           <Chip
             option={{
               id: fresh.freshness,
@@ -147,18 +147,18 @@ export function FilesField({
         </p>
       ) : null}
       {current.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13">No files yet.</p>
+        <p className="text-muted-foreground text-13">No files yet.</p>
       ) : (
         <ul className="flex flex-col gap-1" aria-label={`${field.name} files`}>
           {current.map((f) => (
             <li
               key={f.id}
-              className="border-line text-label-13 flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5"
+              className="border-line text-13 flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5"
             >
               <FileText className="size-4 shrink-0" aria-hidden />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">{f.filename}</span>
-                <span className="text-muted-foreground text-label-12 block">
+                <span className="text-muted-foreground text-12 block">
                   {formatBytes(f.sizeBytes)} · collected {formatDate(f.collectedAt)}
                   {f.validUntil ? ` · valid until ${formatDate(f.validUntil)}` : ''}
                   <span className="font-mono"> · SHA-256 {f.sha256.slice(0, 8)}</span>
@@ -190,7 +190,7 @@ export function FilesField({
         </ul>
       )}
       {busy ? (
-        <p role="status" className="text-muted-foreground text-copy-13">
+        <p role="status" className="text-muted-foreground text-13">
           {busy}
         </p>
       ) : null}
@@ -221,7 +221,7 @@ export function FilesField({
       {showOlder && older.length > 0 ? (
         <ul className="flex flex-col gap-1" aria-label={`Older versions of ${field.name}`}>
           {older.map((f) => (
-            <li key={f.id} className="text-label-12 flex items-center gap-2">
+            <li key={f.id} className="text-12 flex items-center gap-2">
               <span className="text-muted-foreground min-w-0 flex-1 truncate">
                 {f.filename} · {formatBytes(f.sizeBytes)} · collected {formatDate(f.collectedAt)}
               </span>

@@ -234,7 +234,7 @@ export function ViewTabs({
                         <span
                           id={tipId}
                           role="tooltip"
-                          className="bg-ink text-label-12 pointer-events-none absolute top-full left-2 z-20 mt-1 hidden w-48 rounded px-2 py-1 text-white group-hover/tip:block group-data-[highlighted]/tip:block"
+                          className="bg-ink text-12 pointer-events-none absolute top-full left-2 z-20 mt-1 hidden w-48 rounded px-2 py-1 text-white group-hover/tip:block group-data-[highlighted]/tip:block"
                         >
                           Only owners and admins can change tabs
                         </span>
@@ -257,7 +257,7 @@ export function ViewTabs({
               moreRef.current?.focus();
             }}
           >
-            <h2 className="text-heading-16 mb-3">Customise tabs</h2>
+            <h2 className="text-card-title mb-3">Customise tabs</h2>
             {editor}
           </PopoverContent>
         </Popover>
@@ -268,7 +268,7 @@ export function ViewTabs({
           onEscapeKeyDown={keepWhileRenaming}
           className="top-auto bottom-0 left-0 max-h-[88dvh] w-full max-w-none translate-x-0 translate-y-0 overflow-y-auto rounded-t-xl rounded-b-none p-4"
         >
-          <DialogTitle className="text-heading-16">Customise tabs</DialogTitle>
+          <DialogTitle className="text-card-title">Customise tabs</DialogTitle>
           <DialogDescription className="sr-only">
             Choose which tabs everyone sees, their order and names.
           </DialogDescription>
@@ -381,8 +381,8 @@ export function ViewMenu({ views, canEdit }: { views: ViewsState; canEdit: boole
       />
       <Dialog open={dialog === 'delete'} onOpenChange={(o) => !o && setDialog(null)}>
         <DialogContent className="w-[min(400px,calc(100vw-32px))]">
-          <DialogTitle className="text-heading-16">Delete {saved?.name}?</DialogTitle>
-          <DialogDescription className="text-muted-foreground text-label-13">
+          <DialogTitle className="text-card-title">Delete {saved?.name}?</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-13">
             {saved?.ownerId === null
               ? 'Everyone loses this view. Items are not changed.'
               : 'Only the view goes. Items are not changed.'}
@@ -446,7 +446,7 @@ export function ViewDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[min(420px,calc(100vw-32px))]">
-        <DialogTitle className="text-heading-16">{title}</DialogTitle>
+        <DialogTitle className="text-card-title">{title}</DialogTitle>
         <DialogDescription className="sr-only">
           Name the view and choose who sees it.
         </DialogDescription>
@@ -463,7 +463,7 @@ export function ViewDialog({
             onClose();
           }}
         >
-          <label htmlFor={`${id}-name`} className="text-label-13 flex flex-col gap-1 font-semibold">
+          <label htmlFor={`${id}-name`} className="text-13 flex flex-col gap-1 font-semibold">
             View name
             <input
               id={`${id}-name`}
@@ -477,10 +477,10 @@ export function ViewDialog({
           </label>
           {chooseType ? (
             <fieldset className="flex flex-col gap-1">
-              <legend className="text-label-13 mb-1 font-semibold">Type</legend>
+              <legend className="text-13 mb-1 font-semibold">Type</legend>
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {SAVED_VIEW_TYPES.map((t) => (
-                  <label key={t} className="text-label-13 flex items-center gap-1.5">
+                  <label key={t} className="text-13 flex items-center gap-1.5">
                     <input
                       type="radio"
                       name={`${id}-type`}
@@ -494,7 +494,7 @@ export function ViewDialog({
             </fieldset>
           ) : null}
           {canShare !== undefined ? (
-            <label className="text-label-13 flex items-start gap-2">
+            <label className="text-13 flex items-start gap-2">
               <input
                 type="checkbox"
                 className="mt-0.5"
@@ -504,7 +504,7 @@ export function ViewDialog({
               />
               <span>
                 Share with everyone in the workspace
-                <span className="text-muted-foreground text-label-12 block">
+                <span className="text-muted-foreground text-12 block">
                   {canShare
                     ? 'Unticked, only you see this view.'
                     : 'Viewers save personal views only. Only you will see it.'}
@@ -512,7 +512,7 @@ export function ViewDialog({
               </span>
             </label>
           ) : null}
-          {error ? <p className="text-crit text-copy-13">{error}</p> : null}
+          {error ? <p className="text-crit text-13">{error}</p> : null}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel

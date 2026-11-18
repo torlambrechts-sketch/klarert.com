@@ -30,13 +30,13 @@ export function AppFrame({
     <div className="flex min-w-0 flex-col" data-app={app.key}>
       {crumb ? (
         <ShellCrumb>
-          <div className="text-muted-foreground text-label-14 flex min-w-0 items-center gap-2.5">
+          <div className="text-muted-foreground text-14 flex min-w-0 items-center gap-2.5">
             <ListCrumb section="Apps" page={app.title} />
           </div>
         </ShellCrumb>
       ) : null}
-      <div className="px-4 pt-4 sm:px-[28px] sm:pt-5">
-        <p className="text-muted-foreground text-label-13 m-0 flex flex-wrap items-center gap-1.5 font-medium">
+      <div className="px-4 pt-4 sm:px-12 sm:pt-5">
+        <p className="text-muted-foreground text-13 m-0 flex flex-wrap items-center gap-1.5 font-medium">
           <AppIcon icon={app.icon} className="size-[15px]" />
           {app.title}
           {/* the app's sheets and how they connect (Build › Design filtered by app, docs/05 §4) */}

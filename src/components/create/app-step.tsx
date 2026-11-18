@@ -49,16 +49,16 @@ export function AppList({
         id="create-apps"
         data-step-heading
         tabIndex={-1}
-        className="text-heading-20 mb-1 outline-none"
+        className="text-panel-title mb-1 outline-none"
       >
         Pick an app
       </h2>
-      <p className="text-copy-13 text-muted-foreground mb-3">
+      <p className="text-13 text-muted-foreground mb-3">
         An app gives the people who do one job their screens: report a problem, work on their
         actions, check the results.
       </p>
       {apps.length === 0 ? (
-        <p className="border-line text-copy-14 text-muted-foreground rounded-lg border border-dashed p-4">
+        <p className="border-line text-14 text-muted-foreground rounded-lg border border-dashed p-4">
           No apps are available in this workspace yet.
         </p>
       ) : (
@@ -76,24 +76,20 @@ export function AppList({
                 <AppIcon icon={a.icon} className="text-ink mt-0.5 size-5 shrink-0" />
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="flex w-full items-center gap-2">
-                    <span className="text-label-14 min-w-0 flex-1 truncate font-medium">
-                      {a.title}
-                    </span>
+                    <span className="text-14 min-w-0 flex-1 truncate font-medium">{a.title}</span>
                     {STATE_CHIP[a.state] ? (
-                      <span className="bg-soft text-label-12 text-muted-foreground flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5">
+                      <span className="bg-soft text-12 text-muted-foreground flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5">
                         {a.state === 'ready' ? <Check className="size-3" aria-hidden /> : null}
                         {STATE_CHIP[a.state]}
                       </span>
                     ) : null}
                   </span>
                   {a.description ? (
-                    <span className="text-copy-13 text-muted-foreground line-clamp-2">
+                    <span className="text-13 text-muted-foreground line-clamp-2">
                       {a.description}
                     </span>
                   ) : null}
-                  <span className="text-label-12 text-muted-foreground">
-                    Comes with {a.packTitle}
-                  </span>
+                  <span className="text-12 text-muted-foreground">Comes with {a.packTitle}</span>
                 </span>
               </button>
             </li>
@@ -135,13 +131,13 @@ export function AppSummary({
             <AppIcon icon={app.icon} className="text-ink size-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className="text-heading-20">{app.title}</h3>
+            <h3 className="text-panel-title">{app.title}</h3>
             {app.description ? (
-              <p className="text-copy-14 text-muted-foreground mt-1">{app.description}</p>
+              <p className="text-14 text-muted-foreground mt-1">{app.description}</p>
             ) : null}
           </div>
         </div>
-        <p className="text-copy-13 text-muted-foreground flex items-start gap-1.5">
+        <p className="text-13 text-muted-foreground flex items-start gap-1.5">
           <AppWindow className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
             {app.state === 'ready'
@@ -151,28 +147,28 @@ export function AppSummary({
           </span>
         </p>
         {app.uses.length && app.state === 'new' ? (
-          <p className="text-copy-13 flex items-start gap-1.5" data-testid="create-app-uses">
+          <p className="text-13 flex items-start gap-1.5" data-testid="create-app-uses">
             <Layers className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
             <span>Uses sheets you already have: {app.uses.join(', ')}.</span>
           </p>
         ) : null}
         {app.state === 'new' && installsFirst.length ? (
-          <p className="text-copy-13 flex items-start gap-1.5" data-testid="create-installs-first">
+          <p className="text-13 flex items-start gap-1.5" data-testid="create-installs-first">
             <Layers className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
             <span>{installsFirst.join(' ')}</span>
           </p>
         ) : null}
         <div>
-          <h4 className="text-label-13 text-muted-foreground mb-1.5 font-medium">
+          <h4 className="text-13 text-muted-foreground mb-1.5 font-medium">
             {total === 1 ? '1 screen' : `${total} screens`}
           </h4>
           <div className="grid gap-3 sm:grid-cols-2">
             {app.sections.map((sec) => (
               <div key={sec.title}>
-                <p className="text-label-13 font-medium">{sec.title}</p>
+                <p className="text-13 font-medium">{sec.title}</p>
                 <ul className="mt-1 flex flex-col gap-1" aria-label={`${sec.title} screens`}>
                   {sec.screens.map((sc) => (
-                    <li key={sc.title} className="text-copy-13">
+                    <li key={sc.title} className="text-13">
                       {sc.title}
                       <span className="text-muted-foreground">
                         {' · '}
@@ -191,7 +187,7 @@ export function AppSummary({
 
       {app.state === 'ready' ? (
         <div className="border-line flex flex-col items-start gap-3 rounded-lg border p-4">
-          <p className="text-copy-14 flex items-center gap-1.5">
+          <p className="text-14 flex items-center gap-1.5">
             <Check className="text-good size-4" aria-hidden /> {app.title} is ready here. Nothing to
             create.
           </p>
@@ -204,7 +200,7 @@ export function AppSummary({
           {keptScreens === 0 ? (
             <p
               role="status"
-              className="border-warn/40 bg-warn-soft text-copy-14 flex items-start gap-2 rounded-lg border p-3"
+              className="border-warn/40 bg-warn-soft text-14 flex items-start gap-2 rounded-lg border p-3"
               data-testid="create-app-empty"
             >
               <Info className="text-warn mt-0.5 size-4 shrink-0" aria-hidden />
@@ -219,7 +215,7 @@ export function AppSummary({
           className="border-line flex flex-col items-start gap-3 rounded-lg border p-4"
           data-testid="create-app-elsewhere"
         >
-          <p className="text-copy-14">
+          <p className="text-14">
             {app.state === 'update'
               ? `${app.packTitle} is set up here at ${app.installedVersion}. ${app.title} comes with ${app.packVersion}: update it in Workspace admin, Packs.`
               : app.state === 'incomplete'
@@ -232,7 +228,7 @@ export function AppSummary({
                 Open Workspace admin, Packs
               </Button>
             ) : (
-              <p className="text-copy-13 text-muted-foreground">
+              <p className="text-13 text-muted-foreground">
                 Only owners and admins update packs. Ask an admin.
               </p>
             )

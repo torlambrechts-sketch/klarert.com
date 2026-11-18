@@ -36,13 +36,14 @@ export function splitTabs<T extends { id: string }>(
   return { visible, overflow, activeInMenu: overflow.find((t) => t.id === activeId) ?? null };
 }
 
-/** The look of an underline tab: muted, ink and an ink underline when active. Shared by hosts and the trigger. */
+/** The look of an underline tab (docs/18 §5): 14 px uppercase, muted; navy words and a 3 px --brand line when active.
+ * Shared by hosts and the trigger. */
 export const underlineTab = (active: boolean) =>
   cn(
-    'focus-visible:outline-focus text-label-14 relative flex h-[40px] items-center gap-[7px] rounded-sm px-px whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
+    'focus-visible:outline-focus text-tab relative flex h-11 items-center gap-[7px] rounded-sm px-px whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
     active
-      ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-[2px] after:bg-[var(--ink)]'
-      : 'text-muted-foreground hover:text-ink',
+      ? 'text-navy after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:bg-brand'
+      : 'text-muted-foreground hover:text-navy',
   );
 
 export function OverflowTabs<T extends OverflowTab>({

@@ -152,16 +152,16 @@ function WidgetForm({
       }}
     >
       <div className="flex flex-col gap-1">
-        <DialogTitle className="text-heading-16">
+        <DialogTitle className="text-card-title">
           {initial ? 'Edit widget' : 'Add widget'}
         </DialogTitle>
-        <DialogDescription className="text-muted-foreground text-label-13">
+        <DialogDescription className="text-muted-foreground text-13">
           Widgets read from your sheets each time the dashboard opens.
         </DialogDescription>
       </div>
 
       <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
-        <legend className="text-label-13 mb-1 font-medium">Kind</legend>
+        <legend className="text-13 mb-1 font-medium">Kind</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {WIDGET_ORDER.map((id) => {
             const t = WIDGET_TYPES[id]!;
@@ -169,7 +169,7 @@ function WidgetForm({
               <label
                 key={id}
                 className={cn(
-                  'border-line hover:border-line-strong bg-background-100 text-label-13 flex cursor-pointer gap-2 rounded-lg border p-2.5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--focus)]',
+                  'border-line hover:border-line-strong bg-surface text-13 flex cursor-pointer gap-2 rounded-lg border p-2.5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--focus)]',
                   type === id && 'border-brand ring-brand ring-1',
                 )}
               >
@@ -189,7 +189,7 @@ function WidgetForm({
                 />
                 <span className="flex flex-col">
                   <span className="font-medium">{t.label}</span>
-                  <span className="text-muted-foreground text-label-12">{t.description}</span>
+                  <span className="text-muted-foreground text-12">{t.description}</span>
                 </span>
               </label>
             );
@@ -198,7 +198,7 @@ function WidgetForm({
       </fieldset>
 
       {usesSheet ? (
-        <label htmlFor={ids.sheet} className="text-label-13 flex flex-col gap-1 font-medium">
+        <label htmlFor={ids.sheet} className="text-13 flex flex-col gap-1 font-medium">
           Sheet
           <select
             id={ids.sheet}
@@ -222,7 +222,7 @@ function WidgetForm({
       ) : null}
 
       {def.needs.field ? (
-        <label htmlFor={ids.field} className="text-label-13 flex flex-col gap-1 font-medium">
+        <label htmlFor={ids.field} className="text-13 flex flex-col gap-1 font-medium">
           {def.fieldPrompt?.label ?? (def.needs.field === 'date' ? 'Date field' : 'Field')}
           <select
             id={ids.field}
@@ -250,8 +250,8 @@ function WidgetForm({
 
       {def.needs.conditions && current && keptScope.length ? (
         <div className="flex flex-col gap-1">
-          <p className="text-copy-13 m-0 font-medium">Only items where</p>
-          <ul className="text-copy-13 text-muted-foreground m-0 flex list-none flex-col gap-0.5 p-0">
+          <p className="text-13 m-0 font-medium">Only items where</p>
+          <ul className="text-13 text-muted-foreground m-0 flex list-none flex-col gap-0.5 p-0">
             {keptScope.map((c, i) => (
               <li key={i}>{describeCondition(c, current.ctx)}</li>
             ))}
@@ -266,11 +266,9 @@ function WidgetForm({
 
       {def.needs.conditions && current ? (
         <div className="flex flex-col gap-2">
-          <p className="text-copy-13 m-0 font-medium">Count items where all of these match</p>
+          <p className="text-13 m-0 font-medium">Count items where all of these match</p>
           {conditions.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13 m-0">
-              No conditions: every item counts.
-            </p>
+            <p className="text-muted-foreground text-13 m-0">No conditions: every item counts.</p>
           ) : (
             <ol className="m-0 flex list-none flex-col gap-2 p-0">
               {conditions.map((c, i) => (
@@ -301,7 +299,7 @@ function WidgetForm({
       ) : null}
 
       {def.needs.days ? (
-        <label htmlFor={ids.days} className="text-label-13 flex flex-col gap-1 font-medium">
+        <label htmlFor={ids.days} className="text-13 flex flex-col gap-1 font-medium">
           Last days
           <input
             id={ids.days}
@@ -317,7 +315,7 @@ function WidgetForm({
         </label>
       ) : null}
 
-      <label htmlFor={ids.title} className="text-label-13 flex flex-col gap-1 font-medium">
+      <label htmlFor={ids.title} className="text-13 flex flex-col gap-1 font-medium">
         Title
         <input
           id={ids.title}
@@ -332,7 +330,7 @@ function WidgetForm({
       </label>
 
       {problem ? (
-        <p className="text-muted-foreground text-copy-13 m-0" role="status">
+        <p className="text-muted-foreground text-13 m-0" role="status">
           {problem}
         </p>
       ) : null}

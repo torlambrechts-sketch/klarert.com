@@ -57,7 +57,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
               </p>
             </div>
             {invite.email.toLowerCase() !== email.toLowerCase() ? (
-              <p role="alert" className="text-warn text-copy-13">
+              <p role="alert" className="text-warn text-13">
                 You are signed in as {email}. Sign out and sign in as {invite.email} to accept.
               </p>
             ) : (

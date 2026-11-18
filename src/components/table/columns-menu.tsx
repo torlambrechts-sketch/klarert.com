@@ -135,7 +135,7 @@ export function ColumnsMenu(p: ColumnsMenuProps) {
         {trigger}
         <Dialog open={!!open} onOpenChange={setOpen}>
           <DialogContent className="top-auto bottom-0 left-0 max-h-[88dvh] w-full max-w-none translate-x-0 translate-y-0 overflow-y-auto rounded-t-xl rounded-b-none p-4">
-            <DialogTitle className="text-heading-16">Columns</DialogTitle>
+            <DialogTitle className="text-card-title">Columns</DialogTitle>
             <DialogDescription className="sr-only">
               Choose the columns this view shows and their order.
             </DialogDescription>
@@ -171,7 +171,7 @@ export function ColumnsMenu(p: ColumnsMenuProps) {
         }}
         className="flex max-h-[min(640px,var(--radix-popover-content-available-height))] w-[360px] max-w-[calc(100vw-32px)] flex-col overflow-y-auto p-2"
       >
-        <h2 className="text-label-14 px-2 pt-1.5 pb-1 font-semibold">Columns</h2>
+        <h2 className="text-14 px-2 pt-1.5 pb-1 font-semibold">Columns</h2>
         {panel}
       </PopoverContent>
     </Popover>
@@ -265,7 +265,7 @@ function ColumnsPanel({
     return (
       <div className="flex flex-col gap-3 px-2 pb-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-label-13 font-semibold">Column groups</h3>
+          <h3 className="text-13 font-semibold">Column groups</h3>
           <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
             Done
           </Button>
@@ -283,7 +283,7 @@ function ColumnsPanel({
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between gap-2 px-2 pb-2">
-        <span className="text-muted-foreground text-label-12">
+        <span className="text-muted-foreground text-12">
           {shown} of {fields.length} shown
         </span>
         <Button
@@ -298,7 +298,7 @@ function ColumnsPanel({
         </Button>
       </div>
       {fields.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13 px-2 pb-2">No fields yet.</p>
+        <p className="text-muted-foreground text-13 px-2 pb-2">No fields yet.</p>
       ) : null}
       <div className="border-soft flex flex-col border-y py-1">
         {sections.map((s) => {
@@ -313,7 +313,7 @@ function ColumnsPanel({
                     <button
                       type="button"
                       aria-expanded={!shut}
-                      className="text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-12 flex items-center gap-1 rounded font-medium focus-visible:outline-2"
+                      className="text-muted-foreground hover:text-ink focus-visible:outline-focus text-12 flex items-center gap-1 rounded font-medium focus-visible:outline-2"
                       onClick={() => toggleGroup(s.id)}
                     >
                       {shut ? (
@@ -325,11 +325,9 @@ function ColumnsPanel({
                       <span className="sr-only">{shut ? ', collapsed' : ''}</span>
                     </button>
                   ) : (
-                    <span className="text-muted-foreground text-label-12 font-medium">
-                      {s.name}
-                    </span>
+                    <span className="text-muted-foreground text-12 font-medium">{s.name}</span>
                   )}
-                  <span className="text-label-11-mono ml-auto text-[var(--muted)]">
+                  <span className="text-12 ml-auto font-mono text-[var(--muted)]">
                     {shut ? `${s.members.length} hidden` : `${visible.length}/${s.members.length}`}
                   </span>
                 </div>
@@ -350,7 +348,7 @@ function ColumnsPanel({
               id="columns-hidden"
               ref={hiddenRef}
               tabIndex={-1}
-              className="text-muted-foreground text-label-12 px-2 pt-2 pb-1 font-medium outline-none"
+              className="text-muted-foreground text-12 px-2 pt-2 pb-1 font-medium outline-none"
             >
               Hidden · {hiddenList.length}
             </h3>
@@ -363,7 +361,7 @@ function ColumnsPanel({
                     className="hover:bg-subtle flex h-[34px] items-center gap-2 rounded-md pr-1 pl-2"
                   >
                     <Icon className="size-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
-                    <span className="text-muted-foreground text-label-13 min-w-0 flex-1 truncate">
+                    <span className="text-muted-foreground text-13 min-w-0 flex-1 truncate">
                       {f.name}
                     </span>
                     <KeyMark kind={keys.get(f.id)} />
@@ -385,7 +383,7 @@ function ColumnsPanel({
         ) : null}
       </div>
       <div className="flex flex-col gap-2 px-2 pt-2">
-        <p className="text-muted-foreground text-label-12">
+        <p className="text-muted-foreground text-12">
           Hidden columns and collapsed groups belong to this view. Column order is the sheet’s.
         </p>
         {phone ? <ViewBarActions views={views} userId={userId} /> : null}
@@ -410,7 +408,7 @@ function KeyMark({ kind }: { kind: KeyColumn | undefined }) {
   return (
     <span
       title="Key column"
-      className="border-line text-muted-foreground text-label-11 shrink-0 rounded-full border px-1.5 leading-[18px]"
+      className="border-line text-muted-foreground text-12 shrink-0 rounded-full border px-1.5 leading-[18px]"
     >
       {KEY_COLUMN_LABEL[kind]}
       <span className="sr-only"> (key column)</span>
@@ -490,7 +488,7 @@ function ColumnRow({
       style={{ transform: CSS.Transform.toString(s.transform), transition: s.transition }}
       className={cn(
         'group/col hover:bg-subtle focus-within:bg-subtle relative flex h-[34px] items-center gap-0.5 rounded-md pr-1',
-        s.isDragging && 'bg-background-100 z-[1] shadow-[var(--shadow-menu)]',
+        s.isDragging && 'bg-surface z-[1] shadow-[var(--shadow-menu)]',
       )}
     >
       {canMove ? (
@@ -506,12 +504,12 @@ function ColumnRow({
       ) : (
         <span className="w-5 shrink-0" />
       )}
-      <label className="text-label-13 flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2 px-1">
+      <label className="text-13 flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2 px-1">
         <input type="checkbox" checked onChange={onHide} aria-label={`Show ${field.name}`} />
         <Icon className="size-3.5 shrink-0 text-[var(--muted)]" aria-hidden />
         <span className="min-w-0 flex-1 truncate">{field.name}</span>
         <KeyMark kind={keyKind} />
-        <span className="text-label-11 shrink-0 text-[var(--muted)] group-focus-within/col:hidden group-hover/col:hidden">
+        <span className="text-12 shrink-0 text-[var(--muted)] group-focus-within/col:hidden group-hover/col:hidden">
           {label}
         </span>
       </label>

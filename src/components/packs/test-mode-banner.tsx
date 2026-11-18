@@ -72,13 +72,13 @@ export function TestModeBanner({ org, packs }: { org: string; packs: TestModeBan
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <FlaskConical className="text-warn size-5 shrink-0" aria-hidden />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <h2 id={ids.heading} className="text-label-14 m-0 font-medium">
+          <h2 id={ids.heading} className="text-14 m-0 font-medium">
             {one
               ? `${automations(one.count)} from ${one.title} ${one.count === 1 ? 'is' : 'are'} in test mode.`
               : `${automations(total)} from ${waiting.length} packs are in test mode.`}{' '}
             Review and turn them on.
           </h2>
-          <p className="text-copy-13 text-muted-foreground m-0">
+          <p className="text-13 text-muted-foreground m-0">
             In test mode an automation runs and writes the run log, but notifies nobody and changes
             nothing.
           </p>
@@ -109,7 +109,7 @@ export function TestModeBanner({ org, packs }: { org: string; packs: TestModeBan
       </div>
       {one ? null : (
         <>
-          <p className="text-copy-13 m-0">
+          <p className="text-13 m-0">
             <span className="font-medium">Still in test mode: </span>
             {waiting.map((p, i) => (
               <span key={p.installId}>
@@ -132,7 +132,7 @@ export function TestModeBanner({ org, packs }: { org: string; packs: TestModeBan
                 key={p.installId}
                 className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between"
               >
-                <span className="text-copy-13 min-w-0">
+                <span className="text-13 min-w-0">
                   {p.title} · {automations(p.count)}
                 </span>
                 {turnOnButton(p, 'self-start sm:self-auto')}
@@ -158,10 +158,10 @@ export function TestModeNotice({ org, packs }: { org: string; packs: TestModeBan
     >
       <FlaskConical className="text-warn size-5 shrink-0" aria-hidden />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <h2 id={headingId} className="text-label-14 m-0 font-medium">
+        <h2 id={headingId} className="text-14 m-0 font-medium">
           {line}
         </h2>
-        <p className="text-copy-13 text-muted-foreground m-0">
+        <p className="text-13 text-muted-foreground m-0">
           They run and write the run log, but notify nobody and change nothing until you turn them
           on.
         </p>

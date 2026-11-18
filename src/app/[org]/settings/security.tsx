@@ -51,7 +51,7 @@ export function RequireTwoStep({
           className="mt-0.5"
         />
         <div className="flex flex-col gap-1">
-          <label htmlFor={id} className="text-label-14 font-medium">
+          <label htmlFor={id} className="text-14 font-medium">
             Require two-step sign-in for this workspace
             <span
               className="text-muted-foreground font-normal"
@@ -61,7 +61,7 @@ export function RequireTwoStep({
               · {on ? 'On' : 'Off'}
             </span>
           </label>
-          <p id={`${id}-help`} className="text-muted-foreground text-copy-13 m-0">
+          <p id={`${id}-help`} className="text-muted-foreground text-13 m-0">
             Everyone enters a 6-digit code from an authenticator app after their password or email
             link. Members who have not set one up are asked to do so before they can open the
             workspace.
@@ -69,7 +69,7 @@ export function RequireTwoStep({
         </div>
       </div>
       {blockedReason ? (
-        <p id={`${id}-blocked`} className="text-copy-13 m-0">
+        <p id={`${id}-blocked`} className="text-13 m-0">
           {blockedReason}{' '}
           {isOwner ? (
             <Link
@@ -82,7 +82,7 @@ export function RequireTwoStep({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="text-crit text-copy-13 m-0">
+        <p role="alert" className="text-crit text-13 m-0">
           {error}
         </p>
       ) : null}

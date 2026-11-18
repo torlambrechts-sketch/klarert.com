@@ -56,14 +56,14 @@ export function KeyFigures({
   return (
     <section
       aria-labelledby={headingId}
-      className="border-line bg-background-100 overflow-hidden rounded-lg border"
+      className="border-line bg-surface overflow-hidden rounded-lg border"
     >
       <h2 id={headingId} className="sr-only">
         {title}
       </h2>
       {!f ? (
         <div className="flex items-start justify-between gap-3 p-5">
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             {result.empty ?? 'Nothing to show yet.'}
           </p>
           {menu}
@@ -88,15 +88,15 @@ export function KeyFigures({
                   className={cn(
                     'border-line relative flex min-w-0 flex-col items-start gap-[6px] border-r px-[20px] pt-[16px] pb-[18px] text-left outline-offset-[-2px] max-md:border-b max-md:even:border-r-0 md:last:border-r-0',
                     on
-                      ? 'text-ink bg-background-100 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-[var(--ink)]'
+                      ? 'text-ink bg-surface after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-[var(--ink)]'
                       : 'bg-subtle text-muted-foreground hover:bg-soft',
                   )}
                 >
-                  <span className="text-label-13 max-w-full truncate font-medium">{fig.label}</span>
+                  <span className="text-13 max-w-full truncate font-medium">{fig.label}</span>
                   <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
                     <b
                       className={cn(
-                        'text-heading-32 leading-none tabular-nums',
+                        'text-figure leading-none tabular-nums',
                         on ? 'text-ink' : 'text-ink',
                       )}
                     >
@@ -104,7 +104,7 @@ export function KeyFigures({
                     </b>
                     <em
                       className={cn(
-                        'text-label-12-mono inline-flex items-center gap-0.5 font-medium not-italic',
+                        'text-12 inline-flex items-center gap-0.5 font-mono font-medium not-italic',
                         DELTA_TONE[fig.delta.tone],
                       )}
                     >
@@ -118,7 +118,7 @@ export function KeyFigures({
             })}
           </div>
           <div className="px-[20px] pt-[16px] pb-[14px]">
-            <div className="text-muted-foreground text-label-13 mb-[12px] flex items-center justify-between gap-3">
+            <div className="text-muted-foreground text-13 mb-[12px] flex items-center justify-between gap-3">
               <span className="min-w-0">
                 {f.note}
                 <span className="sr-only"> · {result.period}</span>
@@ -184,7 +184,7 @@ function Chart({ figure: f }: { figure: Figure }) {
             )}
             style={{ top: `${(i / (all.length - 1)) * 100}%` }}
           >
-            <span className="text-muted-foreground text-label-12-mono absolute -top-2 right-full mr-2.5 whitespace-nowrap">
+            <span className="text-muted-foreground text-12 absolute -top-2 right-full mr-2.5 font-mono whitespace-nowrap">
               {f.unit === 'percent' ? `${t}%` : t}
             </span>
           </div>
@@ -212,7 +212,7 @@ function Chart({ figure: f }: { figure: Figure }) {
             <span
               key={p.date}
               className={cn(
-                'text-muted-foreground text-label-12-mono absolute top-2',
+                'text-muted-foreground text-12 absolute top-2 font-mono',
                 i === 0 ? '' : i === n - 1 ? '-translate-x-full' : '-translate-x-1/2',
                 // phones: half the labels, and none next to the last
                 i !== n - 1 && (i % (every * 2) !== 0 || i === n - 2) && 'max-sm:hidden',

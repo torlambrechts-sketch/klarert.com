@@ -99,8 +99,8 @@ function MapForm({
     >
       {picked ? (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-label-13">
-            <span className="text-label-12-mono font-medium">{picked.label}</span> {picked.title}
+          <span className="text-13">
+            <span className="text-12 font-mono font-medium">{picked.label}</span> {picked.title}
           </span>
           <Button
             type="button"
@@ -114,7 +114,7 @@ function MapForm({
         </div>
       ) : (
         <div className="flex flex-col gap-1">
-          <label htmlFor={ids.search} className="text-label-13 font-medium">
+          <label htmlFor={ids.search} className="text-13 font-medium">
             Catalogue requirement
           </label>
           <input
@@ -149,7 +149,7 @@ function MapForm({
           />
           {options.isError ? (
             <div role="alert" className="flex flex-wrap items-center gap-2">
-              <p className="text-copy-13 m-0">{options.error.message}</p>
+              <p className="text-13 m-0">{options.error.message}</p>
               <Button
                 type="button"
                 size="sm"
@@ -176,29 +176,27 @@ function MapForm({
                 role="option"
                 aria-selected={i === active}
                 className={cn(
-                  'text-label-13 flex cursor-pointer flex-col rounded px-2 py-1',
+                  'text-13 flex cursor-pointer flex-col rounded px-2 py-1',
                   i === active ? 'bg-sel' : 'hover:bg-soft',
                 )}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(o)}
               >
                 <span>
-                  <span className="text-label-12-mono font-medium">{o.label}</span> {o.title}
+                  <span className="text-12 font-mono font-medium">{o.label}</span> {o.title}
                 </span>
-                <span className="text-label-12 text-muted-foreground">{o.framework}</span>
+                <span className="text-12 text-muted-foreground">{o.framework}</span>
               </li>
             ))}
           </ul>
           {query.trim() && options.data && found.length === 0 ? (
-            <p className="text-copy-13 text-muted-foreground m-0">
-              No catalogue requirement matches.
-            </p>
+            <p className="text-13 text-muted-foreground m-0">No catalogue requirement matches.</p>
           ) : null}
         </div>
       )}
       <div className="grid gap-2 sm:grid-cols-[10rem_minmax(0,1fr)]">
         <div className="flex flex-col gap-1">
-          <label htmlFor={ids.relation} className="text-label-13 font-medium">
+          <label htmlFor={ids.relation} className="text-13 font-medium">
             Relation
           </label>
           <select
@@ -215,7 +213,7 @@ function MapForm({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor={ids.note} className="text-label-13 font-medium">
+          <label htmlFor={ids.note} className="text-13 font-medium">
             Note (optional)
           </label>
           <input
@@ -227,12 +225,12 @@ function MapForm({
           />
         </div>
       </div>
-      <p className="text-label-12 text-muted-foreground m-0">
+      <p className="text-12 text-muted-foreground m-0">
         Equivalent: asks for the same thing. Partly: part of it. Related: worth looking at together.
         When in doubt, related.
       </p>
       {error ? (
-        <p role="alert" className="text-copy-13 m-0 flex items-center gap-1.5">
+        <p role="alert" className="text-13 m-0 flex items-center gap-1.5">
           <X className="text-crit size-4 shrink-0" aria-hidden /> {error}
         </p>
       ) : null}
@@ -280,11 +278,11 @@ export function OwnMappings({
 
   return (
     <div className="flex flex-col gap-1.5" data-testid="own-mappings">
-      <h4 className="text-label-13 text-muted-foreground m-0 font-medium">
+      <h4 className="text-13 text-muted-foreground m-0 font-medium">
         Your mappings · {own.mappings.length}
       </h4>
       {own.mappings.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           Not mapped to a catalogue requirement yet.
           {own.canMap ? ' Map it to see where one control covers both.' : ''}
         </p>
@@ -293,11 +291,11 @@ export function OwnMappings({
           {own.mappings.map((m) => (
             <li
               key={m.id}
-              className="border-line text-label-13 flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border px-3 py-1.5"
+              className="border-line text-13 flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border px-3 py-1.5"
             >
-              <span className="text-label-12-mono font-medium">{m.label}</span>
+              <span className="text-12 font-mono font-medium">{m.label}</span>
               <span className="min-w-0 flex-1 truncate">{m.title}</span>
-              <span className="text-label-12">{RELATION_LABEL[m.relation]}</span>
+              <span className="text-12">{RELATION_LABEL[m.relation]}</span>
               {own.canMap ? (
                 <Button
                   type="button"
@@ -314,7 +312,7 @@ export function OwnMappings({
                   )}
                 </Button>
               ) : null}
-              <span className="text-label-12 text-muted-foreground basis-full">
+              <span className="text-12 text-muted-foreground basis-full">
                 Your mapping · {m.by ?? 'Former member'} · {m.atText}
                 {m.note ? ` · ${m.note}` : ''}
               </span>

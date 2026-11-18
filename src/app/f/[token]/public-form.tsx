@@ -23,12 +23,12 @@ export function NoticeText({ notice, controller }: { notice: PrivacyNotice; cont
     ['Your rights and who to contact', notice.rights],
   ];
   return (
-    <dl className="text-copy-13 flex flex-col gap-2">
+    <dl className="text-13 flex flex-col gap-2">
       {rows
         .filter(([, v]) => v && v.trim())
         .map(([k, v]) => (
           <div key={k}>
-            <dt className="text-label-13 font-semibold">{k}</dt>
+            <dt className="text-13 font-semibold">{k}</dt>
             <dd className="text-muted-foreground whitespace-pre-line">{v}</dd>
           </div>
         ))}
@@ -40,7 +40,7 @@ export function NoticeText({ notice, controller }: { notice: PrivacyNotice; cont
               href={notice.url}
               target="_blank"
               rel="noreferrer noopener"
-              className="text-blue-900 underline underline-offset-2"
+              className="text-info underline underline-offset-2"
             >
               Read the full privacy notice
             </a>
@@ -96,15 +96,15 @@ export function PublicFormView(props: {
     return (
       <section
         role="status"
-        className="border-line bg-background-100 flex flex-col items-start gap-3 rounded-xl border p-6"
+        className="border-line bg-surface flex flex-col items-start gap-3 rounded-xl border p-6"
       >
         <CheckCircle2 className="text-good size-6" aria-hidden />
-        <h1 className="text-heading-24">Thank you. Your answers were sent.</h1>
+        <h1 className="text-kpi">Thank you. Your answers were sent.</h1>
         {props.confirmation ? (
-          <p className="text-copy-14 whitespace-pre-line">{props.confirmation}</p>
+          <p className="text-14 whitespace-pre-line">{props.confirmation}</p>
         ) : null}
         {sent.displayId ? (
-          <p className="text-copy-13">
+          <p className="text-13">
             Reference <span className="font-mono">{sent.displayId}</span>
           </p>
         ) : null}
@@ -127,7 +127,7 @@ export function PublicFormView(props: {
   return (
     <form
       noValidate
-      className="border-line bg-background-100 flex flex-col gap-5 rounded-xl border p-6 sm:p-7"
+      className="border-line bg-surface flex flex-col gap-5 rounded-xl border p-6 sm:p-7"
       onSubmit={async (e) => {
         e.preventDefault();
         setMessage(null);
@@ -162,11 +162,9 @@ export function PublicFormView(props: {
       }}
     >
       <header className="border-line -mx-6 -mt-6 flex flex-col gap-1.5 border-b px-6 pt-6 pb-5 sm:-mx-7 sm:-mt-7 sm:px-7 sm:pt-7">
-        <h1 className="text-heading-24">{props.title}</h1>
+        <h1 className="text-kpi">{props.title}</h1>
         {props.description ? (
-          <p className="text-muted-foreground text-copy-13 whitespace-pre-line">
-            {props.description}
-          </p>
+          <p className="text-muted-foreground text-13 whitespace-pre-line">{props.description}</p>
         ) : null}
       </header>
       <FormFill
@@ -182,7 +180,7 @@ export function PublicFormView(props: {
       />
       {hasNotice ? (
         <details className="border-line rounded-md border p-3">
-          <summary className="text-label-14 focus-visible:outline-focus cursor-pointer font-medium focus-visible:outline-2">
+          <summary className="text-14 focus-visible:outline-focus cursor-pointer font-medium focus-visible:outline-2">
             How we use your answers
           </summary>
           <div className="mt-3">
@@ -192,7 +190,7 @@ export function PublicFormView(props: {
       ) : null}
       {props.consent ? (
         <div className="flex flex-col gap-1">
-          <label htmlFor={consentId} className="text-copy-14 flex items-start gap-2">
+          <label htmlFor={consentId} className="text-14 flex items-start gap-2">
             <input
               id={consentId}
               type="checkbox"
@@ -205,7 +203,7 @@ export function PublicFormView(props: {
             I agree that my answers are used as described in how we use your answers.
           </label>
           {errors.__consent ? (
-            <p id={`${consentId}-e`} className="text-crit text-label-13">
+            <p id={`${consentId}-e`} className="text-crit text-13">
               {errors.__consent}
             </p>
           ) : null}
@@ -225,7 +223,7 @@ export function PublicFormView(props: {
         </label>
       </div>
       {message ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           {message}
         </p>
       ) : null}

@@ -164,18 +164,16 @@ export function Inbox({
   return (
     <Popover open={inboxOpen} onOpenChange={setInboxOpen}>
       <PopoverTrigger
-        className="hover:bg-soft text-label-14 relative flex h-8 items-center gap-1.5 rounded-md px-2.5 font-medium max-[759.98px]:h-11 max-[759.98px]:min-w-11 max-[759.98px]:justify-center"
+        className="text-navy hover:bg-panel relative flex size-11 items-center justify-center rounded-full transition-colors duration-150"
         aria-label={unread > 0 ? `Inbox ${unread > 99 ? '99+' : unread} unread` : 'Inbox'}
         data-testid="inbox-button"
         data-state-loaded={state.status === 'ready' ? '' : undefined}
       >
-        <Bell className="size-4" aria-hidden />
-        <span className="desk-only">Inbox</span>
-        {/* the visible words read "Inbox 4", the start of the name (WCAG 2.5.3, label in name); flex drops the space */}
-        {unread > 0 ? ' ' : null}
+        <Bell className="size-5" aria-hidden />
+        {/* the orange unread mark (docs/18 §4) carries the count (docs/05 §2.3) */}
         {unread > 0 ? (
           <span
-            className="bg-crit text-label-12 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 font-bold text-white"
+            className="bg-warn-mark text-navy text-12 absolute top-1 right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white px-1 font-bold"
             data-testid="inbox-count"
             aria-hidden
           >
@@ -188,10 +186,10 @@ export function Inbox({
         className="flex w-[min(380px,calc(100vw-24px))] flex-col gap-2 p-0"
       >
         <div className="flex items-center justify-between gap-2 px-3 pt-3">
-          <h2 className="text-heading-16">Inbox</h2>
+          <h2 className="text-card-title">Inbox</h2>
           <button
             type="button"
-            className="text-info text-label-13 inline-flex items-center gap-1 rounded px-1 font-semibold disabled:text-[var(--muted)] disabled:opacity-60"
+            className="text-info text-13 inline-flex items-center gap-1 rounded px-1 font-semibold disabled:text-[var(--muted)] disabled:opacity-60"
             disabled={unread === 0}
             onClick={() => void markRead()}
           >
@@ -210,7 +208,7 @@ export function Inbox({
               ))}
             </div>
           ) : state.status === 'error' ? (
-            <div role="alert" className="text-label-13 flex flex-col items-start gap-2 p-2">
+            <div role="alert" className="text-13 flex flex-col items-start gap-2 p-2">
               <p className="m-0">The inbox could not be loaded.</p>
               <button
                 type="button"
@@ -221,7 +219,7 @@ export function Inbox({
               </button>
             </div>
           ) : state.rows.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13 m-0 p-2">
+            <p className="text-muted-foreground text-13 m-0 p-2">
               Nothing here yet. Notifications and requests for you will show here.
             </p>
           ) : (
@@ -240,7 +238,7 @@ export function Inbox({
                     onClick={() => open(row)}
                     disabled={!row.item}
                   >
-                    <span className="text-muted-foreground text-label-12 flex items-center gap-1.5 font-medium">
+                    <span className="text-muted-foreground text-12 flex items-center gap-1.5 font-medium">
                       {!row.readAt ? (
                         <span className="bg-info size-2 shrink-0 rounded-full" aria-hidden />
                       ) : null}
@@ -252,8 +250,8 @@ export function Inbox({
                         </span>
                       ) : null}
                     </span>
-                    <span className="text-label-13 line-clamp-3 break-words">{row.body}</span>
-                    <span className="text-muted-foreground text-label-12">
+                    <span className="text-13 line-clamp-3 break-words">{row.body}</span>
+                    <span className="text-muted-foreground text-12">
                       {formatDateTime(row.createdAt, timeZone)}
                     </span>
                   </button>
@@ -276,7 +274,7 @@ export function Inbox({
         <div className="border-line border-t px-3 py-2">
           <Link
             href={`/${org}/my-work`}
-            className="text-info text-label-13 font-semibold"
+            className="text-info text-13 font-semibold"
             onClick={() => setInboxOpen(false)}
           >
             Open My work

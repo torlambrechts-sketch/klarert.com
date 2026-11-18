@@ -50,7 +50,7 @@ function SourcePill({ source }: { source: string }) {
   return (
     <span
       className={cn(
-        'text-label-12 inline-block max-w-full truncate rounded-full px-[9px] py-0.5 font-medium whitespace-nowrap',
+        'text-12 inline-block max-w-full truncate rounded-full px-[9px] py-0.5 font-medium whitespace-nowrap',
         label === 'Custom' ? 'bg-info-soft text-info' : 'bg-soft text-ink',
       )}
     >
@@ -79,8 +79,8 @@ export function NewAutomationRow({
         <span className="col-span-3 flex min-w-0 items-center gap-3 md:col-span-7">
           <RowIcon icon={Plus} />
           <span className="flex min-w-0 flex-col">
-            <h2 className="text-label-14 m-0 truncate font-medium">{title}</h2>
-            <span className="text-muted-foreground text-label-13">Not saved yet</span>
+            <h2 className="text-14 m-0 truncate font-medium">{title}</h2>
+            <span className="text-muted-foreground text-13">Not saved yet</span>
           </span>
         </span>
       </div>
@@ -210,19 +210,19 @@ export function AutomationRows({
                 <RowIcon icon={Zap} dim={!a.enabled} />
                 <span className="flex min-w-0 flex-col">
                   <span className="flex min-w-0 items-center gap-1.5">
-                    <span className="text-label-14 line-clamp-2 font-medium break-words md:line-clamp-1">
+                    <span className="text-14 line-clamp-2 font-medium break-words md:line-clamp-1">
                       {a.name}
                     </span>
                     {a.locked ? (
                       <Lock className="text-muted-foreground size-3 shrink-0" aria-label="Locked" />
                     ) : null}
                   </span>
-                  <span className="text-muted-foreground text-label-13 truncate">
+                  <span className="text-muted-foreground text-13 truncate">
                     {ctx ? describeAutomation(a, ctx, sheetName) : 'Loading…'}
                   </span>
                   {a.mode === 'test' ? (
                     <span
-                      className="text-label-12 flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5"
+                      className="text-12 flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5"
                       data-testid="automation-test-mode"
                     >
                       <span className="border-warn/40 bg-warn-soft text-warn inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium">
@@ -244,34 +244,34 @@ export function AutomationRows({
                       ) : null}
                     </span>
                   ) : null}
-                  <span className="text-muted-foreground text-label-12 truncate md:hidden">
+                  <span className="text-muted-foreground text-12 truncate md:hidden">
                     {sheetName(a.sheetId) ?? 'Archived sheet'} · {sourceLabel(a.source)} · v
                     {a.version}
                   </span>
                 </span>
               </span>
-              <span className="text-ink text-label-14 hidden min-w-0 items-center gap-[7px] md:flex">
+              <span className="text-ink text-14 hidden min-w-0 items-center gap-[7px] md:flex">
                 <SheetIcon className="text-muted-foreground size-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{sheetName(a.sheetId) ?? 'Archived sheet'}</span>
               </span>
               <span className="hidden min-w-0 md:block">
                 <SourcePill source={a.source} />
               </span>
-              <span className="text-ink text-label-13-mono hidden md:block">v{a.version}</span>
+              <span className="text-ink text-13 hidden font-mono md:block">v{a.version}</span>
               <span className="hidden min-w-0 flex-col md:flex">
                 {a.runCount > 0 ? (
                   <Link
                     href={`/${org}/automations?tab=runs&automation=${a.id}`}
-                    className="text-ink hover:text-ink text-label-13-mono underline-offset-4 hover:underline"
+                    className="text-ink hover:text-ink text-13 font-mono underline-offset-4 hover:underline"
                     aria-label={`${a.runCount.toLocaleString('en-GB')} runs of ${a.name}`}
                   >
                     {a.runCount.toLocaleString('en-GB')}
                   </Link>
                 ) : (
-                  <span className="text-muted-foreground text-label-13-mono">0</span>
+                  <span className="text-muted-foreground text-13 font-mono">0</span>
                 )}
                 <span
-                  className="text-muted-foreground text-label-12 truncate"
+                  className="text-muted-foreground text-12 truncate"
                   title={
                     a.lastRunAt ? `Last run ${formatDateTime(a.lastRunAt, timeZone)}` : undefined
                   }
@@ -288,7 +288,7 @@ export function AutomationRows({
                   onCheckedChange={(v) => void toggle(a, v)}
                   className="data-[state=checked]:bg-ink"
                 />
-                <span className="text-muted-foreground text-label-12 w-6">
+                <span className="text-muted-foreground text-12 w-6">
                   {a.enabled ? 'On' : 'Off'}
                 </span>
               </span>

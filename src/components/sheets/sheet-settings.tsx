@@ -60,7 +60,7 @@ export function SheetSettingsForm({
               defaultValue={sheet.description ?? ''}
               rows={3}
               maxLength={2000}
-              className="border-input focus-visible:ring-focus/25 bg-background-100 text-label-13 rounded-md border p-2 outline-none focus-visible:ring-[3px]"
+              className="border-input focus-visible:ring-focus/25 bg-surface text-13 rounded-md border p-2 outline-none focus-visible:ring-[3px]"
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -98,7 +98,7 @@ export function SheetSettingsForm({
             />
             <div className="flex flex-col gap-0.5">
               <Label htmlFor={libId}>Library sheet</Label>
-              <p className="text-muted-foreground text-copy-13">
+              <p className="text-muted-foreground text-13">
                 Requirement and control link fields of other sheets can point at its items.
               </p>
             </div>
@@ -114,7 +114,7 @@ export function SheetSettingsForm({
             />
             <div className="flex flex-col gap-0.5">
               <Label htmlFor={holdId}>Run automations when an item is finished</Label>
-              <p className="text-muted-foreground text-copy-13">
+              <p className="text-muted-foreground text-13">
                 Edits in the table and the item panel wait until you move to another item, press
                 Done or close the item. Switch off to run automations on every saved change.
               </p>
@@ -148,7 +148,7 @@ export function ArchiveSheet({
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="border-crit text-crit hover:bg-crit/5 text-label-14 h-[40px] rounded-md border px-4 font-medium"
+          className="border-crit text-crit hover:bg-crit/5 text-14 h-[40px] rounded-md border px-4 font-medium"
         >
           Archive sheet
         </button>
@@ -172,13 +172,13 @@ export function ArchiveSheet({
         </SubmitButton>
       ) : (
         <>
-          <span className="text-label-13">Archive this sheet? Its items are kept.</span>
+          <span className="text-13">Archive this sheet? Its items are kept.</span>
           <SubmitButton variant="destructive" pendingText="Archiving…">
             Archive sheet
           </SubmitButton>
           <button
             type="button"
-            className="hover:bg-soft text-label-14 h-[40px] rounded-md px-3"
+            className="hover:bg-soft text-14 h-[40px] rounded-md px-3"
             onClick={() => setConfirming(false)}
           >
             Cancel

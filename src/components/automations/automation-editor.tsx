@@ -37,10 +37,7 @@ import { ErrorBox, ListSkeleton } from './states';
 // automation or a saved one. Used in place on the Automations page and in the Design tab's side window (docs/05 §3.8),
 // so both edit through the same commands with the same checks.
 
-const selectClass = cn(
-  inputClass,
-  'select-chevron h-8 w-auto max-w-[280px] text-label-14 shadow-none',
-);
+const selectClass = cn(inputClass, 'select-chevron h-8 w-auto max-w-[280px] text-14 shadow-none');
 
 function useBuilderSheet(sheetId: string | null, given: SheetData | undefined) {
   return useQuery({
@@ -113,7 +110,7 @@ export function AutomationEditor(props: AutomationEditorProps) {
 
   const frame = (children: React.ReactNode) => (
     <div className="flex flex-col gap-2.5">
-      <div className="border-line bg-background-100 flex flex-col rounded-lg border px-3.5 py-1.5">
+      <div className="border-line bg-surface flex flex-col rounded-lg border px-3.5 py-1.5">
         {head}
         {children}
       </div>
@@ -124,9 +121,7 @@ export function AutomationEditor(props: AutomationEditorProps) {
       </div>
     </div>
   );
-  const note = (text: string) => (
-    <p className="text-muted-foreground text-copy-14 m-0 py-2.5">{text}</p>
-  );
+  const note = (text: string) => <p className="text-muted-foreground text-14 m-0 py-2.5">{text}</p>;
 
   if (editId && autos.isPending) return <ListSkeleton />;
   if (editId && !editing) return frame(note('This automation no longer exists.'));
@@ -203,14 +198,14 @@ function RoleMappingStep({
     <div className="flex flex-col gap-2.5">
       <section
         aria-labelledby="map-roles"
-        className="border-line bg-background-100 flex flex-col rounded-lg border px-3.5 py-1.5"
+        className="border-line bg-surface flex flex-col rounded-lg border px-3.5 py-1.5"
       >
         {head}
         <div className="border-soft flex flex-col gap-0.5 border-b py-2.5">
-          <h3 id="map-roles" className="text-heading-14 m-0">
+          <h3 id="map-roles" className="text-14 m-0 font-semibold">
             Choose the fields this recipe uses
           </h3>
-          <p className="text-muted-foreground text-copy-13 m-0">{recipe.title}</p>
+          <p className="text-muted-foreground text-13 m-0">{recipe.title}</p>
         </div>
         {Object.keys(recipe.roles).map((role) => {
           const list = candidates[role] ?? [];
@@ -222,7 +217,7 @@ function RoleMappingStep({
             >
               <label
                 htmlFor={id}
-                className="text-muted-foreground text-label-12 w-full font-medium sm:w-24"
+                className="text-muted-foreground text-12 w-full font-medium sm:w-24"
               >
                 {role} field
               </label>
@@ -240,7 +235,7 @@ function RoleMappingStep({
                 ))}
               </select>
               {list.length === 0 ? (
-                <span className="text-muted-foreground text-label-13">
+                <span className="text-muted-foreground text-13">
                   This sheet has no {recipe.roles[role]!.join(' or ')} field. Add one, or adjust the
                   automation in the builder.
                 </span>

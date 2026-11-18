@@ -41,7 +41,7 @@ const nameOfKey = (key: string | null | undefined, fields: Map<string, { name: s
   (key && fields.get(key)?.name) || 'a field that is not chosen yet';
 
 const CALCULATED = (
-  <Muted className="text-label-12">The app calculates this value; it cannot be typed.</Muted>
+  <Muted className="text-12">The app calculates this value; it cannot be typed.</Muted>
 );
 
 export const linkUI: FieldTypeUI = {
@@ -134,7 +134,7 @@ export const formulaUI = computedUI({
     return (
       <>
         {cfg.expr ? (
-          <code className="bg-soft text-label-12-mono rounded px-1.5 py-1 break-all">
+          <code className="bg-soft text-12 rounded px-1.5 py-1 font-mono break-all">
             {cfg.expr}
           </code>
         ) : (
@@ -163,7 +163,7 @@ export const progressUI = computedUI({
             style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
           />
         </span>
-        <span className="text-label-12 shrink-0 tabular-nums">{Math.round(value)}%</span>
+        <span className="text-12 shrink-0 tabular-nums">{Math.round(value)}%</span>
       </span>
     ) : (
       <span className="sr-only">Empty</span>
@@ -182,7 +182,7 @@ export const progressUI = computedUI({
 
 export const autoidUI = computedUI({
   icon: IdCard,
-  Cell: (p) => <TextCell {...p} className="text-label-12-mono" />,
+  Cell: (p) => <TextCell {...p} className="text-12 font-mono" />,
   explain: () => (
     <>
       <p>
@@ -259,7 +259,7 @@ function ButtonEditor({ field, onButton, onCancel }: Parameters<FieldTypeUI['Edi
         </>
       }
     >
-      <p className="text-copy-13">{cfg.confirm ?? `Run the automations that use ${field.name}.`}</p>
+      <p className="text-13">{cfg.confirm ?? `Run the automations that use ${field.name}.`}</p>
     </EditorFrame>
   );
 }
@@ -269,7 +269,7 @@ function ButtonCell({ field, item }: Parameters<FieldTypeUI['Cell']>[0]) {
   return (
     <span
       aria-busy={busy}
-      className="border-line bg-soft text-label-12 inline-flex max-w-full items-center gap-1 rounded-md border px-2 py-0.5 font-semibold"
+      className="border-line bg-soft text-12 inline-flex max-w-full items-center gap-1 rounded-md border px-2 py-0.5 font-semibold"
     >
       {busy ? <Loader2 aria-hidden className="size-3 shrink-0 animate-spin" /> : null}
       <span className="truncate">{(field.config as { label: string }).label}</span>
@@ -325,11 +325,9 @@ function AiEditor({
         )
       }
     >
-      <p className="text-copy-13">{displayText(field, v, ctx)}</p>
+      <p className="text-13">{displayText(field, v, ctx)}</p>
       {!target ? (
-        <Muted className="text-label-12">
-          Choose the field a proposal fills in the field settings.
-        </Muted>
+        <Muted className="text-12">Choose the field a proposal fills in the field settings.</Muted>
       ) : null}
     </EditorFrame>
   );
@@ -351,7 +349,7 @@ export const aiUI: FieldTypeUI = {
             done: v.status === 'accepted',
           }}
         />
-        <Text className="text-label-12">
+        <Text className="text-12">
           {displayText(field, { ...v, status: 'proposed' }, ctx).replace(/^Proposed: /, '')}
         </Text>
       </span>

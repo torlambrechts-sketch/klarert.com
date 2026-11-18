@@ -61,7 +61,12 @@ export function SubitemsTab({
     );
   if (!handle.state)
     return (
-      <div aria-busy="true" aria-label="Loading sub-items" className="flex flex-col gap-2">
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading sub-items"
+        className="flex flex-col gap-2"
+      >
         {[0, 1, 2].map((i) => (
           <div key={i} className="bg-soft h-11 animate-pulse rounded-md" />
         ))}
@@ -89,7 +94,7 @@ export function SubitemsTab({
   return (
     <section aria-label={label} className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <p className="text-label-13 m-0 shrink-0 font-medium">
+        <p className="text-13 m-0 shrink-0 font-medium">
           {list.length === 0 ? `No ${label.toLowerCase()} yet.` : `${done} of ${list.length} done`}
         </p>
         {list.length > 0 ? (
@@ -126,8 +131,8 @@ export function SubitemsTab({
                 onClick={() => onOpen(c)}
                 className="hover:bg-subtle focus-visible:outline-focus flex min-w-0 flex-1 flex-col rounded px-1 py-1 text-left focus-visible:outline-2"
               >
-                <span className="text-label-13 truncate">{c.name}</span>
-                <span className="text-muted-foreground text-label-12-mono">{c.displayId}</span>
+                <span className="text-13 truncate">{c.name}</span>
+                <span className="text-muted-foreground text-12 font-mono">{c.displayId}</span>
               </button>
               {cols.map((f) => {
                 const ui = fieldUI(f.type);
@@ -164,7 +169,7 @@ export function SubitemsTab({
           }}
         >
           <input
-            className="border-line placeholder:text-muted-foreground text-label-13 focus-visible:outline-focus bg-background-100 h-11 min-w-0 flex-1 rounded-md border border-dashed px-3 focus-visible:outline-2"
+            className="border-line placeholder:text-muted-foreground text-13 focus-visible:outline-focus bg-surface h-11 min-w-0 flex-1 rounded-md border border-dashed px-3 focus-visible:outline-2"
             placeholder={`+ Add ${one}`}
             aria-label={`Add ${one} to ${parent.displayId}`}
             value={name}

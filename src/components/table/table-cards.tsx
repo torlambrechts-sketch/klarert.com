@@ -245,12 +245,12 @@ function ItemCard({
           type="button"
           onClick={onOpen}
           disabled={item.id.startsWith('temp-')}
-          className="text-label-14 focus-visible:outline-focus text-left leading-snug font-bold break-words outline-offset-2 after:absolute after:inset-0 after:content-[''] focus-visible:outline-2"
+          className="text-14 focus-visible:outline-focus text-left leading-snug font-bold break-words outline-offset-2 after:absolute after:inset-0 after:content-[''] focus-visible:outline-2"
         >
           {item.name}
         </button>
       </h3>
-      <span className="text-muted-foreground text-label-12 flex min-w-0 items-center gap-1.5">
+      <span className="text-muted-foreground text-12 flex min-w-0 items-center gap-1.5">
         {itemRequirementRef(item) ? (
           <>
             <span className="text-foreground shrink-0 font-mono font-semibold">
@@ -276,10 +276,7 @@ function ItemCard({
         <CommentBubble summary={comments} ctx={ctx} className="ml-auto" />
       </span>
       {missing ? (
-        <span
-          className="text-warn text-label-12 flex items-start gap-1"
-          data-testid="missing-required"
-        >
+        <span className="text-warn text-12 flex items-start gap-1" data-testid="missing-required">
           <TriangleAlert className="mt-px size-3.5 shrink-0" aria-hidden />
           <span>{missing}</span>
         </span>
@@ -290,7 +287,7 @@ function ItemCard({
             const ui = fieldUI(f.type);
             return (
               <div key={f.id} className="contents">
-                <dt className="text-muted-foreground text-label-12 truncate">{f.name}</dt>
+                <dt className="text-muted-foreground text-12 truncate">{f.name}</dt>
                 {/* the Table's look: option values as solid blocks (docs/18 C1, docs/05 §5). The dd is positioned for
                     the block, so it would sit above the name button's card-wide hit area: let clicks through to it */}
                 <dd className="pointer-events-none relative flex min-h-[34px] min-w-0 items-center overflow-hidden rounded-[4px]">
@@ -308,7 +305,7 @@ function ItemCard({
         </dl>
       ) : null}
       {due ? (
-        <span className={cn('text-label-12 self-end font-semibold', due.overdue && 'text-crit')}>
+        <span className={cn('text-12 self-end font-semibold', due.overdue && 'text-crit')}>
           {due.field.name}: {formatDate(due.date)}
           {due.overdue ? ' · late' : ''}
         </span>
@@ -333,7 +330,7 @@ function AddCard({
   return (
     <input
       ref={inputRef}
-      className="border-line placeholder:text-muted-foreground text-label-14 focus-visible:outline-focus bg-background-100 h-11 w-full rounded-lg border border-dashed px-3 focus-visible:outline-2"
+      className="border-line placeholder:text-muted-foreground text-14 focus-visible:outline-focus bg-surface h-11 w-full rounded-lg border border-dashed px-3 focus-visible:outline-2"
       placeholder={`+ Add ${label}`}
       aria-label={`Add ${label} to ${group.name}`}
       value={name}

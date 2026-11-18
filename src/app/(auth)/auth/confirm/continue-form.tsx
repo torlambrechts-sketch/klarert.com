@@ -44,7 +44,7 @@ export function ContinueForm({
       >
         {button}
       </Button>
-      <p className="text-muted-foreground text-copy-13 m-0">
+      <p className="text-muted-foreground text-13 m-0">
         {`This link works once, for ${EMAIL_LINK_EXPIRY}.`}
       </p>
     </form>

@@ -284,7 +284,7 @@ export async function viewTabNames(page: Page): Promise<string[]> {
   // the tab bar first shows the default tabs, then the sheet's own tab set once it loads: read until two reads
   // half a second apart agree, after the page's requests have settled
   await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
-  const read = async () => (await nav.getByRole('link').allInnerTexts()).map((t) => t.trim());
+  const read = async () => (await nav.getByRole('link').allTextContents()).map((t) => t.trim());
   let links = await read();
   for (let i = 0; i < 20; i++) {
     await page.waitForTimeout(500);
@@ -295,7 +295,7 @@ export async function viewTabNames(page: Page): Promise<string[]> {
   await nav.locator(MORE).click();
   const menu = page.getByRole('menu');
   await menu.waitFor();
-  const more = (await menu.getByRole('menuitemradio').allInnerTexts()).map((t) => t.trim());
+  const more = (await menu.getByRole('menuitemradio').allTextContents()).map((t) => t.trim());
   await page.keyboard.press('Escape');
   await menu.waitFor({ state: 'hidden' });
   return [...links, ...more];
@@ -309,4 +309,27 @@ export async function openViewTab(page: Page, name: string | RegExp) {
   if (await link.count()) return link.first().click();
   await nav.locator(MORE).click();
   await page.getByRole('menuitemradio', { name }).click();
+}
+
+/** An app's screens in order: the visible tabs, then the ones in More ▾ (docs/18 §7, the menu rule). */
+export async function appScreenNames(page: Page, nav: string): Promise<string[]> {
+  const screens = page.getByRole('navigation', { name: nav });
+  await screens.getByRole('link').first().waitFor();
+  const shown = await screens.getByRole('link').allTextContents();
+  const more = screens.getByTestId('overflow-tabs-more');
+  if (!(await more.count())) return shown.map((t) => t.trim());
+  await more.click();
+  const rest = await page.getByRole('menuitemradio').allTextContents();
+  await page.keyboard.press('Escape');
+  return [...shown, ...rest].map((t) => t.trim());
+}
+
+/** Opens an app screen by its tab: the link, or its item in More ▾. */
+export async function openAppScreen(page: Page, nav: string, name: string) {
+  const screens = page.getByRole('navigation', { name: nav });
+  await screens.getByRole('link').first().waitFor();
+  const link = screens.getByRole('link', { name, exact: true });
+  if (await link.count()) return link.click();
+  await screens.getByTestId('overflow-tabs-more').click();
+  await page.getByRole('menuitemradio', { name, exact: true }).click();
 }

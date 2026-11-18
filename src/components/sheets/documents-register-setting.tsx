@@ -48,10 +48,10 @@ export function DocumentsRegisterSetting({
         aria-describedby="documents-register-help"
       />
       <div className="flex flex-col gap-0.5">
-        <label htmlFor="documents-register" className="text-label-14 font-medium">
+        <label htmlFor="documents-register" className="text-14 font-medium">
           Documents sheet
         </label>
-        <p id="documents-register-help" className="text-muted-foreground text-copy-13 m-0">
+        <p id="documents-register-help" className="text-muted-foreground text-13 m-0">
           Items are controlled documents. Approved is the status&apos;s done option: approving needs
           a version note and a person other than the author, and leaving Approved needs a comment.
           Other sheets link to these documents and always get the last approved version.

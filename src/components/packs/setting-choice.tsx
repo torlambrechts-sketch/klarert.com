@@ -25,7 +25,7 @@ export function SettingChoice({
   const c = chosen(setting, value ? { [setting.key]: value } : {});
   return (
     <div className="flex flex-col gap-2" data-testid={`setting-${setting.key}`}>
-      <label htmlFor={id} className="text-label-13 font-medium">
+      <label htmlFor={id} className="text-13 font-medium">
         {setting.label}
       </label>
       <select
@@ -55,7 +55,7 @@ export function SettingChoice({
           ),
         )}
       </select>
-      <p id={`${id}-what`} className="text-copy-13 text-muted-foreground m-0">
+      <p id={`${id}-what`} className="text-13 text-muted-foreground m-0">
         {setting.description}
       </p>
       {c ? (
@@ -64,13 +64,13 @@ export function SettingChoice({
           data-testid="setting-details"
         >
           {c.verified ? (
-            <p className="text-label-13 m-0 flex items-center gap-1.5">
+            <p className="text-13 m-0 flex items-center gap-1.5">
               <Check className="text-good size-4" aria-hidden /> Checked against the sources
               {c.checkedOn ? ` on ${c.checkedOn}` : ''}
             </p>
           ) : (
             <p
-              className="text-label-13 bg-warn-soft m-0 flex items-start gap-1.5 rounded px-2 py-1"
+              className="text-13 bg-warn-soft m-0 flex items-start gap-1.5 rounded px-2 py-1"
               data-testid="setting-unverified"
             >
               <AlertTriangle className="text-warn mt-0.5 size-4 shrink-0" aria-hidden />
@@ -81,18 +81,15 @@ export function SettingChoice({
             {setting.values.map((v) =>
               c.values[v.key] ? (
                 <div key={v.key} className="contents">
-                  <dt className="text-label-13 text-muted-foreground">{v.label}</dt>
-                  <dd className="text-copy-13 m-0">{c.values[v.key]}</dd>
+                  <dt className="text-13 text-muted-foreground">{v.label}</dt>
+                  <dd className="text-13 m-0">{c.values[v.key]}</dd>
                 </div>
               ) : null,
             )}
           </dl>
-          {c.note ? <p className="text-copy-13 text-muted-foreground m-0">{c.note}</p> : null}
+          {c.note ? <p className="text-13 text-muted-foreground m-0">{c.note}</p> : null}
           {c.sources.length ? (
-            <ul
-              className="text-copy-13 m-0 flex list-none flex-col gap-0.5 p-0"
-              aria-label="Sources"
-            >
+            <ul className="text-13 m-0 flex list-none flex-col gap-0.5 p-0" aria-label="Sources">
               {c.sources.map((x) => (
                 <li key={x.url}>
                   <a

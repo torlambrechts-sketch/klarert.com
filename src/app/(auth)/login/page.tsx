@@ -46,20 +46,20 @@ export default async function LoginPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1>Compliance OS</h1>
-        <h2 className="text-heading-16">{MODES[mode].title}</h2>
+        <h2 className="text-card-title">{MODES[mode].title}</h2>
         <p className="text-muted-foreground">{MODES[mode].intro}</p>
       </div>
       {error ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           That sign-in link has expired or was already used. Sign in again.
         </p>
       ) : null}
       {showDemo && demo ? (
         <section
           aria-labelledby="demo-login-heading"
-          className="border-line text-copy-13 flex flex-col gap-2 rounded-lg border p-4"
+          className="border-line text-13 flex flex-col gap-2 rounded-lg border p-4"
         >
-          <h3 id="demo-login-heading" className="text-label-14 m-0 font-medium">
+          <h3 id="demo-login-heading" className="text-14 m-0 font-medium">
             Demo workspace
           </h3>
           <p className="text-muted-foreground m-0">
@@ -90,7 +90,7 @@ export default async function LoginPage({
         />
       )}
       {mode === 'signin' ? (
-        <p className="text-label-13 -mt-2">
+        <p className="text-13 -mt-2">
           <Link
             className={linkClass}
             href={
@@ -103,7 +103,7 @@ export default async function LoginPage({
           </Link>
         </p>
       ) : null}
-      <nav aria-label="Other ways to sign in" className="text-label-13 flex flex-col gap-1">
+      <nav aria-label="Other ways to sign in" className="text-13 flex flex-col gap-1">
         {mode !== 'signin' ? (
           <Link className={linkClass} href={href('signin')}>
             Sign in with a password

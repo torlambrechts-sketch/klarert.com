@@ -43,9 +43,9 @@ function Chip({
         type="button"
         onClick={() => onOpen(chip)}
         title={`${chip.displayId} ${chip.name}`}
-        className="border-line bg-soft text-label-12 hover:bg-sel inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-left"
+        className="border-line bg-soft text-12 hover:bg-sel inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-left"
       >
-        <span className="text-label-12-mono shrink-0 font-medium">{chip.label}</span>
+        <span className="text-12 shrink-0 font-mono font-medium">{chip.label}</span>
         <span className="truncate">{chip.name}</span>
         {relation ? (
           <span className="text-muted-foreground shrink-0">· {RELATION_LABEL[relation]}</span>
@@ -105,7 +105,7 @@ export function RequirementLinks({
   if (q.isPending)
     return (
       <section aria-labelledby={headingId} className="flex flex-col gap-2">
-        <h3 id={headingId} className="text-heading-14 m-0">
+        <h3 id={headingId} className="text-14 m-0 font-semibold">
           Requirements
         </h3>
         <div
@@ -118,11 +118,11 @@ export function RequirementLinks({
   if (q.isError)
     return (
       <section aria-labelledby={headingId} className="flex flex-col gap-2">
-        <h3 id={headingId} className="text-heading-14 m-0">
+        <h3 id={headingId} className="text-14 m-0 font-semibold">
           Requirements
         </h3>
         <div role="alert" className="flex flex-wrap items-center gap-2">
-          <p className="text-copy-13 m-0">{q.error.message}</p>
+          <p className="text-13 m-0">{q.error.message}</p>
           <Button type="button" size="sm" variant="outline" onClick={() => void q.refetch()}>
             <RotateCcw aria-hidden /> Retry
           </Button>
@@ -135,12 +135,12 @@ export function RequirementLinks({
   if (!r && d.covers.length === 0 && !d.linkFieldId) return null;
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h3 id={headingId} className="text-heading-14 m-0">
+      <h3 id={headingId} className="text-14 m-0 font-semibold">
         {r ? `Requirement · ${r.label}` : 'Requirements'}
       </h3>
       {r ? (
         <>
-          <p className="text-copy-13 m-0 flex items-center gap-1.5">
+          <p className="text-13 m-0 flex items-center gap-1.5">
             {r.covered ? (
               <CircleCheck className="text-good size-4 shrink-0" aria-hidden />
             ) : (
@@ -151,17 +151,17 @@ export function RequirementLinks({
               : 'Not covered yet: link an implemented control or add evidence.'}
           </p>
           <div className="flex flex-col gap-1.5">
-            <h4 className="text-label-13 text-muted-foreground m-0 font-medium">
+            <h4 className="text-13 text-muted-foreground m-0 font-medium">
               Controls · {r.controls.length}
             </h4>
             {r.controls.length === 0 ? (
-              <p className="text-muted-foreground text-copy-13 m-0">
+              <p className="text-muted-foreground text-13 m-0">
                 No controls linked. Link this requirement from a control.
               </p>
             ) : (
               <ul aria-label="Controls" className="m-0 flex list-none flex-col gap-1 p-0">
                 {r.controls.map((c) => (
-                  <li key={c.itemId} className="text-label-13 flex flex-wrap items-center gap-2">
+                  <li key={c.itemId} className="text-13 flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       className="truncate text-left font-medium hover:underline"
@@ -169,10 +169,10 @@ export function RequirementLinks({
                     >
                       {c.name}
                     </button>
-                    <span className="text-muted-foreground text-label-12-mono">
+                    <span className="text-muted-foreground text-12 font-mono">
                       {c.displayId} · {c.sheetName}
                     </span>
-                    <span className="text-label-12">
+                    <span className="text-12">
                       {c.done === null ? '' : c.done ? 'Implemented' : 'Not implemented yet'}
                     </span>
                   </li>
@@ -181,11 +181,11 @@ export function RequirementLinks({
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <h4 className="text-label-13 text-muted-foreground m-0 font-medium">
+            <h4 className="text-13 text-muted-foreground m-0 font-medium">
               Also satisfies · {r.alsoSatisfies.length}
             </h4>
             {r.alsoSatisfies.length === 0 ? (
-              <p className="text-muted-foreground text-copy-13 m-0">
+              <p className="text-muted-foreground text-13 m-0">
                 No requirement of another adopted framework maps to this one.
               </p>
             ) : null}
@@ -211,7 +211,7 @@ export function RequirementLinks({
                       <ul className="m-0 flex list-none p-0">
                         <Chip chip={a} relation={a.relation} onOpen={open} />
                       </ul>
-                      <span className="text-label-12 text-muted-foreground pl-2">
+                      <span className="text-12 text-muted-foreground pl-2">
                         Your mapping · {a.own!.by ?? 'Former member'} · {a.own!.atText}
                       </span>
                     </li>
@@ -221,7 +221,7 @@ export function RequirementLinks({
           </div>
           {r.own ? <OwnMappings org={org} own={r.own} onChanged={() => void q.refetch()} /> : null}
           {r.licence ? (
-            <p className="text-label-12 text-muted-foreground m-0">
+            <p className="text-12 text-muted-foreground m-0">
               {r.framework}. {r.licence}
             </p>
           ) : null}
@@ -229,11 +229,11 @@ export function RequirementLinks({
       ) : (
         <>
           <div className="flex flex-col gap-1.5">
-            <h4 className="text-label-13 text-muted-foreground m-0 font-medium">
+            <h4 className="text-13 text-muted-foreground m-0 font-medium">
               Covers · {d.covers.length}
             </h4>
             {d.covers.length === 0 ? (
-              <p className="text-muted-foreground text-copy-13 m-0">
+              <p className="text-muted-foreground text-13 m-0">
                 Not linked to any requirement yet.
               </p>
             ) : (
@@ -246,7 +246,7 @@ export function RequirementLinks({
           </div>
           {d.suggestions.length ? (
             <div className="flex flex-col gap-1.5">
-              <h4 className="text-label-13 text-muted-foreground m-0 font-medium">
+              <h4 className="text-13 text-muted-foreground m-0 font-medium">
                 Suggested equivalents · {d.suggestions.length}
               </h4>
               <ul
@@ -256,11 +256,11 @@ export function RequirementLinks({
                 {d.suggestions.map((s) => (
                   <li
                     key={s.itemId}
-                    className="border-line text-label-13 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-1.5"
+                    className="border-line text-13 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-1.5"
                   >
-                    <span className="text-label-12-mono font-medium">{s.label}</span>
+                    <span className="text-12 font-mono font-medium">{s.label}</span>
                     <span className="min-w-0 flex-1 truncate">{s.name}</span>
-                    <span className="text-muted-foreground text-label-12">
+                    <span className="text-muted-foreground text-12">
                       {RELATION_LABEL[s.relation]} to {s.via.join(', ')}
                     </span>
                     {d.canLink && d.linkFieldId ? (
@@ -283,7 +283,7 @@ export function RequirementLinks({
         </>
       )}
       {d.sources.length ? (
-        <p className="text-label-12 text-muted-foreground m-0">
+        <p className="text-12 text-muted-foreground m-0">
           Cross-walks: {d.sources.join(', ')}. Check them before you rely on them.
         </p>
       ) : null}

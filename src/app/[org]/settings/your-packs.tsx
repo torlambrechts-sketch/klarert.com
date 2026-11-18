@@ -52,7 +52,7 @@ function Box({
     <div
       data-testid={testId}
       className={cn(
-        'text-copy-14 flex gap-2 rounded-md border p-3',
+        'text-14 flex gap-2 rounded-md border p-3',
         tone === 'warn' ? 'border-warn/40 bg-warn-soft' : 'border-line bg-soft',
       )}
     >
@@ -181,8 +181,8 @@ export function SaveSetup({
       </Button>
       <DialogContent className="flex max-h-[85vh] w-[min(760px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">Save your setup</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogTitle className="text-panel-title">Save your setup</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground">
             Save the sheets, columns, views, forms and automations of this workspace as your own
             pack. Install it in your other workspaces; publish a new version and each workspace
             takes the update and keeps its own changes.
@@ -200,7 +200,7 @@ export function SaveSetup({
 
         {packs.length ? (
           <div className="flex flex-col gap-1">
-            <label htmlFor={ids.as} className="text-label-13 font-medium">
+            <label htmlFor={ids.as} className="text-13 font-medium">
               Publish as
             </label>
             <select
@@ -226,7 +226,12 @@ export function SaveSetup({
         ) : null}
 
         {step.kind === 'loading' ? (
-          <div aria-busy="true" aria-label="Reading your setup" className="flex flex-col gap-2">
+          <div
+            role="status"
+            aria-busy="true"
+            aria-label="Reading your setup"
+            className="flex flex-col gap-2"
+          >
             {[0, 1, 2, 3, 4].map((i) => (
               <div key={i} className="bg-soft h-5 animate-pulse rounded" />
             ))}
@@ -250,7 +255,7 @@ export function SaveSetup({
           <>
             <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
               <div className="flex flex-col gap-1">
-                <label htmlFor={ids.name} className="text-label-13 font-medium">
+                <label htmlFor={ids.name} className="text-13 font-medium">
                   Name
                 </label>
                 <input
@@ -263,12 +268,12 @@ export function SaveSetup({
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor={ids.version} className="text-label-13 font-medium">
+                <label htmlFor={ids.version} className="text-13 font-medium">
                   Version
                 </label>
                 <input
                   id={ids.version}
-                  className={cn(inputClass, 'text-label-13-mono h-9')}
+                  className={cn(inputClass, 'text-13 h-9 font-mono')}
                   value={version}
                   inputMode="decimal"
                   aria-invalid={!!vProblem}
@@ -280,7 +285,7 @@ export function SaveSetup({
             </div>
             <p
               id={ids.versionHelp}
-              className="text-label-13 text-muted-foreground m-0"
+              className="text-13 text-muted-foreground m-0"
               data-testid="version-hint"
             >
               {vProblem ? (
@@ -309,7 +314,7 @@ export function SaveSetup({
               </Box>
             ) : null}
             <div className="flex flex-col gap-1">
-              <label htmlFor={ids.desc} className="text-label-13 font-medium">
+              <label htmlFor={ids.desc} className="text-13 font-medium">
                 Description <span className="text-muted-foreground font-normal">(optional)</span>
               </label>
               <textarea
@@ -323,12 +328,12 @@ export function SaveSetup({
             </div>
 
             <section className="flex flex-col gap-2" aria-label="What is saved">
-              <h3 className="text-label-14 m-0 font-medium">What is saved</h3>
-              <p className="text-copy-14 m-0" data-testid="inside">
+              <h3 className="text-14 m-0 font-medium">What is saved</h3>
+              <p className="text-14 m-0" data-testid="inside">
                 Inside: {data.inside}.
               </p>
               {data.requires.length ? (
-                <p className="text-copy-14 text-muted-foreground m-0 flex gap-1.5">
+                <p className="text-14 text-muted-foreground m-0 flex gap-1.5">
                   <Layers className="mt-0.5 size-4 shrink-0" aria-hidden />
                   <span>
                     Builds on {data.requires.join(', ')}: installed first in a workspace that does
@@ -338,8 +343,8 @@ export function SaveSetup({
               ) : null}
               {data.adds.length ? (
                 <div className="flex flex-col gap-1" data-testid="adds">
-                  <p className="text-label-13 m-0 font-medium">Adds to our registers</p>
-                  <ul className="text-copy-14 text-muted-foreground m-0 flex list-disc flex-col gap-0.5 pl-5">
+                  <p className="text-13 m-0 font-medium">Adds to our registers</p>
+                  <ul className="text-14 text-muted-foreground m-0 flex list-disc flex-col gap-0.5 pl-5">
                     {data.adds.map((a) => (
                       <li key={a}>{a}</li>
                     ))}
@@ -357,12 +362,12 @@ export function SaveSetup({
                   }}
                 />
               ) : (
-                <p className="text-copy-14 text-muted-foreground m-0">
+                <p className="text-14 text-muted-foreground m-0">
                   This workspace has no sheets, automations or dashboards of its own yet.
                 </p>
               )}
               {note ? (
-                <p role="status" className="text-copy-13 text-muted-foreground m-0">
+                <p role="status" className="text-13 text-muted-foreground m-0">
                   {note}
                 </p>
               ) : null}
@@ -372,15 +377,15 @@ export function SaveSetup({
             </section>
 
             <section className="flex flex-col gap-2" aria-label="Left out" data-testid="left-out">
-              <h3 className="text-label-14 m-0 font-medium">Left out</h3>
-              <p className="text-copy-13 text-muted-foreground m-0">
+              <h3 className="text-14 m-0 font-medium">Left out</h3>
+              <p className="text-13 text-muted-foreground m-0">
                 Never copied: people, personal data, files, updates, emails, form links, the
                 activity log and webhook addresses.
               </p>
               {data.leftOut.map((g) => (
                 <div key={g.kind} className="flex flex-col gap-0.5">
-                  <p className="text-label-13 m-0 font-medium">{g.heading}</p>
-                  <ul className="text-copy-13 m-0 flex list-disc flex-col gap-0.5 pl-5">
+                  <p className="text-13 m-0 font-medium">{g.heading}</p>
+                  <ul className="text-13 m-0 flex list-disc flex-col gap-0.5 pl-5">
                     {g.lines.map((l) => (
                       <li key={l}>{l}</li>
                     ))}
@@ -394,10 +399,10 @@ export function SaveSetup({
                 role="alert"
                 className="border-crit-line bg-crit-soft flex flex-col gap-1 rounded-md border p-3"
               >
-                <p className="text-label-14 text-crit-ink m-0 flex items-center gap-1.5 font-medium">
+                <p className="text-14 text-crit-ink m-0 flex items-center gap-1.5 font-medium">
                   <X className="size-4" aria-hidden /> This setup cannot be published yet
                 </p>
-                <ul className="text-copy-13 m-0 flex list-disc flex-col gap-0.5 pl-5">
+                <ul className="text-13 m-0 flex list-disc flex-col gap-0.5 pl-5">
                   {data.problems.map((p) => (
                     <li key={p}>{p}</li>
                   ))}
@@ -406,18 +411,18 @@ export function SaveSetup({
             ) : null}
 
             <details className="border-line rounded-md border p-3" data-testid="advice">
-              <summary className="text-label-14 cursor-pointer font-medium">
+              <summary className="text-14 cursor-pointer font-medium">
                 <Lightbulb className="mr-1.5 inline size-4 align-[-3px]" aria-hidden />
                 Advice ({data.advice.length}): not required
               </summary>
-              <ul className="text-copy-13 text-muted-foreground mt-2 mb-0 flex list-disc flex-col gap-0.5 pl-5">
+              <ul className="text-13 text-muted-foreground mt-2 mb-0 flex list-disc flex-col gap-0.5 pl-5">
                 {data.advice.map((a) => (
                   <li key={a}>{a}</li>
                 ))}
               </ul>
             </details>
 
-            <p className="text-copy-13 text-muted-foreground m-0">
+            <p className="text-13 text-muted-foreground m-0">
               Admins of a workspace you install it in can read every version: it is your work,
               shared with them. Every automation starts in test mode there.
             </p>
@@ -425,14 +430,14 @@ export function SaveSetup({
         ) : null}
 
         {step.kind === 'failed' ? (
-          <p role="alert" className="text-crit-ink text-copy-14 m-0 flex items-center gap-1.5">
+          <p role="alert" className="text-crit-ink text-14 m-0 flex items-center gap-1.5">
             <X className="size-4" aria-hidden /> {step.message}
           </p>
         ) : null}
         {step.kind === 'done' ? (
           <p
             role="status"
-            className="text-copy-14 m-0 flex items-center gap-1.5"
+            className="text-14 m-0 flex items-center gap-1.5"
             data-testid="published"
           >
             <Check className="text-good size-4" aria-hidden /> Published {step.result.title}{' '}
@@ -509,7 +514,7 @@ export function WithdrawPack({
     );
   return (
     <span className="flex flex-col items-start gap-1 sm:items-end">
-      <span className="text-label-13 text-muted-foreground">
+      <span className="text-13 text-muted-foreground">
         No workspace can install it any more. Workspaces that have it keep it and can still take
         your updates.
       </span>

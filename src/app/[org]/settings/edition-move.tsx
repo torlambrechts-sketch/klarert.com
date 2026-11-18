@@ -28,10 +28,7 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 function Body({ data }: { data: EditionMovePreview }) {
   return (
     <div className="flex flex-col gap-3">
-      <ul
-        aria-label="What moving does"
-        className="text-copy-14 m-0 flex list-none flex-col gap-1 p-0"
-      >
+      <ul aria-label="What moving does" className="text-14 m-0 flex list-none flex-col gap-1 p-0">
         <li className="flex items-start gap-1.5">
           <Check className="text-good mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
@@ -65,18 +62,18 @@ function Body({ data }: { data: EditionMovePreview }) {
       </ul>
       {data.review.length ? (
         <div className="flex flex-col gap-1">
-          <p className="text-label-14 m-0 flex items-center gap-1.5 font-medium">
+          <p className="text-14 m-0 flex items-center gap-1.5 font-medium">
             <Flag className="text-warn size-4" aria-hidden /> To review in {data.to.title} ·{' '}
             {data.review.length}
           </p>
           <ul
             aria-label="Requirements to review"
-            className="border-line divide-line text-copy-13 m-0 flex max-h-64 list-none flex-col divide-y overflow-y-auto rounded-md border p-0"
+            className="border-line divide-line text-13 m-0 flex max-h-64 list-none flex-col divide-y overflow-y-auto rounded-md border p-0"
           >
             {data.review.map((r) => (
               <li key={r.toRef} className="flex flex-col gap-0.5 px-3 py-2">
                 <span>
-                  <span className="text-label-12-mono">{r.toRef}</span>{' '}
+                  <span className="text-12 font-mono">{r.toRef}</span>{' '}
                   <span className="font-medium">{r.name}</span>
                 </span>
                 <span className="text-muted-foreground">
@@ -160,15 +157,20 @@ export function MoveToEdition({
       ) : null}
       <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">Move to {toTitle}</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogTitle className="text-panel-title">Move to {toTitle}</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground">
             Carries your work on {title} over to {toTitle} where the requirement is the same, and
             lists the rest for review.
           </DialogDescription>
         </div>
 
         {step.kind === 'loading' ? (
-          <div aria-busy="true" aria-label="Loading the preview" className="flex flex-col gap-2">
+          <div
+            role="status"
+            aria-busy="true"
+            aria-label="Loading the preview"
+            className="flex flex-col gap-2"
+          >
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="bg-soft h-5 animate-pulse rounded" />
             ))}
@@ -186,7 +188,7 @@ export function MoveToEdition({
           <Body data={step.data} />
         ) : null}
         {step.kind === 'moving' ? (
-          <p role="status" className="text-copy-14 m-0 flex items-center gap-1.5">
+          <p role="status" className="text-14 m-0 flex items-center gap-1.5">
             <Loader2 className="size-4 animate-spin" aria-hidden /> Moving to {toTitle} in one step.
           </p>
         ) : null}
@@ -196,7 +198,7 @@ export function MoveToEdition({
           </p>
         ) : null}
         {step.kind === 'done' ? (
-          <p role="status" className="text-copy-16 m-0 flex items-center gap-1.5 font-medium">
+          <p role="status" className="text-16 m-0 flex items-center gap-1.5 font-medium">
             <Check className="text-good size-4" aria-hidden /> Moved:{' '}
             {plural(step.result.copied, 'requirement')} copied, {plural(step.result.links, 'link')}{' '}
             added, {plural(step.result.review, 'requirement')} to review.

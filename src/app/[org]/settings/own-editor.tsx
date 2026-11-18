@@ -87,7 +87,7 @@ function Row({
   const describedBy = problems.length ? `${base}-problems` : undefined;
   const group = isGroup(row);
   const cell = 'flex min-w-0 flex-col gap-1';
-  const lab = 'text-label-12 text-muted-foreground sm:sr-only';
+  const lab = 'text-12 text-muted-foreground sm:sr-only';
   return (
     <li
       className={cn(
@@ -98,7 +98,7 @@ function Row({
       aria-label={`Row ${n}${row.ref ? ` ${row.ref}` : ''}`}
     >
       <div className="grid grid-cols-2 items-start gap-2 sm:grid-cols-[3rem_7rem_7.5rem_7rem_minmax(0,1fr)_minmax(0,1.4fr)_2.5rem]">
-        <span className="text-label-12-mono text-muted-foreground col-span-2 pt-2 sm:col-span-1">
+        <span className="text-12 text-muted-foreground col-span-2 pt-2 font-mono sm:col-span-1">
           {problems.length ? (
             <TriangleAlert className="text-warn mr-1 inline size-3.5" aria-label="Has problems" />
           ) : null}
@@ -111,7 +111,7 @@ function Row({
           <input
             id={`${base}-ref`}
             aria-label={`Ref, row ${n}`}
-            className={cn(inputClass, 'text-label-13-mono h-9')}
+            className={cn(inputClass, 'text-13 h-9 font-mono')}
             value={row.ref}
             aria-invalid={bad('ref') || undefined}
             aria-describedby={describedBy}
@@ -154,7 +154,7 @@ function Row({
           <input
             id={`${base}-parent`}
             aria-label={`Parent, row ${n}`}
-            className={cn(inputClass, 'text-label-13-mono h-9')}
+            className={cn(inputClass, 'text-13 h-9 font-mono')}
             value={row.parent}
             list={refsId}
             disabled={group}
@@ -179,7 +179,7 @@ function Row({
           />
           <span
             className={cn(
-              'text-label-12 tabular-nums',
+              'text-12 tabular-nums',
               row.title.trim().length > OWN_LIMITS.title
                 ? 'text-crit-ink'
                 : 'text-muted-foreground',
@@ -225,9 +225,9 @@ function Row({
           {mappings.map((m) => (
             <li
               key={m.to}
-              className="border-line bg-soft text-label-12 inline-flex items-center gap-1 rounded-full border py-0.5 pr-1 pl-2"
+              className="border-line bg-soft text-12 inline-flex items-center gap-1 rounded-full border py-0.5 pr-1 pl-2"
             >
-              Maps to <span className="text-label-12-mono font-medium">{mappingLabel(m)}</span> ·{' '}
+              Maps to <span className="text-12 font-mono font-medium">{mappingLabel(m)}</span> ·{' '}
               {RELATION_LABEL[m.relation]}
               <Button
                 type="button"
@@ -245,7 +245,7 @@ function Row({
       {problems.length ? (
         <ul
           id={`${base}-problems`}
-          className="text-copy-13 text-crit-ink m-0 flex list-none flex-col gap-0.5 p-0 sm:pl-14"
+          className="text-13 text-crit-ink m-0 flex list-none flex-col gap-0.5 p-0 sm:pl-14"
         >
           {problems.map((p, i) => (
             <li key={i} className="flex items-start gap-1">
@@ -350,31 +350,31 @@ function PublishDialog({
       </Button>
       <DialogContent className="flex max-h-[85vh] w-[min(600px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">Publish {clean.title}</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogTitle className="text-panel-title">Publish {clean.title}</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground">
             Written by your workspace. Klarert does not review it.
           </DialogDescription>
         </div>
 
         {step.kind === 'done' ? (
           <div className="flex flex-col gap-3">
-            <p role="status" className="text-copy-16 m-0 flex items-center gap-1.5 font-medium">
+            <p role="status" className="text-16 m-0 flex items-center gap-1.5 font-medium">
               <Check className="text-good size-4 shrink-0" aria-hidden /> Published{' '}
               {step.result.title}, edition {step.result.version}, revision {step.result.revision}:{' '}
               {plural(step.result.requirements, 'requirement')}.
             </p>
             {step.result.mappings ? (
-              <p className="text-copy-14 m-0">
+              <p className="text-14 m-0">
                 {plural(step.result.mappings, 'mapping')} to catalogue requirements added.
               </p>
             ) : null}
             {step.result.kind === 'revision' ? (
-              <p className="text-copy-14 m-0">
+              <p className="text-14 m-0">
                 Libraries that adopted it show “Update available” on Frameworks. The update keeps
                 applicability, status, owner and evidence.
               </p>
             ) : (
-              <p className="text-copy-14 m-0">
+              <p className="text-14 m-0">
                 {step.result.kind === 'edition'
                   ? 'Adopt the new edition, then move your work to it from Frameworks.'
                   : 'Adopt it to get its library sheet, statement of applicability and coverage.'}
@@ -404,13 +404,13 @@ function PublishDialog({
               data-testid="publish-decision"
             >
               {decision.kind === 'first' ? (
-                <p className="text-copy-14 m-0">
+                <p className="text-14 m-0">
                   Publishes edition 1 with {plural(items, 'requirement')}. You can adopt it straight
                   after.
                 </p>
               ) : null}
               {decision.kind === 'revision' && published ? (
-                <p className="text-copy-14 m-0">
+                <p className="text-14 m-0">
                   Publishes revision {published.revision + 1} of edition {published.version}:{' '}
                   {plural(decision.reworded.length, 'requirement')} changed,{' '}
                   {plural(decision.added.length, 'requirement')} added. Libraries that adopted it
@@ -419,15 +419,15 @@ function PublishDialog({
               ) : null}
               {decision.kind === 'edition' ? (
                 <>
-                  <p className="text-copy-14 m-0 font-medium">
+                  <p className="text-14 m-0 font-medium">
                     This makes edition {nextEdition}: requirements were removed, renumbered or
                     moved.
                   </p>
-                  <p className="text-copy-13 m-0">
+                  <p className="text-13 m-0">
                     {[...decision.removed, ...decision.moved].slice(0, 20).join(', ')}
                     {decision.removed.length + decision.moved.length > 20 ? ' and more' : ''}.
                   </p>
-                  <p className="text-copy-13 text-muted-foreground m-0">
+                  <p className="text-13 text-muted-foreground m-0">
                     Edition {published?.version} stays as it is. Adopt edition {nextEdition}, then
                     move your work to it: answers are copied where a requirement kept its ref and
                     wording, the rest is listed for review.
@@ -435,17 +435,17 @@ function PublishDialog({
                 </>
               ) : null}
               {decision.kind === 'unchanged' ? (
-                <p className="text-copy-14 m-0">Nothing changed since the last publish.</p>
+                <p className="text-14 m-0">Nothing changed since the last publish.</p>
               ) : null}
               {clean.mappings.length ? (
-                <p className="text-copy-13 text-muted-foreground m-0">
+                <p className="text-13 text-muted-foreground m-0">
                   Adds {plural(clean.mappings.length, 'mapping')} to catalogue requirements, shown
                   as your mappings.
                 </p>
               ) : null}
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor={ids.source} className="text-label-13 font-medium">
+              <label htmlFor={ids.source} className="text-13 font-medium">
                 Source
               </label>
               <input
@@ -458,12 +458,12 @@ function PublishDialog({
                 aria-describedby={`${ids.source}-help`}
                 onChange={(e) => setSource(e.target.value)}
               />
-              <span id={`${ids.source}-help`} className="text-label-12 text-muted-foreground">
+              <span id={`${ids.source}-help`} className="text-12 text-muted-foreground">
                 Where the text comes from. The library, the item panel and the statement of
                 applicability say: “{ownLicence(source.trim() || '…', data.workspace)}”
               </span>
             </div>
-            <label htmlFor={ids.rights} className="text-label-13 flex items-start gap-2">
+            <label htmlFor={ids.rights} className="text-13 flex items-start gap-2">
               <input
                 id={ids.rights}
                 type="checkbox"
@@ -480,7 +480,7 @@ function PublishDialog({
               </p>
             ) : null}
             {busy ? (
-              <p role="status" className="text-copy-14 m-0 flex items-center gap-1.5">
+              <p role="status" className="text-14 m-0 flex items-center gap-1.5">
                 <Loader2 className="size-4 animate-spin" aria-hidden /> Publishing in one step.
               </p>
             ) : null}
@@ -536,8 +536,8 @@ function DeleteDraftButton({
       </Button>
       <DialogContent className="flex w-[min(480px,calc(100vw-32px))] flex-col gap-4">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">Delete the draft of {title}</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogTitle className="text-panel-title">Delete the draft of {title}</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground">
             Your changes since the last publish are lost. A published framework stays as it is.
           </DialogDescription>
         </div>
@@ -645,10 +645,10 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
   const ready = problems.length === 0 && details.length === 0;
   return (
     <div className="flex flex-col gap-5">
-      <section className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
+      <section className="border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
         <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-1">
-            <label htmlFor={ids.title} className="text-label-13 font-medium">
+            <label htmlFor={ids.title} className="text-13 font-medium">
               Name
             </label>
             <input
@@ -660,7 +660,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor={ids.short} className="text-label-13 font-medium">
+            <label htmlFor={ids.short} className="text-13 font-medium">
               Short name
             </label>
             <input
@@ -672,7 +672,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor={ids.kind} className="text-label-13 font-medium">
+            <label htmlFor={ids.kind} className="text-13 font-medium">
               Kind
             </label>
             <select
@@ -689,7 +689,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
             </select>
           </div>
         </div>
-        <p className="text-label-13 text-muted-foreground m-0">
+        <p className="text-13 text-muted-foreground m-0">
           {data.published
             ? `Published: edition ${data.published.version}, revision ${data.published.revision}. `
             : 'Not published yet. '}
@@ -700,7 +700,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
             : ''}
         </p>
         {ready ? (
-          <p role="status" className="text-copy-14 m-0 flex items-center gap-1.5">
+          <p role="status" className="text-14 m-0 flex items-center gap-1.5">
             <Check className="text-good size-4 shrink-0" aria-hidden /> Ready to publish:{' '}
             {plural(rows.filter((r) => !isGroup(r)).length, 'requirement')} in{' '}
             {plural(rows.filter(isGroup).length, 'group')}.
@@ -708,7 +708,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
         ) : (
           <>
             {details.map((d) => (
-              <p key={d} role="alert" className="text-copy-14 m-0 flex items-center gap-1.5">
+              <p key={d} role="alert" className="text-14 m-0 flex items-center gap-1.5">
                 <X className="text-crit size-4 shrink-0" aria-hidden /> {d}
               </p>
             ))}
@@ -735,22 +735,20 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
             />
           ) : null}
           {!ready ? (
-            <span className="text-label-13 text-muted-foreground">
-              Fix the problems to publish.
-            </span>
+            <span className="text-13 text-muted-foreground">Fix the problems to publish.</span>
           ) : null}
         </div>
       </section>
 
       <section
         aria-labelledby="own-grid-heading"
-        className="border-line bg-background-100 flex flex-col rounded-lg border"
+        className="border-line bg-surface flex flex-col rounded-lg border"
       >
         <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-[22px]">
-          <h2 id="own-grid-heading" className="text-heading-16 m-0">
+          <h2 id="own-grid-heading" className="text-card-title m-0">
             Groups and requirements
           </h2>
-          <label htmlFor={ids.only} className="text-label-13 flex items-center gap-2">
+          <label htmlFor={ids.only} className="text-13 flex items-center gap-2">
             <input
               id={ids.only}
               type="checkbox"
@@ -769,7 +767,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
         </datalist>
         <div
           aria-hidden
-          className="border-line text-label-12 text-muted-foreground hidden grid-cols-[3rem_7rem_7.5rem_7rem_minmax(0,1fr)_minmax(0,1.4fr)_2.5rem] gap-2 border-y px-3 py-1.5 font-medium sm:grid"
+          className="border-line text-12 text-muted-foreground hidden grid-cols-[3rem_7rem_7.5rem_7rem_minmax(0,1fr)_minmax(0,1.4fr)_2.5rem] gap-2 border-y px-3 py-1.5 font-medium sm:grid"
         >
           <span>Row</span>
           <span>Ref</span>
@@ -780,7 +778,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
           <span />
         </div>
         {slice.length === 0 ? (
-          <p className="text-copy-14 text-muted-foreground m-0 px-3 py-6 sm:px-[22px]">
+          <p className="text-14 text-muted-foreground m-0 px-3 py-6 sm:px-[22px]">
             {onlyProblems
               ? 'No rows with problems.'
               : 'No rows yet. Add a group, then requirements in it.'}
@@ -808,7 +806,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
           </ol>
         )}
         {listProblems.length ? (
-          <ul className="text-copy-13 text-crit-ink m-0 list-none px-3 py-2 sm:px-[22px]">
+          <ul className="text-13 text-crit-ink m-0 list-none px-3 py-2 sm:px-[22px]">
             {listProblems.map((p) => (
               <li key={p.message}>{p.message}</li>
             ))}
@@ -845,7 +843,7 @@ export function OwnFrameworkGrid({ org, data }: { org: string; data: OwnFramewor
               >
                 <ChevronLeft aria-hidden />
               </Button>
-              <span className="text-label-13 tabular-nums">
+              <span className="text-13 tabular-nums">
                 Rows {(shown[current * PAGE]!.i + 1).toLocaleString('en-GB')}–
                 {(slice.at(-1)!.i + 1).toLocaleString('en-GB')} · page {current + 1} of {pages}
               </span>

@@ -14,7 +14,7 @@ export function ForgotPasswordForm({ next }: { next?: string }) {
   if (state?.ok) {
     return (
       <div role="status" className="flex flex-col gap-2" data-testid="reset-sent">
-        <h3 className="text-heading-16">Check your email</h3>
+        <h3 className="text-card-title">Check your email</h3>
         <p className="text-muted-foreground m-0">
           If an account uses that address, we have sent a link to reset your password.
         </p>
@@ -36,7 +36,7 @@ export function ForgotPasswordForm({ next }: { next?: string }) {
         state={state}
       />
       {state && !state.ok && !state.error.fieldErrors ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           {state.error.message}
         </p>
       ) : null}

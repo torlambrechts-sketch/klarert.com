@@ -25,7 +25,8 @@ test('fonts are self-hosted, no Google Fonts requests', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   expect(external).toEqual([]);
   const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-  expect(family).toMatch(/geist/i);
+  // the app type is Figtree, self-hosted (docs/18 §3, owner decision 18 Nov 2026)
+  expect(family).toMatch(/figtree/i);
 });
 
 test('an unknown address shows the app’s own 404 page with a way back', async ({ page }) => {

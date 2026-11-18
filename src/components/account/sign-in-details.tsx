@@ -12,13 +12,12 @@ import { PASSWORD_HINT } from '@/lib/passwords';
 // Your account › Email address and Password (docs/05 §1.1, docs/09 §12). Each card opens its form in place; Cancel
 // and success close it and give focus back to the button that opened it.
 
-export const card =
-  'border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]';
+export const card = 'border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]';
 
 export function GeneralError({ state }: { state: FormState }) {
   if (!state || state.ok || state.error.fieldErrors) return null;
   return (
-    <p role="alert" className="text-crit text-copy-13 m-0">
+    <p role="alert" className="text-crit text-13 m-0">
       {state.error.message}
     </p>
   );
@@ -65,13 +64,13 @@ export function EmailPanel({
   return (
     <section aria-labelledby="email-heading" className={card} data-testid="email-panel">
       <div className="flex flex-col gap-1">
-        <h2 id="email-heading" className="text-heading-16">
+        <h2 id="email-heading" className="text-card-title">
           Email address
         </h2>
-        <p className="text-copy-14 m-0" data-testid="current-email">
+        <p className="text-14 m-0" data-testid="current-email">
           {email}
         </p>
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           You sign in with this address, and links to sign in or reset your password go to it.
         </p>
       </div>
@@ -79,14 +78,14 @@ export function EmailPanel({
       {notice === 'confirm-other' && pendingEmail ? (
         <p
           role="status"
-          className="bg-good-soft text-copy-13 m-0 flex items-start gap-2 rounded-md px-4 py-3"
+          className="bg-good-soft text-13 m-0 flex items-start gap-2 rounded-md px-4 py-3"
         >
           <Check className="text-good mt-0.5 size-4 shrink-0" aria-hidden />
           <span>One link is confirmed. Open the link we sent to the other address to finish.</span>
         </p>
       ) : null}
       {notice === 'link-failed' ? (
-        <p role="alert" className="bg-crit-soft text-crit text-copy-13 m-0 rounded-md px-4 py-3">
+        <p role="alert" className="bg-crit-soft text-crit text-13 m-0 rounded-md px-4 py-3">
           That link did not open here: it has expired, was already used or belongs to another
           browser. If the address above has not changed, change it again to get new links.
         </p>
@@ -96,7 +95,7 @@ export function EmailPanel({
         <div
           role="status"
           data-testid="email-pending"
-          className="bg-subtle text-copy-13 flex items-start gap-2 rounded-md px-4 py-3"
+          className="bg-subtle text-13 flex items-start gap-2 rounded-md px-4 py-3"
         >
           <MailCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
           <p className="m-0">
@@ -161,10 +160,10 @@ export function PasswordPanel() {
   return (
     <section aria-labelledby="password-heading" className={card} data-testid="password-panel">
       <div className="flex flex-col gap-1">
-        <h2 id="password-heading" className="text-heading-16">
+        <h2 id="password-heading" className="text-card-title">
           Password
         </h2>
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           Change the password you sign in with. You are signed out on your other devices afterwards.
         </p>
       </div>
@@ -172,7 +171,7 @@ export function PasswordPanel() {
       {done && !open ? (
         <div
           role="status"
-          className="bg-good-soft text-copy-13 flex items-start gap-2 rounded-md px-4 py-3"
+          className="bg-good-soft text-13 flex items-start gap-2 rounded-md px-4 py-3"
         >
           <Check className="text-good mt-0.5 size-4 shrink-0" aria-hidden />
           <p className="m-0">
@@ -241,7 +240,7 @@ export function PasswordPanel() {
         </Button>
       )}
 
-      <p className="text-muted-foreground text-copy-13 m-0">
+      <p className="text-muted-foreground text-13 m-0">
         Forgot it, or never set one?{' '}
         <Link className="text-info underline-offset-4 hover:underline" href={FORGOT_PASSWORD_PATH}>
           Get a reset link by email

@@ -78,7 +78,7 @@ function OtherSheet({ org, edit, step }: { org: string; edit: StepEdit; step: Fl
         : edit.editor;
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-copy-14 m-0">
+      <p className="text-14 m-0">
         This step lives on {step?.other?.name ?? 'another sheet'}. Open it there to change it: the
         same editor, on the sheet it belongs to.
       </p>
@@ -99,7 +99,7 @@ function OtherSheet({ org, edit, step }: { org: string; edit: StepEdit; step: Fl
 
 function ReadOnlyNote({ text }: { text: string }) {
   return (
-    <p className="border-line bg-subtle text-copy-13 text-muted-foreground m-0 rounded-md border px-3 py-2">
+    <p className="border-line bg-subtle text-13 text-muted-foreground m-0 rounded-md border px-3 py-2">
       {text}
     </p>
   );
@@ -108,7 +108,7 @@ function ReadOnlyNote({ text }: { text: string }) {
 /** The step as words: what it is, its health and where it came from. Shown above a read-only body. */
 function StepSummary({ step }: { step: FlowStep }) {
   return (
-    <dl className="text-copy-13 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-2">
+    <dl className="text-13 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-2">
       <dt className="text-muted-foreground">What</dt>
       <dd className="m-0">{step.subline}</dd>
       {step.health ? (
@@ -165,8 +165,8 @@ export function StepEditor({
   const perms = { canEdit: e.canEdit, isAdmin: e.isAdmin };
   const sheetHead = (
     <div className="border-soft flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b py-2 last:border-b-0">
-      <span className="text-muted-foreground text-label-12 w-full font-medium sm:w-24">Sheet</span>
-      <span className="text-ink text-label-14">{e.data.sheet.name}</span>
+      <span className="text-muted-foreground text-12 w-full font-medium sm:w-24">Sheet</span>
+      <span className="text-ink text-14">{e.data.sheet.name}</span>
     </div>
   );
 
@@ -210,7 +210,7 @@ export function StepEditor({
           <div className="flex flex-col gap-4">
             <ReadOnlyNote text={viewerText(false)} />
             {step ? <StepSummary step={step} /> : null}
-            {a && ctx ? <p className="text-copy-14 m-0">{describeAutomation(a, ctx)}</p> : null}
+            {a && ctx ? <p className="text-14 m-0">{describeAutomation(a, ctx)}</p> : null}
             <div>
               <Button asChild variant="outline" size="sm">
                 <Link href={`/${e.org}/automations?tab=runs&sheet=${sheetId}`}>Run log</Link>
@@ -276,7 +276,7 @@ export function StepEditor({
     case 'field':
     case 'lifecycle': {
       const field = e.data.fields.find((f) => f.id === edit!.id);
-      if (!field) return <p className="text-copy-14 m-0 p-5">This field no longer exists.</p>;
+      if (!field) return <p className="text-14 m-0 p-5">This field no longer exists.</p>;
       return (
         <FieldSettingsBody
           key={field.id}
@@ -300,7 +300,7 @@ export function StepEditor({
         return (
           <div className="flex flex-col gap-4">
             <ReadOnlyNote text={viewerText(false)} />
-            <dl className="text-label-13 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+            <dl className="text-13 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
               <dt className="text-muted-foreground">Name</dt>
               <dd className="m-0">{d.name}</dd>
               <dt className="text-muted-foreground">Items are called</dt>
@@ -321,7 +321,7 @@ export function StepEditor({
           />
           <Link
             href={`/${e.org}/s/${sheetId}/settings`}
-            className="text-label-13 text-info w-fit underline-offset-2 hover:underline"
+            className="text-13 text-info w-fit underline-offset-2 hover:underline"
           >
             All sheet settings
           </Link>
@@ -339,15 +339,15 @@ export function StepEditor({
       return (
         <div className="flex flex-col gap-4">
           <section aria-labelledby="new-item-asks" className="flex flex-col gap-2">
-            <h3 id="new-item-asks" className="text-heading-14 m-0">
+            <h3 id="new-item-asks" className="text-14 m-0 font-semibold">
               What + New asks now
             </h3>
-            <p className="text-copy-13 text-muted-foreground m-0">
+            <p className="text-13 text-muted-foreground m-0">
               {plan.form
                 ? `The form “${plan.form.name}”${plan.steps.length > 1 ? `, in ${plan.steps.length} steps` : ''}.`
                 : 'The standard dialog: the name, required fields and fields marked Ask when adding; the rest under More fields.'}
             </p>
-            <ol className="text-copy-13 m-0 flex list-decimal flex-col gap-0.5 pl-5">
+            <ol className="text-13 m-0 flex list-decimal flex-col gap-0.5 pl-5">
               <li>{plan.nameLabel}</li>
               {planQuestions(plan)
                 .filter((q) => !plan.more.includes(q))
@@ -360,7 +360,7 @@ export function StepEditor({
             </ol>
           </section>
           <section aria-labelledby="new-item-form" className="flex flex-col gap-2">
-            <h3 id="new-item-form" className="text-heading-14 m-0">
+            <h3 id="new-item-form" className="text-14 m-0 font-semibold">
               New item form
             </h3>
             <NewItemFormSetting
@@ -398,7 +398,7 @@ function FormStep({
   const links = useFormLinks(sheetId);
   const setLink = useSetFormLink(sheetId);
   const view = e.views.tabs.forms.find((f) => f.id === id)?.saved ?? null;
-  if (!view) return <p className="text-copy-14 m-0">This form no longer exists.</p>;
+  if (!view) return <p className="text-14 m-0">This form no longer exists.</p>;
   if (!e.isAdmin)
     return (
       <div className="flex flex-col gap-4">

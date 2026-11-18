@@ -6,7 +6,7 @@ import { env } from '@/lib/env';
 import { Button } from '@/components/ui/button';
 import type { Json } from '@/engine/types';
 import type { ServerClient } from '@/lib/supabase/server';
-import { PageHeader, PageTabs } from '@/components/shell/page-header';
+import { HeadCard, PageHeader, PageTabs } from '@/components/shell/page-header';
 import { ROLE_LABELS } from '@/lib/schemas/workspace';
 import { isAdminRole, requireMember } from '@/server/auth';
 import {
@@ -70,10 +70,10 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
+    <section className="border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
       <div className="flex flex-col gap-1">
-        <h2 className="text-heading-16">{title}</h2>
-        {description ? <p className="text-muted-foreground text-copy-13">{description}</p> : null}
+        <h2 className="text-card-title">{title}</h2>
+        {description ? <p className="text-muted-foreground text-13">{description}</p> : null}
       </div>
       {children}
     </section>
@@ -83,7 +83,7 @@ function Card({
 function Avatar({ initials, color }: { initials: string; color: string }) {
   return (
     <span
-      className="text-label-12 flex size-8 shrink-0 items-center justify-center rounded-full font-semibold text-white"
+      className="text-12 flex size-8 shrink-0 items-center justify-center rounded-full font-semibold text-white"
       style={{ background: `var(--label-${color}, var(--label-blue))` }}
       aria-hidden
     >
@@ -107,11 +107,13 @@ export default async function SettingsPage({
 
   if (!isAdminRole(role)) {
     return (
-      <main className="w-full px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
-        <h1>Workspace admin</h1>
-        <p className="text-muted-foreground mt-2">
-          Only owners and admins can change workspace settings.
-        </p>
+      <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
+        <PageHeader title="Workspace admin" />
+        <HeadCard>
+          <p className="text-muted-foreground m-0">
+            Only owners and admins can change workspace settings.
+          </p>
+        </HeadCard>
       </main>
     );
   }
@@ -143,58 +145,64 @@ export default async function SettingsPage({
   const nameOf = new Map(people.map((p) => [p.userId, p.name]));
 
   return (
-    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
       <PageHeader
         crumb={workspace.name}
         title="Workspace admin"
         description="Members and roles, teams and job roles, entities and sites, packs, frameworks, retention, archived folders and sheets, and security."
       />
-      <PageTabs
-        label="Settings sections"
-        active={tab}
-        tabs={TABS.map((t) => ({ id: t.id, label: t.label, href: `/${org}/settings?tab=${t.id}` }))}
-      />
+      <HeadCard>
+        <PageTabs
+          label="Settings sections"
+          active={tab}
+          tabs={TABS.map((t) => ({
+            id: t.id,
+            label: t.label,
+            href: `/${org}/settings?tab=${t.id}`,
+          }))}
+        />
 
-      {tab === 'members' ? (
-        <MembersTab
-          db={supabase}
-          org={org}
-          orgId={workspace.id}
-          members={members}
-          myRole={role}
-          today={today}
-          timeZone={timeZone}
-        />
-      ) : null}
-      {tab === 'teams' ? (
-        <TeamsTab db={supabase} org={org} orgId={workspace.id} people={people} nameOf={nameOf} />
-      ) : null}
-      {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
-      {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
-      {tab === 'frameworks' ? <FrameworksTab org={org} timeZone={timeZone} /> : null}
-      {tab === 'retention' ? <RetentionTab org={org} today={today} /> : null}
-      {tab === 'security' ? (
-        <Card
-          title="Two-step sign-in"
-          description="A second step after the password or email link: a code from an authenticator app on the person's phone."
-        >
-          <RequireTwoStep
+        {tab === 'members' ? (
+          <MembersTab
+            db={supabase}
             org={org}
-            required={workspace.requireTwoStep}
-            isOwner={role === 'owner'}
-            ownerHasTwoStep={twoStep.level === 'aal2'}
+            orgId={workspace.id}
+            members={members}
+            myRole={role}
+            today={today}
+            timeZone={timeZone}
           />
-        </Card>
-      ) : null}
-      {tab === 'archived' ? (
-        <ArchivedTab
-          db={supabase}
-          org={org}
-          orgId={workspace.id}
-          nameOf={nameOf}
-          timeZone={timeZone}
-        />
-      ) : null}
+        ) : null}
+        {tab === 'teams' ? (
+          <TeamsTab db={supabase} org={org} orgId={workspace.id} people={people} nameOf={nameOf} />
+        ) : null}
+        {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
+        {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
+        {tab === 'frameworks' ? <FrameworksTab org={org} timeZone={timeZone} /> : null}
+        {tab === 'retention' ? <RetentionTab org={org} today={today} /> : null}
+        {tab === 'security' ? (
+          <Card
+            title="Two-step sign-in"
+            description="A second step after the password or email link: a code from an authenticator app on the person's phone."
+          >
+            <RequireTwoStep
+              org={org}
+              required={workspace.requireTwoStep}
+              isOwner={role === 'owner'}
+              ownerHasTwoStep={twoStep.level === 'aal2'}
+            />
+          </Card>
+        ) : null}
+        {tab === 'archived' ? (
+          <ArchivedTab
+            db={supabase}
+            org={org}
+            orgId={workspace.id}
+            nameOf={nameOf}
+            timeZone={timeZone}
+          />
+        ) : null}
+      </HeadCard>
     </main>
   );
 }
@@ -258,7 +266,7 @@ async function MembersTab({
                       <span className="text-muted-foreground font-normal"> (you)</span>
                     ) : null}
                   </span>
-                  <span className="text-muted-foreground text-label-13">
+                  <span className="text-muted-foreground text-13">
                     {ROLE_LABELS[m.role]}
                     {m.role === 'auditor' && m.expiresLabel
                       ? ` · read-only until ${m.expiresLabel}`
@@ -281,7 +289,7 @@ async function MembersTab({
               >
                 <div className="flex flex-col">
                   <span className="font-medium">{i.email}</span>
-                  <span className="text-muted-foreground text-label-13">
+                  <span className="text-muted-foreground text-13">
                     {ROLE_LABELS[i.role]} · not accepted yet ·{' '}
                     {i.linkExpired ? 'link ended' : `link works until ${i.linkExpiresOn}`}
                   </span>
@@ -321,9 +329,7 @@ async function TeamsTab({
       >
         <AddByName kind="team" org={org} label="New team" placeholder="Quality" />
         {(teams ?? []).length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">
-            No teams yet. Add the first one above.
-          </p>
+          <p className="text-muted-foreground text-13">No teams yet. Add the first one above.</p>
         ) : (
           <ul className="divide-line flex flex-col divide-y">
             {(teams ?? []).map((t) => (
@@ -353,7 +359,7 @@ async function TeamsTab({
       >
         <AddByName kind="jobRole" org={org} label="New job role" placeholder="Compliance manager" />
         {(roles ?? []).length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">
+          <p className="text-muted-foreground text-13">
             No job roles yet. Add the first one above.
           </p>
         ) : (
@@ -384,7 +390,7 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
     >
       <AddEntity org={org} />
       {(entities ?? []).length === 0 ? (
-        <p className="text-muted-foreground text-copy-13">
+        <p className="text-muted-foreground text-13">
           No entities yet. Add your legal entity above.
         </p>
       ) : (
@@ -394,13 +400,13 @@ async function EntitiesTab({ db, org, orgId }: { db: ServerClient; org: string; 
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">
                   {e.name}{' '}
-                  <span className="text-muted-foreground text-label-12-mono">{e.country}</span>
+                  <span className="text-muted-foreground text-12 font-mono">{e.country}</span>
                 </span>
                 <DeleteButton kind="entity" org={org} id={e.id} name={e.name} />
               </div>
               <ul className="flex flex-col gap-1 pl-3" aria-label={`Sites of ${e.name}`}>
                 {e.sites.length === 0 ? (
-                  <li className="text-muted-foreground text-label-13">No sites yet.</li>
+                  <li className="text-muted-foreground text-13">No sites yet.</li>
                 ) : null}
                 {[...e.sites]
                   .sort((a, b) => a.name.localeCompare(b.name))
@@ -464,7 +470,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
         description="Ready-made sheets, links, forms, automations and dashboards. Preview a pack to see exactly what it creates here before you install it."
       >
         {available.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">No packs are available yet.</p>
+          <p className="text-muted-foreground text-13">No packs are available yet.</p>
         ) : (
           <ul className="divide-line flex flex-col divide-y" aria-label="Available packs">
             {available.map((p) => (
@@ -475,9 +481,9 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                 <div className="flex min-w-0 flex-col gap-1">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{p.title}</span>
-                    <span className="text-label-12-mono text-muted-foreground">{p.version}</span>
+                    <span className="text-12 text-muted-foreground font-mono">{p.version}</span>
                     {p.installedVersion ? (
-                      <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                      <span className="text-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
                         <Check className="text-good size-3" aria-hidden /> Installed
                         {p.installedLevel
                           ? `: ${p.levels.find((l) => l.key === p.installedLevel)?.name ?? p.installedLevel}`
@@ -485,26 +491,26 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                       </span>
                     ) : null}
                     {p.levels.length ? (
-                      <span className="text-label-12 text-muted-foreground">
+                      <span className="text-12 text-muted-foreground">
                         {p.levels.map((l) => l.name).join(' or ')}
                       </span>
                     ) : null}
                   </span>
                   {p.description ? (
-                    <span className="text-copy-13 text-muted-foreground">{p.description}</span>
+                    <span className="text-13 text-muted-foreground">{p.description}</span>
                   ) : null}
-                  <span className="text-label-13">
+                  <span className="text-13">
                     Inside: {p.inside}
                     <span className="text-muted-foreground"> · {p.sheets.join(', ')}</span>
                   </span>
                   {p.frameworks.length ? (
-                    <span className="text-label-13 text-muted-foreground">
+                    <span className="text-13 text-muted-foreground">
                       Builds on the {p.frameworks.join(', ')} requirement library, adopted at
                       install if this workspace has not adopted it.
                     </span>
                   ) : null}
                   {p.linksTo.length ? (
-                    <span className="text-label-13 text-muted-foreground">
+                    <span className="text-13 text-muted-foreground">
                       Links to the {p.linksTo.join(', ')} requirement library where this workspace
                       has adopted it.
                     </span>
@@ -535,7 +541,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
         description="Archiving a pack archives its sheets, folders and dashboards and turns its automations off. Items and the activity log are kept, and archived sheets can be restored from Archived."
       >
         {installed.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">No packs installed yet.</p>
+          <p className="text-muted-foreground text-13">No packs installed yet.</p>
         ) : (
           <ul className="divide-line flex flex-col divide-y" aria-label="Installed packs">
             {installed.map((i) => (
@@ -546,36 +552,36 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                 <div className="flex min-w-0 flex-col">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{i.title}</span>
-                    <span className="text-label-12-mono text-muted-foreground">{i.version}</span>
-                    {i.level ? <span className="text-label-12">{i.level.name}</span> : null}
+                    <span className="text-12 text-muted-foreground font-mono">{i.version}</span>
+                    {i.level ? <span className="text-12">{i.level.name}</span> : null}
                     {i.publisher ? (
-                      <span className="text-label-12 text-muted-foreground">
+                      <span className="text-12 text-muted-foreground">
                         Your own pack, from {i.publisher}
                       </span>
                     ) : null}
-                    <span className="text-label-12 text-muted-foreground">
+                    <span className="text-12 text-muted-foreground">
                       {i.status === 'installed' ? 'Installed' : 'Archived'}
                     </span>
                     {i.updateTo ? (
                       <span
-                        className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5"
+                        className="text-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5"
                         data-testid="update-available"
                       >
                         <ArrowUpCircle className="size-3" aria-hidden /> Update available{' '}
-                        <span className="text-label-12-mono">
+                        <span className="text-12 font-mono">
                           {i.version} → {i.updateTo}
                         </span>
                       </span>
                     ) : null}
                   </span>
                   {i.settings && i.status === 'installed' ? (
-                    <span className="text-label-13" data-testid="pack-settings-summary">
+                    <span className="text-13" data-testid="pack-settings-summary">
                       {i.settings.summary.length
                         ? i.settings.summary.join(' · ')
                         : `Settings not chosen yet: ${i.settings.defs.map((d) => d.label.toLowerCase()).join(', ')}`}
                     </span>
                   ) : null}
-                  <span className="text-muted-foreground text-label-13">
+                  <span className="text-muted-foreground text-13">
                     Installed by {i.installedBy}, {formatDateTime(i.installedAt, timeZone)}
                     {i.archivedAt
                       ? ` · archived by ${i.archivedBy ?? 'System'}, ${formatDateTime(i.archivedAt, timeZone)}`
@@ -668,7 +674,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
         description="Installs, updates and archives from the activity log, newest first."
       >
         {log.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">No pack activity yet.</p>
+          <p className="text-muted-foreground text-13">No pack activity yet.</p>
         ) : (
           <ol
             className="divide-line m-0 flex list-none flex-col divide-y p-0"
@@ -679,7 +685,7 @@ async function PacksTab({ org, timeZone }: { org: string; timeZone: string }) {
                 <span>
                   <span className="font-medium">{e.actor}</span> · {e.text}
                 </span>
-                <span className="text-muted-foreground text-label-12-mono">
+                <span className="text-muted-foreground text-12 font-mono">
                   {formatDateTime(e.at, timeZone)}
                 </span>
               </li>
@@ -729,18 +735,18 @@ function YourPacksCard({
               workspace={workspace}
               packs={published.map((p) => ({ key: p.key, title: p.title, version: p.version }))}
             />
-            <span className="text-label-13 text-muted-foreground">
+            <span className="text-13 text-muted-foreground">
               Saves this workspace&apos;s sheets, columns, views, forms and automations as a pack
               owned by {workspace}.
             </span>
           </div>
         ) : null}
         <section className="flex flex-col gap-1" aria-label={`Published from ${workspace}`}>
-          <h3 className="text-label-13 text-muted-foreground m-0 font-medium">
+          <h3 className="text-13 text-muted-foreground m-0 font-medium">
             Published from {workspace}
           </h3>
           {published.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13 m-0">
+            <p className="text-muted-foreground text-13 m-0">
               Nothing published from this workspace yet.
             </p>
           ) : (
@@ -756,17 +762,17 @@ function YourPacksCard({
                   <div className="flex min-w-0 flex-col gap-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{p.title}</span>
-                      <span className="text-label-12-mono text-muted-foreground">{p.version}</span>
+                      <span className="text-12 text-muted-foreground font-mono">{p.version}</span>
                       {p.withdrawnAt ? (
-                        <span className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                        <span className="text-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5">
                           <X className="size-3" aria-hidden /> Withdrawn
                         </span>
                       ) : null}
                     </span>
                     {p.description ? (
-                      <span className="text-copy-13 text-muted-foreground">{p.description}</span>
+                      <span className="text-13 text-muted-foreground">{p.description}</span>
                     ) : null}
-                    <span className="text-label-13">
+                    <span className="text-13">
                       Installed in {p.sharedWith} other{' '}
                       {p.sharedWith === 1 ? 'workspace' : 'workspaces'}
                       {p.withdrawnAt
@@ -774,14 +780,13 @@ function YourPacksCard({
                         : ''}
                     </span>
                     <details>
-                      <summary className="text-label-13 text-muted-foreground cursor-pointer">
+                      <summary className="text-13 text-muted-foreground cursor-pointer">
                         {p.versions.length} {p.versions.length === 1 ? 'version' : 'versions'}
                       </summary>
-                      <ul className="text-label-13 text-muted-foreground m-0 mt-1 flex list-none flex-col gap-0.5 p-0">
+                      <ul className="text-13 text-muted-foreground m-0 mt-1 flex list-none flex-col gap-0.5 p-0">
                         {p.versions.map((v) => (
                           <li key={v.version}>
-                            <span className="text-label-12-mono">{v.version}</span> ·{' '}
-                            {v.publishedBy}
+                            <span className="text-12 font-mono">{v.version}</span> · {v.publishedBy}
                             {v.publishedAt ? `, ${formatDateTime(v.publishedAt, timeZone)}` : ''}
                           </li>
                         ))}
@@ -800,7 +805,7 @@ function YourPacksCard({
         </section>
         {installable.length ? (
           <section className="flex flex-col gap-1" aria-label="From your other workspaces">
-            <h3 className="text-label-13 text-muted-foreground m-0 font-medium">
+            <h3 className="text-13 text-muted-foreground m-0 font-medium">
               From your other workspaces
             </h3>
             <ul
@@ -815,23 +820,23 @@ function YourPacksCard({
                   <div className="flex min-w-0 flex-col gap-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{p.title}</span>
-                      <span className="text-label-12-mono text-muted-foreground">{p.version}</span>
+                      <span className="text-12 text-muted-foreground font-mono">{p.version}</span>
                       {p.installedVersion ? (
-                        <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                        <span className="text-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
                           <Check className="text-good size-3" aria-hidden /> Installed
                         </span>
                       ) : null}
                       {p.withdrawn ? (
-                        <span className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                        <span className="text-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5">
                           <X className="size-3" aria-hidden /> Withdrawn
                         </span>
                       ) : null}
                     </span>
-                    <span className="text-label-13">
+                    <span className="text-13">
                       From {p.publisher} · Inside: {p.inside}
                     </span>
                     {p.description ? (
-                      <span className="text-copy-13 text-muted-foreground">{p.description}</span>
+                      <span className="text-13 text-muted-foreground">{p.description}</span>
                     ) : null}
                   </div>
                   {canPublish && !p.installedVersion && !p.withdrawn ? (
@@ -866,7 +871,7 @@ function CoverageBar({ percent, label }: { percent: number | null; label: string
       <span className="bg-soft h-1.5 w-full max-w-[240px] overflow-hidden rounded" aria-hidden>
         <span className="bg-good block h-full rounded" style={{ width: `${percent ?? 0}%` }} />
       </span>
-      <span className="text-label-13">{label}</span>
+      <span className="text-13">{label}</span>
     </span>
   );
 }
@@ -874,7 +879,7 @@ function CoverageBar({ percent, label }: { percent: number | null; label: string
 /** A chip that says a framework is the workspace's own (docs/12 Your own frameworks): text, not colour alone. */
 function YoursChip() {
   return (
-    <span className="text-label-12 border-line bg-background-100 flex items-center gap-1 rounded border px-1.5 py-0.5">
+    <span className="text-12 border-line bg-surface flex items-center gap-1 rounded border px-1.5 py-0.5">
       <PenLine className="size-3" aria-hidden /> Yours
     </span>
   );
@@ -912,7 +917,7 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
         description="Each adopted framework is a library sheet: one item per requirement, with applicability, justification, implementation status and evidence. Coverage is the share of requirements in scope with an implemented control or current evidence."
       >
         {adopted.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">
+          <p className="text-muted-foreground text-13">
             No frameworks adopted yet. Adopt one from the catalogue below.
           </p>
         ) : (
@@ -926,17 +931,15 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{f.title}</span>
                     {f.own ? <YoursChip /> : null}
-                    <span className="text-muted-foreground text-label-13">
-                      {f.adopted!.sheetName}
-                    </span>
+                    <span className="text-muted-foreground text-13">{f.adopted!.sheetName}</span>
                     <EditionBadge badge={f.badge} />
                     {f.adopted!.install?.updateTo ? (
                       <span
-                        className="text-label-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5"
+                        className="text-12 bg-soft flex items-center gap-1 rounded px-1.5 py-0.5"
                         data-testid="update-available"
                       >
                         <ArrowUpCircle className="size-3" aria-hidden /> Update available{' '}
-                        <span className="text-label-12-mono">
+                        <span className="text-12 font-mono">
                           {f.adopted!.install.version} → {f.adopted!.install.updateTo}
                         </span>
                       </span>
@@ -947,7 +950,7 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
                     label={f.adopted!.coverageText}
                   />
                   {f.adopted!.movedTo ? (
-                    <span className="text-label-13 text-muted-foreground flex flex-wrap items-center gap-1">
+                    <span className="text-13 text-muted-foreground flex flex-wrap items-center gap-1">
                       <Lock className="size-3" aria-hidden /> Read-only: moved to{' '}
                       <Link
                         href={`/${org}/s/${f.adopted!.movedTo.sheetId}`}
@@ -957,7 +960,7 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
                       </Link>
                     </span>
                   ) : f.badge?.tone === 'replaced' && f.successor && !f.successor.adopted ? (
-                    <span className="text-label-13 text-muted-foreground">
+                    <span className="text-13 text-muted-foreground">
                       Adopt {f.successor.title} from the catalogue below, then move your work to it.
                     </span>
                   ) : null}
@@ -1015,7 +1018,7 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
           </div>
         ) : null}
         {ownList.length === 0 && newDrafts.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             No frameworks of your own yet. Paste a list from Excel, upload a CSV file, start blank
             or copy the structure of a catalogue framework.
           </p>
@@ -1033,23 +1036,21 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
                       <span className="font-medium">{f.title}</span>
                       <YoursChip />
                       {f.adopted ? (
-                        <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                        <span className="text-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
                           <Check className="text-good size-3" aria-hidden /> Adopted
                         </span>
                       ) : null}
                       {draft ? (
-                        <span className="text-label-12 bg-soft rounded px-1.5 py-0.5">
-                          Draft changes
-                        </span>
+                        <span className="text-12 bg-soft rounded px-1.5 py-0.5">Draft changes</span>
                       ) : null}
                     </span>
-                    <span className="text-label-13">
+                    <span className="text-13">
                       {f.requirements} requirements · edition {f.version}, revision {f.revision}
                     </span>
-                    <span className="text-copy-13">
+                    <span className="text-13">
                       Written by {workspace}. Not reviewed by Klarert.
                     </span>
-                    <span className="text-copy-13 text-muted-foreground">{f.licence}</span>
+                    <span className="text-13 text-muted-foreground">{f.licence}</span>
                   </div>
                   {canAdopt ? (
                     <span className="flex shrink-0 flex-wrap gap-2">
@@ -1083,9 +1084,9 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{d.title}</span>
                     <YoursChip />
-                    <span className="text-label-12 bg-soft rounded px-1.5 py-0.5">Draft</span>
+                    <span className="text-12 bg-soft rounded px-1.5 py-0.5">Draft</span>
                   </span>
-                  <span className="text-label-13 text-muted-foreground">
+                  <span className="text-13 text-muted-foreground">
                     Not published yet · saved {formatDate(isoDateInZone(d.updatedAt, timeZone))}
                   </span>
                 </div>
@@ -1112,7 +1113,7 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
         description="Reference numbers with official short titles, plus our own purpose, guidance, audit questions and typical evidence for each. The text of standards is not included: buy the standard for it. EU laws link to EUR-Lex."
       >
         {catalogue.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">No frameworks are available yet.</p>
+          <p className="text-muted-foreground text-13">No frameworks are available yet.</p>
         ) : (
           <ul className="divide-line flex flex-col divide-y" aria-label="Framework catalogue">
             {catalogue.map((f) => (
@@ -1123,23 +1124,23 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
                 <div className="flex min-w-0 flex-col gap-1">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{f.title}</span>
-                    <span className="text-label-12 bg-soft rounded px-1.5 py-0.5">
+                    <span className="text-12 bg-soft rounded px-1.5 py-0.5">
                       {KIND_LABEL[f.kind] ?? f.kind}
                     </span>
                     {f.adopted ? (
-                      <span className="text-label-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
+                      <span className="text-12 bg-good-soft flex items-center gap-1 rounded px-1.5 py-0.5">
                         <Check className="text-good size-3" aria-hidden /> Adopted
                       </span>
                     ) : null}
                   </span>
                   <EditionBadge badge={f.badge} />
-                  <span className="text-label-13">
+                  <span className="text-13">
                     {f.requirements} requirements · {f.publisher}
                   </span>
-                  {f.statusNote ? <span className="text-copy-13">{f.statusNote}</span> : null}
-                  <span className="text-copy-13 text-muted-foreground">{f.licence}</span>
+                  {f.statusNote ? <span className="text-13">{f.statusNote}</span> : null}
+                  <span className="text-13 text-muted-foreground">{f.licence}</span>
                   {f.statusCheckedOn ? (
-                    <span className="text-label-12 text-muted-foreground">
+                    <span className="text-12 text-muted-foreground">
                       {statusCheckedText({ statusCheckedOn: f.statusCheckedOn })}
                       {f.transitionEnds
                         ? '. Transition dates are set by the accreditation bodies; your certification body confirms yours.'
@@ -1150,7 +1151,7 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
                     href={f.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-label-13 flex w-fit items-center gap-1 underline-offset-2 hover:underline"
+                    className="text-13 flex w-fit items-center gap-1 underline-offset-2 hover:underline"
                   >
                     Source <ExternalLink className="size-3" aria-hidden />
                     <span className="sr-only">(opens in a new tab)</span>
@@ -1200,7 +1201,7 @@ async function FrameworksTab({ org, timeZone }: { org: string; timeZone: string 
             />
             <Link
               href={`/${org}/audit`}
-              className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
+              className="text-ink text-13 font-medium underline-offset-4 hover:underline"
             >
               All audit outputs
             </Link>
@@ -1245,7 +1246,7 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
         description="Items whose retention period has ended under a sheet's rules. Nothing is erased until you approve it: approve, postpone with a reason, or place a legal hold."
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             {lastCheck
               ? `Checked daily. Last scheduled check ${formatDate(lastCheck)}.`
               : 'Checked daily by the scheduler.'}
@@ -1256,7 +1257,7 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
           </div>
         </div>
         {open.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             Nothing waits for review.
             {sheets.length === 0
               ? ' Add retention rules in a sheet’s settings (Sheet settings › Retention), or install the GDPR pack.'
@@ -1271,16 +1272,16 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
               >
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <QueueItemLink org={org} row={q} />
-                  <span className="text-muted-foreground text-label-13">
+                  <span className="text-muted-foreground text-13">
                     {q.sheetName} · {q.ruleName} · {queueDueText(q)}
                     {q.archived ? ' · archived item' : ''}
                   </span>
                   <span className="flex flex-wrap items-center gap-2">
                     <StateChip state={q.state} />
                     {q.state === 'held' && q.holdReason ? (
-                      <span className="text-label-13 text-muted-foreground">{q.holdReason}</span>
+                      <span className="text-13 text-muted-foreground">{q.holdReason}</span>
                     ) : q.state === 'postponed' && q.reason ? (
-                      <span className="text-label-13 text-muted-foreground">{q.reason}</span>
+                      <span className="text-13 text-muted-foreground">{q.reason}</span>
                     ) : null}
                   </span>
                 </div>
@@ -1295,9 +1296,7 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
         description="Each sheet's rules decide when its items are due. Change them in the sheet's settings. Periods shipped by packs are suggestions: set your own."
       >
         {sheets.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
-            No sheet has a retention rule yet.
-          </p>
+          <p className="text-muted-foreground text-13 m-0">No sheet has a retention rule yet.</p>
         ) : (
           <ul
             className="divide-line flex flex-col divide-y"
@@ -1312,11 +1311,11 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
                   {s.sheetName}
                 </Link>
                 {s.rules.map((rule) => (
-                  <span key={rule.id} className="text-copy-13">
+                  <span key={rule.id} className="text-13">
                     <span className="font-medium">{rule.name}</span>: {rule.text}
                   </span>
                 ))}
-                <span className="text-muted-foreground text-label-13">
+                <span className="text-muted-foreground text-13">
                   Personal data:{' '}
                   {s.personalFields.length ? s.personalFields.join(', ') : 'no field marked yet'}
                 </span>
@@ -1334,7 +1333,7 @@ async function RetentionTab({ org, today }: { org: string; today: string }) {
             {done.map((q) => (
               <li key={q.id} className="flex flex-col gap-0.5 py-2">
                 <QueueItemLink org={org} row={q} />
-                <span className="text-muted-foreground text-label-13">
+                <span className="text-muted-foreground text-13">
                   {q.ruleName} · approved {q.decidedAt ? formatDate(q.decidedAt.slice(0, 10)) : ''}
                 </span>
               </li>
@@ -1404,7 +1403,7 @@ async function ArchivedTab({
         description="A folder is restored together with the sheets that were archived with it."
       >
         {archivedFolders.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">No archived folders.</p>
+          <p className="text-muted-foreground text-13">No archived folders.</p>
         ) : (
           <ul className="divide-line flex flex-col divide-y" aria-label="Archived folders">
             {archivedFolders.map((f) => {
@@ -1416,7 +1415,7 @@ async function ArchivedTab({
                 >
                   <div className="flex min-w-0 flex-col">
                     <span className="font-medium">{f.name}</span>
-                    <span className="text-muted-foreground text-label-13">
+                    <span className="text-muted-foreground text-13">
                       Archived {formatDateTime(f.archived_at!, timeZone)} ·{' '}
                       {list.length === 0
                         ? 'no sheets'
@@ -1443,7 +1442,7 @@ async function ArchivedTab({
         description="Sheets archived on their own. A sheet whose folder is archived comes back under Other sheets."
       >
         {loose.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">No archived sheets.</p>
+          <p className="text-muted-foreground text-13">No archived sheets.</p>
         ) : (
           <ul className="divide-line flex flex-col divide-y" aria-label="Archived sheets">
             {loose.map((s) => (
@@ -1453,7 +1452,7 @@ async function ArchivedTab({
               >
                 <div className="flex min-w-0 flex-col">
                   <span className="font-medium">{s.name}</span>
-                  <span className="text-muted-foreground text-label-13">
+                  <span className="text-muted-foreground text-13">
                     Archived {formatDateTime(s.archived_at!, timeZone)}
                     {s.folder_id
                       ? ` · from ${folderName.get(s.folder_id) ?? 'a deleted folder'}`
@@ -1471,7 +1470,7 @@ async function ArchivedTab({
         description="The latest 20 entries of the activity log."
       >
         {(log.data ?? []).length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">No changes yet.</p>
+          <p className="text-muted-foreground text-13">No changes yet.</p>
         ) : (
           <ol
             className="divide-line m-0 flex list-none flex-col divide-y p-0"
@@ -1497,7 +1496,7 @@ async function ArchivedTab({
                     (id) => folderName.get(id),
                   )}
                 </span>
-                <span className="text-muted-foreground text-label-12-mono">
+                <span className="text-muted-foreground text-12 font-mono">
                   {formatDateTime(e.at, timeZone)}
                 </span>
               </li>

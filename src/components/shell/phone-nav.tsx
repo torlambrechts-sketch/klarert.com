@@ -7,12 +7,13 @@ import { Dialog, DialogDescription, DialogTitle, SheetContent } from '@/componen
 import { SideMenu, type SideMenuProps } from './side-menu';
 import { useShell } from './shell-context';
 
+// navy bar, white icons and words; the current page on --brand-soft with navy words (docs/18 §4, C10)
 const cell =
-  'flex min-h-11 flex-col items-center justify-center gap-0.5 text-label-12 font-medium text-muted-foreground outline-offset-[-3px] aria-[current=page]:text-ink';
+  'my-2 mx-1.5 flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl text-12 font-semibold text-white focus-visible:outline-white aria-[current=page]:bg-brand-soft aria-[current=page]:text-navy';
 
 /**
- * Phones (< 760 px, docs/05 §5): the bottom bar (Home, My work, Menu) and the full side menu as a left sheet over a
- * scrim. Search and the Inbox stay in the top bar, so each job has one control (owner decision 15 Nov 2026, UX-6).
+ * Phones (< 760 px, docs/05 §5) in the Keptrow look: the navy bottom bar (Home, My work, Menu) and the full side panel as a full-height --panel
+ * sheet over a scrim. Search and the Inbox stay in the top bar, so each job has one control (owner decision 15 Nov 2026, UX-6).
  */
 export function PhoneNav(props: Omit<SideMenuProps, 'onNavigate'>) {
   const { menuOpen, setMenuOpen } = useShell();
@@ -43,7 +44,7 @@ export function PhoneNav(props: Omit<SideMenuProps, 'onNavigate'>) {
         </button>
       </nav>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent className="bg-sidebar">
+        <SheetContent className="bg-panel">
           <DialogTitle className="sr-only">Menu</DialogTitle>
           <DialogDescription className="sr-only">
             Sheets and pages of this workspace

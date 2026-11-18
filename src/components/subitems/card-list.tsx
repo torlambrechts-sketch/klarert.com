@@ -63,7 +63,7 @@ export function CardSubitems({
         {list.length ? (
           <ProgressChip total={list.length} done={done} label={label} />
         ) : (
-          <span className="text-muted-foreground text-label-12">No {label.toLowerCase()} yet</span>
+          <span className="text-muted-foreground text-12">No {label.toLowerCase()} yet</span>
         )}
         <span className="sr-only">
           {expanded ? 'Hide' : 'Show'} {label.toLowerCase()}
@@ -79,10 +79,10 @@ export function CardSubitems({
               onClick={() => onOpen(c)}
               className="border-line hover:bg-subtle focus-visible:outline-focus flex min-h-11 items-center gap-2 border-b px-2 text-left last:border-b-0 focus-visible:outline-2"
             >
-              <span className="text-muted-foreground text-label-12-mono shrink-0">
+              <span className="text-muted-foreground text-12 shrink-0 font-mono">
                 {c.displayId}
               </span>
-              <span className="text-label-13 min-w-0 flex-1 truncate">{c.name}</span>
+              <span className="text-13 min-w-0 flex-1 truncate">{c.name}</span>
               {cols.map((f) => {
                 const ui = fieldUI(f.type);
                 return (
@@ -105,7 +105,7 @@ export function CardSubitems({
           {canEdit ? (
             <div className="flex items-center gap-1 p-1">
               <input
-                className="placeholder:text-muted-foreground text-label-13 focus-visible:outline-focus h-11 min-w-0 flex-1 rounded px-2 focus-visible:outline-2"
+                className="placeholder:text-muted-foreground text-13 focus-visible:outline-focus h-11 min-w-0 flex-1 rounded px-2 focus-visible:outline-2"
                 placeholder={`+ Add ${one}`}
                 aria-label={`Add ${one} to ${parent.displayId}`}
                 value={name}

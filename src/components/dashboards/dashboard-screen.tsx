@@ -22,7 +22,7 @@ import {
 } from '@/app/[org]/dashboards/actions';
 import { PERIODS, WIDGET_TYPES, type WidgetConfig } from '@/engine/dashboards';
 import { inputClass } from '@/components/fields/shared';
-import { PageHeader, PageTabs } from '@/components/shell/page-header';
+import { HeadCard, PageHeader, PageTabs } from '@/components/shell/page-header';
 import { ShellCrumb } from '@/components/shell/shell-crumb';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -131,23 +131,23 @@ export function DashboardScreen({
 
   return (
     <main
-      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]"
+      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]"
       aria-busy={pending}
     >
       <ShellCrumb>
-        <nav aria-label="Breadcrumb" className="text-label-14 flex min-w-0 items-center gap-2.5">
+        <nav aria-label="Breadcrumb" className="text-14 flex min-w-0 items-center gap-2.5">
           <span className="text-muted-foreground flex items-center gap-2">
             <ChartColumn className="size-[15px] shrink-0" aria-hidden />
             Insights
           </span>
-          <span aria-hidden className="text-line-strong text-label-20 leading-none font-light">
+          <span aria-hidden className="text-line-strong text-20 leading-none font-light">
             /
           </span>
           <span className="text-ink flex min-w-0 items-center gap-2" aria-current="page">
             <LayoutGrid className="size-[15px] shrink-0" aria-hidden />
             <span className="truncate font-medium">{dashboard.name}</span>
           </span>
-          <span className="bg-soft text-muted-foreground text-label-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
+          <span className="bg-soft text-muted-foreground text-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
             Dashboard
           </span>
         </nav>
@@ -158,42 +158,51 @@ export function DashboardScreen({
         description="Widgets read live from your sheets, the evidence library and the run log."
         actions={actions}
       />
-      {dashboards.length > 1 ? (
-        <PageTabs
-          label="Dashboards"
-          active={dashboard.id}
-          tabs={dashboards.map((d) => ({
-            id: d.id,
-            label: d.name,
-            href: `/${org}/dashboards/${d.id}`,
-          }))}
-        />
-      ) : null}
-      {usesPeriod && view ? <PeriodSwitch months={months} /> : null}
-
-      {!view ? (
-        <div
-          role="alert"
-          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
-        >
-          <p className="m-0">The widgets could not be loaded.</p>
-          <Button type="button" variant="outline" onClick={refresh}>
-            <RotateCcw aria-hidden /> Retry
-          </Button>
-        </div>
-      ) : widgets.length === 0 ? (
-        <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
-          <p className="text-muted-foreground m-0">
-            No widgets yet.{canEdit ? ' Add the first one.' : ''}
-          </p>
-          {canEdit && editor ? (
-            <Button type="button" variant="outline" onClick={() => setWidgetDialog({})}>
-              <Plus aria-hidden /> Add widget
-            </Button>
+      {/* the header card (docs/18 C14): tabs, the period and the state of the widgets */}
+      {dashboards.length > 1 || (usesPeriod && view) || !view || widgets.length === 0 ? (
+        <HeadCard label="Dashboard">
+          {dashboards.length > 1 ? (
+            <PageTabs
+              label="Dashboards"
+              active={dashboard.id}
+              tabs={dashboards.map((d) => ({
+                id: d.id,
+                label: d.name,
+                href: `/${org}/dashboards/${d.id}`,
+              }))}
+            />
           ) : null}
-        </div>
-      ) : (
-        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-4 gap-y-8 p-0">
+          {usesPeriod && view ? <PeriodSwitch months={months} /> : null}
+
+          {!view ? (
+            <div
+              role="alert"
+              className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
+            >
+              <p className="m-0">The widgets could not be loaded.</p>
+              <Button type="button" variant="outline" onClick={refresh}>
+                <RotateCcw aria-hidden /> Retry
+              </Button>
+            </div>
+          ) : widgets.length === 0 ? (
+            <div className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
+              <p className="text-muted-foreground m-0">
+                No widgets yet.{canEdit ? ' Add the first one.' : ''}
+              </p>
+              {canEdit && editor ? (
+                <Button type="button" variant="outline" onClick={() => setWidgetDialog({})}>
+                  <Plus aria-hidden /> Add widget
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+        </HeadCard>
+      ) : null}
+      {view && widgets.length > 0 ? (
+        <ul
+          data-hero-overlap
+          className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-4 gap-y-8 p-0"
+        >
           {widgets.map((w, i) => (
             <WidgetCard
               key={w.id}
@@ -209,7 +218,7 @@ export function DashboardScreen({
             />
           ))}
         </ul>
-      )}
+      ) : null}
 
       {editor ? (
         <WidgetDialog
@@ -250,8 +259,8 @@ export function DashboardScreen({
       />
       <Dialog open={confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(false)}>
         <DialogContent>
-          <DialogTitle className="text-heading-16">Delete this dashboard?</DialogTitle>
-          <DialogDescription className="text-muted-foreground text-label-13">
+          <DialogTitle className="text-card-title">Delete this dashboard?</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-13">
             {dashboard.name} and its widgets are removed for everyone. Your sheets and items stay as
             they are.
           </DialogDescription>
@@ -283,14 +292,14 @@ export function DashboardScreen({
 function PeriodSwitch({ months }: { months: number }) {
   return (
     <nav aria-label="Period" className="mt-[19px] mb-5 flex flex-wrap items-center gap-2">
-      <ul className="border-line bg-background-100 m-0 inline-flex h-[40px] list-none gap-0.5 rounded-md border p-0.5">
+      <ul className="border-line bg-surface m-0 inline-flex h-[40px] list-none gap-0.5 rounded-md border p-0.5">
         {PERIODS.map((p) => (
           <li key={p} className="flex">
             <Link
               href={`?months=${p}`}
               scroll={false}
               aria-current={p === months ? 'true' : undefined}
-              className="text-muted-foreground hover:text-ink aria-[current=true]:bg-soft aria-[current=true]:text-ink text-label-14 inline-flex items-center rounded px-3 whitespace-nowrap no-underline aria-[current=true]:font-medium"
+              className="text-muted-foreground hover:text-ink aria-[current=true]:bg-soft aria-[current=true]:text-ink text-14 inline-flex items-center rounded px-3 whitespace-nowrap no-underline aria-[current=true]:font-medium"
             >
               {p} months
             </Link>
@@ -369,16 +378,16 @@ function WidgetCard({
     <li
       aria-labelledby={headingId}
       className={cn(
-        'border-line bg-background-100 flex min-w-0 flex-col rounded-lg border',
+        'border-line bg-surface flex min-w-0 flex-col rounded-lg border',
         def?.wide && 'col-span-full',
       )}
     >
       <div className="border-line flex min-h-[52px] items-center justify-between gap-2.5 border-b px-[16px] py-2">
-        <h2 id={headingId} className="text-heading-14 m-0 min-w-0">
+        <h2 id={headingId} className="text-14 m-0 min-w-0 font-semibold">
           {widget.title}
         </h2>
         <span className="flex min-w-0 shrink items-center gap-1.5">
-          <span className="text-muted-foreground text-label-13 truncate text-right">{meta}</span>
+          <span className="text-muted-foreground text-13 truncate text-right">{meta}</span>
           {menu}
         </span>
       </div>
@@ -442,15 +451,15 @@ function NameForm({
         setBusy(false);
       }}
     >
-      <DialogTitle className="text-heading-16">
+      <DialogTitle className="text-card-title">
         {mode === 'rename' ? 'Rename dashboard' : 'New dashboard'}
       </DialogTitle>
-      <DialogDescription className="text-muted-foreground text-label-13">
+      <DialogDescription className="text-muted-foreground text-13">
         {mode === 'rename'
           ? 'Everyone in the workspace sees the new name.'
           : 'A new dashboard starts empty. Add widgets to it next.'}
       </DialogDescription>
-      <label htmlFor={id} className="text-label-13 font-medium">
+      <label htmlFor={id} className="text-13 font-medium">
         Name
       </label>
       <input

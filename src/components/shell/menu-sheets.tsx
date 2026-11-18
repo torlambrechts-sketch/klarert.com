@@ -548,10 +548,7 @@ export function MenuSheets(props: MenuSheetsProps) {
   return (
     <>
       <div className="group/row flex items-center pr-1">
-        <h2
-          id={props.headingId}
-          className="text-muted-foreground text-label-12 flex-1 px-2.5 pt-0.5 pb-1.5 font-medium"
-        >
+        <h2 id={props.headingId} className="text-section-label flex-1 px-4 pt-4 pb-1">
           {title}
         </h2>
         {canEdit ? (
@@ -576,7 +573,7 @@ export function MenuSheets(props: MenuSheetsProps) {
             icon={<Folder className={iconClass} aria-hidden />}
             describedBy="menu-new-folder-note"
           />
-          <p id="menu-new-folder-note" className="text-muted-foreground text-label-12 px-2.5">
+          <p id="menu-new-folder-note" className="text-muted-foreground text-12 px-2.5">
             {NEW_FOLDER_NOTE}
           </p>
         </div>
@@ -585,12 +582,12 @@ export function MenuSheets(props: MenuSheetsProps) {
       {/* the shared registers are sheets too: the empty state shows only when there are none at all */}
       {empty && !nav.registers.some((d) => d.sheets.length > 0) ? (
         <div className="flex flex-col items-start gap-1 px-2.5 py-1.5">
-          <p className="text-muted-foreground text-copy-13 m-0">No sheets yet.</p>
+          <p className="text-muted-foreground text-13 m-0">No sheets yet.</p>
           {canEdit ? (
             <CreateSheetLink
               org={org}
               onNavigate={onNavigate}
-              className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
+              className="text-ink text-13 font-medium underline-offset-4 hover:underline"
             >
               Create your first sheet
             </CreateSheetLink>
@@ -708,7 +705,7 @@ export function MenuSheets(props: MenuSheetsProps) {
         })}
         <DragOverlay dropAnimation={null}>
           {dragging && dragging.kind !== 'empty' ? (
-            <div className="bg-background-100 border-line shadow-menu text-label-13 text-ink flex h-8 items-center gap-2 rounded-md border px-2">
+            <div className="bg-surface border-line shadow-menu text-13 text-ink flex h-8 items-center gap-2 rounded-md border px-2">
               {dragging.kind === 'folder' ? (
                 <Folder className="text-muted-foreground size-4" aria-hidden />
               ) : null}
@@ -788,7 +785,7 @@ function RenameInput({
     onDone(v);
   };
   return (
-    <div className="border-focus bg-background-100 focus-within:ring-focus flex h-8 items-center gap-2 rounded-md border px-2 focus-within:ring-2">
+    <div className="border-focus bg-surface focus-within:ring-focus flex h-8 items-center gap-2 rounded-md border px-2 focus-within:ring-2">
       {icon}
       <input
         ref={input}
@@ -809,7 +806,7 @@ function RenameInput({
           }
         }}
         onBlur={(e) => finish(e.currentTarget.value)}
-        className="text-ink text-label-13 placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
+        className="text-ink text-13 placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
       />
     </div>
   );
@@ -1035,14 +1032,14 @@ function SheetRow({
           title="Restricted. Ask an owner to give you access."
           className={cn(
             itemClass,
-            'text-muted-foreground text-label-13 h-8 min-w-0 flex-1 cursor-default gap-[9px] px-2',
+            'text-muted-foreground min-w-0 flex-1 cursor-default no-underline hover:no-underline',
           )}
         >
           <SheetCode code={sheet.code} />
           <span data-side-text className="min-w-0 flex-1 truncate">
             {sheet.name}
           </span>
-          <span data-side-text className="text-label-12 flex shrink-0 items-center gap-1">
+          <span data-side-text className="text-12 flex shrink-0 items-center gap-1">
             <Lock className="size-3.5" aria-hidden /> Restricted
           </span>
         </span>
@@ -1055,7 +1052,7 @@ function SheetRow({
           onDoubleClick={canEdit ? () => setRenaming({ kind: 'sheet', id: sheet.id }) : undefined}
           data-testid={`rail-sheet-${sheet.code}`}
           data-menu-row={sheet.id}
-          className={cn(itemClass, 'group/item text-label-13 h-8 min-w-0 flex-1 gap-[9px] px-2')}
+          className={cn(itemClass, 'group/item min-w-0 flex-1')}
           title={sheet.name}
         >
           <SheetCode code={sheet.code} />
@@ -1109,13 +1106,13 @@ function EmptyFolder({
       className="flex flex-col items-start gap-0.5 px-2 py-1"
       data-side-text
     >
-      <span className="text-muted-foreground text-label-13">No sheets in this folder</span>
+      <span className="text-muted-foreground text-13">No sheets in this folder</span>
       {canEdit ? (
         <CreateSheetLink
           org={href.split('/')[1] ?? ''}
           folderId={folderId}
           onNavigate={onNavigate}
-          className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
+          className="text-ink text-13 font-medium underline-offset-4 hover:underline"
         >
           New sheet here
         </CreateSheetLink>
@@ -1178,7 +1175,7 @@ function AddMenu({
         {canManage ? (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-muted-foreground text-label-12 font-normal">
+            <DropdownMenuLabel className="text-muted-foreground text-12 font-normal">
               {NEW_FOLDER_NOTE}
             </DropdownMenuLabel>
           </>
@@ -1379,8 +1376,8 @@ function MoveToDialog({
   return (
     <Dialog open={!!sheet} onOpenChange={(o) => (o ? null : onClose())}>
       <DialogContent className="gap-3">
-        <DialogTitle className="text-heading-16">Move {sheet?.name} to…</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-copy-13">
+        <DialogTitle className="text-card-title">Move {sheet?.name} to…</DialogTitle>
+        <DialogDescription className="text-muted-foreground text-13">
           {NEW_FOLDER_NOTE}
         </DialogDescription>
         <input
@@ -1396,11 +1393,11 @@ function MoveToDialog({
           placeholder="Find a folder"
           aria-label="Find a folder"
           autoComplete="off"
-          className="border-line text-ink placeholder:text-muted-foreground focus:border-focus text-label-14 bg-background-100 focus-visible:ring-focus h-9 rounded-md border px-2.5 outline-none focus-visible:ring-2"
+          className="border-line text-ink placeholder:text-muted-foreground focus:border-focus text-14 bg-surface focus-visible:ring-focus h-9 rounded-md border px-2.5 outline-none focus-visible:ring-2"
         />
         <ul aria-label="Folders" className="flex max-h-72 flex-col gap-px overflow-y-auto">
           {options.length === 0 ? (
-            <li className="text-muted-foreground text-copy-13 px-2.5 py-2">No folder matches.</li>
+            <li className="text-muted-foreground text-13 px-2.5 py-2">No folder matches.</li>
           ) : null}
           {options.map((o) => (
             <li key={o.id ?? 'none'}>
@@ -1413,7 +1410,7 @@ function MoveToDialog({
                 <Folder className={iconClass} aria-hidden />
                 <span className="min-w-0 flex-1 truncate">{o.name}</span>
                 {o.id === current ? (
-                  <span className="text-muted-foreground text-label-12 flex items-center gap-1">
+                  <span className="text-muted-foreground text-12 flex items-center gap-1">
                     <Check className="size-3.5" aria-hidden /> Current
                   </span>
                 ) : null}
@@ -1444,14 +1441,14 @@ function ArchiveDialog({
   return (
     <Dialog open={!!target} onOpenChange={(o) => (o ? null : onCancel())}>
       <DialogContent className="gap-3">
-        <DialogTitle className="text-heading-16">
+        <DialogTitle className="text-card-title">
           {folder
             ? count === 0
               ? `Archive ${name}?`
               : `Archive ${name} and its ${count === 1 ? 'sheet' : `${count} sheets`}?`
             : `Archive ${name}?`}
         </DialogTitle>
-        <DialogDescription className="text-muted-foreground text-copy-13">
+        <DialogDescription className="text-muted-foreground text-13">
           {folder
             ? count === 0
               ? 'The folder is hidden from the side menu. Owners and admins can restore it from Workspace admin, Archived.'
@@ -1461,7 +1458,7 @@ function ArchiveDialog({
         {folder && count > 0 ? (
           <ul aria-label="Sheets archived with the folder" className="flex flex-col gap-1 pl-1">
             {folder.sheets.map((s) => (
-              <li key={s.id} className="text-label-13 flex items-center gap-2">
+              <li key={s.id} className="text-13 flex items-center gap-2">
                 <SheetCode code={s.code} /> {s.name}
               </li>
             ))}

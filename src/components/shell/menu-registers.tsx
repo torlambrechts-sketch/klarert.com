@@ -73,17 +73,14 @@ export function MenuRegisters({
                       title="Restricted. Ask an owner to give you access."
                       className={cn(
                         itemClass,
-                        'text-muted-foreground text-label-13 h-8 cursor-default gap-[9px] px-2',
+                        'text-muted-foreground cursor-default no-underline hover:no-underline',
                       )}
                     >
                       <SheetCode code={s.code} />
                       <span data-side-text className="min-w-0 flex-1 truncate">
                         {s.name}
                       </span>
-                      <span
-                        data-side-text
-                        className="text-label-12 flex shrink-0 items-center gap-1"
-                      >
+                      <span data-side-text className="text-12 flex shrink-0 items-center gap-1">
                         <Lock className="size-3.5" aria-hidden /> Restricted
                       </span>
                     </span>
@@ -96,10 +93,7 @@ export function MenuRegisters({
                       onClick={onNavigate}
                       title={s.name}
                       data-testid={`rail-sheet-${s.code}`}
-                      className={cn(
-                        itemClass,
-                        'group/item text-label-13 h-8 min-w-0 gap-[9px] px-2',
-                      )}
+                      className={cn(itemClass, 'group/item min-w-0')}
                     >
                       <SheetCode code={s.code} />
                       <span data-side-text className="min-w-0 flex-1 truncate">

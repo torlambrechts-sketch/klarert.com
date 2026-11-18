@@ -3,6 +3,19 @@ import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
 import { rest, signIn } from './helpers';
 
+/** The app's screens in order: the visible tabs, then the ones in More ▾ (docs/18 §7, the menu rule). */
+async function screenNames(page: Page): Promise<string[]> {
+  const screens = page.getByRole('navigation', { name: 'CAPA screens' });
+  await screens.getByRole('link').first().waitFor();
+  const shown = await screens.getByRole('link').allTextContents();
+  const more = screens.getByTestId('overflow-tabs-more');
+  if (!(await more.count())) return shown.map((t) => t.trim());
+  await more.click();
+  const rest = await page.getByRole('menuitemradio').allTextContents();
+  await page.keyboard.press('Escape');
+  return [...shown, ...rest].map((t) => t.trim());
+}
+
 // Apps (P7, docs/13): an owner installs the CAPA pack, finds the CAPA app under Apps in the side menu, opens its
 // "Report a problem" form, reports a problem and finds the containment step in "My actions" (the pack adds the CAPA
 // steps to a reported problem, the reporter owns containment). Runs on desktop and at 390 px.
@@ -38,8 +51,7 @@ test('install the CAPA pack, report a problem in its app and find it in My actio
   await expect(apps.getByRole('link', { name: 'CAPA' })).toBeVisible();
   await apps.getByRole('link', { name: 'CAPA' }).click();
   await expect(page).toHaveURL(new RegExp(`/${slug}/apps/capa/report$`));
-  const screens = page.getByRole('navigation', { name: 'CAPA screens' });
-  await expect(screens.getByRole('link')).toHaveText([
+  expect(await screenNames(page)).toEqual([
     'Report a problem',
     'My actions',
     'Needs my approval',
@@ -211,9 +223,7 @@ test.describe('CAPA on the Core registers', () => {
     ).toEqual([]);
 
     // ── the app reads Core's register: its six screens, Core's items, Core's open count
-    await expect(
-      page.getByRole('navigation', { name: 'CAPA screens' }).getByRole('link'),
-    ).toHaveText([
+    expect(await screenNames(page)).toEqual([
       'Report a problem',
       'My actions',
       'Needs my approval',

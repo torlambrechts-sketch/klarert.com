@@ -74,7 +74,7 @@ const stageId = (s: Stage) => s.key ?? '';
 const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
 const GRID =
   'grid-cols-[36px_minmax(0,1fr)_64px] md:grid-cols-[40px_minmax(200px,2fr)_minmax(160px,1.3fr)_64px_64px_80px_96px]';
-const selectClass = cn(inputClass, 'select-chevron h-8 w-full text-label-14 shadow-none');
+const selectClass = cn(inputClass, 'select-chevron h-8 w-full text-14 shadow-none');
 
 /** One move of an item to a stage; asks for a comment when a status rule wants one. */
 function useMove(org: string) {
@@ -179,7 +179,7 @@ export function WorkflowScreen({
 
   if (data.rows.length === 0)
     return (
-      <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
+      <div className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
         <p className="text-muted-foreground m-0">
           No sheets yet. Create a sheet with a status field to see its workflow.
         </p>
@@ -234,7 +234,7 @@ export function WorkflowScreen({
           />
         ))}
         {rows.length === 0 ? (
-          <li className="text-muted-foreground text-label-14 p-6 text-center">
+          <li className="text-muted-foreground text-14 p-6 text-center">
             No workflows match “{q.trim()}”.
           </li>
         ) : null}
@@ -285,25 +285,22 @@ function Approvals({ org, row, canManage }: { org: string; row: WorkflowRow; can
       data-testid="workflow-approvals"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-muted-foreground text-label-12 font-medium">Approval workflows</span>
+        <span className="text-muted-foreground text-12 font-medium">Approval workflows</span>
         {canManage ? (
-          <Link
-            href={href}
-            className="text-ink text-label-13 font-medium underline underline-offset-4"
-          >
+          <Link href={href} className="text-ink text-13 font-medium underline underline-offset-4">
             {row.approvals.length ? 'Edit approval workflows' : 'Set up an approval workflow'}
           </Link>
         ) : null}
       </div>
       {row.approvals.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           None yet. An approval workflow sends items through review and approval steps, with every
           decision in the activity log.
         </p>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-1 p-0">
           {row.approvals.map((a) => (
-            <li key={a.id} className="text-copy-13 flex flex-wrap items-center gap-x-2">
+            <li key={a.id} className="text-13 flex flex-wrap items-center gap-x-2">
               <ShieldCheck className="text-muted-foreground size-3.5" aria-hidden />
               <span className="font-medium">{a.name}</span>
               <span className="text-muted-foreground">
@@ -360,8 +357,8 @@ function WorkflowListRow({
         <span className="flex min-w-0 items-center gap-3">
           <RowIcon icon={Workflow} dim={!l} />
           <span className="flex min-w-0 flex-col">
-            <span className="text-label-14 truncate font-medium">{row.sheet.name}</span>
-            <span className="text-muted-foreground text-label-12-mono truncate">
+            <span className="text-14 truncate font-medium">{row.sheet.name}</span>
+            <span className="text-muted-foreground text-12 truncate font-mono">
               {l ? `${l.field.key} · ${countItems(l.total, row.sheet.itemLabel)}` : 'no stages'}
               {row.approvals.length
                 ? ` · ${plural(row.approvals.length, 'approval workflow')}`
@@ -372,11 +369,11 @@ function WorkflowListRow({
         <span className="hidden min-w-0 md:block">
           <FieldPicker row={row} onField={onField} />
         </span>
-        <span className="text-ink text-label-13-mono hidden md:block">
+        <span className="text-ink text-13 hidden font-mono md:block">
           {l ? l.stages.filter((s) => s.key !== null).length : '–'}
         </span>
-        <span className="text-ink text-label-13-mono hidden md:block">{l ? l.total : '–'}</span>
-        <span className="text-label-13-mono">
+        <span className="text-ink text-13 hidden font-mono md:block">{l ? l.total : '–'}</span>
+        <span className="text-13 font-mono">
           {running > 0 ? (
             <b className="text-ink inline-flex items-center gap-1.5 font-medium">
               <span
@@ -396,7 +393,7 @@ function WorkflowListRow({
               {l.overdue} overdue
             </ToneBadge>
           ) : (
-            <span className="text-muted-foreground text-label-13-mono">0</span>
+            <span className="text-muted-foreground text-13 font-mono">0</span>
           )}
         </span>
       </div>
@@ -406,7 +403,7 @@ function WorkflowListRow({
           <div className="flex flex-col gap-1.5 py-2.5 md:hidden">
             <label
               htmlFor={`${drawer}-field`}
-              className="text-muted-foreground text-label-12 font-medium"
+              className="text-muted-foreground text-12 font-medium"
             >
               Stages from
             </label>
@@ -416,12 +413,12 @@ function WorkflowListRow({
             <Steps org={org} row={row} canEdit={canEdit} mover={mover} />
           ) : (
             <div className="flex flex-col items-start gap-2 py-3">
-              <p className="text-muted-foreground text-copy-14 m-0">
+              <p className="text-muted-foreground text-14 m-0">
                 This sheet has no status or label field. Add one to see its stages.
               </p>
               <Link
                 href={`/${org}/s/${row.sheet.id}`}
-                className="text-ink text-label-14 font-medium underline underline-offset-4"
+                className="text-ink text-14 font-medium underline underline-offset-4"
               >
                 Open {row.sheet.name}
               </Link>
@@ -449,7 +446,7 @@ function Steps({
   const label = `${row.sheet.name} steps`;
   return (
     <div className="flex flex-col">
-      <div className="text-muted-foreground text-label-12 flex flex-wrap justify-between gap-2.5 pt-2.5 pb-2 font-medium">
+      <div className="text-muted-foreground text-12 flex flex-wrap justify-between gap-2.5 pt-2.5 pb-2 font-medium">
         <span>Steps</span>
         <span className="font-normal">
           The options of {l.field.name}, in order. Every move is kept in the activity log.
@@ -457,7 +454,7 @@ function Steps({
       </div>
       <ol
         aria-label={label}
-        className="border-line bg-background-100 m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0"
+        className="border-line bg-surface m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0"
       >
         {l.stages.map((s, i) => {
           const id = stageId(s);
@@ -474,7 +471,7 @@ function Steps({
               <div className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 px-2.5 py-2 md:grid-cols-[28px_minmax(140px,1fr)_auto_150px_minmax(150px,220px)_80px]">
                 <span
                   aria-hidden
-                  className="bg-soft text-muted-foreground text-label-12-mono grid size-[22px] place-items-center rounded-full font-medium"
+                  className="bg-soft text-muted-foreground text-12 grid size-[22px] place-items-center rounded-full font-mono font-medium"
                 >
                   {i + 1}
                 </span>
@@ -482,15 +479,13 @@ function Steps({
                   {s.option ? (
                     <Chip option={s.option} />
                   ) : (
-                    <span className="text-muted-foreground text-label-14 font-medium">
-                      {s.label}
-                    </span>
+                    <span className="text-muted-foreground text-14 font-medium">{s.label}</span>
                   )}
                 </span>
                 <span className="col-start-2 flex flex-wrap items-center gap-1.5 md:col-start-auto md:justify-end">
                   {requirement.length > 0 ? (
                     <span
-                      className="bg-soft text-muted-foreground text-label-12 inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 whitespace-nowrap md:max-w-[280px]"
+                      className="bg-soft text-muted-foreground text-12 inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 whitespace-nowrap md:max-w-[280px]"
                       title={[requirement.join('; '), messages].filter(Boolean).join('. ')}
                     >
                       <ShieldCheck className="size-3 shrink-0" aria-hidden />
@@ -498,13 +493,13 @@ function Steps({
                     </span>
                   ) : null}
                   {s.rules.some((r) => r.comment) ? (
-                    <span className="bg-soft text-muted-foreground text-label-12 inline-flex items-center gap-1 rounded-full px-2 py-0.5 whitespace-nowrap">
+                    <span className="bg-soft text-muted-foreground text-12 inline-flex items-center gap-1 rounded-full px-2 py-0.5 whitespace-nowrap">
                       <MessageSquareText className="size-3" aria-hidden />
                       Comment required
                     </span>
                   ) : null}
                 </span>
-                <span className="text-label-13 col-start-2 flex items-center gap-2 whitespace-nowrap md:col-start-auto">
+                <span className="text-13 col-start-2 flex items-center gap-2 whitespace-nowrap md:col-start-auto">
                   <span className="text-ink font-mono">{plural(s.items.length, 'item')}</span>
                   {s.overdue > 0 ? (
                     <ToneBadge tone="crit" icon={AlertTriangle}>
@@ -512,7 +507,7 @@ function Steps({
                     </ToneBadge>
                   ) : null}
                 </span>
-                <span className="text-label-13 col-start-2 min-w-0 md:col-start-auto">
+                <span className="text-13 col-start-2 min-w-0 md:col-start-auto">
                   {s.automations.length > 0 ? (
                     <span
                       className="text-ink inline-flex max-w-full items-center gap-1.5"
@@ -540,7 +535,7 @@ function Steps({
                     aria-expanded={isOpen}
                     aria-label={`Items in ${s.label}`}
                     onClick={() => setShown(isOpen ? null : id)}
-                    className="text-muted-foreground hover:bg-soft hover:text-ink focus-visible:outline-focus text-label-13 inline-flex h-[30px] items-center gap-1 rounded-md px-2 font-medium focus-visible:outline-2"
+                    className="text-muted-foreground hover:bg-soft hover:text-ink focus-visible:outline-focus text-13 inline-flex h-[30px] items-center gap-1 rounded-md px-2 font-medium focus-visible:outline-2"
                   >
                     {isOpen ? (
                       <ChevronDown className="size-3.5" aria-hidden />
@@ -562,7 +557,7 @@ function Steps({
         {canEdit ? (
           <Link
             href={`/${org}/s/${row.sheet.id}/settings`}
-            className="border-line-strong text-muted-foreground hover:border-faint hover:text-ink bg-background-100 text-label-14 inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed px-2.5"
+            className="border-line-strong text-muted-foreground hover:border-faint hover:text-ink bg-surface text-14 inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed px-2.5"
           >
             <Settings2 className="size-3.5" aria-hidden />
             Edit stages and rules
@@ -570,13 +565,13 @@ function Steps({
         ) : null}
         <Link
           href={`/${org}/automations?sheet=${row.sheet.id}`}
-          className="border-line-strong text-muted-foreground hover:border-faint hover:text-ink bg-background-100 text-label-14 inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed px-2.5"
+          className="border-line-strong text-muted-foreground hover:border-faint hover:text-ink bg-surface text-14 inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed px-2.5"
         >
           <Zap className="size-3.5" aria-hidden />
           Automations
         </Link>
         <span className="flex-1" />
-        <span className="text-muted-foreground text-label-13">
+        <span className="text-muted-foreground text-13">
           {l.onChange.length > 0
             ? `On any change: ${l.onChange.map((a) => a.name).join(', ')}`
             : countItems(l.total, row.sheet.itemLabel)}
@@ -639,7 +634,7 @@ function StageItems({
 }) {
   if (stage.items.length === 0)
     return (
-      <p className="text-muted-foreground border-soft text-copy-13 m-0 border-t px-3 py-2.5 md:pl-[48px]">
+      <p className="text-muted-foreground border-soft text-13 m-0 border-t px-3 py-2.5 md:pl-[48px]">
         No items in this stage.
       </p>
     );
@@ -657,8 +652,8 @@ function StageItems({
               href={itemHref(org, { sheetId: row.sheet.id, displayId: it.displayId })}
               className="flex min-w-0 flex-[1_1_180px] items-baseline gap-2 underline-offset-4 hover:underline"
             >
-              <span className="text-muted-foreground text-label-12-mono">{it.displayId}</span>
-              <span className="text-label-14 truncate">{it.name}</span>
+              <span className="text-muted-foreground text-12 font-mono">{it.displayId}</span>
+              <span className="text-14 truncate">{it.name}</span>
             </Link>
             {it.overdue ? (
               <ToneBadge tone="crit" icon={AlertTriangle}>
@@ -703,7 +698,7 @@ function RunningNow({
       headingId={heading}
     >
       {running.length === 0 ? (
-        <p className="text-muted-foreground text-copy-14 m-0 px-4 py-6">
+        <p className="text-muted-foreground text-14 m-0 px-4 py-6">
           {query
             ? `Nothing is running in the workflows matching “${query}”.`
             : 'Nothing is running. Items that are not done show here with their stage.'}
@@ -719,12 +714,10 @@ function RunningNow({
             itemClassName="pb-0.5"
             renderItem={({ row, it }) => (
               <div className="hover:bg-soft flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-md px-2.5 py-2">
-                <span className="text-ink text-label-13-mono w-[72px] shrink-0">
-                  {it.displayId}
-                </span>
+                <span className="text-ink text-13 w-[72px] shrink-0 font-mono">{it.displayId}</span>
                 <span className="flex min-w-0 flex-[1_1_200px] flex-col">
-                  <span className="text-label-14 truncate">{it.name}</span>
-                  <span className="text-muted-foreground text-label-12 truncate">
+                  <span className="text-14 truncate">{it.name}</span>
+                  <span className="text-muted-foreground text-12 truncate">
                     {row.sheet.name} · {it.stageLabel}
                   </span>
                 </span>

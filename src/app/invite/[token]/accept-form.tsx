@@ -11,7 +11,7 @@ export function AcceptForm({ token }: { token: string }) {
     <form action={action} className="flex flex-col gap-3">
       <input type="hidden" name="token" value={token} />
       {state && !state.ok ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           {state.error.message}
         </p>
       ) : null}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
 import { NewSheetWizard } from '@/components/sheets/wizard/wizard';
 import { isEditorRole, requireMember } from '@/server/auth';
@@ -21,7 +21,7 @@ export default async function NewSheetPage({
   // wizard by its address is told so and led back to Home
   if (!isEditorRole(role))
     return (
-      <main className="flex w-full flex-col items-start gap-3 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+      <main className="flex w-full flex-col items-start gap-3 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
         <h1 className="m-0">New sheet</h1>
         <p className="text-muted-foreground m-0 max-w-[60ch]">
           {role === 'auditor' ? 'Auditors' : 'Viewers'} cannot create sheets. Ask an editor or admin
@@ -34,24 +34,25 @@ export default async function NewSheetPage({
     );
   const [nav, data] = await Promise.all([getNav(workspace.id), getWizardData(workspace.id)]);
   return (
-    <main className="flex w-full flex-col gap-6 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-6 px-4 pt-5 pb-8 [--hero-gap:24px] sm:px-12 sm:pt-[26px]">
       <PageHeader
-        className="border-line border-b pb-[18px]"
         crumb={workspace.name}
         title="New sheet"
         description="A sheet is a table of items. Every item gets the sheet’s fields; you can change them later."
       />
-      <NewSheetWizard
-        startId={start ?? null}
-        ctx={{
-          org,
-          folders: nav.folders.map((f) => ({ id: f.id, name: f.name })),
-          prefixes: data.prefixes,
-          sheets: data.sheets,
-          folderId: folder ?? null,
-          sourceId: source ?? null,
-        }}
-      />
+      <HeadCard>
+        <NewSheetWizard
+          startId={start ?? null}
+          ctx={{
+            org,
+            folders: nav.folders.map((f) => ({ id: f.id, name: f.name })),
+            prefixes: data.prefixes,
+            sheets: data.sheets,
+            folderId: folder ?? null,
+            sourceId: source ?? null,
+          }}
+        />
+      </HeadCard>
     </main>
   );
 }

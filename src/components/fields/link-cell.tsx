@@ -50,8 +50,8 @@ function useGridFocused(ref: React.RefObject<HTMLElement | null>, active: boolea
 
 function LinkChip({ target }: { target: Item | undefined }) {
   return (
-    <span className="border-line bg-soft text-label-12 inline-flex max-w-[11rem] min-w-0 items-center gap-1 rounded-full border px-2 py-0.5">
-      <span className="text-label-12-mono shrink-0 font-medium whitespace-nowrap">
+    <span className="border-line bg-soft text-12 inline-flex max-w-[11rem] min-w-0 items-center gap-1 rounded-full border px-2 py-0.5">
+      <span className="text-12 shrink-0 font-mono font-medium whitespace-nowrap">
         {target?.displayId ?? '—'}
       </span>
       {target ? <span className="truncate">{target.name}</span> : null}
@@ -73,7 +73,7 @@ export function LinkCell({ item, field, ctx, active = false }: CellProps) {
         {s.more ? (
           <span
             data-testid="link-more"
-            className="border-line bg-soft text-label-11-mono shrink-0 rounded-full border px-1.5 py-0.5 font-semibold"
+            className="border-line bg-soft text-12 shrink-0 rounded-full border px-1.5 py-0.5 font-mono font-semibold"
           >
             +{s.more}
           </span>
@@ -107,11 +107,11 @@ export function LinkCell({ item, field, ctx, active = false }: CellProps) {
             collisionPadding={16}
             className="bg-popover text-popover-foreground border-line shadow-tooltip z-50 max-w-[min(20rem,calc(100vw-32px))] rounded-md border px-3 py-2"
           >
-            <p className="text-label-12 text-muted-foreground mb-1">{ids.length} linked items</p>
+            <p className="text-12 text-muted-foreground mb-1">{ids.length} linked items</p>
             <ul className="flex flex-col gap-1">
               {s.all.map((l) => (
-                <li key={l.id} className="text-label-13 flex min-w-0 items-baseline gap-2">
-                  <span className="text-label-12-mono shrink-0 font-medium">
+                <li key={l.id} className="text-13 flex min-w-0 items-baseline gap-2">
+                  <span className="text-12 shrink-0 font-mono font-medium">
                     {l.item?.displayId ?? '—'}
                   </span>
                   <span className="truncate">{l.item?.name ?? 'Archived or hidden item'}</span>

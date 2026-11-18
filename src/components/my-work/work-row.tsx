@@ -31,9 +31,9 @@ export function WorkRowView({ org, row }: { org: string; row: WorkRow }) {
           {row.status ? <Chip option={row.status} /> : null}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-label-14 font-medium break-words">{row.name}</span>
-          <span className="text-muted-foreground text-label-12 flex min-w-0 flex-wrap items-center gap-x-2">
-            <span className="text-label-12-mono truncate">{meta}</span>
+          <span className="text-14 font-medium break-words">{row.name}</span>
+          <span className="text-muted-foreground text-12 flex min-w-0 flex-wrap items-center gap-x-2">
+            <span className="text-12 truncate font-mono">{meta}</span>
             {row.status ? (
               <span className="sm:hidden">
                 <Chip option={row.status} />
@@ -52,12 +52,12 @@ export function WorkRowView({ org, row }: { org: string; row: WorkRow }) {
         {row.due ? (
           <span
             className={cn(
-              'text-label-13 flex shrink-0 flex-col items-end text-right',
+              'text-13 flex shrink-0 flex-col items-end text-right',
               row.overdue ? 'text-crit font-medium' : 'text-ink',
             )}
           >
             <span>{formatDate(row.due.date)}</span>
-            {!row.done ? <span className="text-label-12">{row.due.relative}</span> : null}
+            {!row.done ? <span className="text-12">{row.due.relative}</span> : null}
           </span>
         ) : null}
       </Link>
@@ -82,7 +82,7 @@ export function WorkList({
       aria-label={label}
       data-bare={bare ? '' : undefined}
       className={cn(
-        'bg-background-100 m-0 list-none overflow-hidden p-0',
+        'bg-surface m-0 list-none overflow-hidden p-0',
         !bare && 'border-line rounded-lg border',
       )}
     >

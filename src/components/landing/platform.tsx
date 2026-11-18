@@ -25,7 +25,7 @@ export function PlatformPage() {
                 <li key={f.key}>
                   <a
                     href={`#${f.key}`}
-                    className="bg-background-100 border-line text-label-13 hover:bg-nav-hover flex min-h-11 items-center rounded-full border px-3 font-medium sm:min-h-8"
+                    className="bg-surface border-line text-13 hover:bg-nav-hover flex min-h-11 items-center rounded-full border px-3 font-medium sm:min-h-8"
                   >
                     {f.pill}
                   </a>
@@ -49,14 +49,14 @@ export function PlatformPage() {
               className={`min-h-64 lg:min-h-80 ${i % 2 === 1 ? 'lg:order-2' : ''}`}
             />
             <div className="flex flex-col justify-center gap-4 px-3 pb-5 lg:py-8 lg:pr-8">
-              <span className="text-muted-foreground text-label-13 font-medium">{f.pill}</span>
-              <h2 id={`${f.key}-title`} className="text-heading-24 sm:text-heading-32 m-0">
+              <span className="text-muted-foreground text-13 font-medium">{f.pill}</span>
+              <h2 id={`${f.key}-title`} className="text-kpi sm:text-figure m-0">
                 {f.title}
               </h2>
-              <p className="text-muted-foreground text-copy-16 m-0">{f.body}</p>
+              <p className="text-muted-foreground text-16 m-0">{f.body}</p>
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {f.points.map((p) => (
-                  <li key={p} className="text-copy-14 flex items-start gap-2">
+                  <li key={p} className="text-14 flex items-start gap-2">
                     <Check aria-hidden="true" className="text-good mt-0.5 size-4 shrink-0" />
                     {p}
                   </li>

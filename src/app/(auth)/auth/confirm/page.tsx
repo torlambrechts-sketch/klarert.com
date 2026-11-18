@@ -46,9 +46,9 @@ export default async function ConfirmEmailLinkPage({ searchParams }: { searchPar
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           <h1>Compliance OS</h1>
-          <h2 className="text-heading-16">This link is not complete</h2>
+          <h2 className="text-card-title">This link is not complete</h2>
         </div>
-        <p role="alert" className="text-crit text-copy-13 m-0" data-testid="email-link-broken">
+        <p role="alert" className="text-crit text-13 m-0" data-testid="email-link-broken">
           Copy the whole link from the email, or ask for a new link.
         </p>
         <Link href="/login" autoFocus className={buttonVariants({ className: 'w-fit' })}>
@@ -62,7 +62,7 @@ export default async function ConfirmEmailLinkPage({ searchParams }: { searchPar
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1>Compliance OS</h1>
-        <h2 className="text-heading-16">{copy.heading}</h2>
+        <h2 className="text-card-title">{copy.heading}</h2>
       </div>
       <ContinueForm fields={fields} button={copy.button} />
     </div>

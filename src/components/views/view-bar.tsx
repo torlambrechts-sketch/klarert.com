@@ -130,16 +130,16 @@ export function ViewBar({
                 }
               }}
               className={cn(
-                'group/chip text-label-13 focus-visible:outline-focus inline-flex h-[30px] shrink-0 items-center gap-1.5 rounded-full border px-3 font-medium whitespace-nowrap focus-visible:outline-2',
+                'group/chip text-13 focus-visible:outline-focus inline-flex h-[30px] shrink-0 items-center gap-1.5 rounded-full border px-3 font-medium whitespace-nowrap focus-visible:outline-2',
                 on
-                  ? 'border-line bg-background-100 text-ink shadow-[0_1px_2px_var(--gray-alpha-100)]'
+                  ? 'border-line bg-surface text-ink shadow-[0_1px_2px_var(--gray-alpha-100)]'
                   : 'text-muted-foreground hover:text-ink border-transparent',
               )}
             >
               {c.name}
               {on && m.dirty ? (
                 <>
-                  <span aria-hidden className="size-1.5 rounded-full bg-[var(--amber-800)]" />
+                  <span aria-hidden className="bg-warn-mark size-1.5 rounded-full" />
                   <span className="sr-only">(unsaved changes)</span>
                 </>
               ) : null}
@@ -168,7 +168,7 @@ export function ViewBar({
             type="button"
             variant="outline"
             size="sm"
-            className="text-label-12.5 h-[30px] rounded-full border-dashed"
+            className="text-13 h-[30px] rounded-full border-dashed"
             onClick={() => setSaving(true)}
           >
             Save as view…
@@ -178,7 +178,7 @@ export function ViewBar({
           <Button
             type="button"
             size="sm"
-            className="text-label-12.5 h-[30px] rounded-full"
+            className="text-13 h-[30px] rounded-full"
             onClick={() => void views.updateLayout()}
           >
             Update “{m.saved!.name}”
@@ -190,7 +190,7 @@ export function ViewBar({
           type="button"
           variant="ghost"
           size="sm"
-          className="text-muted-foreground hover:text-ink text-label-12.5 h-[30px] shrink-0 gap-1.5 px-2.5"
+          className="text-muted-foreground hover:text-ink text-13 h-[30px] shrink-0 gap-1.5 px-2.5"
           data-columns-opener
           onClick={() => store.getState().openColumns('hidden')}
         >
@@ -211,8 +211,8 @@ export function ViewBar({
       />
       <Dialog open={!!removing} onOpenChange={(o) => !o && setRemoving(null)}>
         <DialogContent className="w-[min(400px,calc(100vw-32px))]">
-          <DialogTitle className="text-heading-16">Delete {removing?.name}?</DialogTitle>
-          <DialogDescription className="text-muted-foreground text-label-13">
+          <DialogTitle className="text-card-title">Delete {removing?.name}?</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-13">
             {removing?.ownerId === null
               ? 'Everyone loses this view. Items are not changed.'
               : 'Only the view goes. Items are not changed.'}

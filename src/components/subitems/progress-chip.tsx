@@ -26,7 +26,7 @@ export function ProgressChip({
     <span
       data-subitems-chip
       className={cn(
-        'border-line text-label-12-mono text-ink bg-background-100 inline-flex h-5 shrink-0 items-center gap-1 rounded-full border px-1.5 tabular-nums',
+        'border-line text-12 text-ink bg-surface inline-flex h-5 shrink-0 items-center gap-1 rounded-full border px-1.5 font-mono tabular-nums',
         all && 'border-good text-good',
         className,
       )}

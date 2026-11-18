@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import {
   ListCrumb,
   ListFrame,
@@ -51,10 +51,7 @@ export interface ScreenProps {
   userId: string;
 }
 
-const selectClass = cn(
-  inputClass,
-  'select-chevron h-8 w-auto max-w-[280px] text-label-14 shadow-none',
-);
+const selectClass = cn(inputClass, 'select-chevron h-8 w-auto max-w-[280px] text-14 shadow-none');
 
 export function AutomationsScreen(props: ScreenProps) {
   const [client] = useState(
@@ -185,7 +182,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
   const filtered = !!(sheetFilter || needle || state !== 'all');
 
   return (
-    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
       <PageHeader
         className="pb-0.5"
         crumb={
@@ -204,7 +201,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
           <>
             “When, if, then” rules that run on the sheets. Open a rule to edit it in place; saving
             creates a new version. The stages items move through show in{' '}
-            <Link href={`/${org}/workflow`} className="text-ink underline underline-offset-4">
+            <Link href={`/${org}/workflow`} className="underline underline-offset-4">
               Workflow
             </Link>
             .
@@ -228,114 +225,119 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
           ) : null
         }
       />
-      {!perms.canEdit ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
-          You can see automations and their runs. Ask an editor or admin to change them.
-        </p>
-      ) : null}
-      <div className="flex flex-wrap items-center gap-2">
-        <ListSearch
-          value={q}
-          onChange={setQ}
-          label="Search automations"
-          placeholder="Search automations…"
-        />
-        <label className="flex min-w-0 flex-1 items-center sm:flex-none">
-          <span className="sr-only">Sheet</span>
-          <select
-            className={toolbarSelectClass}
-            value={sheetFilter ?? ''}
-            onChange={(e) => nav({ sheet: e.target.value || null })}
-          >
-            <option value="">All sheets</option>
-            {(sheets.data ?? []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Segmented<'all' | 'on' | 'off'>
-          label="State"
-          value={state}
-          onChange={setState}
-          options={[
-            { id: 'all', label: 'All' },
-            { id: 'on', label: 'On' },
-            { id: 'off', label: 'Off' },
-          ]}
-        />
-      </div>
-      {autos.isError ? (
-        <ErrorBox text="Automations could not be loaded." retry={() => void autos.refetch()} />
-      ) : autos.isPending ? (
-        <ListSkeleton />
-      ) : (
-        <ListFrame label="Automations" header={<AutomationTableHeader />}>
-          {creating && perms.canEdit ? (
-            <NewAutomationRow
-              title={params.get('recipe') ? 'New automation from a recipe' : 'New automation'}
-              onClose={back}
-            >
-              <BuilderPanel {...props} perms={perms} onDone={back} />
-            </NewAutomationRow>
-          ) : null}
-          <AutomationRows
-            org={org}
-            orgId={orgId}
-            automations={list}
-            perms={perms}
-            ctxOf={ctxOf}
-            sheetName={sheetName}
-            timeZone={props.timeZone}
-            openId={creating ? null : editId}
-            onOpen={(id) => nav({ sheet: sheetFilter, edit: id })}
-            editor={
-              editId && !creating ? <BuilderPanel {...props} perms={perms} onDone={back} /> : null
-            }
-          />
-          {list.length === 0 && !creating ? (
-            <li className="text-muted-foreground text-label-14 p-6 text-center">
-              {filtered
-                ? 'No automations match.'
-                : `No automations yet. ${perms.canEdit ? 'Start from a recipe or build a new one.' : ''}`}
-            </li>
-          ) : null}
-        </ListFrame>
-      )}
-      <PanelCard
-        title="Run log"
-        headingId={runsHeading}
-        aside={
-          <Link
-            href={`${base}?tab=runs${sheetFilter ? `&sheet=${sheetFilter}` : ''}`}
-            className="text-ink underline underline-offset-4"
-          >
-            Open the run log
-          </Link>
-        }
-      >
-        {latest.isError ? (
-          <div className="p-3">
-            <ErrorBox text="The run log could not be loaded." retry={() => void latest.refetch()} />
-          </div>
-        ) : latest.isPending ? (
-          <div className="p-3">
-            <ListSkeleton />
-          </div>
-        ) : latest.data.length === 0 ? (
-          <p className="text-muted-foreground text-copy-14 m-0 px-4 py-6">
-            No runs yet. Every run is audited with “automation” as the actor and listed here.
+      <HeadCard>
+        {!perms.canEdit ? (
+          <p className="text-muted-foreground text-13 m-0">
+            You can see automations and their runs. Ask an editor or admin to change them.
           </p>
-        ) : (
-          <RunTable
-            runs={latest.data.slice(0, LATEST_RUNS)}
-            org={org}
-            timeZone={props.timeZone}
-            label="Latest runs"
+        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <ListSearch
+            value={q}
+            onChange={setQ}
+            label="Search automations"
+            placeholder="Search automations…"
           />
+          <label className="flex min-w-0 flex-1 items-center sm:flex-none">
+            <span className="sr-only">Sheet</span>
+            <select
+              className={toolbarSelectClass}
+              value={sheetFilter ?? ''}
+              onChange={(e) => nav({ sheet: e.target.value || null })}
+            >
+              <option value="">All sheets</option>
+              {(sheets.data ?? []).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Segmented<'all' | 'on' | 'off'>
+            label="State"
+            value={state}
+            onChange={setState}
+            options={[
+              { id: 'all', label: 'All' },
+              { id: 'on', label: 'On' },
+              { id: 'off', label: 'Off' },
+            ]}
+          />
+        </div>
+        {autos.isError ? (
+          <ErrorBox text="Automations could not be loaded." retry={() => void autos.refetch()} />
+        ) : autos.isPending ? (
+          <ListSkeleton />
+        ) : (
+          <ListFrame label="Automations" header={<AutomationTableHeader />}>
+            {creating && perms.canEdit ? (
+              <NewAutomationRow
+                title={params.get('recipe') ? 'New automation from a recipe' : 'New automation'}
+                onClose={back}
+              >
+                <BuilderPanel {...props} perms={perms} onDone={back} />
+              </NewAutomationRow>
+            ) : null}
+            <AutomationRows
+              org={org}
+              orgId={orgId}
+              automations={list}
+              perms={perms}
+              ctxOf={ctxOf}
+              sheetName={sheetName}
+              timeZone={props.timeZone}
+              openId={creating ? null : editId}
+              onOpen={(id) => nav({ sheet: sheetFilter, edit: id })}
+              editor={
+                editId && !creating ? <BuilderPanel {...props} perms={perms} onDone={back} /> : null
+              }
+            />
+            {list.length === 0 && !creating ? (
+              <li className="text-muted-foreground text-14 p-6 text-center">
+                {filtered
+                  ? 'No automations match.'
+                  : `No automations yet. ${perms.canEdit ? 'Start from a recipe or build a new one.' : ''}`}
+              </li>
+            ) : null}
+          </ListFrame>
         )}
-      </PanelCard>
+        <PanelCard
+          title="Run log"
+          headingId={runsHeading}
+          aside={
+            <Link
+              href={`${base}?tab=runs${sheetFilter ? `&sheet=${sheetFilter}` : ''}`}
+              className="text-ink underline underline-offset-4"
+            >
+              Open the run log
+            </Link>
+          }
+        >
+          {latest.isError ? (
+            <div className="p-3">
+              <ErrorBox
+                text="The run log could not be loaded."
+                retry={() => void latest.refetch()}
+              />
+            </div>
+          ) : latest.isPending ? (
+            <div className="p-3">
+              <ListSkeleton />
+            </div>
+          ) : latest.data.length === 0 ? (
+            <p className="text-muted-foreground text-14 m-0 px-4 py-6">
+              No runs yet. Every run is audited with “automation” as the actor and listed here.
+            </p>
+          ) : (
+            <RunTable
+              runs={latest.data.slice(0, LATEST_RUNS)}
+              org={org}
+              timeZone={props.timeZone}
+              label="Latest runs"
+            />
+          )}
+        </PanelCard>
+      </HeadCard>
     </main>
   );
 }
@@ -354,81 +356,83 @@ function RecipeGallery(props: ScreenProps & { perms: ListPermissions }) {
   const sheetSelect = useId();
   if (!props.perms.canEdit) return <ReadOnly org={props.org} />;
   return (
-    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
       <PageHeader
         className="pb-0.5"
         crumb={<ListCrumb section="Build" page="Automations" badge={`${RECIPES.length} recipes`} />}
         title="Start from a recipe"
         description="Pick a recipe and a sheet. Next you choose which fields of the sheet the recipe uses, then adjust it in the builder."
       />
-      <div className="flex flex-wrap items-center gap-2">
-        <label htmlFor={sheetSelect} className="text-muted-foreground text-label-14 font-medium">
-          Sheet
-        </label>
-        <select
-          id={sheetSelect}
-          className={toolbarSelectClass}
-          value={sheetId}
-          onChange={(e) => setSheetId(e.target.value)}
-        >
-          <option value="">Choose a sheet</option>
-          {(sheets.data ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <fieldset className="m-0 border-0 p-0">
-        <legend className="text-label-14 mb-2 font-semibold">Recipe</legend>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {RECIPES.map((r) => (
-            <label
-              key={r.id}
-              className={cn(
-                'border-line hover:bg-subtle has-[:focus-visible]:outline-focus bg-background-100 flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:focus-visible]:outline-2',
-                recipeId === r.id && 'border-ink ring-ink ring-1',
-              )}
-            >
-              <span
-                aria-hidden
-                className="border-line text-muted-foreground bg-background-100 grid size-7 shrink-0 place-items-center rounded-full border"
-              >
-                <Zap className="size-3.5" aria-hidden />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-label-14 font-medium">{r.title}</span>
-                <span className="text-muted-foreground text-label-13">
-                  {Object.keys(r.roles).length === 0
-                    ? 'Uses the sheet’s sub-items'
-                    : `Uses ${Object.keys(r.roles)
-                        .map((role) => `${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role} field`)
-                        .join(', ')}`}
-                </span>
-              </span>
-              <input
-                type="radio"
-                name="recipe"
-                className="accent-ink mt-1"
-                checked={recipeId === r.id}
-                onChange={() => setRecipeId(r.id)}
-              />
-            </label>
-          ))}
+      <HeadCard>
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor={sheetSelect} className="text-muted-foreground text-14 font-medium">
+            Sheet
+          </label>
+          <select
+            id={sheetSelect}
+            className={toolbarSelectClass}
+            value={sheetId}
+            onChange={(e) => setSheetId(e.target.value)}
+          >
+            <option value="">Choose a sheet</option>
+            {(sheets.data ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
         </div>
-      </fieldset>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          disabled={!sheetId || !recipeId}
-          onClick={() => nav({ recipe: recipeId, sheet: sheetId })}
-        >
-          Continue
-        </Button>
-        <Button asChild variant="outline">
-          <Link href={`/${props.org}/automations`}>Cancel</Link>
-        </Button>
-      </div>
+        <fieldset className="m-0 border-0 p-0">
+          <legend className="text-14 mb-2 font-semibold">Recipe</legend>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {RECIPES.map((r) => (
+              <label
+                key={r.id}
+                className={cn(
+                  'border-line hover:bg-subtle has-[:focus-visible]:outline-focus bg-surface flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:focus-visible]:outline-2',
+                  recipeId === r.id && 'border-ink ring-ink ring-1',
+                )}
+              >
+                <span
+                  aria-hidden
+                  className="border-line text-muted-foreground bg-surface grid size-7 shrink-0 place-items-center rounded-full border"
+                >
+                  <Zap className="size-3.5" aria-hidden />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="text-14 font-medium">{r.title}</span>
+                  <span className="text-muted-foreground text-13">
+                    {Object.keys(r.roles).length === 0
+                      ? 'Uses the sheet’s sub-items'
+                      : `Uses ${Object.keys(r.roles)
+                          .map((role) => `${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role} field`)
+                          .join(', ')}`}
+                  </span>
+                </span>
+                <input
+                  type="radio"
+                  name="recipe"
+                  className="accent-ink mt-1"
+                  checked={recipeId === r.id}
+                  onChange={() => setRecipeId(r.id)}
+                />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            disabled={!sheetId || !recipeId}
+            onClick={() => nav({ recipe: recipeId, sheet: sheetId })}
+          >
+            Continue
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/${props.org}/automations`}>Cancel</Link>
+          </Button>
+        </div>
+      </HeadCard>
     </main>
   );
 }
@@ -437,16 +441,16 @@ function RecipeGallery(props: ScreenProps & { perms: ListPermissions }) {
 
 function ReadOnly({ org }: { org: string }) {
   return (
-    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
-      <h1>Automations</h1>
-      <p className="text-muted-foreground m-0">
-        Viewers cannot change automations. Ask an editor or admin.
-      </p>
-      <div>
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
+      <PageHeader title="Automations" />
+      <HeadCard className="items-start">
+        <p className="text-muted-foreground m-0">
+          Viewers cannot change automations. Ask an editor or admin.
+        </p>
         <Button asChild variant="outline">
           <Link href={`/${org}/automations`}>Back to automations</Link>
         </Button>
-      </div>
+      </HeadCard>
     </main>
   );
 }
@@ -470,12 +474,12 @@ function BuilderPanel(props: ScreenProps & { perms: ListPermissions; onDone(): v
     <div className="border-soft flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b py-2 last:border-b-0">
       <label
         htmlFor={editing ? undefined : sheetRowId}
-        className="text-muted-foreground text-label-12 w-full font-medium sm:w-24"
+        className="text-muted-foreground text-12 w-full font-medium sm:w-24"
       >
         Sheet
       </label>
       {editing ? (
-        <span className="text-ink text-label-14">{sheetName ?? 'Archived sheet'}</span>
+        <span className="text-ink text-14">{sheetName ?? 'Archived sheet'}</span>
       ) : (
         <select
           id={sheetRowId}

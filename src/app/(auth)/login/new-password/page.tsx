@@ -28,7 +28,7 @@ export default async function NewPasswordPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1>Compliance OS</h1>
-        <h2 className="text-heading-16">Set a new password</h2>
+        <h2 className="text-card-title">Set a new password</h2>
         <p className="text-muted-foreground">For {signIn.user.email}.</p>
       </div>
       <NewPasswordForm next={next} />

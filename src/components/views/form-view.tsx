@@ -119,7 +119,7 @@ export function FormView({
 
   if (views.query.isError)
     return (
-      <div role="alert" className="text-label-13 flex items-center gap-2 py-6">
+      <div role="alert" className="text-13 flex items-center gap-2 py-6">
         The forms could not be loaded.
         <Button
           type="button"
@@ -157,7 +157,7 @@ export function FormView({
             <ArrowLeft aria-hidden /> All forms
           </Button>
         </div>
-        <div className="border-line bg-background-100 mx-auto w-full max-w-[560px] rounded-lg border p-5">
+        <div className="border-line bg-surface mx-auto w-full max-w-[560px] rounded-lg border p-5">
           {canEdit && state === 'open' ? (
             <FillForm
               org={org}
@@ -172,8 +172,8 @@ export function FormView({
             />
           ) : (
             <div className="flex flex-col gap-2">
-              <h2 className="text-heading-20">{form.title?.trim() || selected.name}</h2>
-              <p className="text-copy-13 text-muted-foreground">
+              <h2 className="text-panel-title">{form.title?.trim() || selected.name}</h2>
+              <p className="text-13 text-muted-foreground">
                 {!canEdit
                   ? 'Viewers cannot send forms. Ask an editor or admin.'
                   : state === 'draft'
@@ -268,8 +268,8 @@ function FormsList({
     <div className="flex flex-col gap-4 py-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-heading-20">Forms</h2>
-          <p className="text-copy-13 text-muted-foreground">
+          <h2 className="text-panel-title">Forms</h2>
+          <p className="text-13 text-muted-foreground">
             Each form adds {itemsWord(data.sheet.itemLabel)} to this sheet.
           </p>
         </div>
@@ -292,17 +292,13 @@ function FormsList({
       ) : forms.length === 0 ? (
         <div className="border-line flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">
           <FileText className="text-muted-foreground size-5" aria-hidden />
-          <p className="text-copy-14">
-            No forms yet. Collect items from people without sheet access.
-          </p>
+          <p className="text-14">No forms yet. Collect items from people without sheet access.</p>
           {isAdmin ? (
             <Button type="button" onClick={() => setCreating(true)}>
               <Plus aria-hidden /> New form
             </Button>
           ) : (
-            <p className="text-copy-13 text-muted-foreground">
-              Ask an owner or admin to create one.
-            </p>
+            <p className="text-13 text-muted-foreground">Ask an owner or admin to create one.</p>
           )}
         </div>
       ) : (
@@ -323,10 +319,10 @@ function FormsList({
             return (
               <li
                 key={v.id}
-                className="border-line bg-background-100 hover:border-line-strong relative flex flex-col gap-3 rounded-lg border p-4"
+                className="border-line bg-surface hover:border-line-strong relative flex flex-col gap-3 rounded-lg border p-4"
               >
                 <div className="flex items-start gap-2">
-                  <h3 className="text-label-16 min-w-0 flex-1 font-semibold">
+                  <h3 className="text-16 min-w-0 flex-1 font-semibold">
                     <button
                       type="button"
                       onClick={() => onOpen(v.id)}
@@ -385,7 +381,7 @@ function FormsList({
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <StatusChip status={state} />
-                  <span className="border-line text-label-12 inline-flex items-center gap-1 rounded-full border px-2 py-0.5">
+                  <span className="border-line text-12 inline-flex items-center gap-1 rounded-full border px-2 py-0.5">
                     {access === 'public' ? (
                       <Globe className="size-3" aria-hidden />
                     ) : (
@@ -394,7 +390,7 @@ function FormsList({
                     {access === 'public' ? 'Public' : 'Internal'}
                   </span>
                 </div>
-                <p className="text-label-13 text-muted-foreground min-h-5">
+                <p className="text-13 text-muted-foreground min-h-5">
                   {statsLoading
                     ? 'Counting answers…'
                     : responses === 0
@@ -404,7 +400,7 @@ function FormsList({
                 <div className="relative z-10 flex min-h-8 items-center gap-1.5">
                   {url ? (
                     <>
-                      <span className="text-label-12-mono text-muted-foreground min-w-0 flex-1 truncate">
+                      <span className="text-12 text-muted-foreground min-w-0 flex-1 truncate font-mono">
                         {url.replace(/^https?:\/\//, '')}
                       </span>
                       <Button
@@ -418,7 +414,7 @@ function FormsList({
                       </Button>
                     </>
                   ) : (
-                    <span className="text-label-12 text-muted-foreground">No public link yet</span>
+                    <span className="text-12 text-muted-foreground">No public link yet</span>
                   )}
                 </div>
               </li>
@@ -446,8 +442,8 @@ function FormsList({
       />
       <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <DialogContent className="w-[min(440px,calc(100vw-32px))]">
-          <DialogTitle className="text-heading-20">Delete {deleting?.name}</DialogTitle>
-          <DialogDescription className="text-copy-13">
+          <DialogTitle className="text-panel-title">Delete {deleting?.name}</DialogTitle>
+          <DialogDescription className="text-13">
             The form and its link go. People who open the link see that the form is not available.
             Items it added stay in the sheet.
           </DialogDescription>
@@ -496,8 +492,8 @@ export function NewFormDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[min(440px,calc(100vw-32px))]">
-        <DialogTitle className="text-heading-20">New form</DialogTitle>
-        <DialogDescription className="text-copy-13 text-muted-foreground">
+        <DialogTitle className="text-panel-title">New form</DialogTitle>
+        <DialogDescription className="text-13 text-muted-foreground">
           It starts as a draft. Open it when it is ready.
         </DialogDescription>
         <form
@@ -513,7 +509,7 @@ export function NewFormDialog({
             onCreated(r.data.view);
           }}
         >
-          <label className="text-label-13 flex flex-col gap-1 font-semibold">
+          <label className="text-13 flex flex-col gap-1 font-semibold">
             Name
             <input
               className={cn(inputClass, 'h-9 font-normal')}
@@ -524,8 +520,8 @@ export function NewFormDialog({
             />
           </label>
           <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-label-13 mb-1 font-semibold">Who fills it in</legend>
-            <label className="text-label-13 flex items-center gap-2">
+            <legend className="text-13 mb-1 font-semibold">Who fills it in</legend>
+            <label className="text-13 flex items-center gap-2">
               <input
                 type="radio"
                 name="new-form-access"
@@ -534,7 +530,7 @@ export function NewFormDialog({
               />
               Public: anyone with the link
             </label>
-            <label className="text-label-13 flex items-center gap-2">
+            <label className="text-13 flex items-center gap-2">
               <input
                 type="radio"
                 name="new-form-access"
@@ -545,7 +541,7 @@ export function NewFormDialog({
             </label>
           </fieldset>
           {error ? (
-            <p role="alert" className="text-crit text-copy-13">
+            <p role="alert" className="text-crit text-13">
               {error}
             </p>
           ) : null}
@@ -602,24 +598,24 @@ function CopyFormDialog({
   return (
     <Dialog open={!!form} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[min(440px,calc(100vw-32px))]">
-        <DialogTitle className="text-heading-20">Copy {form?.name} to another sheet</DialogTitle>
-        <DialogDescription className="text-copy-13 text-muted-foreground">
+        <DialogTitle className="text-panel-title">Copy {form?.name} to another sheet</DialogTitle>
+        <DialogDescription className="text-13 text-muted-foreground">
           Questions are matched by field key. Fields the other sheet does not have are left out. The
           copy is a draft without a link.
         </DialogDescription>
         {sheets.isPending ? (
           <div aria-busy="true" className="bg-soft h-9 animate-pulse rounded" />
         ) : sheets.isError ? (
-          <div role="alert" className="text-label-13 flex items-center gap-2">
+          <div role="alert" className="text-13 flex items-center gap-2">
             The sheets could not be loaded.
             <Button type="button" size="sm" variant="outline" onClick={() => void sheets.refetch()}>
               Retry
             </Button>
           </div>
         ) : choices.length === 0 ? (
-          <p className="text-copy-13">There is no other sheet in this workspace.</p>
+          <p className="text-13">There is no other sheet in this workspace.</p>
         ) : (
-          <label className="text-label-13 flex flex-col gap-1 font-semibold">
+          <label className="text-13 flex flex-col gap-1 font-semibold">
             Sheet
             <select
               className={cn(inputClass, 'h-9 font-normal')}

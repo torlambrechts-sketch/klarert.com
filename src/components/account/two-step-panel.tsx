@@ -54,14 +54,14 @@ export function TwoStepPanel({
   return (
     <section
       aria-labelledby="two-step-heading"
-      className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
+      className="border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
     >
       <div className="flex flex-col gap-1">
-        <h2 id="two-step-heading" className="text-heading-16 flex items-center gap-2">
+        <h2 id="two-step-heading" className="text-card-title flex items-center gap-2">
           Two-step sign-in
           <span
             data-testid="two-step-status"
-            className={`text-label-12 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${
+            className={`text-12 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${
               on ? 'bg-good-soft text-good' : 'bg-subtle text-muted-foreground'
             }`}
           >
@@ -69,7 +69,7 @@ export function TwoStepPanel({
             {on ? 'On' : 'Off'}
           </span>
         </h2>
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           {on
             ? 'After your password or email link, you enter a 6-digit code from your authenticator app.'
             : 'Protect your account with a second step: after your password or email link, you enter a 6-digit code from an authenticator app on your phone.'}
@@ -109,7 +109,7 @@ export function TwoStepPanel({
       ) : (
         <div className="flex flex-col gap-2">
           {startError ? (
-            <p role="alert" className="text-crit text-copy-13 m-0">
+            <p role="alert" className="text-crit text-13 m-0">
               {startError}
             </p>
           ) : null}
@@ -150,11 +150,11 @@ function Recovery() {
       className="bg-subtle flex flex-col gap-1 rounded-md px-4 py-3"
       data-testid="two-step-recovery"
     >
-      <h3 className="text-label-14 m-0 flex items-center gap-2 font-semibold">
+      <h3 className="text-14 m-0 flex items-center gap-2 font-semibold">
         <KeyRound className="size-4" aria-hidden />
         If you lose your phone
       </h3>
-      <ul className="text-copy-13 m-0 flex list-disc flex-col gap-1 pl-5">
+      <ul className="text-13 m-0 flex list-disc flex-col gap-1 pl-5">
         <li>Add a second authenticator app on another device now, so you have a spare.</li>
         <li>Or keep the key you typed in somewhere safe, such as a password manager.</li>
         <li>
@@ -201,10 +201,8 @@ function SetupSteps({
     <form action={submit} className="flex flex-col gap-4" data-testid="two-step-setup">
       <ol className="flex list-none flex-col gap-4 p-0">
         <li className="flex flex-col gap-2">
-          <p className="text-label-14 m-0 font-medium">
-            1. Scan this QR code with an authenticator app
-          </p>
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-14 m-0 font-medium">1. Scan this QR code with an authenticator app</p>
+          <p className="text-muted-foreground text-13 m-0">
             For example Google Authenticator, Microsoft Authenticator or 1Password. It adds
             “Compliance OS ({email})”.
           </p>
@@ -218,12 +216,12 @@ function SetupSteps({
           />
         </li>
         <li className="flex flex-col gap-2">
-          <p className="text-label-14 m-0 font-medium">2. Or type this key into the app</p>
+          <p className="text-14 m-0 font-medium">2. Or type this key into the app</p>
           <div className="flex flex-wrap items-center gap-2">
             <code
               data-testid="two-step-secret"
               data-secret={setup.secret}
-              className="bg-subtle text-label-13-mono rounded-md px-2 py-1.5 break-all"
+              className="bg-subtle text-13 rounded-md px-2 py-1.5 font-mono break-all"
             >
               {grouped(setup.secret)}
             </code>
@@ -261,7 +259,7 @@ function SetupSteps({
             aria-describedby={error ? `${codeId}-error` : undefined}
           />
           {error ? (
-            <p id={`${codeId}-error`} role="alert" className="text-crit text-copy-13 m-0">
+            <p id={`${codeId}-error`} role="alert" className="text-crit text-13 m-0">
               {error}
             </p>
           ) : null}
@@ -309,8 +307,8 @@ function AppRow({
         <div className="flex items-center gap-3">
           <Smartphone className="text-muted-foreground size-4" aria-hidden />
           <div className="flex flex-col">
-            <span className="text-label-14 font-medium">{label}</span>
-            <span className="text-muted-foreground text-label-12">Added {app.added}</span>
+            <span className="text-14 font-medium">{label}</span>
+            <span className="text-muted-foreground text-12">Added {app.added}</span>
           </div>
         </div>
         {!confirming ? (
@@ -331,7 +329,7 @@ function AppRow({
           aria-label={`Remove ${label}`}
           className="bg-subtle flex flex-col gap-2 rounded-md p-3"
         >
-          <p className="text-copy-13 m-0">
+          <p className="text-13 m-0">
             {last
               ? 'Remove this app? Two-step sign-in turns off: you sign in with your password or an email link only.'
               : 'Remove this app? Its codes stop working. Your other apps keep working.'}

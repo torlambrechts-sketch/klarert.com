@@ -39,12 +39,12 @@ function Text({ runs }: { runs: Inline[] }) {
 function BlockView({ block }: { block: Block }) {
   if ('p' in block)
     return (
-      <p className="text-copy-16 m-0">
+      <p className="text-16 m-0">
         <Text runs={block.p} />
       </p>
     );
   return (
-    <ul className="text-copy-16 m-0 flex list-disc flex-col gap-2 pl-5">
+    <ul className="text-16 m-0 flex list-disc flex-col gap-2 pl-5">
       {block.list.map((runs, i) => (
         <li key={i}>
           <Text runs={runs} />
@@ -68,21 +68,21 @@ export function LegalPageView({ page, other }: { page: LegalPage; other: LegalPa
             className="border-warn bg-warn-soft text-warn mb-8 flex items-start gap-2 rounded-lg border px-4 py-3"
           >
             <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            <p className="text-copy-14 m-0">
+            <p className="text-14 m-0">
               <strong className="font-semibold">Draft, to be reviewed.</strong> This page has not
               been reviewed by a lawyer yet. Text in square brackets is still to be filled in.
             </p>
           </div>
 
-          <h1 id="legal-title" className="text-heading-32 m-0">
+          <h1 id="legal-title" className="text-figure m-0">
             {page.title}
           </h1>
-          <p className="text-muted-foreground text-copy-16 mt-3 mb-0">
+          <p className="text-muted-foreground text-16 mt-3 mb-0">
             <Text runs={page.intro} />
           </p>
 
           <nav aria-label="On this page" className="mt-6">
-            <ul className="text-label-14 m-0 flex list-none flex-wrap gap-x-4 gap-y-2 p-0">
+            <ul className="text-14 m-0 flex list-none flex-wrap gap-x-4 gap-y-2 p-0">
               {page.sections.map((s) => (
                 <li key={s.id}>
                   <a className={LINK} href={`#${s.id}`}>
@@ -100,7 +100,7 @@ export function LegalPageView({ page, other }: { page: LegalPage; other: LegalPa
               aria-labelledby={`${s.id}-title`}
               className="border-line mt-8 flex scroll-mt-6 flex-col gap-3 border-t pt-8"
             >
-              <h2 id={`${s.id}-title`} className="text-heading-20 m-0">
+              <h2 id={`${s.id}-title`} className="text-panel-title m-0">
                 {s.title}
               </h2>
               {s.blocks.map((b, i) => (
@@ -109,7 +109,7 @@ export function LegalPageView({ page, other }: { page: LegalPage; other: LegalPa
             </section>
           ))}
 
-          <p className="text-copy-14 text-muted-foreground border-line mt-10 mb-0 border-t pt-6">
+          <p className="text-14 text-muted-foreground border-line mt-10 mb-0 border-t pt-6">
             See also the{' '}
             <Link className={LINK} href={other.path}>
               {other.path === LINKS.terms ? 'terms' : 'privacy notice'}

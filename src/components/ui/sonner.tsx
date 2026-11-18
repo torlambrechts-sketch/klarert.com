@@ -2,7 +2,7 @@
 
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
-// docs/05 §7: bottom centre, dark, 4 s
+// docs/05 §7, docs/18 §5: a navy pill at the bottom centre, white 500 words, max 720 px, 4 s
 export function Toaster(props: ToasterProps) {
   return (
     <Sonner
@@ -10,7 +10,14 @@ export function Toaster(props: ToasterProps) {
       position="bottom-center"
       duration={4000}
       toastOptions={{
-        style: { background: 'var(--brand)', color: 'var(--background-100)', border: 'none' },
+        style: {
+          background: 'var(--navy)',
+          color: 'var(--surface)',
+          border: 'none',
+          borderRadius: 'var(--radius-pill)',
+          fontWeight: 500,
+          maxWidth: 'min(720px, 92vw)',
+        },
       }}
       {...props}
     />

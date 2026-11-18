@@ -13,7 +13,7 @@ import { sendMagicLink, signInWithPassword, signUpWithPassword } from './actions
 /** Under the forms that can create an account: the password sign-up and the email link. */
 function TermsLine() {
   return (
-    <p className="text-muted-foreground text-copy-13 m-0">
+    <p className="text-muted-foreground text-13 m-0">
       By creating an account you agree to the{' '}
       <Link className="text-info underline underline-offset-4" href="/terms">
         terms
@@ -37,7 +37,7 @@ export function LoginForm({ next }: { next?: string }) {
   if (state?.ok) {
     return (
       <div role="status" className="flex flex-col gap-2">
-        <h2 className="text-heading-16">Check your email</h2>
+        <h2 className="text-card-title">Check your email</h2>
         <p className="text-muted-foreground">
           We sent a sign-in link to <strong className="text-foreground">{state.data.email}</strong>.
           Open it on this device to continue.
@@ -109,7 +109,7 @@ export function PasswordForm({
         state={state}
       />
       {state && !state.ok && !state.error.fieldErrors ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           {state.error.message}
         </p>
       ) : null}

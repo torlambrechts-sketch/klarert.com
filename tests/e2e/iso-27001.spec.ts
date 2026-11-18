@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
-import { rest, signIn } from './helpers';
+import { appScreenNames, openAppScreen, rest, signIn } from './helpers';
 
 // The ISO/IEC 27001 add-on (docs/11, Phase 2): an owner installs it into an empty workspace; the Core registers
 // (Full, as the add-on extends the controls, assets, audits, reviews, legal and training registers) and the 27001
@@ -156,9 +156,7 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
 
   // ── the ISMS CAPA app over Core's nonconformities
   await page.goto(`/${slug}/apps/isms-capa`);
-  await expect(
-    page.getByRole('navigation', { name: 'ISMS CAPA screens' }).getByRole('link'),
-  ).toHaveText([
+  expect(await appScreenNames(page, 'ISMS CAPA screens')).toEqual([
     'Report a problem',
     'My actions',
     'Needs my check',
@@ -188,10 +186,7 @@ test('install the ISO 27001 add-on onto Core: domains, the 27001 view, test mode
   localSql(`insert into items (org_id, sheet_id, group_id, seq, display_id, name, "values", position, created_by, updated_by)
     values ${ncItem(901, 'Access review missed for leavers', james, maria)},
            ${ncItem(902, 'Backup restore test overdue', maria, james)}`);
-  await page
-    .getByRole('navigation', { name: 'ISMS CAPA screens' })
-    .getByRole('link', { name: 'Needs my check' })
-    .click();
+  await openAppScreen(page, 'ISMS CAPA screens', 'Needs my check');
   await expect(page).toHaveURL(new RegExp(`/${slug}/apps/isms-capa/approvals$`));
   await expect(page.getByText('Access review missed for leavers')).toBeVisible();
   await expect(page.getByText('Backup restore test overdue')).toHaveCount(0);

@@ -32,13 +32,13 @@ export function NamePanel({ name }: { name: string }) {
   return (
     <section aria-labelledby="name-heading" className={card} data-testid="name-panel">
       <div className="flex flex-col gap-1">
-        <h2 id="name-heading" className="text-heading-16">
+        <h2 id="name-heading" className="text-card-title">
           Your name
         </h2>
-        <p className="text-copy-14 m-0 break-words" data-testid="current-name">
+        <p className="text-14 m-0 break-words" data-testid="current-name">
           {name}
         </p>
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           People in your workspaces see this name. Your initials follow it.
         </p>
       </div>

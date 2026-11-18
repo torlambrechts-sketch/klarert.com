@@ -12,8 +12,8 @@ import { SectionHead, SiteShell, WRAP } from './site-chrome';
 // libraries and apps come from the manifests in the words people read (src/engine/packs/words.ts); only titles and
 // counts of the standards are shown, never their text (docs/12 Licensing).
 
-const DT = 'text-muted-foreground text-label-12 font-medium';
-const CHIP = 'bg-subtle border-line text-label-12 rounded-md border px-2 py-0.5';
+const DT = 'text-muted-foreground text-12 font-medium';
+const CHIP = 'bg-subtle border-line text-12 rounded-md border px-2 py-0.5';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -21,7 +21,7 @@ function Fact({ term, children }: { term: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
       <dt className={DT}>{term}</dt>
-      <dd className="text-copy-14 m-0">{children}</dd>
+      <dd className="text-14 m-0">{children}</dd>
     </div>
   );
 }
@@ -29,7 +29,7 @@ function Fact({ term, children }: { term: string; children: React.ReactNode }) {
 function EditionStatus({ lib }: { lib: SiteLibrary }) {
   if (lib.tone === 'current' || !lib.badge)
     return (
-      <span className="text-good text-label-13 inline-flex items-center gap-1.5 font-medium">
+      <span className="text-good text-13 inline-flex items-center gap-1.5 font-medium">
         <Check aria-hidden="true" className="size-4" /> {lib.status}
       </span>
     );
@@ -38,7 +38,7 @@ function EditionStatus({ lib }: { lib: SiteLibrary }) {
   const Icon = replaced ? TriangleAlert : RefreshCw;
   return (
     <span
-      className={`${replaced ? 'text-warn' : 'text-ink'} text-label-13 inline-flex items-start gap-1.5 font-medium`}
+      className={`${replaced ? 'text-warn' : 'text-ink'} text-13 inline-flex items-start gap-1.5 font-medium`}
     >
       <Icon aria-hidden="true" className="mt-px size-4 shrink-0" /> {badge}
     </span>
@@ -53,10 +53,10 @@ function SetCard({ set, wide }: { set: SiteSet; wide?: boolean }) {
       className="bg-card border-line flex flex-col gap-5 rounded-xl border p-5 sm:p-6"
     >
       <div className="flex flex-col gap-2">
-        <h3 id={id} className="text-heading-20 m-0">
+        <h3 id={id} className="text-panel-title m-0">
           {set.title}
         </h3>
-        <p className="text-muted-foreground text-copy-14 m-0">{set.line}</p>
+        <p className="text-muted-foreground text-14 m-0">{set.line}</p>
       </div>
       <dl className={`m-0 grid gap-4 ${wide ? 'md:grid-cols-2' : ''}`}>
         <Fact term="Levels">
@@ -122,14 +122,14 @@ function LibraryCard({ lib }: { lib: SiteLibrary }) {
       aria-labelledby={id}
       className="bg-card border-line flex flex-col gap-3 rounded-xl border p-5"
     >
-      <h3 id={id} className="text-heading-16 m-0">
+      <h3 id={id} className="text-card-title m-0">
         {lib.title}
       </h3>
-      <p className="text-muted-foreground text-label-13 m-0">
+      <p className="text-muted-foreground text-13 m-0">
         {lib.kind} · {lib.publisher} · {plural(lib.requirements, 'requirement', 'requirements')}
       </p>
       <EditionStatus lib={lib} />
-      <p className="text-muted-foreground text-label-13 m-0">
+      <p className="text-muted-foreground text-13 m-0">
         {lib.usedBy.length ? `Used by ${lib.usedBy.join(', ')}` : 'Adopt it on its own'}
       </p>
     </article>
@@ -149,7 +149,7 @@ export function FrameworksPage() {
             title={FRAMEWORKS_PAGE.title}
             lead={FRAMEWORKS_PAGE.lead}
           />
-          <ul className="text-label-13 m-0 flex list-none flex-wrap justify-center gap-2 p-0">
+          <ul className="text-13 m-0 flex list-none flex-wrap justify-center gap-2 p-0">
             {[
               plural(site.counts.sets, 'ready-made set', 'ready-made sets'),
               plural(site.counts.frameworks, 'framework', 'frameworks'),
@@ -157,7 +157,7 @@ export function FrameworksPage() {
             ].map((t) => (
               <li
                 key={t}
-                className="bg-background-100 border-line rounded-full border px-3 py-1 font-medium"
+                className="bg-surface border-line rounded-full border px-3 py-1 font-medium"
               >
                 {t}
               </li>
@@ -169,7 +169,7 @@ export function FrameworksPage() {
       <div className={`${WRAP} flex flex-col gap-16 pb-16 sm:pb-24`}>
         {site.foundation ? (
           <section aria-labelledby="foundation-title" className="flex flex-col gap-4">
-            <h2 id="foundation-title" className="text-heading-24 m-0">
+            <h2 id="foundation-title" className="text-kpi m-0">
               {FRAMEWORKS_PAGE.foundationTitle}
             </h2>
             <SetCard set={site.foundation} wide />
@@ -178,7 +178,7 @@ export function FrameworksPage() {
 
         {site.groups.map((g) => (
           <section key={g.id} aria-labelledby={`group-${g.id}`} className="flex flex-col gap-4">
-            <h2 id={`group-${g.id}`} className="text-heading-24 m-0">
+            <h2 id={`group-${g.id}`} className="text-kpi m-0">
               {g.title}
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
@@ -191,12 +191,10 @@ export function FrameworksPage() {
 
         <section aria-labelledby="libraries-title" className="flex flex-col gap-4">
           <div className="flex max-w-3xl flex-col gap-2">
-            <h2 id="libraries-title" className="text-heading-24 m-0">
+            <h2 id="libraries-title" className="text-kpi m-0">
               {FRAMEWORKS_PAGE.librariesTitle}
             </h2>
-            <p className="text-muted-foreground text-copy-14 m-0">
-              {FRAMEWORKS_PAGE.librariesLead}
-            </p>
+            <p className="text-muted-foreground text-14 m-0">{FRAMEWORKS_PAGE.librariesLead}</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {site.libraries.map((l) => (

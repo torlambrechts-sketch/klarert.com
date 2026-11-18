@@ -112,7 +112,7 @@ export function CreateButton({ onOpen, className }: { onOpen?: () => void; class
       }}
       title="Create (Ctrl+K)"
       className={cn(
-        'bg-ink text-primary-foreground text-label-14 flex h-[34px] w-full shrink-0 items-center gap-2.5 rounded-md px-2.5 font-medium transition-colors duration-150 hover:bg-gray-900 active:scale-[0.98] max-[759.98px]:h-11',
+        'bg-brand text-primary-foreground text-body hover:bg-navy flex h-11 w-full shrink-0 items-center gap-2.5 rounded-full px-5 font-semibold transition-colors duration-150 active:scale-[0.98]',
         className,
       )}
     >
@@ -123,7 +123,7 @@ export function CreateButton({ onOpen, className }: { onOpen?: () => void; class
       <kbd
         data-side-text
         aria-hidden
-        className="text-label-11-mono rounded-[4px] border border-white/25 px-[5px] leading-[18px] opacity-80"
+        className="text-12 rounded-[4px] border border-white/25 px-[5px] font-mono leading-[18px] opacity-80"
       >
         Ctrl K
       </kbd>

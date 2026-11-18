@@ -17,7 +17,7 @@ export function NewPasswordForm({ next }: { next?: string }) {
     return (
       <div className="flex flex-col gap-4">
         <div role="status" className="flex flex-col gap-2" data-testid="password-changed">
-          <h3 className="text-heading-16">Your password has been changed.</h3>
+          <h3 className="text-card-title">Your password has been changed.</h3>
           <p className="text-muted-foreground m-0">
             {state.data.othersSignedOut
               ? 'You are signed out on your other devices. Use the new password there.'
@@ -52,7 +52,7 @@ export function NewPasswordForm({ next }: { next?: string }) {
         state={state}
       />
       {state && !state.ok && !state.error.fieldErrors ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           {state.error.message}
         </p>
       ) : null}

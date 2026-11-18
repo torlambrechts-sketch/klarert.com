@@ -5,7 +5,7 @@ import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
 import { ExportsSkeleton } from '@/components/audit/exports-list';
 import { ExportsSection } from '@/components/audit/exports-section';
 import { inputClass } from '@/components/fields/shared';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
 import { canSeeExports } from '@/engine/audit/exports';
 import { addDays, addMonths } from '@/engine/fields/helpers';
@@ -33,12 +33,12 @@ function Card({
   return (
     <section
       id={testId}
-      className="border-line bg-background-100 flex scroll-mt-4 flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
+      className="border-line bg-surface flex scroll-mt-4 flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
       data-testid={testId}
     >
       <div className="flex flex-col gap-1">
-        <h2 className="text-heading-16">{title}</h2>
-        <p className="text-muted-foreground text-copy-13 m-0">{description}</p>
+        <h2 className="text-card-title">{title}</h2>
+        <p className="text-muted-foreground text-13 m-0">{description}</p>
       </div>
       {children}
     </section>
@@ -58,17 +58,19 @@ export default async function AuditPage({
   const r = await listAuditOutputs({ org });
   if (!r.ok)
     return (
-      <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+      <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
         <PageHeader crumb="Reports" title="Audit outputs" />
-        <div
-          role="alert"
-          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
-        >
-          <p className="m-0">{r.error.message}</p>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/${org}/audit`}>Retry</Link>
-          </Button>
-        </div>
+        <HeadCard>
+          <div
+            role="alert"
+            className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
+          >
+            <p className="m-0">{r.error.message}</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/${org}/audit`}>Retry</Link>
+            </Button>
+          </div>
+        </HeadCard>
       </main>
     );
   const d = r.data;
@@ -77,7 +79,7 @@ export default async function AuditPage({
   const scopes = [...d.folders, ...d.installs].map((s) => s.value);
   const defaultScope = scope && scopes.includes(scope) ? scope : 'workspace';
   return (
-    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
       <PageHeader
         crumb="Reports"
         title="Audit outputs"
@@ -89,7 +91,7 @@ export default async function AuditPage({
         testId="audit-soa"
       >
         {d.libraries.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             No framework is adopted yet. Owners and admins adopt one in Workspace admin ›
             Frameworks; its library then shows here.
           </p>
@@ -144,11 +146,11 @@ export default async function AuditPage({
           className="flex flex-col gap-3 sm:flex-row sm:items-end"
         >
           <label className="flex flex-col gap-1">
-            <span className="text-label-12 text-muted-foreground">From</span>
+            <span className="text-12 text-muted-foreground">From</span>
             <input type="date" name="from" defaultValue={from} required className={inputClass} />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-label-12 text-muted-foreground">To</span>
+            <span className="text-12 text-muted-foreground">To</span>
             <input type="date" name="to" defaultValue={d.today} required className={inputClass} />
           </label>
           <Button type="submit" variant="outline" className="self-start sm:self-auto">

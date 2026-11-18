@@ -377,10 +377,10 @@ export function CreateWizard({
         <DialogPrimitive.Content
           data-testid="create-wizard"
           aria-describedby={undefined}
-          className="bg-background-100 shadow-modal fixed inset-0 z-50 flex flex-col outline-none min-[760px]:inset-4 min-[760px]:mx-auto min-[760px]:max-w-[1120px] min-[760px]:rounded-xl min-[760px]:border"
+          className="bg-surface shadow-modal fixed inset-0 z-50 flex flex-col outline-none min-[760px]:inset-4 min-[760px]:mx-auto min-[760px]:max-w-[1120px] min-[760px]:rounded-xl min-[760px]:border"
         >
           <header className="border-line flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b px-4 py-3 sm:px-6">
-            <DialogPrimitive.Title className="text-heading-16">Create</DialogPrimitive.Title>
+            <DialogPrimitive.Title className="text-card-title">Create</DialogPrimitive.Title>
             <ol
               aria-label="Steps"
               className="flex min-w-0 flex-1 items-center gap-2 max-[759px]:order-3 max-[759px]:basis-full"
@@ -392,14 +392,14 @@ export function CreateWizard({
                     key={label}
                     aria-current={step === n ? 'step' : undefined}
                     className={cn(
-                      'text-label-13 flex items-center gap-1.5',
+                      'text-13 flex items-center gap-1.5',
                       step === n ? 'text-ink font-medium' : 'text-muted-foreground',
                     )}
                   >
                     <span
                       aria-hidden
                       className={cn(
-                        'text-label-11-mono flex size-5 items-center justify-center rounded-full border',
+                        'text-12 flex size-5 items-center justify-center rounded-full border font-mono',
                         step === n
                           ? 'bg-ink text-primary-foreground border-transparent'
                           : 'border-line',
@@ -431,7 +431,7 @@ export function CreateWizard({
               <Skeleton />
             ) : options.state === 'error' ? (
               <div role="alert" className="flex flex-col items-start gap-3 py-8">
-                <p className="text-copy-14">{options.message}</p>
+                <p className="text-14">{options.message}</p>
                 <Button type="button" variant="outline" onClick={() => void loadOptions()}>
                   <RotateCcw aria-hidden /> Retry
                 </Button>
@@ -470,7 +470,7 @@ export function CreateWizard({
                   className={cn('min-w-0', app && 'max-[999px]:order-first')}
                 >
                   {!app ? (
-                    <div className="border-line text-copy-14 text-muted-foreground flex min-h-[200px] items-center justify-center rounded-lg border border-dashed p-6 text-center">
+                    <div className="border-line text-14 text-muted-foreground flex min-h-[200px] items-center justify-center rounded-lg border border-dashed p-6 text-center">
                       Pick an app to see its screens and what it needs.
                     </div>
                   ) : (
@@ -571,7 +571,7 @@ export function CreateWizard({
           </div>
 
           {step > 1 ? (
-            <footer className="border-line bg-background-100 sticky bottom-0 flex shrink-0 items-center gap-2 border-t px-4 py-3 sm:px-6">
+            <footer className="border-line bg-surface sticky bottom-0 flex shrink-0 items-center gap-2 border-t px-4 py-3 sm:px-6">
               <Button type="button" variant="outline" onClick={back} data-testid="create-back">
                 <ArrowLeft aria-hidden /> Back
               </Button>
@@ -587,7 +587,7 @@ export function CreateWizard({
 
 function Skeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading" className="flex flex-col gap-4">
+    <div role="status" aria-busy="true" aria-label="Loading" className="flex flex-col gap-4">
       <div className="bg-soft h-[52px] animate-pulse rounded-lg" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -601,12 +601,10 @@ function Skeleton() {
 function StepHeading({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-4">
-      <h2 data-step-heading tabIndex={-1} className="text-heading-20 outline-none">
+      <h2 data-step-heading tabIndex={-1} className="text-panel-title outline-none">
         {title}
       </h2>
-      {description ? (
-        <p className="text-copy-14 text-muted-foreground mt-1">{description}</p>
-      ) : null}
+      {description ? <p className="text-14 text-muted-foreground mt-1">{description}</p> : null}
     </div>
   );
 }
@@ -635,12 +633,7 @@ function GoalStep({
   return (
     <div className="flex flex-col gap-6">
       <section aria-labelledby="create-goal" className="flex flex-col gap-3">
-        <h2
-          id="create-goal"
-          data-step-heading
-          tabIndex={-1}
-          className="text-heading-24 outline-none"
-        >
+        <h2 id="create-goal" data-step-heading tabIndex={-1} className="text-kpi outline-none">
           What do you need to handle?
         </h2>
         <label className="border-line focus-within:border-focus focus-within:ring-focus flex h-12 items-center gap-2 rounded-lg border px-3 focus-within:ring-2">
@@ -652,11 +645,11 @@ function GoalStep({
             placeholder="For example: customer complaints"
             aria-label="What do you need to handle?"
             aria-describedby="create-goal-help"
-            className="text-copy-16 text-ink placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
+            className="text-16 text-ink placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
             data-testid="create-goal"
           />
         </label>
-        <p id="create-goal-help" className="text-copy-13 text-muted-foreground">
+        <p id="create-goal-help" className="text-13 text-muted-foreground">
           Matched with keywords on this device. Nothing you type is sent anywhere.
         </p>
         <ul aria-label="Examples" className="flex flex-wrap gap-2">
@@ -666,7 +659,7 @@ function GoalStep({
                 type="button"
                 onClick={() => setGoal(c)}
                 aria-pressed={goal === c}
-                className="border-line hover:border-line-strong text-label-13 aria-pressed:bg-ink aria-pressed:text-primary-foreground h-8 rounded-full border px-3 transition-colors duration-150"
+                className="border-line hover:border-line-strong text-13 aria-pressed:bg-ink aria-pressed:text-primary-foreground h-8 rounded-full border px-3 transition-colors duration-150"
               >
                 {c}
               </button>
@@ -693,12 +686,12 @@ function GoalStep({
                         className="border-line hover:border-line-strong hover:bg-subtle flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors duration-150"
                       >
                         <span className="min-w-0 flex-1">
-                          <span className="text-label-14 block font-medium">{m.title}</span>
-                          <span className="text-copy-13 text-muted-foreground line-clamp-2">
+                          <span className="text-14 block font-medium">{m.title}</span>
+                          <span className="text-13 text-muted-foreground line-clamp-2">
                             {m.description || kindWord[m.kind]}
                           </span>
                         </span>
-                        <span className="bg-soft text-label-12 text-muted-foreground shrink-0 rounded-full px-2 py-0.5">
+                        <span className="bg-soft text-12 text-muted-foreground shrink-0 rounded-full px-2 py-0.5">
                           {installed ? 'Set up' : appReady ? 'Ready' : kindWord[m.kind]}
                         </span>
                       </button>
@@ -707,7 +700,7 @@ function GoalStep({
                 })}
               </ul>
             ) : (
-              <p className="text-copy-14 text-muted-foreground">
+              <p className="text-14 text-muted-foreground">
                 Nothing ready-made matches yet. Pick one of the options below.
               </p>
             )}
@@ -715,7 +708,7 @@ function GoalStep({
         ) : null}
       </section>
       <section aria-labelledby="create-cards">
-        <h2 id="create-cards" className="text-label-13 text-muted-foreground mb-2 font-medium">
+        <h2 id="create-cards" className="text-13 text-muted-foreground mb-2 font-medium">
           Or create
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -732,8 +725,8 @@ function GoalStep({
                   className="border-line hover:border-line-strong hover:bg-subtle flex h-full w-full flex-col items-start gap-2 rounded-lg border p-4 text-left transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 [&_svg]:size-5"
                 >
                   <span className="text-ink">{c.icon}</span>
-                  <span className="text-heading-16">{c.title}</span>
-                  <span className="text-copy-13 text-muted-foreground">
+                  <span className="text-card-title">{c.title}</span>
+                  <span className="text-13 text-muted-foreground">
                     {off ? 'Ask an editor or admin.' : c.outcome}
                   </span>
                 </button>
@@ -782,11 +775,11 @@ function SolveStep({
           id="create-sets"
           data-step-heading
           tabIndex={-1}
-          className="text-heading-20 mb-1 outline-none"
+          className="text-panel-title mb-1 outline-none"
         >
           Pick a ready-made set
         </h2>
-        <p className="text-copy-13 text-muted-foreground mb-3">
+        <p className="text-13 text-muted-foreground mb-3">
           Each set is the sheets, forms, automations and dashboards for one job.
         </p>
         <ul role="radiogroup" aria-label="Ready-made sets" className="flex flex-col gap-2">
@@ -801,19 +794,15 @@ function SolveStep({
                 className="border-line hover:border-line-strong aria-checked:border-ink aria-checked:bg-subtle flex w-full flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors duration-150 aria-checked:shadow-[inset_0_0_0_1px_var(--ink)]"
               >
                 <span className="flex w-full items-center gap-2">
-                  <span className="text-label-14 min-w-0 flex-1 truncate font-medium">
-                    {p.title}
-                  </span>
+                  <span className="text-14 min-w-0 flex-1 truncate font-medium">{p.title}</span>
                   {p.installed ? (
-                    <span className="bg-soft text-label-12 text-muted-foreground rounded-full px-2 py-0.5">
+                    <span className="bg-soft text-12 text-muted-foreground rounded-full px-2 py-0.5">
                       Set up
                     </span>
                   ) : null}
                 </span>
-                <span className="text-copy-13 text-muted-foreground line-clamp-2">
-                  {p.description}
-                </span>
-                <span className="text-label-12 text-muted-foreground">{p.inside}</span>
+                <span className="text-13 text-muted-foreground line-clamp-2">{p.description}</span>
+                <span className="text-12 text-muted-foreground">{p.inside}</span>
               </button>
             </li>
           ))}
@@ -824,13 +813,13 @@ function SolveStep({
         className={cn('min-w-0', pack && 'max-[999px]:order-first')}
       >
         {!pack ? (
-          <div className="border-line text-copy-14 text-muted-foreground flex min-h-[200px] items-center justify-center rounded-lg border border-dashed p-6 text-center">
+          <div className="border-line text-14 text-muted-foreground flex min-h-[200px] items-center justify-center rounded-lg border border-dashed p-6 text-center">
             Pick a set to see exactly what it creates.
           </div>
         ) : pack.installed ? (
           <div className="border-line flex flex-col items-start gap-3 rounded-lg border p-5">
-            <h3 className="text-heading-16">{pack.title} is already set up here</h3>
-            <p className="text-copy-14 text-muted-foreground">
+            <h3 className="text-card-title">{pack.title} is already set up here</h3>
+            <p className="text-14 text-muted-foreground">
               It was created as {pack.installed.name}. A set is created once per workspace.
             </p>
             <Button type="button" onClick={() => onOpen(pack.installed!.sheetId)}>
@@ -870,7 +859,12 @@ function SetPreview({
 }) {
   if (!details || details.state === 'loading')
     return (
-      <div aria-busy="true" aria-label="Loading the preview" className="flex flex-col gap-3">
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading the preview"
+        className="flex flex-col gap-3"
+      >
         <div className="bg-soft h-[72px] animate-pulse rounded-lg" />
         <div className="bg-soft h-[240px] animate-pulse rounded-lg" />
       </div>
@@ -878,7 +872,7 @@ function SetPreview({
   if (details.state === 'error')
     return (
       <div role="alert" className="flex flex-col items-start gap-3">
-        <p className="text-copy-14">{details.message}</p>
+        <p className="text-14">{details.message}</p>
         <Button type="button" variant="outline" onClick={onRetry}>
           <RotateCcw aria-hidden /> Retry
         </Button>
@@ -915,14 +909,14 @@ function PickList({
   return (
     <div>
       <StepHeading title={heading} description={description} />
-      {disabled ? <p className="text-copy-14 text-muted-foreground mb-3">{disabled}</p> : null}
+      {disabled ? <p className="text-14 text-muted-foreground mb-3">{disabled}</p> : null}
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((s) => (
           <li key={s.id}>
             {disabled ? (
               <div aria-disabled className={cn(cls, 'cursor-not-allowed opacity-60')}>
-                <span className="text-label-14 font-medium">{s.title}</span>
-                <span className="text-copy-13 text-muted-foreground">{s.description}</span>
+                <span className="text-14 font-medium">{s.title}</span>
+                <span className="text-13 text-muted-foreground">{s.description}</span>
               </div>
             ) : (
               <Link
@@ -931,8 +925,8 @@ function PickList({
                 data-testid={`create-start-${s.id}`}
                 className={cls}
               >
-                <span className="text-label-14 font-medium">{s.title}</span>
-                <span className="text-copy-13 text-muted-foreground">{s.description}</span>
+                <span className="text-14 font-medium">{s.title}</span>
+                <span className="text-13 text-muted-foreground">{s.description}</span>
               </Link>
             )}
           </li>
@@ -961,7 +955,7 @@ function SheetList({
   const shown = sheets.filter((s) => !q || s.name.toLowerCase().includes(q)).slice(0, 50);
   return (
     <div className="flex flex-col gap-3">
-      {disabled ? <p className="text-copy-14 text-muted-foreground">{disabled}</p> : null}
+      {disabled ? <p className="text-14 text-muted-foreground">{disabled}</p> : null}
       {sheets.length > 6 ? (
         <input
           type="search"
@@ -969,12 +963,12 @@ function SheetList({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a sheet"
           aria-label="Find a sheet"
-          className="border-line focus-visible:border-focus text-label-14 focus-visible:ring-focus h-10 w-full max-w-[420px] rounded-md border px-3 outline-none focus-visible:ring-2"
+          className="border-line focus-visible:border-focus text-14 focus-visible:ring-focus h-10 w-full max-w-[420px] rounded-md border px-3 outline-none focus-visible:ring-2"
         />
       ) : null}
       {sheets.length === 0 ? (
         <div className="border-line flex flex-col items-start gap-3 rounded-lg border border-dashed p-5">
-          <p className="text-copy-14">No sheets yet. Create a sheet first.</p>
+          <p className="text-14">No sheets yet. Create a sheet first.</p>
           {onNewSheet ? (
             <Button type="button" onClick={onNewSheet}>
               New sheet
@@ -982,7 +976,7 @@ function SheetList({
           ) : null}
         </div>
       ) : shown.length === 0 ? (
-        <p className="text-copy-14 text-muted-foreground">No sheet matches.</p>
+        <p className="text-14 text-muted-foreground">No sheet matches.</p>
       ) : (
         <ul aria-label="Sheets" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map((s) => (
@@ -993,8 +987,8 @@ function SheetList({
                 onClick={() => onPick(s.id)}
                 className="border-line hover:border-line-strong hover:bg-subtle flex w-full flex-col items-start rounded-lg border px-3 py-2.5 text-left transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span className="text-label-14 w-full truncate font-medium">{s.name}</span>
-                <span className="text-label-12 text-muted-foreground w-full truncate">
+                <span className="text-14 w-full truncate font-medium">{s.name}</span>
+                <span className="text-12 text-muted-foreground w-full truncate">
                   {s.folder ? `${s.folder} · ` : ''}
                   {s.itemLabel}
                 </span>
@@ -1047,7 +1041,7 @@ function AutomationStep({
         description="Pick a recipe (or start blank) and the sheet it watches. You finish it in the builder."
       />
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-label-14 mb-2 font-medium">Recipe</legend>
+        <legend className="text-14 mb-2 font-medium">Recipe</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {[
             { id: '', title: 'Blank automation: choose the trigger and actions yourself' },
@@ -1065,13 +1059,13 @@ function AutomationStep({
                 onChange={() => setRecipeId(r.id)}
                 className="mt-0.5 accent-[var(--ink)]"
               />
-              <span className="text-copy-13">{r.title}</span>
+              <span className="text-13">{r.title}</span>
             </label>
           ))}
         </div>
       </fieldset>
       <section aria-labelledby="automation-sheet">
-        <h3 id="automation-sheet" className="text-label-14 mb-2 font-medium">
+        <h3 id="automation-sheet" className="text-14 mb-2 font-medium">
           Sheet it watches
         </h3>
         <SheetList
@@ -1082,7 +1076,7 @@ function AutomationStep({
           onPick={onPick}
         />
       </section>
-      <p className="text-copy-13 text-muted-foreground flex items-center gap-1.5">
+      <p className="text-13 text-muted-foreground flex items-center gap-1.5">
         <Puzzle className="size-4" aria-hidden /> Recipes fill in the builder; nothing runs until
         you turn it on.
       </p>

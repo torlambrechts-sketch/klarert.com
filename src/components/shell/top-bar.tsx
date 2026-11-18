@@ -10,13 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { solidVar } from '@/components/fields/shared';
 import { GlobalSearch } from './global-search';
 import { Inbox } from './inbox';
-import { CRUMB_SLOT } from './shell-crumb';
+import { Logo } from './logo';
+import { WorkspaceSwitcher, type Ws } from './side-menu';
 import { useShell } from './shell-context';
-
-type Ws = { id: string; name: string; slug: string };
 
 /** Focus the search box with "/" unless the person is typing somewhere. */
 function useSlashToSearch(focus: () => void) {
@@ -33,42 +31,50 @@ function useSlashToSearch(focus: () => void) {
   }, [focus]);
 }
 
+// The top bar (docs/18 §4, docs/05 §2.3): white, 69 px. The logo in a 288 px slot, the 44 px search pill, then the
+// workspace switcher, the Inbox bell and the user pill. Phones keep Search, the Inbox and the avatar (docs/05 §5);
+// the workspace switcher is in the menu sheet there.
 export function TopBar({
   current,
+  workspaces,
   me,
   canManage,
   timeZone,
 }: {
   current: Ws;
+  workspaces: Ws[];
   me: { id: string; displayName: string; initials: string; color: string; email: string };
   canManage: boolean;
   timeZone: string;
 }) {
   const { focusSearch } = useShell();
   useSlashToSearch(focusSearch);
+  const first = me.displayName.split(/\s+/)[0] ?? me.displayName;
   return (
-    <header className="border-line bg-page sticky top-0 z-30 flex h-[48px] items-center gap-2 border-b px-3 sm:gap-2.5 sm:px-[28px] print:hidden">
-      {/* phones: the menu opens from the bottom bar's Menu; the top bar keeps Search and the Inbox (docs/05 §5) */}
-      {/* the page's breadcrumb (folder / sheet and its badge) is rendered here by <ShellCrumb> */}
-      <div id={CRUMB_SLOT} className="desk-only flex min-w-0 flex-1 items-center" />
+    <header className="top-bar border-line bg-surface sticky top-0 z-30 flex h-[69px] items-center gap-3 border-b px-4 min-[640px]:gap-6 min-[640px]:px-6 print:hidden">
+      <Logo href={`/${current.slug}/home`} />
 
       <GlobalSearch org={current.slug} />
 
-      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1 min-[640px]:gap-3">
+        <div className="desk-only">
+          <WorkspaceSwitcher current={current} workspaces={workspaces} variant="top" />
+        </div>
         <Inbox org={current.slug} orgId={current.id} userId={me.id} timeZone={timeZone} />
 
         <DropdownMenu>
-          <DropdownMenuTrigger
-            className="text-label-12 flex size-7 shrink-0 items-center justify-center rounded-full font-semibold text-white"
-            style={{ background: solidVar(me.color) }}
-            aria-label={`${me.initials}: account menu for ${me.displayName}`}
-          >
-            {me.initials}
+          <DropdownMenuTrigger className="border-brand text-brand hover:bg-panel flex h-11 shrink-0 items-center gap-2.5 rounded-full border pr-1.5 pl-1.5 font-medium transition-colors duration-150 min-[640px]:pr-5">
+            {/* the name is the visible words and then the purpose (WCAG 2.5.3, label in name) */}
+            <span className="bg-brand-soft text-navy text-13 flex size-8 items-center justify-center rounded-full font-semibold">
+              {me.initials}
+            </span>{' '}
+            <span className="text-nav max-w-[10rem] truncate max-[639.98px]:hidden">{first}</span>
+            <span className="sr-only">: account menu for {me.displayName}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-56">
             <DropdownMenuLabel className="flex flex-col">
               <span>{me.displayName}</span>
-              <span className="text-muted-foreground text-label-12 font-normal">{me.email}</span>
+              <span className="text-muted-foreground text-12 font-normal">{me.email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

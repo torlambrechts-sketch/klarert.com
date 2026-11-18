@@ -103,8 +103,8 @@ export function AuditPackDialog({
       </Button>
       <DialogContent className="flex max-h-[85vh] w-[min(560px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">Audit pack</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogTitle className="text-panel-title">Audit pack</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground">
             A zip with the statement of applicability, every sheet in scope as CSV, an index of the
             evidence, and the activity log of the period with its hash chains checked. Only what you
             can see goes in.
@@ -118,7 +118,7 @@ export function AuditPackDialog({
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${id}-scope`} className="text-label-13 font-medium">
+            <label htmlFor={`${id}-scope`} className="text-13 font-medium">
               Scope
             </label>
             <select
@@ -150,10 +150,10 @@ export function AuditPackDialog({
             </select>
           </div>
           <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
-            <legend className="text-label-13 mb-1.5 p-0 font-medium">Period</legend>
+            <legend className="text-13 mb-1.5 p-0 font-medium">Period</legend>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <label className="flex flex-col gap-1">
-                <span className="text-label-12 text-muted-foreground">From</span>
+                <span className="text-12 text-muted-foreground">From</span>
                 <input
                   type="date"
                   className={inputClass}
@@ -164,7 +164,7 @@ export function AuditPackDialog({
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-label-12 text-muted-foreground">To</span>
+                <span className="text-12 text-muted-foreground">To</span>
                 <input
                   type="date"
                   className={inputClass}
@@ -178,11 +178,11 @@ export function AuditPackDialog({
               </label>
             </div>
             {periodError ? (
-              <p id={`${id}-period`} className="text-crit-ink text-label-12 m-0">
+              <p id={`${id}-period`} className="text-crit-ink text-12 m-0">
                 {periodError}
               </p>
             ) : (
-              <p className="text-label-12 text-muted-foreground m-0">
+              <p className="text-12 text-muted-foreground m-0">
                 The activity log extract covers these days. Sheets and evidence are as they are now.
               </p>
             )}
@@ -196,8 +196,8 @@ export function AuditPackDialog({
               onChange={(e) => setFiles(e.target.checked)}
             />
             <span className="flex flex-col">
-              <span className="text-label-13 font-medium">Include the evidence files</span>
-              <span className="text-label-12 text-muted-foreground">
+              <span className="text-13 font-medium">Include the evidence files</span>
+              <span className="text-12 text-muted-foreground">
                 Files up to {formatBytes(AUDIT_FILE_LIMITS.perFile)} each,{' '}
                 {formatBytes(AUDIT_FILE_LIMITS.total)} in all. Larger ones are listed in the index
                 only. Each one counts as a download.
@@ -206,7 +206,7 @@ export function AuditPackDialog({
           </label>
 
           {state.kind === 'busy' ? (
-            <p role="status" className="text-copy-14 m-0 flex items-center gap-1.5">
+            <p role="status" className="text-14 m-0 flex items-center gap-1.5">
               <Loader2 className="size-4 animate-spin" aria-hidden /> Making the pack and checking
               the hash chains. This can take a minute.
             </p>
@@ -220,7 +220,7 @@ export function AuditPackDialog({
             </div>
           ) : null}
           {state.kind === 'done' ? (
-            <p role="status" className="text-copy-14 m-0 flex items-center gap-1.5">
+            <p role="status" className="text-14 m-0 flex items-center gap-1.5">
               <Check className="text-good size-4" aria-hidden /> Saved {state.filename}. The export
               is in the activity log.
             </p>

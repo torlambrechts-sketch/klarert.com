@@ -77,7 +77,7 @@ import {
 
 /** The page header's actions: the board design's 36 px buttons with 15 px icons. */
 const headerButton =
-  "text-label-13 h-9 gap-1.5 px-3.5 has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-[15px]";
+  "text-13 h-9 gap-1.5 px-3.5 has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-[15px]";
 
 export interface SheetViewProps {
   org: string;
@@ -307,11 +307,11 @@ function SheetBody(props: SheetViewProps) {
   return (
     <main
       className={cn(
-        'flex min-w-0 flex-col px-4 pt-5 sm:px-[28px] sm:pt-[26px]',
+        'flex min-w-0 flex-col px-4 pt-5 [--hero-gap:0px] sm:px-12 sm:pt-[26px]',
         // the Table and Insights scroll with the page; the other views fill the window and scroll inside
         tabular || active.type === 'insights' || active.type === 'design'
-          ? 'min-h-[calc(100dvh-48px)] pb-[24px]'
-          : 'h-[calc(100dvh-48px)] pb-3 max-[759px]:h-[calc(100dvh-112px)]',
+          ? 'min-h-[calc(100dvh-69px)] pb-[24px]'
+          : 'h-[calc(100dvh-69px)] pb-3 max-[759px]:h-[calc(100dvh-133px)]',
       )}
     >
       <ShellCrumb>
@@ -320,7 +320,7 @@ function SheetBody(props: SheetViewProps) {
             so screen readers read every word; in a very narrow bar "Used by …" is only read, not shown */}
         <nav
           aria-label="Breadcrumb"
-          className="text-label-14 flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden"
+          className="text-14 flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden"
         >
           {props.folderName ? (
             <>
@@ -331,7 +331,7 @@ function SheetBody(props: SheetViewProps) {
                 <Folder className="size-[15px] shrink-0" aria-hidden />
                 <span className="truncate">{props.folderName}</span>
               </span>
-              <span aria-hidden className="text-line-strong text-label-20 leading-none font-light">
+              <span aria-hidden className="text-line-strong text-20 leading-none font-light">
                 /
               </span>
             </>
@@ -350,12 +350,12 @@ function SheetBody(props: SheetViewProps) {
             className="@container/chips flex min-w-[4.5rem] flex-[1_1_0] items-center gap-2.5 overflow-hidden"
           >
             {props.restricted ? (
-              <span className="bg-soft text-muted-foreground text-label-12 flex shrink-0 items-center gap-1 rounded-full px-[9px] py-0.5 font-medium">
+              <span className="bg-soft text-muted-foreground text-12 flex shrink-0 items-center gap-1 rounded-full px-[9px] py-0.5 font-medium">
                 <Lock className="size-3" aria-hidden /> Restricted
               </span>
             ) : null}
             {props.archived || data?.sheet.isLibrary ? (
-              <span className="bg-soft text-muted-foreground text-label-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
+              <span className="bg-soft text-muted-foreground text-12 shrink-0 rounded-full px-[9px] py-0.5 font-medium">
                 {props.archived ? 'Archived' : 'Library'}
               </span>
             ) : null}
@@ -364,7 +364,7 @@ function SheetBody(props: SheetViewProps) {
                 <span
                   data-testid="system-board"
                   title={`System sheet · installed by ${props.system.source}`}
-                  className="bg-soft text-ink text-label-12 flex min-w-[4.5rem] items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
+                  className="bg-soft text-ink text-12 flex min-w-[4.5rem] items-center gap-1 rounded-full px-[9px] py-0.5 font-medium"
                 >
                   <Lock className="size-3 shrink-0" aria-hidden />
                   <span className="min-w-0 truncate">
@@ -376,7 +376,7 @@ function SheetBody(props: SheetViewProps) {
                   <span
                     data-testid="system-used-by"
                     title={usedByText(data.fields)}
-                    className="border-line text-muted-foreground text-label-12 hidden min-w-[4.5rem] truncate rounded-full border px-[9px] py-0.5 font-medium md:block @max-[12rem]/chips:sr-only"
+                    className="border-line text-muted-foreground text-12 hidden min-w-[4.5rem] truncate rounded-full border px-[9px] py-0.5 font-medium md:block @max-[12rem]/chips:sr-only"
                   >
                     {usedByText(data.fields)}
                   </span>
@@ -393,7 +393,7 @@ function SheetBody(props: SheetViewProps) {
             <>
               {props.description}
               {realtime === 'offline' && online ? (
-                <span className="text-muted-foreground text-label-13 block">
+                <span className="text-muted-foreground text-13 block">
                   Live updates paused, reconnecting.
                 </span>
               ) : null}
@@ -441,134 +441,142 @@ function SheetBody(props: SheetViewProps) {
           </>
         }
       />
-      {data?.sheet.framework?.movedTo ? (
-        <p
-          role="note"
-          data-testid="library-moved"
-          className="border-line bg-soft text-copy-13 m-0 flex flex-wrap items-center gap-1 rounded-md border px-3 py-2"
-        >
-          <Lock className="size-4 shrink-0" aria-hidden /> Read-only: this library moved to{' '}
-          <Link
-            href={`/${org}/s/${data.sheet.framework.movedTo.sheetId}`}
-            className="font-medium underline-offset-2 hover:underline"
-          >
-            {data.sheet.framework.movedTo.title}
-          </Link>
-          . Its items are locked; the history stays here.
-        </p>
-      ) : null}
-      {props.bundle ? (
-        <BundleBanner
-          org={org}
-          bundle={props.bundle}
-          userId={userId}
-          isAdmin={isAdmin}
-          timeZone={timeZone}
-          itemLabel={data?.sheet.itemLabel ?? 'item'}
-          canAdd={canEdit && !!data}
-          onAdd={addNew}
-        />
-      ) : null}
-      {active.type === 'form' ? null : <KeyFigures items={data ? inScope : null} ctx={ctx} />}
-      <ViewTabs
-        className="-mx-4 px-4 sm:-mx-[28px] sm:px-[28px]"
-        views={views}
-        fields={data?.fields ?? []}
-        canCustomise={isAdmin}
-        end={
-          <>
-            {design ? null : <ViewMenu views={views} canEdit={canEdit} />}
-            <Button asChild variant="ghost" size="icon-sm">
-              <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
-                <Settings aria-hidden />
-              </Link>
-            </Button>
-          </>
-        }
-      />
-      <div
-        data-keep-selection
-        data-testid="sheet-toolbar"
-        className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-2"
+      {/* the sheet's header card (docs/18 §6): figures, view tabs and the toolbar, overlapping the hero */}
+      <section
+        aria-label="Sheet tools"
+        data-hero-overlap
+        className="bg-surface shadow-card rounded-card flex min-w-0 flex-col gap-3 px-4 pt-1 pb-3 sm:px-6"
       >
-        {data && ctx && env && tabular ? (
-          // the Table's toolbar (docs/18 C8): View ▾, search, Filter ▾, Sort ▾, More ▾, ⚡
-          <>
-            <TableViewMenu views={views} userId={userId} ctx={ctx} items={inScope} />
-            <div className="flex min-w-[140px] flex-[0_1_180px] focus-within:flex-[0_1_280px] [&>*]:w-full">
-              <SheetSearch value={q} onChange={setQ} />
-            </div>
-            <TableFilterMenu
-              ctx={ctx}
-              items={inScope}
-              fields={data.fields}
-              config={config}
-              setConfig={setConfig}
-              computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
-            />
-            <TableSortMenu config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
-            <TableMoreMenu
-              org={org}
-              data={data}
-              ctx={ctx}
-              env={env}
-              views={views}
-              userId={userId}
-              actions={actions}
-              canEdit={canEdit}
-              isAdmin={isAdmin}
-              archived={props.archived}
-              onlyGroup={props.onlyGroup}
-              sub={sub.state ?? null}
-            />
-            <ValueFilterChip />
-          </>
-        ) : (
-          <>
-            {filterable ? (
-              <div className="flex min-w-0 flex-[1_1_240px] [&>*]:w-full">
+        {data?.sheet.framework?.movedTo ? (
+          <p
+            role="note"
+            data-testid="library-moved"
+            className="border-line bg-soft text-13 m-0 flex flex-wrap items-center gap-1 rounded-md border px-3 py-2"
+          >
+            <Lock className="size-4 shrink-0" aria-hidden /> Read-only: this library moved to{' '}
+            <Link
+              href={`/${org}/s/${data.sheet.framework.movedTo.sheetId}`}
+              className="font-medium underline-offset-2 hover:underline"
+            >
+              {data.sheet.framework.movedTo.title}
+            </Link>
+            . Its items are locked; the history stays here.
+          </p>
+        ) : null}
+        {props.bundle ? (
+          <BundleBanner
+            org={org}
+            bundle={props.bundle}
+            userId={userId}
+            isAdmin={isAdmin}
+            timeZone={timeZone}
+            itemLabel={data?.sheet.itemLabel ?? 'item'}
+            canAdd={canEdit && !!data}
+            onAdd={addNew}
+          />
+        ) : null}
+        {active.type === 'form' ? null : <KeyFigures items={data ? inScope : null} ctx={ctx} />}
+        <ViewTabs
+          className="-mx-4 px-4 sm:-mx-6 sm:px-6"
+          views={views}
+          fields={data?.fields ?? []}
+          canCustomise={isAdmin}
+          end={
+            <>
+              {design ? null : <ViewMenu views={views} canEdit={canEdit} />}
+              <Button asChild variant="ghost" size="icon-sm">
+                <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
+                  <Settings aria-hidden />
+                </Link>
+              </Button>
+            </>
+          }
+        />
+        <div
+          data-keep-selection
+          data-testid="sheet-toolbar"
+          className="flex flex-wrap items-center gap-2"
+        >
+          {data && ctx && env && tabular ? (
+            // the Table's toolbar (docs/18 C8): View ▾, search, Filter ▾, Sort ▾, More ▾, ⚡
+            <>
+              <TableViewMenu views={views} userId={userId} ctx={ctx} items={inScope} />
+              <div className="flex min-w-[140px] flex-[0_1_180px] focus-within:flex-[0_1_280px] [&>*]:w-full">
                 <SheetSearch value={q} onChange={setQ} />
               </div>
-            ) : null}
-            {data && !design ? (
-              <GroupSelect
+              <TableFilterMenu
+                ctx={ctx}
+                items={inScope}
+                fields={data.fields}
+                config={config}
+                setConfig={setConfig}
+                computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
+              />
+              <TableSortMenu config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
+              <TableMoreMenu
                 org={org}
                 data={data}
-                onlyGroup={props.onlyGroup}
+                ctx={ctx}
+                env={env}
+                views={views}
+                userId={userId}
+                actions={actions}
                 canEdit={canEdit}
+                isAdmin={isAdmin}
                 archived={props.archived}
+                onlyGroup={props.onlyGroup}
+                sub={sub.state ?? null}
               />
-            ) : null}
-            {data && ctx && filterable ? (
-              <>
-                {active.type !== 'insights' ? (
-                  <SortButton
+              <ValueFilterChip />
+            </>
+          ) : (
+            <>
+              {filterable ? (
+                <div className="flex min-w-0 flex-[1_1_240px] [&>*]:w-full">
+                  <SheetSearch value={q} onChange={setQ} />
+                </div>
+              ) : null}
+              {data && !design ? (
+                <GroupSelect
+                  org={org}
+                  data={data}
+                  onlyGroup={props.onlyGroup}
+                  canEdit={canEdit}
+                  archived={props.archived}
+                />
+              ) : null}
+              {data && ctx && filterable ? (
+                <>
+                  {active.type !== 'insights' ? (
+                    <SortButton
+                      config={config}
+                      setConfig={setConfig}
+                      fields={data.fields}
+                      ctx={ctx}
+                    />
+                  ) : null}
+                  <FilterButton
                     config={config}
                     setConfig={setConfig}
                     fields={data.fields}
                     ctx={ctx}
+                    computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
                   />
-                ) : null}
-                <FilterButton
-                  config={config}
-                  setConfig={setConfig}
-                  fields={data.fields}
-                  ctx={ctx}
-                  computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
-                />
-              </>
-            ) : null}
-          </>
-        )}
-        <SheetAutomations
-          org={org}
-          sheetId={sheetId}
-          sheetName={sheetName}
-          ctx={ctx}
-          role={role}
-          timeZone={timeZone}
-        />
-      </div>
+                </>
+              ) : null}
+            </>
+          )}
+          <SheetAutomations
+            org={org}
+            sheetId={sheetId}
+            sheetName={sheetName}
+            ctx={ctx}
+            role={role}
+            timeZone={timeZone}
+          />
+        </div>
+      </section>
+      <div aria-hidden className="h-4 shrink-0" />
       <AccessDialog
         org={org}
         target={accessOpen ? { kind: 'sheet', id: sheetId, name: sheetName } : null}
@@ -585,7 +593,7 @@ function SheetBody(props: SheetViewProps) {
         />
       ) : null}
       {!canEdit ? (
-        <p className="text-muted-foreground text-copy-13 -mt-1 mb-3">
+        <p className="text-muted-foreground text-13 -mt-1 mb-3">
           {props.role === 'auditor'
             ? 'You have read-only auditor access.'
             : commentable
@@ -599,7 +607,7 @@ function SheetBody(props: SheetViewProps) {
           className="border-line flex flex-col items-start gap-2 rounded-lg border p-4"
         >
           <p className="font-semibold">The sheet could not be loaded.</p>
-          <p className="text-muted-foreground text-copy-13">{query.error.message}</p>
+          <p className="text-muted-foreground text-13">{query.error.message}</p>
           <Button type="button" variant="outline" onClick={() => void query.refetch()}>
             Retry
           </Button>
@@ -803,7 +811,7 @@ function ViewBody({
   return (
     <>
       {view.filtered && active.type !== 'form' && active.type !== 'table' ? (
-        <p className="text-muted-foreground text-label-12 -mt-1" aria-live="polite">
+        <p className="text-muted-foreground text-12 -mt-1" aria-live="polite">
           Showing {view.items.length.toLocaleString('en-GB')} of{' '}
           {(onlyGroup
             ? data.items.filter((i) => i.groupId === onlyGroup).length
@@ -957,7 +965,7 @@ function ViewBody({
       />
       <Dialog open={!!addFieldAt} onOpenChange={(o) => !o && store.getState().openAddField(null)}>
         <DialogContent className="w-[min(380px,calc(100vw-32px))]">
-          <DialogTitle className="text-heading-16">Add a field</DialogTitle>
+          <DialogTitle className="text-card-title">Add a field</DialogTitle>
           <DialogDescription className="sr-only">
             Choose the type of the new field.
           </DialogDescription>

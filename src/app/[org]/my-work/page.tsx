@@ -10,7 +10,7 @@ import {
 } from '@/engine/my-work';
 import { MyWorkFilters } from '@/components/my-work/my-work-filters';
 import { WorkList } from '@/components/my-work/work-row';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { cn } from '@/lib/utils';
 import { requireMember } from '@/server/auth';
 import { getMyWork } from '@/server/repositories/my-work';
@@ -65,66 +65,68 @@ export default async function MyWorkPage({
   };
 
   return (
-    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
       <PageHeader
         title="My work"
         description="Approvals waiting for you, items assigned to you and requests to you, soonest first."
       />
-      {failed || !data ? (
-        <div
-          role="alert"
-          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
-        >
-          <p className="m-0">My work could not be loaded.</p>
-          <a
-            href={href(bucket)}
-            className="border-line hover:bg-soft bg-background-100 text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+      <HeadCard>
+        {failed || !data ? (
+          <div
+            role="alert"
+            className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
           >
-            Retry
-          </a>
-        </div>
-      ) : (
-        <>
-          <ApprovalInbox org={org} rows={approvals ?? []} timeZone={workspace.time_zone} />
-          <nav aria-label="My work filters" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {TILES.map(({ bucket: b, icon: Icon }) => {
-              const active = bucket === b;
-              return (
-                <a
-                  key={b}
-                  href={active ? href(null) : href(b)}
-                  aria-current={active ? 'page' : undefined}
-                  data-testid={`kpi-${b}`}
-                  className={cn(
-                    'border-line hover:border-line-strong bg-background-100 flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2',
-                    active && 'border-brand ring-brand ring-1',
-                  )}
-                >
-                  <span className="text-ink text-label-14 flex items-center justify-between gap-1.5 font-medium">
-                    {BUCKET_LABEL[b]}
-                    <Icon className="text-muted-foreground size-4" aria-hidden />
-                  </span>
-                  <span
+            <p className="m-0">My work could not be loaded.</p>
+            <a
+              href={href(bucket)}
+              className="border-line hover:bg-soft bg-surface text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+            >
+              Retry
+            </a>
+          </div>
+        ) : (
+          <>
+            <ApprovalInbox org={org} rows={approvals ?? []} timeZone={workspace.time_zone} />
+            <nav aria-label="My work filters" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {TILES.map(({ bucket: b, icon: Icon }) => {
+                const active = bucket === b;
+                return (
+                  <a
+                    key={b}
+                    href={active ? href(null) : href(b)}
+                    aria-current={active ? 'page' : undefined}
+                    data-testid={`kpi-${b}`}
                     className={cn(
-                      'text-heading-32 leading-none tabular-nums',
-                      b === 'overdue' && data.work.counts.overdue > 0 && 'text-crit',
+                      'border-line hover:border-line-strong bg-surface flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2',
+                      active && 'border-brand ring-brand ring-1',
                     )}
                   >
-                    {data.work.counts[b]}
-                  </span>
-                </a>
-              );
-            })}
-          </nav>
-          <MyWorkFilters
-            org={org}
-            counts={{ ...data.work.counts, sheets: data.work.sheets }}
-            filter={bucket}
-            sheet={sheetId}
-          />
-          <Rows org={org} work={data.work} bucket={bucket} sheetId={sheetId} />
-        </>
-      )}
+                    <span className="text-ink text-14 flex items-center justify-between gap-1.5 font-medium">
+                      {BUCKET_LABEL[b]}
+                      <Icon className="text-muted-foreground size-4" aria-hidden />
+                    </span>
+                    <span
+                      className={cn(
+                        'text-figure leading-none tabular-nums',
+                        b === 'overdue' && data.work.counts.overdue > 0 && 'text-crit',
+                      )}
+                    >
+                      {data.work.counts[b]}
+                    </span>
+                  </a>
+                );
+              })}
+            </nav>
+            <MyWorkFilters
+              org={org}
+              counts={{ ...data.work.counts, sheets: data.work.sheets }}
+              filter={bucket}
+              sheet={sheetId}
+            />
+            <Rows org={org} work={data.work} bucket={bucket} sheetId={sheetId} />
+          </>
+        )}
+      </HeadCard>
     </main>
   );
 }
@@ -144,7 +146,7 @@ function Rows({
   const sheetName = sheetId ? work.sheets.find((s) => s.id === sheetId)?.name : null;
   if (work.rows.length === 0)
     return (
-      <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
+      <div className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
         <p className="text-muted-foreground m-0">
           Nothing needs you. Items where you are in a people field, and requests to you, show here.
         </p>
@@ -155,7 +157,7 @@ function Rows({
     );
   if (rows.length === 0)
     return (
-      <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
+      <div className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
         <p className="text-muted-foreground m-0">Nothing matches this filter.</p>
         <a href={`/${org}/my-work`} className="text-ink font-medium underline underline-offset-4">
           Show everything
@@ -167,15 +169,15 @@ function Rows({
     return (
       <section className="flex flex-col gap-2" aria-labelledby="work-filtered">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 id="work-filtered" className="text-heading-16">
+          <h2 id="work-filtered" className="text-card-title">
             {title}{' '}
-            <span className="text-muted-foreground text-label-12-mono font-normal">
+            <span className="text-muted-foreground text-12 font-mono font-normal">
               ({rows.length})
             </span>
           </h2>
           <a
             href={`/${org}/my-work`}
-            className="text-ink text-label-13 font-medium underline underline-offset-4"
+            className="text-ink text-13 font-medium underline underline-offset-4"
           >
             Clear filter
           </a>
@@ -191,9 +193,9 @@ function Rows({
           className="flex flex-col gap-2"
           aria-labelledby={`work-${s.bucket}`}
         >
-          <h2 id={`work-${s.bucket}`} className="text-heading-16">
+          <h2 id={`work-${s.bucket}`} className="text-card-title">
             {BUCKET_LABEL[s.bucket]}{' '}
-            <span className="text-muted-foreground text-label-12-mono font-normal">
+            <span className="text-muted-foreground text-12 font-mono font-normal">
               ({s.rows.length})
             </span>
           </h2>

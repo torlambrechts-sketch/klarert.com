@@ -25,7 +25,7 @@ export function Bang() {
   return (
     <span
       aria-hidden
-      className="text-label-12 inline-flex size-[16px] shrink-0 items-center justify-center rounded-full border border-current leading-none font-bold"
+      className="text-12 inline-flex size-[16px] shrink-0 items-center justify-center rounded-full border border-current leading-none font-bold"
     >
       !
     </span>
@@ -71,7 +71,7 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
   return (
     <span
       className={cn(
-        'text-label-13 inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-full border px-2.5 font-medium',
+        'text-13 inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-full border px-2.5 font-medium',
         className,
       )}
       style={tintStyle(option.color)}
@@ -100,7 +100,7 @@ export function Block({
     return (
       <span
         data-box
-        className="text-label-13 absolute inset-px flex min-w-0 items-center justify-center gap-1 px-2 font-medium text-white transition-[filter] hover:brightness-110"
+        className="text-13 absolute inset-px flex min-w-0 items-center justify-center gap-1 px-2 font-medium text-white transition-[filter] hover:brightness-110"
         style={{ background: solidVar(option.color) }}
       >
         <OptionMarks option={option}>
@@ -112,7 +112,7 @@ export function Block({
     <span
       data-pill
       className={cn(
-        'text-ink text-label-14 flex w-full min-w-0 items-center gap-2 px-1.5 font-medium',
+        'text-ink text-14 flex w-full min-w-0 items-center gap-2 px-1.5 font-medium',
         density === 'grid' ? 'h-[30px]' : 'h-[34px]',
       )}
     >
@@ -127,7 +127,7 @@ export function Block({
 /** The number before a meter in the Table (scores, numbers with meter bands). */
 export function ScoreNumber({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-ink text-label-12.5-mono min-w-[22px] shrink-0 font-medium tabular-nums">
+    <span className="text-ink text-13 min-w-[22px] shrink-0 font-mono font-medium tabular-nums">
       {children}
     </span>
   );
@@ -176,7 +176,7 @@ export function Avatar({
 }) {
   const p = ctx.people.get(id);
   const color = p?.color ?? 'dark';
-  // 24 px is the smallest circle that holds two initials in text-label-12
+  // 24 px is the smallest circle that holds two initials in text-12
   const px = Math.max(size, 24);
   return (
     <span
@@ -185,8 +185,8 @@ export function Avatar({
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full',
         tone === 'solid'
-          ? 'text-label-12 border-2 border-white font-bold text-white'
-          : 'text-label-11 font-semibold shadow-[0_0_0_2px_var(--background-100)]',
+          ? 'text-12 border-2 border-white font-bold text-white'
+          : 'text-12 font-semibold shadow-[0_0_0_2px_var(--background-100)]',
       )}
       style={{
         width: px,
@@ -215,7 +215,7 @@ export function PeopleNames({ ids, ctx }: { ids: string[]; ctx: Ctx }) {
       <Avatar id={first} ctx={ctx} size={22} decorative />
       <span className="min-w-0 truncate">{ctx.people.get(first)?.name ?? 'Former member'}</span>
       {rest > 0 ? (
-        <span className="text-muted-foreground text-label-12 shrink-0 font-semibold">
+        <span className="text-muted-foreground text-12 shrink-0 font-semibold">
           +{rest}
           <span className="sr-only">
             {' '}
@@ -248,7 +248,7 @@ export function PeopleShort({ ids, ctx }: { ids: string[]; ctx: Ctx }) {
     return (
       <span className="flex min-w-0 items-center gap-2" title={name(ids[0]!)}>
         <Avatar id={ids[0]!} ctx={ctx} size={28} tone="soft" decorative />
-        <span className="text-label-13 min-w-0 truncate" aria-hidden>
+        <span className="text-13 min-w-0 truncate" aria-hidden>
           {shortName(name(ids[0]!))}
         </span>
         <span className="sr-only">{name(ids[0]!)}</span>
@@ -262,7 +262,7 @@ export function PeopleShort({ ids, ctx }: { ids: string[]; ctx: Ctx }) {
         ))}
       </span>
       {ids.length > 2 ? (
-        <span className="text-muted-foreground text-label-12 pl-1.5 font-semibold" aria-hidden>
+        <span className="text-muted-foreground text-12 pl-1.5 font-semibold" aria-hidden>
           +{ids.length - 2}
         </span>
       ) : null}
@@ -279,7 +279,7 @@ export function Avatars({ ids, ctx, max = 3 }: { ids: string[]; ctx: Ctx; max?: 
         <Avatar key={id} id={id} ctx={ctx} size={24} tone="soft" />
       ))}
       {ids.length > max ? (
-        <span className="text-muted-foreground text-label-12 pl-2.5 font-semibold">
+        <span className="text-muted-foreground text-12 pl-2.5 font-semibold">
           +{ids.length - max}
           <span className="sr-only">
             {' '}
@@ -316,7 +316,7 @@ export function EditorFrame({
 }) {
   return (
     <div className="flex flex-col gap-2" role="group" aria-label={title}>
-      <p className="text-muted-foreground text-label-12 font-semibold">{title}</p>
+      <p className="text-muted-foreground text-12 font-semibold">{title}</p>
       {children}
       {footer ? <div className="flex flex-wrap justify-end gap-2 pt-1">{footer}</div> : null}
     </div>
@@ -352,7 +352,7 @@ export function SaveCancel({
 }
 
 export const inputClass =
-  'border-input h-[32px] w-full rounded-md border bg-background-100 px-2 text-label-13 outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground hover:border-line-strong focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus';
+  'border-input h-[32px] w-full rounded-md border bg-surface px-2 text-13 outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground hover:border-line-strong focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus';
 
 /**
  * One-line (or multi-line) text editor. Enter saves (Ctrl/Cmd+Enter when multi-line); an input the type cannot read
@@ -427,11 +427,11 @@ export function TextEditor({
         <input {...props} inputMode={inputMode} className={inputClass} />
       )}
       {error ? (
-        <p id={`${id}-err`} role="alert" className="text-crit text-label-12">
+        <p id={`${id}-err`} role="alert" className="text-crit text-12">
           {error}
         </p>
       ) : (
-        <p className="text-muted-foreground text-label-12">
+        <p className="text-muted-foreground text-12">
           {multiline ? 'Ctrl+Enter saves. Esc cancels.' : 'Enter saves. Esc cancels.'}
         </p>
       )}
@@ -461,7 +461,7 @@ function FooterAction({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={cn(
-        'text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-13 inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 font-medium focus-visible:outline-2',
+        'text-muted-foreground hover:text-ink focus-visible:outline-focus text-13 inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 font-medium focus-visible:outline-2',
         className,
       )}
     >
@@ -582,7 +582,7 @@ export function OptionsEditor({
   const canClear = allowClear && current.length > 0;
   const rowClass = (on: boolean) =>
     cn(
-      'flex min-h-9 cursor-pointer items-center gap-2.5 py-1.5 pr-3 pl-4 text-label-13 select-none',
+      'flex min-h-9 cursor-pointer items-center gap-2.5 py-1.5 pr-3 pl-4 text-13 select-none',
       // active row (mouse or keyboard): soft fill and a focus-coloured bar on the left (>= 3:1 against white)
       on && 'bg-sel shadow-[inset_3px_0_0_var(--focus)]',
     );
@@ -606,7 +606,7 @@ export function OptionsEditor({
         setActive(0);
       }}
       onKeyDown={onKey}
-      className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground bg-background-100 text-label-13 h-8 w-full rounded-md border px-2.5 outline-none focus-visible:ring-2"
+      className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground bg-surface text-13 h-8 w-full rounded-md border px-2.5 outline-none focus-visible:ring-2"
     />
   );
 
@@ -616,9 +616,9 @@ export function OptionsEditor({
         data-flush
         role="group"
         aria-label={title}
-        className="bg-background-100 text-label-13 flex w-[320px] max-w-full min-w-0 flex-col"
+        className="bg-surface text-13 flex w-[320px] max-w-full min-w-0 flex-col"
       >
-        <div className="text-label-14 px-4 pt-3 pb-2 font-semibold">{title}</div>
+        <div className="text-14 px-4 pt-3 pb-2 font-semibold">{title}</div>
         <ul
           ref={listRef}
           id={listId}
@@ -640,7 +640,7 @@ export function OptionsEditor({
                 onClick={() => pick(o.id)}
                 onMouseMove={() => i !== at && setActive(i)}
                 className={cn(
-                  'text-label-13 flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] px-3 font-semibold text-white select-none',
+                  'text-13 flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] px-3 font-semibold text-white select-none',
                   on && 'ring-ink ring-2 ring-offset-2',
                   i === at && !on && 'ring-ink/40 ring-2 ring-offset-1',
                 )}
@@ -663,7 +663,7 @@ export function OptionsEditor({
               onClick={() => void addTyped()}
               onMouseMove={() => at !== shown.length && setActive(shown.length)}
               className={cn(
-                'border-line text-ink text-label-13 flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] border border-dashed px-3 font-semibold select-none',
+                'border-line text-ink text-13 flex min-h-[34px] cursor-pointer items-center justify-center gap-1.5 rounded-[3px] border border-dashed px-3 font-semibold select-none',
                 at === shown.length && 'bg-sel',
               )}
             >
@@ -677,7 +677,7 @@ export function OptionsEditor({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onCommit([])}
-                className="bg-soft hover:bg-subtle text-muted-foreground text-label-13 flex min-h-[34px] w-full items-center justify-center rounded-[3px] font-semibold"
+                className="bg-soft hover:bg-subtle text-muted-foreground text-13 flex min-h-[34px] w-full items-center justify-center rounded-[3px] font-semibold"
               >
                 Clear
               </button>
@@ -685,13 +685,13 @@ export function OptionsEditor({
           ) : null}
         </ul>
         {shown.length === 0 && !add ? (
-          <p role="status" className="text-muted-foreground text-copy-13 px-4 pb-2">
+          <p role="status" className="text-muted-foreground text-13 px-4 pb-2">
             No matches
           </p>
         ) : null}
         <div className="border-line flex flex-col gap-2 border-t px-3 py-2.5">
           {searchBox(onAdd ? 'Search or add a label' : 'Search')}
-          <div className="text-muted-foreground text-label-12 flex items-center gap-2 leading-snug">
+          <div className="text-muted-foreground text-12 flex items-center gap-2 leading-snug">
             <span className="flex-1">
               {onAdd ? 'Type a name to add a label.' : 'Labels are set in the field settings.'}
             </span>
@@ -710,7 +710,7 @@ export function OptionsEditor({
       data-flush
       role="group"
       aria-label={title}
-      className="bg-background-100 text-label-13 flex min-w-0 flex-col"
+      className="bg-surface text-13 flex min-w-0 flex-col"
     >
       <div className="p-2">
         <div className="relative">
@@ -736,7 +736,7 @@ export function OptionsEditor({
               setActive(0);
             }}
             onKeyDown={onKey}
-            className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground bg-background-100 text-label-13 h-9 w-full rounded-md border pr-2 pl-8 outline-none focus-visible:ring-2"
+            className="border-line focus-visible:border-focus focus-visible:ring-focus/25 placeholder:text-muted-foreground bg-surface text-13 h-9 w-full rounded-md border pr-2 pl-8 outline-none focus-visible:ring-2"
           />
         </div>
       </div>
@@ -793,7 +793,7 @@ export function OptionsEditor({
         ) : null}
       </ul>
       {shown.length === 0 ? (
-        <p role="status" className="text-muted-foreground text-copy-13 px-4 pt-0.5 pb-2">
+        <p role="status" className="text-muted-foreground text-13 px-4 pt-0.5 pb-2">
           No matches
         </p>
       ) : null}
@@ -843,7 +843,7 @@ export function ExplainEditor({
         </Button>
       }
     >
-      <div className="text-label-13 flex flex-col gap-1.5">{children}</div>
+      <div className="text-13 flex flex-col gap-1.5">{children}</div>
     </EditorFrame>
   );
 }

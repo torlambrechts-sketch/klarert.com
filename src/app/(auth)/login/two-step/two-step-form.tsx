@@ -18,11 +18,11 @@ export function TwoStepForm({
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {apps.length > 1 ? (
         <fieldset className="flex flex-col gap-2" aria-labelledby={legend}>
-          <legend id={legend} className="text-label-14 mb-1 font-medium">
+          <legend id={legend} className="text-14 mb-1 font-medium">
             Which app?
           </legend>
           {apps.map((app, i) => (
-            <label key={app.id} className="text-copy-14 flex items-center gap-2">
+            <label key={app.id} className="text-14 flex items-center gap-2">
               <input type="radio" name="factorId" value={app.id} defaultChecked={i === 0} />
               {app.label}
             </label>
@@ -41,7 +41,7 @@ export function TwoStepForm({
         state={state}
       />
       {state && !state.ok && !state.error.fieldErrors ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           {state.error.message}
         </p>
       ) : null}

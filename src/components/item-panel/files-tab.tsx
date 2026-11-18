@@ -296,7 +296,7 @@ export function FilesTab(p: FilesTabProps) {
           data-testid="files-dropzone"
         >
           <Upload className="text-muted-foreground size-5" aria-hidden />
-          <p className="text-copy-14 m-0">
+          <p className="text-14 m-0">
             Drop files or{' '}
             <Button
               type="button"
@@ -307,7 +307,7 @@ export function FilesTab(p: FilesTabProps) {
               choose files
             </Button>
           </p>
-          <p className="text-muted-foreground text-label-12 m-0">
+          <p className="text-muted-foreground text-12 m-0">
             PDF, images, Office and OpenDocument files, text or CSV · up to 25 MB each
           </p>
           <div className="flex flex-wrap justify-center gap-2">
@@ -345,7 +345,7 @@ export function FilesTab(p: FilesTabProps) {
           />
         </div>
       ) : (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           You can view and download these files. Ask an editor or admin to add files.
         </p>
       )}
@@ -360,10 +360,10 @@ export function FilesTab(p: FilesTabProps) {
                 u.step === 'failed' && 'border-crit-line bg-crit-soft',
               )}
             >
-              <span className="text-label-13 min-w-0 flex-1 truncate font-semibold">{u.name}</span>
+              <span className="text-13 min-w-0 flex-1 truncate font-semibold">{u.name}</span>
               {u.step === 'failed' ? (
                 <>
-                  <span role="alert" className="text-crit text-copy-13 w-full sm:order-last">
+                  <span role="alert" className="text-crit text-13 w-full sm:order-last">
                     ✕ Not uploaded: {u.reason}
                   </span>
                   <Button
@@ -378,7 +378,7 @@ export function FilesTab(p: FilesTabProps) {
                 </>
               ) : (
                 <>
-                  <span role="status" className="text-muted-foreground text-copy-13">
+                  <span role="status" className="text-muted-foreground text-13">
                     {STEP_LABEL[u.step]}
                   </span>
                   <span
@@ -414,7 +414,7 @@ export function FilesTab(p: FilesTabProps) {
           className="border-warn/40 bg-warn-soft flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2.5"
         >
           <ShieldAlert className="text-warn size-4 shrink-0" aria-hidden />
-          <p className="text-copy-13 m-0 min-w-0 flex-1">
+          <p className="text-13 m-0 min-w-0 flex-1">
             {nudge} looks like a policy or procedure. Is this the official approved version? Link
             the document instead.
           </p>
@@ -434,20 +434,20 @@ export function FilesTab(p: FilesTabProps) {
       ) : null}
 
       <section aria-labelledby="files-docs-title" className="flex flex-col gap-2">
-        <h3 id="files-docs-title" className="text-heading-14 m-0">
+        <h3 id="files-docs-title" className="text-14 m-0 font-semibold">
           Documents{docs.length ? ` · ${docs.length}` : ''}
         </h3>
         {p.documentsState === 'loading' && !p.documents ? (
           <div aria-busy="true" className="bg-soft h-16 animate-pulse rounded-lg" />
         ) : p.documentsState === 'error' ? (
-          <p className="text-copy-13 m-0 flex items-center gap-2">
+          <p className="text-13 m-0 flex items-center gap-2">
             The linked documents could not be loaded.
             <Button type="button" size="sm" variant="outline" onClick={p.onRetryDocuments}>
               Retry
             </Button>
           </p>
         ) : docs.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             No linked documents. Link a policy or procedure from a documents sheet.
           </p>
         ) : (
@@ -461,9 +461,9 @@ export function FilesTab(p: FilesTabProps) {
                 >
                   <FileText className="text-muted-foreground size-4 shrink-0" aria-hidden />
                   <div className="min-w-0 flex-1 basis-48">
-                    <p className="text-label-13 m-0 truncate font-semibold">{d.name}</p>
-                    <p className="text-muted-foreground text-label-12 m-0 flex flex-wrap gap-x-2">
-                      <span className="text-label-12-mono">{d.documentId ?? d.displayId}</span>
+                    <p className="text-13 m-0 truncate font-semibold">{d.name}</p>
+                    <p className="text-muted-foreground text-12 m-0 flex flex-wrap gap-x-2">
+                      <span className="text-12 font-mono">{d.documentId ?? d.displayId}</span>
                       {d.owner ? <span>Owner: {d.owner}</span> : null}
                       {d.view.nextReview ? (
                         <span
@@ -478,7 +478,7 @@ export function FilesTab(p: FilesTabProps) {
                   <span
                     data-testid="document-status"
                     className={cn(
-                      'text-label-12 inline-flex h-6 items-center gap-1 rounded-full border px-2 font-semibold',
+                      'text-12 inline-flex h-6 items-center gap-1 rounded-full border px-2 font-semibold',
                       d.view.tone === 'done'
                         ? 'border-good/40 text-good bg-good-soft'
                         : 'border-line text-ink',
@@ -487,7 +487,7 @@ export function FilesTab(p: FilesTabProps) {
                     <span aria-hidden>{d.view.symbol}</span> {d.view.chip}
                   </span>
                   {d.view.draftInReview ? (
-                    <span className="text-warn text-label-12 font-semibold">⚠ Draft in review</span>
+                    <span className="text-warn text-12 font-semibold">⚠ Draft in review</span>
                   ) : null}
                   <div className="flex w-full flex-wrap gap-1 sm:w-auto">
                     <Button
@@ -542,7 +542,7 @@ export function FilesTab(p: FilesTabProps) {
 
       <section aria-labelledby="files-list-title" className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 id="files-list-title" className="text-heading-14 m-0 flex-1">
+          <h3 id="files-list-title" className="text-14 m-0 flex-1 font-semibold">
             Files{chains.length ? ` · ${chains.length}` : ''}
           </h3>
           <div role="radiogroup" aria-label="Show files" className="flex gap-1">
@@ -559,10 +559,8 @@ export function FilesTab(p: FilesTabProps) {
                 role="radio"
                 aria-checked={filter === v}
                 className={cn(
-                  'text-label-12 focus-visible:outline-focus min-h-8 rounded-full border px-2.5 focus-visible:outline-2 max-[759px]:min-h-11',
-                  filter === v
-                    ? 'border-ink bg-ink text-background-100'
-                    : 'border-line hover:bg-gray-alpha-100',
+                  'text-12 focus-visible:outline-focus min-h-8 rounded-full border px-2.5 focus-visible:outline-2 max-[759px]:min-h-11',
+                  filter === v ? 'border-ink bg-ink text-surface' : 'border-line hover:bg-panel',
                 )}
                 onClick={() => setFilter(v)}
               >
@@ -578,18 +576,18 @@ export function FilesTab(p: FilesTabProps) {
             ))}
           </div>
         ) : p.versionsState === 'error' ? (
-          <p className="text-copy-13 m-0 flex items-center gap-2">
+          <p className="text-13 m-0 flex items-center gap-2">
             The files could not be loaded.
             <Button type="button" size="sm" variant="outline" onClick={p.onRetryVersions}>
               Retry
             </Button>
           </p>
         ) : chains.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             No files yet. Drop evidence, contracts or scans here.
           </p>
         ) : shown.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             {filter === 'evidence' ? 'No evidence files.' : 'Nothing expires within 30 days.'}
           </p>
         ) : (
@@ -628,7 +626,7 @@ export function FilesTab(p: FilesTabProps) {
             {showArchived ? (
               <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-label="Archived files">
                 {archived.map((c) => (
-                  <li key={c.current.id} className="text-copy-13 flex items-center gap-2">
+                  <li key={c.current.id} className="text-13 flex items-center gap-2">
                     <span className="text-muted-foreground min-w-0 flex-1 truncate">
                       {c.current.filename} · {versionLabel(c.current.versionNo)}
                     </span>
@@ -767,21 +765,21 @@ function FileRowView({
     >
       <Icon className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
       <div className="min-w-0 flex-1 basis-52">
-        <p className="text-label-13 m-0 flex min-w-0 flex-wrap items-center gap-1.5 font-semibold">
+        <p className="text-13 m-0 flex min-w-0 flex-wrap items-center gap-1.5 font-semibold">
           <span className="min-w-0 truncate">{f.filename}</span>
-          <span className="text-label-12-mono bg-soft rounded px-1.5 font-normal">
+          <span className="text-12 bg-soft rounded px-1.5 font-mono font-normal">
             {versionLabel(f.versionNo)}
           </span>
         </p>
-        {f.description ? <p className="text-copy-13 m-0">{f.description}</p> : null}
+        {f.description ? <p className="text-13 m-0">{f.description}</p> : null}
         <p className="m-0 mt-1 flex flex-wrap items-center gap-1.5">
           {f.category ? (
-            <span className="border-line text-label-12 rounded-full border px-2">
+            <span className="border-line text-12 rounded-full border px-2">
               {categoryLabel(f.category, categories)}
             </span>
           ) : null}
           {validity ? (
-            <span className={cn('text-label-12 font-semibold', VALIDITY_CLASS[validity.validity])}>
+            <span className={cn('text-12 font-semibold', VALIDITY_CLASS[validity.validity])}>
               <span aria-hidden>{validity.symbol}</span> {validity.text}
             </span>
           ) : null}
@@ -790,7 +788,7 @@ function FileRowView({
           f.classification !== 'internal' ? (
             <span
               className={cn(
-                'text-label-12 rounded-full border px-2',
+                'text-12 rounded-full border px-2',
                 CLASSIFICATION_CLASS[f.classification],
               )}
             >
@@ -798,12 +796,10 @@ function FileRowView({
             </span>
           ) : null}
           {f.personalData ? (
-            <span className="border-line text-label-12 rounded-full border px-2">
-              Personal data
-            </span>
+            <span className="border-line text-12 rounded-full border px-2">Personal data</span>
           ) : null}
         </p>
-        <p className="text-muted-foreground text-label-12 m-0 mt-1">
+        <p className="text-muted-foreground text-12 m-0 mt-1">
           {uploader} · {formatDate(f.createdAt.slice(0, 10))} · {formatBytes(f.sizeBytes)}
           {field ? ` · From column: ${field.name}` : ''}
         </p>

@@ -45,17 +45,17 @@ function Changes({ title, list, id }: { title: string; list: UpgradeChange[]; id
   const shown = all ? list : list.slice(0, SHOWN);
   return (
     <section className="flex flex-col gap-1.5" aria-labelledby={`${id}-title`}>
-      <h3 id={`${id}-title`} className="text-label-13 text-muted-foreground m-0 font-medium">
+      <h3 id={`${id}-title`} className="text-13 text-muted-foreground m-0 font-medium">
         {title} · {list.length}
       </h3>
-      <ul aria-label={title} className="text-copy-14 m-0 flex list-none flex-col gap-1 p-0">
+      <ul aria-label={title} className="text-14 m-0 flex list-none flex-col gap-1 p-0">
         {shown.map((c) => (
           <li key={`${c.kind}:${c.ref}`} className="flex flex-col">
             <span>
-              <span className="text-label-12 text-muted-foreground mr-1.5">{KIND[c.kind]}</span>
+              <span className="text-12 text-muted-foreground mr-1.5">{KIND[c.kind]}</span>
               {c.name}
             </span>
-            {c.note ? <span className="text-copy-13 text-muted-foreground">{c.note}</span> : null}
+            {c.note ? <span className="text-13 text-muted-foreground">{c.note}</span> : null}
           </li>
         ))}
       </ul>
@@ -89,11 +89,11 @@ function ConflictChoice({
   const name = `conflict-${c.id}`;
   return (
     <fieldset className="border-line m-0 flex flex-col gap-2 rounded-md border p-3">
-      <legend className="text-label-14 px-1 font-medium">
-        <span className="text-label-12 text-muted-foreground mr-1.5">{KIND[c.kind]}</span>
+      <legend className="text-14 px-1 font-medium">
+        <span className="text-12 text-muted-foreground mr-1.5">{KIND[c.kind]}</span>
         {c.name}
       </legend>
-      <p className="text-copy-13 text-muted-foreground m-0">
+      <p className="text-13 text-muted-foreground m-0">
         You and the pack both changed {c.attributes.join(', ')}.
       </p>
       <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -105,7 +105,7 @@ function ConflictChoice({
         ).map(([v, label]) => (
           <label
             key={v}
-            className="text-label-14 flex min-h-8 cursor-pointer items-center gap-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+            className="text-14 flex min-h-8 cursor-pointer items-center gap-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
           >
             <input
               type="radio"
@@ -138,7 +138,7 @@ function Body({
   const p = data.preview;
   if (p.state === 'current')
     return (
-      <p className="text-copy-14 m-0 flex items-center gap-1.5" role="status">
+      <p className="text-14 m-0 flex items-center gap-1.5" role="status">
         <Check className="text-good size-4" aria-hidden /> {p.title} {p.from} is up to date.
       </p>
     );
@@ -148,10 +148,10 @@ function Body({
         role="alert"
         className="border-crit-line bg-crit-soft flex flex-col gap-1 rounded-md border p-3"
       >
-        <p className="text-label-14 text-crit-ink m-0 flex items-center gap-1.5 font-medium">
+        <p className="text-14 text-crit-ink m-0 flex items-center gap-1.5 font-medium">
           <X className="size-4" aria-hidden /> This pack cannot be updated
         </p>
-        <ul className="text-copy-14 m-0 flex list-none flex-col gap-1 p-0">
+        <ul className="text-14 m-0 flex list-none flex-col gap-1 p-0">
           {p.blockers.map((b) => (
             <li key={b}>{b}</li>
           ))}
@@ -161,17 +161,17 @@ function Body({
   const c = p.counts;
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-copy-14 m-0" data-testid="upgrade-summary">
+      <p className="text-14 m-0" data-testid="upgrade-summary">
         {c.added} added · {c.changed} changed · {c.archived} archived or turned off · {c.kept} kept
         · {c.conflicts} {c.conflicts === 1 ? 'conflict' : 'conflicts'}
       </p>
-      <p className="text-copy-13 text-muted-foreground m-0">
+      <p className="text-13 text-muted-foreground m-0">
         Only what you have not changed is updated. Nothing is deleted: removed objects are archived
         (restorable) and automations turned off. Fields keep their type and every option; your
         items, answers and automation on or off settings stay as they are.
       </p>
       {p.personalData ? (
-        <p className="text-copy-13 text-muted-foreground m-0" data-testid="upgrade-personal-data">
+        <p className="text-13 text-muted-foreground m-0" data-testid="upgrade-personal-data">
           Sheets with personal data are only visible to the people listed on them; updates to them
           show for those people.
         </p>
@@ -180,7 +180,7 @@ function Body({
         <section className="flex flex-col gap-2" aria-labelledby="upgrade-conflicts-title">
           <h3
             id="upgrade-conflicts-title"
-            className="text-label-13 m-0 flex items-center gap-1.5 font-medium"
+            className="text-13 m-0 flex items-center gap-1.5 font-medium"
           >
             <AlertTriangle className="text-warn size-4" aria-hidden /> Conflicts ·{' '}
             {p.conflicts.length}
@@ -201,7 +201,7 @@ function Body({
       <Changes title="Archived or turned off" list={p.archived} id="upgrade-archived" />
       <Changes title="Kept as they are" list={p.kept} id="upgrade-kept" />
       {p.warnings.length ? (
-        <ul className="text-copy-13 text-muted-foreground m-0 flex list-none flex-col gap-1 p-0">
+        <ul className="text-13 text-muted-foreground m-0 flex list-none flex-col gap-1 p-0">
           {p.warnings.map((w) => (
             <li key={w}>{w}</li>
           ))}
@@ -297,20 +297,25 @@ export function PackUpgrade({
       ) : null}
       <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">
+          <DialogTitle className="text-panel-title">
             Update {title}{' '}
-            <span className="text-label-13-mono text-muted-foreground align-middle">
+            <span className="text-13 text-muted-foreground align-middle font-mono">
               {versions.from} → {versions.to}
             </span>
           </DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogDescription className="text-14 text-muted-foreground">
             A dry run: what updating changes in this workspace. Nothing is written until you apply
             it.
           </DialogDescription>
         </div>
 
         {step.kind === 'loading' ? (
-          <div aria-busy="true" aria-label="Loading the update" className="flex flex-col gap-2">
+          <div
+            role="status"
+            aria-busy="true"
+            aria-label="Loading the update"
+            className="flex flex-col gap-2"
+          >
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="bg-soft h-5 animate-pulse rounded" />
             ))}
@@ -334,7 +339,7 @@ export function PackUpgrade({
         ) : null}
         {busy ? (
           <div role="status" className="flex flex-col gap-2">
-            <p className="text-copy-14 m-0 flex items-center gap-1.5">
+            <p className="text-14 m-0 flex items-center gap-1.5">
               <Loader2 className="size-4 animate-spin" aria-hidden /> Updating {title}: every change
               is written in one step, or none.
             </p>
@@ -352,11 +357,11 @@ export function PackUpgrade({
         ) : null}
         {step.kind === 'done' ? (
           <div role="status" className="flex flex-col gap-1">
-            <p className="text-copy-16 m-0 flex items-center gap-1.5 font-medium">
+            <p className="text-16 m-0 flex items-center gap-1.5 font-medium">
               <Check className="text-good size-4" aria-hidden /> Updated {step.result.title} to{' '}
               {step.result.to}.
             </p>
-            <p className="text-copy-14 text-muted-foreground m-0">{step.result.summary}</p>
+            <p className="text-14 text-muted-foreground m-0">{step.result.summary}</p>
           </div>
         ) : null}
 

@@ -46,11 +46,11 @@ export function ApprovalStateLine({
     <p className={cn('m-0 flex items-start gap-2', className)} data-testid="approval-state">
       <Icon className={cn('mt-0.5 size-4 shrink-0', tone)} aria-hidden />
       <span className="flex min-w-0 flex-col">
-        <span className="text-label-14 font-semibold">{text}</span>
+        <span className="text-14 font-semibold">{text}</span>
         {detail ? (
           <span
             className={cn(
-              'text-label-12',
+              'text-12',
               symbol === 'overdue' ? 'text-crit font-medium' : 'text-muted-foreground',
             )}
           >
@@ -124,8 +124,8 @@ export function DecisionDialog({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent aria-describedby={`${id}-desc`}>
-        <DialogTitle className="text-heading-16 m-0">{title}</DialogTitle>
-        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-copy-13 m-0">
+        <DialogTitle className="text-card-title m-0">{title}</DialogTitle>
+        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-13 m-0">
           {rejecting
             ? 'Your reason goes to the person who submitted it and into the activity log.'
             : 'Your approval and comment go into the activity log.'}
@@ -137,7 +137,7 @@ export function DecisionDialog({
             void submit();
           }}
         >
-          <label className="text-label-13 flex flex-col gap-1">
+          <label className="text-13 flex flex-col gap-1">
             {rejecting ? 'Why do you reject it?' : needed ? 'Version note' : 'Comment (optional)'}
             <textarea
               className={cn(inputClass, 'h-auto min-h-20 py-2')}
@@ -150,7 +150,7 @@ export function DecisionDialog({
             />
           </label>
           {error ? (
-            <p role="alert" className="text-crit text-copy-13 m-0">
+            <p role="alert" className="text-crit text-13 m-0">
               {error}
             </p>
           ) : null}

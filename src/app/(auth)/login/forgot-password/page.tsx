@@ -36,7 +36,7 @@ export default async function ForgotPasswordPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1>Compliance OS</h1>
-        <h2 className="text-heading-16">Reset your password</h2>
+        <h2 className="text-card-title">Reset your password</h2>
         {failed ? null : (
           <p className="text-muted-foreground">
             Enter the email address you sign in with. We email you a link to set a new password.
@@ -45,7 +45,7 @@ export default async function ForgotPasswordPage({
       </div>
       {failed ? (
         <div className="flex flex-col gap-4" data-testid="reset-link-failed">
-          <p role="alert" className="text-crit text-copy-13 m-0">
+          <p role="alert" className="text-crit text-13 m-0">
             {failed}
           </p>
           <Link href={again} autoFocus className={buttonVariants({ className: 'w-fit' })}>
@@ -55,7 +55,7 @@ export default async function ForgotPasswordPage({
       ) : (
         <ForgotPasswordForm next={next} />
       )}
-      <p className="text-label-13">
+      <p className="text-13">
         <Link className="text-info underline-offset-4 hover:underline" href={signIn}>
           Back to sign in
         </Link>

@@ -69,7 +69,7 @@ export function WorkspaceMap({
             <span
               key={c.id}
               aria-hidden
-              className="text-muted-foreground text-label-11-mono absolute truncate tracking-[0.08em] uppercase"
+              className="text-muted-foreground text-12 absolute truncate font-mono tracking-[0.08em] uppercase"
               style={{ left: c.x, top: 18, width: c.w }}
             >
               {c.title}
@@ -88,20 +88,20 @@ export function WorkspaceMap({
                     href={`/${org}/s/${n.id}?view=design`}
                     data-testid="map-sheet"
                     className={cn(
-                      'focus-visible:outline-focus bg-background-100 hover:border-line-strong flex h-full flex-col justify-between gap-1 rounded-lg border px-3 py-2 transition-colors duration-150 focus-visible:outline-2',
+                      'focus-visible:outline-focus bg-surface shadow-card hover:border-line-strong rounded-card text-navy flex h-full flex-col justify-between gap-1 border px-3 py-2 transition-colors duration-150 focus-visible:outline-2',
                       n.context ? 'border-line border-dashed opacity-70' : 'border-line',
                       focus === n.id && 'ring-focus ring-2',
                     )}
                   >
                     <span className="flex items-center gap-1.5">
-                      <span className="text-label-13 min-w-0 flex-1 truncate font-semibold">
+                      <span className="text-13 min-w-0 flex-1 truncate font-semibold">
                         {n.name}
                       </span>
                       {n.tone && n.tone !== 'ok' && n.tone !== 'idle' ? (
                         <ToneSymbol tone={n.tone} />
                       ) : null}
                     </span>
-                    <span className="text-muted-foreground text-label-12">
+                    <span className="text-muted-foreground text-12">
                       <span aria-hidden>
                         {n.inputs} in · {n.logic} rules · {n.outputs} out
                       </span>
@@ -109,20 +109,20 @@ export function WorkspaceMap({
                     </span>
                     <span className="flex min-w-0 items-center gap-1.5 overflow-hidden">
                       {n.packTitle ? (
-                        <span className="text-muted-foreground text-label-11 flex min-w-0 items-center gap-1">
+                        <span className="text-muted-foreground text-12 flex min-w-0 items-center gap-1">
                           <Package className="size-3 shrink-0" aria-hidden />
                           <span className="truncate">{n.packTitle}</span>
                         </span>
                       ) : null}
                       {n.differs ? (
-                        <span className="text-warn text-label-11 flex shrink-0 items-center gap-0.5">
+                        <span className="text-warn text-12 flex shrink-0 items-center gap-0.5">
                           <TriangleAlert className="size-3" aria-hidden /> Differs
                         </span>
                       ) : null}
                       {n.outside.map((o) => (
                         <span
                           key={o.destination}
-                          className="border-line text-label-11 flex shrink-0 items-center gap-0.5 rounded-full border px-1.5"
+                          className="border-line text-12 flex shrink-0 items-center gap-0.5 rounded-full border px-1.5"
                         >
                           <Send className="size-3" aria-hidden /> {o.label}
                           {o.count > 1 ? ` · ${o.count}` : ''}
@@ -139,7 +139,7 @@ export function WorkspaceMap({
           </ul>
         </div>
       </div>
-      <figcaption className="text-muted-foreground text-copy-13 flex flex-wrap gap-x-4 gap-y-1">
+      <figcaption className="text-muted-foreground text-13 flex flex-wrap gap-x-4 gap-y-1">
         {kinds.map((k) => (
           <span key={k} className="flex items-center gap-1.5">
             <svg aria-hidden width="28" height="6">

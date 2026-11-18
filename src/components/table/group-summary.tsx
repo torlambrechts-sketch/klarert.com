@@ -29,14 +29,14 @@ export const GroupSummary = memo(function GroupSummary({
     const text = sum ? `Σ ${s.text}` : s.text;
     return (
       <span
-        className="text-ink text-label-12 block min-w-0 leading-[17px] font-semibold tabular-nums"
+        className="text-ink text-12 block min-w-0 leading-[17px] font-semibold tabular-nums"
         title={caption ? `${text} ${caption}` : text}
       >
         <span className="block truncate" aria-label={sum ? `Sum ${s.text}` : undefined}>
           {text}
         </span>
         {caption ? (
-          <span className="text-muted-foreground text-label-12 block truncate leading-none font-normal">
+          <span className="text-muted-foreground text-12 block truncate leading-none font-normal">
             {caption}
           </span>
         ) : null}
@@ -53,7 +53,7 @@ export const GroupSummary = memo(function GroupSummary({
           ))}
         </span>
         {s.ids.length > 4 ? (
-          <span className="text-muted-foreground text-label-12 pl-1.5 font-semibold" aria-hidden>
+          <span className="text-muted-foreground text-12 pl-1.5 font-semibold" aria-hidden>
             +{s.ids.length - 4}
           </span>
         ) : null}
@@ -94,7 +94,7 @@ export function Battery({
           title={`${seg.label}: ${seg.count}`}
           style={{
             width: `${(seg.count / total) * 100}%`,
-            background: seg.color === 'empty' ? 'var(--gray-500)' : solidVar(seg.color),
+            background: seg.color === 'empty' ? 'var(--line-strong)' : solidVar(seg.color),
           }}
         />
       ))}

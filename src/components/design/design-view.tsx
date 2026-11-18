@@ -27,7 +27,7 @@ import {
 import { NewFormDialog } from '@/components/views/form-view';
 import type { ViewsState } from '@/components/views/use-views';
 import { cn } from '@/lib/utils';
-import { ComingLaterChip, HealthLine, PackChip, StepIcon } from './flow-bits';
+import { ComingLaterChip, HealthLine, PackChip, STEP_TOP, StepIcon } from './flow-bits';
 import { SheetMap } from './sheet-map';
 import { ownsTitle, StepEditor, type CreateKind, type EditorEnv } from './step-editor';
 import { useDesign, useRefreshDesign } from './use-design';
@@ -226,7 +226,7 @@ export function DesignView(props: {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="border-line-strong text-muted-foreground hover:text-ink hover:bg-background-100 focus-visible:outline-focus text-label-13 flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed focus-visible:outline-2"
+            className="border-line-strong text-muted-foreground hover:text-ink hover:bg-surface focus-visible:outline-focus text-13 flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed focus-visible:outline-2"
           >
             <Plus className="size-4" aria-hidden /> {ADD_LABEL[group]}
           </button>
@@ -245,7 +245,7 @@ export function DesignView(props: {
         className="border-line flex flex-col items-start gap-2 rounded-lg border p-4"
       >
         <p className="m-0 font-semibold">The design of this sheet could not be loaded.</p>
-        <p className="text-muted-foreground text-copy-13 m-0">{design.error.message}</p>
+        <p className="text-muted-foreground text-13 m-0">{design.error.message}</p>
         <Button type="button" variant="outline" onClick={() => void design.refetch()}>
           Retry
         </Button>
@@ -278,7 +278,7 @@ export function DesignView(props: {
         </div>
       </div>
       {!props.canEdit ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           You can read this sheet’s design. Ask an editor or admin to change it.
         </p>
       ) : null}
@@ -302,12 +302,12 @@ export function DesignView(props: {
               <div className="flex h-[26px] items-center justify-between">
                 <h2
                   id={`design-${g.id}`}
-                  className="text-muted-foreground text-label-11-mono m-0 tracking-[0.08em] uppercase"
+                  className="text-muted-foreground text-12 m-0 font-mono tracking-[0.08em] uppercase"
                 >
                   {g.number} · {g.title}
                 </h2>
                 {g.id !== 'sheet' ? (
-                  <span className="text-muted-foreground text-label-12">
+                  <span className="text-muted-foreground text-12">
                     {g.steps.filter((s) => !s.comingLater).length}
                     <span className="sr-only"> steps</span>
                   </span>
@@ -316,7 +316,7 @@ export function DesignView(props: {
               {addMenu(g.id)}
               <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
                 {g.steps.length === 0 ? (
-                  <li className="border-line text-muted-foreground text-copy-13 rounded-lg border border-dashed px-3 py-3">
+                  <li className="border-line text-muted-foreground text-13 rounded-lg border border-dashed px-3 py-3">
                     {g.id === 'logic'
                       ? 'No automations or approval workflows yet.'
                       : 'Nothing goes out of this sheet yet.'}
@@ -369,8 +369,8 @@ export function DesignView(props: {
             ) : (
               <>
                 <div className="flex flex-col gap-0.5 px-5 pt-4 pr-12 pb-3">
-                  <DialogTitle className="text-heading-20">{titleOf(open).title}</DialogTitle>
-                  <DialogDescription className="text-muted-foreground text-label-13 m-0">
+                  <DialogTitle className="text-panel-title">{titleOf(open).title}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground text-13 m-0">
                     {titleOf(open).description}
                   </DialogDescription>
                   {openedStep?.pack ? (
@@ -418,12 +418,12 @@ function StepRow({ step, canEdit, onOpen }: { step: FlowStep; canEdit: boolean; 
       <div
         aria-disabled="true"
         data-testid="step-coming-later"
-        className="border-line bg-background-200 text-muted-foreground flex min-h-[52px] items-center gap-3 rounded-lg border border-dashed px-2.5 py-2"
+        className="border-line bg-page text-muted-foreground flex min-h-[52px] items-center gap-3 rounded-lg border border-dashed px-2.5 py-2"
       >
         <StepIcon kind={step.kind} />
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-label-14 font-medium">{step.name}</span>
-          <span className="text-label-12">{step.subline}</span>
+          <span className="text-14 font-medium">{step.name}</span>
+          <span className="text-12">{step.subline}</span>
         </span>
         <ComingLaterChip />
       </div>
@@ -435,20 +435,17 @@ function StepRow({ step, canEdit, onOpen }: { step: FlowStep; canEdit: boolean; 
       data-step-row={step.id}
       onClick={onOpen}
       className={cn(
-        'group focus-visible:outline-focus flex min-h-[52px] w-full items-center gap-3 rounded-lg border px-2.5 py-2 text-left transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2',
+        'group focus-visible:outline-focus rounded-card flex min-h-[78px] w-full items-center gap-3 border border-t-4 px-3 py-2 text-left transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2',
         inverted
-          ? 'bg-ink border-ink text-white'
-          : 'border-line bg-background-100 hover:border-line-strong',
+          ? 'bg-navy border-navy text-surface'
+          : cn('border-line-soft bg-surface hover:border-line-strong', STEP_TOP[step.kind]),
       )}
     >
       <StepIcon kind={step.kind} inverted={inverted} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-label-14 truncate font-medium">{step.name}</span>
+        <span className="text-14 truncate font-medium">{step.name}</span>
         <span
-          className={cn(
-            'text-label-12 truncate',
-            inverted ? 'text-gray-500' : 'text-muted-foreground',
-          )}
+          className={cn('text-12 truncate', inverted ? 'text-brand-soft' : 'text-muted-foreground')}
         >
           {step.subline}
         </span>
@@ -464,7 +461,7 @@ function StepRow({ step, canEdit, onOpen }: { step: FlowStep; canEdit: boolean; 
         {step.pack ? (
           <PackChip
             pack={step.pack}
-            className={inverted ? 'border-gray-alpha-500 text-gray-500' : undefined}
+            className={inverted ? 'border-line-strong text-faint' : undefined}
           />
         ) : null}
       </span>
@@ -472,7 +469,7 @@ function StepRow({ step, canEdit, onOpen }: { step: FlowStep; canEdit: boolean; 
         aria-hidden
         className={cn(
           'grid size-7 shrink-0 place-items-center rounded-md',
-          inverted ? 'text-gray-500' : 'text-muted-foreground group-hover:text-ink',
+          inverted ? 'text-faint' : 'text-muted-foreground group-hover:text-ink',
         )}
       >
         {canEdit ? <Pencil className="size-[15px]" /> : <ChevronRight className="size-4" />}

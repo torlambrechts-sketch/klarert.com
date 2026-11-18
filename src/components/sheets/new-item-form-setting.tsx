@@ -81,8 +81,8 @@ export function NewItemFormSetting({
             onChange={() => void save(false)}
           />
           <span className="flex flex-col gap-0.5">
-            <span className="text-label-14 font-medium">Standard dialog</span>
-            <span className="text-muted-foreground text-copy-13">
+            <span className="text-14 font-medium">Standard dialog</span>
+            <span className="text-muted-foreground text-13">
               The name, the required fields and the fields marked Ask when adding. Other fields are
               under More fields.
             </span>
@@ -102,8 +102,8 @@ export function NewItemFormSetting({
               onChange={() => void save(f.id)}
             />
             <span className="flex flex-col gap-0.5">
-              <span className="text-label-14 font-medium">{f.name}</span>
-              <span className="text-muted-foreground text-copy-13">
+              <span className="text-14 font-medium">{f.name}</span>
+              <span className="text-muted-foreground text-13">
                 {f.summary}
                 {f.intake ? ' · Chosen by the pack' : ''}
                 {f.closed ? ' · Closed: open it again to use it here' : ''}
@@ -112,7 +112,7 @@ export function NewItemFormSetting({
           </label>
         ))}
       </fieldset>
-      <p id={`${id}-help`} className="text-muted-foreground text-copy-13 m-0">
+      <p id={`${id}-help`} className="text-muted-foreground text-13 m-0">
         {forms.length === 0
           ? 'This sheet has no forms yet. Make one on the Forms tab to ask its questions, a step at a time.'
           : 'A form asks its own questions, labels and required answers, a step at a time when it has steps. A form that is closed or deleted falls back to the standard dialog.'}

@@ -16,7 +16,7 @@ const CREATES = new Set<FlowStep['kind']>([
 ]);
 
 export const mapCanvas =
-  'border-line bg-background-200 relative overflow-auto rounded-lg border [background-image:radial-gradient(var(--line)_1px,transparent_1px)] [background-size:16px_16px]';
+  'border-line bg-page relative overflow-auto rounded-lg border [background-image:radial-gradient(var(--line)_1px,transparent_1px)] [background-size:16px_16px]';
 
 export function SheetMap({ flow }: { flow: SheetFlow }) {
   const l = layoutSheetMap(flow);
@@ -54,7 +54,7 @@ export function SheetMap({ flow }: { flow: SheetFlow }) {
             <span
               key={lab.side}
               aria-hidden
-              className="text-muted-foreground text-label-11-mono absolute tracking-[0.08em] uppercase"
+              className="text-muted-foreground text-12 absolute font-mono tracking-[0.08em] uppercase"
               style={{ left: lab.x, top: lab.y - 12 }}
             >
               {lab.title}
@@ -65,8 +65,8 @@ export function SheetMap({ flow }: { flow: SheetFlow }) {
             className="bg-ink absolute flex flex-col items-center justify-center gap-1 rounded-xl px-4 text-center text-white"
             style={{ left: l.hub.x, top: l.hub.y, width: l.hub.w, height: l.hub.h }}
           >
-            <span className="text-label-14 w-full truncate font-semibold">{flow.sheet.name}</span>
-            <span className="text-label-12 text-gray-500">
+            <span className="text-14 w-full truncate font-semibold">{flow.sheet.name}</span>
+            <span className="text-12 text-faint">
               {flow.counts.columns} columns · {flow.counts.relations} relations
             </span>
           </div>
@@ -79,17 +79,15 @@ export function SheetMap({ flow }: { flow: SheetFlow }) {
                 aria-hidden
                 data-testid="map-node"
                 className={cn(
-                  'border-line bg-background-100 absolute flex items-center gap-2 rounded-full border px-3',
+                  'border-line bg-surface absolute flex items-center gap-2 rounded-full border px-3',
                   n.step.pack?.state === 'changed' && 'border-warn/50',
                 )}
                 style={{ left: n.x, top: n.y, width: n.w, height: n.h }}
               >
                 <Icon className="text-muted-foreground size-3.5 shrink-0" />
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-label-13 truncate font-medium">{n.step.name}</span>
-                  <span className="text-muted-foreground text-label-11 truncate">
-                    {n.step.subline}
-                  </span>
+                  <span className="text-13 truncate font-medium">{n.step.name}</span>
+                  <span className="text-muted-foreground text-12 truncate">{n.step.subline}</span>
                 </span>
                 {tone === 'warn' || tone === 'crit' || tone === 'off' || tone === 'test' ? (
                   <ToneSymbol tone={tone} />
@@ -99,7 +97,7 @@ export function SheetMap({ flow }: { flow: SheetFlow }) {
           })}
         </div>
       </div>
-      <figcaption className="text-muted-foreground text-copy-13 flex flex-wrap gap-x-4 gap-y-1">
+      <figcaption className="text-muted-foreground text-13 flex flex-wrap gap-x-4 gap-y-1">
         <span className="flex items-center gap-1.5">
           <svg aria-hidden width="24" height="6">
             <path d="M0 3 H24" stroke="var(--line-strong)" strokeWidth="1.5" />

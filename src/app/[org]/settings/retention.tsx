@@ -49,10 +49,10 @@ function useRun() {
 }
 
 const STATE: Record<QueueStatus, { label: string; icon: typeof Check; tone: string }> = {
-  due: { label: 'Due', icon: AlertTriangle, tone: 'text-[var(--amber-900)]' },
-  held: { label: 'Legal hold', icon: Lock, tone: 'text-[var(--blue-900)]' },
+  due: { label: 'Due', icon: AlertTriangle, tone: 'text-warn-ink' },
+  held: { label: 'Legal hold', icon: Lock, tone: 'text-info' },
   postponed: { label: 'Postponed', icon: Clock, tone: 'text-muted-foreground' },
-  done: { label: 'Done', icon: Check, tone: 'text-[var(--green-900)]' },
+  done: { label: 'Done', icon: Check, tone: 'text-ok' },
 };
 
 const ACTION_WORDS = {
@@ -65,7 +65,7 @@ export function StateChip({ state }: { state: QueueStatus }) {
   const s = STATE[state];
   const Icon = s.icon;
   return (
-    <span className={`text-label-13 inline-flex items-center gap-1 ${s.tone}`}>
+    <span className={`text-13 inline-flex items-center gap-1 ${s.tone}`}>
       <Icon className="size-3.5" aria-hidden />
       {s.label}
     </span>
@@ -229,14 +229,14 @@ export function QueueActions({
               }}
             >
               <div className="flex flex-col gap-1 pr-8">
-                <DialogTitle className="text-heading-20">{title[mode]}</DialogTitle>
-                <DialogDescription className="text-copy-14 text-muted-foreground">
+                <DialogTitle className="text-panel-title">{title[mode]}</DialogTitle>
+                <DialogDescription className="text-14 text-muted-foreground">
                   {description[mode]}
                 </DialogDescription>
               </div>
               {mode === 'postpone' ? (
                 <label className="flex flex-col gap-1">
-                  <span className="text-label-13 font-medium">Postpone until</span>
+                  <span className="text-13 font-medium">Postpone until</span>
                   <input
                     type="date"
                     className={inputClass}
@@ -248,7 +248,7 @@ export function QueueActions({
                 </label>
               ) : null}
               <label className="flex flex-col gap-1">
-                <span className="text-label-13 font-medium">
+                <span className="text-13 font-medium">
                   {mode === 'approve'
                     ? 'Note (optional)'
                     : mode === 'release'
@@ -263,12 +263,12 @@ export function QueueActions({
                   aria-describedby={error ? `${id}-err` : undefined}
                   onChange={(e) => setNote(e.target.value)}
                 />
-                <span className="text-label-12 text-muted-foreground">
+                <span className="text-12 text-muted-foreground">
                   Do not write personal data here: the note is kept in the activity log.
                 </span>
               </label>
               {error ? (
-                <p id={`${id}-err`} role="alert" className="text-copy-13 m-0 text-[var(--red-900)]">
+                <p id={`${id}-err`} role="alert" className="text-13 m-0 text-[var(--bad)]">
                   {error}
                 </p>
               ) : null}
@@ -315,7 +315,7 @@ export function QueueItemLink({ org, row }: { org: string; row: RetentionQueueRo
       href={`/${org}/s/${row.sheetId}?item=${encodeURIComponent(row.displayId)}`}
       className="hover:underline"
     >
-      <span className="text-label-13-mono text-muted-foreground mr-1.5">{row.displayId}</span>
+      <span className="text-13 text-muted-foreground mr-1.5 font-mono">{row.displayId}</span>
       {row.itemName}
     </Link>
   );

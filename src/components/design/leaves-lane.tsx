@@ -14,16 +14,16 @@ import { HealthLine, PackChip } from './flow-bits';
 export function LeavesTable({ org, rows }: { org: string; rows: LeaveRow[] }) {
   if (!rows.length)
     return (
-      <p className="border-line text-muted-foreground text-copy-13 m-0 rounded-lg border border-dashed px-3 py-3">
+      <p className="border-line text-muted-foreground text-13 m-0 rounded-lg border border-dashed px-3 py-3">
         Nothing leaves the workspace from these sheets: no webhooks to Teams, Slack or other
         systems.
       </p>
     );
   return (
     <div className="border-line relative overflow-x-auto rounded-lg border print:overflow-visible">
-      <table className="text-copy-13 w-full min-w-[760px] border-collapse print:min-w-0">
+      <table className="text-13 w-full min-w-[760px] border-collapse print:min-w-0">
         <caption className="sr-only">Data that leaves the workspace</caption>
-        <thead className="bg-head text-muted-foreground text-label-12 text-left">
+        <thead className="bg-head text-muted-foreground text-12 text-left">
           <tr>
             <th scope="col" className="px-3 py-2 font-medium">
               Destination
@@ -122,17 +122,17 @@ export function LeavesLane({
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div className="flex flex-col gap-0.5">
-          <h2 id="leaves-heading" className="text-heading-16 m-0">
+          <h2 id="leaves-heading" className="text-card-title m-0">
             Leaves the system
           </h2>
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             Every outside destination, the fields it sends and which are personal data. Addresses
             show their host only.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2">
-            <span className="text-label-13 text-muted-foreground">Destination</span>
+            <span className="text-13 text-muted-foreground">Destination</span>
             <select
               className={toolbarSelectClass}
               value={dest}
@@ -150,7 +150,7 @@ export function LeavesLane({
             href={exportHref}
             // opening the export logs it (docs/05 §4): never fetch it ahead of a click
             prefetch={false}
-            className="border-line hover:bg-soft bg-background-100 text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+            className="border-line hover:bg-soft bg-surface text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
           >
             Export data-flow record
           </Link>

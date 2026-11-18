@@ -43,7 +43,7 @@ export function CreateReviewButton({
   };
   if (state.kind === 'done')
     return (
-      <p role="status" className="text-copy-14 m-0 flex flex-wrap items-center gap-1.5">
+      <p role="status" className="text-14 m-0 flex flex-wrap items-center gap-1.5">
         <Check className="text-good size-4" aria-hidden /> Added {state.displayId} to {sheetName}{' '}
         with these inputs.
         <Link href={state.href} className="text-ink font-medium underline underline-offset-4">
@@ -69,7 +69,7 @@ export function CreateReviewButton({
         {state.kind === 'error' ? 'Try again' : `Add to ${sheetName}`}
       </Button>
       {state.kind === 'error' ? (
-        <p role="alert" className="text-crit-ink text-label-13 m-0">
+        <p role="alert" className="text-crit-ink text-13 m-0">
           {state.message}
         </p>
       ) : null}

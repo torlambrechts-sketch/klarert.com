@@ -1,7 +1,7 @@
 export default function Loading() {
   return (
     <main
-      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]"
+      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]"
       aria-busy="true"
       aria-label="Loading workflow"
     >
@@ -11,7 +11,7 @@ export default function Loading() {
         <div className="bg-soft h-[42px] w-full max-w-[780px] animate-pulse rounded" />
       </div>
       <div className="bg-soft h-[40px] w-full max-w-[360px] animate-pulse rounded-md" />
-      <div className="border-line bg-background-100 overflow-hidden rounded-lg border">
+      <div className="border-line bg-surface overflow-hidden rounded-lg border">
         <div className="border-soft h-9 border-b" />
         {[0, 1, 2].map((i) => (
           <div

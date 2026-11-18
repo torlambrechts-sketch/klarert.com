@@ -167,7 +167,7 @@ export function TabsEditor({
   return (
     <div className={cn('flex flex-col gap-3', className)}>
       <div className="flex flex-col gap-1">
-        <p className="text-label-12 text-muted-foreground" id={`${id}-preview`}>
+        <p className="text-12 text-muted-foreground" id={`${id}-preview`}>
           Preview
         </p>
         <ul
@@ -180,7 +180,7 @@ export function TabsEditor({
               <li
                 key={r.entryId}
                 className={cn(
-                  'text-label-13 relative flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap',
+                  'text-13 relative flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap',
                   r.entryId === first
                     ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-[var(--ink)]'
                     : 'text-muted-foreground',
@@ -196,14 +196,12 @@ export function TabsEditor({
       </div>
 
       {canEdit ? (
-        <p className="text-copy-13 text-muted-foreground" id={`${id}-help`}>
+        <p className="text-13 text-muted-foreground" id={`${id}-help`}>
           Drag or press Alt with the arrow keys to reorder. Hidden tabs stay in More and still open
           from links.
         </p>
       ) : (
-        <p className="text-copy-13 text-muted-foreground">
-          Only owners and admins can change tabs.
-        </p>
+        <p className="text-13 text-muted-foreground">Only owners and admins can change tabs.</p>
       )}
 
       <DndContext
@@ -278,12 +276,12 @@ export function TabsEditor({
         {announce}
       </p>
       {notice ? (
-        <p role="status" className="text-copy-13 text-warn">
+        <p role="status" className="text-13 text-warn">
           {notice}
         </p>
       ) : null}
       {customised ? (
-        <p className="text-label-12 text-muted-foreground">
+        <p className="text-12 text-muted-foreground">
           Customised: these tabs differ from the{' '}
           {templateDefault ? 'template default' : 'built-in tabs'}.
         </p>
@@ -294,9 +292,9 @@ export function TabsEditor({
           <div
             role="group"
             aria-label="Reset tabs"
-            className="border-line bg-background-200 flex flex-col gap-2 rounded-md border p-3"
+            className="border-line bg-page flex flex-col gap-2 rounded-md border p-3"
           >
-            <p className="text-copy-13">
+            <p className="text-13">
               {templateDefault
                 ? 'Reset the tabs to the template default? Names and order go back too.'
                 : 'Reset the tabs to the built-in order? Names and order go back too.'}
@@ -427,9 +425,9 @@ function TabEditorRow({
         }
       }}
       className={cn(
-        'border-line bg-background-100 flex min-h-11 items-center gap-2 rounded-md border px-2 py-1',
+        'border-line bg-surface flex min-h-11 items-center gap-2 rounded-md border px-2 py-1',
         isDragging && 'shadow-menu relative z-10',
-        row.hidden && 'bg-background-200',
+        row.hidden && 'bg-page',
       )}
     >
       {pinned ? (
@@ -444,7 +442,7 @@ function TabEditorRow({
           </span>
           <span
             role="tooltip"
-            className="bg-ink text-label-12 pointer-events-none absolute top-full left-0 z-20 mt-1 hidden w-40 rounded px-2 py-1 text-white group-focus-within/lock:block group-hover/lock:block"
+            className="bg-ink text-12 pointer-events-none absolute top-full left-0 z-20 mt-1 hidden w-40 rounded px-2 py-1 text-white group-focus-within/lock:block group-hover/lock:block"
           >
             Table is always shown
           </span>
@@ -505,17 +503,17 @@ function TabEditorRow({
         ) : (
           <label
             htmlFor={checkId}
-            className={cn('text-label-13 truncate', row.hidden && 'text-muted-foreground')}
+            className={cn('text-13 truncate', row.hidden && 'text-muted-foreground')}
           >
             {row.label}
-            {row.hidden ? <span className="text-label-12"> · hidden</span> : null}
+            {row.hidden ? <span className="text-12"> · hidden</span> : null}
           </label>
         )}
         {row.label !== row.name && !editing ? (
-          <span className="text-label-12 text-muted-foreground truncate">{row.name}</span>
+          <span className="text-12 text-muted-foreground truncate">{row.name}</span>
         ) : null}
         {row.type === 'form' && row.hidden ? (
-          <span className="text-label-12 text-muted-foreground">Public form link stays active</span>
+          <span className="text-12 text-muted-foreground">Public form link stays active</span>
         ) : null}
       </div>
       {canEdit && !editing ? (

@@ -11,7 +11,7 @@ export function EditionBadge({ badge }: { badge: Badge | null }) {
   return (
     <span
       data-testid="edition-badge"
-      className={`text-label-12 inline-flex max-w-full items-center gap-1 rounded px-1.5 py-0.5 ${
+      className={`text-12 inline-flex max-w-full items-center gap-1 rounded px-1.5 py-0.5 ${
         replaced ? 'bg-warn-soft text-warn' : 'bg-info-soft text-info'
       }`}
     >

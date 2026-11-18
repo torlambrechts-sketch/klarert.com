@@ -95,7 +95,7 @@ export function InviteForm({
                   value={role}
                   onChange={(e) => setRole(e.currentTarget.value as Role)}
                   aria-describedby="invite-role-hint"
-                  className="border-input bg-background-100 h-[40px] rounded-md border px-3"
+                  className="border-input bg-surface h-[40px] rounded-md border px-3"
                 >
                   {ROLES.filter((r) => r !== 'owner' || canInviteOwner).map((r) => (
                     <option key={r} value={r}>
@@ -114,7 +114,7 @@ export function InviteForm({
                     required
                     min={today}
                     aria-describedby="invite-expires-hint"
-                    className="border-input bg-background-100 h-[40px] rounded-md border px-3"
+                    className="border-input bg-surface h-[40px] rounded-md border px-3"
                   />
                   <span id="invite-expires-hint" className="sr-only">
                     Auditors have read-only access until the end of this day.
@@ -123,7 +123,7 @@ export function InviteForm({
               ) : null}
               <SubmitButton pendingText="Sending…">Send invite</SubmitButton>
             </div>
-            <p id="invite-role-hint" className="text-muted-foreground text-copy-13 m-0">
+            <p id="invite-role-hint" className="text-muted-foreground text-13 m-0">
               {ROLE_SUMMARIES[role]}
             </p>
           </>
@@ -135,7 +135,7 @@ export function InviteForm({
           data-testid="invite-result"
           className="bg-subtle border-line flex flex-col gap-2 rounded-lg border p-3"
         >
-          <p className="text-copy-13 m-0 flex items-start gap-2">
+          <p className="text-13 m-0 flex items-start gap-2">
             {sent.emailSent ? (
               <MailCheck className="text-good mt-0.5 size-4 shrink-0" aria-hidden />
             ) : (
@@ -153,7 +153,7 @@ export function InviteForm({
             </span>
           </p>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <code className="text-label-12-mono min-w-0 flex-1 truncate" data-testid="invite-link">
+            <code className="text-12 min-w-0 flex-1 truncate font-mono" data-testid="invite-link">
               {sent.link}
             </code>
             <Button
@@ -191,7 +191,7 @@ export function MemberRowControls({
   const locked = member.role === 'owner' && myRole !== 'owner';
   if (locked) {
     return (
-      <span className="text-muted-foreground text-label-13 flex items-center gap-1">
+      <span className="text-muted-foreground text-13 flex items-center gap-1">
         <Lock className="size-3.5" aria-hidden /> Owner
       </span>
     );
@@ -218,7 +218,7 @@ export function MemberRowControls({
             setRole(next);
             if (next !== 'auditor') e.currentTarget.form?.requestSubmit();
           }}
-          className="border-input bg-background-100 text-label-13 h-[32px] rounded-md border px-2"
+          className="border-input bg-surface text-13 h-[32px] rounded-md border px-2"
         >
           {ROLES.filter((r) => r !== 'owner' || myRole === 'owner').map((r) => (
             <option key={r} value={r}>
@@ -237,7 +237,7 @@ export function MemberRowControls({
               type="date"
               min={today}
               defaultValue={member.expiresAt ? member.expiresAt.slice(0, 10) : ''}
-              className="border-input bg-background-100 text-label-13 h-[32px] rounded-md border px-2"
+              className="border-input bg-surface text-13 h-[32px] rounded-md border px-2"
             />
             <SubmitButton size="sm" pendingText="Saving…">
               Save end date

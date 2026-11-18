@@ -136,12 +136,12 @@ export function GlobalSearch({ org }: { org: string }) {
     <form
       ref={box}
       role="search"
-      className="search-box relative min-w-0 flex-1 min-[760px]:w-[260px] min-[760px]:flex-none"
+      className="search-box relative max-w-[520px] min-w-0 flex-[1_1_260px]"
       data-open={open ? '' : undefined}
       onSubmit={(e) => e.preventDefault()}
     >
       <Search
-        className="search-icon text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+        className="search-icon text-muted-foreground pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2"
         aria-hidden
       />
       <input
@@ -163,12 +163,12 @@ export function GlobalSearch({ org }: { org: string }) {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        className="border-line placeholder:text-muted-foreground bg-background-100 text-label-14 focus-visible:border-focus focus-visible:ring-focus h-8 w-full min-w-0 rounded-md border pr-8 pl-8 outline-none focus-visible:ring-2"
+        className="border-line-input placeholder:text-muted-foreground bg-surface text-body h-11 w-full min-w-0 rounded-full border pr-10 pl-[46px]"
       />
       {open ? (
         <button
           type="button"
-          className="search-cancel hover:bg-soft text-label-13 ml-1 hidden h-9 shrink-0 items-center rounded-md px-2 font-semibold"
+          className="search-cancel hover:bg-soft text-13 ml-1 hidden h-9 shrink-0 items-center rounded-md px-2 font-semibold"
           onClick={() => {
             setText('');
             close();
@@ -178,7 +178,7 @@ export function GlobalSearch({ org }: { org: string }) {
         </button>
       ) : (
         <kbd
-          className="text-muted-foreground border-line bg-subtle desk-only text-label-12-mono pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border px-1.5 leading-[18px]"
+          className="text-muted-foreground border-line bg-subtle desk-only text-12 pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 rounded border px-1.5 font-mono leading-[18px]"
           aria-hidden
         >
           /
@@ -188,7 +188,7 @@ export function GlobalSearch({ org }: { org: string }) {
         <button
           type="button"
           aria-label="Clear search"
-          className="hover:bg-soft desk-only absolute top-1/2 right-1 flex size-7 -translate-y-1/2 items-center justify-center rounded-md"
+          className="hover:bg-soft desk-only absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full"
           onClick={() => {
             setText('');
             searchRef.current?.focus();
@@ -198,14 +198,14 @@ export function GlobalSearch({ org }: { org: string }) {
         </button>
       ) : null}
       {showList ? (
-        <div className="search-results border-line bg-background-100 shadow-menu absolute top-[calc(100%+6px)] right-0 left-0 z-50 max-h-[min(70vh,480px)] overflow-y-auto rounded-lg border p-1 min-[760px]:left-auto min-[760px]:w-[420px]">
+        <div className="search-results border-line bg-surface shadow-menu absolute top-[calc(100%+6px)] right-0 left-0 z-50 max-h-[min(70vh,480px)] overflow-y-auto rounded-lg border p-1 min-[760px]:left-auto min-[760px]:w-[420px]">
           <p className="sr-only" role="status" aria-live="polite">
             {state.status === 'ready'
               ? `${options.length} ${options.length === 1 ? 'result' : 'results'}`
               : ''}
           </p>
           {state.status === 'error' ? (
-            <div role="alert" className="text-label-13 flex items-center justify-between gap-2 p-2">
+            <div role="alert" className="text-13 flex items-center justify-between gap-2 p-2">
               <span>Search failed.</span>
               <button
                 type="button"
@@ -216,15 +216,18 @@ export function GlobalSearch({ org }: { org: string }) {
               </button>
             </div>
           ) : state.status === 'loading' && options.length === 0 ? (
-            <div aria-busy="true" aria-label="Searching" className="flex flex-col gap-1 p-1">
+            <div
+              role="status"
+              aria-busy="true"
+              aria-label="Searching"
+              className="flex flex-col gap-1 p-1"
+            >
               {[0, 1, 2].map((i) => (
                 <div key={i} className="bg-soft h-9 animate-pulse rounded" />
               ))}
             </div>
           ) : options.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13 m-0 p-2">
-              No sheets or items match “{q}”.
-            </p>
+            <p className="text-muted-foreground text-13 m-0 p-2">No sheets or items match “{q}”.</p>
           ) : null}
           <ul id={listId} role="listbox" aria-label="Search results" className="m-0 list-none p-0">
             {options.map((o, i) => (
@@ -254,7 +257,7 @@ export function GlobalSearch({ org }: { org: string }) {
                   ) : (
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate font-semibold">{o.label}</span>
-                      <span className="text-muted-foreground text-label-12-mono truncate">
+                      <span className="text-muted-foreground text-12 truncate font-mono">
                         {o.meta}
                       </span>
                     </span>
@@ -271,7 +274,7 @@ export function GlobalSearch({ org }: { org: string }) {
 
 function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-muted-foreground text-label-12 px-2 pt-2 pb-1 font-medium" aria-hidden>
+    <div className="text-muted-foreground text-12 px-2 pt-2 pb-1 font-medium" aria-hidden>
       {children}
     </div>
   );

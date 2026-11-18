@@ -62,8 +62,8 @@ export async function AuditorStart({
               >
                 <Icon className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
                 <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="text-ink text-label-14 font-medium">{l.label}</span>
-                  <span className="text-muted-foreground text-copy-13">{l.description}</span>
+                  <span className="text-ink text-14 font-medium">{l.label}</span>
+                  <span className="text-muted-foreground text-13">{l.description}</span>
                 </span>
               </Link>
             </li>

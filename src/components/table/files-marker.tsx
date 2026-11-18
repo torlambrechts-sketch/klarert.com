@@ -30,7 +30,7 @@ export function FilesMarker({
       title={m.label}
       aria-label={`${m.label}. Open the Files tab`}
       className={cn(
-        'text-ink bg-background-100 text-label-11-mono border-gray-alpha-500 hover:bg-gray-alpha-100 relative inline-flex h-[22px] min-w-[28px] shrink-0 items-center justify-center gap-[3px] rounded-full border px-1.5 font-semibold',
+        'text-ink bg-surface text-12 border-line-strong hover:bg-panel relative inline-flex h-[22px] min-w-[28px] shrink-0 items-center justify-center gap-[3px] rounded-full border px-1.5 font-mono font-semibold',
         m.expired && 'border-crit-line',
       )}
       onMouseDown={(e) => e.stopPropagation()}

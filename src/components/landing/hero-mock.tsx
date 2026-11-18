@@ -16,14 +16,14 @@ export function HeroMock({ soa }: { soa: { title: string; controls: number } | n
     >
       <BrowserFrame address="Example workspace · Risk register">
         <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
-          <span className="text-heading-16">Risk register</span>
+          <span className="text-card-title">Risk register</span>
           <Dot tone="good">Live</Dot>
         </div>
         <div className="border-line border-t">
           <RiskRows />
           <div className="border-line flex items-center gap-2 border-t px-3 py-2">
-            <span className="text-muted-foreground text-label-11-mono w-11 shrink-0">R-004</span>
-            <span className="text-label-13 min-w-0 flex-1 truncate">Backups not tested</span>
+            <span className="text-muted-foreground text-12 w-11 shrink-0 font-mono">R-004</span>
+            <span className="text-13 min-w-0 flex-1 truncate">Backups not tested</span>
             <Tag tint="grey">Not started</Tag>
           </div>
         </div>
@@ -36,13 +36,13 @@ export function HeroMock({ soa }: { soa: { title: string; controls: number } | n
           className="flex flex-col gap-2 p-3 lg:absolute lg:top-0 lg:-right-4 lg:w-64 lg:rotate-2"
         >
           <span className="flex items-center justify-between gap-2">
-            <span className="text-label-13 font-semibold">Activity log</span>
+            <span className="text-13 font-semibold">Activity log</span>
             <Dot tone="good">✓ Chain intact</Dot>
           </span>
-          <span className="text-label-12 flex items-center justify-between gap-2">
+          <span className="text-12 flex items-center justify-between gap-2">
             <span className="truncate">Status · In treatment → Done</span>
           </span>
-          <span className="text-muted-foreground text-label-11-mono">sha256 3f9a…c21e</span>
+          <span className="text-muted-foreground text-12 font-mono">sha256 3f9a…c21e</span>
         </Panel>
 
         <Panel
@@ -50,14 +50,14 @@ export function HeroMock({ soa }: { soa: { title: string; controls: number } | n
           className="flex flex-col gap-2 p-3 lg:absolute lg:bottom-4 lg:-left-6 lg:w-64 lg:-rotate-2"
         >
           <span className="flex items-center justify-between gap-2">
-            <span className="text-label-13 font-semibold">Automation run</span>
+            <span className="text-13 font-semibold">Automation run</span>
             <Tag tint="green" mark="✓">
               Done
             </Tag>
           </span>
-          <span className="text-muted-foreground text-label-12">3 steps</span>
+          <span className="text-muted-foreground text-12">3 steps</span>
           {['Notify the owner', 'Create an item in Actions', 'Post an update'].map((s) => (
-            <span key={s} className="text-label-12 flex items-center gap-1.5">
+            <span key={s} className="text-12 flex items-center gap-1.5">
               <Check className="text-good size-3.5 shrink-0" />
               {s}
             </span>
@@ -69,17 +69,17 @@ export function HeroMock({ soa }: { soa: { title: string; controls: number } | n
             float
             className="hidden flex-col gap-2 p-3 sm:col-span-2 sm:flex lg:absolute lg:right-2 lg:bottom-0 lg:w-60 lg:rotate-1"
           >
-            <span className="text-label-13 font-semibold">Statement of applicability</span>
-            <span className="text-muted-foreground text-label-12">{soa.title}</span>
+            <span className="text-13 font-semibold">Statement of applicability</span>
+            <span className="text-muted-foreground text-12">{soa.title}</span>
             <span className="flex items-baseline justify-between gap-2">
-              <span className="text-heading-24">
+              <span className="text-kpi">
                 {IMPLEMENTED}
-                <span className="text-muted-foreground text-label-13 font-normal">
+                <span className="text-muted-foreground text-13 font-normal">
                   {' '}
                   of {soa.controls}
                 </span>
               </span>
-              <span className="text-label-12">implemented</span>
+              <span className="text-12">implemented</span>
             </span>
             <Bar percent={Math.round((IMPLEMENTED / soa.controls) * 100)} />
           </Panel>

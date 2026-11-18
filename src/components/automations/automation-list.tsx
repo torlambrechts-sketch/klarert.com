@@ -112,7 +112,7 @@ export function AutomationList({
   return (
     <>
       <ul
-        className="border-line bg-background-100 m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0"
+        className="border-line bg-surface m-0 flex list-none flex-col overflow-hidden rounded-lg border p-0"
         aria-label="Automations"
       >
         {automations.map((a) => {
@@ -130,7 +130,7 @@ export function AutomationList({
                   aria-label={a.name}
                   onCheckedChange={(v) => void toggle(a, v)}
                 />
-                <span className="text-muted-foreground text-label-12 w-7 font-medium">
+                <span className="text-muted-foreground text-12 w-7 font-medium">
                   {a.enabled ? 'On' : 'Off'}
                 </span>
               </div>
@@ -150,17 +150,17 @@ export function AutomationList({
                     </span>
                   ) : null}
                 </span>
-                <span className="text-muted-foreground text-label-13">
+                <span className="text-muted-foreground text-13">
                   {ctx ? describeTrigger(a.trigger, ctx) : 'Loading…'}
                 </span>
-                <span className="text-muted-foreground text-label-12 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-muted-foreground text-12 flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span>
                     {a.runCount === 1 ? '1 run' : `${a.runCount.toLocaleString('en-GB')} runs`}
                   </span>
                   <span>
                     Last run {a.lastRunAt ? formatDateTime(a.lastRunAt, timeZone) : 'never'}
                   </span>
-                  <span className="border-line bg-background-100 text-label-12-mono rounded-full border px-1.5 py-px">
+                  <span className="border-line bg-surface text-12 rounded-full border px-1.5 py-px font-mono">
                     {sourceLabel(a.source)} · v{a.version}
                   </span>
                   {a.locked ? (

@@ -111,7 +111,7 @@ export function InsightCard({
       aria-label={title}
       data-widget={widget.type}
       className={cn(
-        'border-line bg-background-100 col-span-12 flex min-w-0 flex-col rounded-xl border',
+        'border-line bg-surface col-span-12 flex min-w-0 flex-col rounded-xl border',
         SPAN_CLASS[widget.span],
         MIN_HEIGHT[height],
         sortable.isDragging && 'shadow-menu relative z-10 opacity-90',
@@ -130,9 +130,9 @@ export function InsightCard({
           </button>
         ) : null}
         <div className="min-w-0 flex-1">
-          <h3 className="text-label-14 m-0 truncate font-semibold tracking-[-0.01em]">{title}</h3>
+          <h3 className="text-14 m-0 truncate font-semibold tracking-[-0.01em]">{title}</h3>
           {sourceLine ? (
-            <p className="text-muted-foreground text-label-12.5 m-0 mt-[3px] flex min-w-0 items-center">
+            <p className="text-muted-foreground text-13 m-0 mt-[3px] flex min-w-0 items-center">
               {sourceHref ? (
                 <Link
                   href={sourceHref}
@@ -150,10 +150,10 @@ export function InsightCard({
         </div>
         <div className="-mt-1 flex items-center gap-1">
           {edit ? (
-            <span className="border-line bg-background-100 inline-flex h-[26px] items-center rounded-md border">
+            <span className="border-line bg-surface inline-flex h-[26px] items-center rounded-md border">
               <button
                 type="button"
-                className="text-muted-foreground hover:text-ink text-label-14 size-6"
+                className="text-muted-foreground hover:text-ink text-14 size-6"
                 aria-label={`Narrower (${title})`}
                 title="Narrower"
                 onClick={() => on.step(-1)}
@@ -161,14 +161,14 @@ export function InsightCard({
                 −
               </button>
               <b
-                className="text-label-11-mono min-w-8 text-center font-medium"
+                className="text-12 min-w-8 text-center font-mono font-medium"
                 aria-label={`Width ${spanLabel(widget.span)}`}
               >
                 {spanLabel(widget.span)}
               </b>
               <button
                 type="button"
-                className="text-muted-foreground hover:text-ink text-label-14 size-6"
+                className="text-muted-foreground hover:text-ink text-14 size-6"
                 aria-label={`Wider (${title})`}
                 title="Wider"
                 onClick={() => on.step(1)}

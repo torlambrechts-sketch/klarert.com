@@ -59,7 +59,7 @@ export function RestrictedFieldSection({
 
   if (!canManage)
     return current ? (
-      <p className="text-copy-13 bg-subtle border-line m-0 flex items-start gap-2 rounded-lg border p-3">
+      <p className="text-13 bg-subtle border-line m-0 flex items-start gap-2 rounded-lg border p-3">
         <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
         <span>
           Restricted field. Its values are seen by{' '}
@@ -71,17 +71,17 @@ export function RestrictedFieldSection({
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-label-13 flex items-center gap-2">
+      <label className="text-13 flex items-center gap-2">
         <input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} />
         Restricted field: only chosen people and roles, and the owners, see its values
       </label>
       {on ? (
         <>
           <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-label-13 mb-1 font-semibold">Roles</legend>
+            <legend className="text-13 mb-1 font-semibold">Roles</legend>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5">
               {ROLES.map((r) => (
-                <label key={r} className="text-label-13 flex items-center gap-2">
+                <label key={r} className="text-13 flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={roles.includes(r)}
@@ -93,9 +93,9 @@ export function RestrictedFieldSection({
             </div>
           </fieldset>
           <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-label-13 mb-1 font-semibold">People</legend>
+            <legend className="text-13 mb-1 font-semibold">People</legend>
             {people.length === 0 ? (
-              <p className="text-muted-foreground text-copy-13 m-0">No members yet.</p>
+              <p className="text-muted-foreground text-13 m-0">No members yet.</p>
             ) : (
               <ul
                 aria-labelledby={`${id}-people`}
@@ -103,7 +103,7 @@ export function RestrictedFieldSection({
               >
                 {people.map((p) => (
                   <li key={p.id}>
-                    <label className="text-label-13 flex items-center gap-2">
+                    <label className="text-13 flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={users.includes(p.id)}

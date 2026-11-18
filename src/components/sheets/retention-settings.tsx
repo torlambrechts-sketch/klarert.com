@@ -120,12 +120,12 @@ export function RetentionSettingsSection({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-copy-13 text-muted-foreground m-0">
+      <p className="text-13 text-muted-foreground m-0">
         Personal data:{' '}
         {personal.length ? personal.map((f) => f.name).join(', ') : 'no field is marked yet'}. Mark
         a field in its settings (Edit field › Personal data).
       </p>
-      <label className="text-label-13 flex items-center gap-2">
+      <label className="text-13 flex items-center gap-2">
         <input
           type="checkbox"
           disabled={!canEdit || pending}
@@ -140,7 +140,7 @@ export function RetentionSettingsSection({
         them)
       </label>
       {settings.rules.length === 0 ? (
-        <p className="text-copy-13 text-muted-foreground m-0">No retention rule yet.</p>
+        <p className="text-13 text-muted-foreground m-0">No retention rule yet.</p>
       ) : (
         <ul className="divide-line flex flex-col divide-y" aria-label="Retention rules">
           {settings.rules.map((r, i) => (
@@ -150,10 +150,8 @@ export function RetentionSettingsSection({
             >
               <div className="flex min-w-0 flex-col">
                 <span className="font-medium">{r.name}</span>
-                <span className="text-copy-13">{describeRule(r, asFields)}</span>
-                {r.note ? (
-                  <span className="text-label-12 text-muted-foreground">{r.note}</span>
-                ) : null}
+                <span className="text-13">{describeRule(r, asFields)}</span>
+                {r.note ? <span className="text-12 text-muted-foreground">{r.note}</span> : null}
               </div>
               {canEdit ? (
                 <div className="flex gap-1">
@@ -196,7 +194,7 @@ export function RetentionSettingsSection({
         </Button>
       ) : null}
       {!canEdit ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           Only owners and admins can change retention rules.
         </p>
       ) : null}
@@ -210,7 +208,7 @@ export function RetentionSettingsSection({
           }}
         >
           <label className="flex flex-col gap-1">
-            <span className="text-label-13 font-semibold">Rule name</span>
+            <span className="text-13 font-semibold">Rule name</span>
             <input
               className={inputClass}
               value={rule.name}
@@ -222,7 +220,7 @@ export function RetentionSettingsSection({
           </label>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <label className="flex flex-col gap-1">
-              <span className="text-label-13 font-semibold">Keep for</span>
+              <span className="text-13 font-semibold">Keep for</span>
               <input
                 type="number"
                 min={1}
@@ -240,7 +238,7 @@ export function RetentionSettingsSection({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-label-13 font-semibold">Unit</span>
+              <span className="text-13 font-semibold">Unit</span>
               <select
                 className={inputClass}
                 value={rule.period.unit}
@@ -261,7 +259,7 @@ export function RetentionSettingsSection({
               </select>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-label-13 font-semibold">Counted from</span>
+              <span className="text-13 font-semibold">Counted from</span>
               <select
                 className={inputClass}
                 value={rule.from.kind === 'field' ? `field:${rule.from.fieldKey}` : rule.from.kind}
@@ -287,7 +285,7 @@ export function RetentionSettingsSection({
             </label>
           </div>
           <label className="flex flex-col gap-1">
-            <span className="text-label-13 font-semibold">Then</span>
+            <span className="text-13 font-semibold">Then</span>
             <select
               className={inputClass}
               value={rule.action}
@@ -302,14 +300,14 @@ export function RetentionSettingsSection({
           </label>
           {rule.action !== 'archive' ? (
             <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
-              <legend className="text-label-13 mb-1 p-0 font-semibold">Fields to erase</legend>
+              <legend className="text-13 mb-1 p-0 font-semibold">Fields to erase</legend>
               {personal.length === 0 ? (
-                <p className="text-copy-13 text-muted-foreground m-0">
+                <p className="text-13 text-muted-foreground m-0">
                   No field is marked personal data: mark fields first, or nothing is erased.
                 </p>
               ) : (
                 personal.map((f) => (
-                  <label key={f.key} className="text-label-13 flex items-center gap-2">
+                  <label key={f.key} className="text-13 flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={!rule.fieldKeys?.length || rule.fieldKeys.includes(f.key)}
@@ -327,7 +325,7 @@ export function RetentionSettingsSection({
               )}
               {rule.action === 'erase' ? (
                 <>
-                  <label className="text-label-13 flex items-center gap-2">
+                  <label className="text-13 flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={!!rule.files}
@@ -335,7 +333,7 @@ export function RetentionSettingsSection({
                     />
                     Also the item files marked personal data
                   </label>
-                  <label className="text-label-13 flex items-center gap-2">
+                  <label className="text-13 flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={!!rule.comments}
@@ -345,12 +343,12 @@ export function RetentionSettingsSection({
                   </label>
                 </>
               ) : (
-                <p className="text-label-12 text-muted-foreground m-0">
+                <p className="text-12 text-muted-foreground m-0">
                   Anonymising also removes the personal item files and the comments, and replaces
                   the name.
                 </p>
               )}
-              <label className="text-label-13 flex items-center gap-2">
+              <label className="text-13 flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={!!rule.archiveItem}
@@ -361,8 +359,8 @@ export function RetentionSettingsSection({
             </fieldset>
           ) : null}
           <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
-            <legend className="text-label-13 mb-1 p-0 font-semibold">Which items</legend>
-            <label className="text-label-13 flex items-center gap-2">
+            <legend className="text-13 mb-1 p-0 font-semibold">Which items</legend>
+            <label className="text-13 flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={!!rule.onlyDone}
@@ -371,7 +369,7 @@ export function RetentionSettingsSection({
               Only items that are done
             </label>
             {groups.map((g) => (
-              <label key={g.id} className="text-label-13 flex items-center gap-2">
+              <label key={g.id} className="text-13 flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={!rule.groupIds?.length || rule.groupIds.includes(g.id)}
@@ -386,7 +384,7 @@ export function RetentionSettingsSection({
             ))}
           </fieldset>
           <label className="flex flex-col gap-1">
-            <span className="text-label-13 font-semibold">Why this period</span>
+            <span className="text-13 font-semibold">Why this period</span>
             <textarea
               id={`${id}-note`}
               className={`${inputClass} min-h-16 py-2`}
@@ -395,7 +393,7 @@ export function RetentionSettingsSection({
               onChange={(e) => set({ note: e.target.value || undefined })}
             />
           </label>
-          <p className="text-copy-13 m-0">{describeRule(rule, asFields)}</p>
+          <p className="text-13 m-0">{describeRule(rule, asFields)}</p>
           <div className="flex justify-end gap-2">
             <Button
               type="button"

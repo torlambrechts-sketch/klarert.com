@@ -120,7 +120,7 @@ export const TableCell = memo(function TableCell({
       onMouseDown={onMouseDown}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'border-b-row-line border-r-col-line text-ink group-hover/row:bg-row-hover bg-surface text-label-14 absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] has-[[data-box]]:px-2 [&_[data-pill]]:-mx-1.5',
+        'border-b-row-line border-r-col-line text-ink group-hover/row:bg-row-hover bg-surface text-14 absolute top-0 flex h-full items-center overflow-hidden border-r border-b px-[14px] hover:shadow-[inset_0_0_0_1px_var(--line-strong)] has-[[data-box]]:px-2 [&_[data-pill]]:-mx-1.5',
         (selected || rowSelected) && 'bg-sel group-hover/row:bg-sel',
         active && 'outline-focus z-[1] outline-2 -outline-offset-2',
       )}

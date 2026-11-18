@@ -1,169 +1,86 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* ═══════════════ Design system: Geist (docs/05 §6) ═══════════════
-   Light only for now. Every colour is a step on one of Geist's scales below; the app's semantic tokens (--ink,
-   --line, --good …) point at those steps, so a dark theme later only redefines the scales (e.g. under
-   [data-theme='dark']) and the whole app follows. Colour carries meaning only: status and option fills, focus,
-   links and the semantic states (good · warn · crit · info), always next to text or a symbol that says the same. */
+/* ═══════════════ Design system: Keptrow (docs/18 §3, owner decision 18 Nov 2026) ═══════════════
+   The Keptrow tokens below replace the Geist look of docs/05 §6. Components use the semantic names (--ink, --line,
+   --brand, --good …), never hex; the older semantic names point at the Keptrow values so nothing breaks. Colour
+   carries meaning only, always next to text or a symbol that says the same. */
 :root {
-  /* ── Geist scales, light ── */
-  --background-100: #ffffff;
-  --background-200: #fafafa;
+  /* ── Keptrow tokens (docs/18 §3) ── */
+  /* brand */
+  --navy: #00005e; /* rail, hero, headings, item panel header, toast */
+  --brand: #0000a0; /* primary buttons, links, active tab line, accents */
+  --brand-2: #2a2ab5; /* buttons on navy (take-action rows) */
+  --brand-2-hover: #3535c2;
+  --brand-soft: #dcedff; /* active rail button, avatars, tags, soft badges, hero sub-text */
+  --sky: #9fc4ec; /* step tops, secondary series, the logo's third bar */
+  /* surfaces */
+  --page: #f2f4f8; /* app background */
+  --panel: #f4f8fd; /* side panel, callouts, hover rows */
+  --surface: #ffffff; /* cards, dialogs, drawers */
+  --kanban-col: #e8edf5;
+  /* text and lines */
+  --ink: #000000;
+  --muted: #474748;
+  --faint: #8a8a8c;
+  --line: #e3e3e3;
+  --line-input: #8a8a8c;
+  --line-soft: #dce3ec;
+  /* states (text on white >= 4.5:1; --warn is a mark colour, its words are --warn-ink) */
+  --ok: #0b6b43;
+  --bad: #b3261e;
+  --warn: #e07b00;
+  --warn-ink: #7a4100;
+  --bad-ink: #9b1c14;
+  --badge-orange-bg: #fff1dc;
+  --badge-red-bg: #fde7e6;
+  --badge-green-bg: #e3f4ee;
+  --badge-green-ink: #0b5a42;
+  /* option colours, solid with white words (Table cells, pickers) */
+  --opt-green: #0b6b43;
+  --opt-orange: #b35a00;
+  --opt-red: #b3261e;
+  --opt-blue: #2f5fc9;
+  --opt-grey: #6b6b6c;
+  --opt-purple: #5b37b0;
+  --opt-teal: #00787a;
+  --opt-high: #c8281e;
+  /* shape */
+  --scrim: rgb(0 0 40 / 0.45);
+  --focus: #3b6fe0; /* 3 px outline, 2 px offset */
 
-  --gray-100: #f2f2f2;
-  --gray-200: #ebebeb;
-  --gray-300: #e6e6e6;
-  --gray-400: #eaeaea;
-  --gray-500: #c9c9c9;
-  --gray-600: #a8a8a8;
-  --gray-700: #8f8f8f;
-  --gray-800: #7d7d7d;
-  --gray-900: #666666;
-  --gray-1000: #171717;
+  /* ── semantic names components already use, pointed at the Keptrow tokens ── */
+  --line-strong: #c9cdd4; /* hover borders, the ring of an empty checkbox, the Table's right edge */
+  --soft: var(--page); /* fills, skeletons, chips, empty option cells */
+  --subtle: var(--panel); /* quiet fills inside white surfaces (collapsed column stubs, hints) */
+  --navy-900: var(--brand);
+  --navy-1000: var(--navy);
+  --brand-hover: var(--navy);
+  --sel: var(--brand-soft); /* selected rows, always with the ticked checkbox */
+  --sidebar: var(--panel); /* side panel and the phone menu sheet */
+  --surface-line: var(--line-strong); /* card outline and the Table's clear right edge */
+  --row-line: var(--line); /* lines between rows */
+  --col-line: var(--line); /* lines between columns */
+  --head: var(--surface); /* header row fill; muted header words on it */
+  --row-hover: var(--panel); /* opaque, so sticky cells cover what scrolls under them */
+  --nav-hover: var(--panel);
+  --nav-active: var(--brand-soft);
 
-  --gray-alpha-100: rgb(0 0 0 / 0.05);
-  --gray-alpha-200: rgb(0 0 0 / 0.08);
-  --gray-alpha-300: rgb(0 0 0 / 0.1);
-  --gray-alpha-400: rgb(0 0 0 / 0.08);
-  --gray-alpha-500: rgb(0 0 0 / 0.21);
-  --gray-alpha-600: rgb(0 0 0 / 0.34);
-  --gray-alpha-700: rgb(0 0 0 / 0.44);
-  --gray-alpha-800: rgb(0 0 0 / 0.51);
-  --gray-alpha-900: rgb(0 0 0 / 0.61);
-  --gray-alpha-1000: rgb(0 0 0 / 0.91);
-
-  --blue-100: #f0f7ff;
-  --blue-200: #e9f4ff;
-  --blue-300: #dfefff;
-  --blue-400: #cae6ff;
-  --blue-500: #94ccff;
-  --blue-600: #52aeff;
-  --blue-700: #0070f3;
-  --blue-800: #0060d1;
-  --blue-900: #0068d6;
-  --blue-1000: #002a4d;
-
-  --red-100: #fff0f0;
-  --red-200: #ffebeb;
-  --red-300: #ffe0e0;
-  --red-400: #fdd8d8;
-  --red-500: #f8baba;
-  --red-600: #f87e7e;
-  --red-700: #e5484d;
-  --red-800: #da2f35;
-  --red-900: #cb2a2f;
-  --red-1000: #3b0e0e;
-
-  --amber-100: #fff6e5;
-  --amber-200: #fff4d5;
-  --amber-300: #fef0cd;
-  --amber-400: #ffdc96;
-  --amber-500: #ffd06e;
-  --amber-600: #ffc53d;
-  --amber-700: #ffb224;
-  --amber-800: #ff990a;
-  --amber-900: #a35200;
-  --amber-1000: #4e2009;
-
-  --green-100: #effbf3;
-  --green-200: #e5f9eb;
-  --green-300: #d3f5dc;
-  --green-400: #b9efc7;
-  --green-500: #8ee5a5;
-  --green-600: #5bd07e;
-  --green-700: #45a557;
-  --green-800: #398e4a;
-  --green-900: #297a3a;
-  --green-1000: #18311e;
-
-  --teal-100: #effcfa;
-  --teal-200: #e3f9f5;
-  --teal-300: #cdf4ec;
-  --teal-400: #b0eee2;
-  --teal-500: #7de0cc;
-  --teal-600: #3fcfb4;
-  --teal-700: #12a594;
-  --teal-800: #0f8f80;
-  --teal-900: #067a6e;
-  --teal-1000: #0a2e29;
-
-  --purple-100: #fbf7fe;
-  --purple-200: #f6effd;
-  --purple-300: #f1e6fc;
-  --purple-400: #e9d7fa;
-  --purple-500: #d4b6f4;
-  --purple-600: #b88aea;
-  --purple-700: #8e4ec6;
-  --purple-800: #7d40b8;
-  --purple-900: #8145b5;
-  --purple-1000: #2e1938;
-
-  --pink-100: #fdf2f7;
-  --pink-200: #fceaf2;
-  --pink-300: #fbdfeb;
-  --pink-400: #f8cddf;
-  --pink-500: #f2a6c6;
-  --pink-600: #ea74a5;
-  --pink-700: #e93d82;
-  --pink-800: #df2670;
-  --pink-900: #c41562;
-  --pink-1000: #45132b;
-
-  /* ── semantic tokens: the only names components use ── */
-  --ink: var(--gray-1000); /* primary text and icons */
-  --muted: var(--gray-900); /* secondary text: 5.7:1 on white, 5.1:1 on gray-100 */
-  --faint: var(--gray-700); /* icons, dividers, empty marks: never body text */
-  --line: var(--gray-alpha-400); /* 1 px borders of cards, tables, controls */
-  --line-strong: var(--gray-alpha-500); /* hover borders, the ring of an empty checkbox */
-  --soft: var(--gray-100); /* fills, skeletons, chips */
-  --subtle: var(
-    --background-200
-  ); /* quiet fills inside white surfaces (collapsed column stubs, hints) */
-  /* navy brand (owner decision 18 Nov 2026, docs/18 C3): primary buttons, the hero band and the active side menu
-     marker; white text on it is 13.9:1 */
-  --navy-900: #0000a0;
-  --navy-1000: #00005e;
-  --brand: var(--navy-900);
-  --brand-hover: var(--navy-1000);
-  --focus: var(--blue-700); /* focus ring, selected cell */
-  --sel: var(
-    --blue-300
-  ); /* selected rows: 1.17:1 blue, always with the ticked checkbox (and the ink bar) */
-
-  /* surfaces (Vercel's calm base, owner decision 17 Nov 2026): a light grey page, white sheets on it with a visible
-     outline, a grey header row and quiet column lines. Ratios are against white unless said. */
-  --page: var(--background-200); /* the main column behind every screen */
-  --sidebar: var(
-    --gray-100
-  ); /* side menu and phone bottom bar; icons there stay --muted (5.1:1), never --faint */
-  --surface: var(--background-100); /* sheet and group cards, panels and cards on the page */
-  --surface-line: var(--gray-alpha-500); /* card outline and the header row's bottom line: 1.65:1 */
-  --row-line: var(--gray-alpha-400); /* lines between rows: 1.20:1 */
-  --col-line: var(--gray-alpha-100); /* lines between columns: 1.12:1, a quiet grid */
-  --head: var(--gray-100); /* header row fill; muted header text on it is 5.1:1 */
-  --row-hover: var(
-    --gray-100
-  ); /* gray-alpha-100 on white, made opaque so sticky cells cover what scrolls under */
-  --nav-hover: var(--gray-alpha-100);
-  --nav-active: var(--gray-alpha-200);
-
-  /* semantic states, each with a soft fill for badges and banners (text ≥ 4.5:1 on white and on its fill) */
-  --good: var(--green-900);
-  --good-soft: var(--green-200);
-  --warn: var(--amber-900);
-  --warn-soft: var(--amber-100);
-  --crit: var(--red-900);
-  --crit-ink: var(--red-900);
-  --crit-soft: var(--red-100);
-  --crit-line: var(--red-400);
-  --info: var(--blue-900); /* links */
-  --info-soft: var(--blue-100);
+  /* semantic states, each with a soft fill for badges and banners (words >= 4.5:1 on white and on the fill) */
+  --good: var(--ok);
+  --good-soft: var(--badge-green-bg);
+  --warn-soft: var(--badge-orange-bg);
+  --crit: var(--bad);
+  --crit-ink: var(--bad-ink);
+  --crit-soft: var(--badge-red-bg);
+  --crit-line: #fdd8d8;
+  --info: var(--brand); /* links */
+  --info-soft: var(--brand-soft);
   /* thin progress bars (the Table's date countdown): the bright steps, beside words that say the same */
-  --bar-good: var(--green-700);
-  --bar-crit: var(--red-700);
-  --bar-warn: var(--amber-700);
-  --bar-far: var(--gray-600);
+  --bar-good: #45a557;
+  --bar-crit: #e5484d;
+  --bar-warn: #ffb224;
+  --bar-far: #a8a8a8;
 
   /* heat scale (risk levels 1 to 4): fill and the text that sits on it. Kept as the risk matrix's own colours. */
   --h1: #ddf1e4;
@@ -226,9 +143,9 @@
   --tint-yellow-hover: color-mix(in oklch, var(--label-yellow) 27%, #fff);
   --tint-yellow-line: color-mix(in oklch, var(--label-yellow) 45%, #fff);
   --tint-yellow-ink: #854d0e;
-  --tint-grey-bg: var(--gray-200);
-  --tint-grey-hover: var(--gray-300);
-  --tint-grey-line: var(--gray-alpha-500);
+  --tint-grey-bg: #ebebeb;
+  --tint-grey-hover: #e6e6e6;
+  --tint-grey-line: rgb(0 0 0 / 0.21);
   --tint-grey-ink: #3f3f46;
   --tint-pink-bg: color-mix(in oklch, var(--label-pink) 20%, #fff);
   --tint-pink-hover: color-mix(in oklch, var(--label-pink) 27%, #fff);
@@ -240,44 +157,44 @@
   --tint-dark-ink: color-mix(in oklch, var(--label-dark) 72%, #000);
 
   /* the four steps of a value meter (number and risk cells): low → critical, beside the number they describe */
-  --meter-1: var(--green-700);
-  --meter-2: var(--amber-700);
-  --meter-3: var(--amber-800);
-  --meter-4: var(--red-700);
-  --meter-off: var(--gray-100);
+  --meter-1: #45a557;
+  --meter-2: #ffb224;
+  --meter-3: #ff990a;
+  --meter-4: #e5484d;
+  --meter-off: #f2f2f2;
 
-  /* fills behind white text (solid status blocks, action-needed pills): the label colour, darkened just enough
-     for 4.5:1 where it falls short (WCAG 2.1 AA, M10 axe pass) */
-  --solid-grey: #71767b;
+  /* fills behind white text (solid option cells, action-needed pills): the Keptrow --opt-* colours; the colours
+     without one keep their value, dark enough for 4.5:1 under white words (src/lib/tokens.test.ts) */
+  --solid-green: var(--opt-green);
+  --solid-orange: var(--opt-orange);
+  --solid-red: var(--opt-red);
+  --solid-blue: var(--opt-blue);
+  --solid-grey: var(--opt-grey);
+  --solid-purple: var(--opt-purple);
+  --solid-teal: var(--opt-teal);
+  --solid-high: var(--opt-high);
   --solid-yellow: #907218;
-  --solid-green: #18874e;
-  --solid-orange: #b26009;
   --solid-pink: #c04d87;
-  /* the label colours that already reach 4.5:1 under white words (the Table's solid option cells, docs/18 C1) */
-  --solid-blue: var(--label-blue);
   --solid-navy: var(--label-navy);
-  --solid-teal: var(--label-teal);
-  --solid-red: var(--label-red);
-  --solid-purple: var(--label-purple);
   --solid-dark: var(--label-dark);
 
   /* shadcn/ui variables mapped onto the tokens */
-  --background: var(--background-100);
+  --background: var(--surface);
   --foreground: var(--ink);
-  --card: var(--background-100);
+  --card: var(--surface);
   --card-foreground: var(--ink);
-  --popover: var(--background-100);
+  --popover: var(--surface);
   --popover-foreground: var(--ink);
   --primary: var(--brand);
-  --primary-foreground: var(--background-200);
-  --secondary: var(--background-100);
+  --primary-foreground: var(--surface);
+  --secondary: var(--surface);
   --secondary-foreground: var(--ink);
   --muted-foreground: var(--muted);
-  --accent: var(--gray-alpha-100);
+  --accent: var(--panel);
   --accent-foreground: var(--ink);
   --destructive: var(--crit);
   --border: var(--line);
-  --input: var(--line);
+  --input: var(--line-input);
   --ring: var(--focus);
   --radius: 6px;
 }
@@ -285,100 +202,35 @@
 @theme inline {
   /* Geist's 4 px grid: p-2.5 is 10 px, size-4 16 px, whatever the root font size */
   --spacing: 4px;
-  --color-background-100: var(--background-100);
-  --color-background-200: var(--background-200);
-  --color-gray-100: var(--gray-100);
-  --color-gray-200: var(--gray-200);
-  --color-gray-300: var(--gray-300);
-  --color-gray-400: var(--gray-400);
-  --color-gray-500: var(--gray-500);
-  --color-gray-600: var(--gray-600);
-  --color-gray-700: var(--gray-700);
-  --color-gray-800: var(--gray-800);
-  --color-gray-900: var(--gray-900);
-  --color-gray-1000: var(--gray-1000);
-  --color-gray-alpha-100: var(--gray-alpha-100);
-  --color-gray-alpha-200: var(--gray-alpha-200);
-  --color-gray-alpha-300: var(--gray-alpha-300);
-  --color-gray-alpha-400: var(--gray-alpha-400);
-  --color-gray-alpha-500: var(--gray-alpha-500);
-  --color-gray-alpha-600: var(--gray-alpha-600);
-  --color-gray-alpha-700: var(--gray-alpha-700);
-  --color-gray-alpha-800: var(--gray-alpha-800);
-  --color-gray-alpha-900: var(--gray-alpha-900);
-  --color-gray-alpha-1000: var(--gray-alpha-1000);
-  --color-blue-100: var(--blue-100);
-  --color-blue-200: var(--blue-200);
-  --color-blue-300: var(--blue-300);
-  --color-blue-400: var(--blue-400);
-  --color-blue-500: var(--blue-500);
-  --color-blue-600: var(--blue-600);
-  --color-blue-700: var(--blue-700);
-  --color-blue-800: var(--blue-800);
-  --color-blue-900: var(--blue-900);
-  --color-blue-1000: var(--blue-1000);
-  --color-red-100: var(--red-100);
-  --color-red-200: var(--red-200);
-  --color-red-300: var(--red-300);
-  --color-red-400: var(--red-400);
-  --color-red-500: var(--red-500);
-  --color-red-600: var(--red-600);
-  --color-red-700: var(--red-700);
-  --color-red-800: var(--red-800);
-  --color-red-900: var(--red-900);
-  --color-red-1000: var(--red-1000);
-  --color-amber-100: var(--amber-100);
-  --color-amber-200: var(--amber-200);
-  --color-amber-300: var(--amber-300);
-  --color-amber-400: var(--amber-400);
-  --color-amber-500: var(--amber-500);
-  --color-amber-600: var(--amber-600);
-  --color-amber-700: var(--amber-700);
-  --color-amber-800: var(--amber-800);
-  --color-amber-900: var(--amber-900);
-  --color-amber-1000: var(--amber-1000);
-  --color-green-100: var(--green-100);
-  --color-green-200: var(--green-200);
-  --color-green-300: var(--green-300);
-  --color-green-400: var(--green-400);
-  --color-green-500: var(--green-500);
-  --color-green-600: var(--green-600);
-  --color-green-700: var(--green-700);
-  --color-green-800: var(--green-800);
-  --color-green-900: var(--green-900);
-  --color-green-1000: var(--green-1000);
-  --color-teal-100: var(--teal-100);
-  --color-teal-200: var(--teal-200);
-  --color-teal-300: var(--teal-300);
-  --color-teal-400: var(--teal-400);
-  --color-teal-500: var(--teal-500);
-  --color-teal-600: var(--teal-600);
-  --color-teal-700: var(--teal-700);
-  --color-teal-800: var(--teal-800);
-  --color-teal-900: var(--teal-900);
-  --color-teal-1000: var(--teal-1000);
-  --color-purple-100: var(--purple-100);
-  --color-purple-200: var(--purple-200);
-  --color-purple-300: var(--purple-300);
-  --color-purple-400: var(--purple-400);
-  --color-purple-500: var(--purple-500);
-  --color-purple-600: var(--purple-600);
-  --color-purple-700: var(--purple-700);
-  --color-purple-800: var(--purple-800);
-  --color-purple-900: var(--purple-900);
-  --color-purple-1000: var(--purple-1000);
-  --color-pink-100: var(--pink-100);
-  --color-pink-200: var(--pink-200);
-  --color-pink-300: var(--pink-300);
-  --color-pink-400: var(--pink-400);
-  --color-pink-500: var(--pink-500);
-  --color-pink-600: var(--pink-600);
-  --color-pink-700: var(--pink-700);
-  --color-pink-800: var(--pink-800);
-  --color-pink-900: var(--pink-900);
-  --color-pink-1000: var(--pink-1000);
 
   --color-ink: var(--ink);
+  --color-navy: var(--navy);
+  --color-brand-2: var(--brand-2);
+  --color-brand-2-hover: var(--brand-2-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-sky: var(--sky);
+  --color-panel: var(--panel);
+  --color-kanban-col: var(--kanban-col);
+  --color-line-input: var(--line-input);
+  --color-line-soft: var(--line-soft);
+  --color-ok: var(--ok);
+  --color-bad: var(--bad);
+  --color-bad-ink: var(--bad-ink);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-mark: var(--warn);
+  --color-badge-orange-bg: var(--badge-orange-bg);
+  --color-badge-red-bg: var(--badge-red-bg);
+  --color-badge-green-bg: var(--badge-green-bg);
+  --color-badge-green-ink: var(--badge-green-ink);
+  --color-opt-green: var(--opt-green);
+  --color-opt-orange: var(--opt-orange);
+  --color-opt-red: var(--opt-red);
+  --color-opt-blue: var(--opt-blue);
+  --color-opt-grey: var(--opt-grey);
+  --color-opt-purple: var(--opt-purple);
+  --color-opt-teal: var(--opt-teal);
+  --color-opt-high: var(--opt-high);
+  --color-scrim: var(--scrim);
   --color-faint: var(--faint);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
@@ -400,7 +252,8 @@
   --color-row-hover: var(--row-hover);
   --color-good: var(--good);
   --color-good-soft: var(--good-soft);
-  --color-warn: var(--warn);
+  /* text-warn and border-warn keep readable words: --warn is the orange mark (warn-mark), its words --warn-ink */
+  --color-warn: var(--warn-ink);
   --color-warn-soft: var(--warn-soft);
   --color-crit: var(--crit);
   --color-crit-ink: var(--crit-ink);
@@ -442,14 +295,19 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
+  /* Keptrow shapes (docs/18 §3): rounded-card, rounded-dialog, rounded-input, rounded-pill */
+  --radius-card: 8px;
+  --radius-dialog: 12px;
+  --radius-input: 4px;
+  --radius-pill: 999px;
   /* the public site's page container (`rounded-page`): the large rounded surface the pages sit in */
   --radius-page: 24px;
 
-  /* materials: cards are flat (1 px --line border, no shadow); only floating surfaces cast one */
+  /* materials (docs/18 §3): cards cast a light navy shadow; menus and drawers a deeper one */
+  --shadow-card: 0 1px 4px rgb(0 0 94 / 0.08);
+  --shadow-drawer: -8px 0 30px rgb(0 0 40 / 0.18);
   --shadow-tooltip: 0 1px 1px rgb(0 0 0 / 0.02), 0 4px 8px rgb(0 0 0 / 0.04);
-  --shadow-menu:
-    0 1px 1px rgb(0 0 0 / 0.02), 0 4px 8px -4px rgb(0 0 0 / 0.04),
-    0 16px 24px -8px rgb(0 0 0 / 0.06);
+  --shadow-menu: 0 8px 28px rgb(0 0 94 / 0.2);
   --shadow-modal:
     0 1px 1px rgb(0 0 0 / 0.02), 0 8px 16px -4px rgb(0 0 0 / 0.04),
     0 24px 32px -8px rgb(0 0 0 / 0.06);
@@ -457,139 +315,102 @@
     0 1px 1px rgb(0 0 0 / 0.02), 0 8px 16px -4px rgb(0 0 0 / 0.04),
     0 24px 32px -8px rgb(0 0 0 / 0.06), 0 32px 64px -16px rgb(0 0 0 / 0.08);
 
-  /* Geist reads heavy above 600: headings and emphasis top out at semibold */
-  --font-weight-bold: 600;
-  --font-weight-extrabold: 600;
+  /* ── Keptrow type sizes (docs/18 §3): text-12 … text-28 for UI text; the named styles (text-hero, text-card-title …)
+     are utilities below. Weight comes from font-* classes. ── */
+  --text-12: 12px;
+  --text-12--line-height: 16px;
+  --text-13: 13px;
+  --text-13--line-height: 18px;
+  --text-14: 14px;
+  --text-14--line-height: 20px;
+  --text-15: 15px;
+  --text-15--line-height: 21px;
+  --text-16: 16px;
+  --text-16--line-height: 22px;
+  --text-17: 17px;
+  --text-17--line-height: 24px;
+  --text-18: 18px;
+  --text-18--line-height: 24px;
+  --text-20: 20px;
+  --text-20--line-height: 26px;
+  --text-22: 22px;
+  --text-22--line-height: 28px;
+  --text-24: 24px;
+  --text-24--line-height: 30px;
+  --text-28: 28px;
+  --text-28--line-height: 34px;
 
-  /* ── Geist type scale: text-heading-*, text-label-*, text-copy-* (px, independent of the 14 px root) ──
-     heading: titles, semibold with negative tracking. label: single-line UI text (controls, cells, menus, meta).
-     copy: running text that may wrap (descriptions, help, empty states). Weight comes from font-* classes. */
-  --text-heading-72: 72px;
-  --text-heading-72--line-height: 72px;
-  --text-heading-72--letter-spacing: -4.32px;
-  --text-heading-72--font-weight: 600;
-  --text-heading-64: 64px;
-  --text-heading-64--line-height: 64px;
-  --text-heading-64--letter-spacing: -3.84px;
-  --text-heading-64--font-weight: 600;
-  --text-heading-56: 56px;
-  --text-heading-56--line-height: 56px;
-  --text-heading-56--letter-spacing: -3.36px;
-  --text-heading-56--font-weight: 600;
-  --text-heading-48: 48px;
-  --text-heading-48--line-height: 56px;
-  --text-heading-48--letter-spacing: -2.88px;
-  --text-heading-48--font-weight: 600;
-  --text-heading-40: 40px;
-  --text-heading-40--line-height: 48px;
-  --text-heading-40--letter-spacing: -2.4px;
-  --text-heading-40--font-weight: 600;
-  --text-heading-32: 32px;
-  --text-heading-32--line-height: 40px;
-  --text-heading-32--letter-spacing: -1.28px;
-  --text-heading-32--font-weight: 600;
-  --text-heading-26: 26px;
-  --text-heading-26--line-height: 31.2px;
-  --text-heading-26--letter-spacing: -0.78px;
-  --text-heading-26--font-weight: 600;
-  --text-heading-24: 24px;
-  --text-heading-24--line-height: 32px;
-  --text-heading-24--letter-spacing: -0.96px;
-  --text-heading-24--font-weight: 600;
-  --text-heading-20: 20px;
-  --text-heading-20--line-height: 26px;
-  --text-heading-20--letter-spacing: -0.4px;
-  --text-heading-20--font-weight: 600;
-  --text-heading-16: 16px;
-  --text-heading-16--line-height: 24px;
-  --text-heading-16--letter-spacing: -0.32px;
-  --text-heading-16--font-weight: 600;
-  --text-heading-14: 14px;
-  --text-heading-14--line-height: 20px;
-  --text-heading-14--letter-spacing: -0.28px;
-  --text-heading-14--font-weight: 600;
-
-  --text-label-20: 20px;
-  --text-label-20--line-height: 32px;
-  --text-label-18: 18px;
-  --text-label-18--line-height: 20px;
-  --text-label-16: 16px;
-  --text-label-16--line-height: 20px;
-  --text-label-14: 14px;
-  --text-label-14--line-height: 20px;
-  --text-label-13: 13px;
-  --text-label-13--line-height: 16px;
-  --text-label-12: 12px;
-  --text-label-12--line-height: 16px;
-  /* Half steps of the board design (docs/05 §6.2): Table dates and scores. 13.5 and 9.5 were rounded to 13 and 11
-     (board review UX-14, 15 Nov 2026). */
-  --text-label-12\.5: 12.5px;
-  --text-label-12\.5--line-height: 18px;
-  --text-label-11: 11px;
-  --text-label-11--line-height: 16px;
-
-  --text-copy-24: 24px;
-  --text-copy-24--line-height: 36px;
-  --text-copy-20: 20px;
-  --text-copy-20--line-height: 36px;
-  --text-copy-18: 18px;
-  --text-copy-18--line-height: 28px;
-  --text-copy-16: 16px;
-  --text-copy-16--line-height: 24px;
-  --text-copy-14: 14px;
-  --text-copy-14--line-height: 20px;
-  --text-copy-13: 13px;
-  --text-copy-13--line-height: 18px;
-
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-/* mono variants of the type scale: ids, codes, counts, keyboard hints */
-@utility text-label-14-mono {
-  font-family: var(--font-mono);
+/* ── Keptrow type scale (docs/18 §3), Figtree; body 15 px / 1.4 ── */
+@utility text-logo {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+@utility text-hero {
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  @media (max-width: 639.98px) {
+    font-size: 30px;
+  }
+}
+@utility text-hero-sub {
+  font-size: 17px;
+  line-height: 1.4;
+}
+@utility text-figure {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+@utility text-kpi {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+@utility text-card-title {
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+@utility text-panel-title {
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+@utility text-nav {
+  font-size: 16px;
+  line-height: 1.3;
+}
+@utility text-body {
+  font-size: 15px;
+  line-height: 1.4;
+}
+@utility text-sub {
   font-size: 14px;
-  line-height: var(--tw-leading, 20px);
+  line-height: 1.4;
+  color: var(--muted);
 }
-@utility text-label-13-mono {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: var(--tw-leading, 20px);
+@utility text-tab {
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
-@utility text-label-12\.5-mono {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  line-height: var(--tw-leading, 18px);
-}
-@utility text-label-11\.5-mono {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  line-height: var(--tw-leading, 18px);
-}
-@utility text-label-11-mono {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: var(--tw-leading, 18px);
-}
-@utility text-label-10\.5-mono {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  line-height: var(--tw-leading, 15px);
-}
-@utility text-label-12-mono {
-  font-family: var(--font-mono);
+@utility text-section-label {
   font-size: 12px;
-  line-height: var(--tw-leading, 16px);
-}
-@utility text-copy-14-mono {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  line-height: var(--tw-leading, 20px);
-}
-@utility text-copy-13-mono {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: var(--tw-leading, 18px);
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 @layer base {
@@ -601,17 +422,18 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    line-height: 1.45;
+    font-size: 15px;
+    line-height: 1.4;
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
   }
   h1 {
-    @apply text-heading-26;
+    @apply text-28 font-semibold;
   }
-  /* Geist focus: a 2 px blue ring clear of the control */
+  /* Keptrow focus (docs/18 §3): a 3 px ring 2 px clear of every focusable control */
   :focus-visible {
-    outline: 2px solid var(--focus);
+    outline: 3px solid var(--focus);
     outline-offset: 2px;
   }
 }
@@ -634,70 +456,199 @@
 /* the public site's background (owner decision 16 Nov 2026, replacing the dot pattern): a white page with two soft
    blue glows at the top, from the blue scale; nothing repeats or moves */
 @utility bg-glow {
-  background-color: var(--background-100);
+  background-color: #ffffff;
   background-image:
-    radial-gradient(70% 520px at 50% -80px, var(--blue-300), transparent 72%),
-    radial-gradient(38% 420px at 100% 120px, var(--blue-200), transparent 70%),
-    radial-gradient(30% 360px at 0% 260px, var(--blue-100), transparent 70%);
+    radial-gradient(70% 520px at 50% -80px, #dfefff, transparent 72%),
+    radial-gradient(38% 420px at 100% 120px, #e9f4ff, transparent 70%),
+    radial-gradient(30% 360px at 0% 260px, #f0f7ff, transparent 70%);
   background-repeat: no-repeat;
 }
 
 /* the inside of an illustration panel on the public site: a quiet blue wash instead of dots */
 @utility bg-glow-soft {
-  background-color: var(--background-200);
-  background-image: radial-gradient(80% 70% at 50% 0%, var(--blue-100), transparent 75%);
+  background-color: #fafafa;
+  background-image: radial-gradient(80% 70% at 50% 0%, #f0f7ff, transparent 75%);
 }
 
-/* ───────────── app shell (docs/05 §2, §5) ─────────────
-   one 256 px side menu (folders collapse) and the main column; under 760 px a bottom bar and the menu as a sheet. */
+/* ───────────── app shell (docs/18 §4 look, docs/05 §2 and §5 content) ─────────────
+   a white 69 px top bar across the window; under it the 80 px navy rail, the 288 px side panel and the page. The
+   panel collapses (Ctrl+B, the rail's toggle or its ‹): the rail stays and the page stretches. Under 760 px the
+   rail and the panel give way to the navy bottom bar and the menu sheet (docs/05 §5). */
 .app-shell {
   display: grid;
-  grid-template-columns: 256px minmax(0, 1fr);
+  grid-template-columns: 80px 288px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'top top top'
+    'rail side main';
   min-height: 100dvh;
+  /* the rail and the panel run the full height of a long page, below their sticky contents */
+  background: linear-gradient(
+    to right,
+    var(--navy) 80px,
+    var(--panel) 80px 367px,
+    var(--line) 367px 368px,
+    var(--page) 368px
+  );
 }
-
-.side-col {
+.app-shell > .top-bar {
+  grid-area: top;
+}
+.rail-col {
+  grid-area: rail;
   position: sticky;
-  top: 0;
-  height: 100dvh;
-  z-index: 40;
-  background: var(--sidebar);
+  top: 69px;
+  height: calc(100dvh - 69px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+  background: var(--navy);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.side-col {
+  grid-area: side;
+  position: sticky;
+  top: 69px;
+  height: calc(100dvh - 69px);
+  z-index: 20;
+  background: var(--panel);
   border-right: 1px solid var(--line);
+}
+.app-main {
+  grid-area: main;
 }
 
 .bottom-bar {
   display: none;
 }
 
-/* collapsed side menu (Ctrl+B): icons only, names as tooltips */
 :root[data-side='collapsed'] .app-shell {
-  grid-template-columns: 60px minmax(0, 1fr);
+  background: linear-gradient(to right, var(--navy) 80px, var(--page) 80px);
+  grid-template-columns: 80px minmax(0, 1fr);
+  grid-template-areas:
+    'top top'
+    'rail main';
 }
-:root[data-side='collapsed'] .side-col [data-side-text],
-:root[data-side='collapsed'] .side-col h2,
-:root[data-side='collapsed'] .side-col kbd,
-:root[data-side='collapsed'] .side-col input[type='search'],
-:root[data-side='collapsed'] .side-col [data-side-trailing] {
+:root[data-side='collapsed'] .side-col {
   display: none;
 }
-:root[data-side='collapsed'] .side-col [data-side-list] {
-  margin-left: 0;
-  padding-left: 0;
-  border-left: 0;
+
+/* ── the hero (docs/18 §4): a navy band behind the page head. Pages have 48 px side padding and a 26 px top (16 and
+   20 px on phones, C14); the band takes them back with negative margins so it runs from edge to edge of the page
+   column. When the next element is marked `data-hero-overlap` it moves up 88 px into the band. --hero-gap is the
+   page's own flex gap (16 px unless a page says otherwise). ── */
+.page-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  column-gap: 20px;
+  row-gap: 12px;
+  margin: -26px -48px 0;
+  padding: 32px 48px;
+  background: var(--navy);
+  color: var(--surface);
 }
-:root[data-side='collapsed'] .side-col a,
-:root[data-side='collapsed'] .side-col button,
-:root[data-side='collapsed'] .side-col label {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
+.page-hero:has(+ [data-hero-overlap]) {
+  padding-bottom: 120px;
+}
+.page-hero + [data-hero-overlap] {
+  position: relative;
+  margin-top: calc(-88px - var(--hero-gap, 16px));
+}
+.hero-text,
+.hero-actions {
+  position: relative;
+}
+.hero-deco {
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  pointer-events: none;
+}
+/* crumbs on navy: --brand-soft words, underlined links, the current one white */
+.hero-crumbs {
+  color: var(--brand-soft);
+  font-size: 14px;
+}
+.hero-crumbs a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hero-crumbs .text-muted-foreground:not([class*='bg-']),
+.hero-crumbs .text-line-strong,
+.hero-text p .text-muted-foreground {
+  color: var(--brand-soft);
+}
+.hero-crumbs [aria-current='page'] {
+  color: var(--surface);
+}
+/* surfaces on navy (the item panel's header, docs/18 §5): white words, --brand-soft for the quiet ones */
+.on-navy {
+  background: var(--navy);
+  color: var(--surface);
+}
+.on-navy .text-muted-foreground,
+.on-navy .text-line-strong {
+  color: var(--brand-soft);
+}
+.on-navy .text-ink,
+.on-navy .text-navy {
+  color: var(--surface);
+}
+.on-navy .after\:bg-brand::after {
+  background: var(--surface);
+}
+.on-navy [data-variant='ghost'],
+.on-navy [data-variant='tertiary'] {
+  color: var(--surface);
+}
+.on-navy [data-variant='ghost']:hover,
+.on-navy [data-variant='tertiary']:hover {
+  background: var(--brand-2);
+}
+.on-navy :focus-visible {
+  outline-color: var(--surface);
+}
+.on-navy input {
+  color: var(--ink);
+  background: var(--surface);
+}
+
+/* buttons on navy: plain and link buttons take white words, the filled one a light ring */
+.hero-actions [data-variant='ghost'],
+.hero-actions [data-variant='tertiary'],
+.hero-actions [data-variant='link'] {
+  color: #fff;
+}
+.hero-actions [data-variant='ghost']:hover,
+.hero-actions [data-variant='tertiary']:hover {
+  background: var(--brand-2);
+}
+.hero-actions [data-variant='default'] {
+  box-shadow: inset 0 0 0 1px var(--brand-soft);
+}
+.page-hero :focus-visible {
+  outline-color: var(--surface);
 }
 
 @media (max-width: 759.98px) {
-  .app-shell {
+  .app-shell,
+  :root[data-side='collapsed'] .app-shell {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'top'
+      'main';
     padding-bottom: 64px;
+    background: var(--page);
   }
+  .rail-col,
   .side-col {
     display: none;
   }
@@ -707,8 +658,7 @@
     position: fixed;
     inset: auto 0 0 0;
     height: 64px;
-    background: var(--sidebar);
-    border-top: 1px solid var(--line);
+    background: var(--navy);
     z-index: 45;
   }
   .desk-only {
@@ -721,30 +671,40 @@
     z-index: 60;
     display: flex;
     align-items: center;
-    height: 48px;
+    height: 69px;
     max-width: none;
     padding: 0 12px;
-    background: var(--background-100);
+    background: var(--surface);
     border-bottom: 1px solid var(--line);
   }
   .search-box[data-open] .search-icon {
-    left: 22px;
+    left: 28px;
   }
   .search-box[data-open] .search-cancel {
     display: inline-flex;
   }
   .search-box[data-open] .search-results {
     position: fixed;
-    top: 48px;
+    top: 69px;
     left: 0;
     right: 0;
-    max-height: calc(100dvh - 48px - 64px);
+    max-height: calc(100dvh - 69px - 64px);
     border-radius: 0;
   }
 }
 @media (min-width: 760px) {
   .phone-only {
     display: none !important;
+  }
+}
+/* phones (< 640 px, docs/18 §4, C12): the hero's 24 × 20 px padding and the 30 px title (text-hero) */
+@media (max-width: 639.98px) {
+  .page-hero {
+    margin: -20px -16px 0;
+    padding: 24px 20px;
+  }
+  .page-hero:has(+ [data-hero-overlap]) {
+    padding-bottom: 112px;
   }
 }
 
@@ -768,7 +728,7 @@
   margin: 0;
   border: 1px solid var(--ink);
   border-radius: 4px;
-  background: var(--background-100) center / 12px no-repeat;
+  background: #ffffff center / 12px no-repeat;
   cursor: pointer;
 }
 .row-check:checked {
@@ -790,7 +750,20 @@
     display: block;
   }
   .side-col,
+  .rail-col,
+  .top-bar,
+  .hero-deco,
   .bottom-bar {
     display: none;
+  }
+  .page-hero {
+    margin: 0;
+    padding: 0;
+    background: none;
+    color: var(--ink);
+  }
+  .page-hero h1,
+  .page-hero p {
+    color: var(--ink);
   }
 }

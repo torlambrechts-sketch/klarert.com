@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { stepLine } from '@/engine/automations/chain';
@@ -28,7 +28,7 @@ import {
 
 const selectClass = cn(
   inputClass,
-  'select-chevron h-[40px] w-auto max-w-full text-label-14 shadow-none sm:min-w-[170px]',
+  'select-chevron h-[40px] w-auto max-w-full text-14 shadow-none sm:min-w-[170px]',
 );
 
 export function RunLog(props: { org: string; orgId: string; timeZone: string }) {
@@ -57,7 +57,7 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
   const filtered = !!(filters.sheetId || filters.automationId || filters.outcome);
 
   return (
-    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
       <PageHeader
         className="pb-0.5"
         crumb={
@@ -72,88 +72,94 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
           <>
             Every run of every automation, newest first, with what each step did. Every run is
             audited with “automation” as the actor.{' '}
-            <Link href={`/${org}/automations`} className="text-ink underline underline-offset-4">
+            <Link href={`/${org}/automations`} className="underline underline-offset-4">
               Back to automations
             </Link>
           </>
         }
       />
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filters">
-        <label className="flex min-w-0 items-center">
-          <span className="sr-only">Sheet</span>
-          <select
-            className={selectClass}
-            value={filters.sheetId ?? ''}
-            onChange={(e) => setFilter('sheet', e.target.value)}
-          >
-            <option value="">All sheets</option>
-            {(sheets.data ?? []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex min-w-0 items-center">
-          <span className="sr-only">Automation</span>
-          <select
-            className={selectClass}
-            value={filters.automationId ?? ''}
-            onChange={(e) => setFilter('automation', e.target.value)}
-          >
-            <option value="">All automations</option>
-            {autoChoices.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex min-w-0 items-center">
-          <span className="sr-only">Outcome</span>
-          <select
-            className={selectClass}
-            value={filters.outcome ?? ''}
-            onChange={(e) => setFilter('outcome', e.target.value)}
-          >
-            <option value="">All outcomes</option>
-            {RUN_OUTCOMES.map((o) => (
-              <option key={o} value={o}>
-                {outcomeLabel(o)}
-              </option>
-            ))}
-          </select>
-        </label>
-        {filtered ? (
-          <Button type="button" variant="ghost" onClick={() => router.replace(`${path}?tab=runs`)}>
-            Clear filters
-          </Button>
-        ) : null}
-      </div>
-      {runs.isError ? (
-        <ErrorBox text="The run log could not be loaded." retry={() => void runs.refetch()} />
-      ) : runs.isPending ? (
-        <ListSkeleton />
-      ) : runs.data.length === 0 ? (
-        <div className="border-line bg-background-100 rounded-lg border border-dashed p-6">
-          <p className="text-muted-foreground m-0">
-            {filtered
-              ? 'No runs match these filters.'
-              : 'No automation runs yet. Every run will be listed here with its steps.'}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="border-line bg-background-100 overflow-hidden rounded-lg border">
-            <RunTable runs={runs.data} org={org} timeZone={props.timeZone} label="Runs" />
-          </div>
-          {runs.data.length === RUN_PAGE ? (
-            <p className="text-muted-foreground text-label-12 m-0">
-              Showing the latest {RUN_PAGE} runs. Filter to see older ones.
-            </p>
+      <HeadCard>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filters">
+          <label className="flex min-w-0 items-center">
+            <span className="sr-only">Sheet</span>
+            <select
+              className={selectClass}
+              value={filters.sheetId ?? ''}
+              onChange={(e) => setFilter('sheet', e.target.value)}
+            >
+              <option value="">All sheets</option>
+              {(sheets.data ?? []).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex min-w-0 items-center">
+            <span className="sr-only">Automation</span>
+            <select
+              className={selectClass}
+              value={filters.automationId ?? ''}
+              onChange={(e) => setFilter('automation', e.target.value)}
+            >
+              <option value="">All automations</option>
+              {autoChoices.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex min-w-0 items-center">
+            <span className="sr-only">Outcome</span>
+            <select
+              className={selectClass}
+              value={filters.outcome ?? ''}
+              onChange={(e) => setFilter('outcome', e.target.value)}
+            >
+              <option value="">All outcomes</option>
+              {RUN_OUTCOMES.map((o) => (
+                <option key={o} value={o}>
+                  {outcomeLabel(o)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {filtered ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.replace(`${path}?tab=runs`)}
+            >
+              Clear filters
+            </Button>
           ) : null}
-        </>
-      )}
+        </div>
+        {runs.isError ? (
+          <ErrorBox text="The run log could not be loaded." retry={() => void runs.refetch()} />
+        ) : runs.isPending ? (
+          <ListSkeleton />
+        ) : runs.data.length === 0 ? (
+          <div className="border-line bg-surface rounded-lg border border-dashed p-6">
+            <p className="text-muted-foreground m-0">
+              {filtered
+                ? 'No runs match these filters.'
+                : 'No automation runs yet. Every run will be listed here with its steps.'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="border-line bg-surface overflow-hidden rounded-lg border">
+              <RunTable runs={runs.data} org={org} timeZone={props.timeZone} label="Runs" />
+            </div>
+            {runs.data.length === RUN_PAGE ? (
+              <p className="text-muted-foreground text-12 m-0">
+                Showing the latest {RUN_PAGE} runs. Filter to see older ones.
+              </p>
+            ) : null}
+          </>
+        )}
+      </HeadCard>
     </main>
   );
 }
@@ -177,14 +183,14 @@ export function RunTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table aria-label={label} className="text-label-13 w-full min-w-[860px] border-collapse">
+      <table aria-label={label} className="text-13 w-full min-w-[860px] border-collapse">
         <thead>
           <tr>
             {['Time', 'Automation', 'Sheet', 'Item', 'Outcome', 'What it did'].map((h) => (
               <th
                 key={h}
                 scope="col"
-                className="border-soft text-muted-foreground bg-background-100 text-label-12 border-b px-3.5 py-2.5 text-left font-normal whitespace-nowrap"
+                className="border-soft text-muted-foreground bg-surface text-12 border-b px-3.5 py-2.5 text-left font-normal whitespace-nowrap"
               >
                 {h}
               </th>
@@ -208,13 +214,13 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
   const stepsId = `run-${run.id}-steps`;
   return (
     <tr className="group hover:[&>td]:bg-row-hover">
-      <td className={cn(td, 'text-muted-foreground text-label-12-mono whitespace-nowrap')}>
+      <td className={cn(td, 'text-muted-foreground text-12 font-mono whitespace-nowrap')}>
         {formatDateTime(run.startedAt, timeZone)}
       </td>
       <td className={cn(td, 'min-w-[180px]')}>
         <span className="text-ink break-words">{run.automationName ?? 'Deleted automation'}</span>
         {run.depth > 0 ? (
-          <span className="text-muted-foreground text-label-12 block">
+          <span className="text-muted-foreground text-12 block">
             Caused by another automation (depth {run.depth})
           </span>
         ) : null}
@@ -226,7 +232,7 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
             className="hover:underline"
             href={`/${org}/s/${run.sheetId}?item=${encodeURIComponent(run.itemDisplayId)}`}
           >
-            <span className="text-label-12-mono">{run.itemDisplayId}</span> {run.itemName}
+            <span className="text-12 font-mono">{run.itemDisplayId}</span> {run.itemName}
           </Link>
         ) : (
           <span className="text-muted-foreground">Item no longer available</span>
@@ -243,7 +249,7 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
             aria-expanded={open}
             aria-controls={stepsId}
             onClick={() => setOpen((o) => !o)}
-            className="text-muted-foreground hover:bg-soft hover:text-ink focus-visible:outline-focus text-label-13 -my-1 inline-flex h-7 items-center gap-1 rounded-md px-1.5 font-medium whitespace-nowrap focus-visible:outline-2"
+            className="text-muted-foreground hover:bg-soft hover:text-ink focus-visible:outline-focus text-13 -my-1 inline-flex h-7 items-center gap-1 rounded-md px-1.5 font-medium whitespace-nowrap focus-visible:outline-2"
           >
             {open ? (
               <ChevronDown className="size-3.5" aria-hidden />

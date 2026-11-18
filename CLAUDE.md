@@ -18,7 +18,7 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 | `docs/02-data-model.md` | Touching the database, RPCs, RLS, storage |
 | `docs/03-field-types.md` | Touching any cell, editor, validation, filter, summary or formula (58 types) |
 | `docs/04-automations.md` | Touching triggers, conditions, actions, scheduler, run log, notifications |
-| `docs/05-ui-layout.md` | Building any screen. Look: the Geist design system (§6, tokens in `src/app/globals.css`); behaviour reference: `reference/compliance-os-sun-v2.html` |
+| `docs/05-ui-layout.md` | Building any screen. Content, routes, menu groups and behaviour. The look comes from `docs/18` (it replaces the Geist look of §6); behaviour reference: `reference/compliance-os-sun-v2.html` |
 | `docs/06-build-plan.md` | Picking the next milestone; tick acceptance boxes as you finish |
 | `docs/07-first-sheet.md` | Milestone M10 and the end-to-end acceptance test |
 | `docs/10-advisory-board.md` | A design decision the docs don't cover |
@@ -27,7 +27,7 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 | `docs/13-apps.md` | Apps: the app manifest, screens over pack sheets, the CAPA app (P7) |
 | `docs/15-messaging-brief.md` | Writing site, sales or onboarding copy |
 | `docs/16-front-page-handoff.md` | Designing the public home page |
-| `docs/18-table-design-handoff.md` | Rebuilding the Table, its toolbar and menus to the monday.com look; the "more than three related buttons become a dropdown" rule. Behaviour reference: `reference/keptrow-table-prototype.html`. Its §2 records the owner's decisions (18 Nov 2026), now in docs/05 |
+| `docs/18-keptrow-look-handoff.md` | Building or restyling **any** screen: the Keptrow look for the whole app (shell with navy rail, side panel, top bar and hero; tokens; Figtree; cards, buttons, tabs, drawer, dialogs; every page; the Table) and the "more than three related buttons become a dropdown" rule. References: `reference/keptrow-prototype.html`, `reference/keptrow-look/` (stylesheet and screenshots of every page at 1440 and 390 px). It wins on look, docs/05 on content |
 | `scripts/hosted/README.md` | Applying migrations, pgTAP and catalogues to the hosted database |
 | `supabase/migrations/0001_core.sql` | The schema. Change it only through new numbered migrations. `node scripts/test-migration.mjs` smoke-tests it without Docker |
 | `templates/*.json` | Sheet templates used by the wizard and the seed |
@@ -36,7 +36,7 @@ Done means: a person can sign in, create their first sheet from the wizard, add 
 ## Stack (do not change without asking)
 
 - Next.js 15 (App Router, React 19, Server Components + Server Actions), TypeScript `strict`
-- Tailwind CSS v4, shadcn/ui (Radix), lucide-react icons, Geist + Geist Mono **self-hosted** via `next/font/local` (no Google Fonts requests)
+- Tailwind CSS v4, shadcn/ui (Radix), lucide-react icons, Figtree + Geist Mono **self-hosted** via `next/font/local` (no Google Fonts requests)
 - Supabase: Postgres 15+, Auth, Storage, Realtime. **EU region (Frankfurt)**. Local dev with the Supabase CLI
 - Vercel for hosting (region `fra1`) and Vercel Cron for the scheduler
 - TanStack Query (server state, optimistic updates), Zustand (UI state only), Zod (all input), date-fns, `fractional-indexing` (ordering), dnd-kit (drag and drop), TanStack Table + `@tanstack/react-virtual` (grid)
@@ -120,4 +120,4 @@ The owner has asked for this many times. Follow it on every task, in every sessi
 
 Keyboard reachable, visible focus, labels on icon buttons, colour never the only signal (status shows text, and a symbol for action-needed and done states), works at 390 px wide, no layout shift when data loads, empty state written, loading state skeleton, error state with a retry.
 
-Uses the Geist tokens and type styles from globals.css (docs/05 Design system); no ad-hoc px font sizes or hex colours.
+Uses the Keptrow tokens and type styles from globals.css (docs/18 §3); no ad-hoc px font sizes or hex colours.

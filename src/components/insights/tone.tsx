@@ -48,7 +48,7 @@ export function ToneBadge({
   return (
     <span
       className={cn(
-        'text-label-12 inline-flex h-6 items-center gap-1 rounded-full px-2 font-medium whitespace-nowrap',
+        'text-12 inline-flex h-6 items-center gap-1 rounded-full px-2 font-medium whitespace-nowrap',
         TONE_BADGE[tone],
         className,
       )}

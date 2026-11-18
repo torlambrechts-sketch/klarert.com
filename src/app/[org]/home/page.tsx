@@ -42,7 +42,7 @@ const TILES: { bucket: Bucket; icon: typeof AlertTriangle }[] = [
   { bucket: 'assigned', icon: UserRound },
 ];
 
-const textLink = 'text-ink text-label-13 font-medium underline-offset-4 hover:underline';
+const textLink = 'text-brand text-14 font-semibold underline-offset-4 hover:underline';
 
 export default async function HomePage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
@@ -93,9 +93,8 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
   const hello = greeting(hourIn(new Date(), workspace.time_zone));
 
   return (
-    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
       <PageHeader
-        className="border-line mb-2 border-b pb-[18px]"
         crumb={workspace.name}
         title={`${hello}, ${first}`}
         description={
@@ -105,195 +104,218 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
         }
       />
 
-      {role === 'auditor' ? (
-        <AuditorStart
-          org={org}
-          orgId={workspace.id}
-          db={supabase}
-          expiresAt={workspace.expiresAt}
-          timeZone={workspace.time_zone}
-        />
-      ) : mine ? (
-        <nav aria-label="My work at a glance" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {TILES.map(({ bucket, icon: Icon }) => {
-            const n = mine.work.counts[bucket];
-            return (
-              <Link
-                key={bucket}
-                href={`/${org}/my-work?filter=${bucket}`}
-                className="border-line hover:border-line-strong bg-background-100 flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2"
-              >
-                <span className="text-ink text-label-14 flex items-center justify-between gap-2 font-medium">
-                  {BUCKET_LABEL[bucket]}
-                  <Icon className="text-muted-foreground size-4" aria-hidden />
-                </span>
-                <span
-                  className={
-                    bucket === 'overdue' && n > 0
-                      ? 'text-crit text-heading-32 leading-none tabular-nums'
-                      : 'text-heading-32 leading-none tabular-nums'
-                  }
-                >
-                  {n}
-                </span>
-                <span className="text-muted-foreground text-label-13">
-                  {n === 1 ? '1 item' : `${n} items`}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
-      ) : null}
+      {/* a main column and a side column that wrap under 1000 px (docs/18 §4); the first card overlaps the hero */}
+      <div data-hero-overlap className="flex flex-wrap items-start gap-6">
+        <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-6">
+          {role === 'auditor' ? (
+            <AuditorStart
+              org={org}
+              orgId={workspace.id}
+              db={supabase}
+              expiresAt={workspace.expiresAt}
+              timeZone={workspace.time_zone}
+            />
+          ) : mine ? (
+            // the take-action banner (docs/18 §5): My work at a glance as action rows
+            <section
+              aria-labelledby="take-action"
+              className="bg-brand rounded-card text-surface flex flex-wrap gap-x-8 gap-y-5 px-5 py-6 sm:px-8"
+            >
+              <div className="flex min-w-[160px] flex-[1_1_180px] flex-col gap-1">
+                <h2 id="take-action" className="text-card-title text-surface m-0">
+                  Take action
+                </h2>
+                <p className="text-figure m-0 tabular-nums">
+                  {summary ? summary.needsYouCount : '–'}
+                </p>
+                <p className="text-brand-soft m-0">
+                  {summary?.needsYouCount === 1 ? 'item needs you' : 'items need you'}
+                </p>
+              </div>
+              <nav aria-label="My work at a glance" className="flex min-w-0 flex-[2_1_320px]">
+                <ul className="m-0 flex w-full list-none flex-col gap-2 p-0">
+                  {TILES.map(({ bucket, icon: Icon }) => {
+                    const n = mine.work.counts[bucket];
+                    return (
+                      <li key={bucket}>
+                        <Link
+                          href={`/${org}/my-work?filter=${bucket}`}
+                          className="bg-brand-2 hover:bg-brand-2-hover text-surface flex min-h-[52px] items-center gap-3 rounded-md px-4 font-medium transition-colors duration-150 focus-visible:outline-white"
+                        >
+                          <Icon className="size-[18px] shrink-0" aria-hidden />
+                          <span className="min-w-0 flex-1">
+                            {BUCKET_LABEL[bucket]} ·{' '}
+                            <span className="tabular-nums">
+                              {bucket === 'overdue' && n > 0 ? '! ' : ''}
+                              {n === 1 ? '1 item' : `${n} items`}
+                            </span>
+                          </span>
+                          <span aria-hidden className="text-12 font-semibold tracking-[0.06em]">
+                            VIEW
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            </section>
+          ) : null}
 
-      <TestModeNotice org={org} packs={quiet} />
+          <TestModeNotice org={org} packs={quiet} />
 
-      {(firstRun ? nextSteps(setups) : []).map((n) => (
-        <NextStepCard key={n.installId} org={org} next={n} />
-      ))}
+          {(firstRun ? nextSteps(setups) : []).map((n) => (
+            <NextStepCard key={n.installId} org={org} next={n} />
+          ))}
 
-      {home &&
-      showGettingStarted({
-        auditor: role === 'auditor',
-        packs: home.packs,
-        steps: home.checklist,
-      }) ? (
-        <Card
-          headingId="getting-started"
-          title="Getting started"
-          description={`${home.checklist.filter((s) => s.done).length} of ${home.checklist.length} done. This list goes away once every step is done or a standard is installed.`}
-        >
-          <ul className="m-0 flex list-none flex-col gap-1 p-0" data-testid="checklist">
-            {home.checklist.map((s) => {
-              const link = s.done ? null : stepLink(s.id);
-              return (
-                <li key={s.id} className="flex min-h-9 items-center gap-2.5">
-                  {s.done ? (
-                    <CircleCheck className="text-good size-[18px] shrink-0" aria-hidden />
-                  ) : (
-                    <Circle className="text-faint size-[18px] shrink-0" aria-hidden />
-                  )}
-                  <span className={s.done ? 'text-muted-foreground line-through' : 'font-medium'}>
-                    {s.label}
+          {home &&
+          showGettingStarted({
+            auditor: role === 'auditor',
+            packs: home.packs,
+            steps: home.checklist,
+          }) ? (
+            <Card
+              headingId="getting-started"
+              title="Getting started"
+              description={`${home.checklist.filter((s) => s.done).length} of ${home.checklist.length} done. This list goes away once every step is done or a standard is installed.`}
+            >
+              <ul className="m-0 flex list-none flex-col gap-1 p-0" data-testid="checklist">
+                {home.checklist.map((s) => {
+                  const link = s.done ? null : stepLink(s.id);
+                  return (
+                    <li key={s.id} className="flex min-h-9 items-center gap-2.5">
+                      {s.done ? (
+                        <CircleCheck className="text-good size-[18px] shrink-0" aria-hidden />
+                      ) : (
+                        <Circle className="text-faint size-[18px] shrink-0" aria-hidden />
+                      )}
+                      <span
+                        className={s.done ? 'text-muted-foreground line-through' : 'font-medium'}
+                      >
+                        {s.label}
+                      </span>
+                      <span className="sr-only">{s.done ? ', done' : ', to do'}</span>
+                      {link && s.id === 'sheet' ? (
+                        <CreateSheetLink org={org} className={`${textLink} ml-auto`}>
+                          {link.label}
+                        </CreateSheetLink>
+                      ) : link ? (
+                        <Link href={link.href} className={`${textLink} ml-auto`}>
+                          {link.label}
+                        </Link>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </Card>
+          ) : null}
+
+          <Card
+            headingId="needs-you"
+            title={
+              <>
+                Needs you{' '}
+                {summary ? (
+                  <span className="text-muted-foreground text-12 font-mono font-normal">
+                    ({summary.needsYouCount})
                   </span>
-                  <span className="sr-only">{s.done ? ', done' : ', to do'}</span>
-                  {link && s.id === 'sheet' ? (
-                    <CreateSheetLink org={org} className={`${textLink} ml-auto`}>
-                      {link.label}
-                    </CreateSheetLink>
-                  ) : link ? (
-                    <Link href={link.href} className={`${textLink} ml-auto`}>
-                      {link.label}
-                    </Link>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
-      ) : null}
+                ) : null}
+              </>
+            }
+            description="Overdue, requested of you or due in the next 14 days"
+            flush
+            footer={
+              <>
+                <span>Oldest first</span>
+                <Link href={`/${org}/my-work`} className={textLink}>
+                  Open My work
+                </Link>
+              </>
+            }
+          >
+            {!summary ? (
+              <Retry org={org} what="Your work" />
+            ) : summary.needsYou.length === 0 ? (
+              <p className="text-muted-foreground text-14 m-0 px-[22px] py-7 text-center">
+                Nothing is overdue, requested of you or due in the next 14 days.
+              </p>
+            ) : (
+              <WorkList org={org} rows={summary.needsYou} label="Needs you" bare />
+            )}
+          </Card>
+        </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card
-          headingId="needs-you"
-          title={
-            <>
-              Needs you{' '}
-              {summary ? (
-                <span className="text-muted-foreground text-label-12-mono font-normal">
-                  ({summary.needsYouCount})
-                </span>
-              ) : null}
-            </>
-          }
-          description="Overdue, requested of you or due in the next 14 days"
-          flush
-          footer={
-            <>
-              <span>Oldest first</span>
-              <Link href={`/${org}/my-work`} className={textLink}>
-                Open My work
-              </Link>
-            </>
-          }
-        >
-          {!summary ? (
-            <Retry org={org} what="Your work" />
-          ) : summary.needsYou.length === 0 ? (
-            <p className="text-muted-foreground text-copy-14 m-0 px-[22px] py-7 text-center">
-              Nothing is overdue, requested of you or due in the next 14 days.
-            </p>
-          ) : (
-            <WorkList org={org} rows={summary.needsYou} label="Needs you" bare />
-          )}
-        </Card>
+        {/* the side column: dates and recent activity (docs/05 §4 Home) */}
+        <div className="flex w-full min-w-0 flex-[1_1_320px] flex-col gap-6 min-[1000px]:max-w-[420px]">
+          <Card
+            headingId="next-30"
+            title={
+              <>
+                Next 30 days{' '}
+                {summary ? (
+                  <span className="text-muted-foreground text-12 font-mono font-normal">
+                    ({summary.next30.length})
+                  </span>
+                ) : null}
+              </>
+            }
+            description="Your items with a date coming up"
+            flush
+          >
+            {!summary ? (
+              <Retry org={org} what="Your dates" />
+            ) : summary.next30.length === 0 ? (
+              <p className="text-muted-foreground text-14 m-0 px-[22px] py-7 text-center">
+                None of your items has a date in the next 30 days.
+              </p>
+            ) : (
+              <WorkList org={org} rows={summary.next30} label="Next 30 days" bare />
+            )}
+          </Card>
 
-        <Card
-          headingId="next-30"
-          title={
-            <>
-              Next 30 days{' '}
-              {summary ? (
-                <span className="text-muted-foreground text-label-12-mono font-normal">
-                  ({summary.next30.length})
-                </span>
-              ) : null}
-            </>
-          }
-          description="Your items with a date coming up"
-          flush
-        >
-          {!summary ? (
-            <Retry org={org} what="Your dates" />
-          ) : summary.next30.length === 0 ? (
-            <p className="text-muted-foreground text-copy-14 m-0 px-[22px] py-7 text-center">
-              None of your items has a date in the next 30 days.
-            </p>
-          ) : (
-            <WorkList org={org} rows={summary.next30} label="Next 30 days" bare />
-          )}
-        </Card>
-
-        <Card
-          headingId="recent"
-          title="Recent activity"
-          description="The latest changes across your sheets"
-          flush
-        >
-          {!home ? (
-            <Retry org={org} what="Recent activity" />
-          ) : home.recent.length === 0 ? (
-            <p className="text-muted-foreground text-copy-14 m-0 px-[22px] py-7 text-center">
-              No activity yet. Changes to items show here.
-            </p>
-          ) : (
-            <ol aria-label="Recent activity" className="m-0 list-none p-0">
-              {home.recent.map((r) => (
-                <li key={r.id} className="border-soft border-t first:border-t-0">
-                  <Link
-                    href={`/${org}/s/${r.item.sheetId}?item=${encodeURIComponent(r.item.displayId)}`}
-                    className="hover:bg-subtle text-label-14 flex items-start gap-3 px-[22px] py-2.5 outline-offset-[-2px]"
-                  >
-                    <span
-                      aria-hidden
-                      className="bg-soft text-ink text-label-12 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full font-semibold"
+          <Card
+            headingId="recent"
+            title="Recent activity"
+            description="The latest changes across your sheets"
+            flush
+          >
+            {!home ? (
+              <Retry org={org} what="Recent activity" />
+            ) : home.recent.length === 0 ? (
+              <p className="text-muted-foreground text-14 m-0 px-[22px] py-7 text-center">
+                No activity yet. Changes to items show here.
+              </p>
+            ) : (
+              <ol aria-label="Recent activity" className="m-0 list-none p-0">
+                {home.recent.map((r) => (
+                  <li key={r.id} className="border-soft border-t first:border-t-0">
+                    <Link
+                      href={`/${org}/s/${r.item.sheetId}?item=${encodeURIComponent(r.item.displayId)}`}
+                      className="hover:bg-subtle text-14 flex items-start gap-3 px-[22px] py-2.5 outline-offset-[-2px]"
                     >
-                      {initials(r.who)}
-                    </span>
-                    <span className="flex min-w-0 flex-col gap-0.5">
-                      <span className="break-words">
-                        <span className="font-medium">{r.who}</span> · {r.text}
+                      <span
+                        aria-hidden
+                        className="bg-soft text-ink text-12 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full font-semibold"
+                      >
+                        {initials(r.who)}
                       </span>
-                      <span className="text-muted-foreground text-label-12-mono truncate">
-                        {r.item.displayId} · {r.item.name} · {r.item.sheetName} ·{' '}
-                        {formatDateTime(r.at, workspace.time_zone)}
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="break-words">
+                          <span className="font-medium">{r.who}</span> · {r.text}
+                        </span>
+                        <span className="text-muted-foreground text-12 truncate font-mono">
+                          {r.item.displayId} · {r.item.name} · {r.item.sheetName} ·{' '}
+                          {formatDateTime(r.at, workspace.time_zone)}
+                        </span>
                       </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          )}
-        </Card>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </Card>
+        </div>
       </div>
     </main>
   );
