@@ -8,6 +8,7 @@ import {
   addFieldAction,
   addFieldOptionAction,
   archiveItemsAction,
+  duplicateItemsAction,
   bulkSetValuesAction,
   changeFieldTypeAction,
   clickButtonAction,
@@ -26,6 +27,8 @@ import {
   setValuesAction,
   updateFieldAction,
 } from '@/app/[org]/s/grid-actions';
+import { postUpdateAction } from '@/app/[org]/s/panel-actions';
+import { keyBetween } from '@/engine/ordering';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Field, FileRow, Item, Json } from '@/engine/types';
@@ -536,8 +539,11 @@ export function useSheetActions(org: string, sheetId: string) {
           ? ` ${r.data.skipped.length} ${r.data.skipped.length === 1 ? 'item was' : 'items were'} not changed: ${r.data.skipped[0]!.message}`
           : '';
         const text = `${opts.message ?? `${r.data.items.length} ${r.data.items.length === 1 ? 'item' : 'items'} changed.`}${skipped}`;
+        // the automations that ran go in the same toast (docs/18 §5: how many changed and which automations ran)
+        const ran = r.data.messages.length ? { description: r.data.messages.join(' ') } : {};
         if (opts.undo !== false && r.data.items.length > 0) {
           toast(text, {
+            ...ran,
             action: {
               label: 'Undo',
               onClick: () =>
@@ -547,8 +553,7 @@ export function useSheetActions(org: string, sheetId: string) {
                 ),
             },
           });
-        } else toast(text);
-        showMessages(r.data.messages);
+        } else toast(text, ran);
       } catch {
         restoreItems(before);
         toast.error('The changes were not saved. Check your connection and try again.');
@@ -766,6 +771,56 @@ export function useSheetActions(org: string, sheetId: string) {
       }
     },
     [get, org, patch, pending, restoreItems, run, sheetId],
+  );
+
+  /** "Notify the owner" (docs/18 §5): post an update that @mentions them; the mention notifies them in the app. */
+  const notifyOwner = useCallback(
+    async (itemId: string, body: string) => {
+      try {
+        const r = await postUpdateAction({ org, itemId, body });
+        if (!r.ok) return showError(r.error);
+        toast(r.data.notified ? 'The owner was notified.' : 'Update posted.');
+      } catch {
+        toast.error('The owner was not notified. Check your connection and try again.');
+      }
+    },
+    [org],
+  );
+
+  /** Duplicate items (docs/18 §5): one copy each, in its item's group, right after it. */
+  const duplicateItems = useCallback(
+    async (items: Item[]) => {
+      const data = get();
+      if (!data || items.length === 0) return;
+      const sorted = (groupId: string) =>
+        data.items
+          .filter((i) => i.groupId === groupId && !i.parentId)
+          .sort((a, b) => (a.position < b.position ? -1 : a.position > b.position ? 1 : 0));
+      const copies = items.map((it) => {
+        const list = sorted(it.groupId);
+        const at = list.findIndex((i) => i.id === it.id);
+        const next = list[at + 1]?.position ?? null;
+        return { itemId: it.id, position: keyBetween(it.position, next) };
+      });
+      try {
+        const r = await run(() =>
+          duplicateItemsAction({ org, sheetId, items: copies, mutationId: newMutationId() }),
+        );
+        if (!r.ok) return showError(r.error);
+        patch((d) => r.data.items.reduce((acc, it) => upsertItem(acc, it), d));
+        const n = r.data.items.length;
+        const skipped = r.data.skipped.length
+          ? ` ${r.data.skipped.length} ${r.data.skipped.length === 1 ? 'item was' : 'items were'} not copied: ${r.data.skipped[0]!.message}`
+          : '';
+        toast(
+          `${n} ${n === 1 ? 'item' : 'items'} duplicated.${skipped}`,
+          r.data.messages.length ? { description: r.data.messages.join(' ') } : undefined,
+        );
+      } catch {
+        toast.error('The items were not duplicated. Check your connection and try again.');
+      }
+    },
+    [get, org, patch, run, sheetId],
   );
 
   const setArchived = useCallback(
@@ -1023,6 +1078,8 @@ export function useSheetActions(org: string, sheetId: string) {
     moveSubitem,
     moveItems,
     setArchived,
+    duplicateItems,
+    notifyOwner,
     setLinks,
     lockItem,
     clickButton,

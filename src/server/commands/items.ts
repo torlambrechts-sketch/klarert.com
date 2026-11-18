@@ -5,7 +5,7 @@ import type { LinkConfig } from '@/engine/fields/link';
 import { needsLibraryTarget } from '@/engine/fields/type-change';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { Ctx, Field, Item, Json } from '@/engine/types';
-import { checkCreate, checkWrite, defaultValues, planValues } from '@/engine/writes';
+import { checkCreate, checkWrite, defaultValues, planDuplicate, planValues } from '@/engine/writes';
 import { manualApprovalValues } from '@/engine/documents';
 import { parseViewConfig } from '@/engine/views/config';
 import {
@@ -22,6 +22,7 @@ import {
   bulkSetValuesInput,
   clickButtonInput,
   createItemInput,
+  duplicateItemsInput,
   finishItemInput,
   lockItemInput,
   moveItemsInput,
@@ -316,6 +317,84 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       return ok({ item: after!, messages, mutationId: v.mutationId });
     },
     'createItem',
+  );
+}
+
+/**
+ * Duplicate items (docs/18 §5): each copy takes the original's name and stored values, in the same group, at the
+ * position the browser chose. Links, files, comments and sub-items stay with the original. Values are validated with
+ * the field registry as for a new item: a value that no longer passes, or a unique value already taken, is left out,
+ * and an item whose copy would break a blocking rule is skipped with the reason. Each copy is created by
+ * `create_item` (its own "created" activity entry) and runs the automations of a new item.
+ */
+export async function duplicateItems(input: unknown): Promise<Result<BulkResult>> {
+  const p = duplicateItemsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId, role, user }) => {
+      const w = await loadWriteContext(
+        supabase,
+        { orgId, userId: user.id, role },
+        v.sheetId,
+        v.items.map((i) => i.itemId),
+      );
+      if (!w) return sheetNotFound();
+      const copies: Item[] = [];
+      const skipped: BulkResult['skipped'] = [];
+      const events: AutomationEvent[] = [];
+      const now = w.ctx.now.toISOString();
+      const actor = userActor(user.id);
+      for (const { itemId, position } of v.items) {
+        const item = w.items.get(itemId);
+        if (!item || item.archivedAt || item.sheetId !== v.sheetId) {
+          skipped.push({ itemId, message: 'This item no longer exists.' });
+          continue;
+        }
+        // unique values already taken are left out of the copy
+        const conflicts = await uniqueConflicts(supabase, v.sheetId, null, w.fields, item.values);
+        const plan = planDuplicate(item, w.fields, w.ctx, {
+          position,
+          now,
+          hash: sha256,
+          isTaken: (id) => conflicts.has(id),
+        });
+        if (!plan.ok) {
+          skipped.push({ itemId, message: plan.message });
+          continue;
+        }
+        const values = plan.values;
+        const { data, error } = await supabase.rpc('create_item', {
+          p_sheet: v.sheetId,
+          p_group: item.groupId,
+          p_name: item.name,
+          p_position: position,
+          p_values: values as Json,
+        });
+        if (error) {
+          const r = fromDbError(error);
+          skipped.push({ itemId, message: r.ok ? '' : r.error.message });
+          continue;
+        }
+        const copy = await withRestrictedValues(supabase, toItem(data));
+        copies.push(copy);
+        events.push({ type: 'item.created', sheetId: v.sheetId, itemId: copy.id, actor });
+      }
+      const messages = await automations(
+        events,
+        { orgId, userId: user.id, workspace: v.org },
+        true,
+      );
+      return ok({
+        items: await settled(supabase, copies, messages),
+        skipped,
+        messages,
+        mutationId: v.mutationId,
+      });
+    },
+    'duplicateItems',
   );
 }
 

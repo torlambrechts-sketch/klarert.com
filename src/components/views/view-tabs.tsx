@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from 'react';
 import {
   Calendar,
   ChartColumn,
-  ChevronDown,
   FileText,
   Lock,
   MoreHorizontal,
@@ -40,6 +39,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { OverflowTabs, underlineTab } from '@/components/ui/overflow-tabs';
 import { TabsEditor } from './tabs-editor';
 import { toTabRows } from './tabs-model';
 import type { ActiveView, ViewsState } from './use-views';
@@ -81,13 +81,8 @@ function TabLink({
         e.preventDefault();
         open(view.id);
       }}
-      className={cn(
-        // the focus ring shows for keyboard focus only (focus-visible), never as a box around the active tab
-        'focus-visible:outline-focus text-label-14 relative flex h-[40px] items-center gap-[7px] rounded-sm px-px whitespace-nowrap outline-none focus-visible:outline-2 focus-visible:-outline-offset-2',
-        active
-          ? 'text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-[2px] after:bg-[var(--ink)]'
-          : 'text-muted-foreground hover:text-ink',
-      )}
+      // the focus ring shows for keyboard focus only (focus-visible), never as a box around the active tab
+      className={underlineTab(active)}
     >
       <Icon className="size-[15px]" aria-hidden />
       {label ?? view.name}
@@ -162,119 +157,110 @@ export function ViewTabs({
       className={cn('border-line mt-[18px] flex min-w-0 items-center gap-2 border-b', className)}
     >
       <nav aria-label="Views" className="flex min-w-0 flex-1">
-        <ul className="m-0 flex min-w-0 flex-1 [scrollbar-width:none] list-none items-center gap-[22px] overflow-x-auto p-0">
-          {bar.map((t) => (
-            <li key={t.view.id}>
-              <TabLink
-                view={t.view}
-                label={t.label}
-                active={active.id === t.view.id}
-                isDefault={isDefault(t.view)}
-                open={open}
-              />
-            </li>
-          ))}
-          {extra ? (
-            <li>
-              <TabLink
-                view={extra}
-                label={layout.hidden.find((t) => t.view.id === extra.id)?.label}
-                active
-                isDefault={isDefault(extra)}
-                open={open}
-              />
-            </li>
-          ) : null}
-          <li>
-            <Popover open={customise && !narrow} onOpenChange={setCustomise}>
-              <DropdownMenu>
-                <PopoverAnchor asChild>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      ref={moreRef}
-                      type="button"
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-ink text-label-14 h-8 px-2 font-normal"
-                    >
-                      More <ChevronDown aria-hidden />
-                    </Button>
-                  </DropdownMenuTrigger>
-                </PopoverAnchor>
-                <DropdownMenuContent
-                  align="start"
-                  className="min-w-56"
-                  // opening Customise tabs: focus goes into the editor, not back to More
-                  onCloseAutoFocus={(e) => {
-                    if (customiseFocus.current) e.preventDefault();
-                    customiseFocus.current = false;
-                  }}
-                >
-                  <DropdownMenuItem onSelect={() => setNewOpen(true)}>
-                    <Plus aria-hidden /> New view
-                  </DropdownMenuItem>
-                  {layout.hidden.length ? (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuGroup aria-label="Hidden tabs">
-                        <DropdownMenuLabel>Hidden tabs</DropdownMenuLabel>
-                        {layout.hidden.map((t) => {
-                          const Icon = ICONS[t.view.type];
-                          return (
-                            <DropdownMenuItem key={t.view.id} onSelect={() => open(t.view.id)}>
-                              <Icon aria-hidden /> {t.label}
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </DropdownMenuGroup>
-                    </>
-                  ) : null}
-                  <DropdownMenuSeparator />
-                  {canCustomise ? (
-                    <DropdownMenuItem
-                      onSelect={() => {
-                        customiseFocus.current = true;
-                        setCustomise(true);
-                      }}
-                    >
-                      <SlidersHorizontal aria-hidden /> Customise tabs
+        <Popover open={customise && !narrow} onOpenChange={setCustomise}>
+          <PopoverAnchor asChild>
+            <div className="flex min-w-0 flex-1">
+              <OverflowTabs
+                label="Views"
+                className="min-w-0 flex-1 [scrollbar-width:none] overflow-x-auto"
+                tabs={[
+                  ...bar,
+                  ...(extra
+                    ? [
+                        {
+                          view: extra,
+                          label: layout.hidden.find((t) => t.view.id === extra.id)?.label,
+                        },
+                      ]
+                    : []),
+                ].map((t) => ({
+                  id: t.view.id,
+                  label: t.label ?? t.view.name,
+                  icon: ICONS[t.view.type],
+                  view: t.view,
+                }))}
+                active={active.id}
+                onSelect={open}
+                triggerRef={moreRef}
+                renderTab={(t, on) => (
+                  <TabLink
+                    view={t.view}
+                    label={t.label}
+                    active={on}
+                    isDefault={isDefault(t.view)}
+                    open={open}
+                  />
+                )}
+                menuExtra={
+                  <>
+                    <DropdownMenuItem onSelect={() => setNewOpen(true)}>
+                      <Plus aria-hidden /> New view
                     </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem
-                      aria-disabled="true"
-                      aria-describedby={tipId}
-                      className="group/tip text-muted-foreground"
-                      onSelect={(e) => e.preventDefault()}
-                    >
-                      <Lock aria-hidden /> Customise tabs
-                      <span
-                        id={tipId}
-                        role="tooltip"
-                        className="bg-ink text-label-12 pointer-events-none absolute top-full left-2 z-20 mt-1 hidden w-48 rounded px-2 py-1 text-white group-hover/tip:block group-data-[highlighted]/tip:block"
+                    {layout.hidden.length ? (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup aria-label="Hidden tabs">
+                          <DropdownMenuLabel>Hidden tabs</DropdownMenuLabel>
+                          {layout.hidden.map((t) => {
+                            const Icon = ICONS[t.view.type];
+                            return (
+                              <DropdownMenuItem key={t.view.id} onSelect={() => open(t.view.id)}>
+                                <Icon aria-hidden /> {t.label}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuGroup>
+                      </>
+                    ) : null}
+                    <DropdownMenuSeparator />
+                    {canCustomise ? (
+                      <DropdownMenuItem
+                        onSelect={() => {
+                          customiseFocus.current = true;
+                          // after the menu has closed and given focus back
+                          setTimeout(() => setCustomise(true), 0);
+                        }}
                       >
-                        Only owners and admins can change tabs
-                      </span>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <PopoverContent
-                align="start"
-                className="max-h-[min(640px,calc(100dvh-120px))] w-[min(440px,calc(100vw-32px))] overflow-y-auto"
-                aria-label="Customise tabs"
-                onEscapeKeyDown={keepWhileRenaming}
-                // rows move under the keyboard: focus passing through the page does not close the editor
-                onFocusOutside={(e) => e.preventDefault()}
-                onCloseAutoFocus={(e) => {
-                  e.preventDefault();
-                  moreRef.current?.focus();
-                }}
-              >
-                <h2 className="text-heading-16 mb-3">Customise tabs</h2>
-                {editor}
-              </PopoverContent>
-            </Popover>
-          </li>
-        </ul>
+                        <SlidersHorizontal aria-hidden /> Customise tabs
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        aria-disabled="true"
+                        aria-describedby={tipId}
+                        className="group/tip text-muted-foreground"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <Lock aria-hidden /> Customise tabs
+                        <span
+                          id={tipId}
+                          role="tooltip"
+                          className="bg-ink text-label-12 pointer-events-none absolute top-full left-2 z-20 mt-1 hidden w-48 rounded px-2 py-1 text-white group-hover/tip:block group-data-[highlighted]/tip:block"
+                        >
+                          Only owners and admins can change tabs
+                        </span>
+                      </DropdownMenuItem>
+                    )}
+                  </>
+                }
+              />
+            </div>
+          </PopoverAnchor>
+          <PopoverContent
+            align="start"
+            className="max-h-[min(640px,calc(100dvh-120px))] w-[min(440px,calc(100vw-32px))] overflow-y-auto"
+            aria-label="Customise tabs"
+            onEscapeKeyDown={keepWhileRenaming}
+            // rows move under the keyboard: focus passing through the page does not close the editor
+            onFocusOutside={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => {
+              e.preventDefault();
+              moreRef.current?.focus();
+            }}
+          >
+            <h2 className="text-heading-16 mb-3">Customise tabs</h2>
+            {editor}
+          </PopoverContent>
+        </Popover>
       </nav>
       {end ? <div className="flex shrink-0 items-center gap-1.5">{end}</div> : null}
       <Dialog open={customise && narrow} onOpenChange={setCustomise}>

@@ -84,10 +84,10 @@ export function Chip({ option, className }: { option: LabelOption; className?: s
 }
 
 /**
- * The value of a one-option cell. In the Table: a box that hugs its words (28 px tall, 4 × 10 px padding, 6 px
- * radius, 13.5 px medium words), centred in the cell (which then has 8 px side padding), the option's tint with a border in the same hue and the words in its dark step, with
- * "!" for options that need action and a check for done ones. Elsewhere (Grid 30 px, List 34 px): a colour dot and
- * the label, left-aligned.
+ * The value of a one-option cell. In the Table (owner decision 18 Nov 2026, docs/18 C1, the monday.com look): the
+ * option's solid colour fills the whole cell with a 1 px gap, centred white 13 px medium words (`--solid-<colour>`
+ * keeps them at 4.5:1 or more), "!" for options that need action and a check for done ones. Elsewhere (Grid 30 px,
+ * List 34 px): a colour dot and the label, left-aligned.
  */
 export function Block({
   option,
@@ -97,19 +97,11 @@ export function Block({
   density: 'grid' | 'list' | 'table';
 }) {
   if (density === 'table')
-    // the design's soft badge: inset 9 px top and bottom, 6 px at the sides, so it spans the column
     return (
       <span
         data-box
-        className="text-label-13 group/box absolute inset-x-[6px] inset-y-[9px] flex min-w-0 items-center justify-center gap-1 rounded-md px-2 font-medium transition-colors hover:[background:var(--box-hover)]"
-        style={
-          {
-            ...tintStyle(option.color),
-            borderColor: undefined,
-            boxShadow: `inset 0 0 0 1px var(--tint-${option.color}-line, var(--tint-grey-line))`,
-            '--box-hover': `var(--tint-${option.color}-hover, var(--tint-grey-hover))`,
-          } as React.CSSProperties
-        }
+        className="text-label-13 absolute inset-px flex min-w-0 items-center justify-center gap-1 px-2 font-medium text-white transition-[filter] hover:brightness-110"
+        style={{ background: solidVar(option.color) }}
       >
         <OptionMarks option={option}>
           <span className="truncate">{option.label}</span>
@@ -235,6 +227,46 @@ export function PeopleNames({ ids, ctx }: { ids: string[]; ctx: Ctx }) {
           </span>
         </span>
       ) : null}
+    </span>
+  );
+}
+
+/** "Mia H.": the first name and the initial of the last (docs/18 C7). */
+export function shortName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return parts[0] ?? '';
+  return `${parts[0]} ${parts.at(-1)!.charAt(0)}.`;
+}
+
+/**
+ * A people cell in the Table (owner decision 18 Nov 2026, docs/18 C7): a 28 px avatar and the short name; several
+ * people show the first two avatars and "+n". The full names are read out.
+ */
+export function PeopleShort({ ids, ctx }: { ids: string[]; ctx: Ctx }) {
+  const name = (id: string) => ctx.people.get(id)?.name ?? 'Former member';
+  if (ids.length === 1)
+    return (
+      <span className="flex min-w-0 items-center gap-2" title={name(ids[0]!)}>
+        <Avatar id={ids[0]!} ctx={ctx} size={28} tone="soft" decorative />
+        <span className="text-label-13 min-w-0 truncate" aria-hidden>
+          {shortName(name(ids[0]!))}
+        </span>
+        <span className="sr-only">{name(ids[0]!)}</span>
+      </span>
+    );
+  return (
+    <span className="flex min-w-0 items-center" title={ids.map(name).join(', ')}>
+      <span className="flex items-center -space-x-1.5">
+        {ids.slice(0, 2).map((id) => (
+          <Avatar key={id} id={id} ctx={ctx} size={28} tone="soft" decorative />
+        ))}
+      </span>
+      {ids.length > 2 ? (
+        <span className="text-muted-foreground text-label-12 pl-1.5 font-semibold" aria-hidden>
+          +{ids.length - 2}
+        </span>
+      ) : null}
+      <span className="sr-only">{ids.map(name).join(', ')}</span>
     </span>
   );
 }

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { OPEN_PUBLIC_FORM, rest, signIn } from './helpers';
+import { OPEN_PUBLIC_FORM, rest, signIn, viewTab, viewTabNames } from './helpers';
 
 // Per-sheet tabs (docs/02 sheets.settings.tabs, docs/05 §3): owners and admins order, hide and rename a sheet's tabs;
 // editors and viewers see the result and cannot change it. Uses the seed (pnpm seed): maria@example.com owner,
@@ -8,7 +8,6 @@ import { OPEN_PUBLIC_FORM, rest, signIn } from './helpers';
 
 const unique = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 const views = (page: Page) => page.getByRole('navigation', { name: 'Views' });
-const tabLinks = (page: Page) => views(page).getByRole('link');
 
 async function trackerSheet(page: Page) {
   const name = `Tabs ${unique()}`;
@@ -60,7 +59,13 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
     body: { org_id: org!.id, sheet_id: sheet.sheetId, view_id: form!.id },
   });
   await page.reload();
-  await expect(tabLinks(page)).toHaveText([/Table/, /Insights/, /Board/, /Calendar/, /Forms/]);
+  expect(await viewTabNames(page)).toEqual([
+    expect.stringMatching(/Table/),
+    expect.stringMatching(/Insights/),
+    expect.stringMatching(/Board/),
+    expect.stringMatching(/Calendar/),
+    expect.stringMatching(/Forms/),
+  ]);
 
   await openCustomise(page);
   const editor = page.getByRole('dialog', { name: 'Customise tabs' });
@@ -103,7 +108,11 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
     ),
   ).toBeVisible();
   await expect(editor).toBeHidden();
-  await expect(tabLinks(page)).toHaveText([/Table/, /Board/, /Dashboard/]);
+  expect(await viewTabNames(page)).toEqual([
+    expect.stringMatching(/Table/),
+    expect.stringMatching(/Board/),
+    expect.stringMatching(/Dashboard/),
+  ]);
 
   // hidden tabs are in More and still open by URL
   await views(page).getByRole('button', { name: 'More' }).click();
@@ -111,10 +120,7 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
   await expect(menu.getByRole('group', { name: 'Hidden tabs' })).toContainText('Calendar');
   await page.keyboard.press('Escape');
   await page.goto(`${sheet.url}?view=calendar`);
-  await expect(views(page).getByRole('link', { name: 'Calendar' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, 'Calendar')).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('button', { name: 'Today' })).toBeVisible();
 
   // the sheet's activity log has the change (sheets.update on the sheet's chain)
@@ -143,7 +149,11 @@ test('an admin orders, hides and renames tabs; others see them and cannot change
     const other = await ctx.newPage();
     await signIn(other, email);
     await other.goto(sheet.url);
-    await expect(tabLinks(other)).toHaveText([/Table/, /Board/, /Dashboard/]);
+    expect(await viewTabNames(other)).toEqual([
+      expect.stringMatching(/Table/),
+      expect.stringMatching(/Board/),
+      expect.stringMatching(/Dashboard/),
+    ]);
     await views(other).getByRole('button', { name: 'More' }).click();
     const item = other.getByRole('menuitem', { name: 'Customise tabs' });
     await expect(item).toHaveAttribute('aria-disabled', 'true');
@@ -174,7 +184,7 @@ test('customise tabs in a bottom sheet on a phone, and reset to the built-in tab
   await sheetDialog.getByRole('button', { name: 'Save tabs' }).click();
   await expect(page.getByText('Tabs saved.')).toBeVisible();
   await expect(sheetDialog).toBeHidden();
-  await expect(views(page).getByRole('link', { name: 'Calendar' })).toHaveCount(0);
+  expect(await viewTabNames(page)).not.toContainEqual(expect.stringMatching(/^Calendar/));
 
   await openCustomise(page);
   await sheetDialog.getByRole('button', { name: 'Reset to built-in tabs' }).click();
@@ -182,5 +192,5 @@ test('customise tabs in a bottom sheet on a phone, and reset to the built-in tab
   await expect(sheetDialog.getByText(/Customised: these tabs differ/)).toHaveCount(0);
   await sheetDialog.getByRole('button', { name: 'Save tabs' }).click();
   await expect(sheetDialog).toBeHidden();
-  await expect(views(page).getByRole('link', { name: 'Calendar' })).toBeVisible();
+  expect(await viewTabNames(page)).toContainEqual(expect.stringMatching(/^Calendar/));
 });

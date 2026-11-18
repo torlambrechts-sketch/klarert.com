@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
-import { rest, signIn } from './helpers';
+import { rest, signIn, openTab } from './helpers';
 
 // The New item dialog (docs/05 §3.7, owner decision 14 Nov 2026) on the Shared registers 1.3.0 (Recommended):
 // Phase A on Nonconformities and CAPA with the standard dialog: keyboard only, a required field, "Ask when adding",
@@ -134,7 +134,7 @@ test('the New item dialog: keyboard only, required answers, add another, discard
   expect(await createdEntry(page, first!.id)).toEqual({ via: 'dialog' });
   await page.goto(`/${w.slug}/s/${nc}?item=${first!.display_id}`);
   const itemPanel = page.getByRole('dialog').filter({ has: page.getByRole('tablist') });
-  await itemPanel.getByRole('tab', { name: /^Activity log/ }).click();
+  await openTab(itemPanel, /^Activity log/);
   await expect(itemPanel.getByText('Created in Open with the New item dialog')).toBeVisible();
   await shot(page, phone ? 'activity-source-390' : 'activity-source');
   await page.keyboard.press('Escape');
@@ -196,16 +196,23 @@ test('the New item dialog: keyboard only, required answers, add another, discard
     .getByTestId('missing-required')
     .filter({ hasText: 'Missing: what was found' });
   await expect(marker).toHaveCount(1);
+  // Missing required sits in the toolbar's Filter ▾ (docs/18 §4), a toggle that keeps the panel open
+  const filterMenu = page.getByTestId('filter-menu');
+  await filterMenu.click();
   const filter = page.getByTestId('missing-filter');
-  await expect(filter).toHaveAttribute('aria-pressed', 'false');
+  await expect(filter).toHaveAttribute('aria-checked', 'false');
   // the example nonconformities have What was found filled in; only the inline row misses it
   await expect(filter).toContainText('1');
   await filter.click();
-  await expect(filter).toHaveAttribute('aria-pressed', 'true');
+  await expect(filter).toHaveAttribute('aria-checked', 'true');
+  await page.keyboard.press('Escape');
   await expect(page.getByText('Guard missing on press 3')).toHaveCount(0);
   await expect(page.getByText('Added inline', { exact: true }).first()).toBeVisible();
   await shot(page, phone ? 'missing-390' : 'missing-marker-filter');
+  await filterMenu.click();
   await filter.click();
+  await expect(filter).toHaveAttribute('aria-checked', 'false');
+  await page.keyboard.press('Escape');
   await expect(page.getByText('Guard missing on press 3').first()).toBeVisible();
 });
 
@@ -325,7 +332,7 @@ test('approving a document by hand fills in Approver and Approved on', async ({ 
   // the document's file, uploaded from the Files tab
   await page.goto(`/${w.slug}/s/${documents}?item=${first!.display_id}`);
   const itemPanel = page.getByRole('dialog').filter({ has: page.getByRole('tablist') });
-  await itemPanel.getByRole('tab', { name: /^Files · / }).click();
+  await openTab(itemPanel, /^Files · /);
   await itemPanel.getByLabel('Choose files to upload').setInputFiles({
     name: 'policy-v1.pdf',
     mimeType: 'application/pdf',

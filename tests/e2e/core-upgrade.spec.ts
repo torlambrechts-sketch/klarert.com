@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { expectWorkflow } from './addon-helpers';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
-import { rest, signIn } from './helpers';
+import { rest, signIn, openTab, viewTabNames } from './helpers';
 
 // Core registers updates (docs/11 Core registers, Upgrades), from versions kept in tests/e2e/fixtures/catalogue.
 // 1.0.0 → 1.3.0: a workspace has Core 1.0.0 (Full) with the ISO/IEC 27001 2.0.0 and Supplier management 2.0.0 add-ons
@@ -157,10 +157,10 @@ test('update Core 1.0.0 to 1.3.0 with ISO/IEC 27001 and Supplier management inst
 
   // the tab set: Table, By status and Review dates on Documents and policies; Insights is in More
   await page.goto(`/${slug}/s/${documents}`);
-  const tabs = page.getByRole('navigation', { name: 'Views' });
-  await expect(tabs).toContainText('By status');
-  await expect(tabs).toContainText('Review dates');
-  await expect(tabs).not.toContainText('Insights');
+  const tabs = await viewTabNames(page);
+  expect(tabs).toContainEqual(expect.stringMatching(/By status/));
+  expect(tabs).toContainEqual(expect.stringMatching(/Review dates/));
+  expect(tabs).not.toContainEqual(expect.stringMatching(/Insights/));
 });
 
 test('update Core 1.1.0 to 1.3.0: Document approval goes to Approve by, the approval fills in Approver', async ({
@@ -235,7 +235,7 @@ test('update Core 1.1.0 to 1.3.0: Document approval goes to Approve by, the appr
   // the document file, uploaded from the Files tab
   await page.goto(`/${slug}/s/${documents}?item=${doc!.display_id}`);
   const itemPanel = page.getByRole('dialog').filter({ has: page.getByRole('tablist') });
-  await itemPanel.getByRole('tab', { name: /^Files · / }).click();
+  await openTab(itemPanel, /^Files · /);
   await itemPanel.getByLabel('Choose files to upload').setInputFiles({
     name: 'policy-v1.pdf',
     mimeType: 'application/pdf',

@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
 import { generateNKeysBetween } from 'fractional-indexing';
-import { MIN_FILL_MS, rest, signIn } from './helpers';
+import { MIN_FILL_MS, rest, signIn, viewTab, viewTabNames } from './helpers';
 
 // M6: the Table view (default), phone cards, Kanban, Calendar, the Form view with its public link, filters, sort,
 // search and saved views. Uses the seed (pnpm seed): maria@example.com owner, james@example.com editor of
@@ -91,10 +91,7 @@ test('Table view: editing, add a field, locks, hint and all rows reachable', asy
   desktopOnly(info.project.name);
   await signIn(page, 'maria@example.com');
   const sheet = await trackerSheet(page);
-  await expect(views(page).getByRole('link', { name: 'Table' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, 'Table')).toHaveAttribute('aria-current', 'page');
   await addRows(
     page,
     sheet,
@@ -421,13 +418,15 @@ test('filters, sort and search', async ({ page }, info) => {
   await expect.poll(names).toEqual(['Pump A seal', 'Pump B seal', 'Valve check', 'Guard rail']);
 
   // text contains
-  await page.getByRole('button', { name: 'Filter', exact: true }).click();
+  // the view's conditions: Filter ▾ › Conditions… (docs/18 §4)
+  await page.getByTestId('filter-menu').click();
+  await page.getByRole('menuitem', { name: /^Conditions/ }).click();
   await page.getByRole('button', { name: 'Add a condition' }).click();
   await page.getByLabel('Condition 1 field').selectOption({ label: 'Name' });
   await page.getByLabel('Condition 1 operator').selectOption({ label: 'contains' });
   await page.getByLabel('Condition 1 value').fill('pump');
   await expect.poll(names).toEqual(['Pump A seal', 'Pump B seal']);
-  await expect(page.getByRole('button', { name: 'Filter, 1 active' })).toBeVisible();
+  await expect(page.getByTestId('filter-menu')).toHaveAttribute('aria-label', 'Filter, 1 on');
 
   // status is any of
   await page.getByLabel('Condition 1 field').selectOption({ label: 'Status' });
@@ -445,10 +444,13 @@ test('filters, sort and search', async ({ page }, info) => {
   await expect.poll(names).toEqual(['Pump A seal', 'Pump B seal', 'Valve check', 'Guard rail']);
 
   // sort by name, Z → A
-  await page.getByRole('button', { name: 'Default order', exact: true }).click();
-  await page.getByRole('button', { name: 'Add a sort' }).click();
-  await page.getByLabel('Sort level 1 field').selectOption({ label: 'Name' });
-  await page.getByLabel('Sort level 1 direction').selectOption({ label: 'Z → A, high → low' });
+  // Sort ▾: a click sorts ascending, the next descending (docs/18 §4)
+  await page.getByTestId('sort-menu').click();
+  const byName = page.getByRole('menuitemcheckbox', { name: /^Name/ });
+  await byName.click();
+  await expect(byName).toContainText('Ascending');
+  await byName.click();
+  await expect(byName).toContainText('Descending');
   await page.keyboard.press('Escape');
   await expect.poll(names).toEqual(['Valve check', 'Pump B seal', 'Pump A seal', 'Guard rail']);
 
@@ -476,7 +478,9 @@ test('saved views: personal stays personal, shared is shared, ?view= opens a vie
   await page.reload();
 
   // a personal view with a filter
-  await page.getByRole('button', { name: 'Filter', exact: true }).click();
+  // the view's conditions: Filter ▾ › Conditions… (docs/18 §4)
+  await page.getByTestId('filter-menu').click();
+  await page.getByRole('menuitem', { name: /^Conditions/ }).click();
   await page.getByRole('button', { name: 'Add a condition' }).click();
   await page.getByLabel('Condition 1 field').selectOption({ label: 'Name' });
   await page.getByLabel('Condition 1 operator').selectOption({ label: 'contains' });
@@ -487,10 +491,7 @@ test('saved views: personal stays personal, shared is shared, ?view= opens a vie
   await dialog.getByLabel('View name').fill('My pumps');
   await expect(dialog.getByRole('checkbox', { name: /Share with everyone/ })).not.toBeChecked();
   await dialog.getByRole('button', { name: 'Save view' }).click();
-  await expect(views(page).getByRole('link', { name: /My pumps/ })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, /My pumps/)).toHaveAttribute('aria-current', 'page');
   await expect(page).toHaveURL(/view=[0-9a-f-]{36}/);
   const personalUrl = page.url();
   await expect(listRow(page, 'Valve check')).toHaveCount(0);
@@ -502,10 +503,7 @@ test('saved views: personal stays personal, shared is shared, ?view= opens a vie
   await dialog.getByRole('radio', { name: 'Kanban' }).check();
   await dialog.getByRole('checkbox', { name: /Share with everyone/ }).check();
   await dialog.getByRole('button', { name: 'Create view' }).click();
-  await expect(views(page).getByRole('link', { name: 'Team board' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, 'Team board')).toHaveAttribute('aria-current', 'page');
   await expect(page.locator('[data-lane="Stuck"]')).toBeVisible();
   const sharedUrl = page.url();
 
@@ -514,31 +512,22 @@ test('saved views: personal stays personal, shared is shared, ?view= opens a vie
   const maria = await ctx.newPage();
   await signIn(maria, 'maria@example.com');
   await maria.goto(sheet.url);
-  await expect(views(maria).getByRole('link', { name: 'Team board' })).toBeVisible();
-  await expect(views(maria).getByRole('link', { name: /My pumps/ })).toHaveCount(0);
+  expect(await viewTabNames(maria)).toContainEqual(expect.stringMatching(/^Team board/));
+  expect(await viewTabNames(maria)).not.toContainEqual(expect.stringMatching(/My pumps/));
   await maria.goto(sharedUrl);
-  await expect(views(maria).getByRole('link', { name: 'Team board' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(maria, 'Team board')).toHaveAttribute('aria-current', 'page');
   await expect(maria.locator('[data-lane="Stuck"]').getByText('Pump seal')).toBeVisible();
   await maria.goto(personalUrl);
   await expect(
     maria.getByText('That view no longer exists or is not shared with you. Showing the table.'),
   ).toBeVisible();
-  await expect(views(maria).getByRole('link', { name: 'Table' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(maria, 'Table')).toHaveAttribute('aria-current', 'page');
   await expect(listRow(maria, 'Valve check')).toBeVisible();
   await ctx.close();
 
   // the deep link still opens James's view for James
   await page.goto(personalUrl);
-  await expect(views(page).getByRole('link', { name: /My pumps/ })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, /My pumps/)).toHaveAttribute('aria-current', 'page');
   await expect(listRow(page, 'Pump seal')).toBeVisible();
   await expect(listRow(page, 'Valve check')).toHaveCount(0);
 });

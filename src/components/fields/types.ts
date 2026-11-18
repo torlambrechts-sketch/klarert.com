@@ -67,6 +67,8 @@ export interface FieldTypeUI<V = unknown, C = unknown> {
   icon: LucideIcon;
   /** Space and click toggle the value without an editor (checkbox). */
   toggle?(v: V | null): unknown;
+  /** In the Table, one click opens the picker under the cell (option and people cells, docs/18 §5). */
+  opensOnClick?: boolean;
   /** Width of the editor popover in px (default 260). */
   editorWidth?: number;
   /** Only automations set this value (workflow step): bulk edit and paste leave it out. */

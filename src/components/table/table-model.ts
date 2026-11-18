@@ -12,6 +12,7 @@ import {
   type ColumnGroup,
 } from '@/engine/views/column-groups';
 import type { Field, Group, Item } from '@/engine/types';
+import type { SortRule } from '@/engine/views/config';
 
 export type TableRow =
   | { kind: 'group'; key: string; group: Group; count: number; collapsed: boolean }
@@ -110,8 +111,8 @@ export function stickyHeaders(rows: TableRow[]): {
 
 /**
  * The width of the table's trailing column ("+" in the header, "…" in rows): the room the columns leave in the card,
- * at least `min`. Columns keep their widths (docs/05 §3.1); when they do not fit, the trailing column is `min` wide
- * and the table scrolls.
+ * at least `min`. Field columns fill the card (fillColumns), so this is `min` unless no column can grow; when they do
+ * not fit, the trailing column is `min` wide and the table scrolls.
  */
 export function trailWidth(
   widths: number[],
@@ -403,4 +404,31 @@ export function step(
       if (at.col > 0) return { row: at.row, col: at.col - 1 };
       return at.row > 0 ? { row: at.row - 1, col: cols - 1 } : null;
   }
+}
+
+/**
+ * Sort ▾ and the column headers (docs/18 §4): a click on a field sorts it ascending, the next descending, the third
+ * takes it out. Other fields keep their place, so several levels stay possible.
+ */
+export function cycleSort(rules: readonly SortRule[], fieldKey: string): SortRule[] {
+  const at = rules.findIndex((r) => r.fieldKey === fieldKey);
+  if (at < 0) return [...rules, { fieldKey, dir: 'asc' }];
+  if (rules[at]!.dir === 'asc')
+    return rules.map((r, i) => (i === at ? { ...r, dir: 'desc' as const } : r));
+  return rules.filter((_, i) => i !== at);
+}
+
+/**
+ * Columns fill the card (owner decision 18 Nov 2026, docs/18 C2): when the card is wider than the columns, every
+ * field column grows in proportion to its base width (its default or resized width) until the table fills it; the
+ * fixed part (checkbox, name, "+" and "…") stays as it is. Columns never get narrower than their base; a narrower
+ * card scrolls. Whole pixels; the rounding remainder goes to the last column so the right edge meets the card's.
+ */
+export function fillColumns(bases: readonly number[], fixed: number, available: number): number[] {
+  const used = bases.reduce((a, b) => a + b, 0);
+  const extra = available - fixed - used;
+  if (extra <= 0 || used <= 0 || bases.length === 0) return [...bases];
+  const out = bases.map((w) => Math.floor(w + (extra * w) / used));
+  out[out.length - 1]! += available - fixed - out.reduce((a, b) => a + b, 0);
+  return out;
 }

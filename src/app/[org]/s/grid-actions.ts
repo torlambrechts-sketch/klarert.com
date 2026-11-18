@@ -28,6 +28,7 @@ export const setValuesAction = bind(items.setValues, false);
 export const bulkSetValuesAction = bind(items.bulkSetValues, false);
 export const moveItemsAction = bind(items.moveItems, true);
 export const archiveItemsAction = bind(items.archiveItems, true);
+export const duplicateItemsAction = bind(items.duplicateItems, true);
 export const setLinksAction = bind(items.setLinks, false);
 export const lockItemAction = bind(items.lockItem, false);
 export const clickButtonAction = bind(items.clickButton, false);

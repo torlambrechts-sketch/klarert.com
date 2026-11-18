@@ -20,10 +20,11 @@ import {
   type Range,
 } from '@tanstack/react-virtual';
 import {
-  Archive,
   ChevronDown,
   ChevronRight,
+  Copy,
   ExternalLink,
+  Trash2,
   FileText,
   GripVertical,
   Lock,
@@ -31,16 +32,18 @@ import {
   MoreHorizontal,
   Plus,
   TriangleAlert,
+  BellRing,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cellColumns, copyRange, planClear, planPaste, type GridColumn } from '@/engine/clipboard';
 import { resolveFieldType } from '@/engine/fields/resolve';
-import { ownerField, ownerOf } from '@/engine/item-panel';
-import { donePercent } from '@/engine/views/group-by';
+import { notifyOwnerUpdate, ownerField, ownerOf } from '@/engine/item-panel';
+import { donePercent, groupValues } from '@/engine/views/group-by';
+import { statusFilterField } from '@/engine/views/quick-filters';
 import { missingRequired, missingText } from '@/engine/views/new-item';
 import { keysBetween } from '@/engine/ordering';
 import type { SheetData } from '@/engine/sheet-data';
-import { columnSummaries, type SummaryFn } from '@/engine/summaries';
+import { columnSummaries, summarise, type SummaryFn } from '@/engine/summaries';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { setSummary, type ViewConfig } from '@/engine/views/config';
 import {
@@ -87,7 +90,7 @@ import {
 } from './subitem-rows';
 import type { UpdateSummary } from './use-update-counts';
 import { ColumnHeader, type ColumnMenuActions } from './column-header';
-import { GroupSummary } from './group-summary';
+import { Battery, GroupSummary } from './group-summary';
 import { GroupTitle } from './group-title';
 import { LockDialog } from './lock-dialog';
 import { useDocumentTop } from './use-document-top';
@@ -98,9 +101,11 @@ import {
   byPosition,
   columnId,
   columnRuns,
+  cycleSort,
   endsCard,
   GROUP_LABEL_H,
   ownLine,
+  fillColumns,
   trailWidth,
   positionsAtEnd,
   rangeOf,
@@ -385,7 +390,8 @@ export function Table({
         items: visibleItems,
         collapsed,
         compare: viewCompare,
-        canAdd: canEdit && !tg.virtual,
+        // "+ Add item" in a group by a field sets that field's value (docs/18 §5)
+        canAdd: canEdit,
         summaries: showSummaries,
         onlyGroup: tg.onlyGroup,
         groupOf: tg.groupOf,
@@ -393,6 +399,21 @@ export function Table({
       }),
     [tg, visibleItems, collapsed, viewCompare, canEdit, showSummaries, subLayout],
   );
+  const groupBy = useGrid((s) => s.groupBy);
+  const groupByField = useMemo(
+    () => (groupBy ? (data.fields.find((f) => f.id === groupBy) ?? null) : null),
+    [groupBy, data.fields],
+  );
+  /** Items per group before filters: "n items · m shown" in the group title. */
+  const groupTotals = useMemo(() => {
+    const m = new Map<string, number>();
+    const scope = onlyGroup ? data.items.filter((i) => i.groupId === onlyGroup) : data.items;
+    for (const it of scope) {
+      const id = tg.groupOf ? tg.groupOf(it) : it.groupId;
+      m.set(id, (m.get(id) ?? 0) + 1);
+    }
+    return m;
+  }, [data.items, onlyGroup, tg]);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
   const owner = useMemo(() => ownerField(ctx), [ctx]);
@@ -424,12 +445,27 @@ export function Table({
     [widths, showTrends],
   );
   const stickyW = CHECK_W + nameWidth;
-  // columns keep their widths (wider tables scroll); the trailing column takes the room left in the card
-  const widthOf = baseWidth;
+  // columns fill the card (owner decision 18 Nov 2026, docs/18 C2): field columns grow in proportion to their
+  // default or resized width; the checkbox and name, "+" / "…" and collapsed groups' stubs stay as they are; never
+  // narrower than the base, so wider tables scroll. Recomputed whenever the card's width changes (ResizeObserver).
+  const filled = useMemo(() => {
+    const grow = bodyCols.filter(
+      (c): c is Extract<BodyCol, { kind: 'field' }> => c.kind === 'field',
+    );
+    const stubs = bodyCols.length - grow.length;
+    const out = fillColumns(
+      grow.map((c) => baseWidth(c.field)),
+      stickyW + EDGE + TRAIL + stubs * STUB_W,
+      viewW,
+    );
+    return new Map(grow.map((c, i) => [c.field.id, out[i]!]));
+  }, [bodyCols, baseWidth, stickyW, viewW]);
+  const widthOf = useCallback((f: Field) => filled.get(f.id) ?? baseWidth(f), [filled, baseWidth]);
   const colWidth = useCallback(
-    (c: BodyCol) => (c.kind === 'stub' ? STUB_W : baseWidth(c.field)),
-    [baseWidth],
+    (c: BodyCol) => (c.kind === 'stub' ? STUB_W : widthOf(c.field)),
+    [widthOf],
   );
+  // "+" / "…": 44 px once the columns fill the card; the room left when no field column can grow
   const trailW = useMemo(
     () => trailWidth(bodyCols.map(colWidth), stickyW + EDGE, viewW, TRAIL),
     [bodyCols, colWidth, stickyW, viewW],
@@ -454,7 +490,14 @@ export function Table({
     }));
   }, [labels, runs, bodyCols, colWidth, stickyW]);
   /** A width the person dragged to, in stored terms. */
-  const toBase = useCallback((_f: Field, shown: number) => shown, []);
+  const toBase = useCallback(
+    (f: Field, shown: number) => {
+      // the fill scales a column up: store the width it would have unscaled
+      const scale = widthOf(f) / baseWidth(f);
+      return Math.max(40, Math.round(shown / (scale > 0 ? scale : 1)));
+    },
+    [widthOf, baseWidth],
+  );
 
   const docTop = useDocumentTop(scrollRef);
   // the column header of the card under the top bar stays rendered and pinned there (docs/05 §3.1)
@@ -896,8 +939,10 @@ export function Table({
     // sub-item rows have their own axis: no ranges across them
     store.getState().focus(cell, e.shiftKey && !at?.isSub);
     focusGrid();
-    if (was && !e.shiftKey) {
-      const field = fieldAt(col, !!at?.isSub);
+    const field = fieldAt(col, !!at?.isSub);
+    // option and people cells open their picker under the cell on the first click (docs/18 §5)
+    const picker = canEdit && !!field && !!fieldUI(field.type).opensOnClick && !e.shiftKey;
+    if ((was || picker) && !e.shiftKey) {
       if (at && field && toggle(at.item, field)) return;
       startEdit(cell);
     }
@@ -955,7 +1000,14 @@ export function Table({
     [store],
   );
 
-  const addItem = async (group: Group, name: string) => {
+  const addItem = async (shown: Group, name: string) => {
+    // grouped by a field: the item goes to the sheet's first group (or the one shown) with the group's value
+    const byField = tg.virtual && groupByField ? groupByField : null;
+    const group = byField
+      ? (data.groups.find((g) => g.id === onlyGroup) ??
+        [...data.groups].sort((a, b) => (a.position < b.position ? -1 : 1))[0]!)
+      : shown;
+    const values = byField ? groupValues(byField, shown.id, ctx) : undefined;
     // after every item of the group, also those a filter hides, so keys never collide
     const list = data.items.filter((i) => i.groupId === group.id).sort(byPosition);
     const [position] = positionsAtEnd(list, 1);
@@ -971,7 +1023,7 @@ export function Table({
         if (s.active?.itemId === tempId || s.anchor?.itemId === tempId)
           store.setState({ active: swap(s.active), anchor: swap(s.anchor) });
       },
-      { hold: true, source: 'inline' },
+      { hold: true, source: 'inline', ...(values ? { values } : {}) },
     );
   };
 
@@ -1116,6 +1168,13 @@ export function Table({
   const rowActionsStable = useStableEvent((item: Item, action: RowAction) => {
     store.getState().openRowMenu(null);
     if (action === 'open') return onOpenItem(item);
+    if (action === 'duplicate') return void actions.duplicateItems([item]);
+    if (action === 'notify') {
+      const n = notifyOwnerUpdate(item, ctx);
+      return n ? void actions.notifyOwner(item.id, n.body) : undefined;
+    }
+    // "Delete…" confirms first (bulk-bar.tsx); the items move to Archived items
+    if (action === 'delete') return store.setState({ deleting: [item.id] });
     if (action === 'archive') {
       const s = store.getState();
       if (s.selected.has(item.id)) {
@@ -1130,6 +1189,7 @@ export function Table({
   });
   const columnActions = useStableEvent((field: Field, index: number): ColumnMenuActions => ({
     sort: (dir) => setConfig((c) => ({ ...c, sort: dir ? [{ fieldKey: field.key, dir }] : [] })),
+    cycleSort: () => setConfig((c) => ({ ...c, sort: cycleSort(c.sort, field.key) })),
     hide: () => {
       store.getState().setHidden(field.id, true);
       toast(`${field.name} hidden. Show it again from Columns.`);
@@ -1314,8 +1374,9 @@ export function Table({
                       row.kind !== 'gap' && 'border-surface-line bg-surface overflow-clip border-x',
                       row.kind === 'header' && 'bg-head',
                       (row.kind === 'item' || row.kind === 'subitem') && 'group/row',
-                      first && 'rounded-t-[10px] border-t',
-                      last && 'rounded-b-[10px]',
+                      // the card's clear edges: 1 px --surface-line, 8 px corners (docs/18 C2)
+                      first && 'rounded-t-lg border-t',
+                      last && 'rounded-b-lg',
                       // item, sub-item and header rows draw their own bottom line
                       last && !ownLine(row.kind) && 'border-b',
                       pinned && 'z-[4]',
@@ -1359,6 +1420,7 @@ export function Table({
                       onAdd={addItemStable}
                       addRef={row.key === firstAddGroup ? firstAddRef : undefined}
                       groupItems={layout.byGroup}
+                      groupTotals={groupTotals}
                       onCommit={commitStable}
                       onOpenItem={openItemStable}
                       onCancelEdit={cancelEditStable}
@@ -1436,7 +1498,7 @@ export function Table({
 
 // ───────────────────────── rows ─────────────────────────
 
-type RowAction = 'open' | 'archive' | 'lock' | 'unlock';
+type RowAction = 'open' | 'duplicate' | 'notify' | 'delete' | 'archive' | 'lock' | 'unlock';
 
 interface RowProps {
   row: TableRow;
@@ -1478,6 +1540,8 @@ interface RowProps {
   onAdd(group: Group, name: string): Promise<void>;
   addRef?: React.RefObject<HTMLInputElement | null>;
   groupItems: Map<string, Item[]>;
+  /** Items per group before filters. */
+  groupTotals: Map<string, number>;
   onCommit(item: Item, col: string, raw: unknown): void;
   onCancelEdit(): void;
   /** "Add …" and "Edit options" for the open editor (people who may edit the field). */
@@ -1561,16 +1625,34 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
         drop.isOver && 'bg-sel',
       )}
     >
-      <div className="sticky left-0 flex items-center px-4">
+      <div className="sticky left-0 flex min-w-0 items-center px-2">
         <GroupTitle
           group={row.group}
-          count={row.count}
+          count={p.groupTotals.get(row.group.id) ?? row.count}
+          shown={row.count}
           donePct={donePercent(items, p.ctx)}
           collapsed={row.collapsed}
           onToggle={() => store.getState().toggleCollapsed(row.group.id)}
+          after={row.collapsed ? <GroupBattery items={items} ctx={p.ctx} /> : null}
         />
       </div>
     </div>
+  );
+}
+
+/** A collapsed group's status battery (160 px): how its items spread over the status options. */
+function GroupBattery({ items, ctx }: { items: Item[]; ctx: Ctx }) {
+  const field = statusFilterField(ctx);
+  if (!field || items.length === 0) return null;
+  const s = summarise(field, items, ctx, 'distribution');
+  if (s.kind !== 'segments') return null;
+  return (
+    <Battery
+      segments={s.segments}
+      total={s.total}
+      label={s.text}
+      className="flex h-[22px] w-[160px] shrink-0 overflow-hidden rounded-[2px]"
+    />
   );
 }
 
@@ -2091,6 +2173,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               open={p.menuOpen}
               canEdit={p.canEdit}
               isAdmin={p.isAdmin}
+              ctx={p.ctx}
               onAction={p.onRowAction}
             />
           );
@@ -2150,6 +2233,7 @@ function RowMenu({
   open,
   canEdit,
   isAdmin,
+  ctx,
   onAction,
 }: {
   item: Item;
@@ -2159,6 +2243,7 @@ function RowMenu({
   open: boolean;
   canEdit: boolean;
   isAdmin: boolean;
+  ctx: Ctx;
   onAction(item: Item, action: RowAction): void;
 }) {
   const store = useGridStore();
@@ -2197,26 +2282,37 @@ function RowMenu({
               document.querySelector<HTMLElement>('[role="grid"]')?.focus({ preventScroll: true });
             }}
           >
+            {/* the row ⋯ menu (docs/18 §5): the destructive item last, in red, ending in "…" */}
             <DropdownMenuItem onSelect={() => onAction(item, 'open')}>
-              <ExternalLink aria-hidden /> Open
+              <ExternalLink aria-hidden /> Open item
             </DropdownMenuItem>
-            {canEdit && (!item.locked || isAdmin) ? (
-              <DropdownMenuItem onSelect={() => onAction(item, 'archive')}>
-                <Archive aria-hidden /> Archive
+            {canEdit ? (
+              <DropdownMenuItem onSelect={() => onAction(item, 'duplicate')}>
+                <Copy aria-hidden /> Duplicate
+              </DropdownMenuItem>
+            ) : null}
+            {canEdit && notifyOwnerUpdate(item, ctx) ? (
+              <DropdownMenuItem onSelect={() => onAction(item, 'notify')}>
+                <BellRing aria-hidden /> Notify the owner
               </DropdownMenuItem>
             ) : null}
             {isAdmin ? (
+              item.locked ? (
+                <DropdownMenuItem onSelect={() => onAction(item, 'unlock')}>
+                  <LockOpen aria-hidden /> Unlock
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onSelect={() => onAction(item, 'lock')}>
+                  <Lock aria-hidden /> Lock
+                </DropdownMenuItem>
+              )
+            ) : null}
+            {canEdit && (!item.locked || isAdmin) ? (
               <>
                 <DropdownMenuSeparator />
-                {item.locked ? (
-                  <DropdownMenuItem onSelect={() => onAction(item, 'unlock')}>
-                    <LockOpen aria-hidden /> Unlock
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onSelect={() => onAction(item, 'lock')}>
-                    <Lock aria-hidden /> Lock
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem variant="destructive" onSelect={() => onAction(item, 'delete')}>
+                  <Trash2 aria-hidden /> Delete…
+                </DropdownMenuItem>
               </>
             ) : null}
           </DropdownMenuContent>

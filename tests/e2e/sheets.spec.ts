@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { signIn } from './helpers';
+import { signIn, viewTab, openViewTab } from './helpers';
 
 // M3: app shell, new sheet wizard, CSV import, copy, sheet settings and groups.
 // Uses the seed (pnpm seed): james@example.com is an editor of /meridian, vic@example.com a viewer.
@@ -61,14 +61,9 @@ test.describe('desktop', () => {
     await expect(page.getByText('Sheet created.')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
     // a new sheet opens in the Table view, its groups as sections
-    await expect(
-      page.getByRole('navigation', { name: 'Views' }).getByRole('link', { name: 'Table' }),
-    ).toHaveAttribute('aria-current', 'page');
+    await expect(viewTab(page, 'Table')).toHaveAttribute('aria-current', 'page');
     await expect(page.getByText('No items yet.').first()).toBeVisible();
-    await page
-      .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Table' })
-      .click();
+    await openViewTab(page, 'Table');
     await expect(page.getByRole('heading', { name: /^Open/ })).toBeVisible();
     await expect(page.getByText('No items yet.').first()).toBeVisible();
 
@@ -81,10 +76,12 @@ test.describe('desktop', () => {
     await expect(link).toContainText(code);
 
     // the group menu lists the groups
-    await page.getByRole('button', { name: /show one group$/ }).click();
-    const groupsMenu = page.getByRole('navigation', { name: 'Groups' });
-    await expect(groupsMenu.getByRole('link', { name: /All groups/ })).toBeVisible();
-    await expect(groupsMenu.getByRole('link', { name: /Done/ })).toBeVisible();
+    // (More ▾ › Show one group, docs/18 §4)
+    await page.getByTestId('more-menu').click();
+    await page.getByRole('menuitem', { name: /^Show one group/ }).click();
+    await expect(page.getByRole('menuitemradio', { name: /All groups/ })).toBeVisible();
+    await expect(page.getByRole('menuitemradio', { name: /Done/ })).toBeVisible();
+    await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
 
     // fields were created with their types and keys
@@ -137,10 +134,7 @@ test.describe('desktop', () => {
     ).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
     await expect(page.getByText('Replace eye-wash station')).toBeVisible();
-    await page
-      .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Table' })
-      .click();
+    await openViewTab(page, 'Table');
     await expect(page.getByRole('button', { name: /^Imported.*3 items$/ })).toBeVisible();
 
     await page.getByRole('link', { name: 'Sheet settings' }).click();
@@ -177,10 +171,7 @@ test.describe('desktop', () => {
     await expect(page.getByText('Group deleted.')).toBeVisible();
     await expect(page.getByLabel('Name of group Imported')).toHaveCount(0);
     await page.getByRole('link', { name: /Back to/ }).click();
-    await page
-      .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Table' })
-      .click();
+    await openViewTab(page, 'Table');
     await expect(page.getByRole('button', { name: /^Archive.*3 items$/ })).toBeVisible();
   });
 
@@ -204,10 +195,7 @@ test.describe('desktop', () => {
     await page.getByRole('button', { name: 'Copy sheet' }).click();
     await expect(page.getByText('Sheet copied. Items are not copied.')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: `${source} copy` })).toBeVisible();
-    await page
-      .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Table' })
-      .click();
+    await openViewTab(page, 'Table');
     await expect(page.getByRole('button', { name: /^Active.*0 items$/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Retired.*0 items$/ })).toBeVisible();
     await page.getByRole('link', { name: 'Sheet settings' }).click();
@@ -264,10 +252,7 @@ test.describe('desktop', () => {
 
     // collapse a group on the sheet page
     await page.getByRole('link', { name: /Back to/ }).click();
-    await page
-      .getByRole('navigation', { name: 'Views' })
-      .getByRole('link', { name: 'Table' })
-      .click();
+    await openViewTab(page, 'Table');
     const toggle = page.getByRole('button', { name: /^In progress.*0 items$/ });
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');

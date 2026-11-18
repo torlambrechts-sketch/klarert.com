@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
-import { rest, signIn } from './helpers';
+import { rest, signIn, viewTabNames } from './helpers';
 
 // Supplier management 3.0.0 (docs/11): an owner installs the add-on into an empty workspace; the Core registers are
 // installed first. The add-on has no supplier register of its own: its columns, forms, examples, automations and the
@@ -205,8 +205,8 @@ test('supplier management add-on: Core first, the Suppliers domain, checks and t
   // ── the checks sheet: four tabs
   await page.goto(`/${slug}/s/${checks}`);
   await expect(page.getByRole('heading', { name: 'Supplier requirement checks' })).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Views' }).getByRole('link')).toHaveText([
-    /^Table/,
+  expect(await viewTabNames(page)).toEqual([
+    expect.stringMatching(/^Table/),
     'Not met',
     'By status',
     'Calendar',

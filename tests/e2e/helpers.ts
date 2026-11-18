@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { COMMAND_HEADER, commandProof, commandSecret } from '@/lib/supabase/command-proof';
 
 const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324';
@@ -235,3 +235,67 @@ export const OPEN_PUBLIC_FORM = {
 
 /** Public forms refuse answers sent sooner than 2 s after the page was served (minimum fill time). */
 export const MIN_FILL_MS = 2100;
+
+const ITEM_TABS = '[role="tablist"][aria-label="Item sections"]';
+const MORE = '[data-testid="overflow-tabs-more"]';
+
+const pageOf = (scope: Page | Locator): Page =>
+  'page' in scope && typeof scope.page === 'function' ? scope.page() : (scope as Page);
+
+/**
+ * Opens an item panel tab (docs/18 §3: two tabs, then More ▾): clicks the tab when it shows, else opens More ▾ and
+ * picks it there.
+ */
+export async function openTab(scope: Page | Locator, name: string | RegExp) {
+  const list = scope.locator(ITEM_TABS).first();
+  await list.waitFor();
+  const tab = list.getByRole('tab', { name });
+  if (await tab.count()) return tab.first().click();
+  await list.locator(MORE).click();
+  await pageOf(scope).getByRole('menuitemradio', { name }).click();
+}
+
+/** The control that shows an item panel tab: the tab itself, or the More trigger while it holds that tab. */
+export function panelTab(scope: Page | Locator, name: string | RegExp) {
+  return scope
+    .getByRole('tab', { name })
+    .or(scope.locator(`${ITEM_TABS} ${MORE}`).filter({ hasText: name }));
+}
+
+const VIEWS = 'nav[aria-label="Views"]';
+
+/**
+ * A view tab (docs/18 §3: two tabs, then More ▾ with the rest): its link, or the More trigger while it holds the
+ * active tab (the trigger then shows its name and is the current page).
+ */
+export function viewTab(page: Page, name: string | RegExp) {
+  const nav = page.locator(VIEWS);
+  return nav.getByRole('link', { name }).or(nav.locator(MORE).filter({ hasText: name }));
+}
+
+/**
+ * The view tabs in order: the links, then the tabs in More ▾ (its radio items; hidden tabs are plain items and are
+ * left out). Opens More ▾ and closes it again.
+ */
+export async function viewTabNames(page: Page): Promise<string[]> {
+  const nav = page.locator(VIEWS);
+  await nav.getByRole('link').first().waitFor();
+  const links = (await nav.getByRole('link').allInnerTexts()).map((t) => t.trim());
+  await nav.locator(MORE).click();
+  const menu = page.getByRole('menu');
+  await menu.waitFor();
+  const more = (await menu.getByRole('menuitemradio').allInnerTexts()).map((t) => t.trim());
+  await page.keyboard.press('Escape');
+  await menu.waitFor({ state: 'hidden' });
+  return [...links, ...more];
+}
+
+/** Opens a view by its tab: the link, or its item in More ▾. */
+export async function openViewTab(page: Page, name: string | RegExp) {
+  const nav = page.locator(VIEWS);
+  await nav.getByRole('link').first().waitFor();
+  const link = nav.getByRole('link', { name });
+  if (await link.count()) return link.first().click();
+  await nav.locator(MORE).click();
+  await page.getByRole('menuitemradio', { name }).click();
+}

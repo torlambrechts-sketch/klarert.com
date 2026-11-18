@@ -12,13 +12,13 @@ import {
   UsersRound,
   UserSquare,
 } from 'lucide-react';
-import { Avatar, Avatars, OptionsEditor, PeopleNames } from './shared';
+import { Avatar, OptionsEditor, PeopleNames, PeopleShort } from './shared';
 import { Empty, optionUI } from './kit';
 import type { FieldTypeUI } from './types';
 
 // Choice and people types (docs/03 §3.2).
 
-// In the Table every one-option value is the option's tinted box (Block); several are tinted chips.
+// In the Table every one-option value fills its cell in the option's solid colour (Block); several are tinted chips.
 export const statusUI = optionUI({ icon: CircleDot });
 export const dropdownUI = optionUI({ icon: ListFilter });
 export const multiselectUI: FieldTypeUI = {
@@ -40,11 +40,12 @@ export const severityUI = optionUI({ icon: ShieldAlert });
 
 export const peopleUI: FieldTypeUI = {
   icon: Users,
+  opensOnClick: true,
   Cell: ({ value, ctx, density }) =>
     Array.isArray(value) && value.length > 0 ? (
       density === 'table' ? (
-        // stacked initials; each avatar carries the person's name (tooltip and screen readers)
-        <Avatars ids={value as string[]} ctx={ctx} />
+        // a 28 px avatar and the short name (docs/18 C7)
+        <PeopleShort ids={value as string[]} ctx={ctx} />
       ) : (
         <PeopleNames ids={value as string[]} ctx={ctx} />
       )

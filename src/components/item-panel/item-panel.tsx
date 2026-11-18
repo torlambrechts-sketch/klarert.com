@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { Dialog as DialogPrimitive, Tabs } from 'radix-ui';
+import { OverflowTabs } from '@/components/ui/overflow-tabs';
 import { toast } from 'sonner';
 import { neighbours } from '@/engine/item-panel';
 import type { SheetData } from '@/engine/sheet-data';
@@ -429,25 +430,29 @@ export function ItemPanel(props: ItemPanelProps) {
                   </span>
                 ) : null}
               </p>
-              <Tabs.List
-                aria-label="Item sections"
-                className="-mb-px flex gap-[22px] overflow-x-auto pt-2 max-[759px]:gap-4"
-              >
-                {[
-                  ['details', 'Details'],
-                  ...(subitems ? [['subitems', `${subLabel} · ${subCount}`]] : []),
-                  ['files', `Files · ${filesCount}`],
-                  ['updates', `Updates · ${updatesCount}`],
-                  ['activity', `Activity log · ${activityCount}`],
-                ].map(([v, label]) => (
-                  <Tabs.Trigger
-                    key={v}
-                    value={v!}
-                    className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-14 h-10 shrink-0 border-b-2 border-transparent px-px whitespace-nowrap focus-visible:outline-2"
-                  >
-                    {label}
-                  </Tabs.Trigger>
-                ))}
+              <Tabs.List aria-label="Item sections" className="-mb-px flex overflow-x-auto pt-2">
+                {/* two tabs, then More ▾ with the rest (docs/18 §3, the menu rule) */}
+                <OverflowTabs
+                  label="Item sections"
+                  className="max-[759px]:gap-4"
+                  tabs={[
+                    { id: 'details', label: 'Details' },
+                    ...(subitems ? [{ id: 'subitems', label: `${subLabel} · ${subCount}` }] : []),
+                    { id: 'files', label: `Files · ${filesCount}` },
+                    { id: 'updates', label: `Updates · ${updatesCount}` },
+                    { id: 'activity', label: `Activity log · ${activityCount}` },
+                  ]}
+                  active={tab}
+                  onSelect={(v) => setTab(v as typeof tab)}
+                  renderTab={(t) => (
+                    <Tabs.Trigger
+                      value={t.id}
+                      className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus text-label-14 h-10 shrink-0 border-b-2 border-transparent px-px whitespace-nowrap focus-visible:outline-2"
+                    >
+                      {t.label}
+                    </Tabs.Trigger>
+                  )}
+                />
               </Tabs.List>
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">

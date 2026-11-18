@@ -44,7 +44,7 @@ export const people: FieldTypeDef<V, PeopleConfig> = base<V, PeopleConfig>({
   valueSchema: z.array(z.string().min(1)),
   configSchema: z.object({ multiple: z.boolean() }),
   defaultConfig: () => ({ multiple: true }),
-  defaultWidth: 84,
+  defaultWidth: 140,
   formAllowed: true,
   // Only a single-person field can be the lane field; views check cfg.multiple.
   kanbanCapable: true,

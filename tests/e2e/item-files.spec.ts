@@ -1,5 +1,5 @@
 import { chromium, expect, test, type Browser, type Page } from '@playwright/test';
-import { rest, signIn } from './helpers';
+import { rest, signIn, openTab, panelTab } from './helpers';
 
 // Files on items and linked controlled documents (docs/05 §3.4 Files tab, docs/02 §8 and §14). Uses the seed:
 // maria@example.com owner, james@example.com editor. Each test makes its own sheets.
@@ -53,7 +53,7 @@ async function itemByName(page: Page, sheetUrl: string, name: string) {
 async function openFiles(page: Page, sheetUrl: string, displayId: string) {
   await page.goto(`${sheetUrl}&item=${displayId}`);
   const dialog = panel(page);
-  await dialog.getByRole('tab', { name: /^Files · / }).click();
+  await openTab(dialog, /^Files · /);
   await expect(dialog.getByRole('heading', { name: /^Files/ })).toBeVisible();
   return dialog;
 }
@@ -156,7 +156,7 @@ test.describe('desktop', () => {
     }, PNG.toString('base64'));
     await dialog.getByTestId('files-dropzone').dispatchEvent('drop', { dataTransfer: dt });
     await expect(fileRow(page, 'site.png')).toContainText('Photo');
-    await expect(dialog.getByRole('tab', { name: 'Files · 2' })).toBeVisible();
+    await expect(panelTab(dialog, 'Files · 2')).toBeVisible();
 
     // a blocked type is refused with a reason
     await dialog.getByLabel('Choose files to upload').setInputFiles({
@@ -238,10 +238,7 @@ test.describe('desktop', () => {
     await expect(marker).toHaveAttribute('data-expired', 'true');
     await expect(marker).toHaveAccessibleName(/expired/);
     await marker.click();
-    await expect(panel(page).getByRole('tab', { name: /^Files/ })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expect(panelTab(panel(page), /^Files/)).toHaveAttribute('aria-selected', 'true');
 
     // an admin archives: gone from the tab, in the activity log
     const maria = await asUser(browser, 'maria@example.com');
@@ -251,9 +248,7 @@ test.describe('desktop', () => {
     await confirm.getByLabel('Reason (optional)').fill('Duplicate photo');
     await confirm.getByRole('button', { name: 'Archive' }).click();
     await expect(fileRow(maria, 'site.png')).toHaveCount(0);
-    await panel(maria)
-      .getByRole('tab', { name: /^Activity log/ })
-      .click();
+    await openTab(panel(maria), /^Activity log/);
     await expect(panel(maria).getByText(/Files: archived site\.png/)).toBeVisible();
     await maria.context().close();
   });
@@ -301,9 +296,7 @@ test.describe('desktop', () => {
     const james = await asUser(browser, 'james@example.com');
     await james.goto(`${regUrl}&item=${doc.display_id}`);
     await approve(james, 'First issue');
-    await panel(james)
-      .getByRole('tab', { name: /^Files/ })
-      .click();
+    await openTab(panel(james), /^Files/);
     await expect(fileRow(james, 'policy-v1.pdf')).toBeVisible();
     // the approval records the approver (the person approving) and the date
     const regId = regUrl.match(/\/s\/([0-9a-f-]{36})/)![1]!;
@@ -346,9 +339,7 @@ test.describe('desktop', () => {
 
     // a new draft version: the asset shows "Draft in review" and still hands out v1
     await james.goto(`${regUrl}&item=${doc.display_id}`);
-    await panel(james)
-      .getByRole('tab', { name: /^Files/ })
-      .click();
+    await openTab(panel(james), /^Files/);
     await menu(james, 'policy-v1.pdf', 'Upload new version');
     const v = james.getByRole('dialog', { name: 'Upload a new version' });
     await v.getByLabel('Version note').fill('Annual review');
@@ -362,9 +353,7 @@ test.describe('desktop', () => {
     await james.context().close();
 
     await page.reload();
-    await panel(page)
-      .getByRole('tab', { name: /^Files/ })
-      .click();
+    await openTab(panel(page), /^Files/);
     const again = panel(page).getByRole('list', { name: 'Linked documents' }).getByRole('listitem');
     await expect(again.getByTestId('document-status')).toContainText('v1 · Approved');
     await expect(again).toContainText('⚠ Draft in review');

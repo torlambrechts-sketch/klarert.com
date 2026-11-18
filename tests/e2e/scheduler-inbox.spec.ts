@@ -12,7 +12,7 @@ import {
   STATUS,
   typeInto,
 } from './automation-helpers';
-import { completeProfile, freshEmail, rest, signIn } from './helpers';
+import { completeProfile, freshEmail, rest, signIn, openTab } from './helpers';
 
 // M9: the scheduler and webhook cron routes, "Run date checks now", the inbox, requests, My work, Home and global
 // search (docs/04 §8–§9, docs/05 §2.3, §4, §5). Seeded people work in /meridian, where other tests run in parallel, so
@@ -346,7 +346,7 @@ test.describe('Home and search', () => {
     // opening an item's activity log ticks its step
     await hydrated(page);
     await checklist.getByRole('link', { name: 'Open an item' }).click();
-    await page.getByRole('tab', { name: /Activity log/ }).click();
+    await openTab(page, /Activity log/);
     await expect(page.getByRole('list', { name: 'Activity log' })).toBeVisible();
     await expect
       .poll(async () => {

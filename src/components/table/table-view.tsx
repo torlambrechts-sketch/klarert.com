@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import type { SheetData } from '@/engine/sheet-data';
 import type { Ctx, Item } from '@/engine/types';
 import type { ViewConfig } from '@/engine/views/config';
-import { filterByKeys, quickFilter } from '@/engine/views/quick-filters';
+import { applyColumnFilters, applyQuickView, filterByKeys } from '@/engine/views/quick-filters';
 import { missingRequired } from '@/engine/views/new-item';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import { Table } from './table';
 import { TableCards } from './table-cards';
+import { BulkBar } from './bulk-bar';
 import { useUpdateSummaries } from './use-update-counts';
 import type { SubitemsState } from '@/components/subitems/use-subitems';
 
@@ -69,21 +70,25 @@ export function TableView(p: TableViewProps) {
     [p.data.items, p.onlyGroup],
   );
   const total = inScope.length;
-  const people = useGrid((s) => s.people);
-  const statuses = useGrid((s) => s.statuses);
+  const quickView = useGrid((s) => s.quick);
+  const colFilters = useGrid((s) => s.colFilters);
   const valueFilter = useGrid((s) => s.valueFilter);
   const missingOnly = useGrid((s) => s.missingOnly);
   const store = useGridStore();
   const updateCounts = useUpdateSummaries(p.data.sheet.id, p.data.sheet.orgId);
   const items = useMemo(() => {
-    const quick = quickFilter(p.items, people, statuses, p.ctx);
+    const quick = applyColumnFilters(applyQuickView(p.items, quickView, p.ctx), colFilters, p.ctx);
     const field = valueFilter && p.data.fields.find((f) => f.id === valueFilter.fieldId);
     const byValue = field ? filterByKeys(quick, field, new Set([valueFilter.key]), p.ctx) : quick;
     return missingOnly
       ? byValue.filter((i) => missingRequired(i, p.data.fields, p.ctx).length > 0)
       : byValue;
-  }, [p.items, people, statuses, valueFilter, missingOnly, p.data.fields, p.ctx]);
+  }, [p.items, quickView, colFilters, valueFilter, missingOnly, p.data.fields, p.ctx]);
   const filtered = p.filtered || items.length !== p.items.length;
+  // Export to CSV writes what the Table shows
+  useEffect(() => {
+    store.setState({ shownIds: items.map((i) => i.id) });
+  }, [items, store]);
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       {total === 0 ? (
@@ -104,10 +109,7 @@ export function TableView(p: TableViewProps) {
             className="h-auto p-0"
             onClick={() => {
               p.onClearFilters();
-              store.getState().clearPeople();
-              store.getState().clearStatuses();
-              store.getState().setValueFilter(null);
-              store.getState().setMissingOnly(false);
+              store.getState().clearToolbarFilters();
             }}
           >
             Clear filters
@@ -131,6 +133,8 @@ export function TableView(p: TableViewProps) {
         />
       ) : (
         <div className="flex min-h-[240px] flex-1 flex-col">
+          {/* the bulk bar and the Delete… confirm (docs/18 §5) */}
+          <BulkBar data={p.data} ctx={p.ctx} actions={p.actions} canEdit={p.canEdit} />
           <Table
             data={p.data}
             ctx={p.ctx}

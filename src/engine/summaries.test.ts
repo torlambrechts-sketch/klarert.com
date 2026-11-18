@@ -106,7 +106,9 @@ describe('summaries', () => {
     expect(summarise(check, items, ctx).text).toBe('25% checked');
     expect(summarise(check, items, ctx, 'count_checked').text).toBe('1 checked');
     expect(summarise(owner, items, ctx).text).toBe('2 of 4 filled');
-    expect(valueOf(summarise(owner, items, ctx, 'distinct'))).toBe(2);
+    const people = summarise(owner, items, ctx, 'distinct');
+    expect(people.kind === 'people' && people.ids).toHaveLength(2);
+    expect(summarise(ev, items, ctx, 'count_with_files').text).toBe('3 of 4');
     const f = summarise(ev, items, ctx);
     expect(f.kind === 'segments' && f.segments.map((x) => [x.id, x.count])).toEqual([
       ['current', 1],
@@ -123,18 +125,20 @@ describe('summaries', () => {
     expect(summarise(num, items, ctx, 'distribution').fn).toBe('sum');
   });
 
-  it('shows number, option and date summaries by default, others only when chosen', () => {
+  it('shows number, option, date, people and file summaries by default (docs/18 C6), others only when chosen', () => {
     expect(autoSummary(pct, ctx)).toBe('average');
     expect(autoSummary(status, ctx)).toBe('distribution');
     expect(autoSummary(due, ctx)).toBe('range');
     expect(autoSummary(txt, ctx)).toBeNull();
-    expect(autoSummary(owner, ctx)).toBeNull();
+    expect(autoSummary(owner, ctx)).toBe('distinct');
+    expect(autoSummary(ev, ctx)).toBe('count_with_files');
     const fields = [status, num, pct, due, txt, owner];
     expect(columnSummaries(fields, undefined, undefined, ctx)).toEqual({
       [status.key]: 'distribution',
       [num.key]: 'sum',
       [pct.key]: 'average',
       [due.key]: 'range',
+      [owner.key]: 'distinct',
     });
     // a chosen function wins, a switched-off column has none
     expect(
@@ -144,6 +148,7 @@ describe('summaries', () => {
       [num.key]: 'max',
       [pct.key]: 'average',
       [txt.key]: 'count_filled',
+      [owner.key]: 'distinct',
     });
   });
 });

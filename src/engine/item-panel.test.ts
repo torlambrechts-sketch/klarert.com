@@ -7,6 +7,7 @@ import {
   itemSummary,
   linkEdges,
   neighbours,
+  notifyOwnerUpdate,
   ownerField,
   ownerOf,
 } from './item-panel';
@@ -175,5 +176,17 @@ describe('checklist sections', () => {
       cells: [{ key: due.key, text: '1 Nov 2026', expired: true }],
     });
     expect(rows[1]!.cells[0]!.expired).toBe(false);
+  });
+});
+
+describe('notifyOwnerUpdate', () => {
+  it('mentions the owner by name, and is null for no owner or for me', () => {
+    const james = makeItem({ 'f-owner': ['u-james'] });
+    const ctx = makeCtx({ fields, items: [james] });
+    const n = notifyOwnerUpdate(james, ctx);
+    expect(n?.userId).toBe('u-james');
+    expect(n?.body).toBe(`@${ctx.people.get('u-james')!.name} please take a look at this item.`);
+    expect(notifyOwnerUpdate(makeItem(), ctx)).toBeNull();
+    expect(notifyOwnerUpdate(makeItem({ 'f-owner': ['u-maria'] }), ctx)).toBeNull();
   });
 });

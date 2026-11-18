@@ -120,8 +120,12 @@
   --subtle: var(
     --background-200
   ); /* quiet fills inside white surfaces (collapsed column stubs, hints) */
-  --brand: var(--gray-1000); /* primary buttons */
-  --brand-hover: color-mix(in srgb, var(--gray-1000) 85%, white);
+  /* navy brand (owner decision 18 Nov 2026, docs/18 C3): primary buttons, the hero band and the active side menu
+     marker; white text on it is 13.9:1 */
+  --navy-900: #0000a0;
+  --navy-1000: #00005e;
+  --brand: var(--navy-900);
+  --brand-hover: var(--navy-1000);
   --focus: var(--blue-700); /* focus ring, selected cell */
   --sel: var(
     --blue-300
@@ -249,6 +253,13 @@
   --solid-green: #18874e;
   --solid-orange: #b26009;
   --solid-pink: #c04d87;
+  /* the label colours that already reach 4.5:1 under white words (the Table's solid option cells, docs/18 C1) */
+  --solid-blue: var(--label-blue);
+  --solid-navy: var(--label-navy);
+  --solid-teal: var(--label-teal);
+  --solid-red: var(--label-red);
+  --solid-purple: var(--label-purple);
+  --solid-dark: var(--label-dark);
 
   /* shadcn/ui variables mapped onto the tokens */
   --background: var(--background-100);

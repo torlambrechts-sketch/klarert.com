@@ -45,7 +45,7 @@ import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import type { SheetActions } from '@/components/grid/use-sheet';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ViewBarActions } from '@/components/views/view-bar';
 import type { ViewsState } from '@/components/views/use-views';
 import { cn } from '@/lib/utils';
@@ -80,6 +80,8 @@ export interface ColumnsMenuProps {
   canEdit: boolean;
   isAdmin: boolean;
   actions: SheetActions;
+  /** No button of its own: it opens from More ▾ and "Hidden · N" and is anchored where it is rendered. */
+  anchorOnly?: boolean;
 }
 
 export function ColumnsMenu(p: ColumnsMenuProps) {
@@ -106,7 +108,9 @@ export function ColumnsMenu(p: ColumnsMenuProps) {
     [p.data.fields, hidden, groups, p.views.config.collapsedGroups],
   );
   const setOpen = (o: boolean) => store.getState().openColumns(o ? 'all' : null);
-  const trigger = (
+  const trigger = p.anchorOnly ? (
+    <span aria-hidden className="block h-[38px] w-0" />
+  ) : (
     <Button
       type="button"
       variant="outline"
@@ -142,7 +146,11 @@ export function ColumnsMenu(p: ColumnsMenuProps) {
     );
   return (
     <Popover open={!!open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      {p.anchorOnly ? (
+        <PopoverAnchor asChild>{trigger}</PopoverAnchor>
+      ) : (
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      )}
       <PopoverContent
         align="start"
         aria-label="Columns"

@@ -30,8 +30,7 @@ import { FormView } from '@/components/views/form-view';
 import { KanbanView } from '@/components/views/kanban-view';
 import { InsightsView } from '@/components/insights/insights-view';
 import { DesignView } from '@/components/design/design-view';
-import { ownerField } from '@/engine/item-panel';
-import { statusFilterField } from '@/engine/views/quick-filters';
+import { filterFields } from '@/engine/views/quick-filters';
 import { NewItemDialog, type NewItemRequest } from '@/components/views/new-item-dialog';
 import type { IntakeForm } from '@/engine/views/new-item';
 import { useOnline } from '@/components/states/use-online';
@@ -50,14 +49,13 @@ import { FieldPicker } from './field-picker';
 import { FieldSettings } from './field-settings';
 import { GroupSelect } from '@/components/table/group-select';
 import { TableView } from '@/components/table/table-view';
-import { ColumnsMenu } from '@/components/table/columns-menu';
+import { KeyFigures } from '@/components/table/key-figures';
 import { ViewBar } from '@/components/views/view-bar';
 import {
-  DensityToggle,
-  MissingFilter,
-  OwnerFilter,
-  StatusFilter,
-  TableActions,
+  TableFilterMenu,
+  TableMoreMenu,
+  TableSortMenu,
+  TableViewMenu,
   useDensityPreference,
   ValueFilterChip,
 } from '@/components/table/table-actions';
@@ -470,6 +468,7 @@ function SheetBody(props: SheetViewProps) {
           onAdd={addNew}
         />
       ) : null}
+      {active.type === 'form' ? null : <KeyFigures items={data ? inScope : null} ctx={ctx} />}
       <ViewTabs
         className="-mx-4 px-4 sm:-mx-[28px] sm:px-[28px]"
         views={views}
@@ -486,70 +485,80 @@ function SheetBody(props: SheetViewProps) {
           </>
         }
       />
-      <div data-keep-selection className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-2">
-        {filterable ? (
-          <div className="flex min-w-0 flex-[1_1_240px] [&>*]:w-full">
-            <SheetSearch value={q} onChange={setQ} />
-          </div>
-        ) : null}
-        {data && env && tabular ? (
-          <TableActions
-            actions={actions}
-            fields={data.fields}
-            env={env}
-            allItems={data.items}
-            canEdit={canEdit}
-            isAdmin={isAdmin}
-          />
-        ) : null}
-        {data && !design ? (
-          <GroupSelect
-            org={org}
-            data={data}
-            onlyGroup={props.onlyGroup}
-            canEdit={canEdit}
-            archived={props.archived}
-          />
-        ) : null}
-        {data && ctx && tabular ? (
+      <div
+        data-keep-selection
+        data-testid="sheet-toolbar"
+        className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-2"
+      >
+        {data && ctx && env && tabular ? (
+          // the Table's toolbar (docs/18 C8): View ▾, search, Filter ▾, Sort ▾, More ▾, ⚡
           <>
-            <StatusFilter items={inScope} ctx={ctx} />
-            <OwnerFilter items={inScope} ctx={ctx} />
-            <MissingFilter items={inScope} fields={data.fields} ctx={ctx} />
-            <ValueFilterChip />
-          </>
-        ) : null}
-        {data && ctx && filterable ? (
-          <>
-            {active.type !== 'insights' ? (
-              <SortButton config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
-            ) : null}
-            <FilterButton
+            <TableViewMenu views={views} userId={userId} ctx={ctx} items={inScope} />
+            <div className="flex min-w-[140px] flex-[0_1_180px] focus-within:flex-[0_1_280px] [&>*]:w-full">
+              <SheetSearch value={q} onChange={setQ} />
+            </div>
+            <TableFilterMenu
+              ctx={ctx}
+              items={inScope}
+              fields={data.fields}
               config={config}
               setConfig={setConfig}
-              fields={data.fields}
-              ctx={ctx}
               computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
             />
+            <TableSortMenu config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
+            <TableMoreMenu
+              org={org}
+              data={data}
+              ctx={ctx}
+              env={env}
+              views={views}
+              userId={userId}
+              actions={actions}
+              canEdit={canEdit}
+              isAdmin={isAdmin}
+              archived={props.archived}
+              onlyGroup={props.onlyGroup}
+              sub={sub.state ?? null}
+            />
+            <ValueFilterChip />
           </>
-        ) : null}
-        {data && tabular ? (
+        ) : (
           <>
-            {ctx ? (
-              <ColumnsMenu
+            {filterable ? (
+              <div className="flex min-w-0 flex-[1_1_240px] [&>*]:w-full">
+                <SheetSearch value={q} onChange={setQ} />
+              </div>
+            ) : null}
+            {data && !design ? (
+              <GroupSelect
                 org={org}
                 data={data}
-                ctx={ctx}
-                views={views}
-                userId={userId}
+                onlyGroup={props.onlyGroup}
                 canEdit={canEdit}
-                isAdmin={isAdmin}
-                actions={actions}
+                archived={props.archived}
               />
             ) : null}
-            <DensityToggle />
+            {data && ctx && filterable ? (
+              <>
+                {active.type !== 'insights' ? (
+                  <SortButton
+                    config={config}
+                    setConfig={setConfig}
+                    fields={data.fields}
+                    ctx={ctx}
+                  />
+                ) : null}
+                <FilterButton
+                  config={config}
+                  setConfig={setConfig}
+                  fields={data.fields}
+                  ctx={ctx}
+                  computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
+                />
+              </>
+            ) : null}
           </>
-        ) : null}
+        )}
         <SheetAutomations
           org={org}
           sheetId={sheetId}
@@ -768,11 +777,9 @@ function ViewBody({
       const field = data.fields.find((f) => f.key === fieldKey);
       if (!field) return;
       const s = store.getState();
-      s.clearPeople();
-      s.clearStatuses();
-      s.setValueFilter(null);
-      if (field.id === statusFilterField(ctx)?.id) s.toggleStatus(key);
-      else if (field.id === ownerField(ctx)?.id) s.togglePerson(key);
+      s.clearToolbarFilters();
+      // an option or people field: its column in Filter ▾; anything else: a removable chip
+      if (filterFields(ctx).some((f) => f.id === field.id)) s.setColFilters({ [field.id]: [key] });
       else s.setValueFilter({ fieldId: field.id, key, label: `${field.name}: ${label}` });
       openView(tableId);
     },

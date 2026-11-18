@@ -2,7 +2,14 @@ import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import './fields/registry';
 import { makeCtx, makeField, makeItem } from './testing/fixtures';
-import { checkCreate, checkWrite, defaultValues, planValues, resolveDefaultToken } from './writes';
+import {
+  checkCreate,
+  checkWrite,
+  defaultValues,
+  planDuplicate,
+  planValues,
+  resolveDefaultToken,
+} from './writes';
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const status = makeField(
@@ -173,5 +180,39 @@ describe('defaults', () => {
       [o.id]: ['u-maria'],
       [s.id]: 'opt_stuck',
     });
+  });
+});
+
+describe('planDuplicate (duplicateItems)', () => {
+  const ctx = makeCtx({ fields: [status, cause, owner, files] });
+  const opts = { position: 'a5', now: '2026-11-18T10:00:00Z', hash: sha };
+
+  it('copies the name and stored values, not files', () => {
+    const it = makeItem(
+      { [status.id]: 'opt_stuck', [cause.id]: 'Worn seal', [owner.id]: ['u-maria'] },
+      { name: 'Leaking valve' },
+    );
+    const r = planDuplicate(it, [status, cause, owner, files], ctx, opts);
+    expect(r).toEqual({
+      ok: true,
+      values: { [status.id]: 'opt_stuck', [cause.id]: 'Worn seal', [owner.id]: ['u-maria'] },
+    });
+  });
+
+  it('leaves out a unique value already taken', () => {
+    const it = makeItem({ [cause.id]: 'Worn seal', [owner.id]: ['u-maria'] });
+    const r = planDuplicate(it, [status, cause, owner, files], ctx, {
+      ...opts,
+      isTaken: (id) => id === cause.id,
+    });
+    expect(r.ok && r.values[cause.id]).toBeUndefined();
+  });
+
+  it('refuses a copy that breaks a blocking rule, with the reason', () => {
+    // Done requires a root cause (the status rule): a done item without one cannot be copied as it is
+    const it = makeItem({ [status.id]: 'opt_done', [owner.id]: ['u-maria'] });
+    const r = planDuplicate(it, [status, cause, owner, files], ctx, opts);
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.message).toMatch(/Root cause/i);
   });
 });
