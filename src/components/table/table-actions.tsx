@@ -171,9 +171,12 @@ export function TableViewMenu({
   return (
     <>
       <DropdownMenu>
-        <Trigger on={quick !== 'all'} data-testid="view-menu" label={`View: ${name}`}>
+        {/* named by its words ("View: Table"), so the accessible name holds the visible text (WCAG 2.5.3) */}
+        <Trigger on={quick !== 'all'} data-testid="view-menu">
           <Layers aria-hidden />
-          <span className="text-muted-foreground font-normal">View</span>
+          <span className="text-muted-foreground font-normal">
+            View<span className="sr-only">:</span>
+          </span>{' '}
           <span className="min-w-0 truncate">{name}</span>
         </Trigger>
         <DropdownMenuContent align="start" className="w-72">
@@ -431,11 +434,8 @@ export function TableSortMenu({
   const first = rules[0];
   return (
     <DropdownMenu>
-      <Trigger
-        on={rules.length > 0}
-        data-testid="sort-menu"
-        label={first ? `Sorted by ${keyLabel(first.fieldKey, ctx)}` : 'Sort'}
-      >
+      {/* named by its words ("Sort · Name"), so the accessible name holds the visible text (WCAG 2.5.3) */}
+      <Trigger on={rules.length > 0} data-testid="sort-menu">
         <ArrowDownUp aria-hidden />
         <span className="min-w-0 truncate">
           {first ? `Sort · ${keyLabel(first.fieldKey, ctx)}` : 'Sort'}
