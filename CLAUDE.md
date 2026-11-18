@@ -89,6 +89,18 @@ pnpm lint && pnpm typecheck
 ```
 Add these scripts in M0 if they do not exist.
 
+## How the owner wants us to work (owner rule, 18 Nov 2026 — overrides anything below that conflicts)
+
+The owner has asked for this many times. Follow it on every task, in every session and every subagent.
+
+- **Keep it simple and fast.** Do the task asked, nothing more. No polish passes, no extra rounds of screenshots, no re-running the same tests.
+- **One working copy that stays up.** Work in the main checkout. Keep the local Supabase and app running between tasks. Do not create a fresh worktree or environment per task.
+- **One task at a time, done directly.** Don't hand work to a stack of subagents. Use at most one helper, only for genuinely separate work, and give it these rules.
+- **Light checks.** Locally: `pnpm lint && pnpm typecheck && pnpm test`, plus only the e2e specs for what changed. GitHub's CI is the full check.
+- **Never merge before CI is green on the PR's current commit.** No exceptions for speed.
+- **Push small and often.** Each push gets CI; don't sit on unpushed work.
+- **Ask before anything big:** new scope, migrations, or long runs. Give options with one marked "(Recommended)".
+
 ## How to work
 
 - Work milestone by milestone from `docs/06-build-plan.md`. Use `/milestone` (see `.claude/commands/milestone.md`).
