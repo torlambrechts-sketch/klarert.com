@@ -111,11 +111,7 @@ export function FilterButton({
   /** Large sheets: filters on calculated columns run on loaded items only. */
   computedNotice: boolean;
 }) {
-  const conds = config.filters;
-  const { invalid } = splitConditions(conds, ctx);
-  const set = (next: Condition[]) => setConfig((c) => ({ ...c, filters: next }));
-  const usable = filterable(fields, ctx);
-  const count = conds.length;
+  const count = config.filters.length;
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -134,52 +130,81 @@ export function FilterButton({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[min(560px,calc(100vw-24px))]">
-        <div className="flex flex-col gap-3">
-          <p className="text-copy-13 font-semibold">Show items where all of these match</p>
-          {conds.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13">No filters. Every item is shown.</p>
-          ) : null}
-          <ol className="flex flex-col gap-2">
-            {conds.map((cond, i) => (
-              <ConditionRow
-                key={i}
-                index={i}
-                cond={cond}
-                ctx={ctx}
-                fields={usable}
-                problem={invalid.find((x) => x.cond === cond)?.problem}
-                onChange={(c) => set(conds.map((x, j) => (j === i ? c : x)))}
-                onRemove={() => set(conds.filter((_, j) => j !== i))}
-              />
-            ))}
-          </ol>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => set([...conds, newCondition(usable, ctx)])}
-            >
-              <Plus aria-hidden /> Add a condition
-            </Button>
-            {conds.length ? (
-              <Button type="button" size="sm" variant="ghost" onClick={() => set([])}>
-                Clear all
-              </Button>
-            ) : null}
-          </div>
-          {computedNotice ? (
-            <p className="text-muted-foreground text-label-12">
-              Filters on calculated columns apply to loaded items.
-            </p>
-          ) : null}
-        </div>
+        <ConditionsEditor
+          config={config}
+          setConfig={setConfig}
+          fields={fields}
+          ctx={ctx}
+          computedNotice={computedNotice}
+        />
       </PopoverContent>
     </Popover>
   );
 }
 
 /** One condition: field, operator and value (view filters and automation conditions). */
+/** The conditions of a view's filter ("Show items where all of these match"): the Filter popover and Filter ▾. */
+export function ConditionsEditor({
+  config,
+  setConfig,
+  fields,
+  ctx,
+  computedNotice,
+}: {
+  config: ViewConfig;
+  setConfig(update: (c: ViewConfig) => ViewConfig): void;
+  fields: Field[];
+  ctx: Ctx;
+  computedNotice: boolean;
+}) {
+  const conds = config.filters;
+  const { invalid } = splitConditions(conds, ctx);
+  const set = (next: Condition[]) => setConfig((c) => ({ ...c, filters: next }));
+  const usable = filterable(fields, ctx);
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-copy-13 font-semibold">Show items where all of these match</p>
+      {conds.length === 0 ? (
+        <p className="text-muted-foreground text-copy-13">No filters. Every item is shown.</p>
+      ) : null}
+      <ol className="flex flex-col gap-2">
+        {conds.map((cond, i) => (
+          <ConditionRow
+            key={i}
+            index={i}
+            cond={cond}
+            ctx={ctx}
+            fields={usable}
+            problem={invalid.find((x) => x.cond === cond)?.problem}
+            onChange={(c) => set(conds.map((x, j) => (j === i ? c : x)))}
+            onRemove={() => set(conds.filter((_, j) => j !== i))}
+          />
+        ))}
+      </ol>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => set([...conds, newCondition(usable, ctx)])}
+        >
+          <Plus aria-hidden /> Add a condition
+        </Button>
+        {conds.length ? (
+          <Button type="button" size="sm" variant="ghost" onClick={() => set([])}>
+            Clear all
+          </Button>
+        ) : null}
+      </div>
+      {computedNotice ? (
+        <p className="text-muted-foreground text-label-12">
+          Filters on calculated columns apply to loaded items.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function ConditionRow({
   index,
   cond,

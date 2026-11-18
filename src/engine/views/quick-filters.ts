@@ -1,10 +1,12 @@
-// The Table toolbar's quick filters (docs/05 §3.1): "All statuses" (the item status field) and "All owners" (the
-// first people field). UI state, not saved with the view. Pure: items in, items out.
+// The Table toolbar's quick views and option filters (docs/18 §4, docs/05 §3): View ▾ and Filter ▾ (the quick views
+// Main table, My items, Overdue, Due in 7 days, the alert status and Missing evidence; a column of options per option
+// and people field). UI state, not saved with the view unless a saved view stores it. Pure: items in, items out.
 import type { LabelOption } from '../fields/types';
 import { itemStatusField } from '../fields/item-status';
 import { ownerField } from '../item-panel';
+import { dueField, isAssigned } from '../my-work';
 import type { Ctx, Field, Item } from '../types';
-import { defOf, keysOf } from '../values';
+import { dateOf, defOf, isEmptyOf, isItemDone, keysOf, kindOf } from '../values';
 
 /** The field the status filter uses: the item status field (first status, else first label with a done option). */
 export const statusFilterField = (ctx: Ctx): Field | null => itemStatusField(ctx);
@@ -60,4 +62,184 @@ export function quickFilter(
     statuses,
     ctx,
   );
+}
+
+// ───────────────────────── quick views ─────────────────────────
+
+/** A quick view of the Table (View ▾ and Filter ▾'s "Show"). */
+export type QuickView = 'all' | 'mine' | 'overdue' | 'week' | 'alert' | 'evidence';
+
+export const QUICK_VIEWS: readonly QuickView[] = [
+  'all',
+  'mine',
+  'overdue',
+  'week',
+  'alert',
+  'evidence',
+];
+
+export interface QuickViewDef {
+  id: QuickView;
+  label: string;
+}
+
+/** Red and orange options that are not done need action: the Table marks them with "!" (docs/05 §3.1). */
+const needsAction = (o: LabelOption) => !o.done && (o.color === 'red' || o.color === 'orange');
+
+/**
+ * The sheet's alert status: the first option of the item status field that needs action (the "!" options). Null
+ * when the field has none.
+ */
+export function alertOption(ctx: Ctx): LabelOption | null {
+  const field = statusFilterField(ctx);
+  if (!field) return null;
+  return (defOf(field).options?.(field.config, ctx) ?? []).find(needsAction) ?? null;
+}
+
+/** The sheet's evidence fields (files): "Missing evidence" looks at them. */
+const evidenceFields = (ctx: Ctx): Field[] =>
+  [...ctx.fieldsByKey.values()].filter((f) => defOf(f).storage === 'files');
+
+/** The quick views a sheet offers: Main table always, the others when the sheet has what they look at. */
+export function quickViews(ctx: Ctx): QuickViewDef[] {
+  const out: QuickViewDef[] = [{ id: 'all', label: 'Main table' }];
+  if ([...ctx.fieldsByKey.values()].some((f) => kindOf(f, ctx) === 'people'))
+    out.push({ id: 'mine', label: 'My items' });
+  if (dueField(ctx)) {
+    out.push({ id: 'overdue', label: 'Overdue' });
+    out.push({ id: 'week', label: 'Due in 7 days' });
+  }
+  const alert = alertOption(ctx);
+  if (alert) out.push({ id: 'alert', label: alert.label });
+  if (evidenceFields(ctx).length) out.push({ id: 'evidence', label: 'Missing evidence' });
+  return out;
+}
+
+/** `iso` (YYYY-MM-DD) plus `days`. */
+function addDays(iso: string, days: number): string {
+  const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/**
+ * Does the item belong to the quick view? My items: a people field holds me. Overdue: the deadline (`dueField`) has
+ * passed and the item is not done. Due in 7 days: the deadline is today or in the next 7 days, not done. The alert
+ * status: the status holds it. Missing evidence: every evidence field is empty.
+ */
+export function inQuickView(item: Item, view: QuickView, ctx: Ctx): boolean {
+  switch (view) {
+    case 'all':
+      return true;
+    case 'mine':
+      return isAssigned(item, ctx, ctx.userId);
+    case 'overdue':
+    case 'week': {
+      const field = dueField(ctx);
+      const date = field ? dateOf(item, field, ctx) : null;
+      if (!date || isItemDone(item, ctx)) return false;
+      return view === 'overdue'
+        ? date < ctx.today
+        : date >= ctx.today && date <= addDays(ctx.today, 7);
+    }
+    case 'alert': {
+      const field = statusFilterField(ctx);
+      const alert = alertOption(ctx);
+      return !!field && !!alert && keysOf(item, field, ctx).includes(alert.id);
+    }
+    case 'evidence': {
+      const fields = evidenceFields(ctx);
+      return fields.length > 0 && fields.every((f) => isEmptyOf(item, f, ctx));
+    }
+  }
+}
+
+export const applyQuickView = (items: Item[], view: QuickView, ctx: Ctx): Item[] =>
+  view === 'all' ? items : items.filter((it) => inQuickView(it, view, ctx));
+
+/** How many of `items` each offered quick view shows. */
+export function quickViewCounts(items: Item[], ctx: Ctx): Map<QuickView, number> {
+  return new Map(quickViews(ctx).map((v) => [v.id, applyQuickView(items, v.id, ctx).length]));
+}
+
+/**
+ * The key figures above the view tabs (docs/18 §4): Items, Open (when the sheet has a done state), Overdue, the alert
+ * status and Missing evidence, each when the sheet can answer it. At most five, never buttons.
+ */
+export function keyFigures(
+  items: Item[],
+  ctx: Ctx,
+): { id: string; label: string; value: number }[] {
+  const out = [{ id: 'items', label: 'Items', value: items.length }];
+  if (statusFilterField(ctx))
+    out.push({ id: 'open', label: 'Open', value: items.filter((i) => !isItemDone(i, ctx)).length });
+  const counts = quickViewCounts(items, ctx);
+  for (const v of quickViews(ctx))
+    if (v.id === 'overdue' || v.id === 'alert' || v.id === 'evidence')
+      out.push({ id: v.id, label: v.label, value: counts.get(v.id) ?? 0 });
+  return out.slice(0, 5);
+}
+
+// ───────────────────────── option filters (Filter ▾) ─────────────────────────
+
+/** Field id → the option ids (or person ids) to keep. Any of them within a field; every field must match. */
+export type ColumnFilters = Readonly<Record<string, readonly string[]>>;
+
+export function applyColumnFilters(items: Item[], filters: ColumnFilters, ctx: Ctx): Item[] {
+  let out = items;
+  for (const [fieldId, keys] of Object.entries(filters)) {
+    if (!keys.length) continue;
+    const field = [...ctx.fieldsByKey.values()].find((f) => f.id === fieldId) ?? null;
+    out = filterByKeys(out, field, new Set(keys), ctx);
+  }
+  return out;
+}
+
+export const columnFilterCount = (filters: ColumnFilters) =>
+  Object.values(filters).reduce((n, keys) => n + keys.length, 0);
+
+/** Toggle one key of one field's filter (a field left with no key drops out). */
+export function toggleColumnFilter(
+  filters: ColumnFilters,
+  fieldId: string,
+  key: string,
+): ColumnFilters {
+  const cur = filters[fieldId] ?? [];
+  const next = cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key];
+  const { [fieldId]: _drop, ...rest } = filters;
+  void _drop;
+  return next.length ? { ...rest, [fieldId]: next } : rest;
+}
+
+export interface FilterChoice {
+  id: string;
+  label: string;
+  color: string;
+  count: number;
+}
+
+/** The fields Filter ▾ shows a column for: option and people fields the person may see, in field order. */
+export function filterFields(ctx: Ctx): Field[] {
+  return [...ctx.fieldsByKey.values()]
+    .filter((f) => !f.hidden && defOf(f).storage === 'values')
+    .filter((f) => kindOf(f, ctx) === 'people' || !!defOf(f).options)
+    .sort((a, b) => (a.position < b.position ? -1 : a.position > b.position ? 1 : 0));
+}
+
+/** A field's choices with how many of `items` hold each: options in their order, people present, most first. */
+export function filterChoices(items: Item[], field: Field, ctx: Ctx): FilterChoice[] {
+  const n = new Map<string, number>();
+  for (const it of items) for (const k of keysOf(it, field, ctx)) n.set(k, (n.get(k) ?? 0) + 1);
+  if (kindOf(field, ctx) === 'people')
+    return [...n.entries()]
+      .map(([id, count]) => {
+        const p = ctx.people.get(id);
+        return { id, label: p?.name ?? 'Former member', color: p?.color ?? 'grey', count };
+      })
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'en-GB'));
+  return (defOf(field).options?.(field.config, ctx) ?? []).map((o) => ({
+    id: o.id,
+    label: o.label,
+    color: o.color,
+    count: n.get(o.id) ?? 0,
+  }));
 }

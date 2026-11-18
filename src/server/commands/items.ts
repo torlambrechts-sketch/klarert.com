@@ -22,6 +22,7 @@ import {
   bulkSetValuesInput,
   clickButtonInput,
   createItemInput,
+  duplicateItemsInput,
   finishItemInput,
   lockItemInput,
   moveItemsInput,
@@ -316,6 +317,118 @@ export async function createItem(input: unknown): Promise<Result<ItemResult>> {
       return ok({ item: after!, messages, mutationId: v.mutationId });
     },
     'createItem',
+  );
+}
+
+/**
+ * Duplicate items (docs/18 §5): each copy takes the original's name and stored values, in the same group, at the
+ * position the browser chose. Links, files, comments and sub-items stay with the original. Values are validated with
+ * the field registry as for a new item: a value that no longer passes, or a unique value already taken, is left out,
+ * and an item whose copy would break a blocking rule is skipped with the reason. Each copy is created by
+ * `create_item` (its own "created" activity entry) and runs the automations of a new item.
+ */
+export async function duplicateItems(input: unknown): Promise<Result<BulkResult>> {
+  const p = duplicateItemsInput.safeParse(input);
+  if (!p.success) return invalid(p.error);
+  const v = p.data;
+  return withOrg(
+    v.org,
+    'editor',
+    async ({ supabase, orgId, role, user }) => {
+      const w = await loadWriteContext(
+        supabase,
+        { orgId, userId: user.id, role },
+        v.sheetId,
+        v.items.map((i) => i.itemId),
+      );
+      if (!w) return sheetNotFound();
+      const copies: Item[] = [];
+      const skipped: BulkResult['skipped'] = [];
+      const events: AutomationEvent[] = [];
+      const now = w.ctx.now.toISOString();
+      const actor = userActor(user.id);
+      for (const { itemId, position } of v.items) {
+        const item = w.items.get(itemId);
+        if (!item || item.archivedAt || item.sheetId !== v.sheetId) {
+          skipped.push({ itemId, message: 'This item no longer exists.' });
+          continue;
+        }
+        const blank: Item = {
+          id: '00000000-0000-0000-0000-000000000000',
+          sheetId: v.sheetId,
+          groupId: item.groupId,
+          seq: 0,
+          displayId: '',
+          name: item.name,
+          values: defaultValues(w.fields, w.ctx),
+          position,
+          locked: false,
+          createdAt: now,
+          updatedAt: now,
+        };
+        // stored values only: links, files and protected values are not copied
+        const stored = Object.fromEntries(
+          w.fields
+            .filter((f) => resolveFieldType(f.type)?.storage === 'values')
+            .filter((f) => item.values[f.id] !== undefined && item.values[f.id] !== null)
+            .map((f) => [f.id, item.values[f.id]]),
+        );
+        const first = planValues(blank, w.fields, stored, w.ctx, sha256);
+        const rejected = new Set(first.rejected.map((r) => r.fieldId));
+        const plan = rejected.size
+          ? planValues(
+              blank,
+              w.fields,
+              Object.fromEntries(Object.entries(stored).filter(([id]) => !rejected.has(id))),
+              w.ctx,
+              sha256,
+            )
+          : first;
+        const conflicts = await uniqueConflicts(
+          supabase,
+          v.sheetId,
+          null,
+          w.fields,
+          plan.next.values,
+        );
+        const values: Record<string, Json> = { ...plan.next.values };
+        for (const id of conflicts) delete values[id];
+        const check = checkCreate({ ...plan.next, values }, w.fields, w.ctx, {
+          isUnique: () => true,
+        });
+        if (check.blocking.length > 0) {
+          skipped.push({ itemId, message: check.blocking.map((i) => i.message).join(' ') });
+          continue;
+        }
+        const { data, error } = await supabase.rpc('create_item', {
+          p_sheet: v.sheetId,
+          p_group: item.groupId,
+          p_name: item.name,
+          p_position: position,
+          p_values: values as Json,
+        });
+        if (error) {
+          const r = fromDbError(error);
+          skipped.push({ itemId, message: r.ok ? '' : r.error.message });
+          continue;
+        }
+        const copy = await withRestrictedValues(supabase, toItem(data));
+        copies.push(copy);
+        events.push({ type: 'item.created', sheetId: v.sheetId, itemId: copy.id, actor });
+      }
+      const messages = await automations(
+        events,
+        { orgId, userId: user.id, workspace: v.org },
+        true,
+      );
+      return ok({
+        items: await settled(supabase, copies, messages),
+        skipped,
+        messages,
+        mutationId: v.mutationId,
+      });
+    },
+    'duplicateItems',
   );
 }
 

@@ -430,10 +430,7 @@ export function ItemPanel(props: ItemPanelProps) {
                   </span>
                 ) : null}
               </p>
-              <Tabs.List
-                aria-label="Item sections"
-                className="-mb-px flex overflow-x-auto pt-2"
-              >
+              <Tabs.List aria-label="Item sections" className="-mb-px flex overflow-x-auto pt-2">
                 {/* two tabs, then More ▾ with the rest (docs/18 §3, the menu rule) */}
                 <OverflowTabs
                   label="Item sections"

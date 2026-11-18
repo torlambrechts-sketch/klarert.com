@@ -1,5 +1,6 @@
-// The sheet toolbar's controls (docs/05 §3): the board design's 38 px row of selects and buttons. One place so the
-// search, Actions, groups, status, owner, sort, filter, columns, density and automations controls line up.
+// The sheet toolbar's controls (docs/05 §3, docs/18 C8): one 38 px row, 8 px apart: View ▾, the search, Filter ▾,
+// Sort ▾, More ▾ and ⚡ n on the Table (the other views keep the search, groups, sort and filter). One place so the
+// menu triggers, the search and the automations button line up.
 
 /** A select-like trigger: 14 px words (muted while nothing is chosen, see `toolbarPlaceholder`), a chevron at the end. */
 export const toolbarSelect =
@@ -8,7 +9,7 @@ export const toolbarSelect =
 /** The words of a select trigger while it shows everything (All statuses, All owners, Default order). */
 export const toolbarPlaceholder = 'text-muted-foreground';
 
-/** An outline button of the toolbar (Filter, Columns, Actions, Automations): 13.5 px medium words, 15 px icons. */
+/** An outline button or menu trigger of the toolbar (View, Filter, Sort, More, Automations): medium words, 15 px icons. */
 export const toolbarButton =
   "h-[38px] px-3.5 has-[>svg]:px-3.5 text-label-13 font-medium shadow-none [&_svg:not([class*='size-'])]:size-[15px]";
 

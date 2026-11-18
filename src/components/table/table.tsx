@@ -98,6 +98,7 @@ import {
   byPosition,
   columnId,
   columnRuns,
+  cycleSort,
   endsCard,
   GROUP_LABEL_H,
   ownLine,
@@ -1130,6 +1131,7 @@ export function Table({
   });
   const columnActions = useStableEvent((field: Field, index: number): ColumnMenuActions => ({
     sort: (dir) => setConfig((c) => ({ ...c, sort: dir ? [{ fieldKey: field.key, dir }] : [] })),
+    cycleSort: () => setConfig((c) => ({ ...c, sort: cycleSort(c.sort, field.key) })),
     hide: () => {
       store.getState().setHidden(field.id, true);
       toast(`${field.name} hidden. Show it again from Columns.`);

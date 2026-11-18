@@ -65,6 +65,15 @@ export const moveItemsInput = z.object({
     .max(5000),
 });
 
+/** Duplicate items (the row ⋯ menu and the bulk bar): each copy at the given position in its item's group. */
+export const duplicateItemsInput = z.object({
+  ...base,
+  items: z
+    .array(z.object({ itemId: uuid, position }))
+    .min(1)
+    .max(500, 'Duplicate at most 500 items at once.'),
+});
+
 export const archiveItemsInput = z.object({
   ...base,
   itemIds: z.array(uuid).min(1).max(5000),

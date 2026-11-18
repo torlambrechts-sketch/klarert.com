@@ -16,6 +16,8 @@ import {
   columnRuns,
   GROUP_LABEL_H,
   stickyHeaders,
+  cycleSort,
+  fillColumns,
 } from './table-model';
 import { cellColumns } from '@/engine/clipboard';
 
@@ -387,5 +389,50 @@ describe('column groups in the table', () => {
 
   it('the column header grows by the label line', () => {
     expect(rowHeight('header', 'comfortable', true)).toBe(rowHeight('header') + GROUP_LABEL_H);
+  });
+});
+
+describe('fillColumns (docs/18 C2)', () => {
+  it('grows every column in proportion to its base until the table fills the card', () => {
+    // fixed 44 + 380 + 52 = 476; bases 140 + 84 + 160 = 384; card 1244 leaves 384 extra
+    const w = fillColumns([140, 84, 160], 476, 1244);
+    expect(w).toEqual([280, 168, 320]);
+    expect(476 + w.reduce((a, b) => a + b, 0)).toBe(1244);
+  });
+
+  it('puts the rounding remainder on the last column so the right edge meets the card', () => {
+    const w = fillColumns([100, 100, 100], 100, 1001);
+    expect(w.reduce((a, b) => a + b, 0)).toBe(901);
+    expect(w.slice(0, 2)).toEqual([300, 300]);
+  });
+
+  it('never makes a column narrower than its base: a narrow card scrolls', () => {
+    expect(fillColumns([140, 84], 476, 500)).toEqual([140, 84]);
+    expect(fillColumns([140, 84], 476, 700)).toEqual([140, 84]);
+  });
+
+  it('keeps resized widths as the base', () => {
+    const w = fillColumns([300, 100], 0, 800);
+    expect(w).toEqual([600, 200]);
+  });
+
+  it('leaves no columns alone', () => expect(fillColumns([], 476, 2000)).toEqual([]));
+});
+
+describe('cycleSort', () => {
+  it('cycles ascending, descending, off', () => {
+    const a1 = cycleSort([], 'due');
+    expect(a1).toEqual([{ fieldKey: 'due', dir: 'asc' }]);
+    const a2 = cycleSort(a1, 'due');
+    expect(a2).toEqual([{ fieldKey: 'due', dir: 'desc' }]);
+    expect(cycleSort(a2, 'due')).toEqual([]);
+  });
+
+  it('keeps the other levels', () => {
+    const rules = [{ fieldKey: 'status', dir: 'asc' as const }];
+    expect(cycleSort(rules, 'due')).toEqual([
+      { fieldKey: 'status', dir: 'asc' },
+      { fieldKey: 'due', dir: 'asc' },
+    ]);
   });
 });

@@ -2,6 +2,11 @@
 
 import { createContext, useContext } from 'react';
 import { createStore, useStore, type StoreApi } from 'zustand';
+import {
+  toggleColumnFilter,
+  type ColumnFilters,
+  type QuickView,
+} from '@/engine/views/quick-filters';
 
 // UI state of one sheet's Table (Zustand, UI state only): the active cell and range, the open editor, selected
 // rows, collapsed groups and hidden columns. Hidden columns belong to the active view (the sheet page syncs them
@@ -24,10 +29,12 @@ export interface GridState {
   settingsFor: string | null;
   /** Table "Group by": a field id, or null for the sheet's own groups. UI state only. */
   groupBy: string | null;
-  /** Table person filter: user ids; empty = everyone. */
-  people: ReadonlySet<string>;
-  /** Table status filter: option ids of the item status field; empty = every status. */
-  statuses: ReadonlySet<string>;
+  /** The Table's quick view (View ▾, Filter ▾ "Show"). */
+  quick: QuickView;
+  /** Filter ▾'s option filters: field id → option or person ids. */
+  colFilters: ColumnFilters;
+  /** The items the Table shows, in order (set by the Table view; Export to CSV reads it). */
+  shownIds: readonly string[];
   /**
    * Table filter on one value of another field, set by clicking a bar in the Insights view (UI state, a removable
    * chip in the toolbar). `label` names it: "Severity: High".
@@ -55,10 +62,11 @@ export interface GridState {
   setWidth(fieldId: string, width: number | null): void;
   openSettings(fieldId: string | null): void;
   setGroupBy(fieldId: string | null): void;
-  togglePerson(userId: string): void;
-  clearPeople(): void;
-  toggleStatus(optionId: string): void;
-  clearStatuses(): void;
+  setQuick(view: QuickView): void;
+  toggleColFilter(fieldId: string, key: string): void;
+  setColFilters(filters: ColumnFilters): void;
+  /** Filter ▾ "Clear all": the quick view, the option filters, the value filter and missing required. */
+  clearToolbarFilters(): void;
   setValueFilter(f: GridState['valueFilter']): void;
   setMissingOnly(on: boolean): void;
   setDensity(d: GridState['density']): void;
@@ -81,11 +89,13 @@ export function createGridStore(): StoreApi<GridState> {
     widths: {},
     settingsFor: null,
     groupBy: null,
-    people: new Set(),
-    statuses: new Set(),
+    quick: 'all',
+    colFilters: {},
+    shownIds: [],
     valueFilter: null,
     missingOnly: false,
-    density: 'comfortable',
+    // 40 px rows by default; 52 px is the comfortable density (owner decision 18 Nov 2026, docs/18 C4)
+    density: 'compact',
     rowMenu: null,
     addFieldAt: null,
     columnsMenu: null,
@@ -95,20 +105,12 @@ export function createGridStore(): StoreApi<GridState> {
     edit: (cell) => set({ editing: cell }),
     setSelected: (ids, last = null) => set({ selected: new Set(ids), lastSelected: last }),
     setGroupBy: (fieldId) => set({ groupBy: fieldId }),
-    togglePerson: (userId) => {
-      const next = new Set(get().people);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
-      set({ people: next });
-    },
-    clearPeople: () => set({ people: new Set() }),
-    toggleStatus: (optionId) => {
-      const next = new Set(get().statuses);
-      if (next.has(optionId)) next.delete(optionId);
-      else next.add(optionId);
-      set({ statuses: next });
-    },
-    clearStatuses: () => set({ statuses: new Set() }),
+    setQuick: (quick) => set({ quick }),
+    toggleColFilter: (fieldId, key) =>
+      set({ colFilters: toggleColumnFilter(get().colFilters, fieldId, key) }),
+    setColFilters: (colFilters) => set({ colFilters }),
+    clearToolbarFilters: () =>
+      set({ quick: 'all', colFilters: {}, valueFilter: null, missingOnly: false }),
     setValueFilter: (valueFilter) => set({ valueFilter }),
     setMissingOnly: (missingOnly) => set({ missingOnly }),
     setDensity: (density) => set({ density }),

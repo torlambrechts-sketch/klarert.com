@@ -7,6 +7,7 @@ import {
   ArrowLeftToLine,
   ArrowRightToLine,
   ArrowUpAZ,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Copy,
@@ -37,6 +38,8 @@ import { systemColumnText } from '@/engine/packs/system';
 
 export interface ColumnMenuActions {
   sort(dir: 'asc' | 'desc' | null): void;
+  /** A click on the header: ascending, descending, off (docs/18 §4). */
+  cycleSort(): void;
   hide(): void;
   settings(): void;
   insert(side: 'left' | 'right'): void;
@@ -134,26 +137,35 @@ export function ColumnHeader({
           <GripVertical className="size-3" />
         </span>
       ) : null}
+      {/* a click on the name sorts (ascending, descending, off); the chevron opens the column menu */}
+      <button
+        type="button"
+        onClick={actions.cycleSort}
+        title={`Sort by ${field.name}`}
+        className={cn(
+          'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-3 text-left font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
+          // the system-column mark sits right after the name
+          field.locked || field.system ? 'flex-initial pr-0' : 'flex-1 pr-1',
+        )}
+      >
+        <span className="truncate">{field.name}</span>
+        {field.restrictedTo ? (
+          <Lock className="size-3 shrink-0" aria-label="restricted field" />
+        ) : null}
+        {sorted ? (
+          sorted === 'asc' ? (
+            <ArrowDownAZ className="size-3.5 shrink-0" aria-label="sorted A to Z" />
+          ) : (
+            <ArrowUpAZ className="size-3.5 shrink-0" aria-label="sorted Z to A" />
+          )
+        ) : null}
+      </button>
       <DropdownMenu>
         <DropdownMenuTrigger
-          className={cn(
-            'hover:text-ink text-muted-foreground text-label-12 flex h-full min-w-0 items-center gap-1.5 pl-3 text-left font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset',
-            // the system-column mark sits right after the name
-            field.locked || field.system ? 'flex-initial pr-0' : 'flex-1 pr-[14px]',
-          )}
+          className="text-muted-foreground hover:text-ink hover:bg-gray-alpha-100 focus-visible:ring-focus data-[state=open]:text-ink mr-1 grid size-6 shrink-0 place-items-center rounded-md opacity-0 outline-none group-focus-within/col:opacity-100 group-hover/col:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 data-[state=open]:opacity-100"
           aria-label={`${field.name} column menu`}
         >
-          <span className="truncate">{field.name}</span>
-          {field.restrictedTo ? (
-            <Lock className="size-3 shrink-0" aria-label="restricted field" />
-          ) : null}
-          {sorted ? (
-            sorted === 'asc' ? (
-              <ArrowDownAZ className="size-3.5 shrink-0" aria-label="sorted A to Z" />
-            ) : (
-              <ArrowUpAZ className="size-3.5 shrink-0" aria-label="sorted Z to A" />
-            )
-          ) : null}
+          <ChevronDown className="size-3.5" aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
           <DropdownMenuItem onSelect={() => actions.sort('asc')}>
