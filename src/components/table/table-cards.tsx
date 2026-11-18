@@ -291,8 +291,9 @@ function ItemCard({
             return (
               <div key={f.id} className="contents">
                 <dt className="text-muted-foreground text-label-12 truncate">{f.name}</dt>
-                {/* the Table's look: option values as solid blocks (docs/18 C1, docs/05 §5) */}
-                <dd className="relative flex min-h-[34px] min-w-0 items-center overflow-hidden rounded-[4px]">
+                {/* the Table's look: option values as solid blocks (docs/18 C1, docs/05 §5). The dd is positioned for
+                    the block, so it would sit above the name button's card-wide hit area: let clicks through to it */}
+                <dd className="pointer-events-none relative flex min-h-[34px] min-w-0 items-center overflow-hidden rounded-[4px]">
                   <ui.Cell
                     value={cellValue(item, f, ctx) as never}
                     field={f}
