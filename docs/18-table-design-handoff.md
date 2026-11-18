@@ -4,8 +4,8 @@ The brief for rebuilding the sheet Table, its toolbar and its menus to match the
 with `docs/05-ui-layout.md` §3 and §6. Behaviour reference: `reference/keptrow-table-prototype.html` (open it in a
 browser; the sheet page is the third icon in the left rail).
 
-**The one rule of this document.** `docs/05` wins wherever this document disagrees with it, until the owner
-decides the conflicts in §2. Everything outside §2 adds to `docs/05` and does not contradict it.
+**Decided 18 Nov 2026.** The owner settled the conflicts in §2; `docs/05` now states the decisions. If this document and
+`docs/05` still disagree anywhere, `docs/05` wins and the difference is a doc bug to fix.
 
 ## 1. How to use the prototype
 
@@ -20,21 +20,21 @@ decides the conflicts in §2. Everything outside §2 adds to `docs/05` and does 
   Table, `@tanstack/react-virtual`, Radix (shadcn) menus and popovers, and the field UI registry (rule 1 in
   CLAUDE.md: no `switch` on field types outside `src/engine/fields/`).
 
-## 2. Conflicts with docs/05: owner decision needed
+## 2. Decisions on the conflicts with docs/05 (owner, 18 Nov 2026)
 
-Each row is a place where the prototype looks or behaves differently from `docs/05`. Build the `docs/05` column
-until the owner picks; then update `docs/05` in the same PR as the code.
+Each row was a place where the prototype differed from `docs/05`. The last column is what the owner chose; `docs/05`
+has been updated to match.
 
-| # | Topic | docs/05 today | Prototype | Options |
+| # | Topic | docs/05 before | Prototype | Decision |
 |---|---|---|---|---|
-| C1 | One-option values (status, dropdown, severity) | A box that hugs its words, tinted `--tint-<colour>-bg/-line/-ink` (§3.1 Cells) | The whole cell is the option's solid colour with white words (`--solid-<colour>`), monday style | Keep tint · Solid full cell · Solid full cell in compact density only |
-| C2 | Column widths | Columns keep their widths; the trailing column takes the room left (§3.1) | Every column grows in proportion to its default width until the table fills the card; never narrower than the default | Keep trailing column · Proportional fill |
-| C3 | Brand and type | Geist, monochrome, black primary buttons, Geist Sans (§6) | Navy `#0000A0` / `#00005E`, Figtree in the hand-off bundle | Keep Geist · Adopt navy as `--brand` |
-| C4 | Row height | 52 px, compact 40 px | 40 px | Keep · 40 px default |
-| C5 | Sticky name column edge | 1 px `--line`, no shadow (§3.1 Wide tables) | Soft shadow `4px 0 8px -4px` on the name column and the "…" column | Keep line · Shadow |
-| C6 | Group summaries | Off by default; per column from its menu (§3.1) | On for every column with a summary function | Keep off · On by default |
-| C7 | People cells | 24 px avatar | 28 px avatar and the short name | Keep · Avatar and name |
-| C8 | Toolbar | Search, Actions, Show one group, status and owner filters, Sort, Filter, Columns, density, ⚡ (§3) | New item, View ▾, Search, Filter ▾, Sort ▾, More ▾ (§4) | Keep · Prototype toolbar |
+| C1 | One-option values (status, dropdown, severity) | A box that hugs its words, tinted `--tint-<colour>-bg/-line/-ink` (§3.1 Cells) | The whole cell is the option's solid colour with white words (`--solid-<colour>`), monday style | **Solid full cell**, using `--solid-<colour>` so white words stay ≥ 4.5:1 |
+| C2 | Column widths | Columns keep their widths; the trailing column takes the room left (§3.1) | Every column grows in proportion to its default width until the table fills the card; never narrower than the default | **Proportional fill**, never below the default or resized width |
+| C3 | Brand and type | Geist, monochrome, black primary buttons, Geist Sans (§6) | Navy `#0000A0` / `#00005E`, Figtree in the hand-off bundle | **Navy as `--brand`**; Geist fonts, scales and layout stay (no Figtree: fonts are self-hosted Geist) |
+| C4 | Row height | 52 px, compact 40 px | 40 px | **40 px**; 52 px as the comfortable density |
+| C5 | Sticky name column edge | 1 px `--line`, no shadow (§3.1 Wide tables) | Soft shadow `4px 0 8px -4px` on the name column and the "…" column | **Keep the 1 px line** (no shadows) |
+| C6 | Group summaries | Off by default; per column from its menu (§3.1) | On for every column with a summary function | **On by default** |
+| C7 | People cells | 24 px avatar | 28 px avatar and the short name | **Avatar and short name** |
+| C8 | Toolbar | Search, Actions, Show one group, status and owner filters, Sort, Filter, Columns, density, ⚡ (§3) | New item, View ▾, Search, Filter ▾, Sort ▾, More ▾ (§4) | **Prototype toolbar** (View, Search, Filter, Sort, More, ⚡) |
 
 ## 3. The menu rule (applies everywhere)
 
@@ -101,8 +101,8 @@ Measurements from the prototype (subject to C1–C7):
 - **Columns**: checkbox 44 px (sticky left, 6 px left bar in the group colour), name 340 px (sticky, ID in mono then
   the name as a link, sub-item chip, checklist chip), field columns at the registry width, actions 52 px (sticky
   right, ⋯ menu: Open item, Duplicate, Notify the owner, Delete…). Header cells are sort buttons; a dot marks a
-  filtered column. 1 px `#E3E3E3` grid lines; the right edge is a 1 px stronger line with a 6 px radius at the top
-  and bottom right so the table has a clear end.
+  filtered column. Grid lines in `--row-line` and `--col-line`; the right edge is a 1 px `--surface-line` with an 8 px
+  radius at the top and bottom right so the table has a clear end.
 - **Rows** 40 px; hover and selected rows get a soft background.
 - **Option cells**: click opens a picker under the cell (listbox, coloured options, the current one ringed;
   dropdown fields add "Clear"). "!" stays in front of action-needed values and "✓" in front of done, so colour is
@@ -141,17 +141,16 @@ Actions as cell edits.
 
 ## 7. Acceptance checks
 
-- [ ] The owner has decided C1–C8 and `docs/05` says what was decided.
+- [x] The owner has decided C1–C8 and `docs/05` says what was decided.
 - [ ] No button group on any screen has more than three related buttons (§3 table).
 - [ ] Every menu opens with Enter, moves with ↑/↓, closes with Escape and returns focus to its trigger.
 - [ ] Menus inside the table are not clipped by its scroll area.
 - [ ] Option and people pickers change one cell, or every selected row from the bulk bar, through commands; the
       activity log has one entry per item.
-- [ ] Group summaries show the battery, Σ, date range and evidence count as in the prototype (if C6 is "on").
-- [ ] At 1920 px with the side menu collapsed the table fills the card and has a clear right edge (if C2 is
-      "proportional").
+- [ ] Group summaries show the battery, Σ, date range and evidence count as in the prototype.
+- [ ] At 1920 px with the side menu collapsed the table fills the card and has a clear right edge.
 - [ ] At 390 px nothing scrolls the page sideways; tables scroll inside their card (phones get cards, `docs/05` §5).
 - [ ] Status shows text and a symbol for action-needed and done; contrast of white words on every solid option
-      colour is at least 4.5:1 (if C1 is "solid").
+      colour is at least 4.5:1.
 - [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` pass; Playwright covers the menu keyboard flow, the
       bulk bar and grouping by status.
