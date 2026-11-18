@@ -190,7 +190,6 @@ test('status rules block until the field is filled; comment on value posts an up
 
   // Done is blocked while Due date is empty
   await cell(page, 'Leaking valve', 'Status').click();
-  await page.keyboard.press('Enter');
   await page.getByRole('option', { name: /Done/ }).click();
   await expect(page.getByText('Add the due date before closing.')).toBeVisible();
   await expect(cell(page, 'Leaking valve', 'Status')).not.toContainText('Done');
@@ -202,7 +201,6 @@ test('status rules block until the field is filled; comment on value posts an up
   await page.keyboard.press('Enter');
   await expect(cell(page, 'Leaking valve', 'Due date')).toContainText('1 Dec');
   await cell(page, 'Leaking valve', 'Status').click();
-  await page.keyboard.press('Enter');
   await page.getByRole('option', { name: /Done/ }).click();
   await expect(cell(page, 'Leaking valve', 'Status')).toContainText('Done');
 
@@ -376,8 +374,8 @@ test('a locked item blocks an editor but not an admin', async ({ page, browser }
   await signIn(james, 'james@example.com');
   await james.goto(url);
   await expect(james.getByRole('grid').getByText('Locked: Approved by QA')).toBeAttached();
+  // a click tries to open the picker (docs/18 §5): the lock answers instead
   await cell(james, 'Approved policy', 'Status').click();
-  await james.keyboard.press('Enter');
   await expect(
     james.getByText('This item is locked: Approved by QA. Only owners and admins can change it.'),
   ).toBeVisible();
@@ -386,7 +384,6 @@ test('a locked item blocks an editor but not an admin', async ({ page, browser }
 
   // the admin can still change it
   await cell(page, 'Approved policy', 'Status').click();
-  await page.keyboard.press('Enter');
   await page.getByRole('option', { name: /Working on it/ }).click();
   await expect(cell(page, 'Approved policy', 'Status')).toContainText('Working on it');
   await page.reload();
@@ -406,7 +403,6 @@ test('a second person sees a cell edit through realtime', async ({ page, browser
   await maria.waitForTimeout(1500); // let the realtime channel join
 
   await cell(page, 'Shared item', 'Status').click();
-  await page.keyboard.press('Enter');
   await page.getByRole('option', { name: /Stuck/ }).click();
   await expect(cell(page, 'Shared item', 'Status')).toContainText('Stuck');
   await expect(cell(maria, 'Shared item', 'Status')).toContainText('Stuck', { timeout: 10_000 });
