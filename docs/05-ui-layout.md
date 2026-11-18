@@ -1,6 +1,6 @@
 # 05 · UI layout and screens
 
-Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it is a self-contained mockup; click around, resize to 390 px) for screens and flows. The look is Vercel's Geist design system as set out in §6; where the mockup's styling differs, §6 wins. Where the mockup shows things outside the MVP scope (dashboards with readiness, Speak-up, partner console, app builder), keep the slot in the menu out of the MVP unless docs/01 lists it.
+Behaviour reference: open `reference/compliance-os-sun-v2.html` in a browser (it is a self-contained mockup; click around, resize to 390 px) for screens and flows. The look is the Keptrow look in `docs/18-keptrow-look-handoff.md` (owner decision 18 Nov 2026; it replaces the Geist look of §6): docs/18 wins on look, this document wins on content, routes, menu groups, behaviour and phone navigation. Where the mockup shows things outside the MVP scope (dashboards with readiness, Speak-up, partner console, app builder), keep the slot in the menu out of the MVP unless docs/01 lists it.
 
 ## 1. Routes (Next.js App Router)
 
@@ -127,7 +127,7 @@ The words are always "two-step sign-in" and "authenticator app", never "MFA" or 
 
 ## 2. App shell
 
-The shell and pages use the Geist design system (§6): a Vercel-style side menu, Geist grays, flat bordered cards.
+> **Look superseded 18 Nov 2026.** The shell takes the Keptrow look (docs/18 §4): white top bar, navy rail, pale side panel holding the menu groups below, navy hero with the first card overlapping it. The structure, groups, roles and behaviour below still apply; measurements and colours come from docs/18.
 
 ```
 ┌──────────────┬──────────────────────────────────────────────────────────┐
@@ -181,7 +181,7 @@ Header: crumb (folder / sheet) in the top bar, then chips: Restricted, Archived 
 
 ### 3.1 Table view (default)
 
-> **Redesigned 18 Nov 2026.** The owner adopted the monday.com look from `reference/keptrow-table-prototype.html` (`docs/18-table-design-handoff.md`): solid option cells, columns that fill the card, 40 px rows, summaries on by default, avatar and name in people cells, the new toolbar, navy as the brand colour, and the rule that more than three related buttons become one dropdown menu. This section states the decisions; docs/18 has the measurements and behaviour.
+> **Redesigned 18 Nov 2026.** The owner adopted the monday.com look from `reference/keptrow-prototype.html` (`docs/18-keptrow-look-handoff.md` §8): solid option cells, columns that fill the card, 40 px rows, summaries on by default, avatar and name in people cells, the new toolbar, navy as the brand colour, and the rule that more than three related buttons become one dropdown menu. This section states the decisions; docs/18 has the measurements and behaviour.
 
 One view for working through items as rows; it replaced the former List and Grid views. `?view=list` and `?view=grid` (old links, saved defaults) open the Table, and saved views stored with type `list` or `grid` load as Table views (mapped when read; `views.type` stores a Table view as `list` until a migration adds `table`).
 - Hint line (dismissible, remembered): "**Click a cell, then click again or press Enter to edit.** Click a name to open the item. **+** adds a column. 🔒 kept by the app."
@@ -313,7 +313,9 @@ Owner decision (15 Nov 2026, board consulted; the owner's design "Flow Config Ex
 - Item panel full screen (above the bottom bar); summary strip two columns; Expand hidden.
 - Tables on other pages scroll horizontally inside their card.
 
-## 6. Design system: Geist
+## 6. Design system: Geist (superseded)
+
+> **Superseded 18 Nov 2026.** The owner replaced this look with the Keptrow look: tokens, Figtree type, shell, components and pages in `docs/18-keptrow-look-handoff.md` §3–§8. Keep this section only for what docs/18 does not cover (the 4 px spacing grid, Geist Mono for codes); where they differ, docs/18 wins.
 
 The whole app follows Vercel's Geist design system with the stack we already have (Geist Sans and Mono self-hosted, Tailwind v4, shadcn/ui on Radix, lucide-react). No other UI library. Everything below lives in `src/app/globals.css`; components use the tokens and type styles, never hex colours or ad-hoc px font sizes.
 
