@@ -375,8 +375,13 @@ export function TableFilterMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Dialog open={conditions} onOpenChange={setConditions}>
-        <DialogContent className="w-[min(600px,calc(100vw-24px))]">
+      {/* not modal: the table behind it shows the matching rows while the conditions change */}
+      <Dialog open={conditions} onOpenChange={setConditions} modal={false}>
+        <DialogContent
+          className="w-[min(600px,calc(100vw-24px))]"
+          // it closes with Escape or its close button, not when focus or a click goes to the table behind it
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogTitle className="text-heading-16">Conditions</DialogTitle>
           <DialogDescription className="sr-only">
             Show only the items that match every condition.
