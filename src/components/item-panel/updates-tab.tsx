@@ -95,7 +95,7 @@ function MentionTextarea({
         aria-expanded={show}
         aria-controls={listId}
         aria-activedescendant={show ? `${listId}-${active}` : undefined}
-        className="border-input focus-visible:border-focus focus-visible:ring-focus/25 bg-background-100 text-label-13 min-h-20 w-full resize-y rounded-md border px-2 py-1.5 outline-none focus-visible:ring-2"
+        className="border-input focus-visible:border-focus focus-visible:ring-focus/25 bg-surface text-13 min-h-20 w-full resize-y rounded-md border px-2 py-1.5 outline-none focus-visible:ring-2"
         value={value}
         maxLength={10_000}
         onChange={(e) => {
@@ -135,7 +135,7 @@ function MentionTextarea({
         role="listbox"
         aria-label="People and job roles"
         hidden={!show}
-        className="border-line bg-background-100 shadow-menu absolute top-full left-0 z-10 mt-1 max-h-56 w-72 overflow-auto rounded-lg border p-1"
+        className="border-line bg-surface shadow-menu absolute top-full left-0 z-10 mt-1 max-h-56 w-72 overflow-auto rounded-lg border p-1"
       >
         {options.map((c, i) => (
           <li
@@ -144,7 +144,7 @@ function MentionTextarea({
             role="option"
             aria-selected={i === active}
             className={cn(
-              'text-label-13 flex cursor-pointer items-center gap-2 rounded px-2 py-1',
+              'text-13 flex cursor-pointer items-center gap-2 rounded px-2 py-1',
               i === active && 'bg-sel',
             )}
             onMouseDown={(e) => {
@@ -154,7 +154,7 @@ function MentionTextarea({
           >
             {c.kind === 'role' ? <Users className="size-3.5" aria-hidden /> : null}
             <span className="flex-1">{c.name}</span>
-            <span className="text-muted-foreground text-label-12">
+            <span className="text-muted-foreground text-12">
               {c.kind === 'role' ? 'Job role' : 'Person'}
             </span>
           </li>
@@ -179,7 +179,7 @@ function Body({ text, candidates }: { text: string; candidates: MentionCandidate
     at = s.end;
   });
   if (at < text.length) parts.push(text.slice(at));
-  return <p className="text-copy-14 m-0 break-words whitespace-pre-wrap">{parts}</p>;
+  return <p className="text-14 m-0 break-words whitespace-pre-wrap">{parts}</p>;
 }
 
 export function UpdatesTab({
@@ -270,13 +270,13 @@ export function UpdatesTab({
             <Button type="submit" size="sm" disabled={posting || !draft.trim()}>
               {posting ? 'Posting…' : 'Post update'}
             </Button>
-            <span className="text-muted-foreground text-label-12">
+            <span className="text-muted-foreground text-12">
               Type @ to mention someone. Ctrl+Enter posts.
             </span>
           </div>
         </form>
       ) : (
-        <p className="text-muted-foreground text-copy-13">
+        <p className="text-muted-foreground text-13">
           You can read updates. Ask an editor or admin to post one.
         </p>
       )}
@@ -287,14 +287,14 @@ export function UpdatesTab({
           ))}
         </div>
       ) : state === 'error' ? (
-        <div role="alert" className="text-label-13 flex flex-col items-start gap-2">
+        <div role="alert" className="text-13 flex flex-col items-start gap-2">
           <p>The updates could not be loaded.</p>
           <Button type="button" size="sm" variant="outline" onClick={onRetry}>
             Retry
           </Button>
         </div>
       ) : updates.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13">No updates yet. Post the first one.</p>
+        <p className="text-muted-foreground text-13">No updates yet. Post the first one.</p>
       ) : (
         <ol className="flex flex-col gap-3" aria-label="Updates">
           {updates.map((u) => {
@@ -321,8 +321,8 @@ export function UpdatesTab({
                   <Avatar id={u.author_id} ctx={ctx} />
                 )}
                 <div className="bg-soft flex min-w-0 flex-1 flex-col gap-1 rounded-md px-3 py-2">
-                  <p className="text-label-12 m-0 flex flex-wrap items-baseline gap-x-2">
-                    <b className="text-label-13">{author}</b>
+                  <p className="text-12 m-0 flex flex-wrap items-baseline gap-x-2">
+                    <b className="text-13">{author}</b>
                     <span className="text-muted-foreground">
                       {formatDateTime(u.created_at, ctx.timeZone)}
                     </span>
@@ -362,7 +362,7 @@ export function UpdatesTab({
                   )}
                   {mine && editing?.id !== u.id ? (
                     confirmDelete === u.id ? (
-                      <div className="text-label-12 flex flex-wrap items-center gap-2">
+                      <div className="text-12 flex flex-wrap items-center gap-2">
                         <span>Delete this update? The activity log keeps a record.</span>
                         <Button type="button" size="sm" onClick={() => void remove(u.id)}>
                           Delete

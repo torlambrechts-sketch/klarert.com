@@ -70,10 +70,10 @@ export function AppForm({
   return (
     <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px]">
       <PageHeader title={title} description={description} />
-      <div className="border-line bg-background-100 w-full max-w-[560px] rounded-lg border p-5">
+      <div className="border-line bg-surface w-full max-w-[560px] rounded-lg border p-5">
         {sent ? (
           <div role="status" className="flex flex-col items-start gap-3">
-            <p className="text-copy-14 m-0 flex items-center gap-2">
+            <p className="text-14 m-0 flex items-center gap-2">
               <CheckCircle2 className="text-good size-4" aria-hidden />
               Sent. {sent} was added.
             </p>
@@ -105,7 +105,7 @@ export function AppForm({
           />
         ) : (
           <div className="flex flex-col items-start gap-3">
-            <p className="text-copy-14 text-muted-foreground m-0">
+            <p className="text-14 text-muted-foreground m-0">
               {!canSend
                 ? 'You can read this app, but you cannot send this form. Ask an editor or admin.'
                 : state === 'draft'

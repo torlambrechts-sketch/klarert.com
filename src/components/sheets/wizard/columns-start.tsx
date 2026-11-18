@@ -121,24 +121,22 @@ export function ColumnsStart({
     <form onSubmit={submit} className="flex flex-col gap-6" aria-label="Sheet details" noValidate>
       <BasicsFields basics={basics} ctx={ctx} errors={errors} />
       <fieldset className="flex flex-col gap-3">
-        <legend className="text-label-14 mb-1 font-bold">Fields</legend>
-        <p className="text-muted-foreground text-copy-13">
+        <legend className="text-14 mb-1 font-bold">Fields</legend>
+        <p className="text-muted-foreground text-13">
           Every {basics.values.itemLabel.toLowerCase() || 'item'} gets these fields. The name is
           always the first column.
         </p>
         {columns.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13">
-            No fields yet. Add the first one below.
-          </p>
+          <p className="text-muted-foreground text-13">No fields yet. Add the first one below.</p>
         ) : (
           <ol className="flex flex-col gap-2" aria-label="Fields">
             {columns.map((c, i) => (
               <li
                 key={c.key}
-                className="border-line bg-background-100 flex flex-col gap-2 rounded-lg border p-2 sm:flex-row sm:items-center"
+                className="border-line bg-surface flex flex-col gap-2 rounded-lg border p-2 sm:flex-row sm:items-center"
               >
                 <span
-                  className="text-muted-foreground text-label-12-mono hidden w-5 sm:block"
+                  className="text-muted-foreground text-12 hidden w-5 font-mono sm:block"
                   aria-hidden
                 >
                   {i + 1}
@@ -165,7 +163,7 @@ export function ColumnsStart({
                     onChange={(patch) => update(c.key, patch)}
                   />
                 ) : (
-                  <span className="text-muted-foreground text-label-12 min-w-0 flex-1">
+                  <span className="text-muted-foreground text-12 min-w-0 flex-1">
                     {fieldType(c.type)?.description}
                   </span>
                 )}
@@ -204,7 +202,7 @@ export function ColumnsStart({
             ))}
           </ol>
         )}
-        {errors.columns ? <p className="text-crit text-copy-13">{errors.columns}</p> : null}
+        {errors.columns ? <p className="text-crit text-13">{errors.columns}</p> : null}
         <div>
           <Button
             type="button"
@@ -224,8 +222,8 @@ export function ColumnsStart({
       </fieldset>
       {start.subitems ? (
         <section aria-label={start.subitems.label} className="flex flex-col gap-1.5">
-          <h3 className="text-label-14 m-0 font-bold">{start.subitems.label}</h3>
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <h3 className="text-14 m-0 font-bold">{start.subitems.label}</h3>
+          <p className="text-muted-foreground text-13 m-0">
             Comes with sub-items called {start.subitems.label.toLowerCase()}. Add them to an item in
             one go with From template: {start.subitems.names.join(', ')}. You can change them in the
             sheet settings.
@@ -272,7 +270,7 @@ function LinkTarget({
         ))}
       </select>
       {target ? (
-        <label className="text-label-12 flex items-center gap-2">
+        <label className="text-12 flex items-center gap-2">
           <input
             type="checkbox"
             checked={!!column.twoWay}
@@ -281,7 +279,7 @@ function LinkTarget({
           Show on {target.name} too
         </label>
       ) : (
-        <span className="text-muted-foreground text-label-12">
+        <span className="text-muted-foreground text-12">
           You can also choose the sheet later in the field settings.
         </span>
       )}

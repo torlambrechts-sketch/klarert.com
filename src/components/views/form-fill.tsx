@@ -56,15 +56,15 @@ export function Label({
 }) {
   if (requiredWord)
     return (
-      <label htmlFor={htmlFor} className="text-label-14 font-medium">
+      <label htmlFor={htmlFor} className="text-14 font-medium">
         {children}
         {required ? (
-          <span className="text-muted-foreground text-label-12 ml-2 font-normal"> Required</span>
+          <span className="text-muted-foreground text-12 ml-2 font-normal"> Required</span>
         ) : null}
       </label>
     );
   return (
-    <label htmlFor={htmlFor} className="text-label-14 font-medium">
+    <label htmlFor={htmlFor} className="text-14 font-medium">
       {children}
       {required ? (
         <>
@@ -98,7 +98,7 @@ export function FormFill(p: FormFillProps) {
           onChange={(e) => p.onName(e.target.value)}
         />
         {p.errors.__name ? (
-          <p id={`${nameId}-error`} className="text-crit text-copy-13">
+          <p id={`${nameId}-error`} className="text-crit text-13">
             {p.errors.__name}
           </p>
         ) : null}
@@ -159,7 +159,7 @@ export function Question({
         {q.label}
       </Label>
       {q.help ? (
-        <p id={`${id}-help`} className="text-muted-foreground text-label-12 -mt-1">
+        <p id={`${id}-help`} className="text-muted-foreground text-12 -mt-1">
           {q.help}
         </p>
       ) : null}
@@ -222,7 +222,7 @@ export function Question({
         </Popover>
       )}
       {error ? (
-        <p id={`${id}-error`} className="text-crit text-copy-13">
+        <p id={`${id}-error`} className="text-crit text-13">
           {error}
         </p>
       ) : null}

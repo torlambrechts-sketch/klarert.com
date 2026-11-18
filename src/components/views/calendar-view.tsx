@@ -67,7 +67,7 @@ export function CalendarView({
 
   if (!field)
     return (
-      <div className="border-line text-label-13 rounded-lg border border-dashed p-6">
+      <div className="border-line text-13 rounded-lg border border-dashed p-6">
         The calendar needs a date field (date, date and time, timeline, recurrence, evidence expiry,
         clock or retention). Add one to this sheet first.
       </div>
@@ -88,7 +88,7 @@ export function CalendarView({
           >
             <ChevronLeft aria-hidden /> Previous
           </Button>
-          <h2 className="text-heading-14 min-w-36 text-center" aria-live="polite">
+          <h2 className="text-14 min-w-36 text-center font-semibold" aria-live="polite">
             {title}
           </h2>
           <Button
@@ -108,10 +108,10 @@ export function CalendarView({
             Today
           </Button>
         </div>
-        <label className="text-label-13 flex items-center gap-2">
+        <label className="text-13 flex items-center gap-2">
           <span className="text-muted-foreground">Dates from</span>
           <select
-            className="border-input bg-background-100 h-8 rounded-md border px-2"
+            className="border-input bg-surface h-8 rounded-md border px-2"
             value={field.key}
             onChange={(e) => setConfig((c) => ({ ...c, dateFieldKey: e.target.value }))}
           >
@@ -124,13 +124,13 @@ export function CalendarView({
         </label>
       </div>
       {canEdit && !settable ? (
-        <p className="text-muted-foreground text-label-12">
+        <p className="text-muted-foreground text-12">
           {field.name} is set by the app, so new items cannot be placed on a day here.
         </p>
       ) : null}
       <div className="border-line min-h-0 flex-1 overflow-auto rounded-lg border">
         <table
-          className="text-label-12 w-full min-w-[340px] table-fixed border-collapse"
+          className="text-12 w-full min-w-[340px] table-fixed border-collapse"
           aria-label={`${title}, by ${field.name}`}
         >
           <thead>
@@ -251,7 +251,7 @@ function DayCell({
               </button>
             </PopoverTrigger>
             <PopoverContent className="flex w-64 flex-col gap-1">
-              <p className="text-copy-13 font-semibold">{label}</p>
+              <p className="text-13 font-semibold">{label}</p>
               {entries.map((item) => (
                 <Chip
                   key={item.id}
@@ -288,10 +288,10 @@ function Chip({
       type="button"
       onClick={onOpen}
       title={`${item.displayId} ${item.name}${option ? ` · ${option.label}` : ''}`}
-      className="text-label-12 pointer-events-auto block w-full truncate rounded border px-1 py-0.5 text-left font-semibold"
+      className="text-12 pointer-events-auto block w-full truncate rounded border px-1 py-0.5 text-left font-semibold"
       style={
         solid
-          ? { background: color, borderColor: color, color: 'var(--background-100)' }
+          ? { background: color, borderColor: color, color: 'var(--surface)' }
           : {
               background: `color-mix(in srgb, ${color} 13%, white)`,
               borderColor: color,

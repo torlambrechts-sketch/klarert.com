@@ -33,7 +33,7 @@ export function Tag({
     <span
       className={cn(
         TINT[tint],
-        'text-label-12 inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 font-medium whitespace-nowrap',
+        'text-12 inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 font-medium whitespace-nowrap',
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function Dot({
   return (
     <span
       className={cn(
-        'text-label-12 inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-medium whitespace-nowrap',
+        'text-12 inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-medium whitespace-nowrap',
         tone === 'good' && 'border-line bg-good-soft text-good',
         tone === 'warn' && 'border-line bg-warn-soft text-warn',
         tone === 'muted' && 'border-line bg-soft text-muted-foreground',
@@ -65,7 +65,7 @@ export function Dot({
           'size-1.5 rounded-full',
           tone === 'good' && 'bg-(--bar-good)',
           tone === 'warn' && 'bg-(--bar-warn)',
-          tone === 'muted' && 'bg-gray-600',
+          tone === 'muted' && 'bg-faint',
         )}
       />
       {children}
@@ -104,11 +104,11 @@ export function BrowserFrame({
     <div className={cn('bg-card border-line overflow-hidden rounded-xl border', className)}>
       <div className="border-line bg-subtle flex items-center gap-3 border-b px-3 py-2">
         <span className="flex gap-1.5">
-          <span className="size-2.5 rounded-full bg-gray-500" />
-          <span className="size-2.5 rounded-full bg-gray-500" />
-          <span className="size-2.5 rounded-full bg-gray-500" />
+          <span className="bg-line-strong size-2.5 rounded-full" />
+          <span className="bg-line-strong size-2.5 rounded-full" />
+          <span className="bg-line-strong size-2.5 rounded-full" />
         </span>
-        <span className="bg-background-100 border-line text-muted-foreground text-label-11-mono min-w-0 flex-1 truncate rounded-full border px-3 py-0.5 text-center">
+        <span className="bg-surface border-line text-muted-foreground text-12 min-w-0 flex-1 truncate rounded-full border px-3 py-0.5 text-center font-mono">
           {address}
         </span>
       </div>
@@ -120,7 +120,7 @@ export function BrowserFrame({
 /** An avatar with initials. */
 export function Initials({ children }: { children: string }) {
   return (
-    <span className="bg-soft text-label-11 text-ink flex size-6 shrink-0 items-center justify-center rounded-full font-semibold">
+    <span className="bg-soft text-12 text-ink flex size-6 shrink-0 items-center justify-center rounded-full font-semibold">
       {children}
     </span>
   );

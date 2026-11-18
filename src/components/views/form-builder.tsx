@@ -71,7 +71,7 @@ import { FormShareDialog, type FormLinkRow } from './form-share';
 type Panel = 'fields' | 'preview' | 'settings';
 type Draft = { name: string; form: FormLayout };
 
-const label = 'text-label-13 flex flex-col gap-1 font-semibold';
+const label = 'text-13 flex flex-col gap-1 font-semibold';
 const field = cn(inputClass, 'h-9 font-normal');
 const area = cn(inputClass, 'h-auto min-h-16 py-1.5 font-normal');
 
@@ -219,13 +219,13 @@ export function FormBuilder({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="bg-background-100 border-line sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b py-2">
+      <header className="bg-surface border-line sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b py-2">
         <Button type="button" variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft aria-hidden /> All forms
         </Button>
         <input
           aria-label="Form name"
-          className={cn(field, 'text-label-14 min-w-0 flex-1 basis-40 font-semibold')}
+          className={cn(field, 'text-14 min-w-0 flex-1 basis-40 font-semibold')}
           value={draft.name}
           maxLength={60}
           onChange={(e) => change((d) => ({ ...d, name: e.target.value }))}
@@ -252,10 +252,8 @@ export function FormBuilder({
                   aria-checked={status === s}
                   onClick={() => status !== s && setStatus(s)}
                   className={cn(
-                    'text-label-13 focus-visible:outline-focus flex h-7 items-center gap-1 rounded px-2.5 focus-visible:outline-2',
-                    status === s
-                      ? 'bg-ink text-background-100'
-                      : 'text-muted-foreground hover:text-ink',
+                    'text-13 focus-visible:outline-focus flex h-7 items-center gap-1 rounded px-2.5 focus-visible:outline-2',
+                    status === s ? 'bg-ink text-surface' : 'text-muted-foreground hover:text-ink',
                   )}
                 >
                   {s === 'open' ? <CheckCircle2 className="size-3.5" aria-hidden /> : null}
@@ -276,7 +274,7 @@ export function FormBuilder({
             <Share2 aria-hidden /> Share
           </Button>
         </div>
-        <p className="text-label-12 text-muted-foreground w-full" aria-live="polite">
+        <p className="text-12 text-muted-foreground w-full" aria-live="polite">
           {state === 'saving'
             ? 'Saving…'
             : state === 'error'
@@ -314,7 +312,7 @@ export function FormBuilder({
           <div
             role="tablist"
             aria-label="Builder panels"
-            className="border-line bg-background-100 sticky bottom-16 z-20 mt-auto grid grid-cols-3 gap-1 border-t p-2 min-[760px]:bottom-0"
+            className="border-line bg-surface sticky bottom-16 z-20 mt-auto grid grid-cols-3 gap-1 border-t p-2 min-[760px]:bottom-0"
           >
             {(['fields', 'preview', 'settings'] as const).map((p) => (
               <button
@@ -325,10 +323,8 @@ export function FormBuilder({
                 aria-controls="form-panel"
                 onClick={() => setPanel(p)}
                 className={cn(
-                  'text-label-13 focus-visible:outline-focus h-9 rounded-md focus-visible:outline-2',
-                  panel === p
-                    ? 'bg-ink text-background-100'
-                    : 'text-muted-foreground hover:bg-soft',
+                  'text-13 focus-visible:outline-focus h-9 rounded-md focus-visible:outline-2',
+                  panel === p ? 'bg-ink text-surface' : 'text-muted-foreground hover:bg-soft',
                 )}
               >
                 {p === 'fields' ? 'Fields' : p === 'preview' ? 'Preview' : 'Settings'}
@@ -351,8 +347,8 @@ export function FormBuilder({
       />
       <Dialog open={preview} onOpenChange={setPreview}>
         <DialogContent className="max-h-[90dvh] w-[min(440px,calc(100vw-32px))] overflow-y-auto">
-          <DialogTitle className="text-heading-20">Preview</DialogTitle>
-          <DialogDescription className="text-copy-13 text-muted-foreground">
+          <DialogTitle className="text-panel-title">Preview</DialogTitle>
+          <DialogDescription className="text-13 text-muted-foreground">
             {status === 'open'
               ? 'Fill it in here to add an item as yourself.'
               : 'How people see the form. It takes answers once it is open.'}
@@ -401,7 +397,7 @@ export function StatusChip({
   return (
     <span
       className={cn(
-        'text-label-12 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium',
+        'text-12 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium',
         status === 'open'
           ? 'border-good/40 bg-good-soft text-good'
           : status === 'draft'
@@ -436,15 +432,15 @@ function FieldsPanel({
 }) {
   const left = fields.length - choices.length;
   return (
-    <div className="border-line bg-background-100 flex flex-col gap-3 rounded-lg border p-4">
-      <h2 className="text-heading-16">Fields</h2>
-      <p className="text-copy-13 text-muted-foreground">Choose the questions the form asks.</p>
+    <div className="border-line bg-surface flex flex-col gap-3 rounded-lg border p-4">
+      <h2 className="text-card-title">Fields</h2>
+      <p className="text-13 text-muted-foreground">Choose the questions the form asks.</p>
       <ul className="flex flex-col gap-1.5">
         {choices.map((f) => {
           const asked = on.some((q) => q.key === f.key);
           return (
             <li key={f.id} className="flex items-center justify-between gap-2">
-              <label htmlFor={`ask-${f.id}`} className="text-label-13 min-w-0 truncate">
+              <label htmlFor={`ask-${f.id}`} className="text-13 min-w-0 truncate">
                 {f.name}
               </label>
               <Switch
@@ -464,7 +460,7 @@ function FieldsPanel({
         })}
       </ul>
       {left > 0 ? (
-        <p className="text-label-12 text-muted-foreground">
+        <p className="text-12 text-muted-foreground">
           {access === 'public'
             ? 'Files, people, teams, roles, entities and calculated fields cannot be asked on a public form.'
             : 'Calculated fields, links, files and other values the app keeps cannot be asked on a form.'}
@@ -513,10 +509,10 @@ function PreviewPanel({
     );
   };
   return (
-    <div className="border-line bg-background-100 mx-auto flex w-full max-w-[560px] flex-col gap-4 rounded-lg border p-5">
+    <div className="border-line bg-surface mx-auto flex w-full max-w-[560px] flex-col gap-4 rounded-lg border p-5">
       <input
         aria-label="Form title"
-        className={cn(field, 'text-heading-20 h-10 border-transparent px-1')}
+        className={cn(field, 'text-panel-title h-10 border-transparent px-1')}
         placeholder={formName}
         value={form.title ?? ''}
         maxLength={200}
@@ -541,16 +537,16 @@ function PreviewPanel({
             onChange={(e) => onChange({ nameLabel: e.target.value })}
           />
         </label>
-        <p className="text-label-12 text-muted-foreground">Always asked and required.</p>
+        <p className="text-12 text-muted-foreground">Always asked and required.</p>
       </div>
       {on.some((q, i) => i > 0 && q.step !== undefined) ? (
-        <p className="text-label-12 text-muted-foreground" data-testid="form-steps-note">
+        <p className="text-12 text-muted-foreground" data-testid="form-steps-note">
           The New item dialog asks this form a step at a time when the sheet uses it as its new-item
           form (Sheet settings › New item form). Elsewhere every question shows on one page.
         </p>
       ) : null}
       {on.length === 0 ? (
-        <p className="text-copy-13 text-muted-foreground">
+        <p className="text-13 text-muted-foreground">
           Only the name is asked. Turn on fields to add questions.
         </p>
       ) : null}
@@ -612,7 +608,7 @@ function SortableQuestion({
       ref={s.setNodeRef}
       style={{ transform: CSS.Transform.toString(s.transform), transition: s.transition }}
       className={cn(
-        'border-line bg-background-100 flex flex-col gap-2 rounded-md border p-3',
+        'border-line bg-surface flex flex-col gap-2 rounded-md border p-3',
         s.isDragging && 'shadow-lg',
       )}
     >
@@ -628,7 +624,7 @@ function SortableQuestion({
         </button>
         <input
           aria-label={`${name} label`}
-          className={cn(field, 'text-label-14 min-w-0 flex-1 font-medium')}
+          className={cn(field, 'text-14 min-w-0 flex-1 font-medium')}
           value={q.label ?? ''}
           placeholder={name}
           maxLength={200}
@@ -666,13 +662,13 @@ function SortableQuestion({
       </div>
       <input
         aria-label={`${name} help text`}
-        className={cn(field, 'text-label-13')}
+        className={cn(field, 'text-13')}
         value={q.help ?? ''}
         placeholder={fieldHelp || 'Help text'}
         maxLength={1000}
         onChange={(e) => onSet({ help: e.target.value })}
       />
-      <label htmlFor={rid} className="text-label-13 flex items-center gap-2 self-start">
+      <label htmlFor={rid} className="text-13 flex items-center gap-2 self-start">
         <input
           id={rid}
           type="checkbox"
@@ -683,7 +679,7 @@ function SortableQuestion({
       </label>
       {!first ? (
         <div className="flex flex-wrap items-center gap-2">
-          <label className="text-label-13 flex items-center gap-2">
+          <label className="text-13 flex items-center gap-2">
             <input
               type="checkbox"
               checked={q.step !== undefined}
@@ -694,7 +690,7 @@ function SortableQuestion({
           {q.step !== undefined ? (
             <input
               aria-label={`Title of the step that starts at ${name}`}
-              className={cn(field, 'text-label-13 h-8 min-w-0 flex-1')}
+              className={cn(field, 'text-13 h-8 min-w-0 flex-1')}
               value={q.step}
               placeholder="Step title (optional)"
               maxLength={120}
@@ -750,10 +746,10 @@ function SettingsPanel({
           role="alert"
           className="border-crit-line bg-crit-soft text-crit-ink rounded-lg border p-3"
         >
-          <p className="text-label-13 flex items-center gap-1.5 font-semibold">
+          <p className="text-13 flex items-center gap-1.5 font-semibold">
             <AlertTriangle className="size-4" aria-hidden /> Before this form can open
           </p>
-          <ul className="text-copy-13 mt-1 list-disc pl-5">
+          <ul className="text-13 mt-1 list-disc pl-5">
             {problems.map((p) => (
               <li key={p}>{p}</li>
             ))}
@@ -762,10 +758,10 @@ function SettingsPanel({
       ) : null}
       {warnings.length ? (
         <div className="border-warn/40 bg-warn-soft rounded-lg border p-3">
-          <p className="text-label-13 text-warn flex items-center gap-1.5 font-semibold">
+          <p className="text-13 text-warn flex items-center gap-1.5 font-semibold">
             <AlertTriangle className="size-4" aria-hidden /> Privacy
           </p>
-          <ul className="text-copy-13 mt-1 list-disc pl-5">
+          <ul className="text-13 mt-1 list-disc pl-5">
             {warnings.map((w) => (
               <li key={w}>{w}</li>
             ))}
@@ -786,7 +782,7 @@ function SettingsPanel({
               ['internal', 'Internal only', 'Signed-in members. Editors can send answers.'],
             ] as const
           ).map(([v, t, d]) => (
-            <label key={v} className="text-label-13 flex items-start gap-2">
+            <label key={v} className="text-13 flex items-start gap-2">
               <input
                 type="radio"
                 name="form-access"
@@ -812,9 +808,7 @@ function SettingsPanel({
             </label>
           ))}
           {status === 'open' ? (
-            <p className="text-label-12 text-muted-foreground">
-              Set the form to draft to change access.
-            </p>
+            <p className="text-12 text-muted-foreground">Set the form to draft to change access.</p>
           ) : null}
         </fieldset>
       </Section>
@@ -879,7 +873,7 @@ function SettingsPanel({
             value={form.confirmation ?? ''}
             onChange={(e) => onChange({ confirmation: e.target.value })}
           />
-          <span className="text-label-12 text-muted-foreground font-normal">
+          <span className="text-12 text-muted-foreground font-normal">
             The answers are never shown back.
           </span>
         </label>
@@ -887,14 +881,14 @@ function SettingsPanel({
 
       <Section title="Notify">
         {people.length === 0 ? (
-          <p className="text-copy-13 text-muted-foreground">No people in this workspace yet.</p>
+          <p className="text-13 text-muted-foreground">No people in this workspace yet.</p>
         ) : (
           <fieldset className="flex max-h-40 flex-col gap-1 overflow-y-auto">
-            <legend className="text-copy-13 text-muted-foreground mb-1">
+            <legend className="text-13 text-muted-foreground mb-1">
               Tell these people about each new answer.
             </legend>
             {people.map((p) => (
-              <label key={p.id} className="text-label-13 flex items-center gap-2">
+              <label key={p.id} className="text-13 flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={(form.notify ?? []).includes(p.id)}
@@ -914,7 +908,7 @@ function SettingsPanel({
       </Section>
 
       <Section title="Hidden values">
-        <p className="text-copy-13 text-muted-foreground">
+        <p className="text-13 text-muted-foreground">
           Set on every answer by the server. People filling in the form never see or change them.
         </p>
         {prefill.map((p) => {
@@ -980,13 +974,13 @@ function SettingsPanel({
       </Section>
 
       <Section title="Privacy notice">
-        <p className="text-copy-13 text-muted-foreground">
+        <p className="text-13 text-muted-foreground">
           Shown on the public form. The controller is this workspace.
           {access === 'internal' ? ' Optional for internal forms.' : ''}
         </p>
         <div
           className={cn(
-            'text-label-13 flex items-start gap-1.5 rounded-md border p-2',
+            'text-13 flex items-start gap-1.5 rounded-md border p-2',
             reviewed ? 'border-good/40 bg-good-soft' : 'border-warn/40 bg-warn-soft',
           )}
         >
@@ -1004,7 +998,7 @@ function SettingsPanel({
           </span>
         </div>
         {noticeLocked ? (
-          <p className="text-label-12 text-muted-foreground">
+          <p className="text-12 text-muted-foreground">
             Close the form or set it to draft to change the notice. A changed notice needs a new
             review.
           </p>
@@ -1040,7 +1034,7 @@ function SettingsPanel({
               ))}
             </select>
             {notice.legalBasis === 'consent' ? (
-              <span className="text-label-12 text-muted-foreground font-normal">
+              <span className="text-12 text-muted-foreground font-normal">
                 People tick a consent box before sending. The time is kept with the answer.
               </span>
             ) : null}
@@ -1097,7 +1091,7 @@ function SettingsPanel({
           </Button>
         ) : null}
         {!reviewed && noticeProblems(notice).length ? (
-          <p className="text-label-12 text-muted-foreground">{noticeProblems(notice)[0]}</p>
+          <p className="text-12 text-muted-foreground">{noticeProblems(notice)[0]}</p>
         ) : null}
       </Section>
     </div>
@@ -1109,9 +1103,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section
       aria-labelledby={id}
-      className="border-line bg-background-100 flex flex-col gap-3 rounded-lg border p-4"
+      className="border-line bg-surface flex flex-col gap-3 rounded-lg border p-4"
     >
-      <h2 id={id} className="text-heading-16">
+      <h2 id={id} className="text-card-title">
         {title}
       </h2>
       {children}
@@ -1179,11 +1173,9 @@ export function FillForm({
       }}
     >
       <header className="flex flex-col gap-1">
-        <p className="text-copy-16 font-semibold">{title}</p>
+        <p className="text-16 font-semibold">{title}</p>
         {form.description?.trim() ? (
-          <p className="text-copy-13 text-muted-foreground whitespace-pre-line">
-            {form.description}
-          </p>
+          <p className="text-13 text-muted-foreground whitespace-pre-line">{form.description}</p>
         ) : null}
       </header>
       <FormFill
@@ -1198,7 +1190,7 @@ export function FillForm({
         disabled={sending || !canSend}
       />
       {message ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           {message}
         </p>
       ) : null}

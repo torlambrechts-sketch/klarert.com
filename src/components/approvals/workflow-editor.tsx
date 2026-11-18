@@ -241,8 +241,8 @@ export function WorkflowEditor({
     <div className="flex flex-col gap-3">
       <Dialog open={!!doomed} onOpenChange={(o) => (o ? null : setDeleting(null))}>
         <DialogContent className="gap-3">
-          <DialogTitle className="text-heading-16">Delete {doomed?.name}?</DialogTitle>
-          <DialogDescription className="text-muted-foreground text-copy-13">
+          <DialogTitle className="text-card-title">Delete {doomed?.name}?</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-13">
             Items waiting for it keep their approval to the end.
           </DialogDescription>
           <div className="flex flex-wrap justify-end gap-2 pt-1">
@@ -264,7 +264,7 @@ export function WorkflowEditor({
         </DialogContent>
       </Dialog>
       {list.length === 0 ? (
-        <p className="text-copy-13 text-muted-foreground m-0">
+        <p className="text-13 text-muted-foreground m-0">
           No approval workflow yet. Add one to send items through review and approval steps, with
           every decision in the activity log.
         </p>
@@ -279,11 +279,11 @@ export function WorkflowEditor({
               className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between"
             >
               <div className="flex min-w-0 flex-col gap-1">
-                <span className="text-label-14 font-semibold">{x.name}</span>
-                <ol className="text-copy-13 m-0 flex list-none flex-col gap-0.5 p-0">
+                <span className="text-14 font-semibold">{x.name}</span>
+                <ol className="text-13 m-0 flex list-none flex-col gap-0.5 p-0">
                   {x.steps.map((s, k) => (
                     <li key={s.id}>
-                      <span className="text-label-12-mono text-muted-foreground mr-1.5">
+                      <span className="text-12 text-muted-foreground mr-1.5 font-mono">
                         {k + 1}
                       </span>
                       <span className="font-medium">{s.name}</span>:{' '}
@@ -293,7 +293,7 @@ export function WorkflowEditor({
                     </li>
                   ))}
                 </ol>
-                <span className="text-label-12 text-muted-foreground">
+                <span className="text-12 text-muted-foreground">
                   {[
                     x.lockOnApproval ? 'Locks the item when approved' : null,
                     x.allowSelfApproval
@@ -308,7 +308,7 @@ export function WorkflowEditor({
                 </span>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <label className="text-label-13 flex items-center gap-1.5">
+                <label className="text-13 flex items-center gap-1.5">
                   <Switch
                     checked={x.enabled}
                     disabled={!canEdit || pending}
@@ -359,7 +359,7 @@ export function WorkflowEditor({
         </Button>
       ) : null}
       {!canEdit ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           Only owners and admins can change approval workflows.
         </p>
       ) : null}
@@ -374,7 +374,7 @@ export function WorkflowEditor({
           }}
         >
           <label className="flex flex-col gap-1">
-            <span className="text-label-13 font-semibold">Name</span>
+            <span className="text-13 font-semibold">Name</span>
             <input
               className={inputClass}
               value={w.name}
@@ -386,7 +386,7 @@ export function WorkflowEditor({
           </label>
 
           <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
-            <legend className="text-label-13 mb-1 p-0 font-semibold">Steps, in order</legend>
+            <legend className="text-13 mb-1 p-0 font-semibold">Steps, in order</legend>
             <ol className="m-0 flex list-none flex-col gap-2 p-0">
               {w.steps.map((s, i) => (
                 <li
@@ -395,7 +395,7 @@ export function WorkflowEditor({
                   className="border-line bg-subtle flex flex-col gap-2 rounded-md border p-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-label-13 font-semibold">Step {i + 1}</span>
+                    <span className="text-13 font-semibold">Step {i + 1}</span>
                     <span className="flex gap-1">
                       <Button
                         type="button"
@@ -444,7 +444,7 @@ export function WorkflowEditor({
                   </div>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <label className="flex flex-col gap-1">
-                      <span className="text-label-13">Step name</span>
+                      <span className="text-13">Step name</span>
                       <input
                         className={inputClass}
                         value={s.name}
@@ -454,7 +454,7 @@ export function WorkflowEditor({
                       />
                     </label>
                     <label className="flex flex-col gap-1">
-                      <span className="text-label-13">Who approves</span>
+                      <span className="text-13">Who approves</span>
                       <select
                         className={inputClass}
                         value={s.approvers.kind}
@@ -497,7 +497,7 @@ export function WorkflowEditor({
                       onChange={(rule) => setStep(i, { approvers: rule })}
                     />
                     <label className="flex flex-col gap-1">
-                      <span className="text-label-13">How many must approve</span>
+                      <span className="text-13">How many must approve</span>
                       <select
                         className={inputClass}
                         value={s.mode}
@@ -510,7 +510,7 @@ export function WorkflowEditor({
                       </select>
                     </label>
                     <div className="flex flex-col gap-1">
-                      <span className="text-label-13" id={`${ids}-sla-${i}`}>
+                      <span className="text-13" id={`${ids}-sla-${i}`}>
                         Time limit
                       </span>
                       <div className="flex gap-2" role="group" aria-labelledby={`${ids}-sla-${i}`}>
@@ -553,7 +553,7 @@ export function WorkflowEditor({
                       </div>
                     </div>
                     <label className="flex flex-col gap-1">
-                      <span className="text-label-13">If rejected</span>
+                      <span className="text-13">If rejected</span>
                       <select
                         className={inputClass}
                         value={
@@ -605,12 +605,10 @@ export function WorkflowEditor({
           </fieldset>
 
           <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
-            <legend className="text-label-13 mb-1 p-0 font-semibold">
-              Fill in before submitting
-            </legend>
+            <legend className="text-13 mb-1 p-0 font-semibold">Fill in before submitting</legend>
             <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
               {requirableFields(fields).map((f) => (
-                <label key={f.key} className="text-label-13 flex items-center gap-2">
+                <label key={f.key} className="text-13 flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={w.requiredFields.includes(f.key)}
@@ -630,7 +628,7 @@ export function WorkflowEditor({
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label className="flex flex-col gap-1">
-              <span className="text-label-13 font-semibold">Show the step in</span>
+              <span className="text-13 font-semibold">Show the step in</span>
               <select
                 className={inputClass}
                 value={w.stepField?.fieldKey ?? ''}
@@ -645,14 +643,14 @@ export function WorkflowEditor({
                   </option>
                 ))}
               </select>
-              <span className="text-label-12 text-muted-foreground">
+              <span className="text-12 text-muted-foreground">
                 {stepFields(fields).length
                   ? 'A workflow step field, read-only to people. Its options follow the step names.'
                   : 'Add a Workflow step field to the sheet to show the step in a column.'}
               </span>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-label-13 font-semibold">Set a status as it moves</span>
+              <span className="text-13 font-semibold">Set a status as it moves</span>
               <select
                 className={inputClass}
                 value={w.statusField?.fieldKey ?? ''}
@@ -679,7 +677,7 @@ export function WorkflowEditor({
                 ] as const
               ).map(([k, label]) => (
                 <label key={k} className="flex flex-col gap-1">
-                  <span className="text-label-13">{label}</span>
+                  <span className="text-13">{label}</span>
                   <select
                     className={inputClass}
                     value={w.statusField?.[k] ?? ''}
@@ -700,8 +698,8 @@ export function WorkflowEditor({
           ) : null}
 
           <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
-            <legend className="text-label-13 mb-1 p-0 font-semibold">Rules</legend>
-            <label className="text-label-13 flex items-center gap-2">
+            <legend className="text-13 mb-1 p-0 font-semibold">Rules</legend>
+            <label className="text-13 flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={w.lockOnApproval}
@@ -709,7 +707,7 @@ export function WorkflowEditor({
               />
               Lock the item when it is approved (only owners and admins can change it afterwards)
             </label>
-            <label className="text-label-13 flex items-center gap-2">
+            <label className="text-13 flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={w.allowSelfApproval}
@@ -718,7 +716,7 @@ export function WorkflowEditor({
               Let the person who submits an item approve it
             </label>
             {w.allowSelfApproval ? (
-              <p className="text-label-12 text-warn m-0">
+              <p className="text-12 text-warn m-0">
                 ⚠ Approvals are usually made by someone other than the person who submits. Leave
                 this off unless one person may approve their own work.
               </p>
@@ -726,7 +724,7 @@ export function WorkflowEditor({
           </fieldset>
 
           {shown.length ? (
-            <ul role="alert" className="text-crit text-copy-13 m-0 flex flex-col gap-0.5 pl-4">
+            <ul role="alert" className="text-crit text-13 m-0 flex flex-col gap-0.5 pl-4">
               {shown.map((p) => (
                 <li key={p}>{p}</li>
               ))}
@@ -767,7 +765,7 @@ function ApproverPicker({
     case 'field':
       return (
         <label className="flex flex-col gap-1">
-          <span className="text-label-13">People field</span>
+          <span className="text-13">People field</span>
           <select
             aria-label={label}
             className={inputClass}
@@ -788,7 +786,7 @@ function ApproverPicker({
     case 'jobRole':
       return (
         <label className="flex flex-col gap-1">
-          <span className="text-label-13">Job role</span>
+          <span className="text-13">Job role</span>
           <select
             aria-label={label}
             className={inputClass}
@@ -814,7 +812,7 @@ function ApproverPicker({
     case 'team':
       return (
         <label className="flex flex-col gap-1">
-          <span className="text-label-13">Team</span>
+          <span className="text-13">Team</span>
           <select
             aria-label={label}
             className={inputClass}
@@ -840,10 +838,10 @@ function ApproverPicker({
     case 'people':
       return (
         <fieldset className="m-0 flex flex-col gap-1 border-0 p-0 sm:col-span-2">
-          <legend className="text-label-13 mb-1 p-0">{label}</legend>
-          <div className="border-line bg-background-100 grid max-h-40 grid-cols-1 gap-1 overflow-y-auto rounded-md border p-2 sm:grid-cols-2">
+          <legend className="text-13 mb-1 p-0">{label}</legend>
+          <div className="border-line bg-surface grid max-h-40 grid-cols-1 gap-1 overflow-y-auto rounded-md border p-2 sm:grid-cols-2">
             {people.map((p) => (
-              <label key={p.id} className="text-label-13 flex items-center gap-2">
+              <label key={p.id} className="text-13 flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={rule.userIds.includes(p.id)}

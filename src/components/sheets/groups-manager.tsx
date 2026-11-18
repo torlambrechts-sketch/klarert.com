@@ -162,7 +162,7 @@ function GroupRow({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`border-line bg-background-100 flex flex-col gap-2 rounded-lg border p-2 ${isDragging ? 'shadow-menu relative z-10' : ''}`}
+      className={`border-line bg-surface flex flex-col gap-2 rounded-lg border p-2 ${isDragging ? 'shadow-menu relative z-10' : ''}`}
     >
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -211,7 +211,7 @@ function GroupRow({
             </option>
           ))}
         </select>
-        <span className="text-muted-foreground text-label-13 w-16 text-right tabular-nums">
+        <span className="text-muted-foreground text-13 w-16 text-right tabular-nums">
           {group.count === 1 ? '1 item' : `${group.count} items`}
         </span>
         <span className="flex gap-1">
@@ -277,7 +277,7 @@ function DeleteGroup({
     >
       {group.count > 0 ? (
         <>
-          <label htmlFor={moveId} className="text-label-13">
+          <label htmlFor={moveId} className="text-13">
             {group.count === 1 ? 'Move its item to' : `Move its ${group.count} items to`}
           </label>
           <select
@@ -298,7 +298,7 @@ function DeleteGroup({
         </>
       ) : (
         <>
-          <span className="text-label-13">Delete this empty group?</span>
+          <span className="text-13">Delete this empty group?</span>
           <SubmitButton size="sm" variant="destructive" pendingText="Deleting…">
             Delete group
           </SubmitButton>

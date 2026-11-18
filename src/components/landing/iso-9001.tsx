@@ -26,8 +26,8 @@ import { SectionHead, SiteShell, WRAP } from './site-chrome';
 // served from our own domain with their size known, so nothing shifts while they load.
 
 const SECTION = `${WRAP} flex flex-col gap-10 py-16 sm:py-24`;
-const CHIP = 'bg-subtle border-line text-label-12 rounded-md border px-2 py-0.5';
-const DT = 'text-muted-foreground text-label-13 font-medium';
+const CHIP = 'bg-subtle border-line text-12 rounded-md border px-2 py-0.5';
+const DT = 'text-muted-foreground text-13 font-medium';
 
 type ScreenName = keyof typeof screens;
 
@@ -56,7 +56,7 @@ function Shot({
         priority={priority}
         className="border-line h-auto w-full rounded-lg border"
       />
-      <figcaption className="text-muted-foreground text-label-12 px-1 pb-0.5">
+      <figcaption className="text-muted-foreground text-12 px-1 pb-0.5">
         {EXAMPLE_CAPTION}
       </figcaption>
     </figure>
@@ -67,7 +67,7 @@ function Points({ items }: { items: readonly string[] }) {
   return (
     <ul className="m-0 flex list-none flex-col gap-2 p-0">
       {items.map((p) => (
-        <li key={p} className="text-copy-14 flex items-start gap-2">
+        <li key={p} className="text-14 flex items-start gap-2">
           <Check aria-hidden="true" className="text-good mt-0.5 size-4 shrink-0" />
           {p}
         </li>
@@ -88,7 +88,7 @@ function Fact({ term, children }: { term: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
       <dt className={DT}>{term}</dt>
-      <dd className="text-copy-14 m-0">{children}</dd>
+      <dd className="text-14 m-0">{children}</dd>
     </div>
   );
 }
@@ -110,16 +110,13 @@ export function Iso9001Page() {
           className={`${WRAP} grid items-center gap-12 pt-8 pb-16 sm:pt-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:pb-24`}
         >
           <div className="flex flex-col items-start gap-6">
-            <span className="bg-background-100 border-line text-label-13 text-ink rounded-full border px-3 py-1 font-medium">
+            <span className="bg-surface border-line text-13 text-ink rounded-full border px-3 py-1 font-medium">
               {P.hero.eyebrow}
             </span>
-            <h1
-              id="iso9001-title"
-              className="text-heading-40 sm:text-heading-48 m-0 max-w-[20ch] text-balance"
-            >
+            <h1 id="iso9001-title" className="text-hero sm:text-hero m-0 max-w-[20ch] text-balance">
               {P.hero.title}
             </h1>
-            <p className="text-muted-foreground text-copy-16 sm:text-copy-18 m-0 max-w-[56ch]">
+            <p className="text-muted-foreground text-16 sm:text-18 m-0 max-w-[56ch]">
               {P.hero.lead}
             </p>
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
@@ -128,7 +125,7 @@ export function Iso9001Page() {
                 <a href="#install">{P.hero.secondary}</a>
               </Button>
             </div>
-            <p className="text-muted-foreground text-label-13 m-0">{P.hero.reassurance}</p>
+            <p className="text-muted-foreground text-13 m-0">{P.hero.reassurance}</p>
           </div>
           <Shot
             name={SHOTS.hero.shot}
@@ -152,7 +149,7 @@ export function Iso9001Page() {
               aria-labelledby="install-sheets"
               className="bg-card border-line flex flex-col gap-5 rounded-xl border p-5 sm:p-6 lg:col-span-2"
             >
-              <h3 id="install-sheets" className="text-heading-20 m-0">
+              <h3 id="install-sheets" className="text-panel-title m-0">
                 {P.install.sheetsTitle}
               </h3>
               <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
@@ -161,12 +158,12 @@ export function Iso9001Page() {
                     key={s.name}
                     className="border-line flex flex-col gap-1 rounded-lg border p-3"
                   >
-                    <span className="text-label-14 flex flex-wrap items-center gap-2 font-semibold">
+                    <span className="text-14 flex flex-wrap items-center gap-2 font-semibold">
                       {s.name}
                       {s.level ? <span className={CHIP}>{s.level}</span> : null}
                     </span>
                     {s.description ? (
-                      <span className="text-muted-foreground text-label-13">{s.description}</span>
+                      <span className="text-muted-foreground text-13">{s.description}</span>
                     ) : null}
                   </li>
                 ))}
@@ -207,13 +204,13 @@ export function Iso9001Page() {
                   aria-labelledby="install-setup"
                   className="bg-card border-line flex flex-col gap-4 rounded-xl border p-5 sm:p-6"
                 >
-                  <h3 id="install-setup" className="text-heading-20 m-0">
+                  <h3 id="install-setup" className="text-panel-title m-0">
                     {P.install.setupTitle}
                   </h3>
                   <ol className="m-0 flex list-none flex-col gap-2 p-0">
                     {install.setup.steps.map((s, i) => (
-                      <li key={s} className="text-copy-14 flex items-start gap-3">
-                        <span className="bg-soft text-label-12 flex size-6 shrink-0 items-center justify-center rounded-full font-semibold">
+                      <li key={s} className="text-14 flex items-start gap-3">
+                        <span className="bg-soft text-12 flex size-6 shrink-0 items-center justify-center rounded-full font-semibold">
                           {i + 1}
                         </span>
                         {s}
@@ -226,16 +223,14 @@ export function Iso9001Page() {
                 aria-labelledby="install-workflows"
                 className="bg-card border-line flex flex-col gap-4 rounded-xl border p-5 sm:p-6"
               >
-                <h3 id="install-workflows" className="text-heading-20 m-0">
+                <h3 id="install-workflows" className="text-panel-title m-0">
                   {P.install.workflowsTitle}
                 </h3>
                 <ul className="m-0 flex list-none flex-col gap-2 p-0">
                   {install.workflows.map((w) => (
-                    <li key={w.name} className="text-copy-14 flex flex-col">
+                    <li key={w.name} className="text-14 flex flex-col">
                       <span className="font-medium">{w.name}</span>
-                      <span className="text-muted-foreground text-label-13">
-                        {w.steps.join(' → ')}
-                      </span>
+                      <span className="text-muted-foreground text-13">{w.steps.join(' → ')}</span>
                     </li>
                   ))}
                 </ul>
@@ -247,14 +242,14 @@ export function Iso9001Page() {
             className="bg-card border-line flex flex-col gap-4 rounded-xl border p-5 sm:p-6"
           >
             <div className="flex flex-col gap-1">
-              <h3 id="install-automations" className="text-heading-20 m-0">
+              <h3 id="install-automations" className="text-panel-title m-0">
                 {P.install.automationsTitle} ({install.automations.length})
               </h3>
-              <p className="text-muted-foreground text-copy-14 m-0">{P.install.automationsNote}</p>
+              <p className="text-muted-foreground text-14 m-0">{P.install.automationsNote}</p>
             </div>
             <ul className="m-0 grid list-none gap-x-6 gap-y-2 p-0 md:grid-cols-2 xl:grid-cols-3">
               {install.automations.map((a) => (
-                <li key={a} className="text-copy-14 flex items-start gap-2">
+                <li key={a} className="text-14 flex items-start gap-2">
                   <ArrowRight
                     aria-hidden="true"
                     className="text-muted-foreground mt-0.5 size-4 shrink-0"
@@ -275,28 +270,28 @@ export function Iso9001Page() {
             <div className="flex flex-col gap-6">
               <Points items={P.library.points} />
               <div className="flex flex-col gap-3">
-                <h3 className="text-heading-20 m-0">{P.library.clausesTitle}</h3>
+                <h3 className="text-panel-title m-0">{P.library.clausesTitle}</h3>
                 <ol className="m-0 flex list-none flex-col gap-0 p-0">
                   {CLAUSES.map((c) => (
                     <li
                       key={c.ref}
                       className="border-line grid grid-cols-[3rem_minmax(0,1fr)] gap-3 border-b py-3 last:border-b-0"
                     >
-                      <span className="text-heading-20 text-ink tabular-nums">{c.ref}</span>
+                      <span className="text-panel-title text-ink tabular-nums">{c.ref}</span>
                       <span className="flex flex-col gap-0.5">
-                        <span className="text-label-14 font-semibold">
+                        <span className="text-14 font-semibold">
                           {c.title}
                           <span className="text-muted-foreground font-normal">
                             {' '}
                             · {current.byClause[c.ref] ?? 0} requirements in {current.title}
                           </span>
                         </span>
-                        <span className="text-muted-foreground text-copy-14">{c.line}</span>
+                        <span className="text-muted-foreground text-14">{c.line}</span>
                       </span>
                     </li>
                   ))}
                 </ol>
-                <p className="text-muted-foreground text-label-13 m-0">{P.library.licence}</p>
+                <p className="text-muted-foreground text-13 m-0">{P.library.licence}</p>
               </div>
             </div>
             <Shot name={SHOTS.library.shot} alt={SHOTS.library.alt} />
@@ -320,7 +315,7 @@ export function Iso9001Page() {
                   <Shot name={p.shot} alt={p.alt} sizes="(min-width: 1024px) 58vw, 100vw" />
                 </div>
                 <div className="flex flex-col gap-4 px-3 pb-5 lg:py-6 lg:pr-6">
-                  <h3 id={`${p.key}-title`} className="text-heading-24 m-0">
+                  <h3 id={`${p.key}-title`} className="text-kpi m-0">
                     {p.title}
                   </h3>
                   <Points items={p.lines} />
@@ -341,7 +336,7 @@ export function Iso9001Page() {
                 key={s.name}
                 className="bg-card border-line flex flex-col gap-3 rounded-xl border p-5"
               >
-                <span className="text-heading-16">{s.name}</span>
+                <span className="text-card-title">{s.name}</span>
                 <span className="flex flex-wrap items-center gap-1.5">
                   <span
                     className={`${CHIP} border-(--tint-blue-line) bg-(--tint-blue-bg) text-(--tint-blue-ink)`}
@@ -354,7 +349,7 @@ export function Iso9001Page() {
                     </span>
                   ))}
                 </span>
-                <span className="text-muted-foreground text-label-13">
+                <span className="text-muted-foreground text-13">
                   {s.usedBy.length
                     ? `${P.shared.usedBy} ${s.usedBy.join(', ')}`
                     : 'Shared with every standard you add later'}
@@ -362,7 +357,7 @@ export function Iso9001Page() {
               </li>
             ))}
           </ul>
-          <p className="text-muted-foreground text-copy-14 m-0 text-center">
+          <p className="text-muted-foreground text-14 m-0 text-center">
             {sharedNames.length} shared registers. {LICENCE_NOTE}
           </p>
         </div>
@@ -377,18 +372,18 @@ export function Iso9001Page() {
               <ol className="m-0 flex list-none flex-col gap-4 p-0">
                 {P.edition.steps.map((s, i) => (
                   <li key={s.title} className="flex items-start gap-4">
-                    <span className="bg-brand text-primary-foreground text-label-14 flex size-8 shrink-0 items-center justify-center rounded-full font-semibold">
+                    <span className="bg-brand text-primary-foreground text-14 flex size-8 shrink-0 items-center justify-center rounded-full font-semibold">
                       {i + 1}
                     </span>
                     <span className="flex flex-col gap-1">
-                      <span className="text-heading-16">{s.title}</span>
-                      <span className="text-muted-foreground text-copy-14">{s.body}</span>
+                      <span className="text-card-title">{s.title}</span>
+                      <span className="text-muted-foreground text-14">{s.body}</span>
                     </span>
                   </li>
                 ))}
               </ol>
               {page.move ? (
-                <p className="text-copy-14 m-0">
+                <p className="text-14 m-0">
                   {page.move.equivalent} of the {page.move.of} requirements of {page.move.from} map
                   one to one onto {page.move.to}, so their answers copy across; the rest are listed
                   for you to review.
@@ -398,27 +393,27 @@ export function Iso9001Page() {
                 aria-labelledby="edition-status"
                 className="bg-card border-line flex flex-col gap-4 rounded-xl border p-5"
               >
-                <h3 id="edition-status" className="text-heading-16 m-0">
+                <h3 id="edition-status" className="text-card-title m-0">
                   {P.edition.statusTitle}
                 </h3>
                 <ul className="m-0 flex list-none flex-col gap-4 p-0">
                   {page.editions.map((e) => (
                     <li key={e.title} className="flex flex-col gap-1.5">
-                      <span className="text-label-14 font-semibold">{e.title}</span>
+                      <span className="text-14 font-semibold">{e.title}</span>
                       {e.badge ? (
-                        <span className="text-warn text-label-13 inline-flex items-start gap-1.5 font-medium">
+                        <span className="text-warn text-13 inline-flex items-start gap-1.5 font-medium">
                           <TriangleAlert aria-hidden="true" className="mt-px size-4 shrink-0" />
                           {e.badge}
                         </span>
                       ) : (
-                        <span className="text-good text-label-13 inline-flex items-center gap-1.5 font-medium">
+                        <span className="text-good text-13 inline-flex items-center gap-1.5 font-medium">
                           <CircleCheck aria-hidden="true" className="size-4" /> Current edition
                         </span>
                       )}
                       {e.note ? (
-                        <span className="text-muted-foreground text-copy-14">{e.note}</span>
+                        <span className="text-muted-foreground text-14">{e.note}</span>
                       ) : null}
-                      <span className="text-muted-foreground text-label-12">
+                      <span className="text-muted-foreground text-12">
                         {P.edition.checked} {e.checkedOn}
                       </span>
                     </li>
@@ -446,8 +441,8 @@ export function Iso9001Page() {
                   <span className="bg-soft flex size-10 items-center justify-center rounded-full">
                     <Icon aria-hidden="true" className="text-ink size-5" />
                   </span>
-                  <h3 className="text-heading-16 m-0">{a.title}</h3>
-                  <p className="text-muted-foreground text-copy-14 m-0">{a.body}</p>
+                  <h3 className="text-card-title m-0">{a.title}</h3>
+                  <p className="text-muted-foreground text-14 m-0">{a.body}</p>
                 </li>
               );
             })}
@@ -467,13 +462,13 @@ export function Iso9001Page() {
         <div className={SECTION}>
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div className="flex flex-col items-start gap-5">
-              <span className="bg-background-100 border-line text-label-13 text-ink rounded-full border px-3 py-1 font-medium">
+              <span className="bg-surface border-line text-13 text-ink rounded-full border px-3 py-1 font-medium">
                 {P.own.pill}
               </span>
-              <h2 id="own-title" className="text-heading-32 sm:text-heading-40 m-0 text-balance">
+              <h2 id="own-title" className="text-figure sm:text-hero m-0 text-balance">
                 {P.own.title}
               </h2>
-              <p className="text-muted-foreground text-copy-16 sm:text-copy-18 m-0">{P.own.lead}</p>
+              <p className="text-muted-foreground text-16 sm:text-18 m-0">{P.own.lead}</p>
               <Points items={P.own.points} />
             </div>
             <Shot name={SHOTS.own.shot} alt={SHOTS.own.alt} />
@@ -500,16 +495,16 @@ export function Iso9001Page() {
                 key={f.q}
                 className="bg-card border-line group rounded-xl border px-5 [&_summary::-webkit-details-marker]:hidden"
               >
-                <summary className="text-heading-16 flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4">
+                <summary className="text-card-title flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4">
                   {f.q}
                   <span
                     aria-hidden="true"
-                    className="text-muted-foreground text-heading-20 group-open:rotate-45"
+                    className="text-muted-foreground text-panel-title group-open:rotate-45"
                   >
                     +
                   </span>
                 </summary>
-                <p className="text-muted-foreground text-copy-14 m-0 pb-5">{f.a}</p>
+                <p className="text-muted-foreground text-14 m-0 pb-5">{f.a}</p>
               </details>
             ))}
           </div>
@@ -520,17 +515,12 @@ export function Iso9001Page() {
       <section aria-labelledby="iso9001-closing" className="border-line border-t">
         <div className={`${WRAP} py-16 sm:py-24`}>
           <div className="bg-card border-line flex flex-col items-center gap-5 rounded-xl border px-6 py-12 text-center sm:py-16">
-            <h2
-              id="iso9001-closing"
-              className="text-heading-32 sm:text-heading-40 m-0 text-balance"
-            >
+            <h2 id="iso9001-closing" className="text-figure sm:text-hero m-0 text-balance">
               {P.closing.title}
             </h2>
-            <p className="text-muted-foreground text-copy-16 sm:text-copy-18 m-0">
-              {P.closing.lead}
-            </p>
+            <p className="text-muted-foreground text-16 sm:text-18 m-0">{P.closing.lead}</p>
             <StartButton full />
-            <p className="text-muted-foreground text-label-13 m-0">{P.hero.reassurance}</p>
+            <p className="text-muted-foreground text-13 m-0">{P.hero.reassurance}</p>
           </div>
         </div>
       </section>

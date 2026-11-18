@@ -32,14 +32,14 @@ export function DeleteAccountPanel({ email, openOnLoad }: { email: string; openO
   return (
     <section
       aria-labelledby="delete-account-heading"
-      className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
+      className="border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
       data-testid="delete-account-panel"
     >
       <div className="flex flex-col gap-1">
-        <h2 id="delete-account-heading" className="text-heading-16">
+        <h2 id="delete-account-heading" className="text-card-title">
           Delete my account
         </h2>
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           You lose access to every workspace and can no longer sign in. Your name is removed. The
           records you made stay in each workspace and are shown as made by “{FORMER_MEMBER}”. This
           cannot be undone.
@@ -53,8 +53,8 @@ export function DeleteAccountPanel({ email, openOnLoad }: { email: string; openO
           </Button>
         </DialogTrigger>
         <DialogContent data-testid="delete-account-dialog">
-          <DialogTitle className="text-heading-16 pr-8">Delete your account?</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground m-0">
+          <DialogTitle className="text-card-title pr-8">Delete your account?</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground m-0">
             You lose access to every workspace and your name is removed. What you made stays, shown
             as made by “{FORMER_MEMBER}”. If you are the only owner of a workspace, make someone
             else owner of it or delete it first.
@@ -76,7 +76,7 @@ export function DeleteAccountPanel({ email, openOnLoad }: { email: string; openO
               <p
                 role="alert"
                 data-testid="delete-account-refusal"
-                className="bg-crit-soft text-crit text-copy-13 m-0 rounded-md px-4 py-3"
+                className="bg-crit-soft text-crit text-13 m-0 rounded-md px-4 py-3"
               >
                 {refusal}
               </p>

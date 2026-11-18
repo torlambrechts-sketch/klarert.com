@@ -43,7 +43,7 @@ export function GroupTitle({
           className="focus-visible:outline-focus group/title flex h-8 max-w-full items-center gap-1.5 rounded-md text-left focus-visible:outline-2"
         >
           <span
-            className="group-hover/title:bg-gray-alpha-100 grid size-8 shrink-0 place-items-center rounded-md"
+            className="group-hover/title:bg-panel grid size-8 shrink-0 place-items-center rounded-md"
             style={{ color }}
           >
             <ChevronDown
@@ -52,17 +52,17 @@ export function GroupTitle({
               aria-hidden
             />
           </span>
-          <span className="text-label-18 min-w-0 truncate font-semibold" style={{ color }}>
+          <span className="text-18 min-w-0 truncate font-semibold" style={{ color }}>
             {group.name}
           </span>
-          <span className="text-muted-foreground text-label-13 shrink-0 pl-1 tabular-nums">
+          <span className="text-muted-foreground text-13 shrink-0 pl-1 tabular-nums">
             {count === 1 ? '1 item' : `${count.toLocaleString('en-GB')} items`}
             {shown !== undefined && shown !== count
               ? ` · ${shown.toLocaleString('en-GB')} shown`
               : ''}
           </span>
           {donePct === null ? null : (
-            <span className="text-muted-foreground text-label-13 shrink-0 tabular-nums">
+            <span className="text-muted-foreground text-13 shrink-0 tabular-nums">
               · {donePct}% done
             </span>
           )}

@@ -41,16 +41,16 @@ function Chip({
         href={href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'text-label-13 inline-flex h-[30px] items-center gap-1.5 rounded-full border px-2.5 font-medium whitespace-nowrap',
+          'text-13 inline-flex h-[30px] items-center gap-1.5 rounded-full border px-2.5 font-medium whitespace-nowrap',
           active
             ? 'bg-brand border-brand text-primary-foreground'
-            : 'border-line text-ink hover:bg-soft hover:text-ink bg-background-100',
+            : 'border-line text-ink hover:bg-soft hover:text-ink bg-surface',
         )}
       >
         <span className="max-w-[220px] truncate">{label}</span>
         <span
           className={cn(
-            'text-label-12-mono tabular-nums',
+            'text-12 font-mono tabular-nums',
             active ? 'text-faint' : 'text-muted-foreground',
           )}
         >
@@ -90,7 +90,7 @@ export function MyWorkFilters({
       </nav>
       {counts.sheets.length > 0 ? (
         <nav aria-label="My work by sheet" className="flex flex-wrap items-center gap-2">
-          <span className="text-muted-foreground text-label-12 font-medium">By sheet</span>
+          <span className="text-muted-foreground text-12 font-medium">By sheet</span>
           <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
             {counts.sheets.map((s) => (
               <Chip

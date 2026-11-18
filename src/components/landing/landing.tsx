@@ -58,8 +58,8 @@ function Stats() {
           key={s.key}
           className={`border-line flex flex-col gap-1 pr-4 ${i % 2 === 1 ? 'border-l pl-5' : ''} ${i === 2 ? 'sm:border-l sm:pl-5 lg:border-l-0 lg:pl-0' : ''}`}
         >
-          <dt className="text-muted-foreground text-label-13">{s.label}</dt>
-          <dd className="text-heading-24 order-first m-0">{facts[s.key as keyof typeof facts]}</dd>
+          <dt className="text-muted-foreground text-13">{s.label}</dt>
+          <dd className="text-kpi order-first m-0">{facts[s.key as keyof typeof facts]}</dd>
         </div>
       ))}
     </dl>
@@ -91,17 +91,17 @@ function FlowDiagram() {
               />
             ) : null}
             <span
-              className={`flex w-full items-center gap-3 rounded-full border px-3 py-2 lg:flex-col lg:justify-start lg:gap-2 lg:rounded-xl lg:px-2 lg:py-4 lg:text-center ${last ? 'bg-brand text-primary-foreground border-transparent' : 'bg-background-100 border-line'}`}
+              className={`flex w-full items-center gap-3 rounded-full border px-3 py-2 lg:flex-col lg:justify-start lg:gap-2 lg:rounded-xl lg:px-2 lg:py-4 lg:text-center ${last ? 'bg-brand text-primary-foreground border-transparent' : 'bg-surface border-line'}`}
             >
               <span
-                className={`flex size-8 shrink-0 items-center justify-center rounded-full ${last ? 'bg-gray-alpha-300' : 'bg-soft'}`}
+                className={`flex size-8 shrink-0 items-center justify-center rounded-full ${last ? 'bg-line' : 'bg-soft'}`}
               >
                 <Icon aria-hidden="true" className="size-4" />
               </span>
               <span className="flex flex-col">
-                <span className="text-label-14 font-semibold">{s.title}</span>
+                <span className="text-14 font-semibold">{s.title}</span>
                 <span
-                  className={`text-label-12 ${last ? 'text-primary-foreground' : 'text-muted-foreground'}`}
+                  className={`text-12 ${last ? 'text-primary-foreground' : 'text-muted-foreground'}`}
                 >
                   {s.body}
                 </span>
@@ -123,15 +123,10 @@ export function Landing() {
           className={`${WRAP} grid items-center gap-12 pt-8 pb-16 sm:pt-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12 lg:pb-24`}
         >
           <div className="flex flex-col items-start gap-6">
-            <h1
-              id="hero-title"
-              className="text-heading-40 sm:text-heading-48 m-0 max-w-[22ch] text-balance"
-            >
+            <h1 id="hero-title" className="text-hero sm:text-hero m-0 max-w-[22ch] text-balance">
               {HERO.title}
             </h1>
-            <p className="text-muted-foreground text-copy-16 sm:text-copy-18 m-0 max-w-[52ch]">
-              {HERO.lead}
-            </p>
+            <p className="text-muted-foreground text-16 sm:text-18 m-0 max-w-[52ch]">{HERO.lead}</p>
             <Actions />
             <div className="mt-6 w-full">
               <Stats />
@@ -141,17 +136,14 @@ export function Landing() {
         </div>
       </section>
 
-      <section aria-labelledby="sets-band" className="bg-background-100 border-line border-y">
+      <section aria-labelledby="sets-band" className="bg-surface border-line border-y">
         <div className={`${WRAP} flex flex-col gap-4 py-8 md:flex-row md:items-center md:gap-10`}>
-          <h2
-            id="sets-band"
-            className="text-label-14 text-muted-foreground m-0 shrink-0 font-medium"
-          >
+          <h2 id="sets-band" className="text-14 text-muted-foreground m-0 shrink-0 font-medium">
             {STANDARDS_BAND.label}
           </h2>
           <ul className="m-0 flex list-none flex-wrap items-center gap-x-8 gap-y-3 p-0">
             {STANDARDS.map((s) => (
-              <li key={s.name} className="text-label-16 text-ink font-semibold">
+              <li key={s.name} className="text-16 text-ink font-semibold">
                 {s.href ? (
                   <Link
                     href={s.href}
@@ -179,8 +171,8 @@ export function Landing() {
               >
                 <Illustration name={p.key} className="h-56" />
                 <div className="flex flex-col gap-2 px-2 pb-3">
-                  <h3 className="text-heading-20 m-0">{p.title}</h3>
-                  <p className="text-muted-foreground text-copy-14 m-0">{p.body}</p>
+                  <h3 className="text-panel-title m-0">{p.title}</h3>
+                  <p className="text-muted-foreground text-14 m-0">{p.body}</p>
                 </div>
               </li>
             ))}
@@ -199,11 +191,11 @@ export function Landing() {
               >
                 <Illustration name={f.key} className="h-60" />
                 <div className="flex flex-1 flex-col gap-2 px-2 pb-3">
-                  <h3 className="text-heading-20 m-0">{f.title}</h3>
-                  <p className="text-muted-foreground text-copy-14 m-0 flex-1">{f.body}</p>
+                  <h3 className="text-panel-title m-0">{f.title}</h3>
+                  <p className="text-muted-foreground text-14 m-0 flex-1">{f.body}</p>
                   <Link
                     href={`${LINKS.platform}#${f.key}`}
-                    className="text-info text-label-14 mt-1 inline-flex min-h-11 items-center gap-1 self-start rounded-sm font-medium underline-offset-4 hover:underline sm:min-h-8"
+                    className="text-info text-14 mt-1 inline-flex min-h-11 items-center gap-1 self-start rounded-sm font-medium underline-offset-4 hover:underline sm:min-h-8"
                   >
                     <span>
                       More about this<span className="sr-only"> ({f.title})</span>
@@ -240,12 +232,12 @@ export function Landing() {
                 key={g.id}
                 className="bg-card border-line flex flex-col gap-4 rounded-xl border p-6"
               >
-                <h3 className="text-heading-16 m-0">{g.title}</h3>
+                <h3 className="text-card-title m-0">{g.title}</h3>
                 <ul className="m-0 flex list-none flex-col gap-2 p-0">
                   {g.sets.map((s) => (
                     <li key={s.key} className="flex flex-col">
-                      <span className="text-label-14 font-medium">{s.title}</span>
-                      <span className="text-muted-foreground text-label-12">
+                      <span className="text-14 font-medium">{s.title}</span>
+                      <span className="text-muted-foreground text-12">
                         {s.sheets.length} {s.sheets.length === 1 ? 'sheet' : 'sheets'} ·{' '}
                         {s.sharedRegisters.length} shared{' '}
                         {s.sharedRegisters.length === 1 ? 'register' : 'registers'}
@@ -257,7 +249,7 @@ export function Landing() {
             ))}
           </ul>
           {catalogue.foundation ? (
-            <p className="text-muted-foreground text-copy-14 m-0 text-center">
+            <p className="text-muted-foreground text-14 m-0 text-center">
               Every standard builds on the {catalogue.foundation.title.toLowerCase()} (
               {catalogue.foundation.sheets.length} sheets). {LICENCE_NOTE}
             </p>
@@ -286,8 +278,8 @@ export function Landing() {
                       <Icon aria-hidden="true" className="text-ink size-5" />
                     </span>
                   ) : null}
-                  <h3 className="text-heading-16 m-0">{t.title}</h3>
-                  <p className="text-muted-foreground text-copy-14 m-0">{t.body}</p>
+                  <h3 className="text-card-title m-0">{t.title}</h3>
+                  <p className="text-muted-foreground text-14 m-0">{t.body}</p>
                 </li>
               );
             })}
@@ -306,10 +298,10 @@ export function Closing() {
     <section aria-labelledby="closing-title" className="border-line border-t">
       <div className={`${WRAP} py-16 sm:py-24`}>
         <div className="bg-card border-line flex flex-col items-center gap-5 rounded-xl border px-6 py-12 text-center sm:py-16">
-          <h2 id="closing-title" className="text-heading-32 sm:text-heading-40 m-0 text-balance">
+          <h2 id="closing-title" className="text-figure sm:text-hero m-0 text-balance">
             {CLOSING.title}
           </h2>
-          <p className="text-muted-foreground text-copy-16 sm:text-copy-18 m-0">{CLOSING.lead}</p>
+          <p className="text-muted-foreground text-16 sm:text-18 m-0">{CLOSING.lead}</p>
           <div className="flex justify-center">
             <Actions />
           </div>

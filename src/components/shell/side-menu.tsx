@@ -156,7 +156,7 @@ export function WorkspaceSwitcher({
         </DropdownMenuTrigger>
       )}
       <DropdownMenuContent align="start" className="min-w-60">
-        <DropdownMenuLabel className="text-muted-foreground text-label-12 font-medium">
+        <DropdownMenuLabel className="text-muted-foreground text-12 font-medium">
           Your workspaces
         </DropdownMenuLabel>
         {workspaces.map((w) => (
@@ -164,7 +164,7 @@ export function WorkspaceSwitcher({
             <Link href={`/${w.slug}`} className="flex items-center gap-2">
               <span
                 aria-hidden
-                className="bg-ink text-primary-foreground text-label-12 flex size-[28px] shrink-0 items-center justify-center rounded-full font-medium"
+                className="bg-ink text-primary-foreground text-12 flex size-[28px] shrink-0 items-center justify-center rounded-full font-medium"
               >
                 {initialsOf(w.name)}
               </span>
@@ -316,7 +316,7 @@ export function SideMenu({
             onNavigate={onNavigate}
             trailing={
               myWorkCount > 0 ? (
-                <span className="text-muted-foreground text-label-13 font-medium">
+                <span className="text-muted-foreground text-13 font-medium">
                   {myWorkCount}
                   <span className="sr-only"> waiting</span>
                 </span>

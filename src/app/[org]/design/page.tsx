@@ -55,12 +55,12 @@ export default async function DesignPage({
       ) : (
         <div
           role="alert"
-          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
+          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
         >
           <p className="m-0">The design could not be loaded.</p>
           <a
             href={`/${org}/design`}
-            className="border-line hover:bg-soft bg-background-100 text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+            className="border-line hover:bg-soft bg-surface text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
           >
             Retry
           </a>

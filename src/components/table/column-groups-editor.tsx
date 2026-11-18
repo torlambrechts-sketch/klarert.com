@@ -78,7 +78,7 @@ export function ColumnGroupsEditor({
   return (
     <div className="flex flex-col gap-3">
       {list.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13">
+        <p className="text-muted-foreground text-13">
           No column groups yet. Group columns into sections such as Identify, Assess and Treat; each
           view can then collapse a section into one narrow column.
         </p>
@@ -116,14 +116,14 @@ export function ColumnGroupsEditor({
                   {members.map((f) => (
                     <li
                       key={f.key}
-                      className="bg-soft text-label-12 flex h-6 items-center gap-1 rounded-full pr-0.5 pl-2.5"
+                      className="bg-soft text-12 flex h-6 items-center gap-1 rounded-full pr-0.5 pl-2.5"
                     >
                       {f.name}
                       <button
                         type="button"
                         aria-label={`Remove ${f.name} from ${g.name}`}
                         disabled={busy}
-                        className="hover:bg-background-100 focus-visible:outline-focus grid size-5 place-items-center rounded-full text-[var(--muted)] focus-visible:outline-2"
+                        className="hover:bg-surface focus-visible:outline-focus grid size-5 place-items-center rounded-full text-[var(--muted)] focus-visible:outline-2"
                         onClick={() =>
                           void save(
                             list.map((x) =>
@@ -140,12 +140,12 @@ export function ColumnGroupsEditor({
                   ))}
                 </ul>
               ) : (
-                <p className="text-muted-foreground text-label-12">No columns yet.</p>
+                <p className="text-muted-foreground text-12">No columns yet.</p>
               )}
               {others.length ? (
                 <select
                   aria-label={`Add a column to ${g.name}`}
-                  className={cn(inputClass, 'text-label-13 h-8')}
+                  className={cn(inputClass, 'text-13 h-8')}
                   value=""
                   disabled={busy}
                   onChange={(e) => {
@@ -180,10 +180,7 @@ export function ColumnGroupsEditor({
           void save([...list, { id: newGroupId(), name: n, fieldKeys: [] }]);
         }}
       >
-        <label
-          htmlFor={`${id}-new`}
-          className="text-label-13 flex flex-1 flex-col gap-1 font-medium"
-        >
+        <label htmlFor={`${id}-new`} className="text-13 flex flex-1 flex-col gap-1 font-medium">
           New group
           <input
             id={`${id}-new`}
@@ -203,12 +200,12 @@ export function ColumnGroupsEditor({
         </Button>
       </form>
       {error ? (
-        <p role="alert" className="text-crit text-copy-13">
+        <p role="alert" className="text-crit text-13">
           {error}
         </p>
       ) : null}
       {byKey.size === 0 ? (
-        <p className="text-muted-foreground text-copy-13">Add fields to the sheet first.</p>
+        <p className="text-muted-foreground text-13">Add fields to the sheet first.</p>
       ) : null}
     </div>
   );
@@ -233,7 +230,7 @@ function GroupName({
   return (
     <input
       aria-label={`Group name ${value}`}
-      className={cn(inputClass, 'text-label-13 h-8 min-w-0 flex-1 font-medium')}
+      className={cn(inputClass, 'text-13 h-8 min-w-0 flex-1 font-medium')}
       value={draft}
       maxLength={60}
       disabled={disabled}

@@ -63,7 +63,7 @@ describe('OverflowTabs', () => {
     const trigger = html.slice(html.indexOf('<button'));
     expect(trigger).toContain('Form');
     expect(trigger).not.toContain('More');
-    expect(trigger).toContain('after:bg-[var(--ink)]');
+    expect(trigger).toContain('after:bg-brand');
   });
 
   it('has no menu when three tabs fit', () => {

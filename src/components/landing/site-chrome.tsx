@@ -19,8 +19,8 @@ export function Wordmark() {
       href={LINKS.home}
       className="text-ink flex min-h-11 flex-col justify-center rounded-sm leading-none sm:flex-row sm:items-baseline sm:gap-1.5"
     >
-      <span className="text-heading-16">{BRAND.product}</span>
-      <span className="text-muted-foreground text-label-12">by {BRAND.company}</span>
+      <span className="text-card-title">{BRAND.product}</span>
+      <span className="text-muted-foreground text-12">by {BRAND.company}</span>
     </Link>
   );
 }
@@ -31,9 +31,9 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
       href={href}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'text-label-14 flex h-9 items-center rounded-full border px-3.5 font-medium transition-colors',
+        'text-14 flex h-9 items-center rounded-full border px-3.5 font-medium transition-colors',
         active
-          ? 'bg-background-100 border-line text-ink'
+          ? 'bg-surface border-line text-ink'
           : 'text-muted-foreground hover:bg-nav-hover hover:text-ink border-transparent',
       )}
     >
@@ -45,10 +45,10 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
 /** `path` is the page's own address: it marks the active nav item and resets the phone menu between pages. */
 export function SiteShell({ path, children }: { path: string; children: React.ReactNode }) {
   return (
-    <div className="bg-background-100 flex min-h-dvh flex-col">
+    <div className="bg-surface flex min-h-dvh flex-col">
       <a
         href="#main"
-        className="bg-brand text-primary-foreground text-label-14 sr-only rounded-md px-3 py-2 font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
+        className="bg-brand text-primary-foreground text-14 sr-only rounded-md px-3 py-2 font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
       >
         Skip to content
       </a>
@@ -71,7 +71,7 @@ export function SiteShell({ path, children }: { path: string; children: React.Re
               </Button>
               <nav aria-label="Main" className="relative md:hidden">
                 <details key={path} className="group">
-                  <summary className="border-line bg-background-100 text-ink text-label-14 flex size-11 cursor-pointer list-none items-center justify-center rounded-md border font-medium [&::-webkit-details-marker]:hidden">
+                  <summary className="border-line bg-surface text-ink text-14 flex size-11 cursor-pointer list-none items-center justify-center rounded-md border font-medium [&::-webkit-details-marker]:hidden">
                     <Menu aria-hidden="true" className="size-5" />
                     <span className="sr-only">Menu</span>
                   </summary>
@@ -81,7 +81,7 @@ export function SiteShell({ path, children }: { path: string; children: React.Re
                         <Link
                           href={n.href}
                           aria-current={n.href === path ? 'page' : undefined}
-                          className="text-label-14 hover:bg-nav-hover aria-[current=page]:bg-nav-active flex h-11 items-center rounded-md px-3 font-medium"
+                          className="text-14 hover:bg-nav-hover aria-[current=page]:bg-nav-active flex h-11 items-center rounded-md px-3 font-medium"
                         >
                           {n.label}
                         </Link>
@@ -98,9 +98,9 @@ export function SiteShell({ path, children }: { path: string; children: React.Re
           {children}
         </main>
 
-        <footer className="bg-background-100 border-line border-t">
+        <footer className="bg-surface border-line border-t">
           <div
-            className={`${WRAP} text-muted-foreground text-label-13 flex flex-col gap-6 py-10 md:flex-row md:items-start md:justify-between`}
+            className={`${WRAP} text-muted-foreground text-13 flex flex-col gap-6 py-10 md:flex-row md:items-start md:justify-between`}
           >
             <div className="flex flex-col gap-2">
               <Wordmark />
@@ -155,21 +155,19 @@ export function SectionHead({
 }) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 text-center">
-      <span className="bg-background-100 border-line text-label-13 text-ink rounded-full border px-3 py-1 font-medium">
+      <span className="bg-surface border-line text-13 text-ink rounded-full border px-3 py-1 font-medium">
         {pill}
       </span>
       <Heading
         id={id}
         className={cn(
           'm-0 text-balance',
-          Heading === 'h1'
-            ? 'text-heading-32 sm:text-heading-48'
-            : 'text-heading-32 sm:text-heading-40',
+          Heading === 'h1' ? 'text-figure sm:text-hero' : 'text-figure sm:text-hero',
         )}
       >
         {title}
       </Heading>
-      <p className="text-muted-foreground text-copy-16 sm:text-copy-18 m-0 max-w-[60ch] text-pretty">
+      <p className="text-muted-foreground text-16 sm:text-18 m-0 max-w-[60ch] text-pretty">
         {lead}
       </p>
     </div>

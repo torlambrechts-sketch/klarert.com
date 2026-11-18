@@ -33,14 +33,11 @@ export function OutcomeChip({ outcome, className }: { outcome: string; className
   return (
     <span
       className={cn(
-        'text-label-12 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium whitespace-nowrap',
+        'text-12 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium whitespace-nowrap',
         outcome === 'done' && 'border-good/30 text-h1i bg-good-soft',
         bad && 'border-crit-line text-crit-ink bg-crit-soft',
         warn && 'border-warn/40 text-warn bg-warn-soft',
-        !bad &&
-          !warn &&
-          outcome !== 'done' &&
-          'border-line text-muted-foreground bg-background-100',
+        !bad && !warn && outcome !== 'done' && 'border-line text-muted-foreground bg-surface',
         className,
       )}
     >

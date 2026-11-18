@@ -80,10 +80,7 @@ export function MenuRegisters({
                       <span data-side-text className="min-w-0 flex-1 truncate">
                         {s.name}
                       </span>
-                      <span
-                        data-side-text
-                        className="text-label-12 flex shrink-0 items-center gap-1"
-                      >
+                      <span data-side-text className="text-12 flex shrink-0 items-center gap-1">
                         <Lock className="size-3.5" aria-hidden /> Restricted
                       </span>
                     </span>

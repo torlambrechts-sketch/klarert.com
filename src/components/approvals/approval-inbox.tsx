@@ -33,20 +33,18 @@ export function ApprovalInbox({
       aria-labelledby="work-approvals"
       data-testid="approval-inbox"
     >
-      <h2 id="work-approvals" className="text-heading-16">
+      <h2 id="work-approvals" className="text-card-title">
         Needs my approval{' '}
-        <span className="text-muted-foreground text-label-12-mono font-normal">
-          ({rows.length})
-        </span>
+        <span className="text-muted-foreground text-12 font-mono font-normal">({rows.length})</span>
       </h2>
       {rows.length === 0 ? (
-        <p className="border-line bg-background-100 text-muted-foreground text-copy-13 m-0 rounded-lg border border-dashed p-4">
+        <p className="border-line bg-surface text-muted-foreground text-13 m-0 rounded-lg border border-dashed p-4">
           Nothing waits for your approval.
         </p>
       ) : (
         <ul
           aria-label="Needs my approval"
-          className="border-line bg-background-100 m-0 list-none overflow-hidden rounded-lg border p-0"
+          className="border-line bg-surface m-0 list-none overflow-hidden rounded-lg border p-0"
         >
           {rows.map((r) => {
             const href = `/${org}/s/${r.sheetId}?item=${encodeURIComponent(r.displayId)}`;
@@ -59,12 +57,12 @@ export function ApprovalInbox({
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <Link
                     href={href}
-                    className="text-label-14 font-medium break-words underline-offset-4 hover:underline"
+                    className="text-14 font-medium break-words underline-offset-4 hover:underline"
                   >
                     {r.name}
                   </Link>
-                  <span className="text-muted-foreground text-label-12 flex flex-wrap gap-x-2">
-                    <span className="text-label-12-mono">{r.displayId}</span>
+                  <span className="text-muted-foreground text-12 flex flex-wrap gap-x-2">
+                    <span className="text-12 font-mono">{r.displayId}</span>
                     <span>{r.sheetName}</span>
                     <span>
                       Step {r.stepIndex + 1} of {r.stepCount}: {r.stepName}
@@ -72,7 +70,7 @@ export function ApprovalInbox({
                     <span>Submitted by {r.submittedBy}</span>
                   </span>
                 </div>
-                <div className="text-label-13 flex shrink-0 flex-col sm:items-end sm:text-right">
+                <div className="text-13 flex shrink-0 flex-col sm:items-end sm:text-right">
                   <span className="text-muted-foreground flex items-center gap-1">
                     <Clock className="size-3.5" aria-hidden />
                     Waiting since {formatDateTime(r.waitingSince, timeZone)}

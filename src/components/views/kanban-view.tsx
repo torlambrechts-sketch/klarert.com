@@ -74,7 +74,7 @@ export function KanbanView({
 
   if (!field)
     return (
-      <div className="border-line text-label-13 rounded-lg border border-dashed p-6">
+      <div className="border-line text-13 rounded-lg border border-dashed p-6">
         Kanban needs a status, dropdown or another label field for its lanes. Add one to this sheet
         first.
       </div>
@@ -97,11 +97,11 @@ export function KanbanView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <div className="text-label-13 flex flex-wrap items-center gap-2">
+      <div className="text-13 flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2">
           <span className="text-muted-foreground">Lanes by</span>
           <select
-            className="border-input bg-background-100 h-8 rounded-md border px-2"
+            className="border-input bg-surface h-8 rounded-md border px-2"
             value={field.key}
             onChange={(e) => setConfig((c) => ({ ...c, labelFieldKey: e.target.value }))}
           >
@@ -113,7 +113,7 @@ export function KanbanView({
           </select>
         </label>
         {canEdit ? (
-          <span className="text-muted-foreground text-label-12">
+          <span className="text-muted-foreground text-12">
             Drag a card to another lane to change it. Status rules still apply.
           </span>
         ) : null}
@@ -219,7 +219,7 @@ function LaneColumn({
       )}
     >
       <h3
-        className="border-line bg-soft text-label-13 flex items-center justify-between gap-2 border-b px-3 py-2.5 font-extrabold"
+        className="border-line bg-soft text-13 flex items-center justify-between gap-2 border-b px-3 py-2.5 font-extrabold"
         style={{ borderLeft: `4px solid ${color}` }}
       >
         <span className="flex min-w-0 items-center gap-2">
@@ -230,7 +230,7 @@ function LaneColumn({
           />
           <span className="truncate">{name}</span>
         </span>
-        <span className="border-line bg-background-100 text-label-12 rounded-sm border px-2 tabular-nums">
+        <span className="border-line bg-surface text-12 rounded-sm border px-2 tabular-nums">
           {lane.items.length}
         </span>
       </h3>
@@ -252,7 +252,7 @@ function LaneColumn({
           type="button"
           onClick={onAdd}
           aria-label={`Add an item to ${name}`}
-          className="text-muted-foreground hover:text-ink text-label-13 m-2 mt-0 flex items-center gap-1 rounded px-2 py-1 font-semibold"
+          className="text-muted-foreground hover:text-ink text-13 m-2 mt-0 flex items-center gap-1 rounded px-2 py-1 font-semibold"
         >
           <Plus className="size-4" aria-hidden /> Add
         </button>
@@ -315,7 +315,7 @@ function CardBody({
   return (
     <div
       className={cn(
-        'border-line bg-background-100 text-label-13 flex flex-col gap-1 rounded-lg border p-2.5',
+        'border-line bg-surface text-13 flex flex-col gap-1 rounded-lg border p-2.5',
         lifted && 'shadow-menu cursor-grabbing',
       )}
     >
@@ -329,7 +329,7 @@ function CardBody({
       >
         {item.name}
       </button>
-      <span className="text-muted-foreground text-label-12 flex items-center gap-2">
+      <span className="text-muted-foreground text-12 flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate">
           <span className="font-mono">{item.displayId}</span>
           {person ? ` · ${person}` : ''}
@@ -337,7 +337,7 @@ function CardBody({
         <SubitemChip item={item} ctx={ctx} />
         <CommentBubble summary={comments} ctx={ctx} />
       </span>
-      <span className="text-label-12 flex items-center justify-between gap-2">
+      <span className="text-12 flex items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-1.5">
           <span
             aria-hidden

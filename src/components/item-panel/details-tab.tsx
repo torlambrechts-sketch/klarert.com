@@ -32,9 +32,9 @@ import type { FileVersion } from './queries';
 
 function SummaryCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="border-line bg-background-100 flex min-w-0 flex-col gap-1.5 rounded-lg border px-3.5 py-3">
-      <span className="text-muted-foreground text-label-13 font-medium">{label}</span>
-      <div className="text-label-14 min-w-0 font-medium">{children}</div>
+    <div className="border-line bg-surface flex min-w-0 flex-col gap-1.5 rounded-lg border px-3.5 py-3">
+      <span className="text-muted-foreground text-13 font-medium">{label}</span>
+      <div className="text-14 min-w-0 font-medium">{children}</div>
     </div>
   );
 }
@@ -84,7 +84,7 @@ function Summary({ item, ctx }: { item: Item; ctx: Ctx }) {
             {s.due.relative ? (
               <em
                 className={cn(
-                  'text-label-12 font-semibold not-italic',
+                  'text-12 font-semibold not-italic',
                   s.due.overdue ? 'text-crit font-extrabold' : 'text-muted-foreground',
                 )}
               >
@@ -132,7 +132,7 @@ function LinkedItems({
   });
   return (
     <section aria-labelledby={`linked-${item.id}`} className="flex flex-col gap-2">
-      <h3 id={`linked-${item.id}`} className="text-heading-14 m-0">
+      <h3 id={`linked-${item.id}`} className="text-14 m-0 font-semibold">
         Linked items · {rows.length}
       </h3>
       {loading && rows.length === 0 ? (
@@ -142,7 +142,7 @@ function LinkedItems({
           className="bg-soft h-9 animate-pulse rounded"
         />
       ) : rows.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           No linked items. Add a link field to connect this item to items on other sheets.
         </p>
       ) : (
@@ -160,10 +160,10 @@ function LinkedItems({
             return (
               <li
                 key={`${edge.direction}:${edge.fieldId}:${other.id}`}
-                className="border-line text-label-13 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2"
+                className="border-line text-13 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2"
               >
                 <span
-                  className="bg-soft border-line text-label-12-mono shrink-0 rounded-md border px-2 py-0.5"
+                  className="bg-soft border-line text-12 shrink-0 rounded-md border px-2 py-0.5 font-mono"
                   title={edge.direction === 'out' ? 'Links from this item' : 'Links to this item'}
                 >
                   {edge.direction === 'in' ? '← ' : ''}
@@ -177,7 +177,7 @@ function LinkedItems({
                   >
                     {other.name}
                   </button>
-                  <span className="text-muted-foreground text-label-12-mono">
+                  <span className="text-muted-foreground text-12 font-mono">
                     {other.displayId} · {sheet?.name ?? ''}
                   </span>
                 </span>
@@ -304,14 +304,14 @@ export function DetailsTab({
       ) : null}
       <ItemAutomations org={org} item={item} ctx={ctx} canPause={canPause} />
       <section aria-labelledby={`fields-${item.id}`} className="flex flex-col gap-2">
-        <h3 id={`fields-${item.id}`} className="text-heading-14 m-0">
+        <h3 id={`fields-${item.id}`} className="text-14 m-0 font-semibold">
           All fields
         </h3>
         {!canEditItem ? (
-          <p className="text-muted-foreground text-copy-13 m-0">{readOnlyReason}</p>
+          <p className="text-muted-foreground text-13 m-0">{readOnlyReason}</p>
         ) : null}
         {visible.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             This sheet has no fields yet. Add one from the Grid’s “+” column.
           </p>
         ) : (

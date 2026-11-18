@@ -9,7 +9,7 @@ import { useShell } from './shell-context';
 
 // navy bar, white icons and words; the current page on --brand-soft with navy words (docs/18 §4, C10)
 const cell =
-  'my-2 mx-1.5 flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl text-label-12 font-semibold text-white focus-visible:outline-white aria-[current=page]:bg-brand-soft aria-[current=page]:text-navy';
+  'my-2 mx-1.5 flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl text-12 font-semibold text-white focus-visible:outline-white aria-[current=page]:bg-brand-soft aria-[current=page]:text-navy';
 
 /**
  * Phones (< 760 px, docs/05 §5) in the Keptrow look: the navy bottom bar (Home, My work, Menu) and the full side panel as a full-height --panel

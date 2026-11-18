@@ -23,10 +23,8 @@ export function KeyFigures({ items, ctx }: { items: Item[] | null; ctx: Ctx | nu
       {figures
         ? figures.map((f) => (
             <div key={f.id} className={box}>
-              <dt className="text-muted-foreground text-label-13 order-2 truncate">{f.label}</dt>
-              <dd className="text-heading-24 m-0 tabular-nums">
-                {f.value.toLocaleString('en-GB')}
-              </dd>
+              <dt className="text-muted-foreground text-13 order-2 truncate">{f.label}</dt>
+              <dd className="text-kpi m-0 tabular-nums">{f.value.toLocaleString('en-GB')}</dd>
             </div>
           ))
         : [0, 1, 2].map((i) => (

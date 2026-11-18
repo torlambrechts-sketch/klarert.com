@@ -23,7 +23,7 @@ function readDismissed(installId: string): boolean {
 }
 
 const textLink =
-  'text-ink text-label-13 inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline';
+  'text-ink text-13 inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline';
 
 export function NextStepCard({ org, next }: { org: string; next: NextStep }) {
   const [dismissed, setDismissed] = useState(false);
@@ -47,7 +47,7 @@ export function NextStepCard({ org, next }: { org: string; next: NextStep }) {
       >
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <span className="text-label-13 text-muted-foreground tabular-nums">
+            <span className="text-13 text-muted-foreground tabular-nums">
               {next.line}
               {next.level ? ` · ${next.level}` : ''}
             </span>
@@ -63,8 +63,8 @@ export function NextStepCard({ org, next }: { org: string; next: NextStep }) {
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-label-14 font-medium">{step.title}</span>
-            <p className="text-copy-13 text-muted-foreground m-0">{step.body}</p>
+            <span className="text-14 font-medium">{step.title}</span>
+            <p className="text-13 text-muted-foreground m-0">{step.body}</p>
             {step.link ? (
               <Link
                 href={`/${org}/s/${step.link.sheetId}${step.link.viewId ? `?view=${step.link.viewId}` : ''}`}

@@ -51,10 +51,7 @@ export interface ScreenProps {
   userId: string;
 }
 
-const selectClass = cn(
-  inputClass,
-  'select-chevron h-8 w-auto max-w-[280px] text-label-14 shadow-none',
-);
+const selectClass = cn(inputClass, 'select-chevron h-8 w-auto max-w-[280px] text-14 shadow-none');
 
 export function AutomationsScreen(props: ScreenProps) {
   const [client] = useState(
@@ -229,7 +226,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
         }
       />
       {!perms.canEdit ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           You can see automations and their runs. Ask an editor or admin to change them.
         </p>
       ) : null}
@@ -295,7 +292,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
             }
           />
           {list.length === 0 && !creating ? (
-            <li className="text-muted-foreground text-label-14 p-6 text-center">
+            <li className="text-muted-foreground text-14 p-6 text-center">
               {filtered
                 ? 'No automations match.'
                 : `No automations yet. ${perms.canEdit ? 'Start from a recipe or build a new one.' : ''}`}
@@ -324,7 +321,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
             <ListSkeleton />
           </div>
         ) : latest.data.length === 0 ? (
-          <p className="text-muted-foreground text-copy-14 m-0 px-4 py-6">
+          <p className="text-muted-foreground text-14 m-0 px-4 py-6">
             No runs yet. Every run is audited with “automation” as the actor and listed here.
           </p>
         ) : (
@@ -362,7 +359,7 @@ function RecipeGallery(props: ScreenProps & { perms: ListPermissions }) {
         description="Pick a recipe and a sheet. Next you choose which fields of the sheet the recipe uses, then adjust it in the builder."
       />
       <div className="flex flex-wrap items-center gap-2">
-        <label htmlFor={sheetSelect} className="text-muted-foreground text-label-14 font-medium">
+        <label htmlFor={sheetSelect} className="text-muted-foreground text-14 font-medium">
           Sheet
         </label>
         <select
@@ -380,25 +377,25 @@ function RecipeGallery(props: ScreenProps & { perms: ListPermissions }) {
         </select>
       </div>
       <fieldset className="m-0 border-0 p-0">
-        <legend className="text-label-14 mb-2 font-semibold">Recipe</legend>
+        <legend className="text-14 mb-2 font-semibold">Recipe</legend>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {RECIPES.map((r) => (
             <label
               key={r.id}
               className={cn(
-                'border-line hover:bg-subtle has-[:focus-visible]:outline-focus bg-background-100 flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:focus-visible]:outline-2',
+                'border-line hover:bg-subtle has-[:focus-visible]:outline-focus bg-surface flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:focus-visible]:outline-2',
                 recipeId === r.id && 'border-ink ring-ink ring-1',
               )}
             >
               <span
                 aria-hidden
-                className="border-line text-muted-foreground bg-background-100 grid size-7 shrink-0 place-items-center rounded-full border"
+                className="border-line text-muted-foreground bg-surface grid size-7 shrink-0 place-items-center rounded-full border"
               >
                 <Zap className="size-3.5" aria-hidden />
               </span>
               <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-label-14 font-medium">{r.title}</span>
-                <span className="text-muted-foreground text-label-13">
+                <span className="text-14 font-medium">{r.title}</span>
+                <span className="text-muted-foreground text-13">
                   {Object.keys(r.roles).length === 0
                     ? 'Uses the sheet’s sub-items'
                     : `Uses ${Object.keys(r.roles)
@@ -470,12 +467,12 @@ function BuilderPanel(props: ScreenProps & { perms: ListPermissions; onDone(): v
     <div className="border-soft flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b py-2 last:border-b-0">
       <label
         htmlFor={editing ? undefined : sheetRowId}
-        className="text-muted-foreground text-label-12 w-full font-medium sm:w-24"
+        className="text-muted-foreground text-12 w-full font-medium sm:w-24"
       >
         Sheet
       </label>
       {editing ? (
-        <span className="text-ink text-label-14">{sheetName ?? 'Archived sheet'}</span>
+        <span className="text-ink text-14">{sheetName ?? 'Archived sheet'}</span>
       ) : (
         <select
           id={sheetRowId}

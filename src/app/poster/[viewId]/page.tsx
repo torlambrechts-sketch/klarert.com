@@ -42,14 +42,12 @@ export default async function PosterPage({ params }: { params: Promise<{ viewId:
   const title = form?.title?.trim() || view?.name || 'Form';
   const svg = url ? await QRCode.toString(url, { type: 'svg', margin: 1 }) : null;
   return (
-    <main className="bg-background-100 mx-auto flex min-h-dvh max-w-[720px] flex-col items-center gap-6 px-4 py-10 text-center print:py-0">
+    <main className="bg-surface mx-auto flex min-h-dvh max-w-[720px] flex-col items-center gap-6 px-4 py-10 text-center print:py-0">
       {view && url && svg ? (
         <>
-          <h1 className="text-heading-40">{title}</h1>
+          <h1 className="text-hero">{title}</h1>
           {form?.description ? (
-            <p className="text-copy-18 text-muted-foreground whitespace-pre-line">
-              {form.description}
-            </p>
+            <p className="text-18 text-muted-foreground whitespace-pre-line">{form.description}</p>
           ) : null}
           <div
             role="img"
@@ -58,14 +56,14 @@ export default async function PosterPage({ params }: { params: Promise<{ viewId:
             // the SVG is made here by the qrcode library from our own URL
             dangerouslySetInnerHTML={{ __html: svg }}
           />
-          <p className="text-copy-20 font-semibold">Scan the code to fill in the form</p>
-          <p className="text-label-14-mono text-muted-foreground break-all">{url}</p>
+          <p className="text-20 font-semibold">Scan the code to fill in the form</p>
+          <p className="text-14 text-muted-foreground font-mono break-all">{url}</p>
           <PrintButton />
         </>
       ) : (
         <section className="border-line rounded-xl border p-6">
-          <h1 className="text-heading-24">No poster for this form</h1>
-          <p className="text-copy-13 text-muted-foreground mt-2">
+          <h1 className="text-kpi">No poster for this form</h1>
+          <p className="text-13 text-muted-foreground mt-2">
             The form has no live link, or it no longer exists. Create a link in Share first.
           </p>
         </section>

@@ -123,7 +123,7 @@ export function CreateButton({ onOpen, className }: { onOpen?: () => void; class
       <kbd
         data-side-text
         aria-hidden
-        className="text-label-11-mono rounded-[4px] border border-white/25 px-[5px] leading-[18px] opacity-80"
+        className="text-12 rounded-[4px] border border-white/25 px-[5px] font-mono leading-[18px] opacity-80"
       >
         Ctrl K
       </kbd>

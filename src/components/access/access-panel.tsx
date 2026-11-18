@@ -52,8 +52,8 @@ export function AccessDialog({
   return (
     <Dialog open={!!target} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[calc(100dvh-32px)] w-[min(560px,calc(100vw-32px))] overflow-y-auto">
-        <DialogTitle className="text-heading-16 pr-8">Access to {target?.name ?? ''}</DialogTitle>
-        <DialogDescription className="text-copy-13 text-muted-foreground -mt-2">
+        <DialogTitle className="text-card-title pr-8">Access to {target?.name ?? ''}</DialogTitle>
+        <DialogDescription className="text-13 text-muted-foreground -mt-2">
           {target?.kind === 'folder'
             ? 'Its sheets follow the folder unless a sheet has its own setting.'
             : 'Who can see, comment on and edit this sheet and its sub-items.'}
@@ -176,7 +176,7 @@ export function AccessPanel({
     <div className="flex flex-col gap-4" aria-busy={busy || undefined}>
       <p
         role="status"
-        className="bg-subtle border-line text-copy-13 flex items-start gap-2 rounded-lg border p-3"
+        className="bg-subtle border-line text-13 flex items-start gap-2 rounded-lg border p-3"
       >
         {info.restricted ? (
           <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -198,11 +198,11 @@ export function AccessPanel({
 
       {info.kind === 'sheet' && mode ? (
         <fieldset className="flex flex-col gap-1.5" disabled={!info.canManage || busy}>
-          <legend className="text-label-13 mb-1 font-semibold">Who can see this sheet</legend>
+          <legend className="text-13 mb-1 font-semibold">Who can see this sheet</legend>
           {MODES.filter((m) => m.id !== 'inherit' || info.folder).map((m) => (
             <label
               key={m.id}
-              className="has-[:checked]:border-focus border-line text-label-14 flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2 has-[:disabled]:cursor-default"
+              className="has-[:checked]:border-focus border-line text-14 flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2 has-[:disabled]:cursor-default"
             >
               <input
                 type="radio"
@@ -218,7 +218,7 @@ export function AccessPanel({
                     ? `Same as ${info.folder.name} (${info.folder.restricted ? 'restricted' : 'everyone'})`
                     : m.label}
                 </span>
-                <span className="text-muted-foreground text-label-12">{m.hint}</span>
+                <span className="text-muted-foreground text-12">{m.hint}</span>
               </span>
             </label>
           ))}
@@ -227,14 +227,14 @@ export function AccessPanel({
 
       {info.kind === 'folder' ? (
         <fieldset className="flex flex-col gap-1.5" disabled={!info.canManage || busy}>
-          <legend className="text-label-13 mb-1 font-semibold">Who can see this folder</legend>
+          <legend className="text-13 mb-1 font-semibold">Who can see this folder</legend>
           {[
             { v: false, label: 'Everyone in the workspace', hint: 'By their workspace role.' },
             { v: true, label: 'Only people I choose', hint: 'And the workspace owners.' },
           ].map((m) => (
             <label
               key={String(m.v)}
-              className="has-[:checked]:border-focus border-line text-label-14 flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2"
+              className="has-[:checked]:border-focus border-line text-14 flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2"
             >
               <input
                 type="radio"
@@ -245,7 +245,7 @@ export function AccessPanel({
               />
               <span className="flex flex-col">
                 <span>{m.label}</span>
-                <span className="text-muted-foreground text-label-12">{m.hint}</span>
+                <span className="text-muted-foreground text-12">{m.hint}</span>
               </span>
             </label>
           ))}
@@ -253,24 +253,24 @@ export function AccessPanel({
       ) : null}
 
       {!info.canManage ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           Only owners, and admins who have access, can change who has access.
         </p>
       ) : null}
 
       {info.restricted ? (
         <section aria-labelledby={`${modeName}-people`} className="flex flex-col gap-2">
-          <h3 id={`${modeName}-people`} className="text-label-13 m-0 font-semibold">
+          <h3 id={`${modeName}-people`} className="text-13 m-0 font-semibold">
             People
           </h3>
           {!ownList ? (
-            <p className="text-muted-foreground text-copy-13 m-0">
+            <p className="text-muted-foreground text-13 m-0">
               This sheet uses the list of {info.folder?.name}. Change it on the folder, or choose
               “Only people I choose” to give the sheet its own list.
             </p>
           ) : null}
           {info.people.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13 m-0">No members yet.</p>
+            <p className="text-muted-foreground text-13 m-0">No members yet.</p>
           ) : (
             <ul className="divide-line flex flex-col divide-y">
               {info.people.map((p) => (
@@ -287,19 +287,19 @@ export function AccessPanel({
       ) : null}
 
       <section aria-labelledby={`${modeName}-log`} className="flex flex-col gap-2">
-        <h3 id={`${modeName}-log`} className="text-label-13 m-0 font-semibold">
+        <h3 id={`${modeName}-log`} className="text-13 m-0 font-semibold">
           Access log
         </h3>
         {info.log.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">No access changes yet.</p>
+          <p className="text-muted-foreground text-13 m-0">No access changes yet.</p>
         ) : (
           <ol className="flex flex-col gap-1.5" data-testid="access-log">
             {info.log.map((l) => (
-              <li key={l.id} className="text-copy-13 flex flex-col">
+              <li key={l.id} className="text-13 flex flex-col">
                 <span>
                   <strong className="font-semibold">{l.who}</strong> · {l.text}
                 </span>
-                <time dateTime={l.at} className="text-muted-foreground text-label-12">
+                <time dateTime={l.at} className="text-muted-foreground text-12">
                   {formatDateTime(l.at, timeZone)}
                 </time>
               </li>
@@ -328,10 +328,10 @@ function PersonRow({
       <Avatar initials={person.initials} color={person.color} />
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate">{person.name}</span>
-        <span className="text-muted-foreground text-label-12">{ROLE_LABEL[person.role]}</span>
+        <span className="text-muted-foreground text-12">{ROLE_LABEL[person.role]}</span>
       </span>
       {person.role === 'owner' ? (
-        <span className="text-muted-foreground text-label-13">Always has access</span>
+        <span className="text-muted-foreground text-13">Always has access</span>
       ) : editable ? (
         <>
           <label htmlFor={id} className="sr-only">
@@ -341,7 +341,7 @@ function PersonRow({
             id={id}
             value={person.grant ?? ''}
             onChange={(e) => onChange((e.currentTarget.value || null) as GrantLevel | null)}
-            className="border-input bg-background-100 text-label-13 h-[32px] rounded-md border px-2"
+            className="border-input bg-surface text-13 h-[32px] rounded-md border px-2"
           >
             <option value="">No access</option>
             {choices.map((l) => (
@@ -352,7 +352,7 @@ function PersonRow({
           </select>
         </>
       ) : (
-        <span className="text-label-13">{LEVEL_LABEL[person.level]}</span>
+        <span className="text-13">{LEVEL_LABEL[person.level]}</span>
       )}
     </li>
   );
@@ -361,7 +361,7 @@ function PersonRow({
 function Avatar({ initials, color }: { initials: string; color: string }) {
   return (
     <span
-      className="text-label-12 flex size-8 shrink-0 items-center justify-center rounded-full font-semibold text-white"
+      className="text-12 flex size-8 shrink-0 items-center justify-center rounded-full font-semibold text-white"
       style={{ background: `var(--label-${color}, var(--label-blue))` }}
       aria-hidden
     >

@@ -53,9 +53,7 @@ function TurnOn({ org, sheetId, canEdit }: SubitemSettingsProps & { canEdit: boo
   const [pending, start] = useTransition();
   const id = useId();
   if (!canEdit)
-    return (
-      <p className="text-muted-foreground text-copy-13 m-0">Sub-items are off for this sheet.</p>
-    );
+    return <p className="text-muted-foreground text-13 m-0">Sub-items are off for this sheet.</p>;
   return (
     <form
       className="flex flex-col gap-3"
@@ -70,7 +68,7 @@ function TurnOn({ org, sheetId, canEdit }: SubitemSettingsProps & { canEdit: boo
         });
       }}
     >
-      <p className="text-muted-foreground text-copy-13 m-0">
+      <p className="text-muted-foreground text-13 m-0">
         Break an item into steps with their own owner, status, due date and evidence. Each one gets
         an ID like CA-014.1 and its own activity log.
       </p>
@@ -169,8 +167,8 @@ function Enabled(
           />
         </div>
         <fieldset className="flex flex-col gap-2" disabled={!p.canEdit}>
-          <legend className="text-label-14 mb-1 font-semibold">Rules</legend>
-          <label htmlFor={ids.block} className="text-label-13 flex items-start gap-2">
+          <legend className="text-14 mb-1 font-semibold">Rules</legend>
+          <label htmlFor={ids.block} className="text-13 flex items-start gap-2">
             <input
               id={ids.block}
               type="checkbox"
@@ -185,7 +183,7 @@ function Enabled(
               </span>
             </span>
           </label>
-          <label htmlFor={ids.lock} className="text-label-13 flex items-start gap-2">
+          <label htmlFor={ids.lock} className="text-13 flex items-start gap-2">
             <input
               id={ids.lock}
               type="checkbox"
@@ -202,13 +200,13 @@ function Enabled(
           </label>
         </fieldset>
         <fieldset className="flex flex-col gap-2" disabled={!p.canEdit}>
-          <legend className="text-label-14 mb-1 font-semibold">Template</legend>
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <legend className="text-14 mb-1 font-semibold">Template</legend>
+          <p className="text-muted-foreground text-13 m-0">
             From template adds these to an item in one go.
             {p.dueKey ? ' Due dates count from the day they are added.' : ''}
           </p>
           {rows.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13 m-0">No template yet.</p>
+            <p className="text-muted-foreground text-13 m-0">No template yet.</p>
           ) : (
             <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Template">
               {rows.map((r, i) => (
@@ -221,7 +219,7 @@ function Enabled(
                     className="min-w-40 flex-1"
                   />
                   {p.dueKey ? (
-                    <label className="text-label-13 flex items-center gap-1.5">
+                    <label className="text-13 flex items-center gap-1.5">
                       Due in
                       <Input
                         type="number"
@@ -285,7 +283,7 @@ function Enabled(
         ) : null}
       </form>
       <section className="flex flex-col gap-2" aria-label={`Fields of the ${label.toLowerCase()}`}>
-        <h3 className="text-label-14 m-0 font-semibold">Fields of the {label.toLowerCase()}</h3>
+        <h3 className="text-14 m-0 font-semibold">Fields of the {label.toLowerCase()}</h3>
         <SheetFields
           org={p.org}
           sheetId={p.childSheetId}
@@ -297,7 +295,7 @@ function Enabled(
       </section>
       <Link
         href={`/${p.org}/automations?sheet=${p.childSheetId}`}
-        className="text-label-13 text-info flex w-fit items-center gap-1.5 hover:underline"
+        className="text-13 text-info flex w-fit items-center gap-1.5 hover:underline"
       >
         <Zap className="size-4" aria-hidden /> Automations on the {label.toLowerCase()}
       </Link>

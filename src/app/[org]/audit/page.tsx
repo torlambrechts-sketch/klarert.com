@@ -33,12 +33,12 @@ function Card({
   return (
     <section
       id={testId}
-      className="border-line bg-background-100 flex scroll-mt-4 flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
+      className="border-line bg-surface flex scroll-mt-4 flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
       data-testid={testId}
     >
       <div className="flex flex-col gap-1">
-        <h2 className="text-heading-16">{title}</h2>
-        <p className="text-muted-foreground text-copy-13 m-0">{description}</p>
+        <h2 className="text-card-title">{title}</h2>
+        <p className="text-muted-foreground text-13 m-0">{description}</p>
       </div>
       {children}
     </section>
@@ -62,7 +62,7 @@ export default async function AuditPage({
         <PageHeader crumb="Reports" title="Audit outputs" />
         <div
           role="alert"
-          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
+          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
         >
           <p className="m-0">{r.error.message}</p>
           <Button asChild variant="outline" size="sm">
@@ -89,7 +89,7 @@ export default async function AuditPage({
         testId="audit-soa"
       >
         {d.libraries.length === 0 ? (
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             No framework is adopted yet. Owners and admins adopt one in Workspace admin ›
             Frameworks; its library then shows here.
           </p>
@@ -144,11 +144,11 @@ export default async function AuditPage({
           className="flex flex-col gap-3 sm:flex-row sm:items-end"
         >
           <label className="flex flex-col gap-1">
-            <span className="text-label-12 text-muted-foreground">From</span>
+            <span className="text-12 text-muted-foreground">From</span>
             <input type="date" name="from" defaultValue={from} required className={inputClass} />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-label-12 text-muted-foreground">To</span>
+            <span className="text-12 text-muted-foreground">To</span>
             <input type="date" name="to" defaultValue={d.today} required className={inputClass} />
           </label>
           <Button type="submit" variant="outline" className="self-start sm:self-auto">

@@ -67,8 +67,8 @@ export function LinkDocumentDialog({
         aria-describedby={`${id}-desc`}
         className="top-[12vh] w-[min(560px,calc(100vw-32px))] translate-y-0 gap-3"
       >
-        <DialogTitle className="text-heading-16 m-0">Link a document</DialogTitle>
-        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-copy-13 m-0">
+        <DialogTitle className="text-card-title m-0">Link a document</DialogTitle>
+        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-13 m-0">
           Controlled documents from the documents sheets. The item always shows their last approved
           version.
         </DialogDescription>
@@ -76,7 +76,7 @@ export function LinkDocumentDialog({
           <Search className="text-muted-foreground size-4" aria-hidden />
           <input
             autoFocus
-            className="text-copy-14 h-10 min-w-0 flex-1 bg-transparent outline-none"
+            className="text-14 h-10 min-w-0 flex-1 bg-transparent outline-none"
             placeholder="Search by title or ID"
             aria-label="Search documents"
             value={query}
@@ -91,7 +91,7 @@ export function LinkDocumentDialog({
               ))}
             </div>
           ) : state === 'error' ? (
-            <p className="text-copy-13 m-0 flex items-center gap-2">
+            <p className="text-13 m-0 flex items-center gap-2">
               The documents could not be searched.
               <Button
                 type="button"
@@ -103,7 +103,7 @@ export function LinkDocumentDialog({
               </Button>
             </p>
           ) : results.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13 m-0">
+            <p className="text-muted-foreground text-13 m-0">
               {query
                 ? 'No document matches. Try another title or ID.'
                 : 'No documents yet. Create a "Documents and policies" sheet and add your policies there.'}
@@ -126,7 +126,7 @@ export function LinkDocumentDialog({
                     aria-disabled={already}
                     tabIndex={0}
                     className={cn(
-                      'hover:bg-gray-alpha-100 focus-visible:outline-focus flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 focus-visible:outline-2',
+                      'hover:bg-panel focus-visible:outline-focus flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 focus-visible:outline-2',
                       on && 'bg-sel',
                       already && 'cursor-default opacity-50',
                     )}
@@ -142,23 +142,21 @@ export function LinkDocumentDialog({
                       aria-hidden
                       className={cn(
                         'border-line-strong flex size-4 shrink-0 items-center justify-center rounded border',
-                        (on || already) && 'bg-ink border-ink text-background-100',
+                        (on || already) && 'bg-ink border-ink text-surface',
                       )}
                     >
                       {on || already ? <Check className="size-3" /> : null}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="text-label-13 block truncate font-semibold">{d.name}</span>
-                      <span className="text-muted-foreground text-label-12 block truncate">
+                      <span className="text-13 block truncate font-semibold">{d.name}</span>
+                      <span className="text-muted-foreground text-12 block truncate">
                         {d.documentId ?? d.displayId} · {d.sheetName}
                       </span>
                     </span>
-                    <span className="text-label-12 shrink-0">
+                    <span className="text-12 shrink-0">
                       {d.view.symbol} {d.view.chip}
                     </span>
-                    {already ? (
-                      <span className="text-muted-foreground text-label-12">Linked</span>
-                    ) : null}
+                    {already ? <span className="text-muted-foreground text-12">Linked</span> : null}
                   </li>
                 );
               })}

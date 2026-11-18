@@ -125,12 +125,12 @@ export function TeamMembers({
     <div className="flex flex-col gap-2">
       <ul className="flex flex-wrap gap-1.5" aria-label={`Members of ${teamName}`}>
         {members.length === 0 ? (
-          <li className="text-muted-foreground text-label-13">No members yet.</li>
+          <li className="text-muted-foreground text-13">No members yet.</li>
         ) : null}
         {members.map((m) => (
           <li
             key={m.userId}
-            className="bg-soft border-line text-label-13 flex items-center gap-1 rounded-full border py-0.5 pr-1 pl-2.5"
+            className="bg-soft border-line text-13 flex items-center gap-1 rounded-full border py-0.5 pr-1 pl-2.5"
           >
             {m.name}
             <ActionForm action={removeTeamMemberAction} hidden={{ org, teamId, userId: m.userId }}>
@@ -157,7 +157,7 @@ export function TeamMembers({
           <select
             id={`add-${teamId}`}
             name="userId"
-            className="border-input bg-background-100 text-label-13 h-8 rounded-md border px-2"
+            className="border-input bg-surface text-13 h-8 rounded-md border px-2"
           >
             {available.map((p) => (
               <option key={p.userId} value={p.userId}>

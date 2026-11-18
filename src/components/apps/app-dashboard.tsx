@@ -36,7 +36,7 @@ export function AppDashboard({
         actions={
           <Link
             href={fullHref}
-            className="text-label-14 text-ink font-medium underline underline-offset-4"
+            className="text-14 text-ink font-medium underline underline-offset-4"
           >
             Open in Dashboards
           </Link>
@@ -45,18 +45,18 @@ export function AppDashboard({
       {!view ? (
         <div
           role="alert"
-          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
+          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
         >
           <p className="m-0">The widgets could not be loaded.</p>
           <a
             href={retryHref}
-            className="border-line hover:bg-soft bg-background-100 text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+            className="border-line hover:bg-soft bg-surface text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
           >
             Retry
           </a>
         </div>
       ) : widgets.length === 0 ? (
-        <div className="border-line bg-background-100 rounded-lg border border-dashed p-6">
+        <div className="border-line bg-surface rounded-lg border border-dashed p-6">
           <p className="text-muted-foreground m-0">This dashboard has no widgets yet.</p>
         </div>
       ) : (
@@ -77,15 +77,15 @@ export function AppDashboard({
                 key={w.id}
                 aria-labelledby={headingId}
                 className={cn(
-                  'border-line bg-background-100 flex min-w-0 flex-col rounded-lg border',
+                  'border-line bg-surface flex min-w-0 flex-col rounded-lg border',
                   def?.wide && 'col-span-full',
                 )}
               >
                 <div className="border-line flex min-h-[52px] items-center justify-between gap-2.5 border-b px-[16px] py-2">
-                  <h2 id={headingId} className="text-heading-14 m-0 min-w-0">
+                  <h2 id={headingId} className="text-14 m-0 min-w-0 font-semibold">
                     {w.title}
                   </h2>
-                  <span className="text-muted-foreground text-label-13 truncate text-right">
+                  <span className="text-muted-foreground text-13 truncate text-right">
                     {resultMeta(result) ?? `${def?.label ?? 'Widget'} · ${scope}`}
                   </span>
                 </div>

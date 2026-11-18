@@ -69,7 +69,7 @@ import { Segmented, WidgetEditor, type EditorState } from './widget-editor';
 
 const newId = (p: string) => `${p}${Math.random().toString(36).slice(2, 10)}`;
 
-const headButton = 'h-9 text-label-13 font-medium [&_svg]:size-3.5';
+const headButton = 'h-9 text-13 font-medium [&_svg]:size-3.5';
 
 export function InsightsView({
   org,
@@ -194,7 +194,7 @@ export function InsightsView({
   return (
     <div className="flex flex-1 flex-col">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground text-label-12 m-0">
+        <p className="text-muted-foreground text-12 m-0">
           {anyFilterable && !edit ? 'Click a bar to filter the table' : null}
         </p>
         {edit ? null : (
@@ -218,7 +218,7 @@ export function InsightsView({
         <div
           role="region"
           aria-label="Editing layout"
-          className="border-line bg-background-100 text-label-13 mb-4 flex flex-wrap items-center gap-2.5 rounded-xl border py-2 pr-2.5 pl-3.5 text-gray-900"
+          className="border-line bg-surface text-13 text-muted-foreground mb-4 flex flex-wrap items-center gap-2.5 rounded-xl border py-2 pr-2.5 pl-3.5"
         >
           <LayoutGrid className="text-ink size-4" aria-hidden />
           <span>
@@ -250,8 +250,8 @@ export function InsightsView({
       ) : null}
 
       {empty && !edit ? (
-        <div className="border-line text-muted-foreground text-label-13 flex flex-col items-center gap-2 rounded-xl border border-dashed px-5 py-12 text-center">
-          <b className="text-ink text-label-16 font-semibold">No widgets yet</b>
+        <div className="border-line text-muted-foreground text-13 flex flex-col items-center gap-2 rounded-xl border border-dashed px-5 py-12 text-center">
+          <b className="text-ink text-16 font-semibold">No widgets yet</b>
           <span>Build this view from this sheet or any sheet you can view.</span>
           <Button type="button" className="mt-2" onClick={addFromToolbar}>
             <Plus aria-hidden /> Add widget
@@ -307,7 +307,7 @@ export function InsightsView({
                           type="button"
                           onClick={() => openAdd(row.id, span)}
                           className={cn(
-                            'border-line-strong text-muted-foreground hover:text-ink hover:bg-background-100 text-label-13 col-span-12 flex items-center justify-center gap-1.5 rounded-xl border border-dashed font-medium hover:border-gray-600',
+                            'border-line-strong text-muted-foreground hover:text-ink hover:bg-surface text-13 hover:border-faint col-span-12 flex items-center justify-center gap-1.5 rounded-xl border border-dashed font-medium',
                             SPAN_CLASS[span],
                             MIN_HEIGHT[row.height ?? 'm'],
                           )}
@@ -431,7 +431,7 @@ function AddRowButton({ onPick }: { onPick(plan: readonly Span[]): void }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[232px] p-1.5">
-        <p className="text-muted-foreground text-label-12 m-0 px-2 pt-1 pb-1.5 font-medium">
+        <p className="text-muted-foreground text-12 m-0 px-2 pt-1 pb-1.5 font-medium">
           Columns in the new row
         </p>
         <div role="group" aria-label="Columns in the new row" className="flex flex-col">
@@ -439,7 +439,7 @@ function AddRowButton({ onPick }: { onPick(plan: readonly Span[]): void }) {
             <button
               key={plan.join('-')}
               type="button"
-              className="hover:bg-soft text-label-13 flex h-8 items-center gap-2.5 rounded-md px-2 text-left"
+              className="hover:bg-soft text-13 flex h-8 items-center gap-2.5 rounded-md px-2 text-left"
               onClick={() => {
                 setOpen(false);
                 onPick(plan);
@@ -488,13 +488,13 @@ function RowFrame({
       aria-label={edit ? `Row ${index + 1}` : undefined}
       className={cn(
         'flex flex-col gap-2.5',
-        edit && 'bg-subtle rounded-[14px] border border-dashed border-gray-400 px-3 pt-2.5 pb-3',
-        edit && drop.isOver && 'border-gray-700',
+        edit && 'bg-subtle border-line rounded-[14px] border border-dashed px-3 pt-2.5 pb-3',
+        edit && drop.isOver && 'border-faint',
       )}
     >
       {edit ? (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-muted-foreground text-label-12-mono mr-1 font-medium">
+          <span className="text-muted-foreground text-12 mr-1 font-mono font-medium">
             Row {index + 1}
           </span>
           <span
@@ -515,7 +515,7 @@ function RowFrame({
                   className={cn(
                     'inline-flex h-[26px] min-w-[30px] items-center justify-center rounded-md px-2',
                     on
-                      ? 'bg-background-100 text-ink shadow-tooltip'
+                      ? 'bg-surface text-ink shadow-tooltip'
                       : 'text-muted-foreground hover:text-ink [&_i]:opacity-50',
                   )}
                 >

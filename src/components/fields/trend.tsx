@@ -32,9 +32,9 @@ const Y_TOP = 3;
 const Y_BOTTOM = 17;
 
 const STROKE: Record<TrendTone, string> = {
-  good: 'var(--green-700)',
-  bad: 'var(--red-700)',
-  neutral: 'var(--gray-700)',
+  good: 'var(--ok)',
+  bad: 'var(--bad)',
+  neutral: 'var(--faint)',
 };
 
 /** Space for the line, reserved while the history loads and kept when there is none, so cells do not shift. */

@@ -71,7 +71,7 @@ export function BundleBanner({
     <div className="mt-3 flex flex-col gap-2" data-testid="bundle-banner">
       {fresh && canAdd ? (
         <div className="border-focus bg-info-soft ring-focus flex flex-wrap items-center gap-3 rounded-lg border p-3 ring-1">
-          <p className="text-copy-14 min-w-0 flex-1">
+          <p className="text-14 min-w-0 flex-1">
             <span className="font-medium">{bundle.name} is ready.</span> Next: add your first{' '}
             {label}.
           </p>
@@ -89,7 +89,7 @@ export function BundleBanner({
           </Button>
         </div>
       ) : null}
-      <div className="text-label-13 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="text-13 flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="bg-soft text-ink flex items-center gap-1.5 rounded-full px-2.5 py-1">
           <Package className="size-3.5" aria-hidden /> Created by {bundle.name}
         </span>
@@ -138,7 +138,7 @@ export function BundleBanner({
           aria-label="Archive the whole set"
           className="border-line flex flex-wrap items-center gap-2 rounded-lg border p-3"
         >
-          <p className="text-copy-13 min-w-0 flex-1">
+          <p className="text-13 min-w-0 flex-1">
             Archive {bundle.name}: {bundle.sheets} {bundle.sheets === 1 ? 'sheet' : 'sheets'}, its
             forms and dashboards; its automations are turned off. Items and the activity log are
             kept.

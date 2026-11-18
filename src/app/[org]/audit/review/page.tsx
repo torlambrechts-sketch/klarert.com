@@ -38,11 +38,11 @@ export default async function ReviewInputsPage({
       aria-label="Period"
     >
       <label className="flex flex-col gap-1">
-        <span className="text-label-12 text-muted-foreground">From</span>
+        <span className="text-12 text-muted-foreground">From</span>
         <input type="date" name="from" defaultValue={from} required className={inputClass} />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-label-12 text-muted-foreground">To</span>
+        <span className="text-12 text-muted-foreground">To</span>
         <input type="date" name="to" defaultValue={to} required className={inputClass} />
       </label>
       <Button type="submit" variant="outline" className="self-start sm:self-auto">
@@ -57,7 +57,7 @@ export default async function ReviewInputsPage({
         {periodForm}
         <div
           role="alert"
-          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
+          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
         >
           <p className="m-0">{r.error.fieldErrors?.to ?? r.error.message}</p>
           <Button asChild variant="outline" size="sm">
@@ -88,7 +88,7 @@ export default async function ReviewInputsPage({
         }
       />
       {periodForm}
-      <dl className="text-copy-13 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1">
+      <dl className="text-13 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1">
         <dt className="text-muted-foreground">Workspace</dt>
         <dd className="m-0">{d.workspace}</dd>
         <dt className="text-muted-foreground">Period</dt>
@@ -99,9 +99,9 @@ export default async function ReviewInputsPage({
         </dd>
       </dl>
       {nothing ? (
-        <div className="border-line bg-background-100 rounded-lg border p-5">
+        <div className="border-line bg-surface rounded-lg border p-5">
           <p className="m-0">Nothing to compile yet.</p>
-          <p className="text-copy-13 text-muted-foreground m-0 mt-1">
+          <p className="text-13 text-muted-foreground m-0 mt-1">
             The inputs come from the ISO/IEC 27001 pack&apos;s sheets (risks, nonconformities,
             audits, incidents) and your adopted frameworks. Owners and admins install them in
             Workspace admin.
@@ -112,19 +112,19 @@ export default async function ReviewInputsPage({
         {d.review.sections.map((s, i) => (
           <li
             key={s.key}
-            className="border-line bg-background-100 flex break-inside-avoid flex-col gap-2 rounded-lg border p-5 sm:px-[22px]"
+            className="border-line bg-surface flex break-inside-avoid flex-col gap-2 rounded-lg border p-5 sm:px-[22px]"
             data-section={s.key}
           >
-            <h2 className="text-heading-16 flex items-baseline gap-2">
+            <h2 className="text-card-title flex items-baseline gap-2">
               <span className="text-muted-foreground tabular-nums">{i + 1}.</span> {s.title}
             </h2>
             {s.available ? null : (
-              <p className="text-copy-13 text-muted-foreground m-0 flex items-center gap-1.5">
+              <p className="text-13 text-muted-foreground m-0 flex items-center gap-1.5">
                 <CircleDashed className="size-3.5 shrink-0" aria-hidden /> No sheet holds this yet.
               </p>
             )}
             {s.facts.length ? (
-              <ul className="text-copy-14 m-0 flex flex-col gap-1 pl-5">
+              <ul className="text-14 m-0 flex flex-col gap-1 pl-5">
                 {s.facts.map((f) => (
                   <li key={f}>{f}</li>
                 ))}
@@ -138,11 +138,11 @@ export default async function ReviewInputsPage({
                 {s.items.map((it) => (
                   <li
                     key={`${s.key}-${it.id}`}
-                    className="text-copy-13 flex flex-wrap items-baseline gap-x-2 py-1.5"
+                    className="text-13 flex flex-wrap items-baseline gap-x-2 py-1.5"
                   >
                     <Link
                       href={`/${org}/s/${it.sheetId}?item=${encodeURIComponent(it.displayId)}`}
-                      className="text-label-13-mono text-ink underline-offset-4 hover:underline"
+                      className="text-13 text-ink font-mono underline-offset-4 hover:underline"
                     >
                       {it.displayId}
                     </Link>
@@ -151,7 +151,7 @@ export default async function ReviewInputsPage({
                   </li>
                 ))}
                 {s.more ? (
-                  <li className="text-copy-13 text-muted-foreground py-1.5">and {s.more} more</li>
+                  <li className="text-13 text-muted-foreground py-1.5">and {s.more} more</li>
                 ) : null}
               </ul>
             ) : null}
@@ -160,20 +160,20 @@ export default async function ReviewInputsPage({
       </ol>
       {d.reviewSheet ? (
         <section
-          className="border-line bg-background-100 flex flex-col gap-3 rounded-lg border p-5 sm:px-[22px] print:hidden"
+          className="border-line bg-surface flex flex-col gap-3 rounded-lg border p-5 sm:px-[22px] print:hidden"
           aria-labelledby="review-record"
         >
-          <h2 id="review-record" className="text-heading-16 flex items-center gap-2">
+          <h2 id="review-record" className="text-card-title flex items-center gap-2">
             <ListChecks className="size-4" aria-hidden /> Record the review
           </h2>
-          <p className="text-copy-13 text-muted-foreground m-0">
+          <p className="text-13 text-muted-foreground m-0">
             Adds an item to {d.reviewSheet.name} for this period, ticks the inputs that have data
             and posts this report as its first update.
           </p>
           {d.canCreate ? (
             <CreateReviewButton org={org} from={from} to={to} sheetName={d.reviewSheet.name} />
           ) : (
-            <p className="text-copy-13 m-0">Only editors can add items. You can print this page.</p>
+            <p className="text-13 m-0">Only editors can add items. You can print this page.</p>
           )}
         </section>
       ) : null}

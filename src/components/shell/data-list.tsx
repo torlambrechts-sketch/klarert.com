@@ -30,7 +30,7 @@ export function ListCrumb({
 
 export function CountBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="bg-soft text-muted-foreground text-label-12 rounded-full px-[9px] py-0.5 font-medium whitespace-nowrap">
+    <span className="bg-soft text-muted-foreground text-12 rounded-full px-[9px] py-0.5 font-medium whitespace-nowrap">
       {children}
     </span>
   );
@@ -57,7 +57,7 @@ export function ListSearch({
       />
       <input
         type="search"
-        className={cn(inputClass, 'text-label-14 h-[40px] w-full pl-8 shadow-none')}
+        className={cn(inputClass, 'text-14 h-[40px] w-full pl-8 shadow-none')}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -68,7 +68,7 @@ export function ListSearch({
 
 export const toolbarSelectClass = cn(
   inputClass,
-  'select-chevron h-[40px] w-full text-label-14 shadow-none sm:w-auto sm:min-w-[170px]',
+  'select-chevron h-[40px] w-full text-14 shadow-none sm:w-auto sm:min-w-[170px]',
 );
 
 /** All / On / Off: a segmented control (aria-pressed buttons). */
@@ -87,7 +87,7 @@ export function Segmented<T extends string>({
     <div
       role="group"
       aria-label={label}
-      className="border-line bg-background-100 box-border inline-flex h-[40px] rounded-md border p-0.5"
+      className="border-line bg-surface box-border inline-flex h-[40px] rounded-md border p-0.5"
     >
       {options.map((o) => (
         <button
@@ -95,7 +95,7 @@ export function Segmented<T extends string>({
           type="button"
           aria-pressed={value === o.id}
           onClick={() => onChange(o.id)}
-          className="text-muted-foreground hover:text-ink aria-pressed:bg-soft aria-pressed:text-ink focus-visible:outline-focus text-label-14 rounded-[4px] px-3 focus-visible:outline-2 aria-pressed:font-medium"
+          className="text-muted-foreground hover:text-ink aria-pressed:bg-soft aria-pressed:text-ink focus-visible:outline-focus text-14 rounded-[4px] px-3 focus-visible:outline-2 aria-pressed:font-medium"
         >
           {o.label}
         </button>
@@ -138,7 +138,7 @@ export function ListHeader({
     <div
       aria-hidden
       className={cn(
-        'border-surface-line bg-head text-muted-foreground text-label-12 grid min-h-9 items-center gap-x-3 border-b pr-3 pl-1.5 font-medium',
+        'border-surface-line bg-head text-muted-foreground text-12 grid min-h-9 items-center gap-x-3 border-b pr-3 pl-1.5 font-medium',
         className,
       )}
     >
@@ -185,7 +185,7 @@ export function RowIcon({
     <span
       aria-hidden
       className={cn(
-        'border-line text-muted-foreground bg-background-100 grid size-7 shrink-0 place-items-center rounded-full border',
+        'border-line text-muted-foreground bg-surface grid size-7 shrink-0 place-items-center rounded-full border',
         dim && 'opacity-55',
       )}
     >
@@ -211,16 +211,13 @@ export function PanelCard({
   return (
     <section
       aria-labelledby={headingId}
-      className={cn(
-        'border-line bg-background-100 flex min-w-0 flex-col rounded-lg border',
-        className,
-      )}
+      className={cn('border-line bg-surface flex min-w-0 flex-col rounded-lg border', className)}
     >
       <header className="border-line flex min-h-[52px] flex-wrap items-center justify-between gap-x-2.5 border-b px-4 py-2">
-        <h2 id={headingId} className="text-heading-14 m-0">
+        <h2 id={headingId} className="text-14 m-0 font-semibold">
           {title}
         </h2>
-        {aside ? <span className="text-muted-foreground text-label-13">{aside}</span> : null}
+        {aside ? <span className="text-muted-foreground text-13">{aside}</span> : null}
       </header>
       {children}
     </section>

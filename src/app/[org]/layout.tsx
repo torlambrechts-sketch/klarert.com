@@ -63,7 +63,7 @@ export default async function OrgLayout({
               <p
                 role="status"
                 data-testid="auditor-banner"
-                className="border-line bg-subtle text-copy-13 flex items-center gap-2 border-b px-4 py-2 sm:px-[28px]"
+                className="border-line bg-subtle text-13 flex items-center gap-2 border-b px-4 py-2 sm:px-[28px]"
               >
                 <Eye className="size-4 shrink-0" aria-hidden />
                 {auditorBanner(workspace.expiresAt, workspace.time_zone)}.

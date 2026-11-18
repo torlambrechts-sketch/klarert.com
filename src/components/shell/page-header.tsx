@@ -38,7 +38,7 @@ export function PageHeader({
       <div className="hero-text flex min-w-0 flex-[1_1_320px] flex-col gap-3">
         {/* crumbs: the page's own, or the slot <ShellCrumb> renders into (a sheet's folder / sheet and chips) */}
         {crumb ? (
-          <div className="hero-crumbs text-label-14 flex min-w-0 items-center gap-2.5">{crumb}</div>
+          <div className="hero-crumbs text-14 flex min-w-0 items-center gap-2.5">{crumb}</div>
         ) : (
           <div id={CRUMB_SLOT} className="hero-crumbs flex min-w-0 items-center empty:hidden" />
         )}
@@ -88,17 +88,17 @@ export function Card({
     >
       {title ? (
         <div className="px-[22px] pt-5 pb-1.5">
-          <h2 id={headingId} className="text-heading-16 m-0">
+          <h2 id={headingId} className="text-card-title m-0">
             {title}
           </h2>
           {description ? (
-            <p className="text-muted-foreground text-copy-13 m-0 mt-1">{description}</p>
+            <p className="text-muted-foreground text-13 m-0 mt-1">{description}</p>
           ) : null}
         </div>
       ) : null}
       <div className={cn('flex-1', flush ? 'pt-2 pb-1' : 'px-[22px] py-3.5')}>{children}</div>
       {footer ? (
-        <div className="border-soft text-muted-foreground text-label-13 flex items-center justify-between gap-2.5 border-t px-[22px] py-3">
+        <div className="border-soft text-muted-foreground text-13 flex items-center justify-between gap-2.5 border-t px-[22px] py-3">
           {footer}
         </div>
       ) : null}

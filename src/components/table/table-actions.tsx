@@ -135,8 +135,8 @@ function Trigger({
   );
 }
 
-const menuHead = 'text-muted-foreground text-label-12 px-2 pt-2 pb-1 font-semibold';
-const countClass = 'text-muted-foreground text-label-12-mono ml-auto pl-3 tabular-nums';
+const menuHead = 'text-muted-foreground text-12 px-2 pt-2 pb-1 font-semibold';
+const countClass = 'text-muted-foreground font-mono text-12 ml-auto pl-3 tabular-nums';
 
 // ───────────────────────── View ▾ ─────────────────────────
 
@@ -295,9 +295,9 @@ export function TableFilterMenu({
           className="max-h-[min(70vh,560px)] w-auto max-w-[min(860px,calc(100vw-24px))] p-3"
         >
           <div className="flex items-center justify-between gap-6 px-2 pb-2">
-            <span className="text-label-16 font-semibold">Filter</span>
+            <span className="text-16 font-semibold">Filter</span>
             <DropdownMenuItem
-              className="text-label-13 min-h-8 w-auto px-2 font-medium"
+              className="text-13 min-h-8 w-auto px-2 font-medium"
               disabled={n === 0}
               onSelect={(e) => {
                 e.preventDefault();
@@ -374,7 +374,7 @@ export function TableFilterMenu({
       </DropdownMenu>
       <Dialog open={conditions} onOpenChange={setConditions}>
         <DialogContent className="w-[min(600px,calc(100vw-24px))]">
-          <DialogTitle className="text-heading-16">Conditions</DialogTitle>
+          <DialogTitle className="text-card-title">Conditions</DialogTitle>
           <DialogDescription className="sr-only">
             Show only the items that match every condition.
           </DialogDescription>
@@ -397,7 +397,7 @@ export function ValueFilterChip() {
   const f = useGrid((s) => s.valueFilter);
   if (!f) return null;
   return (
-    <span className="border-faint bg-soft text-ink text-label-14 flex h-[38px] max-w-[280px] items-center gap-1 rounded-md border pr-1 pl-3 font-medium">
+    <span className="border-faint bg-soft text-ink text-14 flex h-[38px] max-w-[280px] items-center gap-1 rounded-md border pr-1 pl-3 font-medium">
       <span className="min-w-0 flex-1 truncate">{f.label}</span>
       <button
         type="button"
@@ -461,7 +461,7 @@ export function TableSortMenu({
             >
               <span className="min-w-0 flex-1 truncate">{keyLabel(k, ctx)}</span>
               {r ? (
-                <span className="text-muted-foreground text-label-12 ml-auto pl-2">
+                <span className="text-muted-foreground text-12 ml-auto pl-2">
                   {rules.length > 1 ? `${at + 1} · ` : ''}
                   {r.dir === 'asc' ? '▲ Ascending' : '▼ Descending'}
                 </span>
@@ -587,7 +587,7 @@ export function TableMoreMenu(p: TableMoreMenuProps) {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Layers3 aria-hidden /> Group by
-              <span className="text-muted-foreground text-label-12 ml-auto truncate pl-2">
+              <span className="text-muted-foreground text-12 ml-auto truncate pl-2">
                 {groupBy ? byField.find((f) => f.id === groupBy)?.name : 'Groups'}
               </span>
             </DropdownMenuSubTrigger>
@@ -608,7 +608,7 @@ export function TableMoreMenu(p: TableMoreMenuProps) {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Layers aria-hidden /> Show one group
-              <span className="text-muted-foreground text-label-12 ml-auto truncate pl-2">
+              <span className="text-muted-foreground text-12 ml-auto truncate pl-2">
                 {groups.find((g) => g.id === p.onlyGroup)?.name ?? 'All'}
               </span>
             </DropdownMenuSubTrigger>
@@ -652,7 +652,7 @@ export function TableMoreMenu(p: TableMoreMenuProps) {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Rows3 aria-hidden /> Row height
-              <span className="text-muted-foreground text-label-12 ml-auto pl-2">
+              <span className="text-muted-foreground text-12 ml-auto pl-2">
                 {density === 'compact' ? '40 px' : '52 px'}
               </span>
             </DropdownMenuSubTrigger>
@@ -685,7 +685,7 @@ export function TableMoreMenu(p: TableMoreMenuProps) {
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <PenSquare aria-hidden /> Actions
-                <span className="text-muted-foreground text-label-12 ml-auto pl-2">
+                <span className="text-muted-foreground text-12 ml-auto pl-2">
                   {n ? `${n} selected` : ''}
                 </span>
               </DropdownMenuSubTrigger>
@@ -791,7 +791,7 @@ export function TableMoreMenu(p: TableMoreMenuProps) {
       />
       <Dialog open={newGroup} onOpenChange={setNewGroup}>
         <DialogContent className="w-[min(380px,calc(100vw-32px))]">
-          <DialogTitle className="text-heading-16">New group</DialogTitle>
+          <DialogTitle className="text-card-title">New group</DialogTitle>
           <DialogDescription className="sr-only">Name the new group.</DialogDescription>
           <NewGroupForm org={p.org} sheetId={p.data.sheet.id} />
         </DialogContent>
@@ -848,8 +848,8 @@ function BulkEditor({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[min(420px,calc(100vw-32px))]">
-        <DialogTitle className="text-heading-16">Set {field.name}</DialogTitle>
-        <DialogDescription className="text-muted-foreground text-label-13">
+        <DialogTitle className="text-card-title">Set {field.name}</DialogTitle>
+        <DialogDescription className="text-muted-foreground text-13">
           The value is set on every selected item.
         </DialogDescription>
         <ui.Editor

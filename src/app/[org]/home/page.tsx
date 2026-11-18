@@ -42,7 +42,7 @@ const TILES: { bucket: Bucket; icon: typeof AlertTriangle }[] = [
   { bucket: 'assigned', icon: UserRound },
 ];
 
-const textLink = 'text-ink text-label-13 font-medium underline-offset-4 hover:underline';
+const textLink = 'text-ink text-13 font-medium underline-offset-4 hover:underline';
 
 export default async function HomePage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
@@ -124,22 +124,22 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
               <Link
                 key={bucket}
                 href={`/${org}/my-work?filter=${bucket}`}
-                className="border-line hover:border-line-strong bg-background-100 flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2"
+                className="border-line hover:border-line-strong bg-surface flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2"
               >
-                <span className="text-ink text-label-14 flex items-center justify-between gap-2 font-medium">
+                <span className="text-ink text-14 flex items-center justify-between gap-2 font-medium">
                   {BUCKET_LABEL[bucket]}
                   <Icon className="text-muted-foreground size-4" aria-hidden />
                 </span>
                 <span
                   className={
                     bucket === 'overdue' && n > 0
-                      ? 'text-crit text-heading-32 leading-none tabular-nums'
-                      : 'text-heading-32 leading-none tabular-nums'
+                      ? 'text-crit text-figure leading-none tabular-nums'
+                      : 'text-figure leading-none tabular-nums'
                   }
                 >
                   {n}
                 </span>
-                <span className="text-muted-foreground text-label-13">
+                <span className="text-muted-foreground text-13">
                   {n === 1 ? '1 item' : `${n} items`}
                 </span>
               </Link>
@@ -202,7 +202,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
             <>
               Needs you{' '}
               {summary ? (
-                <span className="text-muted-foreground text-label-12-mono font-normal">
+                <span className="text-muted-foreground text-12 font-mono font-normal">
                   ({summary.needsYouCount})
                 </span>
               ) : null}
@@ -222,7 +222,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
           {!summary ? (
             <Retry org={org} what="Your work" />
           ) : summary.needsYou.length === 0 ? (
-            <p className="text-muted-foreground text-copy-14 m-0 px-[22px] py-7 text-center">
+            <p className="text-muted-foreground text-14 m-0 px-[22px] py-7 text-center">
               Nothing is overdue, requested of you or due in the next 14 days.
             </p>
           ) : (
@@ -236,7 +236,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
             <>
               Next 30 days{' '}
               {summary ? (
-                <span className="text-muted-foreground text-label-12-mono font-normal">
+                <span className="text-muted-foreground text-12 font-mono font-normal">
                   ({summary.next30.length})
                 </span>
               ) : null}
@@ -248,7 +248,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
           {!summary ? (
             <Retry org={org} what="Your dates" />
           ) : summary.next30.length === 0 ? (
-            <p className="text-muted-foreground text-copy-14 m-0 px-[22px] py-7 text-center">
+            <p className="text-muted-foreground text-14 m-0 px-[22px] py-7 text-center">
               None of your items has a date in the next 30 days.
             </p>
           ) : (
@@ -265,7 +265,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
           {!home ? (
             <Retry org={org} what="Recent activity" />
           ) : home.recent.length === 0 ? (
-            <p className="text-muted-foreground text-copy-14 m-0 px-[22px] py-7 text-center">
+            <p className="text-muted-foreground text-14 m-0 px-[22px] py-7 text-center">
               No activity yet. Changes to items show here.
             </p>
           ) : (
@@ -274,11 +274,11 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
                 <li key={r.id} className="border-soft border-t first:border-t-0">
                   <Link
                     href={`/${org}/s/${r.item.sheetId}?item=${encodeURIComponent(r.item.displayId)}`}
-                    className="hover:bg-subtle text-label-14 flex items-start gap-3 px-[22px] py-2.5 outline-offset-[-2px]"
+                    className="hover:bg-subtle text-14 flex items-start gap-3 px-[22px] py-2.5 outline-offset-[-2px]"
                   >
                     <span
                       aria-hidden
-                      className="bg-soft text-ink text-label-12 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full font-semibold"
+                      className="bg-soft text-ink text-12 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full font-semibold"
                     >
                       {initials(r.who)}
                     </span>
@@ -286,7 +286,7 @@ export default async function HomePage({ params }: { params: Promise<{ org: stri
                       <span className="break-words">
                         <span className="font-medium">{r.who}</span> · {r.text}
                       </span>
-                      <span className="text-muted-foreground text-label-12-mono truncate">
+                      <span className="text-muted-foreground text-12 truncate font-mono">
                         {r.item.displayId} · {r.item.name} · {r.item.sheetName} ·{' '}
                         {formatDateTime(r.at, workspace.time_zone)}
                       </span>

@@ -106,7 +106,7 @@ function guard(entry: FieldTypeUI): FieldTypeUI {
 
 export function RestrictedValue() {
   return (
-    <span className="text-muted-foreground text-label-12 flex items-center gap-1">
+    <span className="text-muted-foreground text-12 flex items-center gap-1">
       <Lock className="size-3.5" aria-hidden /> Restricted
     </span>
   );

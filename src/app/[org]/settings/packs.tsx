@@ -46,7 +46,7 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-1.5">
-      <h3 className="text-label-13 text-muted-foreground font-medium">{title}</h3>
+      <h3 className="text-13 text-muted-foreground font-medium">{title}</h3>
       {children}
     </section>
   );
@@ -54,7 +54,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function List({ label, items }: { label: string; items: React.ReactNode[] }) {
   return (
-    <ul aria-label={label} className="text-copy-14 m-0 flex list-none flex-col gap-1 p-0">
+    <ul aria-label={label} className="text-14 m-0 flex list-none flex-col gap-1 p-0">
       {items.map((x, i) => (
         <li key={i}>{x}</li>
       ))}
@@ -70,7 +70,7 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
     <div className="flex flex-col gap-4">
       {data.publisher ? (
         <p
-          className="border-line bg-soft text-copy-14 m-0 flex gap-2 rounded-md border p-3"
+          className="border-line bg-soft text-14 m-0 flex gap-2 rounded-md border p-3"
           data-testid="pack-publisher"
         >
           <Building2 className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
@@ -82,14 +82,14 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
         </p>
       ) : null}
       {p.state === 'ready' && p.extendsLevel && p.level ? (
-        <p className="text-copy-14 m-0" data-testid="extends-level">
+        <p className="text-14 m-0" data-testid="extends-level">
           {p.extendsLevel.name} is installed. {p.level.name} adds only what is missing; your sheets,
           items and settings stay as they are.
         </p>
       ) : null}
       {p.state !== 'installed' && toAdopt.length ? (
         <p
-          className="border-line bg-soft text-copy-14 m-0 flex gap-2 rounded-md border p-3"
+          className="border-line bg-soft text-14 m-0 flex gap-2 rounded-md border p-3"
           data-testid="adopts-framework"
         >
           <BookOpen className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
@@ -102,7 +102,7 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
       ) : null}
       {p.state === 'ready' && p.installsFirst?.length ? (
         <p
-          className="border-line bg-soft text-copy-14 m-0 flex gap-2 rounded-md border p-3"
+          className="border-line bg-soft text-14 m-0 flex gap-2 rounded-md border p-3"
           data-testid="installs-first"
         >
           <Layers className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
@@ -120,8 +120,8 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
       ) : null}
       {p.state === 'ready' && p.extends?.length ? (
         <div className="flex flex-col gap-1" data-testid="extends-list">
-          <p className="text-label-14 m-0 font-medium">Adds to the shared registers</p>
-          <ul className="text-copy-14 text-muted-foreground m-0 flex list-disc flex-col gap-0.5 pl-5">
+          <p className="text-14 m-0 font-medium">Adds to the shared registers</p>
+          <ul className="text-14 text-muted-foreground m-0 flex list-disc flex-col gap-0.5 pl-5">
             {p.extends.map((e) => (
               <li key={`${e.pack}:${e.sheet}`}>
                 {e.sheet}:{' '}
@@ -136,7 +136,7 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
         </div>
       ) : null}
       {p.state !== 'installed' && linked.length ? (
-        <p className="text-copy-14 text-muted-foreground m-0" data-testid="links-framework">
+        <p className="text-14 text-muted-foreground m-0" data-testid="links-framework">
           Links its items to the{' '}
           {linked.map((f) => data.frameworkTitles[f.library] ?? f.library).join(', ')} requirement
           library you have adopted.
@@ -147,18 +147,18 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
           role="alert"
           className="border-crit-line bg-crit-soft flex flex-col gap-1 rounded-md border p-3"
         >
-          <p className="text-label-14 text-crit-ink m-0 flex items-center gap-1.5 font-medium">
+          <p className="text-14 text-crit-ink m-0 flex items-center gap-1.5 font-medium">
             <X className="size-4" aria-hidden /> This pack cannot be installed
           </p>
           <List label="Conflicts" items={p.conflicts} />
         </div>
       ) : null}
       {p.state === 'installed' ? (
-        <p className="text-copy-14 m-0 flex items-center gap-1.5">
+        <p className="text-14 m-0 flex items-center gap-1.5">
           <Check className="text-good size-4" aria-hidden /> Already installed. Nothing to do.
         </p>
       ) : null}
-      {p.state === 'ready' ? <p className="text-copy-14 m-0">{data.lines[0]}</p> : null}
+      {p.state === 'ready' ? <p className="text-14 m-0">{data.lines[0]}</p> : null}
       {p.folders.length ? (
         <Section title="Folders">
           <List
@@ -175,7 +175,7 @@ function PreviewBody({ data }: { data: PackPreviewResult }) {
           items={p.sheets.map((s) => (
             <span key={s.ref}>
               <span className="font-medium">{s.name}</span>{' '}
-              <span className="text-label-12-mono text-muted-foreground">{s.prefix}</span>
+              <span className="text-12 text-muted-foreground font-mono">{s.prefix}</span>
               <span className="text-muted-foreground">
                 {' · '}
                 {plural(s.fields, 'field')}
@@ -282,9 +282,7 @@ function LevelChoice({
   const installedRank = installed ? levels.findIndex((l) => l.key === installed) : -1;
   return (
     <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
-      <legend className="text-label-13 text-muted-foreground mb-1.5 font-medium">
-        Choose a level
-      </legend>
+      <legend className="text-13 text-muted-foreground mb-1.5 font-medium">Choose a level</legend>
       <div className="grid gap-2 sm:grid-cols-2">
         {levels.map((l, i) => {
           const done = i <= installedRank;
@@ -308,20 +306,20 @@ function LevelChoice({
                   aria-describedby={`level-${l.key}-what`}
                   className="accent-ink size-4"
                 />
-                <span className="text-label-14 font-medium">{l.name}</span>
+                <span className="text-14 font-medium">{l.name}</span>
                 {done ? (
-                  <span className="text-label-12 bg-good-soft ml-auto flex items-center gap-1 rounded px-1.5 py-0.5">
+                  <span className="text-12 bg-good-soft ml-auto flex items-center gap-1 rounded px-1.5 py-0.5">
                     <Check className="text-good size-3" aria-hidden /> Installed
                   </span>
                 ) : null}
               </span>
-              <span id={`level-${l.key}-what`} className="text-copy-13 text-muted-foreground">
+              <span id={`level-${l.key}-what`} className="text-13 text-muted-foreground">
                 {l.description}
               </span>
-              <span className="text-label-13">
+              <span className="text-13">
                 {i === 0 ? 'Creates' : 'Adds'}: {(i === 0 ? l.sheets : l.adds).join(', ')}
               </span>
-              <span className="text-label-12 text-muted-foreground">
+              <span className="text-12 text-muted-foreground">
                 {plural(l.sheets.length, 'sheet')} · {plural(l.automations, 'automation')} ·{' '}
                 {plural(l.dashboards, 'dashboard')} in all
               </span>
@@ -402,8 +400,8 @@ export function PackSettings({
       </Button>
       <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">Settings of {title}</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogTitle className="text-panel-title">Settings of {title}</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground">
             Your choices set the defaults of new items in the pack&apos;s sheets. Items you already
             have keep their values.
           </DialogDescription>
@@ -425,7 +423,7 @@ export function PackSettings({
           />
         ))}
         {error ? (
-          <p role="alert" className="text-crit-ink text-copy-14 m-0 flex items-center gap-1.5">
+          <p role="alert" className="text-crit-ink text-14 m-0 flex items-center gap-1.5">
             <X className="size-4" aria-hidden /> {error}
           </p>
         ) : null}
@@ -542,13 +540,13 @@ export function PackPreview({
       )}
       <DialogContent className="flex max-h-[85vh] w-[min(640px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">
+          <DialogTitle className="text-panel-title">
             {pack.title}{' '}
-            <span className="text-label-13-mono text-muted-foreground align-middle">
+            <span className="text-13 text-muted-foreground align-middle font-mono">
               {pack.version}
             </span>
           </DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogDescription className="text-14 text-muted-foreground">
             What installing this pack creates in this workspace.
           </DialogDescription>
         </div>
@@ -568,7 +566,7 @@ export function PackPreview({
 
         {settingDefs.length && step.kind !== 'done' ? (
           <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
-            <legend className="text-label-13 text-muted-foreground mb-1.5 font-medium">
+            <legend className="text-13 text-muted-foreground mb-1.5 font-medium">
               Settings (you can change them later under Installed packs)
             </legend>
             {settingDefs.map((s) => (
@@ -611,7 +609,7 @@ export function PackPreview({
 
         {step.kind === 'installing' ? (
           <div role="status" className="flex flex-col gap-2">
-            <p className="text-copy-14 m-0 flex items-center gap-1.5">
+            <p className="text-14 m-0 flex items-center gap-1.5">
               <Loader2 className="size-4 animate-spin" aria-hidden /> Installing {pack.title}:
               writing every sheet, field, item and automation in one step.
             </p>
@@ -629,24 +627,24 @@ export function PackPreview({
         ) : null}
         {step.kind === 'done' ? (
           <div role="status" className="flex flex-col gap-2">
-            <p className="text-copy-16 m-0 flex items-center gap-1.5 font-medium">
+            <p className="text-16 m-0 flex items-center gap-1.5 font-medium">
               <Check className="text-good size-4" aria-hidden />{' '}
               {step.result.extended
                 ? `Added ${step.result.level ?? 'the level'} to ${step.result.title}.`
                 : `Installed ${step.result.title}${step.result.level ? ` (${step.result.level})` : ''}.`}
             </p>
             {step.result.installedFirst?.length ? (
-              <p className="text-copy-14 text-muted-foreground m-0">
+              <p className="text-14 text-muted-foreground m-0">
                 Installed {step.result.installedFirst.join(', ')} first.
               </p>
             ) : null}
             {step.result.adopted.length ? (
-              <p className="text-copy-14 text-muted-foreground m-0">
+              <p className="text-14 text-muted-foreground m-0">
                 Adopted {step.result.adopted.join(', ')} first.
               </p>
             ) : null}
             {step.result.renamedPrefixes.length ? (
-              <p className="text-copy-14 text-muted-foreground m-0">
+              <p className="text-14 text-muted-foreground m-0">
                 {step.result.renamedPrefixes.map((r) => `${r.sheet} uses ${r.to}`).join('; ')}.
               </p>
             ) : null}
@@ -750,7 +748,7 @@ export function ArchivePack({
   return (
     <span className="flex flex-col items-start gap-1 sm:items-end">
       {addOn ? (
-        <span className="text-label-13 text-muted-foreground" data-testid="archive-addon-note">
+        <span className="text-13 text-muted-foreground" data-testid="archive-addon-note">
           Archives its own sheets and dashboards, turns its automations off and takes its columns,
           views and empty groups
           {addOn.standard ? ` and the ${addOn.standard} tag` : ''} off the shared registers of{' '}
@@ -758,7 +756,7 @@ export function ArchivePack({
           tagged with it, stay with their history.
         </span>
       ) : (
-        <span className="text-label-13 text-muted-foreground">
+        <span className="text-13 text-muted-foreground">
           Archives its sheets, folders and dashboards and turns its automations off. Items and the
           activity log are kept.
         </span>

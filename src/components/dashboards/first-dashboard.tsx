@@ -29,7 +29,7 @@ export function FirstDashboard({ org, canEdit }: { org: string; canEdit: boolean
 
   if (!canEdit)
     return (
-      <div className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
+      <div className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
         <p className="text-muted-foreground m-0">
           No dashboards yet. An editor can set one up by opening this page.
         </p>
@@ -39,7 +39,7 @@ export function FirstDashboard({ org, canEdit }: { org: string; canEdit: boolean
     return (
       <div
         role="alert"
-        className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
+        className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
       >
         <p className="m-0">{error}</p>
         <Button type="button" variant="outline" onClick={() => void seed()}>
@@ -49,7 +49,7 @@ export function FirstDashboard({ org, canEdit }: { org: string; canEdit: boolean
     );
   return (
     <div aria-busy="true" className="flex flex-col gap-3">
-      <p className="text-muted-foreground text-copy-14 m-0" role="status">
+      <p className="text-muted-foreground text-14 m-0" role="status">
         Setting up your first dashboard from your sheets…
       </p>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4">

@@ -123,7 +123,7 @@ export function FilterButton({
         >
           <ListFilter aria-hidden /> Filter
           {count ? (
-            <span className="bg-ink text-label-12 ml-0.5 rounded-full px-1.5 leading-4 font-bold text-white tabular-nums">
+            <span className="bg-ink text-12 ml-0.5 rounded-full px-1.5 leading-4 font-bold text-white tabular-nums">
               {count}
             </span>
           ) : null}
@@ -163,9 +163,9 @@ export function ConditionsEditor({
   const usable = filterable(fields, ctx);
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-copy-13 font-semibold">Show items where all of these match</p>
+      <p className="text-13 font-semibold">Show items where all of these match</p>
       {conds.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13">No filters. Every item is shown.</p>
+        <p className="text-muted-foreground text-13">No filters. Every item is shown.</p>
       ) : null}
       <ol className="flex flex-col gap-2">
         {conds.map((cond, i) => (
@@ -197,7 +197,7 @@ export function ConditionsEditor({
         ) : null}
       </div>
       {computedNotice ? (
-        <p className="text-muted-foreground text-label-12">
+        <p className="text-muted-foreground text-12">
           Filters on calculated columns apply to loaded items.
         </p>
       ) : null}
@@ -290,9 +290,7 @@ export function ConditionRow({
           onChange={(value) => onChange({ ...cond, value })}
         />
       ) : null}
-      {problem ? (
-        <p className="text-crit text-label-12">{problem} This condition is skipped.</p>
-      ) : null}
+      {problem ? <p className="text-crit text-12">{problem} This condition is skipped.</p> : null}
     </li>
   );
 }
@@ -321,10 +319,10 @@ function ValueInput({
       <fieldset className="flex max-h-40 flex-wrap gap-x-3 gap-y-1 overflow-auto">
         <legend className="sr-only">{label}</legend>
         {choices.length === 0 ? (
-          <p className="text-muted-foreground text-label-12">No options to choose from.</p>
+          <p className="text-muted-foreground text-12">No options to choose from.</p>
         ) : null}
         {choices.map((c) => (
-          <label key={c.id} className="text-label-13 flex items-center gap-1.5">
+          <label key={c.id} className="text-13 flex items-center gap-1.5">
             <input
               type="checkbox"
               checked={chosen.has(c.id)}
@@ -387,7 +385,7 @@ function ValueInput({
           value={String(pair[0] ?? '')}
           onChange={(e) => onChange([read(e.target.value), pair[1] ?? ''])}
         />
-        <span className="text-muted-foreground text-label-13">and</span>
+        <span className="text-muted-foreground text-13">and</span>
         <input
           aria-label={`${label}, to`}
           type={type}
@@ -457,16 +455,14 @@ export function SortButton({
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[min(440px,calc(100vw-24px))]">
         <div className="flex flex-col gap-3">
-          <p className="text-copy-13 font-semibold">Sort items in each group by</p>
+          <p className="text-13 font-semibold">Sort items in each group by</p>
           {rules.length === 0 ? (
-            <p className="text-muted-foreground text-copy-13">
-              Items keep the order you gave them.
-            </p>
+            <p className="text-muted-foreground text-13">Items keep the order you gave them.</p>
           ) : null}
           <ol className="flex flex-col gap-2">
             {rules.map((r, i) => (
               <li key={i} className="flex flex-wrap items-center gap-1.5">
-                <span className="text-muted-foreground text-label-12 w-12">
+                <span className="text-muted-foreground text-12 w-12">
                   {i === 0 ? 'Sort by' : 'then by'}
                 </span>
                 <select
@@ -548,7 +544,7 @@ export function SheetSearch({ value, onChange }: { value: string; onChange(v: st
       />
       <input
         type="search"
-        className={cn(inputClass, 'text-label-14 h-[38px] w-full pl-8')}
+        className={cn(inputClass, 'text-14 h-[38px] w-full pl-8')}
         placeholder="Search items…"
         value={value}
         onChange={(e) => onChange(e.target.value)}

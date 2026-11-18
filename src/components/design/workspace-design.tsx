@@ -106,7 +106,7 @@ export function WorkspaceDesign({
     on: (v: string | null) => void,
   ) => (
     <label className="flex min-w-0 flex-col gap-1 sm:w-auto">
-      <span className="text-label-12 text-muted-foreground font-medium">{label}</span>
+      <span className="text-12 text-muted-foreground font-medium">{label}</span>
       <select
         className={toolbarSelectClass}
         value={value ?? ''}
@@ -154,7 +154,7 @@ export function WorkspaceDesign({
                 (v) => set({ domain: v }),
               )
             : null}
-          <label className="text-label-14 flex h-[40px] items-center gap-2 sm:self-end">
+          <label className="text-14 flex h-[40px] items-center gap-2 sm:self-end">
             <input
               type="checkbox"
               checked={!!params.differs}
@@ -174,7 +174,7 @@ export function WorkspaceDesign({
           ) : null}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-muted-foreground text-copy-13 m-0" aria-live="polite">
+          <p className="text-muted-foreground text-13 m-0" aria-live="polite">
             {app ? `${app.title}: ` : ''}
             {kept.length} {kept.length === 1 ? 'sheet' : 'sheets'} · {rows.length}{' '}
             {rows.length === 1 ? 'connection' : 'connections'}
@@ -222,12 +222,12 @@ export function WorkspaceDesign({
       ) : (
         <>
           <section aria-labelledby="design-sheets" className="flex flex-col gap-2">
-            <h2 id="design-sheets" className="text-heading-16 m-0">
+            <h2 id="design-sheets" className="text-card-title m-0">
               Sheets
             </h2>
             <div className="border-line relative overflow-x-auto rounded-lg border">
-              <table className="text-copy-13 w-full border-collapse" data-testid="design-sheets">
-                <thead className="bg-head text-muted-foreground text-label-12 text-left">
+              <table className="text-13 w-full border-collapse" data-testid="design-sheets">
+                <thead className="bg-head text-muted-foreground text-12 text-left">
                   <tr>
                     <th scope="col" className="px-3 py-2 font-medium">
                       Sheet
@@ -257,7 +257,7 @@ export function WorkspaceDesign({
                           {n.name}
                         </Link>
                         {n.differs ? (
-                          <span className="text-warn text-label-12 mt-0.5 flex items-center gap-1">
+                          <span className="text-warn text-12 mt-0.5 flex items-center gap-1">
                             <TriangleAlert className="size-3" aria-hidden /> Differs from pack
                           </span>
                         ) : null}
@@ -283,20 +283,17 @@ export function WorkspaceDesign({
             </div>
           </section>
           <section aria-labelledby="design-connections" className="flex flex-col gap-2">
-            <h2 id="design-connections" className="text-heading-16 m-0">
+            <h2 id="design-connections" className="text-card-title m-0">
               Connections
             </h2>
             {rows.length === 0 ? (
-              <p className="border-line text-muted-foreground text-copy-13 m-0 rounded-lg border border-dashed px-3 py-3">
+              <p className="border-line text-muted-foreground text-13 m-0 rounded-lg border border-dashed px-3 py-3">
                 No links, created items or buttons between these sheets yet.
               </p>
             ) : (
               <div className="border-line relative overflow-x-auto rounded-lg border">
-                <table
-                  className="text-copy-13 w-full border-collapse"
-                  data-testid="design-connections"
-                >
-                  <thead className="bg-head text-muted-foreground text-label-12 text-left">
+                <table className="text-13 w-full border-collapse" data-testid="design-connections">
+                  <thead className="bg-head text-muted-foreground text-12 text-left">
                     <tr>
                       <th scope="col" className="px-3 py-2 font-medium">
                         From
@@ -362,7 +359,7 @@ export function WorkspaceDesign({
           exportHref={`/${org}/design/print?${new URLSearchParams([...filterQuery(filter), ['part', 'leaves']]).toString()}`}
         />
       ) : (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           Owners, admins and auditors see where data leaves the workspace.
         </p>
       )}

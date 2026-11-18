@@ -16,8 +16,8 @@ import {
 import { Dot, Initials, Panel, Stage, Tag } from './mock-kit';
 
 const row = 'border-line flex items-center gap-2 border-b px-3 py-2 last:border-b-0';
-const mono = 'text-muted-foreground text-label-11-mono';
-const small = 'text-label-12';
+const mono = 'text-muted-foreground font-mono text-12';
+const small = 'text-12';
 
 // ── the problem ──
 
@@ -57,7 +57,7 @@ function Inbox() {
           <Paperclip className="text-faint size-3.5 shrink-0" />
         </div>
       ))}
-      <div className="bg-subtle text-muted-foreground text-label-12 rounded-b-lg px-3 py-2">
+      <div className="bg-subtle text-muted-foreground text-12 rounded-b-lg px-3 py-2">
         Which one is current? When does it expire?
       </div>
     </Panel>
@@ -68,7 +68,7 @@ function AuditRebuild() {
   return (
     <Panel className="flex w-full max-w-sm flex-col gap-2 p-3">
       <span className="flex items-center justify-between">
-        <span className="text-label-13 font-semibold">Before the audit</span>
+        <span className="text-13 font-semibold">Before the audit</span>
         <Dot tone="warn">2 weeks left</Dot>
       </span>
       {[
@@ -117,7 +117,7 @@ export function RiskRows({ count = 3 }: { count?: number }) {
       {RISKS.slice(0, count).map((r) => (
         <div key={r.id} className={row}>
           <span className={`${mono} w-11 shrink-0`}>{r.id}</span>
-          <span className="text-label-13 min-w-0 flex-1 truncate">{r.name}</span>
+          <span className="text-13 min-w-0 flex-1 truncate">{r.name}</span>
           <span className="hidden sm:block">
             <Initials>{r.who}</Initials>
           </span>
@@ -134,12 +134,12 @@ function Sheets() {
     <div className="flex w-full max-w-md flex-col gap-3">
       <Panel>
         <div className="border-line flex items-center justify-between border-b px-3 py-2">
-          <span className="text-label-13 font-semibold whitespace-nowrap">Risk register</span>
+          <span className="text-13 font-semibold whitespace-nowrap">Risk register</span>
           <span className="flex gap-1">
             {['Table', 'Board', 'Calendar'].map((v, i) => (
               <span
                 key={v}
-                className={`text-label-12 rounded-md px-1.5 py-0.5 ${i === 0 ? 'bg-soft text-ink font-medium' : 'text-muted-foreground'}`}
+                className={`text-12 rounded-md px-1.5 py-0.5 ${i === 0 ? 'bg-soft text-ink font-medium' : 'text-muted-foreground'}`}
               >
                 {v}
               </span>
@@ -150,10 +150,7 @@ function Sheets() {
       </Panel>
       <div className="flex flex-wrap justify-center gap-1.5">
         {types.map((t) => (
-          <span
-            key={t}
-            className="bg-background-100 border-line text-label-12 rounded-full border px-2 py-0.5"
-          >
+          <span key={t} className="bg-surface border-line text-12 rounded-full border px-2 py-0.5">
             {t}
           </span>
         ))}
@@ -166,14 +163,14 @@ function Forms() {
   return (
     <div className="flex w-full max-w-md items-center gap-3">
       <Panel float className="flex flex-1 flex-col gap-2 p-3">
-        <span className="text-label-13 font-semibold">Report an incident</span>
+        <span className="text-13 font-semibold">Report an incident</span>
         {['What happened?', 'When?'].map((q) => (
           <span key={q} className="flex flex-col gap-1">
             <span className={small}>{q}</span>
             <span className="border-line h-6 rounded-md border" />
           </span>
         ))}
-        <span className="bg-brand text-primary-foreground text-label-12 self-start rounded-md px-2 py-1 font-medium">
+        <span className="bg-brand text-primary-foreground text-12 self-start rounded-md px-2 py-1 font-medium">
           Send
         </span>
       </Panel>
@@ -189,12 +186,10 @@ function Forms() {
 function Automations() {
   const part = (label: string, text: string) => (
     <span className="flex items-baseline gap-2">
-      <span className="text-muted-foreground text-label-11-mono w-9 shrink-0 uppercase">
+      <span className="text-muted-foreground text-12 w-9 shrink-0 font-mono uppercase">
         {label}
       </span>
-      <span className="bg-background-100 border-line text-label-12 rounded-md border px-2 py-1">
-        {text}
-      </span>
+      <span className="bg-surface border-line text-12 rounded-md border px-2 py-1">{text}</span>
     </span>
   );
   return (
@@ -205,7 +200,7 @@ function Automations() {
         {part('Then', 'Create an item in Actions')}
       </Panel>
       <Panel float className="flex items-center justify-between gap-2 px-3 py-2">
-        <span className="text-label-12 font-medium">Run log · 3 steps</span>
+        <span className="text-12 font-medium">Run log · 3 steps</span>
         <Tag tint="green" mark="✓">
           Done
         </Tag>
@@ -236,19 +231,19 @@ function Approvals() {
   return (
     <Panel className="w-full max-w-md">
       <div className="border-line flex items-center justify-between border-b px-3 py-2">
-        <span className="text-label-13 font-semibold">Document approval</span>
+        <span className="text-13 font-semibold">Document approval</span>
         <span className={mono}>2 steps</span>
       </div>
       {steps.map((s, i) => (
         <div key={s.who} className={row}>
-          <span className="bg-soft text-label-11 flex size-5 items-center justify-center rounded-full font-semibold">
+          <span className="bg-soft text-12 flex size-5 items-center justify-center rounded-full font-semibold">
             {i + 1}
           </span>
-          <span className="text-label-13 flex-1">{s.who}</span>
+          <span className="text-13 flex-1">{s.who}</span>
           {s.state}
         </div>
       ))}
-      <div className="text-muted-foreground text-label-12 flex items-center gap-1.5 px-3 py-2">
+      <div className="text-muted-foreground text-12 flex items-center gap-1.5 px-3 py-2">
         <Lock className="size-3.5" /> Locked when approved
       </div>
     </Panel>
@@ -264,13 +259,13 @@ function Activity() {
   return (
     <Panel className="w-full max-w-md">
       <div className="border-line flex items-center justify-between border-b px-3 py-2">
-        <span className="text-label-13 font-semibold">Activity log</span>
+        <span className="text-13 font-semibold">Activity log</span>
         <Dot tone="good">✓ Chain intact</Dot>
       </div>
       {entries.map((e) => (
         <div key={e.hash} className={row}>
           <span className="bg-faint size-1.5 shrink-0 rounded-full" />
-          <span className="text-label-12 min-w-0 flex-1 truncate">{e.what}</span>
+          <span className="text-12 min-w-0 flex-1 truncate">{e.what}</span>
           <span className={mono}>{e.hash}</span>
         </div>
       ))}
@@ -295,15 +290,13 @@ function Soa() {
   return (
     <Panel className="w-full max-w-md">
       <div className="border-line flex items-center justify-between border-b px-3 py-2">
-        <span className="text-label-13 font-semibold whitespace-nowrap">
-          Statement of applicability
-        </span>
+        <span className="text-13 font-semibold whitespace-nowrap">Statement of applicability</span>
         <span className={mono}>Export</span>
       </div>
       {rows.map((r) => (
         <div key={r.ref} className={row}>
           <span className={`${mono} w-11`}>{r.ref}</span>
-          <span className="text-label-12 text-muted-foreground flex-1 whitespace-nowrap">
+          <span className="text-12 text-muted-foreground flex-1 whitespace-nowrap">
             Applicable: {r.yes ? 'Yes' : 'No'}
           </span>
           {r.tag}
@@ -340,8 +333,8 @@ function Evidence() {
         <div key={f.name} className={`${row} items-start`}>
           <FileText className="text-faint mt-0.5 size-4 shrink-0" />
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="text-label-13 truncate">{f.name}</span>
-            <span className="text-muted-foreground text-label-12 whitespace-nowrap">{f.until}</span>
+            <span className="text-13 truncate">{f.name}</span>
+            <span className="text-muted-foreground text-12 whitespace-nowrap">{f.until}</span>
             <span className={mono}>sha256 3f9a…c21e · v2</span>
           </span>
           {f.tag}
@@ -355,22 +348,22 @@ function Retention() {
   return (
     <Panel className="w-full max-w-md">
       <div className="border-line flex items-center justify-between border-b px-3 py-2">
-        <span className="text-label-13 font-semibold">Retention review</span>
+        <span className="text-13 font-semibold">Retention review</span>
         <span className={mono}>2 due</span>
       </div>
       {['DSR-014 · closed 2 years ago', 'DSR-019 · closed 2 years ago'].map((t, i) => (
         <div key={t} className={row}>
-          <span className="text-label-12 min-w-0 flex-1 truncate">{t}</span>
+          <span className="text-12 min-w-0 flex-1 truncate">{t}</span>
           {i === 0 ? (
             <Tag tint="grey">Legal hold</Tag>
           ) : (
-            <span className="bg-brand text-primary-foreground text-label-12 rounded-md px-2 py-0.5 font-medium">
+            <span className="bg-brand text-primary-foreground text-12 rounded-md px-2 py-0.5 font-medium">
               Approve
             </span>
           )}
         </div>
       ))}
-      <div className="text-muted-foreground text-label-12 px-3 py-2">
+      <div className="text-muted-foreground text-12 px-3 py-2">
         Erased values show as erased; the chain stays intact
       </div>
     </Panel>
@@ -388,11 +381,11 @@ function Roles() {
       {people.map((p) => (
         <div key={p.who} className={row}>
           <Initials>{p.who}</Initials>
-          <span className="text-label-13 flex-1">{p.role}</span>
-          {p.note ? <span className="text-muted-foreground text-label-12">{p.note}</span> : null}
+          <span className="text-13 flex-1">{p.role}</span>
+          {p.note ? <span className="text-muted-foreground text-12">{p.note}</span> : null}
         </div>
       ))}
-      <div className="text-muted-foreground text-label-12 flex items-center gap-1.5 px-3 py-2">
+      <div className="text-muted-foreground text-12 flex items-center gap-1.5 px-3 py-2">
         <Lock className="size-3.5" /> Salary band · Restricted
       </div>
     </Panel>
@@ -405,14 +398,14 @@ function Security() {
       <Panel float className="flex items-center gap-3 p-3">
         <Smartphone className="text-ink size-6 shrink-0" />
         <span className="flex flex-1 flex-col gap-1">
-          <span className="text-label-13 font-semibold">Two-step sign-in</span>
-          <span className="text-label-14-mono tracking-widest">482 •••</span>
+          <span className="text-13 font-semibold">Two-step sign-in</span>
+          <span className="text-14 font-mono tracking-widest">482 •••</span>
         </span>
         <KeyRound className="text-faint size-4" />
       </Panel>
       <Panel className="flex items-center gap-3 p-3">
         <MapPin className="text-ink size-5 shrink-0" />
-        <span className="text-label-13 flex-1">Frankfurt, EU</span>
+        <span className="text-13 flex-1">Frankfurt, EU</span>
         <Dot tone="good">✓ RLS on every table</Dot>
       </Panel>
     </div>
@@ -423,26 +416,26 @@ function Apps() {
   return (
     <div className="flex w-full max-w-md items-end justify-center gap-3">
       <Panel float className="flex w-40 flex-col gap-1.5 p-2.5">
-        <span className="text-label-12 font-semibold">CAPA</span>
+        <span className="text-12 font-semibold">CAPA</span>
         {['Report a problem', 'My actions', 'Needs my check'].map((s, i) => (
           <span
             key={s}
-            className={`text-label-12 rounded-md px-2 py-1.5 ${i === 1 ? 'bg-soft font-medium' : ''}`}
+            className={`text-12 rounded-md px-2 py-1.5 ${i === 1 ? 'bg-soft font-medium' : ''}`}
           >
             {s}
           </span>
         ))}
       </Panel>
       <Panel className="hidden flex-1 sm:block">
-        <div className="border-line text-label-13 border-b px-3 py-2 font-semibold">My actions</div>
+        <div className="border-line text-13 border-b px-3 py-2 font-semibold">My actions</div>
         <div className={row}>
-          <span className="text-label-12 flex-1 truncate">Contain the leak</span>
+          <span className="text-12 flex-1 truncate">Contain the leak</span>
           <Tag tint="red" mark="!">
             Overdue
           </Tag>
         </div>
         <div className={row}>
-          <span className="text-label-12 flex-1 truncate">Check effectiveness</span>
+          <span className="text-12 flex-1 truncate">Check effectiveness</span>
           <Tag tint="blue">Open</Tag>
         </div>
       </Panel>
@@ -453,7 +446,7 @@ function Apps() {
 function Design() {
   const node = (label: string, strong?: boolean) => (
     <span
-      className={`text-label-12 rounded-full border px-2.5 py-1 font-medium whitespace-nowrap ${strong ? 'bg-brand text-primary-foreground border-transparent' : 'bg-background-100 border-line'}`}
+      className={`text-12 rounded-full border px-2.5 py-1 font-medium whitespace-nowrap ${strong ? 'bg-brand text-primary-foreground border-transparent' : 'bg-surface border-line'}`}
     >
       {label}
     </span>

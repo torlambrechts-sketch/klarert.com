@@ -14,8 +14,8 @@ export function CreateRefusedDialog({ org, onClose }: { org: string; onClose: ()
   return (
     <Dialog open onOpenChange={(o) => (o ? null : onClose())}>
       <DialogContent data-testid="create-refused">
-        <DialogTitle className="text-heading-20 pr-8">Create</DialogTitle>
-        <DialogDescription className="text-copy-14 text-muted-foreground m-0">
+        <DialogTitle className="text-panel-title pr-8">Create</DialogTitle>
+        <DialogDescription className="text-14 text-muted-foreground m-0">
           {CREATE_REFUSED}
         </DialogDescription>
         <div>

@@ -280,14 +280,14 @@ function NewItemSession({
           )}
         >
           <div className="border-line flex flex-col gap-1 border-b px-5 pt-4 pr-12 pb-3">
-            <DialogTitle className="text-heading-16">New {label}</DialogTitle>
-            <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-copy-13">
+            <DialogTitle className="text-card-title">New {label}</DialogTitle>
+            <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-13">
               {request.note ??
                 plan.title ??
                 (plan.form ? plan.form.name : `Add a ${label} to ${data.sheet.name}.`)}
             </DialogDescription>
             {steps.length > 1 ? (
-              <p className="text-label-13 font-medium" data-testid="new-item-step">
+              <p className="text-13 font-medium" data-testid="new-item-step">
                 Step {step + 1} of {steps.length}
                 {stepTitle ? (
                   <span className="text-muted-foreground font-normal"> · {stepTitle}</span>
@@ -313,7 +313,7 @@ function NewItemSession({
           >
             <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
               {step === 0 && plan.description && plan.form ? (
-                <p className="text-copy-13 text-muted-foreground -mt-1 whitespace-pre-line">
+                <p className="text-13 text-muted-foreground -mt-1 whitespace-pre-line">
                   {plan.description}
                 </p>
               ) : null}
@@ -337,7 +337,7 @@ function NewItemSession({
                       onChange={(e) => setName(e.target.value)}
                     />
                     {errors.__name ? (
-                      <p id={`${id}-name-error`} className="text-crit text-copy-13">
+                      <p id={`${id}-name-error`} className="text-crit text-13">
                         {errors.__name}
                       </p>
                     ) : null}
@@ -383,7 +383,7 @@ function NewItemSession({
                     type="button"
                     aria-expanded={moreOpen}
                     aria-controls={`${id}-more`}
-                    className="text-label-14 hover:bg-soft -mx-2 flex items-center gap-1.5 self-start rounded-md px-2 py-1 font-medium"
+                    className="text-14 hover:bg-soft -mx-2 flex items-center gap-1.5 self-start rounded-md px-2 py-1 font-medium"
                     onClick={() => setMoreOpen((o) => !o)}
                   >
                     <ChevronDown
@@ -391,7 +391,7 @@ function NewItemSession({
                       className={cn('size-4 transition-transform', !moreOpen && '-rotate-90')}
                     />
                     More fields
-                    <span className="text-muted-foreground text-label-12-mono">{more.length}</span>
+                    <span className="text-muted-foreground text-12 font-mono">{more.length}</span>
                   </button>
                   <div id={`${id}-more`} hidden={!moreOpen} className="flex flex-col gap-4">
                     {moreOpen
@@ -413,14 +413,14 @@ function NewItemSession({
                 </div>
               ) : null}
               {message ? (
-                <p role="alert" className="text-crit text-copy-13" data-testid="new-item-error">
+                <p role="alert" className="text-crit text-13" data-testid="new-item-error">
                   {message}
                 </p>
               ) : null}
               <p
                 aria-live="polite"
                 data-testid="new-item-created"
-                className={cn('text-copy-13 flex items-center gap-1.5', !created && 'sr-only')}
+                className={cn('text-13 flex items-center gap-1.5', !created && 'sr-only')}
               >
                 {created ? <Check className="text-good size-4 shrink-0" aria-hidden /> : null}
                 {created}
@@ -428,7 +428,7 @@ function NewItemSession({
             </div>
             <div className="border-line flex flex-col gap-2.5 border-t px-5 py-3">
               {last ? (
-                <label className="text-label-13 flex items-center gap-2 self-start">
+                <label className="text-13 flex items-center gap-2 self-start">
                   <input
                     type="checkbox"
                     checked={openAfter}
@@ -485,8 +485,8 @@ function NewItemSession({
       </Dialog>
       <Dialog open={confirming} onOpenChange={setConfirming}>
         <DialogContent role="alertdialog" className="w-[min(400px,calc(100vw-32px))]">
-          <DialogTitle className="text-heading-16">Discard this item?</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogTitle className="text-card-title">Discard this item?</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground">
             Your answers are not saved anywhere.
           </DialogDescription>
           <div className="flex justify-end gap-2">

@@ -52,7 +52,7 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
         <Tooltip.Content
           side="right"
           sideOffset={8}
-          className="bg-navy text-label-13 shadow-menu z-50 rounded-md px-2.5 py-1.5 font-medium text-white"
+          className="bg-navy text-13 shadow-menu z-50 rounded-md px-2.5 py-1.5 font-medium text-white"
         >
           {label}
         </Tooltip.Content>

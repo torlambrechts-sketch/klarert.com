@@ -61,7 +61,7 @@ export function FieldRow({
 
   return (
     <div className="contents">
-      <dt id={labelId} className="text-muted-foreground text-label-13 flex min-w-0 flex-col pt-1.5">
+      <dt id={labelId} className="text-muted-foreground text-13 flex min-w-0 flex-col pt-1.5">
         <span className="flex items-center gap-1">
           <span className="truncate">{field.name}</span>
           {field.required ? (
@@ -78,7 +78,7 @@ export function FieldRow({
           ) : null}
         </span>
         {field.description ? (
-          <span id={descId} className="text-muted-foreground/90 text-label-12">
+          <span id={descId} className="text-muted-foreground/90 text-12">
             {field.description}
           </span>
         ) : null}
@@ -91,7 +91,7 @@ export function FieldRow({
             type="button"
             aria-labelledby={labelId}
             aria-describedby={field.description ? descId : undefined}
-            className="hover:bg-soft focus-visible:outline-focus text-label-13 flex min-h-8 w-full items-center rounded-md px-1.5 text-left focus-visible:outline-2"
+            className="hover:bg-soft focus-visible:outline-focus text-13 flex min-h-8 w-full items-center rounded-md px-1.5 text-left focus-visible:outline-2"
             onClick={() => commit(field.id, ui.toggle!(value as never))}
           >
             <ui.Cell value={value as never} field={field} item={item} ctx={ctx} density="list" />
@@ -104,7 +104,7 @@ export function FieldRow({
                 aria-label={`${explainOnly ? 'About' : 'Edit'} ${field.name}${text ? `: ${text}` : ''}`}
                 aria-describedby={field.description ? descId : undefined}
                 className={cn(
-                  'hover:bg-soft focus-visible:outline-focus text-label-13 flex min-h-8 w-full items-center rounded-md px-1.5 text-left focus-visible:outline-2',
+                  'hover:bg-soft focus-visible:outline-focus text-13 flex min-h-8 w-full items-center rounded-md px-1.5 text-left focus-visible:outline-2',
                   missing && 'outline-crit/60 outline-1 -outline-offset-1',
                 )}
               >
@@ -153,7 +153,7 @@ export function FieldRow({
           <button
             type="button"
             aria-label={`${field.name}${text ? `: ${text}` : ''}`}
-            className="text-label-13 flex min-h-8 w-full cursor-default items-center rounded-md px-1.5 text-left"
+            className="text-13 flex min-h-8 w-full cursor-default items-center rounded-md px-1.5 text-left"
             onClick={() => toast(readOnlyReason)}
           >
             <span className="min-w-0 flex-1">

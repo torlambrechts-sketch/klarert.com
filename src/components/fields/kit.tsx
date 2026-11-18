@@ -131,9 +131,7 @@ export function OptionCell({ value, field, ctx, density }: CellProps) {
         <Chip key={o.id} option={o} className="shrink-0" />
       ))}
       {chosen.length > 3 ? (
-        <span className="text-muted-foreground text-label-12 font-semibold">
-          +{chosen.length - 3}
-        </span>
+        <span className="text-muted-foreground text-12 font-semibold">+{chosen.length - 3}</span>
       ) : null}
     </span>
   );

@@ -242,6 +242,10 @@ the same thing or choose between options of one setting.
 | C8 | Table toolbar | View, Search, Filter, Sort, More, ⚡ |
 | C9 | Shell | Navy rail, pale side panel, white top bar, navy hero with overlapping cards (§4); `docs/05` menu groups and roles inside it |
 | C10 | Phones | `docs/05` §5 navigation (bottom bar Menu, Search, Inbox) in the Keptrow look |
+| C11 | Help in the rail | Left out until a help page or support link exists; the rail's Settings opens Your account |
+| C12 | Phone breakpoint | Navigation switches below 760 px (`docs/05` §5); the smaller hero (24 × 20 px padding, 30 px title) below 640 px |
+| C13 | Orange words | Words use `--warn-ink`; the bright `--warn` is for marks only (dots, bars, star fills) |
+| C14 | Overlap and padding | Every page head sits in cards that overlap the hero by 88 px; pages have 48 px side padding (16 px on phones) |
 
 ## 10. Mapping to the code
 

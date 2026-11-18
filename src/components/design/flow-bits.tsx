@@ -55,7 +55,7 @@ export function StepIcon({ kind, inverted }: { kind: StepKind; inverted?: boolea
       aria-hidden
       className={cn(
         'grid size-[26px] shrink-0 place-items-center rounded-md',
-        inverted ? 'bg-gray-alpha-400 text-white' : 'bg-soft text-ink',
+        inverted ? 'bg-line text-white' : 'bg-soft text-ink',
       )}
     >
       <Icon className="size-[14px]" />
@@ -83,7 +83,7 @@ export function HealthLine({ health, className }: { health: StepHealth; classNam
   return (
     <span
       data-testid="step-health"
-      className={cn('text-label-12 flex min-w-0 items-center gap-1', className)}
+      className={cn('text-12 flex min-w-0 items-center gap-1', className)}
       title={health.problems.length > 1 ? health.problems.join('\n') : undefined}
     >
       <ToneSymbol tone={health.tone} />
@@ -116,7 +116,7 @@ export function PackChip({ pack, className }: { pack: StepPack; className?: stri
     <span
       data-testid="step-pack"
       className={cn(
-        'text-label-11 inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-px font-medium whitespace-nowrap',
+        'text-12 inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-px font-medium whitespace-nowrap',
         pack.state === 'changed'
           ? 'border-warn/40 bg-warn-soft text-warn'
           : pack.state === 'added'
@@ -137,7 +137,7 @@ export function PackChip({ pack, className }: { pack: StepPack; className?: stri
 
 export function ComingLaterChip() {
   return (
-    <span className="border-line text-muted-foreground text-label-11 inline-flex items-center gap-1 rounded-full border border-dashed px-2 py-px font-medium whitespace-nowrap">
+    <span className="border-line text-muted-foreground text-12 inline-flex items-center gap-1 rounded-full border border-dashed px-2 py-px font-medium whitespace-nowrap">
       <Send className="size-3" aria-hidden /> Coming later
     </span>
   );

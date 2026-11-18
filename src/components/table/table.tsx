@@ -1463,7 +1463,7 @@ export function Table({
         </div>
         <DragOverlay dropAnimation={null}>
           {dragging?.startsWith('row:') ? (
-            <div className="bg-ink text-label-13 shadow-menu rounded-md px-3 py-1.5 font-semibold text-white">
+            <div className="bg-ink text-13 shadow-menu rounded-md px-3 py-1.5 font-semibold text-white">
               {selected.has(dragging.slice(4)) && selected.size > 1
                 ? `${selected.size} items`
                 : (layout.flat.find((i) => i.id === dragging.slice(4))?.name ?? '')}
@@ -1663,7 +1663,7 @@ function StubHeader({ col, onToggle }: { col: StubCol; onToggle(groupId: string)
     <button
       type="button"
       title={`Show ${col.name}: ${col.fields.map((f) => f.name).join(', ')}`}
-      className="text-muted-foreground hover:text-ink hover:bg-subtle focus-visible:outline-focus text-label-12 flex h-full w-full items-center gap-1 truncate px-[14px] text-left focus-visible:outline-2 focus-visible:-outline-offset-2"
+      className="text-muted-foreground hover:text-ink hover:bg-subtle focus-visible:outline-focus text-12 flex h-full w-full items-center gap-1 truncate px-[14px] text-left focus-visible:outline-2 focus-visible:-outline-offset-2"
       onClick={() => onToggle(col.groupId)}
     >
       <span className="truncate">
@@ -1702,7 +1702,7 @@ function GroupLabels({
                 type="button"
                 aria-expanded={!r.collapsed}
                 title={r.collapsed ? `Show ${r.name}` : `Collapse ${r.name}`}
-                className="text-muted-foreground hover:text-ink hover:bg-soft focus-visible:outline-focus text-label-12 flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-md pr-2 pl-1 font-medium focus-visible:outline-2"
+                className="text-muted-foreground hover:text-ink hover:bg-soft focus-visible:outline-focus text-12 flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-md pr-2 pl-1 font-medium focus-visible:outline-2"
                 onClick={() => onToggle(r.groupId!)}
               >
                 {r.collapsed ? (
@@ -1711,13 +1711,13 @@ function GroupLabels({
                   <ChevronDown className="size-3.5 shrink-0" aria-hidden />
                 )}
                 <span className="truncate">{r.name}</span>
-                <span className="text-label-11-mono shrink-0 text-[var(--muted)]">
+                <span className="text-12 shrink-0 font-mono text-[var(--muted)]">
                   {r.size}
                   <span className="sr-only"> columns</span>
                 </span>
               </button>
             ) : (
-              <span className="text-muted-foreground text-label-12 truncate pl-1 font-medium">
+              <span className="text-muted-foreground text-12 truncate pl-1 font-medium">
                 {r.name}
               </span>
             )}
@@ -1760,7 +1760,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
           ) : (
             <span className="w-[58px] shrink-0" />
           )}
-          <span className="text-muted-foreground text-label-12 truncate pl-[4px] font-medium">
+          <span className="text-muted-foreground text-12 truncate pl-[4px] font-medium">
             {p.ctx.sheet.itemLabel}
           </span>
         </span>
@@ -1874,7 +1874,7 @@ function StubCell({
       title={title}
       onClick={() => onToggle(col.groupId)}
       className={cn(
-        'border-b-row-line border-r-col-line bg-subtle group-hover/row:bg-row-hover text-label-13 absolute top-0 flex h-full cursor-pointer items-center overflow-hidden border-r border-b px-[14px] [&_[data-pill]]:-mx-1.5',
+        'border-b-row-line border-r-col-line bg-subtle group-hover/row:bg-row-hover text-13 absolute top-0 flex h-full cursor-pointer items-center overflow-hidden border-r border-b px-[14px] [&_[data-pill]]:-mx-1.5',
         selected && 'bg-sel group-hover/row:bg-sel',
       )}
       style={{ left, width }}
@@ -1978,7 +1978,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
             <span
               aria-hidden
               className={cn(
-                'border-line text-muted-foreground bg-background-100 absolute top-1/2 left-[16px] grid size-[28px] -translate-y-1/2 place-items-center rounded-full border',
+                'border-line text-muted-foreground bg-surface absolute top-1/2 left-[16px] grid size-[28px] -translate-y-1/2 place-items-center rounded-full border',
                 p.canEdit && 'group-focus-within/row:invisible group-hover/row:invisible',
                 p.canEdit && (rowActive || p.selected.size > 0) && 'invisible',
               )}
@@ -2016,7 +2016,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
             )}
           >
             <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
-              <span className="text-label-14 flex min-w-0 items-center gap-1">
+              <span className="text-14 flex min-w-0 items-center gap-1">
                 {p.sub && !item.id.startsWith('temp-') ? (
                   <button
                     type="button"
@@ -2068,7 +2068,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                 ) : null}
               </span>
               {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
-                <span className="text-muted-foreground text-label-12-mono flex min-w-0 items-center gap-[7px] leading-[17px]">
+                <span className="text-muted-foreground text-12 flex min-w-0 items-center gap-[7px] font-mono leading-[17px]">
                   {itemRequirementRef(item) ? (
                     <>
                       <span className="text-foreground shrink-0 font-semibold">
@@ -2342,7 +2342,7 @@ function AddRow(p: RowProps & { row: Extract<TableRow, { kind: 'add' }> }) {
         <div ref={drop.setNodeRef} className="flex h-full w-full items-center pl-[58px]">
           <input
             ref={p.addRef}
-            className="placeholder:text-muted-foreground text-ink text-label-14 h-full w-full bg-transparent px-[4px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+            className="placeholder:text-muted-foreground text-ink text-14 h-full w-full bg-transparent px-[4px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
             placeholder={`+ Add ${label}`}
             aria-label={`Add ${label} to ${row.group.name}`}
             value={name}
@@ -2426,8 +2426,8 @@ function MoveSubitemDialog({
       }}
     >
       <DialogContent className="w-[min(420px,calc(100vw-32px))]">
-        <DialogTitle className="text-heading-16">Move {item?.displayId}</DialogTitle>
-        <DialogDescription className="text-copy-13">
+        <DialogTitle className="text-card-title">Move {item?.displayId}</DialogTitle>
+        <DialogDescription className="text-13">
           Choose the item this {label} belongs to. Its ID stays {item?.displayId}.
         </DialogDescription>
         <form
@@ -2441,10 +2441,10 @@ function MoveSubitemDialog({
             }
           }}
         >
-          <label className="text-label-13 flex flex-col gap-1.5 font-medium">
+          <label className="text-13 flex flex-col gap-1.5 font-medium">
             New parent
             <select
-              className="border-line bg-background-100 text-label-14 h-9 rounded-md border px-2"
+              className="border-line bg-surface text-14 h-9 rounded-md border px-2"
               value={to}
               onChange={(e) => setTo(e.target.value)}
               required

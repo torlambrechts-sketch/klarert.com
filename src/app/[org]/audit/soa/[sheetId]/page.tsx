@@ -34,7 +34,7 @@ export default async function SoaPage({
         <PageHeader crumb="Audit outputs" title="Statement of applicability" />
         <div
           role="alert"
-          className="border-line bg-background-100 flex flex-col items-start gap-2 rounded-lg border p-5"
+          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
         >
           <p className="m-0">{r.error.message}</p>
           <div className="flex gap-2">
@@ -75,7 +75,7 @@ export default async function SoaPage({
           </div>
         }
       />
-      <dl className="text-copy-13 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1">
+      <dl className="text-13 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1">
         {soaHeaderLines(header).map(([k, v]) => (
           <div key={k} className="contents">
             <dt className="text-muted-foreground">{k}</dt>
@@ -84,40 +84,40 @@ export default async function SoaPage({
         ))}
       </dl>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 print:hidden">
-        <p className="text-label-13 m-0 tabular-nums" role="status">
+        <p className="text-13 m-0 tabular-nums" role="status">
           {c.total} requirements · {c.applicable} applicable · {c.notApplicable} not applicable ·{' '}
           {c.undecided} to decide · {c.implemented} implemented
         </p>
         {hasSoaView ? (
           <Link
             href={`/${org}/audit/soa/${sheetId}${showAll ? '' : '?all=1'}`}
-            className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
+            className="text-ink text-13 font-medium underline-offset-4 hover:underline"
           >
             {showAll ? 'Show the statement of applicability only' : 'Show every requirement'}
           </Link>
         ) : null}
         <Link
           href={`/${org}/s/${sheet.id}`}
-          className="text-ink text-label-13 font-medium underline-offset-4 hover:underline"
+          className="text-ink text-13 font-medium underline-offset-4 hover:underline"
         >
           Open {sheet.name}
         </Link>
       </div>
-      <p className="text-label-13 m-0 hidden tabular-nums print:block">
+      <p className="text-13 m-0 hidden tabular-nums print:block">
         {c.total} requirements · {c.applicable} applicable · {c.notApplicable} not applicable ·{' '}
         {c.undecided} to decide · {c.implemented} implemented
       </p>
       {soa.rows.length === 0 ? (
-        <div className="border-line bg-background-100 rounded-lg border p-5">
+        <div className="border-line bg-surface rounded-lg border p-5">
           <p className="m-0">No requirements in this statement.</p>
-          <p className="text-copy-13 text-muted-foreground m-0 mt-1">
+          <p className="text-13 text-muted-foreground m-0 mt-1">
             The library&apos;s view shows no items. Show every requirement, or check the view&apos;s
             filters in <Link href={back}>the library</Link>.
           </p>
         </div>
       ) : (
         <div className="border-line overflow-x-auto rounded-lg border print:overflow-visible print:border-0">
-          <table className="text-copy-13 w-full min-w-[960px] border-collapse print:min-w-0">
+          <table className="text-13 w-full min-w-[960px] border-collapse print:min-w-0">
             <caption className="sr-only">
               Statement of applicability, {framework.title}, {c.total} requirements
             </caption>
@@ -127,7 +127,7 @@ export default async function SoaPage({
                   <th
                     key={h}
                     scope="col"
-                    className="border-line text-label-12 border-b px-2.5 py-2 text-left align-bottom font-medium"
+                    className="border-line text-12 border-b px-2.5 py-2 text-left align-bottom font-medium"
                   >
                     {h}
                   </th>
@@ -137,7 +137,7 @@ export default async function SoaPage({
             <tbody>
               {soa.rows.map((row) => (
                 <tr key={row.itemId} className="border-line break-inside-avoid border-b align-top">
-                  <td className="text-label-13-mono px-2.5 py-2 whitespace-nowrap">{row.ref}</td>
+                  <td className="text-13 px-2.5 py-2 font-mono whitespace-nowrap">{row.ref}</td>
                   <td className="px-2.5 py-2">{row.title}</td>
                   <td className="px-2.5 py-2">{row.applicable || '–'}</td>
                   <td className="px-2.5 py-2">{row.justification}</td>

@@ -19,7 +19,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/55',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 bg-scrim fixed inset-0 z-50',
         className,
       )}
       {...props}
@@ -39,14 +39,14 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'bg-background-100 shadow-modal fixed top-1/2 left-1/2 z-50 grid w-[min(480px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border p-5',
+          'bg-surface shadow-menu rounded-dialog fixed top-1/2 left-1/2 z-50 grid w-[min(580px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 gap-4 p-7',
           className,
         )}
         {...props}
       >
         {children}
         <DialogPrimitive.Close
-          className="text-muted-foreground hover:bg-gray-alpha-100 hover:text-ink absolute top-3 right-3 rounded-md p-1 transition-colors duration-150"
+          className="text-muted-foreground hover:bg-panel hover:text-ink absolute top-3 right-3 rounded-md p-1 transition-colors duration-150"
           aria-label="Close"
         >
           <XIcon className="size-4" aria-hidden />
@@ -68,7 +68,7 @@ function SheetContent({
       <DialogPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left shadow-fullscreen fixed inset-y-0 left-0 z-50 flex w-[min(300px,calc(100vw-40px))] flex-col',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left shadow-drawer fixed inset-y-0 left-0 z-50 flex w-[min(320px,calc(100vw-40px))] flex-col',
           className,
         )}
         {...props}
@@ -87,18 +87,18 @@ function SideSheetContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content>) {
   return (
     <DialogPrimitive.Portal>
-      <DialogOverlay className="bg-black/30" />
+      <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="side-sheet-content"
         className={cn(
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right bg-background-100 shadow-fullscreen fixed inset-y-0 right-0 z-50 flex w-[min(470px,100vw)] flex-col border-l',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right bg-surface shadow-drawer fixed inset-y-0 right-0 z-50 flex w-[min(520px,100vw)] flex-col',
           className,
         )}
         {...props}
       >
         {children}
         <DialogPrimitive.Close
-          className="text-muted-foreground hover:bg-gray-alpha-100 hover:text-ink absolute top-3 right-3 rounded-md p-1 transition-colors duration-150"
+          className="text-muted-foreground hover:bg-panel hover:text-ink absolute top-3 right-3 rounded-md p-1 transition-colors duration-150"
           aria-label="Close"
         >
           <XIcon className="size-4" aria-hidden />

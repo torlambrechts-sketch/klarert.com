@@ -49,10 +49,10 @@ function NameStep(p: { type: string; onBack(): void; onAdd(name: string): void }
         if (trimmed) p.onAdd(trimmed);
       }}
     >
-      <p className="text-copy-13 flex items-center gap-1.5 font-semibold">
+      <p className="text-13 flex items-center gap-1.5 font-semibold">
         <Icon className="size-4" aria-hidden /> {label}
       </p>
-      <label htmlFor={id} className="text-label-13 flex flex-col gap-1 font-semibold">
+      <label htmlFor={id} className="text-13 flex flex-col gap-1 font-semibold">
         Field name
         <input
           id={id}
@@ -64,7 +64,7 @@ function NameStep(p: { type: string; onBack(): void; onAdd(name: string): void }
           onChange={(e) => setName(e.target.value)}
         />
       </label>
-      <p className="text-muted-foreground text-label-12">
+      <p className="text-muted-foreground text-12">
         Formulas and templates use its key, made from this name. Renaming it later keeps the key.
       </p>
       <div className="flex justify-end gap-2">
@@ -104,7 +104,7 @@ function TypeStep({ onPick }: { onPick(type: string): void }) {
       />
       {!q ? (
         <div>
-          <p className="text-muted-foreground text-label-12 mb-1.5 font-semibold">Essentials</p>
+          <p className="text-muted-foreground text-12 mb-1.5 font-semibold">Essentials</p>
           <ul className="grid grid-cols-3 gap-1.5">
             {ESSENTIALS.map((id) => {
               const Icon = fieldUI(id).icon;
@@ -113,7 +113,7 @@ function TypeStep({ onPick }: { onPick(type: string): void }) {
                   <button
                     type="button"
                     onClick={() => onPick(id)}
-                    className="border-line hover:bg-sel text-label-12 flex w-full flex-col items-center gap-1 rounded-md border px-1 py-2 font-semibold"
+                    className="border-line hover:bg-sel text-12 flex w-full flex-col items-center gap-1 rounded-md border px-1 py-2 font-semibold"
                   >
                     <Icon className="size-4" aria-hidden />
                     {fieldType(id)!.label}
@@ -130,7 +130,7 @@ function TypeStep({ onPick }: { onPick(type: string): void }) {
             type="button"
             aria-expanded={all}
             onClick={() => setAll((a) => !a)}
-            className="hover:bg-soft text-label-13 flex w-full items-center gap-1 rounded-md px-1 py-1 text-left font-semibold"
+            className="hover:bg-soft text-13 flex w-full items-center gap-1 rounded-md px-1 py-1 text-left font-semibold"
           >
             {all ? (
               <ChevronDown className="size-4" aria-hidden />
@@ -143,11 +143,11 @@ function TypeStep({ onPick }: { onPick(type: string): void }) {
         {all || q ? (
           <div className="flex max-h-72 flex-col gap-3 overflow-auto pt-1">
             {families.length === 0 ? (
-              <p className="text-muted-foreground text-copy-13">No field type matches.</p>
+              <p className="text-muted-foreground text-13">No field type matches.</p>
             ) : null}
             {families.map((f) => (
               <section key={f.family} aria-label={f.label}>
-                <p className="text-muted-foreground text-label-12 mb-1 font-bold tracking-wide uppercase">
+                <p className="text-muted-foreground text-12 mb-1 font-bold tracking-wide uppercase">
                   {f.label}
                 </p>
                 <ul className="flex flex-col">
@@ -162,10 +162,8 @@ function TypeStep({ onPick }: { onPick(type: string): void }) {
                         >
                           <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
                           <span className="flex flex-col">
-                            <span className="text-label-13 font-semibold">{t.label}</span>
-                            <span className="text-muted-foreground text-label-12">
-                              {t.description}
-                            </span>
+                            <span className="text-13 font-semibold">{t.label}</span>
+                            <span className="text-muted-foreground text-12">{t.description}</span>
                           </span>
                         </button>
                       </li>

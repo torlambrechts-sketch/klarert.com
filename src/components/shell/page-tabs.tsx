@@ -37,14 +37,14 @@ export function PageTabs({
     <nav aria-label={label} className={cn('border-line border-b', className)}>
       <ul
         ref={list}
-        className="m-0 flex [scrollbar-width:none] list-none gap-[22px] overflow-x-auto p-0"
+        className="m-0 flex [scrollbar-width:none] list-none gap-7 overflow-x-auto p-0"
       >
         {tabs.map((t) => (
           <li key={t.id}>
             <Link
               href={t.href}
               aria-current={t.id === active ? 'page' : undefined}
-              className="text-muted-foreground hover:text-ink aria-[current=page]:text-ink text-label-14 relative flex h-10 items-center px-px whitespace-nowrap outline-offset-[-2px] aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:-bottom-px aria-[current=page]:after:h-0.5 aria-[current=page]:after:rounded-sm aria-[current=page]:after:bg-[var(--ink)]"
+              className="text-muted-foreground hover:text-navy aria-[current=page]:text-navy text-tab aria-[current=page]:after:bg-brand relative flex h-11 items-center px-px whitespace-nowrap outline-offset-[-3px] aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:-bottom-px aria-[current=page]:after:h-[3px]"
             >
               {t.label}
             </Link>

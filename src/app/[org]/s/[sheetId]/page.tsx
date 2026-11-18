@@ -57,7 +57,7 @@ export default async function SheetPage({
       {sheet.archived_at ? (
         <p
           role="status"
-          className="border-warn/40 text-warn bg-warn-soft text-copy-13 mx-4 mt-4 rounded-lg border px-3 py-2 sm:mx-7"
+          className="border-warn/40 text-warn bg-warn-soft text-13 mx-4 mt-4 rounded-lg border px-3 py-2 sm:mx-7"
         >
           This sheet is archived. It is hidden from the side menu. Restore it in its settings.
         </p>

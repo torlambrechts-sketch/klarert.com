@@ -26,11 +26,11 @@ export const resultMeta = (result: WidgetResult | undefined): string | null =>
 export function WidgetBody({ result, org }: { result: WidgetResult | undefined; org: string }) {
   if (!result)
     return (
-      <p className="text-muted-foreground text-copy-13 m-0 p-4">This widget could not be loaded.</p>
+      <p className="text-muted-foreground text-13 m-0 p-4">This widget could not be loaded.</p>
     );
   if (result.kind === 'problem')
     return (
-      <p className="text-muted-foreground text-copy-13 m-0 flex items-start gap-1.5 p-4">
+      <p className="text-muted-foreground text-13 m-0 flex items-start gap-1.5 p-4">
         <AlertTriangle className="text-warn mt-0.5 size-4 shrink-0" aria-hidden />
         <span>{result.message} Edit or remove this widget.</span>
       </p>
@@ -41,7 +41,7 @@ export function WidgetBody({ result, org }: { result: WidgetResult | undefined; 
         <span className="flex items-center gap-2">
           <span
             className={cn(
-              'text-heading-32 leading-none tabular-nums',
+              'text-figure leading-none tabular-nums',
               result.tone === 'crit' && result.value > 0 && 'text-crit-ink',
             )}
           >
@@ -53,7 +53,7 @@ export function WidgetBody({ result, org }: { result: WidgetResult | undefined; 
             </ToneBadge>
           ) : null}
         </span>
-        <span className="text-muted-foreground text-label-13">{result.caption}</span>
+        <span className="text-muted-foreground text-13">{result.caption}</span>
       </div>
     );
   if (result.kind === 'bars')
@@ -71,7 +71,7 @@ function Bars({ bars, total, caption }: { bars: Bar[]; total: number; caption: s
         {bars.map((b) => (
           <li
             key={b.key}
-            className="text-label-13 grid grid-cols-[minmax(0,140px)_minmax(0,1fr)_auto] items-center gap-2.5"
+            className="text-13 grid grid-cols-[minmax(0,140px)_minmax(0,1fr)_auto] items-center gap-2.5"
           >
             <span className="min-w-0 truncate" title={b.label}>
               {b.option ? (
@@ -92,14 +92,14 @@ function Bars({ bars, total, caption }: { bars: Bar[]; total: number; caption: s
                 }}
               />
             </span>
-            <span className="text-ink text-label-13-mono w-8 text-right tabular-nums">
+            <span className="text-ink text-13 w-8 text-right font-mono tabular-nums">
               {b.value}
               <span className="sr-only"> of {total}</span>
             </span>
           </li>
         ))}
       </ul>
-      <p className="text-muted-foreground text-copy-13 m-0">{caption}</p>
+      <p className="text-muted-foreground text-13 m-0">{caption}</p>
     </div>
   );
 }
@@ -107,7 +107,7 @@ function Bars({ bars, total, caption }: { bars: Bar[]; total: number; caption: s
 function Rows({ result, org }: { result: Extract<WidgetResult, { kind: 'rows' }>; org: string }) {
   if (result.rows.length === 0)
     return (
-      <p className="text-muted-foreground text-copy-13 m-0 p-4">
+      <p className="text-muted-foreground text-13 m-0 p-4">
         {result.empty ?? 'Nothing to show yet.'}
       </p>
     );
@@ -116,7 +116,7 @@ function Rows({ result, org }: { result: Extract<WidgetResult, { kind: 'rows' }>
       {result.columns ? (
         <div
           aria-hidden
-          className="text-muted-foreground text-label-12 flex justify-between px-[10px] pt-[4px] pb-[6px]"
+          className="text-muted-foreground text-12 flex justify-between px-[10px] pt-[4px] pb-[6px]"
         >
           <span>{result.columns[0]}</span>
           <span>{result.columns[1]}</span>
@@ -141,22 +141,22 @@ function RowLine({ row, href, column }: { row: WidgetRow; href: string | null; c
       {filled ? (
         <i
           aria-hidden
-          className="bg-soft group-hover:bg-gray-alpha-200 absolute inset-y-1 left-0 rounded-[5px]"
+          className="bg-soft group-hover:bg-soft absolute inset-y-1 left-0 rounded-[5px]"
           style={{ width: `${Math.max(0, Math.min(100, row.fill!))}%` }}
         />
       ) : null}
-      <span className="text-label-14 relative flex min-w-0 flex-1 flex-col font-medium">
+      <span className="text-14 relative flex min-w-0 flex-1 flex-col font-medium">
         <span className="truncate">{row.label}</span>
         <small
           className={cn(
-            'text-label-12 truncate font-normal',
+            'text-12 truncate font-normal',
             filled ? 'text-muted-foreground' : 'text-muted-foreground',
           )}
         >
           {row.sub}
         </small>
       </span>
-      <b className="text-label-14-mono relative font-medium tabular-nums">
+      <b className="text-14 relative font-mono font-medium tabular-nums">
         {column ? <span className="sr-only">{column}: </span> : null}
         {row.value}
         {attention ? <span className="sr-only"> (needs attention)</span> : null}
@@ -202,7 +202,7 @@ function Heatmap({ result }: { result: Extract<WidgetResult, { kind: 'heatmap' }
           <div role="row" key={row[0]!.y} className="contents">
             <span
               role="rowheader"
-              className="text-muted-foreground text-label-12-mono grid place-items-center"
+              className="text-muted-foreground text-12 grid place-items-center font-mono"
             >
               <span className="sr-only">{axes.y} </span>
               {row[0]!.y}
@@ -213,7 +213,7 @@ function Heatmap({ result }: { result: Extract<WidgetResult, { kind: 'heatmap' }
                 key={c.x}
                 title={`${axes.y} ${c.y} · ${axes.x.toLowerCase()} ${c.x}: ${c.count} · ${c.level}`}
                 className={cn(
-                  'text-label-14 grid aspect-[1.5/1] min-h-[36px] place-items-center rounded-md font-semibold tabular-nums',
+                  'text-14 grid aspect-[1.5/1] min-h-[36px] place-items-center rounded-md font-semibold tabular-nums',
                   c.count > 0 ? HEAT[c.rank] : 'bg-subtle',
                 )}
               >
@@ -230,14 +230,14 @@ function Heatmap({ result }: { result: Extract<WidgetResult, { kind: 'heatmap' }
           {result.rows[0]!.map((c) => (
             <span
               key={c.x}
-              className="text-muted-foreground text-label-12-mono grid h-[20px] place-items-center"
+              className="text-muted-foreground text-12 grid h-[20px] place-items-center font-mono"
             >
               {c.x}
             </span>
           ))}
         </div>
       </div>
-      <div className="text-muted-foreground text-label-12 mt-[12px] flex flex-wrap justify-between gap-2.5">
+      <div className="text-muted-foreground text-12 mt-[12px] flex flex-wrap justify-between gap-2.5">
         <span>
           Rows: {axes.y.toLowerCase()} · Columns: {axes.x.toLowerCase()}
         </span>

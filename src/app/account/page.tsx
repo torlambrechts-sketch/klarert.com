@@ -53,14 +53,14 @@ export default async function AccountPage({
       <div className="flex w-full max-w-xl flex-col gap-5">
         <Link
           href={next ?? '/'}
-          className="text-label-13 text-muted-foreground hover:text-ink inline-flex w-fit items-center gap-1.5 rounded-sm"
+          className="text-13 text-muted-foreground hover:text-ink inline-flex w-fit items-center gap-1.5 rounded-sm"
         >
           <ArrowLeft className="size-4" aria-hidden />
           {back ? `Back to ${back.name}` : 'Back'}
         </Link>
         <div className="flex flex-col gap-1">
           <h1>Your account</h1>
-          <p className="text-muted-foreground text-copy-14">
+          <p className="text-muted-foreground text-14">
             {session.profile.display_name} · {session.user.email}
           </p>
         </div>
@@ -69,7 +69,7 @@ export default async function AccountPage({
           <p
             role="status"
             data-testid="two-step-required"
-            className="border-warn bg-warn-soft text-copy-13 flex items-start gap-2 rounded-lg border px-4 py-3"
+            className="border-warn bg-warn-soft text-13 flex items-start gap-2 rounded-lg border px-4 py-3"
           >
             <ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
             <span>
@@ -90,18 +90,18 @@ export default async function AccountPage({
 
         <section
           aria-labelledby="session-heading"
-          className="border-line bg-background-100 flex flex-col gap-3 rounded-lg border p-5 sm:px-[22px]"
+          className="border-line bg-surface flex flex-col gap-3 rounded-lg border p-5 sm:px-[22px]"
         >
-          <h2 id="session-heading" className="text-heading-16">
+          <h2 id="session-heading" className="text-card-title">
             This session
           </h2>
-          <p className="text-copy-14 m-0" data-testid="signed-in-since">
+          <p className="text-14 m-0" data-testid="signed-in-since">
             {signIn?.signedInAt
               ? `Signed in since ${formatDateTime(signIn.signedInAt, timeZone)}`
               : 'Signed in'}
             {session.twoStep.level === 'aal2' ? ', with two-step sign-in.' : '.'}
           </p>
-          <p className="text-muted-foreground text-copy-13 m-0">
+          <p className="text-muted-foreground text-13 m-0">
             Sessions end some hours after you sign in, and sooner if you are away. Sign out when you
             use a shared computer.
           </p>

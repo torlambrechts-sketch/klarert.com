@@ -35,10 +35,10 @@ function Body({ data }: { data: AdoptionPreview }) {
           role="alert"
           className="border-crit-line bg-crit-soft flex flex-col gap-1 rounded-md border p-3"
         >
-          <p className="text-label-14 text-crit-ink m-0 flex items-center gap-1.5 font-medium">
+          <p className="text-14 text-crit-ink m-0 flex items-center gap-1.5 font-medium">
             <X className="size-4" aria-hidden /> This framework cannot be adopted
           </p>
-          <ul className="text-copy-14 m-0 flex list-none flex-col gap-1 p-0">
+          <ul className="text-14 m-0 flex list-none flex-col gap-1 p-0">
             {p.conflicts.map((c, i) => (
               <li key={i}>{c}</li>
             ))}
@@ -46,13 +46,13 @@ function Body({ data }: { data: AdoptionPreview }) {
         </div>
       ) : null}
       {p.state === 'installed' ? (
-        <p className="text-copy-14 m-0 flex items-center gap-1.5">
+        <p className="text-14 m-0 flex items-center gap-1.5">
           <Check className="text-good size-4" aria-hidden /> Already adopted. Nothing to do.
         </p>
       ) : null}
       <ul
         aria-label="What adopting creates"
-        className="text-copy-14 m-0 flex list-none flex-col gap-1 p-0"
+        className="text-14 m-0 flex list-none flex-col gap-1 p-0"
       >
         {p.folders.map((f) => (
           <li key={f.name}>
@@ -62,7 +62,7 @@ function Body({ data }: { data: AdoptionPreview }) {
         {sheet ? (
           <li>
             <span className="font-medium">{sheet.name}</span>{' '}
-            <span className="text-label-12-mono text-muted-foreground">{sheet.prefix}</span>
+            <span className="text-12 text-muted-foreground font-mono">{sheet.prefix}</span>
             <span className="text-muted-foreground">
               {' · '}a library of {plural(sheet.items, 'requirement')} with{' '}
               {plural(sheet.fields, 'field')}, grouped by theme
@@ -82,7 +82,7 @@ function Body({ data }: { data: AdoptionPreview }) {
           </li>
         ))}
       </ul>
-      <p className="text-label-13 text-muted-foreground m-0">{data.licence}</p>
+      <p className="text-13 text-muted-foreground m-0">{data.licence}</p>
     </div>
   );
 }
@@ -181,8 +181,8 @@ export function AdoptFramework({
       )}
       <DialogContent className="flex max-h-[85vh] w-[min(600px,calc(100vw-32px))] flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-1 pr-8">
-          <DialogTitle className="text-heading-20">Adopt {framework.title}</DialogTitle>
-          <DialogDescription className="text-copy-14 text-muted-foreground">
+          <DialogTitle className="text-panel-title">Adopt {framework.title}</DialogTitle>
+          <DialogDescription className="text-14 text-muted-foreground">
             What adopting this framework creates in this workspace.
           </DialogDescription>
         </div>
@@ -193,17 +193,17 @@ export function AdoptFramework({
             data-testid="replaced-warning"
             className="border-warn/40 bg-warn-soft flex flex-col gap-2 rounded-md border p-3"
           >
-            <p className="text-label-14 text-warn m-0 flex items-center gap-1.5 font-medium">
+            <p className="text-14 text-warn m-0 flex items-center gap-1.5 font-medium">
               <AlertTriangle className="size-4 shrink-0" aria-hidden /> This edition is replaced
             </p>
-            <p className="text-copy-14 m-0">{replaced.warning}</p>
+            <p className="text-14 m-0">{replaced.warning}</p>
             {replaced.recommended ? (
-              <p className="text-copy-13 text-muted-foreground m-0">
+              <p className="text-13 text-muted-foreground m-0">
                 Close this and choose Adopt on {replaced.recommended} in the catalogue. Both
                 editions can be adopted side by side.
               </p>
             ) : null}
-            <label htmlFor={confirmId} className="text-label-13 flex items-start gap-2">
+            <label htmlFor={confirmId} className="text-13 flex items-start gap-2">
               <input
                 id={confirmId}
                 type="checkbox"
@@ -218,12 +218,12 @@ export function AdoptFramework({
         ) : null}
 
         <div className="flex flex-col gap-1">
-          <label htmlFor={selectId} className="text-label-13 font-medium">
+          <label htmlFor={selectId} className="text-13 font-medium">
             Controls sheet
           </label>
           <select
             id={selectId}
-            className="border-line bg-background-100 text-copy-14 h-9 rounded-md border px-2"
+            className="border-line bg-surface text-14 h-9 rounded-md border px-2"
             value={controlsSheetId}
             disabled={busy || step.kind === 'done'}
             onChange={(e) => {
@@ -238,7 +238,7 @@ export function AdoptFramework({
               </option>
             ))}
           </select>
-          <span className="text-label-12 text-muted-foreground">
+          <span className="text-12 text-muted-foreground">
             {controls.length
               ? 'The library gets a Controls column linked both ways with this sheet.'
               : 'Add a Requirement field that links to any library sheet to a sheet of controls to link them both ways.'}
@@ -264,7 +264,7 @@ export function AdoptFramework({
           <Body data={step.data} />
         ) : null}
         {step.kind === 'adopting' ? (
-          <p role="status" className="text-copy-14 m-0 flex items-center gap-1.5">
+          <p role="status" className="text-14 m-0 flex items-center gap-1.5">
             <Loader2 className="size-4 animate-spin" aria-hidden /> Adopting {framework.title}:
             writing the library in one step.
           </p>
@@ -275,7 +275,7 @@ export function AdoptFramework({
           </p>
         ) : null}
         {step.kind === 'done' ? (
-          <p role="status" className="text-copy-16 m-0 flex items-center gap-1.5 font-medium">
+          <p role="status" className="text-16 m-0 flex items-center gap-1.5 font-medium">
             <Check className="text-good size-4" aria-hidden /> Adopted {step.result.title}:{' '}
             {plural(step.result.requirements, 'requirement')} in the library.
           </p>

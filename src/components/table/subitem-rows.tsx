@@ -102,13 +102,13 @@ export function SubHeaderRow({
         <span aria-hidden className="relative h-full w-[58px] shrink-0">
           <span className="bg-line-strong absolute top-1/2 bottom-0 left-[30px] w-px" />
         </span>
-        <span className="text-muted-foreground text-label-12 truncate">{sub.label}</span>
+        <span className="text-muted-foreground text-12 truncate">{sub.label}</span>
       </Sticky>
       {cols.map(({ field, left, width }) => (
         <div
           key={field.id}
           role="columnheader"
-          className="bg-head border-b-surface-line text-muted-foreground text-label-12 absolute top-0 flex h-full items-center truncate border-b px-[14px]"
+          className="bg-head border-b-surface-line text-muted-foreground text-12 absolute top-0 flex h-full items-center truncate border-b px-[14px]"
           style={{ left, width }}
         >
           <span className="truncate">{field.name}</span>
@@ -160,13 +160,13 @@ export const SubItemRow = memo(function SubItemRow(
           <Spine last={row.last} />
           <span className="flex min-w-0 flex-1 items-center gap-2">
             {temp ? (
-              <span className="text-ink text-label-13 truncate">{item.name}</span>
+              <span className="text-ink text-13 truncate">{item.name}</span>
             ) : (
               <button
                 type="button"
                 tabIndex={-1}
                 title={`Open ${item.displayId}`}
-                className="text-ink text-label-13 min-w-0 truncate text-left hover:underline"
+                className="text-ink text-13 min-w-0 truncate text-left hover:underline"
                 onMouseDown={(e) => e.stopPropagation()}
                 onDoubleClick={(e) => e.stopPropagation()}
                 onClick={(e) => {
@@ -177,12 +177,12 @@ export const SubItemRow = memo(function SubItemRow(
                 {item.name}
               </button>
             )}
-            <span className="text-muted-foreground text-label-12-mono shrink-0">
+            <span className="text-muted-foreground text-12 shrink-0 font-mono">
               {item.displayId}
             </span>
             {sub.actions.held.has(item.id) ? (
               <span
-                className="text-label-12 flex shrink-0 items-center gap-1"
+                className="text-12 flex shrink-0 items-center gap-1"
                 title="Actions run when you finish this item"
               >
                 <span className="border-line text-ink rounded-full border px-1.5 leading-4">
@@ -291,7 +291,7 @@ function NameEditor({ item, sub, seed }: { item: Item; sub: SubRowContext; seed:
     <input
       autoFocus
       aria-label={`${sub.one} name`}
-      className="border-focus text-label-13 bg-background-100 absolute inset-y-1 right-2 left-[58px] z-[3] rounded border-2 px-2 outline-none"
+      className="border-focus text-13 bg-surface absolute inset-y-1 right-2 left-[58px] z-[3] rounded border-2 px-2 outline-none"
       value={v}
       maxLength={500}
       onChange={(e) => setV(e.target.value)}
@@ -321,13 +321,13 @@ export function SubEmptyRow({
       <span aria-hidden className="relative h-full w-[58px] shrink-0">
         <span className="bg-line-strong absolute inset-y-0 left-[30px] w-px" />
       </span>
-      <span className="text-muted-foreground text-label-13 flex min-w-0 items-center gap-2">
+      <span className="text-muted-foreground text-13 flex min-w-0 items-center gap-2">
         No {sub.label.toLowerCase()} yet.
         {sub.canEdit && sub.hasTemplate ? (
           <Button
             type="button"
             variant="link"
-            className="text-label-13 h-auto p-0"
+            className="text-13 h-auto p-0"
             onClick={() => sub.onFromTemplate(row.parent)}
           >
             <FileStack aria-hidden /> From template
@@ -353,7 +353,7 @@ export function SubAddRow({
       </span>
       <input
         id={subAddId(row.parent.id)}
-        className="placeholder:text-muted-foreground text-ink text-label-13 h-full min-w-0 flex-1 bg-transparent px-[4px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
+        className="placeholder:text-muted-foreground text-ink text-13 h-full min-w-0 flex-1 bg-transparent px-[4px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-inset"
         placeholder={`+ Add ${label}`}
         aria-label={`Add ${label} to ${row.parent.displayId} ${row.parent.name}`}
         value={name}
@@ -377,7 +377,7 @@ export function SubAddRow({
           type="button"
           variant="ghost"
           size="sm"
-          className="text-label-12 mr-2 h-7 shrink-0"
+          className="text-12 mr-2 h-7 shrink-0"
           onClick={() => sub.onFromTemplate(row.parent)}
         >
           <FileStack aria-hidden /> From template

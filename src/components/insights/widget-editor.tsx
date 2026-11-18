@@ -48,7 +48,7 @@ export interface EditorState {
   widget: InsightWidget;
 }
 
-const selectClass = cn(inputClass, 'h-9 text-label-13 px-2.5');
+const selectClass = cn(inputClass, 'h-9 text-13 px-2.5');
 
 function Field({
   label,
@@ -64,12 +64,12 @@ function Field({
   const Tag = htmlFor ? 'label' : 'span';
   return (
     <div className="flex flex-col gap-2">
-      <Tag {...(htmlFor ? { htmlFor } : {})} className="text-label-13 font-medium">
+      <Tag {...(htmlFor ? { htmlFor } : {})} className="text-13 font-medium">
         {label}
       </Tag>
       {children}
       {hint ? (
-        <small className="text-muted-foreground text-label-12 flex items-start gap-1.5 leading-[1.4]">
+        <small className="text-muted-foreground text-12 flex items-start gap-1.5 leading-[1.4]">
           {hint}
         </small>
       ) : null}
@@ -106,9 +106,9 @@ export function Segmented<T extends string | number>({
           title={c.name}
           onClick={() => onChange(c.value)}
           className={cn(
-            'text-label-12 inline-flex h-[26px] min-w-[30px] flex-1 items-center justify-center rounded-md px-2 font-medium whitespace-nowrap',
+            'text-12 inline-flex h-[26px] min-w-[30px] flex-1 items-center justify-center rounded-md px-2 font-medium whitespace-nowrap',
             c.value === value
-              ? 'bg-background-100 text-ink shadow-tooltip'
+              ? 'bg-surface text-ink shadow-tooltip'
               : 'text-muted-foreground hover:text-ink',
           )}
         >
@@ -181,12 +181,12 @@ export function WidgetEditor({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <SideSheetContent className="text-label-13 w-[min(480px,100vw)]">
+      <SideSheetContent className="text-13 w-[min(480px,100vw)]">
         <div className="border-soft flex flex-col gap-1 border-b py-5 pr-12 pl-6">
-          <DialogTitle className="text-heading-16 m-0">
+          <DialogTitle className="text-card-title m-0">
             {state.mode === 'add' ? 'Add widget' : 'Configure widget'}
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground text-label-13 m-0">
+          <DialogDescription className="text-muted-foreground text-13 m-0">
             {state.mode === 'add'
               ? 'Pick a type and where the data comes from.'
               : 'Changes apply when you save.'}
@@ -197,15 +197,15 @@ export function WidgetEditor({
             aria-label="Preview"
             className="bg-subtle border-soft flex flex-col gap-2 rounded-xl border px-3 pt-2.5 pb-3"
           >
-            <span aria-hidden className="text-muted-foreground text-label-11 font-medium">
+            <span aria-hidden className="text-muted-foreground text-12 font-medium">
               Preview
             </span>
             <div
-              className="border-line bg-background-100 pointer-events-none flex flex-col rounded-xl border"
+              className="border-line bg-surface pointer-events-none flex flex-col rounded-xl border"
               inert
             >
               <div className="px-5 pt-4 pb-1">
-                <h3 className="text-label-14 m-0 truncate font-semibold">{widgetTitle(w, data)}</h3>
+                <h3 className="text-14 m-0 truncate font-semibold">{widgetTitle(w, data)}</h3>
               </div>
               <div className="max-h-[260px] overflow-hidden px-5 pt-2.5 pb-[18px]">
                 <WidgetBody
@@ -234,10 +234,8 @@ export function WidgetEditor({
                     aria-pressed={on}
                     onClick={() => set({ type: t })}
                     className={cn(
-                      'bg-background-100 text-label-12.5 flex flex-col items-start gap-2 rounded-[10px] border p-2.5 text-left font-medium',
-                      on
-                        ? 'border-gray-1000 ring-gray-1000 ring-1'
-                        : 'border-line hover:border-line-strong',
+                      'bg-surface text-13 flex flex-col items-start gap-2 rounded-[10px] border p-2.5 text-left font-medium',
+                      on ? 'border-ink ring-ink ring-1' : 'border-line hover:border-line-strong',
                     )}
                   >
                     <Icon
@@ -282,7 +280,7 @@ export function WidgetEditor({
           ) : null}
 
           {spec.hint && s ? (
-            <p className="text-muted-foreground text-copy-13 m-0">{spec.hint(w, s)}</p>
+            <p className="text-muted-foreground text-13 m-0">{spec.hint(w, s)}</p>
           ) : null}
 
           {spec.groupBy ? (
@@ -302,7 +300,7 @@ export function WidgetEditor({
                   ))}
                 </select>
               ) : (
-                <p className="text-muted-foreground text-copy-13 m-0">
+                <p className="text-muted-foreground text-13 m-0">
                   No status, dropdown, people or checkbox fields on this sheet.
                 </p>
               )}
@@ -388,9 +386,7 @@ export function WidgetEditor({
                   ))}
                 </select>
               ) : (
-                <p className="text-muted-foreground text-copy-13 m-0">
-                  No date fields on this sheet.
-                </p>
+                <p className="text-muted-foreground text-13 m-0">No date fields on this sheet.</p>
               )}
             </Field>
           ) : null}
@@ -421,10 +417,10 @@ export function WidgetEditor({
                         set({ columns: [...columns, f.key] });
                       }}
                       className={cn(
-                        'text-label-12.5 h-7 rounded-full border px-2.5',
+                        'text-13 h-7 rounded-full border px-2.5',
                         on
-                          ? 'border-gray-1000 bg-gray-1000 text-background-100'
-                          : 'border-line bg-background-100 hover:border-line-strong',
+                          ? 'border-ink bg-ink text-surface'
+                          : 'border-line bg-surface hover:border-line-strong',
                       )}
                     >
                       {f.name}
@@ -455,7 +451,7 @@ export function WidgetEditor({
             >
               <textarea
                 id={`${id}-text`}
-                className={cn(inputClass, 'text-label-13 h-24 resize-y px-2.5 py-2 leading-[1.5]')}
+                className={cn(inputClass, 'text-13 h-24 resize-y px-2.5 py-2 leading-[1.5]')}
                 maxLength={MAX_NOTE}
                 placeholder="Context, targets or instructions for this view"
                 value={w.text ?? ''}
@@ -485,7 +481,7 @@ export function WidgetEditor({
             />
           </Field>
           {error ? (
-            <p role="alert" className="text-crit text-copy-13 m-0">
+            <p role="alert" className="text-crit text-13 m-0">
               {error}
             </p>
           ) : null}

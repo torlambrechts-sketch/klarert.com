@@ -34,7 +34,7 @@ import { useDownloads } from './queries';
 // sheet; a bottom sheet at phone width), preview with previous/next, and archive (admins).
 
 const fieldClass =
-  'border-input focus-visible:border-focus focus-visible:ring-focus/30 bg-background-100 text-copy-14 w-full rounded-md border px-2.5 py-2 outline-none focus-visible:ring-2';
+  'border-input focus-visible:border-focus focus-visible:ring-focus/30 bg-surface text-14 w-full rounded-md border px-2.5 py-2 outline-none focus-visible:ring-2';
 
 const personName = (ctx: Ctx, id: string | null | undefined) =>
   id ? (ctx.people.get(id)?.name ?? 'Former member') : 'Someone';
@@ -88,8 +88,8 @@ export function DetailsDialog({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent aria-describedby={`${id}-desc`}>
-        <DialogTitle className="text-heading-16 m-0">Edit details</DialogTitle>
-        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-copy-13 m-0">
+        <DialogTitle className="text-card-title m-0">Edit details</DialogTitle>
+        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-13 m-0">
           {file.filename} · {versionLabel(file.versionNo)}
         </DialogDescription>
         <form
@@ -99,7 +99,7 @@ export function DetailsDialog({
             void save();
           }}
         >
-          <label className="text-label-13 flex flex-col gap-1">
+          <label className="text-13 flex flex-col gap-1">
             Description
             <textarea
               className={cn(fieldClass, 'min-h-16')}
@@ -109,7 +109,7 @@ export function DetailsDialog({
             />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-label-13 flex flex-col gap-1">
+            <label className="text-13 flex flex-col gap-1">
               Category
               <select
                 className={fieldClass}
@@ -124,7 +124,7 @@ export function DetailsDialog({
                 ))}
               </select>
             </label>
-            <label className="text-label-13 flex flex-col gap-1">
+            <label className="text-13 flex flex-col gap-1">
               Valid until
               <input
                 type="date"
@@ -133,7 +133,7 @@ export function DetailsDialog({
                 onChange={(e) => setValidUntil(e.target.value)}
               />
             </label>
-            <label className="text-label-13 flex flex-col gap-1">
+            <label className="text-13 flex flex-col gap-1">
               Classification
               <select
                 className={fieldClass}
@@ -147,7 +147,7 @@ export function DetailsDialog({
                 ))}
               </select>
             </label>
-            <label className="text-label-13 flex min-h-11 items-center gap-2 self-end">
+            <label className="text-13 flex min-h-11 items-center gap-2 self-end">
               <input
                 type="checkbox"
                 className="size-4"
@@ -158,7 +158,7 @@ export function DetailsDialog({
             </label>
           </div>
           {error ? (
-            <p role="alert" className="text-crit text-copy-13 m-0">
+            <p role="alert" className="text-crit text-13 m-0">
               {error}
             </p>
           ) : null}
@@ -194,8 +194,8 @@ export function NewVersionDialog({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent aria-describedby={`${id}-desc`}>
-        <DialogTitle className="text-heading-16 m-0">Upload a new version</DialogTitle>
-        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-copy-13 m-0">
+        <DialogTitle className="text-card-title m-0">Upload a new version</DialogTitle>
+        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-13 m-0">
           {file.filename} is {versionLabel(file.versionNo)}. The new file becomes{' '}
           {versionLabel(file.versionNo + 1)}; every earlier version is kept.
         </DialogDescription>
@@ -206,7 +206,7 @@ export function NewVersionDialog({
             if (chosen) onUpload(chosen, note.trim());
           }}
         >
-          <label className="text-label-13 flex flex-col gap-1">
+          <label className="text-13 flex flex-col gap-1">
             Version note
             <textarea
               className={cn(fieldClass, 'min-h-16')}
@@ -220,7 +220,7 @@ export function NewVersionDialog({
             <Button type="button" variant="outline" onClick={() => input.current?.click()}>
               <Upload aria-hidden /> Choose file
             </Button>
-            <span className="text-copy-13 text-muted-foreground min-w-0 truncate">
+            <span className="text-13 text-muted-foreground min-w-0 truncate">
               {chosen ? chosen.name : 'No file chosen'}
             </span>
             <input
@@ -279,10 +279,8 @@ export function HistorySheet({
         className="max-[759px]:inset-x-0 max-[759px]:top-auto max-[759px]:max-h-[85vh] max-[759px]:w-full max-[759px]:rounded-t-xl max-[759px]:border-t max-[759px]:border-l-0"
       >
         <div className="border-line border-b px-5 pt-4 pr-12 pb-3">
-          <DialogTitle className="text-heading-16 m-0">Version history</DialogTitle>
-          <p className="text-muted-foreground text-copy-13 m-0 truncate">
-            {chain.current.filename}
-          </p>
+          <DialogTitle className="text-card-title m-0">Version history</DialogTitle>
+          <p className="text-muted-foreground text-13 m-0 truncate">{chain.current.filename}</p>
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 py-4">
           <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Versions, newest first">
@@ -297,15 +295,15 @@ export function HistorySheet({
                   )}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-label-13 m-0 flex flex-wrap items-center gap-1.5 font-semibold">
-                      <span className="text-label-12-mono bg-soft rounded px-1.5">
+                    <p className="text-13 m-0 flex flex-wrap items-center gap-1.5 font-semibold">
+                      <span className="text-12 bg-soft rounded px-1.5 font-mono">
                         {versionLabel(v.versionNo)}
                       </span>
                       <span className="min-w-0 truncate">{v.filename}</span>
                       {state ? (
                         <span
                           className={cn(
-                            'text-label-12 rounded-full border px-2',
+                            'text-12 rounded-full border px-2',
                             state === 'Obsolete'
                               ? 'border-line text-muted-foreground'
                               : 'border-good/40 text-good',
@@ -319,12 +317,12 @@ export function HistorySheet({
                         </span>
                       ) : null}
                     </p>
-                    <p className="text-muted-foreground text-label-12 m-0">
+                    <p className="text-muted-foreground text-12 m-0">
                       {personName(ctx, v.uploadedBy)} · {formatDateTime(v.createdAt, ctx.timeZone)}{' '}
                       · {formatBytes(v.sizeBytes)}
                     </p>
                     {v.versionNote ? (
-                      <p className="text-copy-13 m-0 mt-1">Note: {v.versionNote}</p>
+                      <p className="text-13 m-0 mt-1">Note: {v.versionNote}</p>
                     ) : null}
                   </div>
                   <div className="flex gap-1">
@@ -359,13 +357,13 @@ export function HistorySheet({
             })}
           </ol>
           <section aria-labelledby="downloads-title" className="flex flex-col gap-2">
-            <h3 id="downloads-title" className="text-heading-14 m-0">
+            <h3 id="downloads-title" className="text-14 m-0 font-semibold">
               Downloads
             </h3>
             {downloads.isPending ? (
               <div aria-busy="true" className="bg-soft h-9 animate-pulse rounded" />
             ) : downloads.isError ? (
-              <p className="text-copy-13 m-0 flex items-center gap-2">
+              <p className="text-13 m-0 flex items-center gap-2">
                 The downloads could not be loaded.
                 <Button
                   type="button"
@@ -377,13 +375,13 @@ export function HistorySheet({
                 </Button>
               </p>
             ) : (downloads.data ?? []).length === 0 ? (
-              <p className="text-muted-foreground text-copy-13 m-0">
+              <p className="text-muted-foreground text-13 m-0">
                 Nobody has downloaded this file yet.
               </p>
             ) : (
               <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-label="Downloads">
                 {downloads.data!.map((d, i) => (
-                  <li key={`${d.fileId}-${d.at}-${i}`} className="text-copy-13">
+                  <li key={`${d.fileId}-${d.at}-${i}`} className="text-13">
                     {personName(ctx, d.userId)} downloaded{' '}
                     {versionLabel(byId.get(d.fileId)?.versionNo)} ·{' '}
                     <span className="text-muted-foreground">
@@ -436,10 +434,10 @@ export function PreviewDialog({
         }}
       >
         <div className="flex items-center gap-2 pr-8">
-          <DialogTitle className="text-heading-16 m-0 min-w-0 flex-1 truncate">
+          <DialogTitle className="text-card-title m-0 min-w-0 flex-1 truncate">
             {file.filename}
           </DialogTitle>
-          <span className="text-muted-foreground text-label-12" aria-live="polite">
+          <span className="text-muted-foreground text-12" aria-live="polite">
             {index + 1} of {files.length}
           </span>
           <Button
@@ -487,7 +485,7 @@ export function PreviewDialog({
           ) : (
             <div className="flex flex-col items-center gap-3 p-6 text-center">
               <FileText className="text-muted-foreground size-10" aria-hidden />
-              <p className="text-copy-14 m-0">This type of file cannot be previewed here.</p>
+              <p className="text-14 m-0">This type of file cannot be previewed here.</p>
               <Button type="button" onClick={() => onDownload(file)}>
                 <Download aria-hidden /> Download {file.filename}
               </Button>
@@ -532,13 +530,13 @@ export function ArchiveDialog({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent aria-describedby={`${id}-desc`}>
-        <DialogTitle className="text-heading-16 m-0">Archive {chain.current.filename}?</DialogTitle>
-        <DialogDescription id={`${id}-desc`} className="text-copy-14 m-0">
+        <DialogTitle className="text-card-title m-0">Archive {chain.current.filename}?</DialogTitle>
+        <DialogDescription id={`${id}-desc`} className="text-14 m-0">
           {n === 1 ? 'The file' : `The file and its ${n} versions`} leave the Files tab, the
           evidence library and expiry checks. Nothing is deleted, and the activity log keeps the
           record.
         </DialogDescription>
-        <label className="text-label-13 flex flex-col gap-1">
+        <label className="text-13 flex flex-col gap-1">
           Reason (optional)
           <input
             className={fieldClass}

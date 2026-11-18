@@ -114,7 +114,7 @@ export default async function DesignPrintPage({
             </p>
             <Link
               href={`/${org}/design/print?${new URLSearchParams([...filterQuery(filter), ['part', 'leaves']]).toString()}`}
-              className="border-line hover:bg-soft text-label-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium"
+              className="border-line hover:bg-soft text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium"
               prefetch={false}
             >
               Retry
@@ -126,7 +126,7 @@ export default async function DesignPrintPage({
 
   return (
     <main
-      className="text-copy-13 flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px] print:gap-3 print:p-0"
+      className="text-13 flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px] print:gap-3 print:p-0"
       data-testid="design-print"
     >
       <style>{'@media print { @page { size: A4; margin: 12mm } }'}</style>
@@ -151,11 +151,11 @@ export default async function DesignPrintPage({
 
       {flow ? (
         <section aria-labelledby="print-flow" className="flex flex-col gap-2">
-          <h2 id="print-flow" className="text-heading-16 m-0">
+          <h2 id="print-flow" className="text-card-title m-0">
             Flow · {flowCounts(flow.counts)}
           </h2>
           <table className="w-full border-collapse" data-testid="print-flow">
-            <thead className="bg-head text-muted-foreground text-label-12 text-left">
+            <thead className="bg-head text-muted-foreground text-12 text-left">
               <tr>
                 <th scope="col" className={th}>
                   Step
@@ -177,7 +177,7 @@ export default async function DesignPrintPage({
                   <th
                     scope="rowgroup"
                     colSpan={4}
-                    className="text-label-11-mono text-muted-foreground px-2 pt-2 pb-1 text-left tracking-[0.08em] uppercase"
+                    className="text-12 text-muted-foreground px-2 pt-2 pb-1 text-left font-mono tracking-[0.08em] uppercase"
                   >
                     {g.number} · {g.title}
                   </th>
@@ -200,11 +200,11 @@ export default async function DesignPrintPage({
       ) : part === 'all' ? (
         <>
           <section aria-labelledby="print-sheets" className="flex flex-col gap-2">
-            <h2 id="print-sheets" className="text-heading-16 m-0">
+            <h2 id="print-sheets" className="text-card-title m-0">
               Sheets · {kept.length}
             </h2>
             <table className="w-full border-collapse" data-testid="print-sheets">
-              <thead className="bg-head text-muted-foreground text-label-12 text-left">
+              <thead className="bg-head text-muted-foreground text-12 text-left">
                 <tr>
                   <th scope="col" className={th}>
                     Sheet
@@ -241,11 +241,11 @@ export default async function DesignPrintPage({
             </table>
           </section>
           <section aria-labelledby="print-connections" className="flex flex-col gap-2">
-            <h2 id="print-connections" className="text-heading-16 m-0">
+            <h2 id="print-connections" className="text-card-title m-0">
               Connections · {graph.edges.length}
             </h2>
             <table className="w-full border-collapse" data-testid="print-connections">
-              <thead className="bg-head text-muted-foreground text-label-12 text-left">
+              <thead className="bg-head text-muted-foreground text-12 text-left">
                 <tr>
                   <th scope="col" className={th}>
                     From
@@ -279,7 +279,7 @@ export default async function DesignPrintPage({
       ) : null}
 
       <section aria-labelledby="print-leaves" className="flex flex-col gap-2">
-        <h2 id="print-leaves" className="text-heading-16 m-0">
+        <h2 id="print-leaves" className="text-card-title m-0">
           Leaves the system
         </h2>
         {leaves ? (

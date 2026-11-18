@@ -50,11 +50,11 @@ export function GroupSelect({
           href={href(id)}
           aria-current={on ? 'page' : undefined}
           onClick={() => setOpen(false)}
-          className="hover:bg-soft text-label-14 flex h-[34px] items-center gap-2 rounded-sm px-2 aria-[current=page]:font-medium"
+          className="hover:bg-soft text-14 flex h-[34px] items-center gap-2 rounded-sm px-2 aria-[current=page]:font-medium"
         >
           {mark}
           <span className="min-w-0 flex-1 truncate">{label}</span>
-          <span className="bg-soft text-ink text-label-12-mono rounded px-1.5 leading-[18px] tabular-nums">
+          <span className="bg-soft text-ink text-12 rounded px-1.5 font-mono leading-[18px] tabular-nums">
             {count(id)}
           </span>
           {on ? (
@@ -72,7 +72,7 @@ export function GroupSelect({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           className={cn(
-            'border-line hover:bg-subtle bg-background-100 text-label-14 flex h-[38px] max-w-[260px] min-w-[170px] items-center gap-2 rounded-md border pr-2.5 pl-3',
+            'border-line hover:bg-subtle bg-surface text-14 flex h-[38px] max-w-[260px] min-w-[170px] items-center gap-2 rounded-md border pr-2.5 pl-3',
             current && toolbarOn,
           )}
         >
@@ -84,16 +84,14 @@ export function GroupSelect({
           <span className="min-w-0 flex-1 truncate text-left">
             {current ? current.name : 'All groups'}
           </span>
-          <span className="bg-gray-alpha-200 text-muted-foreground text-label-11.5-mono rounded-[4px] px-[5px] leading-[18px] tabular-nums">
+          <span className="bg-soft text-muted-foreground text-12 rounded-[4px] px-[5px] font-mono leading-[18px] tabular-nums">
             {count(current?.id ?? null)}
           </span>
           <span className="sr-only">, show one group</span>
           <ChevronsUpDown className="text-muted-foreground size-[15px] shrink-0" aria-hidden />
         </PopoverTrigger>
         <PopoverContent align="start" className="w-[260px] p-1">
-          <p className="text-muted-foreground text-label-12 m-0 px-2 pt-1.5 pb-1 font-medium">
-            Groups
-          </p>
+          <p className="text-muted-foreground text-12 m-0 px-2 pt-1.5 pb-1 font-medium">Groups</p>
           <nav aria-label="Groups">
             <ul className="m-0 flex list-none flex-col gap-px p-0">
               {row(
@@ -117,7 +115,7 @@ export function GroupSelect({
         <Link
           href={href(null)}
           aria-label="Show all groups"
-          className="border-line hover:bg-soft text-muted-foreground hover:text-ink bg-background-100 ml-1 flex size-[38px] items-center justify-center rounded-md border"
+          className="border-line hover:bg-soft text-muted-foreground hover:text-ink bg-surface ml-1 flex size-[38px] items-center justify-center rounded-md border"
         >
           <X className="size-3.5" aria-hidden />
         </Link>

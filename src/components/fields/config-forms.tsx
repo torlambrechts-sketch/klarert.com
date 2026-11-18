@@ -34,11 +34,11 @@ export function Row({
   const id = useId();
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-label-13 font-semibold">
+      <label htmlFor={id} className="text-13 font-semibold">
         {label}
       </label>
       {children(id)}
-      {hint ? <p className="text-muted-foreground text-label-12">{hint}</p> : null}
+      {hint ? <p className="text-muted-foreground text-12">{hint}</p> : null}
     </div>
   );
 }
@@ -53,7 +53,7 @@ function Toggle({
   onChange(v: boolean): void;
 }) {
   return (
-    <label className="text-label-13 flex items-center gap-2">
+    <label className="text-13 flex items-center gap-2">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}
     </label>
@@ -178,7 +178,7 @@ export function OptionsConfig(p: Props) {
   };
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-label-13 mb-1 font-semibold">Options</legend>
+      <legend className="text-13 mb-1 font-semibold">Options</legend>
       <ul className="flex flex-col gap-1.5">
         {options.map((o, i) => (
           <li key={o.id} className="flex items-center gap-1.5">
@@ -207,7 +207,7 @@ export function OptionsConfig(p: Props) {
               ))}
             </select>
             <label
-              className="text-label-12 flex items-center gap-1"
+              className="text-12 flex items-center gap-1"
               title="Counts as done for My work, overdue and progress"
             >
               <input
@@ -268,7 +268,7 @@ export function OptionsConfig(p: Props) {
       >
         <Plus aria-hidden /> Add option
       </Button>
-      <p className="text-muted-foreground text-label-12">
+      <p className="text-muted-foreground text-12">
         Renaming an option keeps every value that uses it.
       </p>
     </fieldset>
@@ -279,9 +279,9 @@ export function FixedOptions(p: Props) {
   const options = resolveFieldType(p.field.type)?.options?.(p.config, p.env.ctx) ?? [];
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-copy-13 font-semibold">Options</p>
-      <p className="text-muted-foreground text-copy-13">{options.map((o) => o.label).join(', ')}</p>
-      <p className="text-muted-foreground text-label-12">These options are fixed.</p>
+      <p className="text-13 font-semibold">Options</p>
+      <p className="text-muted-foreground text-13">{options.map((o) => o.label).join(', ')}</p>
+      <p className="text-muted-foreground text-12">These options are fixed.</p>
     </div>
   );
 }
@@ -318,14 +318,14 @@ export function NumberConfig(p: Props) {
         />
       </div>
       <fieldset className="flex flex-col gap-1.5">
-        <legend className="text-label-13 font-medium">Meter bands (optional)</legend>
-        <p className="text-muted-foreground text-copy-13">
+        <legend className="text-13 font-medium">Meter bands (optional)</legend>
+        <p className="text-muted-foreground text-13">
           Three thresholds, each higher than the last. The Table shows a four-bar meter beside the
           number: one bar up to the first, four above the last.
         </p>
         <div className="grid grid-cols-3 gap-2">
           {['First', 'Second', 'Third'].map((label, i) => (
-            <label key={label} className="text-label-12 flex flex-col gap-1">
+            <label key={label} className="text-12 flex flex-col gap-1">
               {label}
               <input
                 type="number"
@@ -337,7 +337,7 @@ export function NumberConfig(p: Props) {
           ))}
         </div>
         {partial ? (
-          <p className="text-muted-foreground text-copy-13" role="status">
+          <p className="text-muted-foreground text-13" role="status">
             Fill all three, each higher than the last, to show the meter.
           </p>
         ) : null}
@@ -476,7 +476,7 @@ function TwoWay(p: Props) {
         checked={on}
         onChange={(v) => set(p, { twoWay: v })}
       />
-      <p className="text-muted-foreground text-label-12">
+      <p className="text-muted-foreground text-12">
         {on
           ? `${target.name} gets a field listing the items that link to it. Changing either side changes both.`
           : `Adds a field to ${target.name} that lists the items linking to it.`}
@@ -541,13 +541,13 @@ function Checks({
 }) {
   return (
     <fieldset className="flex flex-col gap-1" disabled={disabled}>
-      <legend className="text-label-13 mb-1 font-semibold">{legend}</legend>
+      <legend className="text-13 mb-1 font-semibold">{legend}</legend>
       {all.length === 0 ? (
-        <p className="text-muted-foreground text-label-12">None in this workspace yet.</p>
+        <p className="text-muted-foreground text-12">None in this workspace yet.</p>
       ) : null}
       <div className="flex max-h-36 flex-col gap-0.5 overflow-auto">
         {all.map((x) => (
-          <label key={x.id} className="text-label-13 flex items-center gap-2">
+          <label key={x.id} className="text-13 flex items-center gap-2">
             <input
               type="checkbox"
               checked={chosen.includes(x.id)}
@@ -632,7 +632,7 @@ export function ChecklistConfig(p: Props) {
   const update = (next: typeof lines) => set(p, { lines: next });
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="text-label-13 mb-1 font-semibold">Lines</legend>
+      <legend className="text-13 mb-1 font-semibold">Lines</legend>
       <ol className="flex flex-col gap-1.5">
         {lines.map((l, i) => (
           <li key={l.id} className="flex items-center gap-1.5">
@@ -644,7 +644,7 @@ export function ChecklistConfig(p: Props) {
                 update(lines.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))
               }
             />
-            <label className="text-label-12 flex items-center gap-1">
+            <label className="text-12 flex items-center gap-1">
               <input
                 type="checkbox"
                 checked={l.noteOnNo}
@@ -699,7 +699,7 @@ export function QuestionConfig(p: Props) {
         onChange={(v) => set(p, { question: v })}
       />
       <fieldset className="flex flex-col gap-1.5">
-        <legend className="text-label-13 mb-1 font-semibold">Answers and scores</legend>
+        <legend className="text-13 mb-1 font-semibold">Answers and scores</legend>
         {options.map((o, i) => (
           <div key={o.id} className="flex items-center gap-1.5">
             <input
@@ -845,7 +845,7 @@ export const ProtectedConfig = (p: Props) => (
       disabled={p.env.isAdmin === false}
     />
     {p.env.isAdmin === false ? (
-      <p className="text-muted-foreground text-label-12">
+      <p className="text-muted-foreground text-12">
         Only owners and admins can change who sees this field.
       </p>
     ) : null}
@@ -937,7 +937,7 @@ export function FormulaConfig(p: Props) {
           />
         )}
       </Row>
-      <p className="text-muted-foreground text-label-12">
+      <p className="text-muted-foreground text-12">
         Keys:{' '}
         {p.env.fields
           .filter((f) => f.id !== p.field.id)
@@ -945,7 +945,7 @@ export function FormulaConfig(p: Props) {
           .join(' ') || 'none yet'}
       </p>
       {first ? (
-        <p className="text-copy-13">
+        <p className="text-13">
           On {first.displayId}: <span className="font-semibold">{preview || 'empty'}</span>
         </p>
       ) : null}

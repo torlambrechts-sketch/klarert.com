@@ -67,22 +67,22 @@ function Steps({ steps, ctx }: { steps: TimelineStep[]; ctx: Ctx }) {
           <StepMark state={s.state} />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-              <span className="text-label-14 font-semibold">
+              <span className="text-14 font-semibold">
                 {s.index + 1}. {s.name}
               </span>
               <span
                 className={cn(
-                  'text-label-12 font-medium',
+                  'text-12 font-medium',
                   s.state === 'rejected' ? 'text-crit' : 'text-muted-foreground',
                 )}
               >
                 {STEP_WORDS[s.state]}
               </span>
             </div>
-            <span className="text-label-12 text-muted-foreground">{s.rule}</span>
+            <span className="text-12 text-muted-foreground">{s.rule}</span>
             <ul className="m-0 flex list-none flex-col gap-1 p-0">
               {s.people.map((p) => (
-                <li key={p.id} className="text-copy-13 flex flex-col">
+                <li key={p.id} className="text-13 flex flex-col">
                   <span>
                     <span className="font-medium">{p.name}</span>
                     {p.decision ? (
@@ -109,7 +109,7 @@ function Steps({ steps, ctx }: { steps: TimelineStep[]; ctx: Ctx }) {
               ))}
             </ul>
             {s.earlier.map((r) => (
-              <details key={r.round} className="text-copy-13">
+              <details key={r.round} className="text-13">
                 <summary className="text-muted-foreground cursor-pointer">
                   Round {r.round}: {r.decisions.length}{' '}
                   {r.decisions.length === 1 ? 'decision' : 'decisions'}
@@ -183,7 +183,7 @@ export function ItemApprovals({
       data-testid="item-approvals"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 id={`approval-${item.id}`} className="text-heading-14 m-0">
+        <h3 id={`approval-${item.id}`} className="text-14 m-0 font-semibold">
           Approval
         </h3>
         <div className="flex flex-wrap gap-1.5">
@@ -221,22 +221,22 @@ export function ItemApprovals({
           role="alert"
           className="border-line flex items-center justify-between gap-2 rounded-lg border p-3"
         >
-          <span className="text-copy-13">The approval could not be loaded.</span>
+          <span className="text-13">The approval could not be loaded.</span>
           <Button type="button" size="sm" variant="outline" onClick={() => void q.refetch()}>
             Retry
           </Button>
         </div>
       ) : (
-        <div className="border-line bg-background-100 flex flex-col gap-3 rounded-lg border p-3">
+        <div className="border-line bg-surface flex flex-col gap-3 rounded-lg border p-3">
           <ApprovalStateLine {...state} />
           {live && mine && selfBlocked ? (
-            <p className="text-copy-13 text-muted-foreground m-0">
+            <p className="text-13 text-muted-foreground m-0">
               You submitted it, so someone else approves it.
             </p>
           ) : null}
           {timeline ? (
             <>
-              <p className="text-copy-13 text-muted-foreground m-0">
+              <p className="text-13 text-muted-foreground m-0">
                 {timeline.workflowName} · submitted by {timeline.submittedBy},{' '}
                 {formatDateTime(timeline.submittedAt, ctx.timeZone)}
                 {current?.submitComment ? ` · “${current.submitComment}”` : ''}
@@ -244,14 +244,14 @@ export function ItemApprovals({
               <Steps steps={timeline.steps} ctx={ctx} />
             </>
           ) : (
-            <p className="text-copy-13 text-muted-foreground m-0">
+            <p className="text-13 text-muted-foreground m-0">
               {canSubmit
                 ? 'Submit it when it is ready: each step’s approvers are told and every decision is logged.'
                 : 'Not submitted yet.'}
             </p>
           )}
           {data && data.instances.length > 1 ? (
-            <details className="text-copy-13">
+            <details className="text-13">
               <summary className="text-muted-foreground cursor-pointer">
                 Earlier approvals ({data.instances.length - 1})
               </summary>
@@ -374,8 +374,8 @@ function SubmitDialog({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent aria-describedby={`${id}-desc`}>
-        <DialogTitle className="text-heading-16 m-0">Submit for approval</DialogTitle>
-        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-copy-13 m-0">
+        <DialogTitle className="text-card-title m-0">Submit for approval</DialogTitle>
+        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-13 m-0">
           {item.displayId} {item.name}
         </DialogDescription>
         {preview.isPending ? (
@@ -385,7 +385,7 @@ function SubmitDialog({
           />
         ) : preview.isError || !w ? (
           <div role="alert" className="flex items-center justify-between gap-2">
-            <span className="text-copy-13">
+            <span className="text-13">
               {preview.isError
                 ? 'Who approves could not be worked out.'
                 : 'This sheet has no approval workflow turned on.'}
@@ -410,7 +410,7 @@ function SubmitDialog({
             }}
           >
             {workflows.length > 1 ? (
-              <label className="text-label-13 flex flex-col gap-1">
+              <label className="text-13 flex flex-col gap-1">
                 Approval workflow
                 <select
                   className={inputClass}
@@ -425,31 +425,31 @@ function SubmitDialog({
                 </select>
               </label>
             ) : (
-              <p className="text-label-14 m-0 font-semibold">{w.name}</p>
+              <p className="text-14 m-0 font-semibold">{w.name}</p>
             )}
             <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Who approves">
               {w.steps.map((s, i) => (
                 <li key={i} className="border-line rounded-md border px-3 py-2">
-                  <span className="text-label-13 font-semibold">
+                  <span className="text-13 font-semibold">
                     {i + 1}. {s.name}
                   </span>
-                  <span className="text-copy-13 block">
+                  <span className="text-13 block">
                     {s.approvers.length ? s.approvers.join(', ') : 'Nobody yet'}
                   </span>
-                  <span className="text-label-12 text-muted-foreground block">
+                  <span className="text-12 text-muted-foreground block">
                     {s.who} · {s.rule}
                   </span>
                 </li>
               ))}
             </ol>
             {w.problems.length ? (
-              <ul role="alert" className="text-crit text-copy-13 m-0 flex flex-col gap-1 pl-4">
+              <ul role="alert" className="text-crit text-13 m-0 flex flex-col gap-1 pl-4">
                 {w.problems.map((p) => (
                   <li key={p}>⚠ {p}</li>
                 ))}
               </ul>
             ) : null}
-            <label className="text-label-13 flex flex-col gap-1">
+            <label className="text-13 flex flex-col gap-1">
               {w.commentRequired ? 'Comment' : 'Comment (optional)'}
               <textarea
                 className={cn(inputClass, 'h-auto min-h-16 py-2')}
@@ -460,7 +460,7 @@ function SubmitDialog({
               />
             </label>
             {error ? (
-              <p role="alert" className="text-crit text-copy-13 m-0">
+              <p role="alert" className="text-crit text-13 m-0">
                 {error}
               </p>
             ) : null}
@@ -499,8 +499,8 @@ function WithdrawDialog({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent aria-describedby={`${id}-desc`}>
-        <DialogTitle className="text-heading-16 m-0">Withdraw {title}?</DialogTitle>
-        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-copy-13 m-0">
+        <DialogTitle className="text-card-title m-0">Withdraw {title}?</DialogTitle>
+        <DialogDescription id={`${id}-desc`} className="text-muted-foreground text-13 m-0">
           The approval stops here. The decisions so far stay in the activity log; submitting again
           starts from step 1.
         </DialogDescription>
@@ -520,7 +520,7 @@ function WithdrawDialog({
             onDone();
           }}
         >
-          <label className="text-label-13 flex flex-col gap-1">
+          <label className="text-13 flex flex-col gap-1">
             Comment (optional)
             <textarea
               className={cn(inputClass, 'h-auto min-h-16 py-2')}
@@ -530,7 +530,7 @@ function WithdrawDialog({
             />
           </label>
           {error ? (
-            <p role="alert" className="text-crit text-copy-13 m-0">
+            <p role="alert" className="text-crit text-13 m-0">
               {error}
             </p>
           ) : null}

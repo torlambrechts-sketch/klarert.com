@@ -12,7 +12,7 @@ export default function Loading() {
         <div className="bg-soft h-5 w-full max-w-[560px] animate-pulse rounded" />
       </div>
       <div className="bg-soft h-[40px] w-[260px] animate-pulse rounded-md" />
-      <div className="border-line bg-background-100 h-[440px] animate-pulse rounded-lg border" />
+      <div className="border-line bg-surface h-[440px] animate-pulse rounded-lg border" />
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4">
         {[0, 1, 2].map((i) => (
           <div

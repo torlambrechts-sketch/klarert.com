@@ -28,7 +28,7 @@ import {
 
 const selectClass = cn(
   inputClass,
-  'select-chevron h-[40px] w-auto max-w-full text-label-14 shadow-none sm:min-w-[170px]',
+  'select-chevron h-[40px] w-auto max-w-full text-14 shadow-none sm:min-w-[170px]',
 );
 
 export function RunLog(props: { org: string; orgId: string; timeZone: string }) {
@@ -135,7 +135,7 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
       ) : runs.isPending ? (
         <ListSkeleton />
       ) : runs.data.length === 0 ? (
-        <div className="border-line bg-background-100 rounded-lg border border-dashed p-6">
+        <div className="border-line bg-surface rounded-lg border border-dashed p-6">
           <p className="text-muted-foreground m-0">
             {filtered
               ? 'No runs match these filters.'
@@ -144,11 +144,11 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
         </div>
       ) : (
         <>
-          <div className="border-line bg-background-100 overflow-hidden rounded-lg border">
+          <div className="border-line bg-surface overflow-hidden rounded-lg border">
             <RunTable runs={runs.data} org={org} timeZone={props.timeZone} label="Runs" />
           </div>
           {runs.data.length === RUN_PAGE ? (
-            <p className="text-muted-foreground text-label-12 m-0">
+            <p className="text-muted-foreground text-12 m-0">
               Showing the latest {RUN_PAGE} runs. Filter to see older ones.
             </p>
           ) : null}
@@ -177,14 +177,14 @@ export function RunTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table aria-label={label} className="text-label-13 w-full min-w-[860px] border-collapse">
+      <table aria-label={label} className="text-13 w-full min-w-[860px] border-collapse">
         <thead>
           <tr>
             {['Time', 'Automation', 'Sheet', 'Item', 'Outcome', 'What it did'].map((h) => (
               <th
                 key={h}
                 scope="col"
-                className="border-soft text-muted-foreground bg-background-100 text-label-12 border-b px-3.5 py-2.5 text-left font-normal whitespace-nowrap"
+                className="border-soft text-muted-foreground bg-surface text-12 border-b px-3.5 py-2.5 text-left font-normal whitespace-nowrap"
               >
                 {h}
               </th>
@@ -208,13 +208,13 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
   const stepsId = `run-${run.id}-steps`;
   return (
     <tr className="group hover:[&>td]:bg-row-hover">
-      <td className={cn(td, 'text-muted-foreground text-label-12-mono whitespace-nowrap')}>
+      <td className={cn(td, 'text-muted-foreground text-12 font-mono whitespace-nowrap')}>
         {formatDateTime(run.startedAt, timeZone)}
       </td>
       <td className={cn(td, 'min-w-[180px]')}>
         <span className="text-ink break-words">{run.automationName ?? 'Deleted automation'}</span>
         {run.depth > 0 ? (
-          <span className="text-muted-foreground text-label-12 block">
+          <span className="text-muted-foreground text-12 block">
             Caused by another automation (depth {run.depth})
           </span>
         ) : null}
@@ -226,7 +226,7 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
             className="hover:underline"
             href={`/${org}/s/${run.sheetId}?item=${encodeURIComponent(run.itemDisplayId)}`}
           >
-            <span className="text-label-12-mono">{run.itemDisplayId}</span> {run.itemName}
+            <span className="text-12 font-mono">{run.itemDisplayId}</span> {run.itemName}
           </Link>
         ) : (
           <span className="text-muted-foreground">Item no longer available</span>
@@ -243,7 +243,7 @@ function RunItem({ run, org, timeZone }: { run: RunRow; org: string; timeZone: s
             aria-expanded={open}
             aria-controls={stepsId}
             onClick={() => setOpen((o) => !o)}
-            className="text-muted-foreground hover:bg-soft hover:text-ink focus-visible:outline-focus text-label-13 -my-1 inline-flex h-7 items-center gap-1 rounded-md px-1.5 font-medium whitespace-nowrap focus-visible:outline-2"
+            className="text-muted-foreground hover:bg-soft hover:text-ink focus-visible:outline-focus text-13 -my-1 inline-flex h-7 items-center gap-1 rounded-md px-1.5 font-medium whitespace-nowrap focus-visible:outline-2"
           >
             {open ? (
               <ChevronDown className="size-3.5" aria-hidden />

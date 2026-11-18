@@ -71,14 +71,14 @@ export function ProblemList({
   if (problems.length === 0) return null;
   return (
     <div className="border-warn/40 bg-warn-soft flex flex-col gap-2 rounded-md border p-3">
-      <p className="text-label-14 text-warn m-0 flex items-center gap-1.5 font-medium">
+      <p className="text-14 text-warn m-0 flex items-center gap-1.5 font-medium">
         <TriangleAlert className="size-4 shrink-0" aria-hidden />
         {problems.length === 1
           ? '1 problem'
           : `${problems.length.toLocaleString('en-GB')} problems`}{' '}
         to fix before publishing
       </p>
-      <ul aria-label={label} className="text-copy-13 m-0 flex list-none flex-col gap-1 p-0">
+      <ul aria-label={label} className="text-13 m-0 flex list-none flex-col gap-1 p-0">
         {problems.slice(0, limit).map((p, i) => (
           <li key={i}>
             <span className="font-medium">
@@ -86,7 +86,7 @@ export function ProblemList({
               {p.column ? ` · ${COLUMN_LABEL[p.column] ?? p.column}` : ''}
             </span>
             {p.ref ? (
-              <span className="text-label-12-mono text-muted-foreground"> {p.ref}</span>
+              <span className="text-12 text-muted-foreground font-mono"> {p.ref}</span>
             ) : null}
             {': '}
             {p.message}
@@ -94,7 +94,7 @@ export function ProblemList({
         ))}
       </ul>
       {problems.length > limit ? (
-        <p className="text-copy-13 text-muted-foreground m-0">
+        <p className="text-13 text-muted-foreground m-0">
           And {(problems.length - limit).toLocaleString('en-GB')} more. You fix them in the next
           step.
         </p>
@@ -224,21 +224,21 @@ export function OwnFrameworkStart({
         className="mt-1 size-4 shrink-0"
       />
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-label-14 flex items-center gap-1.5 font-medium">
+        <span className="text-14 flex items-center gap-1.5 font-medium">
           {icon} {label}
         </span>
-        <span className="text-copy-13 text-muted-foreground">{help}</span>
+        <span className="text-13 text-muted-foreground">{help}</span>
       </span>
     </label>
   );
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
-        <h2 className="text-heading-16 m-0">Name it</h2>
+      <section className="border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
+        <h2 className="text-card-title m-0">Name it</h2>
         <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-1">
-            <label htmlFor={ids.title} className="text-label-13 font-medium">
+            <label htmlFor={ids.title} className="text-13 font-medium">
               Name
             </label>
             <input
@@ -251,7 +251,7 @@ export function OwnFrameworkStart({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor={ids.short} className="text-label-13 font-medium">
+            <label htmlFor={ids.short} className="text-13 font-medium">
               Short name
             </label>
             <input
@@ -265,12 +265,12 @@ export function OwnFrameworkStart({
                 setShortTitle(e.target.value);
               }}
             />
-            <span id={`${ids.short}-help`} className="text-label-12 text-muted-foreground">
+            <span id={`${ids.short}-help`} className="text-12 text-muted-foreground">
               On chips: “{short || 'ACME'} 4.2”.
             </span>
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor={ids.kind} className="text-label-13 font-medium">
+            <label htmlFor={ids.kind} className="text-13 font-medium">
               Kind
             </label>
             <select
@@ -289,8 +289,8 @@ export function OwnFrameworkStart({
         </div>
       </section>
 
-      <section className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
-        <h2 className="text-heading-16 m-0">Start from</h2>
+      <section className="border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
+        <h2 className="text-card-title m-0">Start from</h2>
         <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
           <legend className="sr-only">How to start</legend>
           {choice(
@@ -316,12 +316,12 @@ export function OwnFrameworkStart({
         {start === 'paste' ? (
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
-              <label htmlFor={ids.paste} className="text-label-13 font-medium">
+              <label htmlFor={ids.paste} className="text-13 font-medium">
                 Paste the list
               </label>
               <textarea
                 id={ids.paste}
-                className={cn(inputClass, 'text-label-13-mono h-auto min-h-40 py-2 font-normal')}
+                className={cn(inputClass, 'text-13 h-auto min-h-40 py-2 font-mono font-normal')}
                 value={text}
                 aria-describedby={ids.help}
                 placeholder={
@@ -333,7 +333,7 @@ export function OwnFrameworkStart({
                   setRead(null);
                 }}
               />
-              <span id={ids.help} className="text-label-12 text-muted-foreground">
+              <span id={ids.help} className="text-12 text-muted-foreground">
                 Columns: {IMPORT_COLUMNS.join(', ')}. Ref and title are needed. A title has at most{' '}
                 {OWN_LIMITS.title} characters; put the full wording in text. Rows with a group and
                 no parent go in that group.
@@ -350,7 +350,7 @@ export function OwnFrameworkStart({
               </Button>
               <label
                 htmlFor={ids.file}
-                className="border-line text-label-14 hover:bg-soft has-[:focus-visible]:ring-focus inline-flex h-[40px] cursor-pointer items-center gap-1.5 rounded-md border px-3 font-medium has-[:focus-visible]:ring-2"
+                className="border-line text-14 hover:bg-soft has-[:focus-visible]:ring-focus inline-flex h-[40px] cursor-pointer items-center gap-1.5 rounded-md border px-3 font-medium has-[:focus-visible]:ring-2"
               >
                 <FileUp className="size-4" aria-hidden /> Upload a CSV file
                 <input
@@ -362,19 +362,19 @@ export function OwnFrameworkStart({
                 />
               </label>
               {fileName ? (
-                <span className="text-label-13 text-muted-foreground">
+                <span className="text-13 text-muted-foreground">
                   {fileName} · {Math.ceil(byteLength(text) / 1024).toLocaleString('en-GB')} KB
                 </span>
               ) : null}
             </div>
             {readError ? (
-              <p role="alert" className="text-copy-14 m-0 flex items-center gap-1.5">
+              <p role="alert" className="text-14 m-0 flex items-center gap-1.5">
                 <X className="text-crit size-4 shrink-0" aria-hidden /> {readError}
               </p>
             ) : null}
             {read && counts ? (
               <div className="flex flex-col gap-2" data-testid="paste-result">
-                <p role="status" className="text-copy-14 m-0 flex items-center gap-1.5">
+                <p role="status" className="text-14 m-0 flex items-center gap-1.5">
                   <Check className="text-good size-4 shrink-0" aria-hidden />
                   Read {counts.items.toLocaleString('en-GB')}{' '}
                   {counts.items === 1 ? 'requirement' : 'requirements'} in {counts.groups}{' '}
@@ -382,7 +382,7 @@ export function OwnFrameworkStart({
                   {read.problems.length === 0 ? ' No problems.' : ''}
                 </p>
                 {read.ignored.length ? (
-                  <p className="text-copy-13 text-muted-foreground m-0">
+                  <p className="text-13 text-muted-foreground m-0">
                     Not read: {read.ignored.join(', ')}.
                   </p>
                 ) : null}
@@ -395,7 +395,7 @@ export function OwnFrameworkStart({
         {start === 'copy' ? (
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
-              <label htmlFor={ids.copy} className="text-label-13 font-medium">
+              <label htmlFor={ids.copy} className="text-13 font-medium">
                 Catalogue framework
               </label>
               <select
@@ -410,13 +410,13 @@ export function OwnFrameworkStart({
                   </option>
                 ))}
               </select>
-              <span className="text-label-12 text-muted-foreground">
+              <span className="text-12 text-muted-foreground">
                 Copies the refs, hierarchy and kinds. Titles start empty and you write every one
                 before publishing. Our purpose, guidance, audit questions and typical evidence are
                 not copied.
               </span>
             </div>
-            <label htmlFor={ids.mappings} className="text-label-13 flex items-start gap-2">
+            <label htmlFor={ids.mappings} className="text-13 flex items-start gap-2">
               <input
                 id={ids.mappings}
                 type="checkbox"
@@ -432,12 +432,12 @@ export function OwnFrameworkStart({
       </section>
 
       {details.length && (title || shortTouched) ? (
-        <p role="alert" className="text-copy-14 m-0 flex items-center gap-1.5">
+        <p role="alert" className="text-14 m-0 flex items-center gap-1.5">
           <X className="text-crit size-4 shrink-0" aria-hidden /> {details[0]}
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="text-copy-14 m-0 flex items-center gap-1.5">
+        <p role="alert" className="text-14 m-0 flex items-center gap-1.5">
           <X className="text-crit size-4 shrink-0" aria-hidden /> {error}
         </p>
       ) : null}

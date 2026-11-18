@@ -23,10 +23,10 @@ export function LockDialog({
   return (
     <Dialog open={!!items} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
-        <DialogTitle className="text-heading-16">
+        <DialogTitle className="text-card-title">
           Lock {n === 1 ? 'this item' : `${n} items`}
         </DialogTitle>
-        <DialogDescription className="text-muted-foreground text-label-13">
+        <DialogDescription className="text-muted-foreground text-13">
           Only owners and admins can change a locked item. Everyone sees the lock and the reason.
         </DialogDescription>
         <form
@@ -40,7 +40,7 @@ export function LockDialog({
             onClose();
           }}
         >
-          <label className="text-label-13 flex flex-col gap-1 font-semibold">
+          <label className="text-13 flex flex-col gap-1 font-semibold">
             Reason
             <input
               className={inputClass}

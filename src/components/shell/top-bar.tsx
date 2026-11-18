@@ -69,7 +69,7 @@ export function TopBar({
           >
             <span
               aria-hidden
-              className="bg-brand-soft text-navy text-label-13 flex size-8 items-center justify-center rounded-full font-semibold"
+              className="bg-brand-soft text-navy text-13 flex size-8 items-center justify-center rounded-full font-semibold"
             >
               {me.initials}
             </span>
@@ -80,7 +80,7 @@ export function TopBar({
           <DropdownMenuContent align="end" className="min-w-56">
             <DropdownMenuLabel className="flex flex-col">
               <span>{me.displayName}</span>
-              <span className="text-muted-foreground text-label-12 font-normal">{me.email}</span>
+              <span className="text-muted-foreground text-12 font-normal">{me.email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

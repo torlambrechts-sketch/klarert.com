@@ -17,7 +17,7 @@ export function SheetCode({ code }: { code: string }) {
   return (
     <span
       aria-hidden
-      className="border-line text-ink bg-background-100 text-label-12-mono flex h-5 min-w-6 shrink-0 items-center justify-center rounded-[5px] border px-1 font-medium tracking-tight"
+      className="border-line text-ink bg-surface text-12 flex h-5 min-w-6 shrink-0 items-center justify-center rounded-[5px] border px-1 font-mono font-medium tracking-tight"
     >
       {code}
     </span>

@@ -13,8 +13,8 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
   return (
     <div className="flex flex-col gap-8">
       <section aria-labelledby="wizard-step-1" className="flex flex-col gap-3">
-        <h2 id="wizard-step-1" className="text-heading-16 flex items-center gap-2">
-          <span className="bg-brand text-primary-foreground text-label-12-mono flex size-6 items-center justify-center rounded-full">
+        <h2 id="wizard-step-1" className="text-card-title flex items-center gap-2">
+          <span className="bg-brand text-primary-foreground text-12 flex size-6 items-center justify-center rounded-full font-mono">
             1
           </span>
           Start from
@@ -29,15 +29,15 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
                   scroll={false}
                   aria-current={selected ? 'true' : undefined}
                   className={cn(
-                    'bg-background-100 flex h-full flex-col gap-1.5 rounded-lg border px-4 py-3.5',
+                    'bg-surface flex h-full flex-col gap-1.5 rounded-lg border px-4 py-3.5',
                     selected ? 'border-brand ring-brand ring-1' : 'border-line hover:border-faint',
                   )}
                 >
-                  <span className="text-label-14 flex items-center gap-1.5 font-semibold">
+                  <span className="text-14 flex items-center gap-1.5 font-semibold">
                     {selected ? <Check className="size-4" aria-hidden /> : null}
                     {s.title}
                   </span>
-                  <span className="text-muted-foreground text-label-13 leading-snug">
+                  <span className="text-muted-foreground text-13 leading-snug">
                     {s.description}
                   </span>
                 </Link>
@@ -49,10 +49,10 @@ export function NewSheetWizard({ ctx, startId }: { ctx: WizardContext; startId: 
       {start ? (
         <section
           aria-labelledby="wizard-step-2"
-          className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
+          className="border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]"
         >
-          <h2 id="wizard-step-2" className="text-heading-16 flex items-center gap-2">
-            <span className="bg-brand text-primary-foreground text-label-12-mono flex size-6 items-center justify-center rounded-full">
+          <h2 id="wizard-step-2" className="text-card-title flex items-center gap-2">
+            <span className="bg-brand text-primary-foreground text-12 flex size-6 items-center justify-center rounded-full font-mono">
               2
             </span>
             {start.title}

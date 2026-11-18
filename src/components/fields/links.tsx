@@ -93,7 +93,7 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
           </Button>
         }
       >
-        <Muted className="text-label-13">
+        <Muted className="text-13">
           Choose the sheet this field links to in the field settings first.
         </Muted>
       </EditorFrame>
@@ -120,7 +120,7 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
             return (
               <li
                 key={id}
-                className="bg-soft border-line text-label-12 flex max-w-full items-center gap-1 rounded-full border py-0.5 pr-1 pl-2"
+                className="bg-soft border-line text-12 flex max-w-full items-center gap-1 rounded-full border py-0.5 pr-1 pl-2"
               >
                 <span className="font-mono">{t?.displayId ?? '—'}</span>
                 <span className="truncate">{t?.name ?? 'Item'}</span>
@@ -154,21 +154,21 @@ export function LinkEditor({ item, field, ctx, onCommit, onCancel }: EditorProps
       />
       <ul id={listId} className="flex max-h-56 flex-col gap-0.5 overflow-auto" aria-busy={loading}>
         {error ? (
-          <li className="text-crit text-label-12">Items could not be loaded. Try again.</li>
+          <li className="text-crit text-12">Items could not be loaded. Try again.</li>
         ) : null}
         {!loading && !error && rows.length === 0 ? (
-          <li className="text-muted-foreground text-label-12">No matching items</li>
+          <li className="text-muted-foreground text-12">No matching items</li>
         ) : null}
         {rows
           .filter((r) => r.id !== item.id)
           .map((r) => (
             <li key={r.id}>
-              <label className="hover:bg-sel text-label-13 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1">
+              <label className="hover:bg-sel text-13 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1">
                 <input type="checkbox" checked={picked.includes(r.id)} onChange={() => toggle(r)} />
-                <span className="text-label-12-mono">{r.displayId}</span>
+                <span className="text-12 font-mono">{r.displayId}</span>
                 <span className="truncate">{r.name}</span>
                 {r.sheetName ? (
-                  <span className="text-muted-foreground text-label-12 ml-auto shrink-0">
+                  <span className="text-muted-foreground text-12 ml-auto shrink-0">
                     {r.sheetName}
                   </span>
                 ) : null}

@@ -20,16 +20,10 @@ import { cn } from '@/lib/utils';
 export type RowHeight = 's' | 'm' | 'l';
 
 /** Monochrome steps for slices without an option colour (donut segments), darkest first. */
-const SHADES = [
-  'var(--gray-1000)',
-  'var(--gray-900)',
-  'var(--gray-600)',
-  'var(--gray-400)',
-  'var(--gray-300)',
-];
+const SHADES = ['var(--ink)', 'var(--muted)', 'var(--faint)', 'var(--line-strong)', 'var(--line)'];
 
 const sliceFill = (s: Slice, mono: 'ink' | 'shade') =>
-  s.color ? colorVar(s.color) : mono === 'ink' ? 'var(--gray-1000)' : SHADES[s.shade]!;
+  s.color ? colorVar(s.color) : mono === 'ink' ? 'var(--ink)' : SHADES[s.shade]!;
 
 export interface BodyActions {
   /** Filter the Table to a value (only widgets reading the view's own sheet). */
@@ -58,13 +52,13 @@ export function WidgetBody({
         <div className="flex flex-col">
           <b
             className={cn(
-              'text-heading-32 leading-[1.1] font-semibold tabular-nums',
+              'text-figure leading-[1.1] font-semibold tabular-nums',
               model.alert && 'text-crit',
             )}
           >
             {model.display}
           </b>
-          <span className="text-muted-foreground text-label-12.5 mt-0.5">{model.caption}</span>
+          <span className="text-muted-foreground text-13 mt-0.5">{model.caption}</span>
         </div>
       );
     case 'bars':
@@ -79,21 +73,17 @@ export function WidgetBody({
       return <ItemList model={model} actions={act} />;
     case 'note':
       return model.text ? (
-        <p className="text-copy-14 text-gray-1000 m-0 [text-wrap:pretty] whitespace-pre-wrap">
-          {model.text}
-        </p>
+        <p className="text-14 text-ink m-0 [text-wrap:pretty] whitespace-pre-wrap">{model.text}</p>
       ) : (
-        <p className="text-muted-foreground text-copy-13 m-0">
-          Write a note in the widget settings.
-        </p>
+        <p className="text-muted-foreground text-13 m-0">Write a note in the widget settings.</p>
       );
     case 'message':
-      return <p className="text-muted-foreground text-copy-13 m-0">{model.message}</p>;
+      return <p className="text-muted-foreground text-13 m-0">{model.message}</p>;
     case 'unavailable':
       return (
-        <div className="text-muted-foreground text-label-12.5 flex flex-col items-center gap-1 text-center">
+        <div className="text-muted-foreground text-13 flex flex-col items-center gap-1 text-center">
           <Lock className="size-[18px]" aria-hidden />
-          <b className="text-ink text-label-13 font-semibold">No access</b>
+          <b className="text-ink text-13 font-semibold">No access</b>
           <span>This sheet no longer exists or you cannot see it.</span>
         </div>
       );
@@ -166,7 +156,7 @@ function BarList({ model, actions }: { model: BarsModel; actions: BodyActions })
               actions={actions}
               filterable={model.filterable}
             >
-              <span className="text-label-13 flex min-w-0 items-center gap-2 font-medium">
+              <span className="text-13 flex min-w-0 items-center gap-2 font-medium">
                 <Swatch fill={fill} />
                 <span className="truncate">{s.label}</span>
               </span>
@@ -179,7 +169,7 @@ function BarList({ model, actions }: { model: BarsModel; actions: BodyActions })
                   }}
                 />
               </span>
-              <b className="text-label-12.5-mono text-right font-medium tabular-nums">
+              <b className="text-13 text-right font-mono font-medium tabular-nums">
                 {s.value.toLocaleString('en-GB')}
               </b>
             </SliceRow>
@@ -237,13 +227,13 @@ function Donut({
           <b
             className={cn(
               'font-semibold tabular-nums',
-              height === 's' ? 'text-label-16' : 'text-heading-20',
+              height === 's' ? 'text-16' : 'text-panel-title',
             )}
           >
             {model.totalDisplay}
           </b>
           {height === 's' ? null : (
-            <span className="text-muted-foreground text-label-11">{model.caption}</span>
+            <span className="text-muted-foreground text-12">{model.caption}</span>
           )}
         </div>
       </div>
@@ -254,7 +244,7 @@ function Donut({
         {model.slices.map((s) => (
           <li key={s.key}>
             <SliceRow
-              className="text-ink text-label-13 -mx-1.5 grid w-[calc(100%+12px)] grid-cols-[8px_minmax(0,1fr)_auto_38px] items-center gap-2 rounded-md px-1.5 py-[5px] text-left"
+              className="text-ink text-13 -mx-1.5 grid w-[calc(100%+12px)] grid-cols-[8px_minmax(0,1fr)_auto_38px] items-center gap-2 rounded-md px-1.5 py-[5px] text-left"
               slice={s}
               fieldKey={model.fieldKey}
               fieldName={model.fieldName}
@@ -263,10 +253,10 @@ function Donut({
             >
               <Swatch fill={sliceFill(s, 'shade')} />
               <span className="truncate">{s.label}</span>
-              <b className="text-label-12.5-mono font-medium tabular-nums">
+              <b className="text-13 font-mono font-medium tabular-nums">
                 {s.value.toLocaleString('en-GB')}
               </b>
-              <em className="text-muted-foreground text-label-12-mono text-right not-italic">
+              <em className="text-muted-foreground text-12 text-right font-mono not-italic">
                 {s.percent}%
               </em>
             </SliceRow>
@@ -300,11 +290,11 @@ function Columns({ model, height }: { model: ColumnsModel; height: RowHeight }) 
             title={`${c.name}: ${c.value}`}
             className="flex h-full min-w-3.5 flex-1 flex-col items-center justify-end"
           >
-            <b className="text-muted-foreground text-label-11-mono mb-1 font-medium tabular-nums">
+            <b className="text-muted-foreground text-12 mb-1 font-mono font-medium tabular-nums">
               {c.value}
             </b>
             <i
-              className="bg-gray-1000 block min-h-0.5 w-[70%] max-w-9 rounded-t"
+              className="bg-ink block min-h-0.5 w-[70%] max-w-9 rounded-t"
               style={{ height: `${Math.max(1, (c.value / model.max) * 86)}%` }}
             />
           </div>
@@ -314,7 +304,7 @@ function Columns({ model, height }: { model: ColumnsModel; height: RowHeight }) 
         {model.columns.map((c) => (
           <span
             key={c.key}
-            className="text-muted-foreground text-label-11 min-w-3.5 flex-1 truncate pt-1.5 text-center"
+            className="text-muted-foreground text-12 min-w-3.5 flex-1 truncate pt-1.5 text-center"
           >
             {c.label}
           </span>
@@ -328,8 +318,8 @@ function Progress({ model }: { model: ProgressModel }) {
   return (
     <div>
       <div className="flex flex-col">
-        <b className="text-heading-32 leading-[1.1] font-semibold tabular-nums">{model.percent}%</b>
-        <span className="text-muted-foreground text-label-12.5 mt-0.5">
+        <b className="text-figure leading-[1.1] font-semibold tabular-nums">{model.percent}%</b>
+        <span className="text-muted-foreground text-13 mt-0.5">
           {model.done} of {model.total} completed
         </span>
       </div>
@@ -349,7 +339,7 @@ function Progress({ model }: { model: ProgressModel }) {
       </div>
       <ul
         aria-hidden
-        className="text-muted-foreground text-label-12 m-0 flex list-none flex-wrap gap-x-3.5 gap-y-1.5 p-0"
+        className="text-muted-foreground text-12 m-0 flex list-none flex-wrap gap-x-3.5 gap-y-1.5 p-0"
       >
         {model.segments.map((s) => (
           <li key={s.key} className="inline-flex items-center gap-1.5">
@@ -363,21 +353,20 @@ function Progress({ model }: { model: ProgressModel }) {
 }
 
 function ItemList({ model, actions }: { model: ListModel; actions: BodyActions }) {
-  if (!model.rows.length)
-    return <p className="text-muted-foreground text-copy-13 m-0">No items.</p>;
+  if (!model.rows.length) return <p className="text-muted-foreground text-13 m-0">No items.</p>;
   const open = model.current ? actions.onOpenItem : undefined;
   return (
     <div className="min-w-0 overflow-x-auto">
-      <table className="text-label-13 w-full border-collapse">
+      <table className="text-13 w-full border-collapse">
         <thead>
           <tr>
-            <th className="text-muted-foreground text-label-12 border-line border-b pr-2 pb-2 text-left font-medium whitespace-nowrap">
+            <th className="text-muted-foreground text-12 border-line border-b pr-2 pb-2 text-left font-medium whitespace-nowrap">
               Item
             </th>
             {model.columns.map((c) => (
               <th
                 key={c.key}
-                className="text-muted-foreground text-label-12 border-line border-b px-2 pb-2 text-left font-medium whitespace-nowrap"
+                className="text-muted-foreground text-12 border-line border-b px-2 pb-2 text-left font-medium whitespace-nowrap"
               >
                 {c.name}
               </th>
@@ -413,7 +402,7 @@ function ItemList({ model, actions }: { model: ListModel; actions: BodyActions }
                 ) : (
                   <b className="block truncate font-medium">{r.name}</b>
                 )}
-                <small className="text-muted-foreground text-label-11.5-mono block">
+                <small className="text-muted-foreground text-12 block font-mono">
                   {r.displayId}
                 </small>
               </td>
@@ -439,7 +428,7 @@ function ItemList({ model, actions }: { model: ListModel; actions: BodyActions }
         </tbody>
       </table>
       {model.more > 0 ? (
-        <p className="text-muted-foreground text-label-12 m-0 pt-2">+{model.more} more</p>
+        <p className="text-muted-foreground text-12 m-0 pt-2">+{model.more} more</p>
       ) : null}
     </div>
   );

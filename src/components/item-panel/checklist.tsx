@@ -48,7 +48,7 @@ export function ChecklistSection({
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-2" data-testid="checklist">
-      <h3 id={headingId} className="text-heading-14 m-0">
+      <h3 id={headingId} className="text-14 m-0 font-semibold">
         {field.name}
         {q.data ? (
           <span className="text-muted-foreground font-normal">
@@ -64,13 +64,13 @@ export function ChecklistSection({
         </div>
       ) : q.isError ? (
         <div role="alert" className="flex flex-wrap items-center gap-2">
-          <p className="text-copy-13 m-0">{q.error.message}</p>
+          <p className="text-13 m-0">{q.error.message}</p>
           <Button type="button" size="sm" variant="outline" onClick={() => void q.refetch()}>
             <RotateCcw aria-hidden /> Retry
           </Button>
         </div>
       ) : rows.length === 0 ? (
-        <p className="text-muted-foreground text-copy-13 m-0">
+        <p className="text-muted-foreground text-13 m-0">
           {cfg.panelEmpty || `Nothing is linked in ${field.name} yet.`}
         </p>
       ) : (
@@ -78,7 +78,7 @@ export function ChecklistSection({
           {rows.map((r) => (
             <li
               key={r.id}
-              className="border-line text-label-13 flex flex-col gap-1.5 rounded-lg border px-3 py-2 min-[560px]:flex-row min-[560px]:flex-wrap min-[560px]:items-center min-[560px]:gap-3"
+              className="border-line text-13 flex flex-col gap-1.5 rounded-lg border px-3 py-2 min-[560px]:flex-row min-[560px]:flex-wrap min-[560px]:items-center min-[560px]:gap-3"
             >
               <span className="shrink-0 min-[560px]:w-[150px]">
                 {r.status ? (
@@ -95,7 +95,7 @@ export function ChecklistSection({
                 >
                   {r.name}
                 </button>
-                <span className="text-muted-foreground text-label-12-mono">{r.displayId}</span>
+                <span className="text-muted-foreground text-12 font-mono">{r.displayId}</span>
               </span>
               {r.cells.length ? (
                 <dl className="m-0 flex flex-wrap gap-x-4 gap-y-1">

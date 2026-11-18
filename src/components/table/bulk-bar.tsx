@@ -31,7 +31,7 @@ import { useExportCsv } from './table-actions';
 // items move to Archived items (archiveItems), where they can be restored; the activity log keeps one entry each.
 
 const barButton =
-  'hover:bg-gray-alpha-100 focus-visible:outline-focus text-label-12 text-ink flex h-[60px] shrink-0 flex-col items-center justify-center gap-0.5 px-3.5 focus-visible:outline-2 focus-visible:-outline-offset-2 data-[state=open]:bg-gray-alpha-100';
+  'hover:bg-panel focus-visible:outline-focus text-12 text-ink flex h-[60px] shrink-0 flex-col items-center justify-center gap-0.5 px-3.5 focus-visible:outline-2 focus-visible:-outline-offset-2 data-[state=open]:bg-panel';
 
 export function BulkBar({
   data,
@@ -61,13 +61,13 @@ export function BulkBar({
           className="bg-surface shadow-menu fixed bottom-6 left-1/2 z-40 flex h-[60px] max-w-[calc(100vw-24px)] -translate-x-1/2 items-stretch overflow-x-auto rounded-lg max-[759px]:bottom-[80px]"
         >
           <span
-            className="bg-brand text-heading-24 flex min-w-[60px] shrink-0 items-center justify-center rounded-l-lg px-2 text-white tabular-nums"
+            className="bg-brand text-kpi flex min-w-[60px] shrink-0 items-center justify-center rounded-l-lg px-2 text-white tabular-nums"
             aria-hidden
           >
             {n}
           </span>
           <span
-            className="text-ink text-label-16 flex shrink-0 items-center px-4 font-medium max-sm:sr-only"
+            className="text-ink text-16 flex shrink-0 items-center px-4 font-medium max-sm:sr-only"
             aria-live="polite"
           >
             {n === 1 ? '1 item selected' : `${n} items selected`}
@@ -193,10 +193,10 @@ function DeleteItemsDialog({ data, actions }: { data: SheetData; actions: SheetA
   return (
     <Dialog open={!!ids} onOpenChange={(o) => !o && close()}>
       <DialogContent className="w-[min(440px,calc(100vw-32px))]" role="alertdialog">
-        <DialogTitle className="text-heading-16">
+        <DialogTitle className="text-card-title">
           Delete {n === 1 ? '1 item' : `${n} items`}?
         </DialogTitle>
-        <DialogDescription className="text-muted-foreground text-copy-13">
+        <DialogDescription className="text-muted-foreground text-13">
           {n === 1 ? 'It moves' : 'They move'} to Archived items in the sheet settings, where{' '}
           {n === 1 ? 'it' : 'they'} can be restored. The activity log keeps the record.
         </DialogDescription>
@@ -207,9 +207,9 @@ function DeleteItemsDialog({ data, actions }: { data: SheetData; actions: SheetA
           {items.map((it) => (
             <li
               key={it.id}
-              className="border-b-row-line text-label-13 flex items-center gap-2 border-b px-3 py-2 last:border-b-0"
+              className="border-b-row-line text-13 flex items-center gap-2 border-b px-3 py-2 last:border-b-0"
             >
-              <span className="text-muted-foreground text-label-12-mono shrink-0">
+              <span className="text-muted-foreground text-12 shrink-0 font-mono">
                 {it.displayId}
               </span>
               <span className="min-w-0 truncate">{it.name}</span>

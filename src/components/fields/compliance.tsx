@@ -97,7 +97,7 @@ function filesUI(icon: FieldTypeUI['icon'], expiry: boolean): FieldTypeUI {
       const f = freshness(rows, ctx.today);
       return (
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="text-label-12 shrink-0">{count}</span>
+          <span className="text-12 shrink-0">{count}</span>
           <Chip
             option={{ id: f, label: FRESH[f].label, color: FRESH[f].color, done: f === 'current' }}
           />
@@ -118,7 +118,7 @@ function filesUI(icon: FieldTypeUI['icon'], expiry: boolean): FieldTypeUI {
                   <FileText className="size-4 shrink-0" aria-hidden />
                   <span className="min-w-0 flex-1 truncate">{r.filename}</span>
                   {expiry && r.validUntil ? (
-                    <Muted className="text-label-12 shrink-0">
+                    <Muted className="text-12 shrink-0">
                       valid until {formatDate(r.validUntil)}
                     </Muted>
                   ) : null}
@@ -126,7 +126,7 @@ function filesUI(icon: FieldTypeUI['icon'], expiry: boolean): FieldTypeUI {
               ))}
             </ul>
           )}
-          <Muted className="text-label-12">
+          <Muted className="text-12">
             Files are added and replaced in the item panel, with a checksum and version history.
           </Muted>
           {p.onOpenItem ? (
@@ -141,7 +141,7 @@ function filesUI(icon: FieldTypeUI['icon'], expiry: boolean): FieldTypeUI {
             </Button>
           ) : null}
           {rows.length > 0 && expiry ? (
-            <Muted className="text-label-12">
+            <Muted className="text-12">
               Freshness: {FRESH[freshness(rows, ctx.today)].label.toLowerCase()}.
             </Muted>
           ) : null}
@@ -176,11 +176,11 @@ function SignatureEditor({ value, field, ctx, onCommit, onCancel }: EditorProps)
           </>
         }
       >
-        <p className="text-copy-13">
+        <p className="text-13">
           {v.meaning} by {ctx.people.get(v.by)?.name ?? 'a former member'} on{' '}
           {formatDateTime(v.at, ctx.timeZone)}.
         </p>
-        <Muted className="text-label-12">
+        <Muted className="text-12">
           The signature holds a fingerprint of the item&apos;s values at signing
           {(field.config as { clearOnChange: boolean }).clearOnChange
             ? ' and is removed when they change'
@@ -210,7 +210,7 @@ function SignatureEditor({ value, field, ctx, onCommit, onCancel }: EditorProps)
         </>
       }
     >
-      <p className="text-copy-13">
+      <p className="text-13">
         You sign as {me} with the meaning &ldquo;{meaning}&rdquo;. The signature records the
         item&apos;s values as they are now.
       </p>
@@ -274,12 +274,12 @@ function AckEditor({ value, field, item, ctx, onCommit, onCancel }: EditorProps)
         )
       }
     >
-      <p className="text-copy-13">
+      <p className="text-13">
         {done} of {audience.length} acknowledged{version ? ` (version ${version})` : ''}.
       </p>
-      {mine ? <Muted className="text-label-12">You have acknowledged this.</Muted> : null}
+      {mine ? <Muted className="text-12">You have acknowledged this.</Muted> : null}
       {!inAudience ? (
-        <Muted className="text-label-12">You are not in the audience for this field.</Muted>
+        <Muted className="text-12">You are not in the audience for this field.</Muted>
       ) : null}
     </EditorFrame>
   );
@@ -296,7 +296,7 @@ export const ackUI: FieldTypeUI = {
       ctx,
       version,
     );
-    if (audience === 0) return <Muted className="text-label-12">No audience</Muted>;
+    if (audience === 0) return <Muted className="text-12">No audience</Muted>;
     return (
       <Text className="tabular-nums">
         {done} of {audience} · {Math.round((done / audience) * 100)}%
@@ -333,7 +333,7 @@ function ApplicabilityEditor({ value, field, onCommit, onCancel }: EditorProps) 
       title={field.name}
       footer={<SaveCancel onSave={save} onCancel={onCancel} onClear={() => onCommit(null)} />}
     >
-      <fieldset className="text-label-13 flex flex-col gap-1">
+      <fieldset className="text-13 flex flex-col gap-1">
         <legend className="sr-only">{field.name}</legend>
         <label className="flex items-center gap-2">
           <input
@@ -355,7 +355,7 @@ function ApplicabilityEditor({ value, field, onCommit, onCancel }: EditorProps) 
           Not applicable
         </label>
       </fieldset>
-      <label className="text-label-12 flex flex-col gap-1 font-semibold">
+      <label className="text-12 flex flex-col gap-1 font-semibold">
         Reason
         <textarea
           className={cn(inputClass, 'h-auto py-1.5 font-normal')}
@@ -425,7 +425,7 @@ function ChecklistEditor({ value, field, ctx, onCommit, onCancel }: EditorProps)
           const e = answers[line.id];
           return (
             <li key={line.id} className="flex flex-col gap-1">
-              <span className="text-label-13">{line.text}</span>
+              <span className="text-13">{line.text}</span>
               <div className="flex gap-1" role="group" aria-label={`Answer to ${line.text}`}>
                 {ANSWERS.map(([a, label]) => (
                   <button
@@ -435,7 +435,7 @@ function ChecklistEditor({ value, field, ctx, onCommit, onCancel }: EditorProps)
                     aria-pressed={e?.a === a}
                     onClick={() => set(line.id, a)}
                     className={cn(
-                      'border-line text-label-12 rounded-md border px-2 py-0.5 font-semibold',
+                      'border-line text-12 rounded-md border px-2 py-0.5 font-semibold',
                       e?.a === a &&
                         (a === 'yes'
                           ? 'bg-good border-good text-white'
@@ -487,7 +487,7 @@ export const checklistUI: FieldTypeUI = {
         >
           <span className="bg-brand block h-full" style={{ width: `${p.pct ?? 0}%` }} />
         </span>
-        <span className="text-label-13 shrink-0 tabular-nums">
+        <span className="text-13 shrink-0 tabular-nums">
           {p.answered}/{p.lines}
           <span className="sr-only"> answered</span>
         </span>
@@ -525,7 +525,7 @@ function RiskEditor({ value, field, onCommit, onCancel }: EditorProps) {
       }
     >
       <div className="flex gap-1">
-        <span className="text-muted-foreground text-label-12 rotate-180 self-center font-semibold [writing-mode:vertical-rl]">
+        <span className="text-muted-foreground text-12 rotate-180 self-center font-semibold [writing-mode:vertical-rl]">
           Likelihood
         </span>
         <div
@@ -547,12 +547,12 @@ function RiskEditor({ value, field, onCommit, onCancel }: EditorProps) {
                   aria-pressed={on}
                   onClick={() => onCommit({ l, i })}
                   className={cn(
-                    'text-label-12 h-8 rounded font-bold',
+                    'text-12 h-8 rounded font-bold',
                     on && 'ring-ink ring-2 ring-offset-1',
                   )}
                   style={{
                     background: `color-mix(in srgb, var(--label-${LEVEL_COLOR[level]}) ${on ? 100 : 35}%, white)`,
-                    color: on && level !== 'Medium' ? 'var(--background-100)' : 'var(--ink)',
+                    color: on && level !== 'Medium' ? 'var(--surface)' : 'var(--ink)',
                   }}
                 >
                   {l * i}
@@ -562,7 +562,7 @@ function RiskEditor({ value, field, onCommit, onCancel }: EditorProps) {
           )}
         </div>
       </div>
-      <p className="text-muted-foreground text-label-12 text-center font-semibold">Impact</p>
+      <p className="text-muted-foreground text-12 text-center font-semibold">Impact</p>
     </EditorFrame>
   );
 }
@@ -632,7 +632,7 @@ function MeasurementEditor({ value, field, ctx, onCommit, onCancel }: EditorProp
       footer={<SaveCancel onSave={add} onCancel={onCancel} saveLabel="Add reading" />}
     >
       {readings.length ? (
-        <ul className="text-label-12 flex max-h-32 flex-col gap-0.5 overflow-auto">
+        <ul className="text-12 flex max-h-32 flex-col gap-0.5 overflow-auto">
           {[...readings].reverse().map((r, i) => (
             <li key={`${r.at}-${i}`} className="flex gap-2">
               <span className="w-24 shrink-0">{formatDate(r.at)}</span>
@@ -645,10 +645,10 @@ function MeasurementEditor({ value, field, ctx, onCommit, onCancel }: EditorProp
           ))}
         </ul>
       ) : (
-        <Muted className="text-label-12">No readings yet.</Muted>
+        <Muted className="text-12">No readings yet.</Muted>
       )}
       <div className="flex gap-2">
-        <label className="text-label-12 flex flex-1 flex-col gap-1 font-semibold">
+        <label className="text-12 flex flex-1 flex-col gap-1 font-semibold">
           Value{unit ? ` (${unit})` : ''}
           <input
             ref={ref}
@@ -659,7 +659,7 @@ function MeasurementEditor({ value, field, ctx, onCommit, onCancel }: EditorProp
             onKeyDown={(e) => e.key === 'Enter' && add()}
           />
         </label>
-        <label className="text-label-12 flex flex-1 flex-col gap-1 font-semibold">
+        <label className="text-12 flex flex-1 flex-col gap-1 font-semibold">
           Date
           <input
             type="date"
@@ -669,12 +669,12 @@ function MeasurementEditor({ value, field, ctx, onCommit, onCancel }: EditorProp
           />
         </label>
       </div>
-      <label className="text-label-12 flex flex-col gap-1 font-semibold">
+      <label className="text-12 flex flex-col gap-1 font-semibold">
         Note
         <input className={inputClass} value={note} onChange={(e) => setNote(e.target.value)} />
       </label>
       {error ? (
-        <p role="alert" className="text-crit text-label-12">
+        <p role="alert" className="text-crit text-12">
           {error}
         </p>
       ) : null}
@@ -694,9 +694,7 @@ export const measurementUI: FieldTypeUI = {
         <Text className="tabular-nums">{defOf(field).toText(readings, cfg, ctx)}</Text>
         <Sparkline readings={readings} />
         {hit === null ? null : (
-          <span
-            className={cn('text-label-12 shrink-0 font-semibold', hit ? 'text-good' : 'text-crit')}
-          >
+          <span className={cn('text-12 shrink-0 font-semibold', hit ? 'text-good' : 'text-crit')}>
             {hit ? 'On target' : 'Off target'}
           </span>
         )}
@@ -730,7 +728,7 @@ export const clockUI = computedUI({
   icon: Timer,
   Cell: ({ field, item, ctx }) => {
     const s = clockState(item, field as Field<ClockConfig>, ctx);
-    if (s.state === 'not_started') return <Muted className="text-label-12">Not started</Muted>;
+    if (s.state === 'not_started') return <Muted className="text-12">Not started</Muted>;
     const left =
       s.hoursLeft !== null
         ? ` · ${formatHours(s.hoursLeft)}${s.hoursLeft < 0 ? ' over' : ' left'}`
@@ -759,7 +757,7 @@ export const clockUI = computedUI({
           {stop ? ` and stops when ${stop} is set` : ''}.
         </p>
         {s.deadline ? <p>Deadline: {formatDateTime(s.deadline, ctx.timeZone)}.</p> : null}
-        <Muted className="text-label-12">The app calculates this value; it cannot be typed.</Muted>
+        <Muted className="text-12">The app calculates this value; it cannot be typed.</Muted>
       </>
     );
   },
@@ -771,7 +769,7 @@ export const protectedUI: FieldTypeUI = {
   icon: Lock,
   Cell: ({ value }) =>
     value === undefined ? (
-      <span className="text-muted-foreground text-label-12 flex items-center gap-1">
+      <span className="text-muted-foreground text-12 flex items-center gap-1">
         <Lock className="size-3.5" aria-hidden /> Restricted
       </span>
     ) : typeof value === 'string' && value ? (
@@ -811,10 +809,10 @@ function RetentionEditor({ value, field, item, ctx, onCommit, onCancel }: Editor
         />
       }
     >
-      <p className="text-copy-13">
+      <p className="text-13">
         {retentionText(item, field as Field<RetentionConfig>, ctx) || 'No deletion date yet.'}
       </p>
-      <label className="text-label-13 flex items-center gap-2">
+      <label className="text-13 flex items-center gap-2">
         <input
           ref={ref}
           type="checkbox"
@@ -824,7 +822,7 @@ function RetentionEditor({ value, field, item, ctx, onCommit, onCancel }: Editor
         Legal hold
       </label>
       {hold ? (
-        <label className="text-label-12 flex flex-col gap-1 font-semibold">
+        <label className="text-12 flex flex-col gap-1 font-semibold">
           Reason for the hold
           <input
             className={inputClass}

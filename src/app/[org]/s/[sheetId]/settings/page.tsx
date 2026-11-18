@@ -50,10 +50,10 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-line bg-background-100 flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
+    <section className="border-line bg-surface flex flex-col gap-4 rounded-lg border p-5 sm:px-[22px]">
       <div className="flex flex-col gap-1">
-        <h2 className="text-heading-16">{title}</h2>
-        {description ? <p className="text-muted-foreground text-copy-13">{description}</p> : null}
+        <h2 className="text-card-title">{title}</h2>
+        {description ? <p className="text-muted-foreground text-13">{description}</p> : null}
       </div>
       {children}
     </section>
@@ -127,7 +127,7 @@ export default async function SheetSettingsPage({
       <div className="flex flex-col gap-2">
         <Link
           href={`/${org}/s/${sheet.id}`}
-          className="text-muted-foreground hover:text-ink text-label-13 flex w-fit items-center gap-1"
+          className="text-muted-foreground hover:text-ink text-13 flex w-fit items-center gap-1"
         >
           <ArrowLeft className="size-4" aria-hidden /> Back to {sheet.name}
         </Link>
@@ -159,7 +159,7 @@ export default async function SheetSettingsPage({
         </Card>
       ) : (
         <Card title="Sheet">
-          <dl className="text-label-13 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+          <dl className="text-13 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
             <dt className="text-muted-foreground">Name</dt>
             <dd>{sheet.name}</dd>
             <dt className="text-muted-foreground">Items are called</dt>
@@ -260,7 +260,7 @@ export default async function SheetSettingsPage({
             {sheet.groups.map((g) => (
               <li key={g.id} className="flex items-center gap-2">
                 <GroupSwatch color={g.color} /> {g.name}{' '}
-                <span className="text-muted-foreground text-label-13">· {g.count}</span>
+                <span className="text-muted-foreground text-13">· {g.count}</span>
               </li>
             ))}
           </ul>
@@ -287,7 +287,7 @@ export default async function SheetSettingsPage({
             )}
           />
         ) : (
-          <p className="text-muted-foreground text-copy-13">
+          <p className="text-muted-foreground text-13">
             Only owners and admins can change column groups.
           </p>
         )}

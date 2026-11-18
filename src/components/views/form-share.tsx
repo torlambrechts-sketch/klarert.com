@@ -104,14 +104,14 @@ export function FormShareDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90dvh] w-[min(560px,calc(100vw-32px))] overflow-y-auto">
-        <DialogTitle className="text-heading-20">Share {title}</DialogTitle>
-        <DialogDescription className="text-copy-13 text-muted-foreground">
+        <DialogTitle className="text-panel-title">Share {title}</DialogTitle>
+        <DialogDescription className="text-13 text-muted-foreground">
           {access === 'internal'
             ? 'Internal form: people sign in to fill it in. Editors can send answers.'
             : 'Public form: anyone with the link can send it without signing in. At most 10 answers a minute from one visitor and 100 an hour through the link.'}
         </DialogDescription>
         <section aria-labelledby="share-link-h" className="flex flex-col gap-2">
-          <h3 id="share-link-h" className="text-label-14 font-semibold">
+          <h3 id="share-link-h" className="text-14 font-semibold">
             Link
           </h3>
           {url ? (
@@ -119,7 +119,7 @@ export function FormShareDialog({
               <input
                 aria-label={access === 'internal' ? 'Form link' : 'Public link'}
                 readOnly
-                className={cn(inputClass, 'text-label-12-mono h-9')}
+                className={cn(inputClass, 'text-12 h-9 font-mono')}
                 value={url}
                 onFocus={(e) => e.currentTarget.select()}
               />
@@ -155,7 +155,7 @@ export function FormShareDialog({
               {confirm ? (
                 <div
                   role="alert"
-                  className="border-warn/40 bg-warn-soft text-copy-13 flex flex-col gap-2 rounded-md border p-3"
+                  className="border-warn/40 bg-warn-soft text-13 flex flex-col gap-2 rounded-md border p-3"
                 >
                   <p>
                     {confirm === 'regenerate'
@@ -186,7 +186,7 @@ export function FormShareDialog({
             </>
           ) : canEdit ? (
             <div className="flex flex-col items-start gap-2">
-              <p className="text-copy-13 text-muted-foreground">
+              <p className="text-13 text-muted-foreground">
                 No link yet. Create one to share the form.
               </p>
               <Button type="button" disabled={busy} onClick={() => void run('create')}>
@@ -194,14 +194,14 @@ export function FormShareDialog({
               </Button>
             </div>
           ) : (
-            <p className="text-copy-13 text-muted-foreground">
+            <p className="text-13 text-muted-foreground">
               No link. Ask an owner or admin to create one.
             </p>
           )}
         </section>
         {url ? (
           <section aria-labelledby="share-qr-h" className="flex flex-col gap-2">
-            <h3 id="share-qr-h" className="text-label-14 font-semibold">
+            <h3 id="share-qr-h" className="text-14 font-semibold">
               QR code
             </h3>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start">

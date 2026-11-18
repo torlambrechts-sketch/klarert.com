@@ -7,7 +7,7 @@ import type { SetupProgress } from '@/engine/packs/setup';
 // dismissible card, on Home. Status is never colour alone: each step has an icon and its words ("Done", "2 of 5").
 
 const textLink =
-  'text-ink text-label-13 inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline';
+  'text-ink text-13 inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline';
 
 /** A bar with its value in words for assistive technology. */
 function Bar({ value, label }: { value: number; label: string }) {
@@ -32,7 +32,7 @@ function Bar({ value, label }: { value: number; label: string }) {
 export function SetupSummary({ progress }: { progress: SetupProgress }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-label-13">
+      <span className="text-13">
         <span className="font-medium tabular-nums">
           {progress.done} of {progress.total}
         </span>{' '}
@@ -72,10 +72,10 @@ export function SetupSteps({
             />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <span className="text-label-14 font-medium">
+                <span className="text-14 font-medium">
                   <span className="text-muted-foreground tabular-nums">{s.number}.</span> {s.title}
                 </span>
-                <span className="text-label-12 text-muted-foreground tabular-nums">
+                <span className="text-12 text-muted-foreground tabular-nums">
                   {s.done
                     ? 'Done'
                     : s.progress > 0
@@ -83,7 +83,7 @@ export function SetupSteps({
                       : `To do · ${s.detail}`}
                 </span>
               </span>
-              <p className="text-copy-13 text-muted-foreground m-0">{s.body}</p>
+              <p className="text-13 text-muted-foreground m-0">{s.body}</p>
               {!s.done && s.progress > 0 ? (
                 <Bar value={s.progress} label={`${s.title}: ${Math.round(s.progress * 100)}%`} />
               ) : null}
@@ -101,7 +101,7 @@ export function SetupSteps({
                   ) : null}
                 </span>
               ) : (
-                <span className="text-label-12 text-muted-foreground">
+                <span className="text-12 text-muted-foreground">
                   The sheet for this step is archived or not shared with you.
                 </span>
               )}

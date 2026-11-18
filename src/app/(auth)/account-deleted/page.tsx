@@ -9,7 +9,7 @@ export default function AccountDeletedPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1>Compliance OS</h1>
-        <h2 className="text-heading-16" data-testid="account-deleted">
+        <h2 className="text-card-title" data-testid="account-deleted">
           Your account has been deleted.
         </h2>
         <p className="text-muted-foreground">
@@ -17,7 +17,7 @@ export default function AccountDeletedPage() {
           in their workspaces without your name.
         </p>
       </div>
-      <p className="text-label-13">
+      <p className="text-13">
         <Link className="text-info underline-offset-4 hover:underline" href="/login">
           Go to sign in
         </Link>

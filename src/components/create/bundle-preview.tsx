@@ -59,19 +59,17 @@ export function BundlePreview({
     <div className="flex flex-col gap-4" data-testid="create-preview">
       <div className="border-line rounded-lg border p-4">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <h3 className="text-heading-20">{details.title}</h3>
-          <span className="text-label-12-mono text-muted-foreground">{details.version}</span>
+          <h3 className="text-panel-title">{details.title}</h3>
+          <span className="text-12 text-muted-foreground font-mono">{details.version}</span>
           {details.level ? (
-            <span className="bg-soft text-label-12 rounded-full px-2 py-0.5">
-              {details.level.name}
-            </span>
+            <span className="bg-soft text-12 rounded-full px-2 py-0.5">{details.level.name}</span>
           ) : null}
         </div>
-        <p className="text-copy-14 mt-2" data-testid="create-summary">
+        <p className="text-14 mt-2" data-testid="create-summary">
           Creates {summary.join(' · ')}.
         </p>
         {details.uses.length ? (
-          <p className="text-copy-13 mt-1 flex items-start gap-1.5" data-testid="create-uses">
+          <p className="text-13 mt-1 flex items-start gap-1.5" data-testid="create-uses">
             <Layers className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
             <span>
               Works on sheets you already have: {details.uses.join(', ')}.
@@ -79,7 +77,7 @@ export function BundlePreview({
             </span>
           </p>
         ) : null}
-        <p className="text-copy-13 text-muted-foreground mt-2 flex items-start gap-1.5">
+        <p className="text-13 text-muted-foreground mt-2 flex items-start gap-1.5">
           <Users className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
             {restricted.length
@@ -88,14 +86,14 @@ export function BundlePreview({
           </span>
         </p>
         {details.frameworks.length ? (
-          <p className="text-copy-13 text-muted-foreground mt-1 flex items-start gap-1.5">
+          <p className="text-13 text-muted-foreground mt-1 flex items-start gap-1.5">
             <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
             <span>
               Adds the requirement library it builds on when the workspace has not got it yet.
             </span>
           </p>
         ) : null}
-        <p className="text-copy-13 text-muted-foreground mt-1">
+        <p className="text-13 text-muted-foreground mt-1">
           Nothing is created until you press Create.
         </p>
       </div>
@@ -108,13 +106,13 @@ export function BundlePreview({
         >
           <h3
             id={`${id}-safety`}
-            className="text-label-14 text-warn flex items-center gap-1.5 font-semibold"
+            className="text-14 text-warn flex items-center gap-1.5 font-semibold"
           >
             <ShieldAlert className="size-4" aria-hidden /> Off until someone checks it
           </h3>
           <ul className="mt-2 flex flex-col gap-2">
             {flagged.map((p) => (
-              <li key={p.id} className="text-copy-13">
+              <li key={p.id} className="text-13">
                 <span className="font-medium">{p.name}</span>
                 {p.sheet ? <span className="text-muted-foreground"> · {p.sheet}</span> : null}
                 {p.flags
@@ -130,20 +128,17 @@ export function BundlePreview({
         </section>
       ) : null}
 
-      <p aria-live="polite" className="text-copy-13 empty:hidden" data-testid="create-note">
+      <p aria-live="polite" className="text-13 empty:hidden" data-testid="create-note">
         {note}
       </p>
 
       {details.check?.state === 'blocked' ? (
-        <div
-          role="alert"
-          className="border-crit/40 bg-crit-soft text-copy-13 rounded-lg border p-3"
-        >
+        <div role="alert" className="border-crit/40 bg-crit-soft text-13 rounded-lg border p-3">
           This set cannot be created here: {details.check.conflicts.join(' ')}
         </div>
       ) : null}
       {details.check && (details.check.warnings.length || details.check.renamedPrefixes.length) ? (
-        <ul className="text-copy-13 text-muted-foreground flex flex-col gap-1">
+        <ul className="text-13 text-muted-foreground flex flex-col gap-1">
           {details.check.renamedPrefixes.map((r) => (
             <li key={r.sheet}>
               {r.sheet} uses the ID prefix {r.to}: {r.from} is taken here.
@@ -158,7 +153,7 @@ export function BundlePreview({
       <PartPicker parts={details.parts} excluded={excluded} onChange={onChange}>
         {details.apps.length ? (
           <section className="border-line rounded-lg border p-3" aria-label="Apps">
-            <h4 className="text-label-13 text-muted-foreground px-1 font-medium">Apps</h4>
+            <h4 className="text-13 text-muted-foreground px-1 font-medium">Apps</h4>
             <ul className="mt-1 flex flex-col gap-1">
               {details.apps.map((a) => {
                 const left = apps.find((x) => x.title === a.title);
@@ -166,8 +161,8 @@ export function BundlePreview({
                   <li key={a.title} className="flex items-start gap-2.5 p-1.5">
                     <AppWindow className="mt-0.5 size-4 shrink-0" aria-hidden />
                     <span>
-                      <span className="text-label-14 block">{a.title}</span>
-                      <span className="text-label-12 text-muted-foreground">
+                      <span className="text-14 block">{a.title}</span>
+                      <span className="text-12 text-muted-foreground">
                         {left
                           ? `${plural(left.screens, 'screen')} in the side menu`
                           : 'Not shown: the parts it needs are left out'}
@@ -184,7 +179,7 @@ export function BundlePreview({
       {!canInstall ? (
         <p
           role="note"
-          className="border-line bg-subtle text-copy-14 rounded-lg border p-3"
+          className="border-line bg-subtle text-14 rounded-lg border p-3"
           data-testid="ask-admin"
         >
           Only owners and admins can create ready-made sets. Ask an admin to create it for you, or
@@ -220,9 +215,7 @@ export function PartPicker({
         if (!list.length) return null;
         return (
           <fieldset key={g.kind} className="border-line rounded-lg border p-3">
-            <legend className="text-label-13 text-muted-foreground px-1 font-medium">
-              {g.title}
-            </legend>
+            <legend className="text-13 text-muted-foreground px-1 font-medium">{g.title}</legend>
             <ul className="flex flex-col gap-1">
               {list.map((p) => {
                 const on = !off.has(p.id);
@@ -241,7 +234,7 @@ export function PartPicker({
                         className="mt-[3px] size-4 shrink-0 accent-[var(--ink)]"
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="text-label-14 flex items-center gap-1.5">
+                        <span className="text-14 flex items-center gap-1.5">
                           <span className={on ? '' : 'text-muted-foreground line-through'}>
                             {p.name}
                           </span>
@@ -255,7 +248,7 @@ export function PartPicker({
                             />
                           ) : null}
                         </span>
-                        <span className="text-label-12 text-muted-foreground block">
+                        <span className="text-12 text-muted-foreground block">
                           {[p.sheet, p.detail].filter(Boolean).join(' · ')}
                           {needers.length
                             ? ` · needed by ${needers.map((x) => x.name).join(', ')}`
