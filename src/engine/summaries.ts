@@ -80,18 +80,32 @@ export function defaultSummary(field: Field, ctx: Ctx): SummaryFn {
   return summaryOptions(field, ctx)[0]!;
 }
 
-/** Kinds whose group summary shows by default (the Table footer): averages, distributions and date ranges. */
+/**
+ * Kinds whose group summary shows by default (owner decision 18 Nov 2026, docs/18 C6: summaries on by default): a
+ * status battery for option fields, Σ for numbers, the date range for dates, the people present and "n of m" for
+ * evidence files.
+ */
 const AUTO_KINDS: ReadonlySet<ValueKind> = new Set([
   'number',
   'option',
   'ordered',
   'date',
   'daterange',
+  'people',
+  'file',
 ]);
+
+/** The automatic summary where it differs from the kind's first option. */
+const AUTO_FN: Partial<Record<ValueKind, SummaryFn>> = {
+  people: 'distinct',
+  file: 'count_with_files',
+};
 
 /** The summary a column shows when the view says nothing about it; null = none. */
 export function autoSummary(field: Field, ctx: Ctx): SummaryFn | null {
-  return AUTO_KINDS.has(kindOf(field, ctx)) ? defaultSummary(field, ctx) : null;
+  const kind = kindOf(field, ctx);
+  if (!AUTO_KINDS.has(kind)) return null;
+  return AUTO_FN[kind] ?? defaultSummary(field, ctx);
 }
 
 /**
@@ -128,7 +142,7 @@ export const SUMMARY_CAPTION: Record<SummaryFn, string> = {
   percent_checked: '',
   count_checked: '',
   freshness: '',
-  count_with_files: '',
+  count_with_files: 'with files',
   total_links: '',
   items_with_links: '',
 };
@@ -142,6 +156,8 @@ export interface Segment {
 
 export type Summary =
   | { kind: 'value'; fn: SummaryFn; value: number | null; text: string }
+  /** The people present (people fields' "distinct"): shown as avatars, read as their names. */
+  | { kind: 'people'; fn: SummaryFn; ids: string[]; text: string }
   | { kind: 'segments'; fn: SummaryFn; segments: Segment[]; total: number; text: string };
 
 const fmt = (n: number, digits = 2) =>
@@ -211,6 +227,13 @@ export function summarise(field: Field, items: Item[], ctx: Ctx, fn?: SummaryFn)
       return value(use, filled.length, `${fmt(filled.length)} of ${fmt(items.length)} filled`);
     case 'distinct': {
       const keys = new Set(items.flatMap((it) => keysOf(it, field, ctx)));
+      if (kindOf(field, ctx) === 'people')
+        return {
+          kind: 'people',
+          fn: use,
+          ids: [...keys],
+          text: [...keys].map((id) => ctx.people.get(id)?.name ?? 'Former member').join(', '),
+        };
       return value(use, keys.size, plural(keys.size, 'distinct', 'distinct'));
     }
     case 'distribution': {
@@ -284,7 +307,7 @@ export function summarise(field: Field, items: Item[], ctx: Ctx, fn?: SummaryFn)
       };
     }
     case 'count_with_files':
-      return value(use, filled.length, `${fmt(filled.length)} with files`);
+      return value(use, filled.length, `${fmt(filled.length)} of ${fmt(items.length)}`);
     case 'total_links': {
       const n = items.reduce((a, it) => a + ctx.links(it.id, field.id).length, 0);
       return value(use, n, plural(n, 'link'));

@@ -36,11 +36,12 @@ import { toast } from 'sonner';
 import { cellColumns, copyRange, planClear, planPaste, type GridColumn } from '@/engine/clipboard';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import { ownerField, ownerOf } from '@/engine/item-panel';
-import { donePercent } from '@/engine/views/group-by';
+import { donePercent, groupValues } from '@/engine/views/group-by';
+import { statusFilterField } from '@/engine/views/quick-filters';
 import { missingRequired, missingText } from '@/engine/views/new-item';
 import { keysBetween } from '@/engine/ordering';
 import type { SheetData } from '@/engine/sheet-data';
-import { columnSummaries, type SummaryFn } from '@/engine/summaries';
+import { columnSummaries, summarise, type SummaryFn } from '@/engine/summaries';
 import type { Ctx, Field, Group, Item } from '@/engine/types';
 import { setSummary, type ViewConfig } from '@/engine/views/config';
 import {
@@ -87,7 +88,7 @@ import {
 } from './subitem-rows';
 import type { UpdateSummary } from './use-update-counts';
 import { ColumnHeader, type ColumnMenuActions } from './column-header';
-import { GroupSummary } from './group-summary';
+import { Battery, GroupSummary } from './group-summary';
 import { GroupTitle } from './group-title';
 import { LockDialog } from './lock-dialog';
 import { useDocumentTop } from './use-document-top';
@@ -386,7 +387,8 @@ export function Table({
         items: visibleItems,
         collapsed,
         compare: viewCompare,
-        canAdd: canEdit && !tg.virtual,
+        // "+ Add item" in a group by a field sets that field's value (docs/18 §5)
+        canAdd: canEdit,
         summaries: showSummaries,
         onlyGroup: tg.onlyGroup,
         groupOf: tg.groupOf,
@@ -394,6 +396,21 @@ export function Table({
       }),
     [tg, visibleItems, collapsed, viewCompare, canEdit, showSummaries, subLayout],
   );
+  const groupBy = useGrid((s) => s.groupBy);
+  const groupByField = useMemo(
+    () => (groupBy ? (data.fields.find((f) => f.id === groupBy) ?? null) : null),
+    [groupBy, data.fields],
+  );
+  /** Items per group before filters: "n items · m shown" in the group title. */
+  const groupTotals = useMemo(() => {
+    const m = new Map<string, number>();
+    const scope = onlyGroup ? data.items.filter((i) => i.groupId === onlyGroup) : data.items;
+    for (const it of scope) {
+      const id = tg.groupOf ? tg.groupOf(it) : it.groupId;
+      m.set(id, (m.get(id) ?? 0) + 1);
+    }
+    return m;
+  }, [data.items, onlyGroup, tg]);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
   const owner = useMemo(() => ownerField(ctx), [ctx]);
@@ -958,7 +975,14 @@ export function Table({
     [store],
   );
 
-  const addItem = async (group: Group, name: string) => {
+  const addItem = async (shown: Group, name: string) => {
+    // grouped by a field: the item goes to the sheet's first group (or the one shown) with the group's value
+    const byField = tg.virtual && groupByField ? groupByField : null;
+    const group = byField
+      ? (data.groups.find((g) => g.id === onlyGroup) ??
+        [...data.groups].sort((a, b) => (a.position < b.position ? -1 : 1))[0]!)
+      : shown;
+    const values = byField ? groupValues(byField, shown.id, ctx) : undefined;
     // after every item of the group, also those a filter hides, so keys never collide
     const list = data.items.filter((i) => i.groupId === group.id).sort(byPosition);
     const [position] = positionsAtEnd(list, 1);
@@ -974,7 +998,7 @@ export function Table({
         if (s.active?.itemId === tempId || s.anchor?.itemId === tempId)
           store.setState({ active: swap(s.active), anchor: swap(s.anchor) });
       },
-      { hold: true, source: 'inline' },
+      { hold: true, source: 'inline', ...(values ? { values } : {}) },
     );
   };
 
@@ -1363,6 +1387,7 @@ export function Table({
                       onAdd={addItemStable}
                       addRef={row.key === firstAddGroup ? firstAddRef : undefined}
                       groupItems={layout.byGroup}
+                      groupTotals={groupTotals}
                       onCommit={commitStable}
                       onOpenItem={openItemStable}
                       onCancelEdit={cancelEditStable}
@@ -1482,6 +1507,8 @@ interface RowProps {
   onAdd(group: Group, name: string): Promise<void>;
   addRef?: React.RefObject<HTMLInputElement | null>;
   groupItems: Map<string, Item[]>;
+  /** Items per group before filters. */
+  groupTotals: Map<string, number>;
   onCommit(item: Item, col: string, raw: unknown): void;
   onCancelEdit(): void;
   /** "Add …" and "Edit options" for the open editor (people who may edit the field). */
@@ -1565,16 +1592,34 @@ function GroupRow(p: RowProps & { row: Extract<TableRow, { kind: 'group' }> }) {
         drop.isOver && 'bg-sel',
       )}
     >
-      <div className="sticky left-0 flex items-center px-4">
+      <div className="sticky left-0 flex min-w-0 items-center px-2">
         <GroupTitle
           group={row.group}
-          count={row.count}
+          count={p.groupTotals.get(row.group.id) ?? row.count}
+          shown={row.count}
           donePct={donePercent(items, p.ctx)}
           collapsed={row.collapsed}
           onToggle={() => store.getState().toggleCollapsed(row.group.id)}
+          after={row.collapsed ? <GroupBattery items={items} ctx={p.ctx} /> : null}
         />
       </div>
     </div>
+  );
+}
+
+/** A collapsed group's status battery (160 px): how its items spread over the status options. */
+function GroupBattery({ items, ctx }: { items: Item[]; ctx: Ctx }) {
+  const field = statusFilterField(ctx);
+  if (!field || items.length === 0) return null;
+  const s = summarise(field, items, ctx, 'distribution');
+  if (s.kind !== 'segments') return null;
+  return (
+    <Battery
+      segments={s.segments}
+      total={s.total}
+      label={s.text}
+      className="flex h-[22px] w-[160px] shrink-0 overflow-hidden rounded-[2px]"
+    />
   );
 }
 

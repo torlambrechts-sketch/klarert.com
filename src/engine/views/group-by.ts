@@ -1,5 +1,5 @@
 // "Group by" in the Table (docs/05 §3.1): the sheet's own groups, or virtual groups made from a label or people
-// field (one per option or person, plus "No value"). Pure: fields and items in, groups and a lookup out.
+// field (one per option or person in option order, then "No <field>"). Pure: fields and items in, groups and a lookup out.
 import { itemStatusField } from '../fields/item-status';
 import { resolveFieldType } from '../fields/resolve';
 import type { Ctx, Field, Group, Item, LabelColor } from '../types';
@@ -28,7 +28,7 @@ export interface VirtualGroups {
   groupOf(item: Item): string;
 }
 
-/** Virtual groups of `items` by `field`: the field's options (or the people present) that hold items, then "No value". */
+/** Virtual groups of `items` by `field`: the field's options (or the people present) that hold items, then "No <field>". */
 export function virtualGroups(
   field: Field,
   items: Item[],
@@ -67,7 +67,7 @@ export function virtualGroups(
     groups.push({
       id: GROUP_BY_NONE,
       sheetId,
-      name: 'No value',
+      name: `No ${field.name.toLowerCase()}`,
       color: 'grey',
       position: '9999',
     });
@@ -85,4 +85,14 @@ export function donePercent(items: Item[], ctx: Ctx): number | null {
   if (!itemStatusField(ctx)) return null;
   if (items.length === 0) return null;
   return Math.round((items.filter((i) => isItemDone(i, ctx)).length / items.length) * 100);
+}
+
+/**
+ * The values "+ Add item" gives a new item in a virtual group (docs/18 §5): the group's option or person; nothing for
+ * "No <field>" or a sheet group.
+ */
+export function groupValues(field: Field, groupId: string, ctx: Ctx): Record<string, unknown> {
+  if (!groupId.startsWith('v:') || groupId === GROUP_BY_NONE) return {};
+  const key = groupId.slice(2);
+  return { [field.id]: kindOf(field, ctx) === 'people' ? [key] : key };
 }
