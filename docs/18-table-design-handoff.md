@@ -143,14 +143,14 @@ Actions as cell edits.
 
 - [x] The owner has decided C1–C8 and `docs/05` says what was decided.
 - [ ] No button group on any screen has more than three related buttons (§3 table).
-- [ ] Every menu opens with Enter, moves with ↑/↓, closes with Escape and returns focus to its trigger.
-- [ ] Menus inside the table are not clipped by its scroll area.
-- [ ] Option and people pickers change one cell, or every selected row from the bulk bar, through commands; the
+- [x] Every menu opens with Enter, moves with ↑/↓, closes with Escape and returns focus to its trigger.
+- [x] Menus inside the table are not clipped by its scroll area.
+- [x] Option and people pickers change one cell, or every selected row from the bulk bar, through commands; the
       activity log has one entry per item.
-- [ ] Group summaries show the battery, Σ, date range and evidence count as in the prototype.
+- [x] Group summaries show the battery, Σ, date range and evidence count as in the prototype.
 - [ ] At 1920 px with the side menu collapsed the table fills the card and has a clear right edge.
-- [ ] At 390 px nothing scrolls the page sideways; tables scroll inside their card (phones get cards, `docs/05` §5).
-- [ ] Status shows text and a symbol for action-needed and done; contrast of white words on every solid option
+- [x] At 390 px nothing scrolls the page sideways; tables scroll inside their card (phones get cards, `docs/05` §5).
+- [x] Status shows text and a symbol for action-needed and done; contrast of white words on every solid option
       colour is at least 4.5:1.
 - [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` pass; Playwright covers the menu keyboard flow, the
       bulk bar and grouping by status.
