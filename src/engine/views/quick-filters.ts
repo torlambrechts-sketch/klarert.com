@@ -87,13 +87,13 @@ export interface QuickViewDef {
 const needsAction = (o: LabelOption) => !o.done && (o.color === 'red' || o.color === 'orange');
 
 /**
- * The sheet's alert status: the first option of the item status field that needs action (the "!" options). Null
- * when the field has none.
+ * The sheet's alert options: every option of the item status field that needs action (the "!" options); the quick
+ * view "Needs action" shows items holding any of them (owner decision 18 Nov 2026). Empty when the field has none.
  */
-export function alertOption(ctx: Ctx): LabelOption | null {
+export function alertOptions(ctx: Ctx): LabelOption[] {
   const field = statusFilterField(ctx);
-  if (!field) return null;
-  return (defOf(field).options?.(field.config, ctx) ?? []).find(needsAction) ?? null;
+  if (!field) return [];
+  return (defOf(field).options?.(field.config, ctx) ?? []).filter(needsAction);
 }
 
 /** The sheet's evidence fields (files): "Missing evidence" looks at them. */
@@ -109,8 +109,7 @@ export function quickViews(ctx: Ctx): QuickViewDef[] {
     out.push({ id: 'overdue', label: 'Overdue' });
     out.push({ id: 'week', label: 'Due in 7 days' });
   }
-  const alert = alertOption(ctx);
-  if (alert) out.push({ id: 'alert', label: alert.label });
+  if (alertOptions(ctx).length) out.push({ id: 'alert', label: 'Needs action' });
   if (evidenceFields(ctx).length) out.push({ id: 'evidence', label: 'Missing evidence' });
   return out;
 }
@@ -123,8 +122,8 @@ function addDays(iso: string, days: number): string {
 
 /**
  * Does the item belong to the quick view? My items: a people field holds me. Overdue: the deadline (`dueField`) has
- * passed and the item is not done. Due in 7 days: the deadline is today or in the next 7 days, not done. The alert
- * status: the status holds it. Missing evidence: every evidence field is empty.
+ * passed and the item is not done. Due in 7 days: the deadline is today or in the next 7 days, not done. Needs action:
+ * the status holds an option that needs action. Missing evidence: every evidence field is empty.
  */
 export function inQuickView(item: Item, view: QuickView, ctx: Ctx): boolean {
   switch (view) {
@@ -143,8 +142,8 @@ export function inQuickView(item: Item, view: QuickView, ctx: Ctx): boolean {
     }
     case 'alert': {
       const field = statusFilterField(ctx);
-      const alert = alertOption(ctx);
-      return !!field && !!alert && keysOf(item, field, ctx).includes(alert.id);
+      const ids = new Set(alertOptions(ctx).map((o) => o.id));
+      return !!field && keysOf(item, field, ctx).some((k) => ids.has(k));
     }
     case 'evidence': {
       const fields = evidenceFields(ctx);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import '../fields/registry';
 import { makeCtx, makeField, makeFile, makeItem } from '../testing/fixtures';
 import {
-  alertOption,
+  alertOptions,
   keyFigures,
   applyColumnFilters,
   applyQuickView,
@@ -79,16 +79,16 @@ describe('quick views (View ▾ and Filter ▾)', () => {
     files: [makeFile({ itemId: b.id, fieldId: ev.id })],
   });
 
-  it('offers the views the sheet can answer, the alert status by its label', () => {
+  it('offers the views the sheet can answer, Needs action for the "!" options', () => {
     expect(quickViews(world).map((v) => v.label)).toEqual([
       'Main table',
       'My items',
       'Overdue',
       'Due in 7 days',
-      'Stuck',
+      'Needs action',
       'Missing evidence',
     ]);
-    expect(alertOption(world)?.id).toBe('stuck');
+    expect(alertOptions(world).map((o) => o.id)).toContain('stuck');
     expect(quickViews(makeCtx({ fields: [] })).map((v) => v.id)).toEqual(['all']);
   });
 
@@ -119,7 +119,7 @@ describe('quick views (View ▾ and Filter ▾)', () => {
       ['Items', 4],
       ['Open', 3],
       ['Overdue', 1],
-      ['Stuck', 1],
+      ['Needs action', 1],
       ['Missing evidence', 3],
     ]);
     expect(keyFigures(all, makeCtx({ fields: [] })).map((f) => f.id)).toEqual(['items']);

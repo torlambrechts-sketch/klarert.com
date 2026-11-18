@@ -42,6 +42,19 @@ export function ownerOf(item: Item, field: Field, ctx: Ctx): string | null {
   return (Array.isArray(v) ? v.find((x): x is string => typeof x === 'string') : undefined) ?? null;
 }
 
+/**
+ * "Notify the owner" in the row menu (docs/18 §5, owner decision 18 Nov 2026): an update on the item that
+ * @mentions its owner, so the existing mention notification reaches them in the app. Null when the item has no
+ * owner, the owner is unknown, or the owner is the person asking.
+ */
+export function notifyOwnerUpdate(item: Item, ctx: Ctx): { userId: string; body: string } | null {
+  const field = ownerField(ctx);
+  const userId = field ? ownerOf(item, field, ctx) : null;
+  const person = userId ? ctx.people.get(userId) : undefined;
+  if (!userId || !person || userId === ctx.userId) return null;
+  return { userId, body: `@${person.name} please take a look at this item.` };
+}
+
 export function itemSummary(item: Item, ctx: Ctx): ItemSummary {
   const fields = [...ctx.fieldsByKey.values()].sort(byPosition);
   const status = itemStatusField(ctx);

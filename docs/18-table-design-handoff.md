@@ -75,7 +75,7 @@ scrolls). Inside a scrolling table use a portal (Radix does this) so the menu is
 Left to right, 8 px gaps, 40 px controls, wraps on narrow screens:
 
 1. **New item** (primary).
-2. **View ▾**: the quick views (Main table, My items, Overdue, Due in 7 days, the sheet's alert status, Missing
+2. **View ▾**: the quick views (Main table, My items, Overdue, Due in 7 days, Needs action (items whose status is any "!" option; owner decision 18 Nov 2026), Missing
    evidence) with counts, the saved views, then "Save current view…". A saved view stores the quick view, search,
    owner filter, column filters, sort, hidden columns and grouping.
 3. **Search** (pill, grows from 180 px).
@@ -87,7 +87,7 @@ Left to right, 8 px gaps, 40 px controls, wraps on narrow screens:
 6. **More ▾**: Group by… and Hide columns… (each swaps the menu to its panel), Add column, Turn on / Show all
    sub-items, Export to CSV, Share view.
 
-Above the tabs: up to five key figures (Items, Open, Overdue, the alert status, Missing evidence). They are figures,
+Above the tabs: up to five key figures (Items, Open, Overdue, Needs action, Missing evidence). They are figures,
 not buttons.
 
 ## 5. The table
@@ -100,7 +100,8 @@ Measurements from the prototype (subject to C1–C7):
   then "No <field>" for empty values. "+ Add item" in such a group sets that value.
 - **Columns**: checkbox 44 px (sticky left, 6 px left bar in the group colour), name 340 px (sticky, ID in mono then
   the name as a link, sub-item chip, checklist chip), field columns at the registry width, actions 52 px (sticky
-  right, ⋯ menu: Open item, Duplicate, Notify the owner, Delete…). Header cells are sort buttons; a dot marks a
+  right, ⋯ menu: Open item, Duplicate, Notify the owner (an update on the item that @mentions the owner, so the
+  existing mention notification reaches them in the app; no email; owner decision 18 Nov 2026), Delete…). Header cells are sort buttons; a dot marks a
   filtered column. Grid lines in `--row-line` and `--col-line`; the right edge is a 1 px `--surface-line` with an 8 px
   radius at the top and bottom right so the table has a clear end.
 - **Rows** 40 px; hover and selected rows get a soft background.

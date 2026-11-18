@@ -27,6 +27,7 @@ import {
   setValuesAction,
   updateFieldAction,
 } from '@/app/[org]/s/grid-actions';
+import { postUpdateAction } from '@/app/[org]/s/panel-actions';
 import { keyBetween } from '@/engine/ordering';
 import { resolveFieldType } from '@/engine/fields/resolve';
 import type { SheetData } from '@/engine/sheet-data';
@@ -772,6 +773,20 @@ export function useSheetActions(org: string, sheetId: string) {
     [get, org, patch, pending, restoreItems, run, sheetId],
   );
 
+  /** "Notify the owner" (docs/18 §5): post an update that @mentions them; the mention notifies them in the app. */
+  const notifyOwner = useCallback(
+    async (itemId: string, body: string) => {
+      try {
+        const r = await postUpdateAction({ org, itemId, body });
+        if (!r.ok) return showError(r.error);
+        toast(r.data.notified ? 'The owner was notified.' : 'Update posted.');
+      } catch {
+        toast.error('The owner was not notified. Check your connection and try again.');
+      }
+    },
+    [org],
+  );
+
   /** Duplicate items (docs/18 §5): one copy each, in its item's group, right after it. */
   const duplicateItems = useCallback(
     async (items: Item[]) => {
@@ -1064,6 +1079,7 @@ export function useSheetActions(org: string, sheetId: string) {
     moveItems,
     setArchived,
     duplicateItems,
+    notifyOwner,
     setLinks,
     lockItem,
     clickButton,

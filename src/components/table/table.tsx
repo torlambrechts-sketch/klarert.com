@@ -32,11 +32,12 @@ import {
   MoreHorizontal,
   Plus,
   TriangleAlert,
+  BellRing,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cellColumns, copyRange, planClear, planPaste, type GridColumn } from '@/engine/clipboard';
 import { resolveFieldType } from '@/engine/fields/resolve';
-import { ownerField, ownerOf } from '@/engine/item-panel';
+import { notifyOwnerUpdate, ownerField, ownerOf } from '@/engine/item-panel';
 import { donePercent, groupValues } from '@/engine/views/group-by';
 import { statusFilterField } from '@/engine/views/quick-filters';
 import { missingRequired, missingText } from '@/engine/views/new-item';
@@ -1168,6 +1169,10 @@ export function Table({
     store.getState().openRowMenu(null);
     if (action === 'open') return onOpenItem(item);
     if (action === 'duplicate') return void actions.duplicateItems([item]);
+    if (action === 'notify') {
+      const n = notifyOwnerUpdate(item, ctx);
+      return n ? void actions.notifyOwner(item.id, n.body) : undefined;
+    }
     // "Delete…" confirms first (bulk-bar.tsx); the items move to Archived items
     if (action === 'delete') return store.setState({ deleting: [item.id] });
     if (action === 'archive') {
@@ -1493,7 +1498,7 @@ export function Table({
 
 // ───────────────────────── rows ─────────────────────────
 
-type RowAction = 'open' | 'duplicate' | 'delete' | 'archive' | 'lock' | 'unlock';
+type RowAction = 'open' | 'duplicate' | 'notify' | 'delete' | 'archive' | 'lock' | 'unlock';
 
 interface RowProps {
   row: TableRow;
@@ -2168,6 +2173,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
               open={p.menuOpen}
               canEdit={p.canEdit}
               isAdmin={p.isAdmin}
+              ctx={p.ctx}
               onAction={p.onRowAction}
             />
           );
@@ -2227,6 +2233,7 @@ function RowMenu({
   open,
   canEdit,
   isAdmin,
+  ctx,
   onAction,
 }: {
   item: Item;
@@ -2236,6 +2243,7 @@ function RowMenu({
   open: boolean;
   canEdit: boolean;
   isAdmin: boolean;
+  ctx: Ctx;
   onAction(item: Item, action: RowAction): void;
 }) {
   const store = useGridStore();
@@ -2281,6 +2289,11 @@ function RowMenu({
             {canEdit ? (
               <DropdownMenuItem onSelect={() => onAction(item, 'duplicate')}>
                 <Copy aria-hidden /> Duplicate
+              </DropdownMenuItem>
+            ) : null}
+            {canEdit && notifyOwnerUpdate(item, ctx) ? (
+              <DropdownMenuItem onSelect={() => onAction(item, 'notify')}>
+                <BellRing aria-hidden /> Notify the owner
               </DropdownMenuItem>
             ) : null}
             {isAdmin ? (
