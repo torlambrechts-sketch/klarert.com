@@ -162,7 +162,7 @@ async function Screen({
       }).catch(() => null);
       if (!data) return <ScreenNoAccess org={org} screen={screen} />;
       return (
-        <main className="flex w-full flex-col px-4 pt-5 pb-8 sm:px-[28px]">
+        <main className="flex w-full flex-col px-4 pt-5 pb-8 sm:px-12">
           <WorkflowScreen
             org={org}
             orgId={workspace.id}

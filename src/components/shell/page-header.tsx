@@ -3,14 +3,14 @@ import { CRUMB_SLOT } from './shell-crumb';
 
 // Page header shared by every page (docs/18 §4 hero, docs/05 §2 content): a navy band behind the crumbs (the page's
 // own, or what <ShellCrumb> renders into the slot), the h1 and one line of description, actions on the right. The
-// band runs the full width of the page column. When the element after it is marked `data-hero-overlap` (cards,
-// the Home tiles), the band reaches 88 px under it so that element overlaps the hero.
+// band runs the full width of the page column. The element after it marked `data-hero-overlap` (a HeadCard, a Card,
+// Home's columns) moves up to overlap the hero by 88 px.
 
 /** The hero's decoration: three --brand circles at the top right, hidden from screen readers. */
 function HeroDeco() {
   return (
     <span aria-hidden className="hero-deco">
-      <svg width="420" height="320" viewBox="0 0 420 320" fill="none">
+      <svg width="420" height="320" viewBox="0 0 420 320" fill="none" className="block">
         <circle cx="260" cy="140" r="170" stroke="var(--brand)" strokeWidth="2" />
         <circle cx="300" cy="180" r="110" stroke="var(--brand)" strokeWidth="2" />
         <circle cx="330" cy="200" r="50" fill="var(--brand)" />
@@ -102,6 +102,34 @@ export function Card({
           {footer}
         </div>
       ) : null}
+    </section>
+  );
+}
+
+/**
+ * The page's header card (docs/18 §6, C14): the first card under the hero, overlapping it by 88 px. It holds the
+ * page's tabs, filters and figures, or its first block of content.
+ */
+export function HeadCard({
+  children,
+  className,
+  label,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  /** A name for the region when it has no heading of its own. */
+  label?: string;
+}) {
+  return (
+    <section
+      aria-label={label}
+      data-hero-overlap
+      className={cn(
+        'bg-surface shadow-card rounded-card flex min-w-0 flex-col gap-4 px-4 py-5 sm:px-6',
+        className,
+      )}
+    >
+      {children}
     </section>
   );
 }

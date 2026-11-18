@@ -88,7 +88,7 @@ export function WorkspaceMap({
                     href={`/${org}/s/${n.id}?view=design`}
                     data-testid="map-sheet"
                     className={cn(
-                      'focus-visible:outline-focus bg-surface hover:border-line-strong flex h-full flex-col justify-between gap-1 rounded-lg border px-3 py-2 transition-colors duration-150 focus-visible:outline-2',
+                      'focus-visible:outline-focus bg-surface shadow-card hover:border-line-strong rounded-card text-navy flex h-full flex-col justify-between gap-1 border px-3 py-2 transition-colors duration-150 focus-visible:outline-2',
                       n.context ? 'border-line border-dashed opacity-70' : 'border-line',
                       focus === n.id && 'ring-focus ring-2',
                     )}

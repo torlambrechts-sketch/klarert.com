@@ -5,7 +5,7 @@ import { AuditPackDialog } from '@/components/audit/audit-pack-dialog';
 import { ExportsSkeleton } from '@/components/audit/exports-list';
 import { ExportsSection } from '@/components/audit/exports-section';
 import { inputClass } from '@/components/fields/shared';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
 import { canSeeExports } from '@/engine/audit/exports';
 import { addDays, addMonths } from '@/engine/fields/helpers';
@@ -58,17 +58,19 @@ export default async function AuditPage({
   const r = await listAuditOutputs({ org });
   if (!r.ok)
     return (
-      <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+      <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
         <PageHeader crumb="Reports" title="Audit outputs" />
-        <div
-          role="alert"
-          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
-        >
-          <p className="m-0">{r.error.message}</p>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/${org}/audit`}>Retry</Link>
-          </Button>
-        </div>
+        <HeadCard>
+          <div
+            role="alert"
+            className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
+          >
+            <p className="m-0">{r.error.message}</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/${org}/audit`}>Retry</Link>
+            </Button>
+          </div>
+        </HeadCard>
       </main>
     );
   const d = r.data;
@@ -77,7 +79,7 @@ export default async function AuditPage({
   const scopes = [...d.folders, ...d.installs].map((s) => s.value);
   const defaultScope = scope && scopes.includes(scope) ? scope : 'workspace';
   return (
-    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
       <PageHeader
         crumb="Reports"
         title="Audit outputs"

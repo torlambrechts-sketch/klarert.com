@@ -27,7 +27,7 @@ import {
 import { NewFormDialog } from '@/components/views/form-view';
 import type { ViewsState } from '@/components/views/use-views';
 import { cn } from '@/lib/utils';
-import { ComingLaterChip, HealthLine, PackChip, StepIcon } from './flow-bits';
+import { ComingLaterChip, HealthLine, PackChip, STEP_TOP, StepIcon } from './flow-bits';
 import { SheetMap } from './sheet-map';
 import { ownsTitle, StepEditor, type CreateKind, type EditorEnv } from './step-editor';
 import { useDesign, useRefreshDesign } from './use-design';
@@ -435,16 +435,18 @@ function StepRow({ step, canEdit, onOpen }: { step: FlowStep; canEdit: boolean; 
       data-step-row={step.id}
       onClick={onOpen}
       className={cn(
-        'group focus-visible:outline-focus flex min-h-[52px] w-full items-center gap-3 rounded-lg border px-2.5 py-2 text-left transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2',
+        'group focus-visible:outline-focus rounded-card flex min-h-[78px] w-full items-center gap-3 border border-t-4 px-3 py-2 text-left transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2',
         inverted
-          ? 'bg-ink border-ink text-white'
-          : 'border-line bg-surface hover:border-line-strong',
+          ? 'bg-navy border-navy text-surface'
+          : cn('border-line-soft bg-surface hover:border-line-strong', STEP_TOP[step.kind]),
       )}
     >
       <StepIcon kind={step.kind} inverted={inverted} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-14 truncate font-medium">{step.name}</span>
-        <span className={cn('text-12 truncate', inverted ? 'text-faint' : 'text-muted-foreground')}>
+        <span
+          className={cn('text-12 truncate', inverted ? 'text-brand-soft' : 'text-muted-foreground')}
+        >
           {step.subline}
         </span>
         {step.health || step.pack ? (

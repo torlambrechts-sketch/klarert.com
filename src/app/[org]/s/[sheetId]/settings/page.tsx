@@ -1,3 +1,4 @@
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { AccessPanel } from '@/components/access/access-panel';
 import { NoAccess } from '@/components/access/no-access';
 import { canEdit as canEditLevel, toLevel } from '@/engine/access';
@@ -123,268 +124,269 @@ export default async function SheetSettingsPage({
   const newItemSetting = (sheet.settings as { newItemForm?: unknown } | null)?.newItemForm;
 
   return (
-    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
-      <div className="flex flex-col gap-2">
-        <Link
-          href={`/${org}/s/${sheet.id}`}
-          className="text-muted-foreground hover:text-ink text-13 flex w-fit items-center gap-1"
-        >
-          <ArrowLeft className="size-4" aria-hidden /> Back to {sheet.name}
-        </Link>
-        <h1>Sheet settings</h1>
-        {!canEdit ? (
-          <p className="text-muted-foreground">Viewers cannot change sheet settings.</p>
-        ) : null}
-      </div>
-
-      {canEdit ? (
-        <Card title="Sheet">
-          <SheetSettingsForm
-            org={org}
-            folders={nav.folders.map((f) => ({ id: f.id, name: f.name }))}
-            sheet={{
-              id: sheet.id,
-              name: sheet.name,
-              description: sheet.description,
-              itemLabel: sheet.item_label,
-              idPrefix: sheet.id_prefix ?? '',
-              prefixLocked: sheet.next_seq > 1,
-              folderId: sheet.folder_id,
-              isLibrary: sheet.is_library,
-              holdAutomations:
-                (sheet.settings as { holdAutomations?: boolean } | null)?.holdAutomations !== false,
-              archived: !!sheet.archived_at,
-            }}
-          />
-        </Card>
-      ) : (
-        <Card title="Sheet">
-          <dl className="text-13 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
-            <dt className="text-muted-foreground">Name</dt>
-            <dd>{sheet.name}</dd>
-            <dt className="text-muted-foreground">Items are called</dt>
-            <dd>{sheet.item_label}</dd>
-            <dt className="text-muted-foreground">ID prefix</dt>
-            <dd className="font-mono">{sheet.id_prefix}</dd>
-            <dt className="text-muted-foreground">Folder</dt>
-            <dd>{sheet.folderName ?? 'No folder'}</dd>
-          </dl>
-        </Card>
-      )}
-
-      <Card
-        title="Access"
-        description="Who can see, comment on and edit this sheet. Restricted sheets are seen only by the people listed and the owners."
-      >
-        <AccessPanel
-          org={org}
-          target={{ kind: 'sheet', id: sheet.id, name: sheet.name }}
-          timeZone={workspace.time_zone}
-        />
-      </Card>
-      <Card title="Controlled documents">
-        <DocumentsRegisterSetting
-          org={org}
-          sheetId={sheet.id}
-          on={(sheet.settings as { register?: string } | null)?.register === 'documents'}
-          canChange={isAdminRole(role) && !sheet.archived_at}
-        />
-      </Card>
-
-      <section id="approvals" className="scroll-mt-4">
-        <Card
-          title="Approval workflows"
-          description="Steps an item goes through to be approved: who approves each step, whether any one or all must, a time limit and what a rejection does. Every submission and decision is written to the item's activity log."
-        >
-          <WorkflowEditor
-            org={org}
-            sheetId={sheet.id}
-            initial={readWorkflows(sheet.settings)}
-            fields={(retentionRows ?? []).map((f) => ({
-              key: f.key,
-              name: f.name,
-              type: f.type,
-              options: Array.isArray((f.config as { options?: unknown } | null)?.options)
-                ? ((f.config as { options: { id: string; label: string; done?: boolean }[] })
-                    .options ?? [])
-                : [],
-              restricted: !!f.restricted_to,
-            }))}
-            people={directory.people.map((p) => ({ id: p.id, name: p.name }))}
-            jobRoles={directory.jobRoles.map((r) => ({ id: r.id, name: r.name }))}
-            teams={directory.teams.map((t) => ({ id: t.id, name: t.name }))}
-            canEdit={isAdminRole(role) && !sheet.archived_at}
-            recordKeys={approvalRecordKeys(sheet.settings as Pick<Sheet, 'register'> | null)}
-          />
-        </Card>
-      </section>
-
-      <section id="retention" className="scroll-mt-4">
-        <Card
-          title="Retention"
-          description="How long this sheet keeps personal data. When an item's period ends it goes to Workspace admin › Retention, where an owner or admin approves the erasure, postpones it or places a legal hold."
-        >
-          <RetentionSettingsSection
-            org={org}
-            sheetId={sheet.id}
-            initial={readRetention(sheet.settings)}
-            fields={retentionFields.map((f) => ({
-              key: f.key,
-              name: f.name,
-              personal: isPersonalField(f),
-              date: dateKeys.has(f.key),
-            }))}
-            groups={sheet.groups.map((g) => ({ id: g.id, name: g.name }))}
-            canEdit={isAdminRole(role) && !sheet.archived_at}
-          />
-        </Card>
-      </section>
-
-      <Card
-        title="Groups"
-        description="Groups are the sections of the sheet. Drag or use the arrows to reorder them."
-      >
-        {canEdit && !sheet.archived_at ? (
-          <GroupsManager
-            org={org}
-            sheetId={sheet.id}
-            groups={sheet.groups.map((g) => ({
-              id: g.id,
-              name: g.name,
-              color: g.color,
-              count: g.count,
-            }))}
-          />
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
+      <PageHeader
+        crumb={
+          <Link href={`/${org}/s/${sheet.id}`} className="flex w-fit items-center gap-1">
+            <ArrowLeft className="size-4" aria-hidden /> Back to {sheet.name}
+          </Link>
+        }
+        title="Sheet settings"
+        description={canEdit ? undefined : 'Viewers cannot change sheet settings.'}
+      />
+      <HeadCard>
+        {canEdit ? (
+          <Card title="Sheet">
+            <SheetSettingsForm
+              org={org}
+              folders={nav.folders.map((f) => ({ id: f.id, name: f.name }))}
+              sheet={{
+                id: sheet.id,
+                name: sheet.name,
+                description: sheet.description,
+                itemLabel: sheet.item_label,
+                idPrefix: sheet.id_prefix ?? '',
+                prefixLocked: sheet.next_seq > 1,
+                folderId: sheet.folder_id,
+                isLibrary: sheet.is_library,
+                holdAutomations:
+                  (sheet.settings as { holdAutomations?: boolean } | null)?.holdAutomations !==
+                  false,
+                archived: !!sheet.archived_at,
+              }}
+            />
+          </Card>
         ) : (
-          <ul className="flex flex-col gap-1" aria-label="Groups">
-            {sheet.groups.map((g) => (
-              <li key={g.id} className="flex items-center gap-2">
-                <GroupSwatch color={g.color} /> {g.name}{' '}
-                <span className="text-muted-foreground text-13">· {g.count}</span>
-              </li>
-            ))}
-          </ul>
+          <Card title="Sheet">
+            <dl className="text-13 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+              <dt className="text-muted-foreground">Name</dt>
+              <dd>{sheet.name}</dd>
+              <dt className="text-muted-foreground">Items are called</dt>
+              <dd>{sheet.item_label}</dd>
+              <dt className="text-muted-foreground">ID prefix</dt>
+              <dd className="font-mono">{sheet.id_prefix}</dd>
+              <dt className="text-muted-foreground">Folder</dt>
+              <dd>{sheet.folderName ?? 'No folder'}</dd>
+            </dl>
+          </Card>
         )}
-      </Card>
 
-      <Card
-        title="Column groups"
-        description="Sections of columns, such as Identify, Assess and Treat. A group's columns always sit together; each view can collapse a group into one narrow column."
-      >
-        {isAdminRole(role) && !sheet.archived_at ? (
-          <SheetColumnGroups
-            org={org}
-            sheetId={sheet.id}
-            fields={fields.map((f) => ({
-              id: f.id,
-              key: f.key,
-              name: f.name,
-              position: f.position,
-            }))}
-            groups={parseColumnGroups(
-              (sheet.settings as { columnGroups?: unknown } | null)?.columnGroups,
-              fields.map((f) => f.key),
-            )}
-          />
-        ) : (
-          <p className="text-muted-foreground text-13">
-            Only owners and admins can change column groups.
-          </p>
-        )}
-      </Card>
-
-      <section id="new-item" className="scroll-mt-4">
         <Card
-          title="New item form"
-          description="What “+ New” and the N key ask when someone adds an item to this sheet."
+          title="Access"
+          description="Who can see, comment on and edit this sheet. Restricted sheets are seen only by the people listed and the owners."
         >
-          <NewItemFormSetting
+          <AccessPanel
+            org={org}
+            target={{ kind: 'sheet', id: sheet.id, name: sheet.name }}
+            timeZone={workspace.time_zone}
+          />
+        </Card>
+        <Card title="Controlled documents">
+          <DocumentsRegisterSetting
             org={org}
             sheetId={sheet.id}
-            setting={
-              newItemSetting === false || typeof newItemSetting === 'string' ? newItemSetting : null
-            }
-            forms={formChoices}
+            on={(sheet.settings as { register?: string } | null)?.register === 'documents'}
             canChange={isAdminRole(role) && !sheet.archived_at}
           />
         </Card>
-      </section>
 
-      <Card
-        title="Tabs"
-        description="The views everyone sees as tabs, their order and names. Hidden tabs stay in More and still open from links."
-      >
-        <SheetTabsSettings
-          org={org}
-          sheetId={sheet.id}
-          rows={toTabRows(tabLayout.all)}
-          defaultViewId={normaliseViewId(tabSettings.defaultViewId ?? 'table')}
-          templateDefault={tabSettings.tabsDefault}
-          canEdit={isAdminRole(role) && !sheet.archived_at}
-        />
-      </Card>
+        <section id="approvals" className="scroll-mt-4">
+          <Card
+            title="Approval workflows"
+            description="Steps an item goes through to be approved: who approves each step, whether any one or all must, a time limit and what a rejection does. Every submission and decision is written to the item's activity log."
+          >
+            <WorkflowEditor
+              org={org}
+              sheetId={sheet.id}
+              initial={readWorkflows(sheet.settings)}
+              fields={(retentionRows ?? []).map((f) => ({
+                key: f.key,
+                name: f.name,
+                type: f.type,
+                options: Array.isArray((f.config as { options?: unknown } | null)?.options)
+                  ? ((f.config as { options: { id: string; label: string; done?: boolean }[] })
+                      .options ?? [])
+                  : [],
+                restricted: !!f.restricted_to,
+              }))}
+              people={directory.people.map((p) => ({ id: p.id, name: p.name }))}
+              jobRoles={directory.jobRoles.map((r) => ({ id: r.id, name: r.name }))}
+              teams={directory.teams.map((t) => ({ id: t.id, name: t.name }))}
+              canEdit={isAdminRole(role) && !sheet.archived_at}
+              recordKeys={approvalRecordKeys(sheet.settings as Pick<Sheet, 'register'> | null)}
+            />
+          </Card>
+        </section>
 
-      <Card
-        title={`Fields · ${fields.length}`}
-        description="The columns every item of this sheet has. Edit a field to change its name, options and rules."
-      >
-        <SheetFields
-          org={org}
-          sheetId={sheet.id}
-          userId={user.id}
-          timeZone={workspace.time_zone}
-          role={role}
-          archived={!!sheet.archived_at}
-        />
-      </Card>
+        <section id="retention" className="scroll-mt-4">
+          <Card
+            title="Retention"
+            description="How long this sheet keeps personal data. When an item's period ends it goes to Workspace admin › Retention, where an owner or admin approves the erasure, postpones it or places a legal hold."
+          >
+            <RetentionSettingsSection
+              org={org}
+              sheetId={sheet.id}
+              initial={readRetention(sheet.settings)}
+              fields={retentionFields.map((f) => ({
+                key: f.key,
+                name: f.name,
+                personal: isPersonalField(f),
+                date: dateKeys.has(f.key),
+              }))}
+              groups={sheet.groups.map((g) => ({ id: g.id, name: g.name }))}
+              canEdit={isAdminRole(role) && !sheet.archived_at}
+            />
+          </Card>
+        </section>
 
-      <Card
-        title="Sub-items"
-        description="Steps under an item with their own fields, IDs and activity log, like the actions of a CAPA or the clauses of an audit."
-      >
-        <SubitemSettingsSection
-          org={org}
-          sheetId={sheet.id}
-          userId={user.id}
-          timeZone={workspace.time_zone}
-          role={role}
-          archived={!!sheet.archived_at}
-          childSheetId={child?.id ?? null}
-          settings={child && subSettings ? readSubitemSettings(subSettings) : null}
-          dueKey={child?.dueKey ?? null}
-        />
-      </Card>
-
-      {canEdit ? (
         <Card
-          title={`Archived items · ${archivedItems.length}`}
-          description="Archived items are hidden from views, search and automations. Restore one to bring it back."
+          title="Groups"
+          description="Groups are the sections of the sheet. Drag or use the arrows to reorder them."
         >
-          <ArchivedItems org={org} sheetId={sheet.id} items={archivedItems} />
+          {canEdit && !sheet.archived_at ? (
+            <GroupsManager
+              org={org}
+              sheetId={sheet.id}
+              groups={sheet.groups.map((g) => ({
+                id: g.id,
+                name: g.name,
+                color: g.color,
+                count: g.count,
+              }))}
+            />
+          ) : (
+            <ul className="flex flex-col gap-1" aria-label="Groups">
+              {sheet.groups.map((g) => (
+                <li key={g.id} className="flex items-center gap-2">
+                  <GroupSwatch color={g.color} /> {g.name}{' '}
+                  <span className="text-muted-foreground text-13">· {g.count}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Card>
-      ) : null}
 
-      {canEdit && child && archivedSubitems.length > 0 ? (
         <Card
-          title={`Archived ${readSubitemSettings(subSettings).label.toLowerCase()} · ${archivedSubitems.length}`}
-          description="Restore one on its own, or restore its parent to bring back the ones archived with it."
+          title="Column groups"
+          description="Sections of columns, such as Identify, Assess and Treat. A group's columns always sit together; each view can collapse a group into one narrow column."
         >
-          <ArchivedItems org={org} sheetId={child.id} items={archivedSubitems} />
+          {isAdminRole(role) && !sheet.archived_at ? (
+            <SheetColumnGroups
+              org={org}
+              sheetId={sheet.id}
+              fields={fields.map((f) => ({
+                id: f.id,
+                key: f.key,
+                name: f.name,
+                position: f.position,
+              }))}
+              groups={parseColumnGroups(
+                (sheet.settings as { columnGroups?: unknown } | null)?.columnGroups,
+                fields.map((f) => f.key),
+              )}
+            />
+          ) : (
+            <p className="text-muted-foreground text-13">
+              Only owners and admins can change column groups.
+            </p>
+          )}
         </Card>
-      ) : null}
 
-      {isAdminRole(role) ? (
+        <section id="new-item" className="scroll-mt-4">
+          <Card
+            title="New item form"
+            description="What “+ New” and the N key ask when someone adds an item to this sheet."
+          >
+            <NewItemFormSetting
+              org={org}
+              sheetId={sheet.id}
+              setting={
+                newItemSetting === false || typeof newItemSetting === 'string'
+                  ? newItemSetting
+                  : null
+              }
+              forms={formChoices}
+              canChange={isAdminRole(role) && !sheet.archived_at}
+            />
+          </Card>
+        </section>
+
         <Card
-          title={sheet.archived_at ? 'Archived' : 'Archive'}
-          description={
-            sheet.archived_at
-              ? 'This sheet is hidden from the side menu. Restore it to use it again.'
-              : 'Archiving hides the sheet from the side menu. Nothing is deleted.'
-          }
+          title="Tabs"
+          description="The views everyone sees as tabs, their order and names. Hidden tabs stay in More and still open from links."
         >
-          <ArchiveSheet org={org} sheetId={sheet.id} archived={!!sheet.archived_at} />
+          <SheetTabsSettings
+            org={org}
+            sheetId={sheet.id}
+            rows={toTabRows(tabLayout.all)}
+            defaultViewId={normaliseViewId(tabSettings.defaultViewId ?? 'table')}
+            templateDefault={tabSettings.tabsDefault}
+            canEdit={isAdminRole(role) && !sheet.archived_at}
+          />
         </Card>
-      ) : null}
+
+        <Card
+          title={`Fields · ${fields.length}`}
+          description="The columns every item of this sheet has. Edit a field to change its name, options and rules."
+        >
+          <SheetFields
+            org={org}
+            sheetId={sheet.id}
+            userId={user.id}
+            timeZone={workspace.time_zone}
+            role={role}
+            archived={!!sheet.archived_at}
+          />
+        </Card>
+
+        <Card
+          title="Sub-items"
+          description="Steps under an item with their own fields, IDs and activity log, like the actions of a CAPA or the clauses of an audit."
+        >
+          <SubitemSettingsSection
+            org={org}
+            sheetId={sheet.id}
+            userId={user.id}
+            timeZone={workspace.time_zone}
+            role={role}
+            archived={!!sheet.archived_at}
+            childSheetId={child?.id ?? null}
+            settings={child && subSettings ? readSubitemSettings(subSettings) : null}
+            dueKey={child?.dueKey ?? null}
+          />
+        </Card>
+
+        {canEdit ? (
+          <Card
+            title={`Archived items · ${archivedItems.length}`}
+            description="Archived items are hidden from views, search and automations. Restore one to bring it back."
+          >
+            <ArchivedItems org={org} sheetId={sheet.id} items={archivedItems} />
+          </Card>
+        ) : null}
+
+        {canEdit && child && archivedSubitems.length > 0 ? (
+          <Card
+            title={`Archived ${readSubitemSettings(subSettings).label.toLowerCase()} · ${archivedSubitems.length}`}
+            description="Restore one on its own, or restore its parent to bring back the ones archived with it."
+          >
+            <ArchivedItems org={org} sheetId={child.id} items={archivedSubitems} />
+          </Card>
+        ) : null}
+
+        {isAdminRole(role) ? (
+          <Card
+            title={sheet.archived_at ? 'Archived' : 'Archive'}
+            description={
+              sheet.archived_at
+                ? 'This sheet is hidden from the side menu. Restore it to use it again.'
+                : 'Archiving hides the sheet from the side menu. Nothing is deleted.'
+            }
+          >
+            <ArchiveSheet org={org} sheetId={sheet.id} archived={!!sheet.archived_at} />
+          </Card>
+        ) : null}
+      </HeadCard>
     </main>
   );
 }

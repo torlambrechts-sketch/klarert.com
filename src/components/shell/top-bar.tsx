@@ -63,19 +63,13 @@ export function TopBar({
         <Inbox org={current.slug} orgId={current.id} userId={me.id} timeZone={timeZone} />
 
         <DropdownMenu>
-          <DropdownMenuTrigger
-            className="border-brand text-brand hover:bg-panel flex h-11 shrink-0 items-center gap-2.5 rounded-full border pr-1.5 pl-1.5 font-medium transition-colors duration-150 min-[640px]:pr-5"
-            aria-label={`${me.initials}: account menu for ${me.displayName}`}
-          >
-            <span
-              aria-hidden
-              className="bg-brand-soft text-navy text-13 flex size-8 items-center justify-center rounded-full font-semibold"
-            >
+          <DropdownMenuTrigger className="border-brand text-brand hover:bg-panel flex h-11 shrink-0 items-center gap-2.5 rounded-full border pr-1.5 pl-1.5 font-medium transition-colors duration-150 min-[640px]:pr-5">
+            {/* the name is the visible words and then the purpose (WCAG 2.5.3, label in name) */}
+            <span className="bg-brand-soft text-navy text-13 flex size-8 items-center justify-center rounded-full font-semibold">
               {me.initials}
-            </span>
-            <span aria-hidden className="text-nav max-w-[10rem] truncate max-[639.98px]:hidden">
-              {first}
-            </span>
+            </span>{' '}
+            <span className="text-nav max-w-[10rem] truncate max-[639.98px]:hidden">{first}</span>
+            <span className="sr-only">: account menu for {me.displayName}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-56">
             <DropdownMenuLabel className="flex flex-col">

@@ -7,7 +7,7 @@ describe('cn', () => {
   });
 });
 
-describe('cn with the Geist type scale and materials', () => {
+describe('cn with the Keptrow type and materials', () => {
   it('keeps a type style next to a text colour', () => {
     expect(cn('text-13 flex', 'text-white')).toBe('text-13 flex text-white');
     expect(cn('font-mono text-12', 'text-muted-foreground')).toBe(

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { FirstDashboard } from '@/components/dashboards/first-dashboard';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { isEditorRole, requireMember } from '@/server/auth';
 import { listDashboards } from '@/server/repositories/dashboards';
 
@@ -22,13 +22,15 @@ export default async function DashboardsPage({
   const list = await listDashboards(supabase, workspace.id);
   if (list[0]) redirect(`/${org}/dashboards/${list[0].id}${fresh}`);
   return (
-    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
       <PageHeader
         crumb="Reports"
         title="Dashboards"
         description="Widgets read live from your sheets, the evidence library and the run log."
       />
-      <FirstDashboard org={org} canEdit={isEditorRole(role)} />
+      <HeadCard>
+        <FirstDashboard org={org} canEdit={isEditorRole(role)} />
+      </HeadCard>
     </main>
   );
 }

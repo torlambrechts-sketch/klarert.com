@@ -80,7 +80,7 @@ export default async function DesignPrintPage({
 
   if (sheetId && !flow)
     return (
-      <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+      <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
         <PageHeader crumb={<ListCrumb section="Design" page="Export" />} title="Design export" />
         <p role="alert" className="border-line rounded-lg border p-5">
           This sheet no longer exists or you cannot open it.
@@ -102,7 +102,7 @@ export default async function DesignPrintPage({
     });
     if (!logged.ok)
       return (
-        <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+        <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
           <PageHeader crumb={<ListCrumb section="Design" page="Export" />} title="Design export" />
           <div
             role="alert"
@@ -126,7 +126,7 @@ export default async function DesignPrintPage({
 
   return (
     <main
-      className="text-13 flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px] print:gap-3 print:p-0"
+      className="text-13 flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px] print:gap-3 print:p-0"
       data-testid="design-print"
     >
       <style>{'@media print { @page { size: A4; margin: 12mm } }'}</style>

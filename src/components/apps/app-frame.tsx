@@ -35,7 +35,7 @@ export function AppFrame({
           </div>
         </ShellCrumb>
       ) : null}
-      <div className="px-4 pt-4 sm:px-[28px] sm:pt-5">
+      <div className="px-4 pt-4 sm:px-12 sm:pt-5">
         <p className="text-muted-foreground text-13 m-0 flex flex-wrap items-center gap-1.5 font-medium">
           <AppIcon icon={app.icon} className="size-[15px]" />
           {app.title}

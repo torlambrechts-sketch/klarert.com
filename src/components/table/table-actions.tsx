@@ -171,9 +171,9 @@ export function TableViewMenu({
   return (
     <>
       <DropdownMenu>
-        <Trigger on={quick !== 'all'} data-testid="view-menu" label={`View: ${name}`}>
+        <Trigger on={quick !== 'all'} data-testid="view-menu">
           <Layers aria-hidden />
-          <span className="text-muted-foreground font-normal">View</span>
+          <span className="text-muted-foreground font-normal">View</span>{' '}
           <span className="min-w-0 truncate">{name}</span>
         </Trigger>
         <DropdownMenuContent align="start" className="w-72">

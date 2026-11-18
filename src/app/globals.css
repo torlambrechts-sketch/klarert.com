@@ -333,6 +333,8 @@
   --text-18--line-height: 24px;
   --text-20: 20px;
   --text-20--line-height: 26px;
+  --text-22: 22px;
+  --text-22--line-height: 28px;
   --text-24: 24px;
   --text-24--line-height: 30px;
   --text-28: 28px;
@@ -519,10 +521,6 @@
 .app-main {
   grid-area: main;
 }
-/* the hero's band runs past the page's padding to the column's edges; it stops there */
-.app-page {
-  overflow: clip;
-}
 
 .bottom-bar {
   display: none;
@@ -539,50 +537,40 @@
   display: none;
 }
 
-/* ── the hero (docs/18 §4): a navy band behind the page head; the band is painted by border-image so it reaches the
-   column's edges and the page's top padding whatever the page's own padding is ── */
+/* ── the hero (docs/18 §4): a navy band behind the page head. Pages have 48 px side padding and a 26 px top (16 and
+   20 px on phones, C14); the band takes them back with negative margins so it runs from edge to edge of the page
+   column. When the next element is marked `data-hero-overlap` it moves up 88 px into the band. --hero-gap is the
+   page's own flex gap (16 px unless a page says otherwise). ── */
 .page-hero {
   position: relative;
+  overflow: hidden;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   column-gap: 20px;
   row-gap: 12px;
-  padding: 6px 0 32px;
-  border: 0;
+  margin: -26px -48px 0;
+  padding: 32px 48px;
+  background: var(--navy);
   color: var(--surface);
-  border-image: linear-gradient(var(--navy) 0 0) fill 0 / /26px 100vw 0;
 }
 .page-hero:has(+ [data-hero-overlap]) {
-  border-image-outset: 26px 100vw 104px;
+  padding-bottom: 120px;
 }
 .page-hero + [data-hero-overlap] {
   position: relative;
+  margin-top: calc(-88px - var(--hero-gap, 16px));
 }
-.hero-text {
-  position: relative;
-}
+.hero-text,
 .hero-actions {
   position: relative;
 }
 .hero-deco {
   position: absolute;
-  top: -26px;
-  right: -28px;
-  bottom: 0;
-  width: 420px;
-  max-width: 100vw;
-  overflow: hidden;
-  pointer-events: none;
-}
-.page-hero:has(+ [data-hero-overlap]) .hero-deco {
-  bottom: -104px;
-}
-.hero-deco svg {
-  position: absolute;
-  right: -60px;
   top: -80px;
+  right: -60px;
+  pointer-events: none;
 }
 /* crumbs on navy: --brand-soft words, underlined links, the current one white */
 .hero-crumbs {
@@ -593,7 +581,7 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.hero-crumbs .text-muted-foreground,
+.hero-crumbs .text-muted-foreground:not([class*='bg-']),
 .hero-crumbs .text-line-strong,
 .hero-text p .text-muted-foreground {
   color: var(--brand-soft);
@@ -601,6 +589,38 @@
 .hero-crumbs [aria-current='page'] {
   color: var(--surface);
 }
+/* surfaces on navy (the item panel's header, docs/18 §5): white words, --brand-soft for the quiet ones */
+.on-navy {
+  background: var(--navy);
+  color: var(--surface);
+}
+.on-navy .text-muted-foreground,
+.on-navy .text-line-strong {
+  color: var(--brand-soft);
+}
+.on-navy .text-ink,
+.on-navy .text-navy {
+  color: var(--surface);
+}
+.on-navy .after\:bg-brand::after {
+  background: var(--surface);
+}
+.on-navy [data-variant='ghost'],
+.on-navy [data-variant='tertiary'] {
+  color: var(--surface);
+}
+.on-navy [data-variant='ghost']:hover,
+.on-navy [data-variant='tertiary']:hover {
+  background: var(--brand-2);
+}
+.on-navy :focus-visible {
+  outline-color: var(--surface);
+}
+.on-navy input {
+  color: var(--ink);
+  background: var(--surface);
+}
+
 /* buttons on navy: plain and link buttons take white words, the filled one a light ring */
 .hero-actions [data-variant='ghost'],
 .hero-actions [data-variant='tertiary'],
@@ -677,18 +697,14 @@
     display: none !important;
   }
 }
-/* phones (< 640 px, docs/18 §4): the hero's 24 × 20 px padding and the 30 px title (text-hero) */
+/* phones (< 640 px, docs/18 §4, C12): the hero's 24 × 20 px padding and the 30 px title (text-hero) */
 @media (max-width: 639.98px) {
   .page-hero {
-    padding: 4px 0 24px;
-    border-image-outset: 20px 100vw 0;
+    margin: -20px -16px 0;
+    padding: 24px 20px;
   }
   .page-hero:has(+ [data-hero-overlap]) {
-    border-image-outset: 20px 100vw 104px;
-  }
-  .hero-deco {
-    top: -20px;
-    right: -16px;
+    padding-bottom: 112px;
   }
 }
 
@@ -741,7 +757,9 @@
     display: none;
   }
   .page-hero {
-    border-image: none;
+    margin: 0;
+    padding: 0;
+    background: none;
     color: var(--ink);
   }
   .page-hero h1,

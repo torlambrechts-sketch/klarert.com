@@ -10,7 +10,7 @@ const twMerge = extendTailwindMerge({
       'font-size': [
         {
           text: [
-            ...['12', '13', '14', '15', '16', '17', '18', '20', '24', '28'],
+            ...['12', '13', '14', '15', '16', '17', '18', '20', '22', '24', '28'],
             ...['logo', 'hero', 'hero-sub', 'figure', 'kpi', 'card-title', 'panel-title', 'nav'],
             ...['body', 'sub', 'tab', 'section-label'],
           ],

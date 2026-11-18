@@ -1,6 +1,6 @@
 import { WorkflowScreen } from '@/components/workflow/workflow-screen';
 import { ListCrumb } from '@/components/shell/data-list';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { isAdminRole, isEditorRole, requireMember } from '@/server/auth';
 import { getWorkflow, type WorkflowData } from '@/server/repositories/workflow';
 
@@ -47,7 +47,7 @@ export default async function WorkflowPage({
     : 0;
   const lifecycles = data ? data.rows.filter((r) => r.lifecycle).length : 0;
   return (
-    <main className="flex w-full flex-col gap-0 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-0 px-4 pt-5 pb-8 [--hero-gap:0px] sm:px-12 sm:pt-[26px]">
       <PageHeader
         className="pb-[18px]"
         crumb={
@@ -64,29 +64,31 @@ export default async function WorkflowPage({
         title="Workflow"
         description="The stages items move through, read from a status or label field of each sheet. Open a sheet to see its steps: what each stage needs, what runs when an item enters it and the items in it."
       />
-      {data ? (
-        <WorkflowScreen
-          org={org}
-          orgId={workspace.id}
-          data={data}
-          explicit={!!chosen.sheetId}
-          canEdit={isEditorRole(role)}
-          canManage={isAdminRole(role)}
-        />
-      ) : (
-        <div
-          role="alert"
-          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
-        >
-          <p className="m-0">The workflow could not be loaded.</p>
-          <a
-            href={`/${org}/workflow`}
-            className="border-line hover:bg-soft bg-surface text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+      <HeadCard>
+        {data ? (
+          <WorkflowScreen
+            org={org}
+            orgId={workspace.id}
+            data={data}
+            explicit={!!chosen.sheetId}
+            canEdit={isEditorRole(role)}
+            canManage={isAdminRole(role)}
+          />
+        ) : (
+          <div
+            role="alert"
+            className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
           >
-            Retry
-          </a>
-        </div>
-      )}
+            <p className="m-0">The workflow could not be loaded.</p>
+            <a
+              href={`/${org}/workflow`}
+              className="border-line hover:bg-soft bg-surface text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+            >
+              Retry
+            </a>
+          </div>
+        )}
+      </HeadCard>
     </main>
   );
 }

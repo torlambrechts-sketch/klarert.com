@@ -48,14 +48,34 @@ export const STEP_ICON: Record<StepKind, typeof Zap> = {
   webhook: Webhook,
 };
 
+/** The 4 px top border of a flow node (docs/18 §5): navy for what starts a flow, orange for a decision, sky for
+ * actions. */
+export const STEP_TOP: Record<StepKind, string> = {
+  manual: 'border-t-navy',
+  form: 'border-t-navy',
+  automation_in: 'border-t-navy',
+  button_in: 'border-t-navy',
+  link_in: 'border-t-navy',
+  api: 'border-t-navy',
+  sheet: 'border-t-navy',
+  automation: 'border-t-sky',
+  approval: 'border-t-warn-mark',
+  lifecycle: 'border-t-sky',
+  link_out: 'border-t-sky',
+  create_out: 'border-t-sky',
+  update_out: 'border-t-sky',
+  notify: 'border-t-sky',
+  webhook: 'border-t-sky',
+};
+
 export function StepIcon({ kind, inverted }: { kind: StepKind; inverted?: boolean }) {
   const Icon = STEP_ICON[kind];
   return (
     <span
       aria-hidden
       className={cn(
-        'grid size-[26px] shrink-0 place-items-center rounded-md',
-        inverted ? 'bg-line text-white' : 'bg-soft text-ink',
+        'grid size-[22px] shrink-0 place-items-center rounded-md',
+        inverted ? 'bg-brand-2 text-surface' : 'bg-brand-soft text-navy',
       )}
     >
       <Icon className="size-[14px]" />

@@ -306,7 +306,7 @@ function SheetBody(props: SheetViewProps) {
   return (
     <main
       className={cn(
-        'flex min-w-0 flex-col px-4 pt-5 sm:px-[28px] sm:pt-[26px]',
+        'flex min-w-0 flex-col px-4 pt-5 [--hero-gap:0px] sm:px-12 sm:pt-[26px]',
         // the Table and Insights scroll with the page; the other views fill the window and scroll inside
         tabular || active.type === 'insights' || active.type === 'design'
           ? 'min-h-[calc(100dvh-69px)] pb-[24px]'
@@ -440,134 +440,142 @@ function SheetBody(props: SheetViewProps) {
           </>
         }
       />
-      {data?.sheet.framework?.movedTo ? (
-        <p
-          role="note"
-          data-testid="library-moved"
-          className="border-line bg-soft text-13 m-0 flex flex-wrap items-center gap-1 rounded-md border px-3 py-2"
-        >
-          <Lock className="size-4 shrink-0" aria-hidden /> Read-only: this library moved to{' '}
-          <Link
-            href={`/${org}/s/${data.sheet.framework.movedTo.sheetId}`}
-            className="font-medium underline-offset-2 hover:underline"
-          >
-            {data.sheet.framework.movedTo.title}
-          </Link>
-          . Its items are locked; the history stays here.
-        </p>
-      ) : null}
-      {props.bundle ? (
-        <BundleBanner
-          org={org}
-          bundle={props.bundle}
-          userId={userId}
-          isAdmin={isAdmin}
-          timeZone={timeZone}
-          itemLabel={data?.sheet.itemLabel ?? 'item'}
-          canAdd={canEdit && !!data}
-          onAdd={addNew}
-        />
-      ) : null}
-      {active.type === 'form' ? null : <KeyFigures items={data ? inScope : null} ctx={ctx} />}
-      <ViewTabs
-        className="-mx-4 px-4 sm:-mx-[28px] sm:px-[28px]"
-        views={views}
-        fields={data?.fields ?? []}
-        canCustomise={isAdmin}
-        end={
-          <>
-            {design ? null : <ViewMenu views={views} canEdit={canEdit} />}
-            <Button asChild variant="ghost" size="icon-sm">
-              <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
-                <Settings aria-hidden />
-              </Link>
-            </Button>
-          </>
-        }
-      />
-      <div
-        data-keep-selection
-        data-testid="sheet-toolbar"
-        className="mt-[16px] mb-[14px] flex flex-wrap items-center gap-2"
+      {/* the sheet's header card (docs/18 §6): figures, view tabs and the toolbar, overlapping the hero */}
+      <section
+        aria-label="Sheet tools"
+        data-hero-overlap
+        className="bg-surface shadow-card rounded-card flex min-w-0 flex-col gap-3 px-4 pt-1 pb-3 sm:px-6"
       >
-        {data && ctx && env && tabular ? (
-          // the Table's toolbar (docs/18 C8): View ▾, search, Filter ▾, Sort ▾, More ▾, ⚡
-          <>
-            <TableViewMenu views={views} userId={userId} ctx={ctx} items={inScope} />
-            <div className="flex min-w-[140px] flex-[0_1_180px] focus-within:flex-[0_1_280px] [&>*]:w-full">
-              <SheetSearch value={q} onChange={setQ} />
-            </div>
-            <TableFilterMenu
-              ctx={ctx}
-              items={inScope}
-              fields={data.fields}
-              config={config}
-              setConfig={setConfig}
-              computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
-            />
-            <TableSortMenu config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
-            <TableMoreMenu
-              org={org}
-              data={data}
-              ctx={ctx}
-              env={env}
-              views={views}
-              userId={userId}
-              actions={actions}
-              canEdit={canEdit}
-              isAdmin={isAdmin}
-              archived={props.archived}
-              onlyGroup={props.onlyGroup}
-              sub={sub.state ?? null}
-            />
-            <ValueFilterChip />
-          </>
-        ) : (
-          <>
-            {filterable ? (
-              <div className="flex min-w-0 flex-[1_1_240px] [&>*]:w-full">
+        {data?.sheet.framework?.movedTo ? (
+          <p
+            role="note"
+            data-testid="library-moved"
+            className="border-line bg-soft text-13 m-0 flex flex-wrap items-center gap-1 rounded-md border px-3 py-2"
+          >
+            <Lock className="size-4 shrink-0" aria-hidden /> Read-only: this library moved to{' '}
+            <Link
+              href={`/${org}/s/${data.sheet.framework.movedTo.sheetId}`}
+              className="font-medium underline-offset-2 hover:underline"
+            >
+              {data.sheet.framework.movedTo.title}
+            </Link>
+            . Its items are locked; the history stays here.
+          </p>
+        ) : null}
+        {props.bundle ? (
+          <BundleBanner
+            org={org}
+            bundle={props.bundle}
+            userId={userId}
+            isAdmin={isAdmin}
+            timeZone={timeZone}
+            itemLabel={data?.sheet.itemLabel ?? 'item'}
+            canAdd={canEdit && !!data}
+            onAdd={addNew}
+          />
+        ) : null}
+        {active.type === 'form' ? null : <KeyFigures items={data ? inScope : null} ctx={ctx} />}
+        <ViewTabs
+          className="-mx-4 px-4 sm:-mx-6 sm:px-6"
+          views={views}
+          fields={data?.fields ?? []}
+          canCustomise={isAdmin}
+          end={
+            <>
+              {design ? null : <ViewMenu views={views} canEdit={canEdit} />}
+              <Button asChild variant="ghost" size="icon-sm">
+                <Link href={`/${org}/s/${sheetId}/settings`} aria-label="Sheet settings">
+                  <Settings aria-hidden />
+                </Link>
+              </Button>
+            </>
+          }
+        />
+        <div
+          data-keep-selection
+          data-testid="sheet-toolbar"
+          className="flex flex-wrap items-center gap-2"
+        >
+          {data && ctx && env && tabular ? (
+            // the Table's toolbar (docs/18 C8): View ▾, search, Filter ▾, Sort ▾, More ▾, ⚡
+            <>
+              <TableViewMenu views={views} userId={userId} ctx={ctx} items={inScope} />
+              <div className="flex min-w-[140px] flex-[0_1_180px] focus-within:flex-[0_1_280px] [&>*]:w-full">
                 <SheetSearch value={q} onChange={setQ} />
               </div>
-            ) : null}
-            {data && !design ? (
-              <GroupSelect
+              <TableFilterMenu
+                ctx={ctx}
+                items={inScope}
+                fields={data.fields}
+                config={config}
+                setConfig={setConfig}
+                computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
+              />
+              <TableSortMenu config={config} setConfig={setConfig} fields={data.fields} ctx={ctx} />
+              <TableMoreMenu
                 org={org}
                 data={data}
-                onlyGroup={props.onlyGroup}
+                ctx={ctx}
+                env={env}
+                views={views}
+                userId={userId}
+                actions={actions}
                 canEdit={canEdit}
+                isAdmin={isAdmin}
                 archived={props.archived}
+                onlyGroup={props.onlyGroup}
+                sub={sub.state ?? null}
               />
-            ) : null}
-            {data && ctx && filterable ? (
-              <>
-                {active.type !== 'insights' ? (
-                  <SortButton
+              <ValueFilterChip />
+            </>
+          ) : (
+            <>
+              {filterable ? (
+                <div className="flex min-w-0 flex-[1_1_240px] [&>*]:w-full">
+                  <SheetSearch value={q} onChange={setQ} />
+                </div>
+              ) : null}
+              {data && !design ? (
+                <GroupSelect
+                  org={org}
+                  data={data}
+                  onlyGroup={props.onlyGroup}
+                  canEdit={canEdit}
+                  archived={props.archived}
+                />
+              ) : null}
+              {data && ctx && filterable ? (
+                <>
+                  {active.type !== 'insights' ? (
+                    <SortButton
+                      config={config}
+                      setConfig={setConfig}
+                      fields={data.fields}
+                      ctx={ctx}
+                    />
+                  ) : null}
+                  <FilterButton
                     config={config}
                     setConfig={setConfig}
                     fields={data.fields}
                     ctx={ctx}
+                    computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
                   />
-                ) : null}
-                <FilterButton
-                  config={config}
-                  setConfig={setConfig}
-                  fields={data.fields}
-                  ctx={ctx}
-                  computedNotice={data.items.length > CLIENT_FILTER_LIMIT}
-                />
-              </>
-            ) : null}
-          </>
-        )}
-        <SheetAutomations
-          org={org}
-          sheetId={sheetId}
-          sheetName={sheetName}
-          ctx={ctx}
-          role={role}
-          timeZone={timeZone}
-        />
-      </div>
+                </>
+              ) : null}
+            </>
+          )}
+          <SheetAutomations
+            org={org}
+            sheetId={sheetId}
+            sheetName={sheetName}
+            ctx={ctx}
+            role={role}
+            timeZone={timeZone}
+          />
+        </div>
+      </section>
+      <div aria-hidden className="h-4 shrink-0" />
       <AccessDialog
         org={org}
         target={accessOpen ? { kind: 'sheet', id: sheetId, name: sheetName } : null}

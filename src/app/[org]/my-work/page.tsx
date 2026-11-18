@@ -10,7 +10,7 @@ import {
 } from '@/engine/my-work';
 import { MyWorkFilters } from '@/components/my-work/my-work-filters';
 import { WorkList } from '@/components/my-work/work-row';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { cn } from '@/lib/utils';
 import { requireMember } from '@/server/auth';
 import { getMyWork } from '@/server/repositories/my-work';
@@ -65,66 +65,68 @@ export default async function MyWorkPage({
   };
 
   return (
-    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
       <PageHeader
         title="My work"
         description="Approvals waiting for you, items assigned to you and requests to you, soonest first."
       />
-      {failed || !data ? (
-        <div
-          role="alert"
-          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
-        >
-          <p className="m-0">My work could not be loaded.</p>
-          <a
-            href={href(bucket)}
-            className="border-line hover:bg-soft bg-surface text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+      <HeadCard>
+        {failed || !data ? (
+          <div
+            role="alert"
+            className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
           >
-            Retry
-          </a>
-        </div>
-      ) : (
-        <>
-          <ApprovalInbox org={org} rows={approvals ?? []} timeZone={workspace.time_zone} />
-          <nav aria-label="My work filters" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {TILES.map(({ bucket: b, icon: Icon }) => {
-              const active = bucket === b;
-              return (
-                <a
-                  key={b}
-                  href={active ? href(null) : href(b)}
-                  aria-current={active ? 'page' : undefined}
-                  data-testid={`kpi-${b}`}
-                  className={cn(
-                    'border-line hover:border-line-strong bg-surface flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2',
-                    active && 'border-brand ring-brand ring-1',
-                  )}
-                >
-                  <span className="text-ink text-14 flex items-center justify-between gap-1.5 font-medium">
-                    {BUCKET_LABEL[b]}
-                    <Icon className="text-muted-foreground size-4" aria-hidden />
-                  </span>
-                  <span
+            <p className="m-0">My work could not be loaded.</p>
+            <a
+              href={href(bucket)}
+              className="border-line hover:bg-soft bg-surface text-14 inline-flex h-[40px] items-center rounded-md border px-3.5 font-medium transition-colors duration-150"
+            >
+              Retry
+            </a>
+          </div>
+        ) : (
+          <>
+            <ApprovalInbox org={org} rows={approvals ?? []} timeZone={workspace.time_zone} />
+            <nav aria-label="My work filters" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {TILES.map(({ bucket: b, icon: Icon }) => {
+                const active = bucket === b;
+                return (
+                  <a
+                    key={b}
+                    href={active ? href(null) : href(b)}
+                    aria-current={active ? 'page' : undefined}
+                    data-testid={`kpi-${b}`}
                     className={cn(
-                      'text-figure leading-none tabular-nums',
-                      b === 'overdue' && data.work.counts.overdue > 0 && 'text-crit',
+                      'border-line hover:border-line-strong bg-surface flex flex-col gap-1.5 rounded-lg border px-5 py-[18px] outline-offset-2',
+                      active && 'border-brand ring-brand ring-1',
                     )}
                   >
-                    {data.work.counts[b]}
-                  </span>
-                </a>
-              );
-            })}
-          </nav>
-          <MyWorkFilters
-            org={org}
-            counts={{ ...data.work.counts, sheets: data.work.sheets }}
-            filter={bucket}
-            sheet={sheetId}
-          />
-          <Rows org={org} work={data.work} bucket={bucket} sheetId={sheetId} />
-        </>
-      )}
+                    <span className="text-ink text-14 flex items-center justify-between gap-1.5 font-medium">
+                      {BUCKET_LABEL[b]}
+                      <Icon className="text-muted-foreground size-4" aria-hidden />
+                    </span>
+                    <span
+                      className={cn(
+                        'text-figure leading-none tabular-nums',
+                        b === 'overdue' && data.work.counts.overdue > 0 && 'text-crit',
+                      )}
+                    >
+                      {data.work.counts[b]}
+                    </span>
+                  </a>
+                );
+              })}
+            </nav>
+            <MyWorkFilters
+              org={org}
+              counts={{ ...data.work.counts, sheets: data.work.sheets }}
+              filter={bucket}
+              sheet={sheetId}
+            />
+            <Rows org={org} work={data.work} bucket={bucket} sheetId={sheetId} />
+          </>
+        )}
+      </HeadCard>
     </main>
   );
 }

@@ -22,7 +22,7 @@ import {
 } from '@/app/[org]/dashboards/actions';
 import { PERIODS, WIDGET_TYPES, type WidgetConfig } from '@/engine/dashboards';
 import { inputClass } from '@/components/fields/shared';
-import { PageHeader, PageTabs } from '@/components/shell/page-header';
+import { HeadCard, PageHeader, PageTabs } from '@/components/shell/page-header';
 import { ShellCrumb } from '@/components/shell/shell-crumb';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -131,7 +131,7 @@ export function DashboardScreen({
 
   return (
     <main
-      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]"
+      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]"
       aria-busy={pending}
     >
       <ShellCrumb>
@@ -158,42 +158,51 @@ export function DashboardScreen({
         description="Widgets read live from your sheets, the evidence library and the run log."
         actions={actions}
       />
-      {dashboards.length > 1 ? (
-        <PageTabs
-          label="Dashboards"
-          active={dashboard.id}
-          tabs={dashboards.map((d) => ({
-            id: d.id,
-            label: d.name,
-            href: `/${org}/dashboards/${d.id}`,
-          }))}
-        />
-      ) : null}
-      {usesPeriod && view ? <PeriodSwitch months={months} /> : null}
-
-      {!view ? (
-        <div
-          role="alert"
-          className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
-        >
-          <p className="m-0">The widgets could not be loaded.</p>
-          <Button type="button" variant="outline" onClick={refresh}>
-            <RotateCcw aria-hidden /> Retry
-          </Button>
-        </div>
-      ) : widgets.length === 0 ? (
-        <div className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
-          <p className="text-muted-foreground m-0">
-            No widgets yet.{canEdit ? ' Add the first one.' : ''}
-          </p>
-          {canEdit && editor ? (
-            <Button type="button" variant="outline" onClick={() => setWidgetDialog({})}>
-              <Plus aria-hidden /> Add widget
-            </Button>
+      {/* the header card (docs/18 C14): tabs, the period and the state of the widgets */}
+      {dashboards.length > 1 || (usesPeriod && view) || !view || widgets.length === 0 ? (
+        <HeadCard label="Dashboard">
+          {dashboards.length > 1 ? (
+            <PageTabs
+              label="Dashboards"
+              active={dashboard.id}
+              tabs={dashboards.map((d) => ({
+                id: d.id,
+                label: d.name,
+                href: `/${org}/dashboards/${d.id}`,
+              }))}
+            />
           ) : null}
-        </div>
-      ) : (
-        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-4 gap-y-8 p-0">
+          {usesPeriod && view ? <PeriodSwitch months={months} /> : null}
+
+          {!view ? (
+            <div
+              role="alert"
+              className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border p-5"
+            >
+              <p className="m-0">The widgets could not be loaded.</p>
+              <Button type="button" variant="outline" onClick={refresh}>
+                <RotateCcw aria-hidden /> Retry
+              </Button>
+            </div>
+          ) : widgets.length === 0 ? (
+            <div className="border-line bg-surface flex flex-col items-start gap-2 rounded-lg border border-dashed p-6">
+              <p className="text-muted-foreground m-0">
+                No widgets yet.{canEdit ? ' Add the first one.' : ''}
+              </p>
+              {canEdit && editor ? (
+                <Button type="button" variant="outline" onClick={() => setWidgetDialog({})}>
+                  <Plus aria-hidden /> Add widget
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+        </HeadCard>
+      ) : null}
+      {view && widgets.length > 0 ? (
+        <ul
+          data-hero-overlap
+          className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-4 gap-y-8 p-0"
+        >
           {widgets.map((w, i) => (
             <WidgetCard
               key={w.id}
@@ -209,7 +218,7 @@ export function DashboardScreen({
             />
           ))}
         </ul>
-      )}
+      ) : null}
 
       {editor ? (
         <WidgetDialog

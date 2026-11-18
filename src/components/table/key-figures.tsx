@@ -17,7 +17,6 @@ export function KeyFigures({ items, ctx }: { items: Item[] | null; ctx: Ctx | nu
       aria-label="Key figures"
       aria-busy={!figures || undefined}
       data-testid="key-figures"
-      data-hero-overlap
       className="m-0 mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(150px,100%),1fr))] gap-3"
     >
       {figures

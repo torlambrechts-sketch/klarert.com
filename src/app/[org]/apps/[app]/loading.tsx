@@ -1,7 +1,7 @@
 export default function Loading() {
   return (
     <main
-      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px]"
+      className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12"
       aria-busy="true"
       aria-label="Loading the app"
     >

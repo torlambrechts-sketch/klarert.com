@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { PageHeader } from '@/components/shell/page-header';
+import { HeadCard, PageHeader } from '@/components/shell/page-header';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { stepLine } from '@/engine/automations/chain';
@@ -57,7 +57,7 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
   const filtered = !!(filters.sheetId || filters.automationId || filters.outcome);
 
   return (
-    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
       <PageHeader
         className="pb-0.5"
         crumb={
@@ -78,82 +78,88 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
           </>
         }
       />
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filters">
-        <label className="flex min-w-0 items-center">
-          <span className="sr-only">Sheet</span>
-          <select
-            className={selectClass}
-            value={filters.sheetId ?? ''}
-            onChange={(e) => setFilter('sheet', e.target.value)}
-          >
-            <option value="">All sheets</option>
-            {(sheets.data ?? []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex min-w-0 items-center">
-          <span className="sr-only">Automation</span>
-          <select
-            className={selectClass}
-            value={filters.automationId ?? ''}
-            onChange={(e) => setFilter('automation', e.target.value)}
-          >
-            <option value="">All automations</option>
-            {autoChoices.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex min-w-0 items-center">
-          <span className="sr-only">Outcome</span>
-          <select
-            className={selectClass}
-            value={filters.outcome ?? ''}
-            onChange={(e) => setFilter('outcome', e.target.value)}
-          >
-            <option value="">All outcomes</option>
-            {RUN_OUTCOMES.map((o) => (
-              <option key={o} value={o}>
-                {outcomeLabel(o)}
-              </option>
-            ))}
-          </select>
-        </label>
-        {filtered ? (
-          <Button type="button" variant="ghost" onClick={() => router.replace(`${path}?tab=runs`)}>
-            Clear filters
-          </Button>
-        ) : null}
-      </div>
-      {runs.isError ? (
-        <ErrorBox text="The run log could not be loaded." retry={() => void runs.refetch()} />
-      ) : runs.isPending ? (
-        <ListSkeleton />
-      ) : runs.data.length === 0 ? (
-        <div className="border-line bg-surface rounded-lg border border-dashed p-6">
-          <p className="text-muted-foreground m-0">
-            {filtered
-              ? 'No runs match these filters.'
-              : 'No automation runs yet. Every run will be listed here with its steps.'}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="border-line bg-surface overflow-hidden rounded-lg border">
-            <RunTable runs={runs.data} org={org} timeZone={props.timeZone} label="Runs" />
-          </div>
-          {runs.data.length === RUN_PAGE ? (
-            <p className="text-muted-foreground text-12 m-0">
-              Showing the latest {RUN_PAGE} runs. Filter to see older ones.
-            </p>
+      <HeadCard>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filters">
+          <label className="flex min-w-0 items-center">
+            <span className="sr-only">Sheet</span>
+            <select
+              className={selectClass}
+              value={filters.sheetId ?? ''}
+              onChange={(e) => setFilter('sheet', e.target.value)}
+            >
+              <option value="">All sheets</option>
+              {(sheets.data ?? []).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex min-w-0 items-center">
+            <span className="sr-only">Automation</span>
+            <select
+              className={selectClass}
+              value={filters.automationId ?? ''}
+              onChange={(e) => setFilter('automation', e.target.value)}
+            >
+              <option value="">All automations</option>
+              {autoChoices.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex min-w-0 items-center">
+            <span className="sr-only">Outcome</span>
+            <select
+              className={selectClass}
+              value={filters.outcome ?? ''}
+              onChange={(e) => setFilter('outcome', e.target.value)}
+            >
+              <option value="">All outcomes</option>
+              {RUN_OUTCOMES.map((o) => (
+                <option key={o} value={o}>
+                  {outcomeLabel(o)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {filtered ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.replace(`${path}?tab=runs`)}
+            >
+              Clear filters
+            </Button>
           ) : null}
-        </>
-      )}
+        </div>
+        {runs.isError ? (
+          <ErrorBox text="The run log could not be loaded." retry={() => void runs.refetch()} />
+        ) : runs.isPending ? (
+          <ListSkeleton />
+        ) : runs.data.length === 0 ? (
+          <div className="border-line bg-surface rounded-lg border border-dashed p-6">
+            <p className="text-muted-foreground m-0">
+              {filtered
+                ? 'No runs match these filters.'
+                : 'No automation runs yet. Every run will be listed here with its steps.'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="border-line bg-surface overflow-hidden rounded-lg border">
+              <RunTable runs={runs.data} org={org} timeZone={props.timeZone} label="Runs" />
+            </div>
+            {runs.data.length === RUN_PAGE ? (
+              <p className="text-muted-foreground text-12 m-0">
+                Showing the latest {RUN_PAGE} runs. Filter to see older ones.
+              </p>
+            ) : null}
+          </>
+        )}
+      </HeadCard>
     </main>
   );
 }

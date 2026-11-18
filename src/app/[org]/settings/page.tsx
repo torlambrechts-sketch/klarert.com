@@ -6,7 +6,7 @@ import { env } from '@/lib/env';
 import { Button } from '@/components/ui/button';
 import type { Json } from '@/engine/types';
 import type { ServerClient } from '@/lib/supabase/server';
-import { PageHeader, PageTabs } from '@/components/shell/page-header';
+import { HeadCard, PageHeader, PageTabs } from '@/components/shell/page-header';
 import { ROLE_LABELS } from '@/lib/schemas/workspace';
 import { isAdminRole, requireMember } from '@/server/auth';
 import {
@@ -107,11 +107,13 @@ export default async function SettingsPage({
 
   if (!isAdminRole(role)) {
     return (
-      <main className="w-full px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
-        <h1>Workspace admin</h1>
-        <p className="text-muted-foreground mt-2">
-          Only owners and admins can change workspace settings.
-        </p>
+      <main className="flex w-full flex-col gap-4 px-4 pt-5 pb-8 sm:px-12 sm:pt-[26px]">
+        <PageHeader title="Workspace admin" />
+        <HeadCard>
+          <p className="text-muted-foreground m-0">
+            Only owners and admins can change workspace settings.
+          </p>
+        </HeadCard>
       </main>
     );
   }
@@ -143,58 +145,64 @@ export default async function SettingsPage({
   const nameOf = new Map(people.map((p) => [p.userId, p.name]));
 
   return (
-    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 sm:px-[28px] sm:pt-[26px]">
+    <main className="flex w-full flex-col gap-5 px-4 pt-5 pb-8 [--hero-gap:20px] sm:px-12 sm:pt-[26px]">
       <PageHeader
         crumb={workspace.name}
         title="Workspace admin"
         description="Members and roles, teams and job roles, entities and sites, packs, frameworks, retention, archived folders and sheets, and security."
       />
-      <PageTabs
-        label="Settings sections"
-        active={tab}
-        tabs={TABS.map((t) => ({ id: t.id, label: t.label, href: `/${org}/settings?tab=${t.id}` }))}
-      />
+      <HeadCard>
+        <PageTabs
+          label="Settings sections"
+          active={tab}
+          tabs={TABS.map((t) => ({
+            id: t.id,
+            label: t.label,
+            href: `/${org}/settings?tab=${t.id}`,
+          }))}
+        />
 
-      {tab === 'members' ? (
-        <MembersTab
-          db={supabase}
-          org={org}
-          orgId={workspace.id}
-          members={members}
-          myRole={role}
-          today={today}
-          timeZone={timeZone}
-        />
-      ) : null}
-      {tab === 'teams' ? (
-        <TeamsTab db={supabase} org={org} orgId={workspace.id} people={people} nameOf={nameOf} />
-      ) : null}
-      {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
-      {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
-      {tab === 'frameworks' ? <FrameworksTab org={org} timeZone={timeZone} /> : null}
-      {tab === 'retention' ? <RetentionTab org={org} today={today} /> : null}
-      {tab === 'security' ? (
-        <Card
-          title="Two-step sign-in"
-          description="A second step after the password or email link: a code from an authenticator app on the person's phone."
-        >
-          <RequireTwoStep
+        {tab === 'members' ? (
+          <MembersTab
+            db={supabase}
             org={org}
-            required={workspace.requireTwoStep}
-            isOwner={role === 'owner'}
-            ownerHasTwoStep={twoStep.level === 'aal2'}
+            orgId={workspace.id}
+            members={members}
+            myRole={role}
+            today={today}
+            timeZone={timeZone}
           />
-        </Card>
-      ) : null}
-      {tab === 'archived' ? (
-        <ArchivedTab
-          db={supabase}
-          org={org}
-          orgId={workspace.id}
-          nameOf={nameOf}
-          timeZone={timeZone}
-        />
-      ) : null}
+        ) : null}
+        {tab === 'teams' ? (
+          <TeamsTab db={supabase} org={org} orgId={workspace.id} people={people} nameOf={nameOf} />
+        ) : null}
+        {tab === 'entities' ? <EntitiesTab db={supabase} org={org} orgId={workspace.id} /> : null}
+        {tab === 'packs' ? <PacksTab org={org} timeZone={timeZone} /> : null}
+        {tab === 'frameworks' ? <FrameworksTab org={org} timeZone={timeZone} /> : null}
+        {tab === 'retention' ? <RetentionTab org={org} today={today} /> : null}
+        {tab === 'security' ? (
+          <Card
+            title="Two-step sign-in"
+            description="A second step after the password or email link: a code from an authenticator app on the person's phone."
+          >
+            <RequireTwoStep
+              org={org}
+              required={workspace.requireTwoStep}
+              isOwner={role === 'owner'}
+              ownerHasTwoStep={twoStep.level === 'aal2'}
+            />
+          </Card>
+        ) : null}
+        {tab === 'archived' ? (
+          <ArchivedTab
+            db={supabase}
+            org={org}
+            orgId={workspace.id}
+            nameOf={nameOf}
+            timeZone={timeZone}
+          />
+        ) : null}
+      </HeadCard>
     </main>
   );
 }

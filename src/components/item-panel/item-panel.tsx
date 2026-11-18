@@ -255,13 +255,13 @@ export function ItemPanel(props: ItemPanelProps) {
             }
           }}
           className={cn(
-            'group/panel border-line bg-surface shadow-fullscreen fixed top-0 right-0 bottom-0 z-40 flex w-[min(580px,100vw)] flex-col border-l outline-none',
+            'group/panel bg-surface shadow-drawer fixed top-0 right-0 bottom-0 z-40 flex w-[min(520px,100vw)] flex-col outline-none',
             'data-[wide=true]:w-[min(1080px,calc(100vw-100px))]',
             'max-[759px]:bottom-[64px] max-[759px]:w-full max-[759px]:data-[wide=true]:w-full',
           )}
         >
           <Tabs.Root value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col">
-            <header className="border-line flex flex-col gap-1.5 border-b px-4 pt-3.5 sm:px-6">
+            <header className="on-navy flex flex-col gap-1.5 px-5 pt-[18px]">
               <div className="flex items-center gap-1">
                 {parent ? (
                   <nav
@@ -397,7 +397,7 @@ export function ItemPanel(props: ItemPanelProps) {
                     ref={titleRef}
                     tabIndex={-1}
                     className={cn(
-                      'text-panel-title m-0 min-w-0 flex-1 break-words outline-none focus-visible:underline',
+                      'text-22 m-0 min-w-0 flex-1 font-semibold break-words outline-none focus-visible:underline',
                       canEditItem && 'cursor-text',
                     )}
                     onClick={() => canEditItem && setRenaming(true)}
@@ -419,7 +419,7 @@ export function ItemPanel(props: ItemPanelProps) {
                 </div>
               )}
               <p className="text-12 m-0 flex flex-wrap items-center gap-2">
-                <span className="bg-soft text-ink text-12 rounded px-1.5 font-mono leading-[18px]">
+                <span className="bg-brand-2 text-surface text-12 rounded px-1.5 font-mono leading-[18px]">
                   {item.displayId}
                 </span>
                 {item.source ? <FormSource source={item.source} sheetId={item.sheetId} /> : null}
@@ -447,7 +447,7 @@ export function ItemPanel(props: ItemPanelProps) {
                   renderTab={(t) => (
                     <Tabs.Trigger
                       value={t.id}
-                      className="data-[state=active]:border-ink data-[state=active]:text-ink text-muted-foreground hover:text-ink focus-visible:outline-focus text-14 h-10 shrink-0 border-b-2 border-transparent px-px whitespace-nowrap focus-visible:outline-2"
+                      className="data-[state=active]:border-surface data-[state=active]:text-surface text-brand-soft hover:text-surface text-tab h-11 shrink-0 border-b-[3px] border-transparent px-px whitespace-nowrap focus-visible:outline-2 focus-visible:outline-white"
                     >
                       {t.label}
                     </Tabs.Trigger>
@@ -455,7 +455,7 @@ export function ItemPanel(props: ItemPanelProps) {
                 />
               </Tabs.List>
             </header>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+            <div className="min-h-0 flex-1 overflow-y-auto p-5">
               <Tabs.Content value="details" className="outline-none">
                 <DetailsTab
                   org={org}
