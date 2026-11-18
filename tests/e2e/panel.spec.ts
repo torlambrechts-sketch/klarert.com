@@ -398,6 +398,10 @@ test.describe('desktop', () => {
     await expect(actionRow).toContainText('Done');
     await expect(actionRow).toContainText('100%');
     await page.reload();
+    // after a reload the table starts at the left; the new Rollup column is the last one, past the card's edge in
+    // the Keptrow shell, and the grid only draws the columns in view: scroll to it as a person would
+    await expect(grid(page).getByRole('row').filter({ hasText: 'Fix the handrail' })).toBeVisible();
+    await grid(page).first().evaluate((el) => el.scrollTo({ left: el.scrollWidth }));
     await expect(grid(page).getByRole('row').filter({ hasText: 'Fix the handrail' })).toContainText(
       '100%',
     );
