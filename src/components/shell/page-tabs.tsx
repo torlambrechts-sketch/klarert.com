@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useLayoutEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { OverflowTabs, underlineTab } from '@/components/ui/overflow-tabs';
 import { cn } from '@/lib/utils';
 
 export type PageTab = { id: string; label: string; href: string };
 
 /**
- * Underline tabs under a page header (docs/05 §2): a 2 px ink underline on the current one. When they are wider than
- * the page (nine dashboards, an app's screens at 390 px) the row scrolls sideways, and the current tab is brought into
- * view when the page opens or the tab changes, before paint, so nothing jumps.
+ * Underline tabs under a page header (docs/18 §5 and §7): 14 px uppercase links with the 3 px --brand line on the
+ * current one. Four or more become two tabs and More ▾ (OverflowTabs); the trigger shows the current tab when it is
+ * in the menu.
  */
 export function PageTabs({
   label,
@@ -22,35 +23,24 @@ export function PageTabs({
   active: string;
   className?: string;
 }) {
-  const list = useRef<HTMLUListElement>(null);
-  useLayoutEffect(() => {
-    const ul = list.current;
-    const tab = ul?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!ul || !tab) return;
-    const box = ul.getBoundingClientRect();
-    const at = tab.getBoundingClientRect();
-    // only when it is not wholly in view; then centred, so the tabs on either side show too
-    if (at.left >= box.left && at.right <= box.right) return;
-    ul.scrollLeft += at.left - box.left - (box.width - at.width) / 2;
-  }, [active]);
+  const router = useRouter();
   return (
     <nav aria-label={label} className={cn('border-line border-b', className)}>
-      <ul
-        ref={list}
-        className="m-0 flex [scrollbar-width:none] list-none gap-7 overflow-x-auto p-0"
-      >
-        {tabs.map((t) => (
-          <li key={t.id}>
-            <Link
-              href={t.href}
-              aria-current={t.id === active ? 'page' : undefined}
-              className="text-muted-foreground hover:text-navy aria-[current=page]:text-navy text-tab aria-[current=page]:after:bg-brand relative flex h-11 items-center px-px whitespace-nowrap outline-offset-[-3px] aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:-bottom-px aria-[current=page]:after:h-[3px]"
-            >
-              {t.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <OverflowTabs
+        label={label}
+        tabs={tabs}
+        active={active}
+        className="gap-7"
+        onSelect={(id) => {
+          const t = tabs.find((x) => x.id === id);
+          if (t) router.push(t.href);
+        }}
+        renderTab={(t, on) => (
+          <Link href={t.href} aria-current={on ? 'page' : undefined} className={underlineTab(on)}>
+            {t.label}
+          </Link>
+        )}
+      />
     </nav>
   );
 }

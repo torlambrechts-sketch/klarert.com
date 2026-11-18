@@ -280,11 +280,11 @@ export function viewTab(page: Page, name: string | RegExp) {
 export async function viewTabNames(page: Page): Promise<string[]> {
   const nav = page.locator(VIEWS);
   await nav.getByRole('link').first().waitFor();
-  const links = (await nav.getByRole('link').allInnerTexts()).map((t) => t.trim());
+  const links = (await nav.getByRole('link').allTextContents()).map((t) => t.trim());
   await nav.locator(MORE).click();
   const menu = page.getByRole('menu');
   await menu.waitFor();
-  const more = (await menu.getByRole('menuitemradio').allInnerTexts()).map((t) => t.trim());
+  const more = (await menu.getByRole('menuitemradio').allTextContents()).map((t) => t.trim());
   await page.keyboard.press('Escape');
   await menu.waitFor({ state: 'hidden' });
   return [...links, ...more];
