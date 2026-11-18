@@ -61,13 +61,13 @@ export function BulkBar({
           className="bg-surface shadow-menu fixed bottom-6 left-1/2 z-40 flex h-[60px] max-w-[calc(100vw-24px)] -translate-x-1/2 items-stretch overflow-x-auto rounded-lg max-[759px]:bottom-[80px]"
         >
           <span
-            className="bg-brand text-kpi flex min-w-[60px] shrink-0 items-center justify-center rounded-l-lg px-2 text-white tabular-nums"
+            className="bg-navy text-kpi text-surface flex min-w-[60px] shrink-0 items-center justify-center rounded-l-lg px-2 tabular-nums"
             aria-hidden
           >
             {n}
           </span>
           <span
-            className="text-ink text-16 flex shrink-0 items-center px-4 font-medium max-sm:sr-only"
+            className="text-navy text-16 flex shrink-0 items-center px-4 font-medium max-sm:sr-only"
             aria-live="polite"
           >
             {n === 1 ? '1 item selected' : `${n} items selected`}

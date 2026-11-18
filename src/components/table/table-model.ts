@@ -59,7 +59,7 @@ export function rowHeight(
       // 48 and the card's top border
       return 49;
     case 'header':
-      return 34 + (groupLabels ? GROUP_LABEL_H : 0);
+      return 38 + (groupLabels ? GROUP_LABEL_H : 0);
     case 'item':
       return density === 'compact' ? 40 : 52;
     case 'add':

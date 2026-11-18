@@ -118,7 +118,7 @@ import {
 } from './table-model';
 
 /** The app's sticky top bar (docs/05 §2): pinned column headers sit under it. */
-const TOP_BAR_H = 48;
+const TOP_BAR_H = 69;
 
 // The Table view (docs/05 §3.1): each group is a card spanning the content width: a title row (chevron, dot, name,
 // item count), its own column header (select all, small muted names, "+" add column), readable two-line rows
@@ -1737,7 +1737,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
   const allSelected = items.length > 0 && items.every((i) => p.selected.has(i.id));
   // with column groups the label line sits above the column names
   const top = p.runs.length > 0 ? GROUP_LABEL_H : 0;
-  const cell = { top, height: 34 };
+  const cell = { top, height: 38 };
   return (
     <>
       <Sticky
@@ -1745,7 +1745,7 @@ function HeaderRow(p: RowProps & { row: Extract<TableRow, { kind: 'header' }> })
         role="columnheader"
         className="border-b-surface-line border-r-col-line bg-head items-end self-stretch border-r border-b"
       >
-        <span className="flex h-[34px] w-full items-center">
+        <span className="flex h-[38px] w-full items-center">
           {p.canEdit ? (
             <span className="flex w-[58px] shrink-0 items-center pl-[24px]">
               <input

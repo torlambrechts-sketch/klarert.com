@@ -200,7 +200,7 @@ describe('column widths', () => {
   it('has taller rows when comfortable', () => {
     expect(rowHeight('item')).toBe(52);
     expect(rowHeight('item', 'compact')).toBe(40);
-    expect(rowHeight('header')).toBe(34);
+    expect(rowHeight('header')).toBe(38);
   });
 });
 
