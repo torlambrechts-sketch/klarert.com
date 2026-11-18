@@ -160,6 +160,12 @@ export function ColumnHeader({
           )
         ) : null}
       </button>
+      {/* the system or locked mark right after the name, clear of the resize handle at the right edge */}
+      {field.system ? (
+        <SystemMark text={systemColumnText([...ctx.fieldsByKey.values()])} />
+      ) : field.locked ? (
+        <LockedMark />
+      ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
           className="text-muted-foreground hover:text-ink hover:bg-gray-alpha-100 focus-visible:ring-focus data-[state=open]:text-ink mr-1 grid size-6 shrink-0 place-items-center rounded-md opacity-0 outline-none group-focus-within/col:opacity-100 group-hover/col:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 data-[state=open]:opacity-100"
@@ -250,11 +256,6 @@ export function ColumnHeader({
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
-      {field.system ? (
-        <SystemMark text={systemColumnText([...ctx.fieldsByKey.values()])} />
-      ) : field.locked ? (
-        <LockedMark />
-      ) : null}
       {editable ? (
         <div
           role="separator"

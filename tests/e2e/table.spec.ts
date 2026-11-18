@@ -79,9 +79,9 @@ test.describe('desktop', () => {
       .filter({ has: page.getByRole('columnheader') });
     await expect(headerRows).toHaveCount(2);
     await expect(grid(page).getByRole('button', { name: 'Status column menu' })).toHaveCount(2);
-    // small muted column names (12 px)
+    // small muted column names (12 px): the name is the header's sort button, the column menu its chevron
     const headSize = await grid(page)
-      .getByRole('button', { name: 'Status column menu' })
+      .getByTitle('Sort by Status', { exact: true })
       .first()
       .evaluate((el) => getComputedStyle(el).fontSize);
     expect(headSize).toBe('12px');

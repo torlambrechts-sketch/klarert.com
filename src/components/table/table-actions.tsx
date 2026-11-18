@@ -171,9 +171,12 @@ export function TableViewMenu({
   return (
     <>
       <DropdownMenu>
-        <Trigger on={quick !== 'all'} data-testid="view-menu" label={`View: ${name}`}>
+        {/* named by its words ("View: Table"), so the accessible name holds the visible text (WCAG 2.5.3) */}
+        <Trigger on={quick !== 'all'} data-testid="view-menu">
           <Layers aria-hidden />
-          <span className="text-muted-foreground font-normal">View</span>
+          <span className="text-muted-foreground font-normal">
+            View<span className="sr-only">:</span>
+          </span>{' '}
           <span className="min-w-0 truncate">{name}</span>
         </Trigger>
         <DropdownMenuContent align="start" className="w-72">
@@ -372,8 +375,13 @@ export function TableFilterMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Dialog open={conditions} onOpenChange={setConditions}>
-        <DialogContent className="w-[min(600px,calc(100vw-24px))]">
+      {/* not modal: the table behind it shows the matching rows while the conditions change */}
+      <Dialog open={conditions} onOpenChange={setConditions} modal={false}>
+        <DialogContent
+          className="w-[min(600px,calc(100vw-24px))]"
+          // it closes with Escape or its close button, not when focus or a click goes to the table behind it
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogTitle className="text-heading-16">Conditions</DialogTitle>
           <DialogDescription className="sr-only">
             Show only the items that match every condition.
@@ -431,11 +439,8 @@ export function TableSortMenu({
   const first = rules[0];
   return (
     <DropdownMenu>
-      <Trigger
-        on={rules.length > 0}
-        data-testid="sort-menu"
-        label={first ? `Sorted by ${keyLabel(first.fieldKey, ctx)}` : 'Sort'}
-      >
+      {/* named by its words ("Sort · Name"), so the accessible name holds the visible text (WCAG 2.5.3) */}
+      <Trigger on={rules.length > 0} data-testid="sort-menu">
         <ArrowDownUp aria-hidden />
         <span className="min-w-0 truncate">
           {first ? `Sort · ${keyLabel(first.fieldKey, ctx)}` : 'Sort'}

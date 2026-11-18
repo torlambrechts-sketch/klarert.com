@@ -160,7 +160,14 @@ export function ColumnsMenu(p: ColumnsMenuProps) {
         }}
         // "Hidden · N" moves an open menu to its hidden list instead of closing it
         onInteractOutside={(e) => {
-          if ((e.target as Element | null)?.closest?.('[data-columns-opener]')) e.preventDefault();
+          const t = e.target as Element | null;
+          if (t?.closest?.('[data-columns-opener]')) e.preventDefault();
+          // opened from More ▾: that menu hands focus back to its trigger as it closes, which is not leaving the panel
+          if (
+            e.type === 'dismissableLayer.focusOutside' &&
+            t?.closest?.('[data-slot="dropdown-menu-trigger"]')
+          )
+            e.preventDefault();
         }}
         className="flex max-h-[min(640px,var(--radix-popover-content-available-height))] w-[360px] max-w-[calc(100vw-32px)] flex-col overflow-y-auto p-2"
       >

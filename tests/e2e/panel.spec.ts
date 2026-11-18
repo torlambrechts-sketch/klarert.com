@@ -339,8 +339,8 @@ test.describe('desktop', () => {
     const risksUrl = await trackerSheet(page, risksName);
     await addItems(page, 'Open', ['Loose handrail', 'Wet floor']);
     const handrailRow = grid(page).getByRole('row').filter({ hasText: 'Loose handrail' });
+    // an option cell opens its picker on the first click (docs/18 §5)
     await handrailRow.getByRole('gridcell').nth(2).click();
-    await page.keyboard.press('Enter');
     await page.getByRole('option', { name: 'Done' }).click();
     await expect(handrailRow).toContainText('Done');
 

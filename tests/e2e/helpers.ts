@@ -236,7 +236,8 @@ export const OPEN_PUBLIC_FORM = {
 /** Public forms refuse answers sent sooner than 2 s after the page was served (minimum fill time). */
 export const MIN_FILL_MS = 2100;
 
-const ITEM_TABS = '[role="tablist"][aria-label="Item sections"]';
+// the item panel tab bar: the tablist "Item sections" and More ▾ beside it
+const ITEM_TABS = '[data-testid="item-tabs"]';
 const MORE = '[data-testid="overflow-tabs-more"]';
 
 const pageOf = (scope: Page | Locator): Page =>
@@ -280,7 +281,17 @@ export function viewTab(page: Page, name: string | RegExp) {
 export async function viewTabNames(page: Page): Promise<string[]> {
   const nav = page.locator(VIEWS);
   await nav.getByRole('link').first().waitFor();
-  const links = (await nav.getByRole('link').allInnerTexts()).map((t) => t.trim());
+  // the tab bar first shows the default tabs, then the sheet's own tab set once it loads: read until two reads
+  // half a second apart agree, after the page's requests have settled
+  await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+  const read = async () => (await nav.getByRole('link').allInnerTexts()).map((t) => t.trim());
+  let links = await read();
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(500);
+    const again = await read();
+    if (again.join('|') === links.join('|')) break;
+    links = again;
+  }
   await nav.locator(MORE).click();
   const menu = page.getByRole('menu');
   await menu.waitFor();
