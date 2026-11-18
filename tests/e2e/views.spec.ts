@@ -497,7 +497,8 @@ test('saved views: personal stays personal, shared is shared, ?view= opens a vie
   await expect(listRow(page, 'Valve check')).toHaveCount(0);
 
   // a shared Kanban view
-  await views(page).getByRole('button', { name: 'More' }).click();
+  // More ▾ shows the active tab's name while it holds it (docs/18 §3): find it by its test id
+  await views(page).getByTestId('overflow-tabs-more').click();
   await page.getByRole('menuitem', { name: 'New view' }).click();
   await dialog.getByLabel('View name').fill('Team board');
   await dialog.getByRole('radio', { name: 'Kanban' }).check();
