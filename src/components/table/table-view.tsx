@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useGrid, useGridStore } from '@/components/grid/grid-store';
 import { Table } from './table';
 import { TableCards } from './table-cards';
+import { BulkBar } from './bulk-bar';
 import { useUpdateSummaries } from './use-update-counts';
 import type { SubitemsState } from '@/components/subitems/use-subitems';
 
@@ -132,6 +133,8 @@ export function TableView(p: TableViewProps) {
         />
       ) : (
         <div className="flex min-h-[240px] flex-1 flex-col">
+          {/* the bulk bar and the Delete… confirm (docs/18 §5) */}
+          <BulkBar data={p.data} ctx={p.ctx} actions={p.actions} canEdit={p.canEdit} />
           <Table
             data={p.data}
             ctx={p.ctx}

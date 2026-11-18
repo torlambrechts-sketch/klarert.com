@@ -35,6 +35,8 @@ export interface GridState {
   colFilters: ColumnFilters;
   /** The items the Table shows, in order (set by the Table view; Export to CSV reads it). */
   shownIds: readonly string[];
+  /** Items waiting for the "Delete…" confirm (row ⋯ menu, bulk bar). */
+  deleting: readonly string[] | null;
   /**
    * Table filter on one value of another field, set by clicking a bar in the Insights view (UI state, a removable
    * chip in the toolbar). `label` names it: "Severity: High".
@@ -92,6 +94,7 @@ export function createGridStore(): StoreApi<GridState> {
     quick: 'all',
     colFilters: {},
     shownIds: [],
+    deleting: null,
     valueFilter: null,
     missingOnly: false,
     // 40 px rows by default; 52 px is the comfortable density (owner decision 18 Nov 2026, docs/18 C4)

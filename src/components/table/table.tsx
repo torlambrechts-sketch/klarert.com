@@ -20,10 +20,11 @@ import {
   type Range,
 } from '@tanstack/react-virtual';
 import {
-  Archive,
   ChevronDown,
   ChevronRight,
+  Copy,
   ExternalLink,
+  Trash2,
   FileText,
   GripVertical,
   Lock,
@@ -1166,6 +1167,9 @@ export function Table({
   const rowActionsStable = useStableEvent((item: Item, action: RowAction) => {
     store.getState().openRowMenu(null);
     if (action === 'open') return onOpenItem(item);
+    if (action === 'duplicate') return void actions.duplicateItems([item]);
+    // "Delete…" confirms first (bulk-bar.tsx); the items move to Archived items
+    if (action === 'delete') return store.setState({ deleting: [item.id] });
     if (action === 'archive') {
       const s = store.getState();
       if (s.selected.has(item.id)) {
@@ -1489,7 +1493,7 @@ export function Table({
 
 // ───────────────────────── rows ─────────────────────────
 
-type RowAction = 'open' | 'archive' | 'lock' | 'unlock';
+type RowAction = 'open' | 'duplicate' | 'delete' | 'archive' | 'lock' | 'unlock';
 
 interface RowProps {
   row: TableRow;
@@ -2270,26 +2274,32 @@ function RowMenu({
               document.querySelector<HTMLElement>('[role="grid"]')?.focus({ preventScroll: true });
             }}
           >
+            {/* the row ⋯ menu (docs/18 §5): the destructive item last, in red, ending in "…" */}
             <DropdownMenuItem onSelect={() => onAction(item, 'open')}>
-              <ExternalLink aria-hidden /> Open
+              <ExternalLink aria-hidden /> Open item
             </DropdownMenuItem>
-            {canEdit && (!item.locked || isAdmin) ? (
-              <DropdownMenuItem onSelect={() => onAction(item, 'archive')}>
-                <Archive aria-hidden /> Archive
+            {canEdit ? (
+              <DropdownMenuItem onSelect={() => onAction(item, 'duplicate')}>
+                <Copy aria-hidden /> Duplicate
               </DropdownMenuItem>
             ) : null}
             {isAdmin ? (
+              item.locked ? (
+                <DropdownMenuItem onSelect={() => onAction(item, 'unlock')}>
+                  <LockOpen aria-hidden /> Unlock
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onSelect={() => onAction(item, 'lock')}>
+                  <Lock aria-hidden /> Lock
+                </DropdownMenuItem>
+              )
+            ) : null}
+            {canEdit && (!item.locked || isAdmin) ? (
               <>
                 <DropdownMenuSeparator />
-                {item.locked ? (
-                  <DropdownMenuItem onSelect={() => onAction(item, 'unlock')}>
-                    <LockOpen aria-hidden /> Unlock
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onSelect={() => onAction(item, 'lock')}>
-                    <Lock aria-hidden /> Lock
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem variant="destructive" onSelect={() => onAction(item, 'delete')}>
+                  <Trash2 aria-hidden /> Delete…
+                </DropdownMenuItem>
               </>
             ) : null}
           </DropdownMenuContent>
