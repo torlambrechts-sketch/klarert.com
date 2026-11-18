@@ -57,6 +57,7 @@ export function OverflowTabs<T extends OverflowTab>({
   forceMenu = false,
   className,
   triggerRef,
+  wrapTabs,
 }: {
   tabs: readonly T[];
   active: string | null;
@@ -72,6 +73,11 @@ export function OverflowTabs<T extends OverflowTab>({
   forceMenu?: boolean;
   className?: string;
   triggerRef?: React.Ref<HTMLButtonElement>;
+  /**
+   * Wraps the visible tabs (a `role=tablist`): More ▾ then sits beside the list, not in it, since a tablist may own
+   * only tabs (WAI-ARIA). Without it the tabs and More share one plain row.
+   */
+  wrapTabs?: (tabs: React.ReactNode) => React.ReactNode;
 }) {
   const { visible, overflow, activeInMenu } = splitTabs(tabs, active, {
     max,
@@ -80,11 +86,13 @@ export function OverflowTabs<T extends OverflowTab>({
   const Icon = activeInMenu?.icon;
   return (
     <div className={cn('flex min-w-0 items-center gap-[22px]', className)}>
-      {visible.map((t) => (
-        <span key={t.id} className="contents">
-          {renderTab(t, t.id === active)}
-        </span>
-      ))}
+      {(wrapTabs ?? ((x: React.ReactNode) => x))(
+        visible.map((t) => (
+          <span key={t.id} className="contents">
+            {renderTab(t, t.id === active)}
+          </span>
+        )),
+      )}
       {overflow.length || menuExtra ? (
         <DropdownMenu>
           <DropdownMenuTrigger

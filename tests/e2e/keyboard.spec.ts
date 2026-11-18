@@ -103,7 +103,7 @@ test('keyboard only: add an item, set its status, open it, post an update, close
   await expect(panelTab(panel, /^Steps/)).toBeFocused();
   // Tab leaves the tabs for More ▾; Enter opens it on its first item, ↓ moves, Enter picks
   await page.keyboard.press('Tab');
-  const more = panel.locator('[role="tablist"] [data-testid="overflow-tabs-more"]');
+  const more = panel.getByTestId('overflow-tabs-more');
   await expect(more).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('menuitemradio', { name: /^Files/ })).toBeFocused();

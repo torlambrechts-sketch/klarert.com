@@ -430,11 +430,19 @@ export function ItemPanel(props: ItemPanelProps) {
                   </span>
                 ) : null}
               </p>
-              <Tabs.List aria-label="Item sections" className="-mb-px flex overflow-x-auto pt-2">
-                {/* two tabs, then More ▾ with the rest (docs/18 §3, the menu rule) */}
+              <div data-testid="item-tabs" className="-mb-px flex overflow-x-auto pt-2">
+                {/* two tabs, then More ▾ with the rest (docs/18 §3, the menu rule); More sits beside the tablist */}
                 <OverflowTabs
                   label="Item sections"
                   className="max-[759px]:gap-4"
+                  wrapTabs={(tabs) => (
+                    <Tabs.List
+                      aria-label="Item sections"
+                      className="flex items-center gap-[22px] max-[759px]:gap-4"
+                    >
+                      {tabs}
+                    </Tabs.List>
+                  )}
                   tabs={[
                     { id: 'details', label: 'Details' },
                     ...(subitems ? [{ id: 'subitems', label: `${subLabel} · ${subCount}` }] : []),
@@ -453,7 +461,7 @@ export function ItemPanel(props: ItemPanelProps) {
                     </Tabs.Trigger>
                   )}
                 />
-              </Tabs.List>
+              </div>
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto p-5">
               <Tabs.Content value="details" className="outline-none">

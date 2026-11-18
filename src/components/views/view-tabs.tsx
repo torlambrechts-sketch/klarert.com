@@ -247,7 +247,7 @@ export function ViewTabs({
           </PopoverAnchor>
           <PopoverContent
             align="start"
-            className="max-h-[min(640px,calc(100dvh-120px))] w-[min(440px,calc(100vw-32px))] overflow-y-auto"
+            className="max-h-[min(640px,calc(100dvh-120px),var(--radix-popover-content-available-height))] w-[min(440px,calc(100vw-32px))] overflow-y-auto"
             aria-label="Customise tabs"
             onEscapeKeyDown={keepWhileRenaming}
             // rows move under the keyboard: focus passing through the page does not close the editor

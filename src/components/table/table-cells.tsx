@@ -212,10 +212,11 @@ export function CellEditor({
     // only when the editor opens
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const anchor = useRef<HTMLSpanElement>(null);
   return (
     <Popover open onOpenChange={(o) => !o && onCancel()}>
       <PopoverAnchor asChild>
-        <span className="absolute inset-0" aria-hidden />
+        <span ref={anchor} className="absolute inset-0" aria-hidden />
       </PopoverAnchor>
       <PopoverContent
         ref={content}
@@ -223,6 +224,12 @@ export function CellEditor({
         sideOffset={2}
         className={editorPopoverClass}
         style={{ width: Math.min(width, 420) }}
+        // a second click (or a double-click) on the cell being edited keeps its editor open (docs/05 §3.1
+        // Interaction): option and people pickers open on the first click, and the click after it is not "outside"
+        onPointerDownOutside={(e) => {
+          const cell = anchor.current?.parentElement;
+          if (cell && e.target instanceof Node && cell.contains(e.target)) e.preventDefault();
+        }}
         onOpenAutoFocus={(e) => e.preventDefault()}
         onCloseAutoFocus={(e) => e.preventDefault()}
         onKeyDown={(e) => e.stopPropagation()}

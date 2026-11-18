@@ -936,6 +936,8 @@ export function Table({
     const was = active && active.itemId === itemId && active.col === col;
     const at = itemAt(itemId);
     e.preventDefault();
+    // a click on the cell being edited leaves its editor open and focused (a second click edits, docs/05 §3.1)
+    if (!e.shiftKey && editing && editing.itemId === itemId && editing.col === col) return;
     // sub-item rows have their own axis: no ranges across them
     store.getState().focus(cell, e.shiftKey && !at?.isSub);
     focusGrid();
@@ -2067,7 +2069,9 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                   </span>
                 ) : null}
               </span>
-              {p.density === 'compact' && !p.actions.held.has(item.id) ? null : (
+              {/* the display id, owner, lock and held marker under the name in both densities: the 40 px row keeps
+                  this second line (docs/05 §3.1 Rows, owner decision 18 Nov 2026) */}
+              {
                 <span className="text-muted-foreground text-12 flex min-w-0 items-center gap-[7px] font-mono leading-[17px]">
                   {itemRequirementRef(item) ? (
                     <>
@@ -2130,7 +2134,7 @@ const ItemRow = memo(function ItemRow(p: RowProps & { row: Extract<TableRow, { k
                     </span>
                   ) : null}
                 </span>
-              )}
+              }
             </span>
             {p.sub && p.subTotal > 0 ? (
               <ProgressChip total={p.subTotal} done={p.subDone} label={p.sub.label} />

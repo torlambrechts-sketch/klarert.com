@@ -9,7 +9,9 @@ const MENU_CONTENT = '[data-slot="dropdown-menu-content"], [data-slot="dropdown-
 
 /**
  * A menu (docs/18 §3): closes on an outside click (Radix) and when the page scrolls, but not when the menu itself
- * scrolls. Controlled or not, like Radix's Root.
+ * scrolls. Controlled or not, like Radix's Root. Menus open with a short animation and close at once: with an exit
+ * animation Radix keeps the closed menu mounted until `animationend`, and a menu whose items re-render (a filter)
+ * could stay mounted, so the next click on its trigger opened it and its stale layer closed it again.
  */
 function DropdownMenu({
   open: openProp,
@@ -31,16 +33,21 @@ function DropdownMenu({
   );
   React.useEffect(() => {
     if (!open) return;
-    // focus moving into the menu can scroll it into view: only scrolls after it settled close it
-    const since = Date.now();
-    const onScroll = (e: Event) => {
-      if (Date.now() - since < 150) return;
+    // the person scrolling the page (wheel or touch outside the menu) closes it. Not `scroll` events: the page also
+    // scrolls when a menu item changes what it shows (a filter shortens the table and the scroll position clamps)
+    // or when focus brings an item into view, and the menu must stay open then.
+    const onUserScroll = (e: Event) => {
       const t = e.target;
       if (t instanceof Element && t.closest(MENU_CONTENT)) return;
       setOpen(false);
     };
-    window.addEventListener('scroll', onScroll, true);
-    return () => window.removeEventListener('scroll', onScroll, true);
+    const opts = { capture: true, passive: true } as const;
+    window.addEventListener('wheel', onUserScroll, opts);
+    window.addEventListener('touchmove', onUserScroll, opts);
+    return () => {
+      window.removeEventListener('wheel', onUserScroll, opts);
+      window.removeEventListener('touchmove', onUserScroll, opts);
+    };
   }, [open, setOpen]);
   return (
     <DropdownMenuPrimitive.Root
@@ -75,7 +82,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          'bg-popover text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 shadow-menu rounded-card z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto p-1.5',
+          'bg-popover text-popover-foreground data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 shadow-menu rounded-card z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto p-1.5',
           className,
         )}
         {...props}

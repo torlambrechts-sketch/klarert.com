@@ -30,7 +30,8 @@ import { FormView } from '@/components/views/form-view';
 import { KanbanView } from '@/components/views/kanban-view';
 import { InsightsView } from '@/components/insights/insights-view';
 import { DesignView } from '@/components/design/design-view';
-import { filterFields } from '@/engine/views/quick-filters';
+import { ownerField } from '@/engine/item-panel';
+import { statusFilterField } from '@/engine/views/quick-filters';
 import { NewItemDialog, type NewItemRequest } from '@/components/views/new-item-dialog';
 import type { IntakeForm } from '@/engine/views/new-item';
 import { useOnline } from '@/components/states/use-online';
@@ -786,8 +787,10 @@ function ViewBody({
       if (!field) return;
       const s = store.getState();
       s.clearToolbarFilters();
-      // an option or people field: its column in Filter ▾; anything else: a removable chip
-      if (filterFields(ctx).some((f) => f.id === field.id)) s.setColFilters({ [field.id]: [key] });
+      // the status and owner fields: their column in Filter ▾ (the quick filters); any other field: a removable
+      // "Field: value" chip (docs/05 §3.6)
+      if (field.id === statusFilterField(ctx)?.id || field.id === ownerField(ctx)?.id)
+        s.setColFilters({ [field.id]: [key] });
       else s.setValueFilter({ fieldId: field.id, key, label: `${field.name}: ${label}` });
       openView(tableId);
     },

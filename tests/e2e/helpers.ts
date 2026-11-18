@@ -236,7 +236,8 @@ export const OPEN_PUBLIC_FORM = {
 /** Public forms refuse answers sent sooner than 2 s after the page was served (minimum fill time). */
 export const MIN_FILL_MS = 2100;
 
-const ITEM_TABS = '[role="tablist"][aria-label="Item sections"]';
+// the item panel tab bar: the tablist "Item sections" and More ▾ beside it
+const ITEM_TABS = '[data-testid="item-tabs"]';
 const MORE = '[data-testid="overflow-tabs-more"]';
 
 const pageOf = (scope: Page | Locator): Page =>
