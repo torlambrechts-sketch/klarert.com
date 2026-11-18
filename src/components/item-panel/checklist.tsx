@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { RotateCcw } from 'lucide-react';
 import { checklistAction } from '@/app/[org]/s/panel-actions';
 import type { LinkConfig } from '@/engine/fields/link';
@@ -41,6 +41,8 @@ export function ChecklistSection({
       return r.data.rows;
     },
     staleTime: 10_000,
+    // a sync changes the links, and the key with them: keep the list on screen while the new one loads
+    placeholderData: keepPreviousData,
   });
   const headingId = `checklist-${field.id}-${item.id}`;
   const rows = q.data ?? [];
