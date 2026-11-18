@@ -30,7 +30,7 @@ export function PageTabs({
         label={label}
         tabs={tabs}
         active={active}
-        className="gap-7"
+        className="flex-wrap gap-x-5 sm:gap-x-7"
         onSelect={(id) => {
           const t = tabs.find((x) => x.id === id);
           if (t) router.push(t.href);
