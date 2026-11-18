@@ -72,7 +72,7 @@ export function RunLog(props: { org: string; orgId: string; timeZone: string }) 
           <>
             Every run of every automation, newest first, with what each step did. Every run is
             audited with “automation” as the actor.{' '}
-            <Link href={`/${org}/automations`} className="text-ink underline underline-offset-4">
+            <Link href={`/${org}/automations`} className="underline underline-offset-4">
               Back to automations
             </Link>
           </>

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
-import { rest, signIn } from './helpers';
+import { appScreenNames, rest, signIn } from './helpers';
 
 // The Create wizard (docs/05 §4 Create, docs/11 Bundles): Ctrl+K opens the picker, a goal finds the incident set, the
 // preview flags its public form and lets a form be left out, step 3 names it with an owner and a review date, Create
@@ -246,9 +246,8 @@ test.describe('App card and settings, desktop', () => {
     await expect(page.getByText(/^Created Corrective action \(CAPA\): 1 sheet/)).toContainText(
       '1 draft form, 1 automation, 1 dashboard',
     );
-    await expect(
-      page.getByRole('navigation', { name: 'CAPA screens' }).getByRole('link'),
-    ).toHaveText([
+    await page.getByRole('navigation', { name: 'CAPA screens' }).waitFor();
+    expect(await appScreenNames(page, 'CAPA screens')).toEqual([
       'Report a problem',
       'My actions',
       'Needs my approval',

@@ -22,7 +22,7 @@ export function ListCrumb({
       <span aria-hidden className="text-line-strong">
         /
       </span>
-      <span className="text-ink font-medium">{page}</span>
+      <span className="font-medium">{page}</span>
       {badge ? <CountBadge>{badge}</CountBadge> : null}
     </span>
   );

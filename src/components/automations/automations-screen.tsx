@@ -201,7 +201,7 @@ function ListScreen(props: ScreenProps & { perms: ListPermissions }) {
           <>
             “When, if, then” rules that run on the sheets. Open a rule to edit it in place; saving
             creates a new version. The stages items move through show in{' '}
-            <Link href={`/${org}/workflow`} className="text-ink underline underline-offset-4">
+            <Link href={`/${org}/workflow`} className="underline underline-offset-4">
               Workflow
             </Link>
             .

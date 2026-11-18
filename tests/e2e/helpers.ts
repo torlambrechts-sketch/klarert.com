@@ -310,3 +310,26 @@ export async function openViewTab(page: Page, name: string | RegExp) {
   await nav.locator(MORE).click();
   await page.getByRole('menuitemradio', { name }).click();
 }
+
+/** An app's screens in order: the visible tabs, then the ones in More ▾ (docs/18 §7, the menu rule). */
+export async function appScreenNames(page: Page, nav: string): Promise<string[]> {
+  const screens = page.getByRole('navigation', { name: nav });
+  await screens.getByRole('link').first().waitFor();
+  const shown = await screens.getByRole('link').allTextContents();
+  const more = screens.getByTestId('overflow-tabs-more');
+  if (!(await more.count())) return shown.map((t) => t.trim());
+  await more.click();
+  const rest = await page.getByRole('menuitemradio').allTextContents();
+  await page.keyboard.press('Escape');
+  return [...shown, ...rest].map((t) => t.trim());
+}
+
+/** Opens an app screen by its tab: the link, or its item in More ▾. */
+export async function openAppScreen(page: Page, nav: string, name: string) {
+  const screens = page.getByRole('navigation', { name: nav });
+  await screens.getByRole('link').first().waitFor();
+  const link = screens.getByRole('link', { name, exact: true });
+  if (await link.count()) return link.click();
+  await screens.getByTestId('overflow-tabs-more').click();
+  await page.getByRole('menuitemradio', { name, exact: true }).click();
+}

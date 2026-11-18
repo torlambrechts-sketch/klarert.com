@@ -36,7 +36,7 @@ export function AppDashboard({
         actions={
           <Link
             href={fullHref}
-            className="text-14 text-ink font-medium underline underline-offset-4"
+            className="text-14 font-medium underline underline-offset-4"
           >
             Open in Dashboards
           </Link>
