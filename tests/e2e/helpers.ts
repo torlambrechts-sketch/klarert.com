@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { COMMAND_HEADER, commandProof, commandSecret } from '@/lib/supabase/command-proof';
 
 const MAILPIT = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324';
@@ -235,3 +235,22 @@ export const OPEN_PUBLIC_FORM = {
 
 /** Public forms refuse answers sent sooner than 2 s after the page was served (minimum fill time). */
 export const MIN_FILL_MS = 2100;
+
+/**
+ * Opens an item panel tab (or any tab bar built on OverflowTabs, docs/18 §3): clicks the tab when it shows, else
+ * opens the bar's More ▾ menu and picks it there.
+ */
+export async function openTab(scope: Page | Locator, name: string | RegExp) {
+  const tab = scope.getByRole('tab', { name });
+  if (await tab.count()) return tab.first().click();
+  const page = 'page' in scope && typeof scope.page === 'function' ? scope.page() : (scope as Page);
+  await scope.locator('[role="tablist"] [data-testid="overflow-tabs-more"]').first().click();
+  await page.getByRole('menuitemradio', { name }).click();
+}
+
+/** The control that shows an item panel tab: the tab itself, or the More trigger once the tab is picked there. */
+export function panelTab(scope: Page | Locator, name: string | RegExp) {
+  return scope
+    .getByRole('tab', { name })
+    .or(scope.locator('[role="tablist"] [data-testid="overflow-tabs-more"]').filter({ hasText: name }));
+}
