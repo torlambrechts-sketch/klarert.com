@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { idsOf, isoIn, localSql, seedWorkspace } from './first-sheet-helpers';
-import { rest, signIn } from './helpers';
+import { rest, signIn, openTab } from './helpers';
 
 // P2 · Access control (docs/02 §16): restrict a sheet and list people with a level, the admin who is not listed sees
 // only the name, a commenter comments but does not edit, an auditor reads until the end date, and a restricted field
@@ -106,7 +106,7 @@ test.describe('access control', () => {
     await expect(tom.getByRole('button', { name: /^New corrective action/ })).toHaveCount(0);
     await tom.goto(`/${slug}/s/${ca}?item=${burrs.display_id}`);
     const panel = tom.getByRole('dialog');
-    await panel.getByRole('tab', { name: /^Updates/ }).click();
+    await openTab(panel, /^Updates/);
     await panel.getByRole('combobox', { name: 'Write an update' }).fill('Lot 2210 checked.');
     await panel.getByRole('button', { name: 'Post update' }).click();
     await expect(tom.getByText('Update posted.')).toBeVisible();
@@ -158,9 +158,9 @@ test.describe('access control', () => {
     const burrs = await ids.item('Corrective actions', CA_ITEM);
     await vic.goto(`/${slug}/s/${ca}?item=${burrs.display_id}`);
     const panel = vic.getByRole('dialog');
-    await panel.getByRole('tab', { name: /^Updates/ }).click();
+    await openTab(panel, /^Updates/);
     await expect(panel.getByRole('combobox', { name: 'Write an update' })).toHaveCount(0);
-    await panel.getByRole('tab', { name: /^Activity log/ }).click();
+    await openTab(panel, /^Activity log/);
     await expect(panel.getByText('Created in').first()).toBeVisible();
     expect(
       await restError(vic, 'item_updates', {

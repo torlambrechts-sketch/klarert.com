@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { idsOf, seedWorkspace } from './first-sheet-helpers';
-import { signIn } from './helpers';
+import { signIn, openTab } from './helpers';
 
 // M10 accessibility (docs/01 §6: WCAG 2.1 AA): axe on Home, the sheet (Table, with a summary row and a collapsed
 // group, and its phone cards), the item panel and the automation
@@ -70,7 +70,7 @@ test('Home, the sheet Table and its cards, the item panel and the automation bui
   await expect(panel.getByRole('heading', { name: 'Burrs on bracket 44-210' })).toBeVisible();
   await expect(panel.getByRole('list', { name: 'Automations on this item' })).toBeVisible();
   await axe(page, 'Item panel · Details');
-  await panel.getByRole('tab', { name: /^Activity log/ }).click();
+  await openTab(panel, /^Activity log/);
   await expect(panel.getByRole('list', { name: 'Activity log' })).toBeVisible();
   await axe(page, 'Item panel · Activity log');
 

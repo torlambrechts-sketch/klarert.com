@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { rest, signIn } from './helpers';
+import { rest, signIn, openTab, panelTab } from './helpers';
 
 // M5: the item panel, updates with mentions, the activity log, files and two-way links. Uses the seed (pnpm seed):
 // maria@example.com owner (Compliance manager), james@example.com editor, tom@example.com editor (HSE manager).
@@ -169,7 +169,7 @@ test.describe('desktop', () => {
     const item = await itemByName(page, url, 'Check the fire doors');
     await openByName(page, 'Check the fire doors');
     const dialog = panel(page);
-    await dialog.getByRole('tab', { name: /^Updates/ }).click();
+    await openTab(dialog, /^Updates/);
     await expect(dialog.getByText('No updates yet. Post the first one.')).toBeVisible();
 
     const box = dialog.getByRole('combobox', { name: 'Write an update' });
@@ -183,7 +183,7 @@ test.describe('desktop', () => {
     await expect(box).toHaveValue('Please review @Maria Pereira and @HSE manager today.');
     await dialog.getByRole('button', { name: 'Post update' }).click();
     await expect(page.getByText('Update posted. 2 people notified.')).toBeVisible();
-    await expect(dialog.getByRole('tab', { name: 'Updates · 1' })).toBeVisible();
+    await expect(panelTab(dialog, 'Updates · 1')).toBeVisible();
     const feed = dialog.getByRole('list', { name: 'Updates' });
     await expect(feed).toContainText('Please review @Maria Pereira and @HSE manager today.');
 
@@ -212,13 +212,13 @@ test.describe('desktop', () => {
     await dialog.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Update changed.')).toBeVisible();
     await expect(feed).toContainText('Reviewed, all fine.');
-    await dialog.getByRole('tab', { name: /^Activity log/ }).click();
+    await openTab(dialog, /^Activity log/);
     await expect(dialog.getByRole('list', { name: 'Activity log' })).toContainText(
       'James Okafor · Edited an update',
     );
 
     // delete it again
-    await dialog.getByRole('tab', { name: /^Updates/ }).click();
+    await openTab(dialog, /^Updates/);
     await feed.getByRole('button', { name: 'Delete' }).click();
     await feed.getByRole('button', { name: 'Delete' }).click();
     await expect(page.getByText('Update deleted.')).toBeVisible();
@@ -242,7 +242,7 @@ test.describe('desktop', () => {
     await page.keyboard.press('Enter');
     await expect(dialog.getByRole('heading', { name: 'Replace both extinguishers' })).toBeVisible();
 
-    await dialog.getByRole('tab', { name: /^Activity log/ }).click();
+    await openTab(dialog, /^Activity log/);
     const log = dialog.getByRole('list', { name: 'Activity log' });
     await expect(log.getByRole('listitem')).toHaveCount(4);
     const lines = await log.getByRole('listitem').allInnerTexts();
@@ -253,7 +253,7 @@ test.describe('desktop', () => {
     expect(lines[2]).toContain('Status set to Working on it');
     expect(lines[3]).toContain('Created in Open');
     expect(lines[0]).toMatch(/hash [0-9a-f]{8}/);
-    await expect(dialog.getByRole('tab', { name: 'Activity log · 4' })).toBeVisible();
+    await expect(panelTab(dialog, 'Activity log · 4')).toBeVisible();
 
     await dialog.getByRole('button', { name: 'Verify audit trail' }).click();
     await expect(dialog.getByRole('status').filter({ hasText: 'Audit trail intact' })).toHaveText(
@@ -321,7 +321,7 @@ test.describe('desktop', () => {
     expect(res.status).toBe(200);
     expect(Buffer.from(await res.arrayBuffer()).toString()).toContain('June, signed');
 
-    await dialog.getByRole('tab', { name: /^Activity log/ }).click();
+    await openTab(dialog, /^Activity log/);
     const log = dialog.getByRole('list', { name: 'Activity log' });
     await expect(log).toContainText('Evidence: replaced drill.pdf with drill-v2.pdf');
     await expect(log).toContainText('Evidence: added drill.pdf');

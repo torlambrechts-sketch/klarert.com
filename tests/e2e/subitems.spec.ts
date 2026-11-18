@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { seedWorkspace } from './first-sheet-helpers';
-import { accessToken, rest, signIn } from './helpers';
+import { accessToken, rest, signIn, openTab, panelTab } from './helpers';
 
 // Sub-items (docs/02 §12, docs/05 §3.1): a CAPA sheet from the wizard comes with "Actions" as sub-items, the
 // "can't close while open" gate and a five-step template. Each test works in a fresh seeded workspace (Maria owner).
@@ -141,20 +141,17 @@ test.describe('desktop', () => {
     // both activity logs: pointer entries on the parent, the sub-item's own chain
     await parent.getByRole('button', { name: 'Guard missing on press 7', exact: true }).click();
     const panel = page.getByRole('dialog');
-    await panel.getByRole('tab', { name: 'Actions · 6' }).click();
+    await openTab(panel, 'Actions · 6');
     await expect(panel.getByText('6 of 6 done')).toBeVisible();
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/subitems-panel-1440.png` });
-    await panel.getByRole('tab', { name: /^Activity log/ }).click();
+    await openTab(panel, /^Activity log/);
     await expect(panel.getByText(`Sub-item added: ${pid}.1 “Containment”`)).toBeVisible();
-    await panel.getByRole('tab', { name: 'Actions · 6' }).click();
+    await openTab(panel, 'Actions · 6');
     await panel.getByRole('button', { name: /Containment/ }).click();
     await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).last()).toContainText(
       `${pid}/${pid}.1`,
     );
-    await page
-      .getByRole('dialog')
-      .getByRole('tab', { name: /^Activity log/ })
-      .click();
+    await openTab(page.getByRole('dialog'), /^Activity log/);
     await expect(page.getByRole('dialog').getByText(`Created under ${pid}`)).toBeVisible();
     await expect(
       page.getByRole('dialog').getByText(/Status (set to Done|: .* → Done)/),
@@ -163,9 +160,10 @@ test.describe('desktop', () => {
       .getByRole('dialog')
       .getByRole('button', { name: `Back to ${pid}` })
       .click();
-    await expect(
-      page.getByRole('dialog').getByRole('tab', { name: 'Actions · 6' }),
-    ).toHaveAttribute('aria-selected', 'true');
+    await expect(panelTab(page.getByRole('dialog'), 'Actions · 6')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 
   test('an automation adds the five steps when a CAPA is created, once the row is finished', async ({

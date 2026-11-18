@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { generateNKeysBetween } from 'fractional-indexing';
-import { rest, signIn } from './helpers';
+import { rest, signIn, viewTabNames, viewTab } from './helpers';
 
 // The Table view (docs/05 §3.1): one sticky column header for all groups, collapsible group sections, column
 // summaries off until switched on (kept in the view), old ?view=list / ?view=grid links, and cards at 390 px.
@@ -116,18 +116,16 @@ test.describe('desktop', () => {
     // the former view ids open the Table
     for (const old of ['list', 'grid']) {
       await page.goto(`${sheet.url}?view=${old}`);
-      await expect(
-        page.getByRole('navigation', { name: 'Views' }).getByRole('link', { name: 'Table' }),
-      ).toHaveAttribute('aria-current', 'page');
+      await expect(viewTab(page, 'Table')).toHaveAttribute('aria-current', 'page');
       await expect(grid(page).getByText('Calibrate scale', { exact: true })).toBeVisible();
     }
     // Insights joined the tabs in 0b7bfb3 (sheet-insights); this list predates it
-    await expect(page.getByRole('navigation', { name: 'Views' }).getByRole('link')).toHaveText([
-      /Table/,
-      /Insights/,
-      /Board/,
-      /Calendar/,
-      /Form/,
+    expect(await viewTabNames(page)).toEqual([
+      expect.stringMatching(/Table/),
+      expect.stringMatching(/Insights/),
+      expect.stringMatching(/Board/),
+      expect.stringMatching(/Calendar/),
+      expect.stringMatching(/Form/),
     ]);
   });
 

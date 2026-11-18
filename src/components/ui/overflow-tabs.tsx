@@ -88,7 +88,8 @@ export function OverflowTabs<T extends OverflowTab>({
         <DropdownMenu>
           <DropdownMenuTrigger
             ref={triggerRef}
-            aria-label={`${label}: ${activeInMenu ? activeInMenu.label : 'more'}`}
+            // named by its words ("More", or the active tab it holds), which stands for the current tab
+            aria-current={activeInMenu ? 'page' : undefined}
             data-testid="overflow-tabs-more"
             className={cn(underlineTab(!!activeInMenu), 'gap-1 px-1')}
           >
@@ -96,7 +97,7 @@ export function OverflowTabs<T extends OverflowTab>({
             {activeInMenu ? activeInMenu.label : 'More'}
             <ChevronDown className="size-[15px]" aria-hidden />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="min-w-56">
+          <DropdownMenuContent align="start" className="min-w-56" aria-label={`${label}: more`}>
             {overflow.length ? (
               <DropdownMenuRadioGroup value={active ?? ''} onValueChange={onSelect}>
                 {overflow.map((t) => {

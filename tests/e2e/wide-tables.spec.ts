@@ -98,7 +98,8 @@ test.describe('desktop', () => {
     await expect(grid(page).getByText('Fix guard rail', { exact: true })).toBeVisible();
 
     // groups: "Plan" gets Due date and Note 2; Note 2 moves next to Due date
-    await page.getByRole('button', { name: /^Columns/ }).click();
+    await page.getByTestId('more-menu').click();
+    await page.getByRole('menuitem', { name: /^Columns/ }).click();
     await page.getByRole('button', { name: 'Edit column groups' }).click();
     await page.getByLabel('New group').fill('Plan');
     await page.getByRole('button', { name: 'Add group' }).click();
@@ -128,7 +129,8 @@ test.describe('desktop', () => {
     ).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Hidden · 2' })).toBeVisible();
     // hide Note 8 too: Hidden · 3; the button opens the Columns menu at its hidden list
-    await page.getByRole('button', { name: /^Columns/ }).click();
+    await page.getByTestId('more-menu').click();
+    await page.getByRole('menuitem', { name: /^Columns/ }).click();
     // unticked, the column moves to the hidden list
     await page.getByRole('checkbox', { name: 'Show Note 8' }).click();
     await expect(page.getByRole('button', { name: 'Show Note 8' })).toBeVisible();
@@ -185,7 +187,8 @@ test.describe('desktop', () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await signIn(page, 'james@example.com');
     await wideSheet(page);
-    await page.getByRole('button', { name: /^Columns/ }).click();
+    await page.getByTestId('more-menu').click();
+    await page.getByRole('menuitem', { name: /^Columns/ }).click();
     await expect(page.getByRole('checkbox', { name: 'Show Note 1' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Edit column groups' })).toHaveCount(0);
     await page.keyboard.press('Escape');

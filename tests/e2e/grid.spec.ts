@@ -306,9 +306,11 @@ test('bulk archive with Undo, and dragging a row to another group', async ({ pag
   await page.getByRole('checkbox', { name: 'Select Archive A' }).check();
   await page.getByRole('checkbox', { name: 'Select Archive B' }).click({ modifiers: ['Shift'] });
   const bar = page.getByRole('region', { name: 'Selected items' });
-  await expect(bar).toContainText('2 selected');
-  await bar.getByRole('button', { name: 'Actions' }).click();
-  await page.getByRole('menuitem', { name: 'Archive' }).click();
+  await expect(bar).toContainText('2 items selected');
+  // the bulk bar's More ▾ › Delete… confirms, then moves the items to Archived items (docs/18 §5)
+  await bar.getByRole('button', { name: 'More' }).click();
+  await page.getByRole('menuitem', { name: 'Delete…' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Delete 2 items' }).click();
   await expect(page.getByText('2 items archived.')).toBeVisible();
   await expect(grid(page).getByText('Archive A')).toHaveCount(0);
   await page.getByRole('button', { name: 'Undo' }).click();
@@ -362,10 +364,9 @@ test('a locked item blocks an editor but not an admin', async ({ page, browser }
   const url = await trackerSheet(page);
   await addItems(page, 'Open', ['Approved policy']);
   await page.getByRole('checkbox', { name: 'Select Approved policy' }).check();
-  await page
-    .getByRole('region', { name: 'Selected items' })
-    .getByRole('button', { name: 'Actions' })
-    .click();
+  // the toolbar's More ▾ › Actions holds the bulk actions on the selected rows
+  await page.getByTestId('more-menu').click();
+  await page.getByRole('menuitem', { name: /^Actions/ }).click();
   await page.getByRole('menuitem', { name: 'Lock' }).click();
   await page.getByLabel('Reason').fill('Approved by QA');
   await page.getByRole('dialog').getByRole('button', { name: 'Lock' }).click();

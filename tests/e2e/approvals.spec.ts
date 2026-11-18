@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { localSql, seedWorkspace } from './first-sheet-helpers';
-import { signIn } from './helpers';
+import { signIn, openTab } from './helpers';
 
 // Approval workflows (docs/04 §13, docs/05): an owner defines a two-step workflow in Sheet settings (Review by the
 // item's Owner, then Approval by everyone with the job role "Quality lead", a rejection there back to Review, lock on
@@ -243,7 +243,7 @@ test('define, submit, approve from My work, a rejection back to step 1, locked',
   await expect(steps).toContainText('Vic Viewer ✕ rejected');
   await expect(steps).toContainText('“Add the rollback plan”');
   if (SHOTS) await panel.screenshot({ path: `${SHOTS}/panel-timeline.png` });
-  await page.getByRole('tab', { name: /Activity log/ }).click();
+  await openTab(page, /Activity log/);
   await expect(page.getByText('Approval complete: Procedure approval')).toBeVisible();
   await expect(
     page.getByText(

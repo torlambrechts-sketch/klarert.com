@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { idsOf, seedWorkspace } from './first-sheet-helpers';
-import { signIn } from './helpers';
+import { signIn, openTab, viewTab } from './helpers';
 
 // The Insights view (docs/05 §3.6) and the comment marker on rows and cards (docs/05 §3.1), against a workspace
 // seeded with the first-sheet template: Corrective actions has five items (statuses Investigating, Action set, Stuck,
@@ -65,10 +65,7 @@ test('Insights: default layout, customise every widget type, save, reload, filte
   await page.goto(`/${slug}/s/${ca}?view=insights`);
 
   // the default layout, worked out from the fields
-  await expect(views(page).getByRole('link', { name: 'Insights' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, 'Insights')).toHaveAttribute('aria-current', 'page');
   await expect(card(page, 'Total items')).toContainText('5');
   await expect(card(page, 'Completed')).toContainText('0');
   await expect(card(page, 'Overdue')).toContainText('of 5 items');
@@ -173,10 +170,7 @@ test('Insights: default layout, customise every widget type, save, reload, filte
   });
   await expect(page.getByText('View saved and shared.')).toBeVisible();
   await expect(page).toHaveURL(/view=[0-9a-f-]{36}/);
-  await expect(views(page).getByRole('link', { name: 'Insights' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, 'Insights')).toHaveAttribute('aria-current', 'page');
   const saved = await widgetTypes(page);
   await page.reload();
   await expect(card(page, 'Audit target')).toBeVisible();
@@ -197,11 +191,16 @@ test('Insights: default layout, customise every widget type, save, reload, filte
     .first()
     .getByRole('button', { name: /^Stuck/ })
     .click();
-  await expect(views(page).getByRole('link', { name: 'Table' })).toHaveAttribute(
-    'aria-current',
-    'page',
+  await expect(viewTab(page, 'Table')).toHaveAttribute('aria-current', 'page');
+  // the Table's Filter ▾ is on, with Stuck ticked in its Status column (docs/18 §4)
+  const filterMenu = page.getByTestId('filter-menu');
+  await expect(filterMenu).toHaveAccessibleName('Filter, 1 on');
+  await filterMenu.click();
+  await expect(page.getByRole('menuitemcheckbox', { name: /^Stuck/ })).toHaveAttribute(
+    'aria-checked',
+    'true',
   );
-  await expect(page.getByRole('button', { name: 'Filter by status: Stuck' })).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(
     page.getByRole('button', { name: 'Guard bypassed on press 3', exact: true }),
   ).toBeVisible();
@@ -213,10 +212,7 @@ test('Insights: default layout, customise every widget type, save, reload, filte
   await views(page).getByRole('button', { name: 'More' }).click();
   await page.getByRole('menu').getByRole('menuitem', { name: 'Insights' }).click();
   await card(page, 'By severity').getByRole('button').filter({ hasText: /\d$/ }).first().click();
-  await expect(views(page).getByRole('link', { name: 'Table' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, 'Table')).toHaveAttribute('aria-current', 'page');
   const chip = page.getByRole('button', { name: /^Remove filter Severity: / });
   await expect(chip).toBeVisible();
   await chip.click();
@@ -241,7 +237,7 @@ test('a comment shows as a marker on its row and Kanban card at once and after a
   await expect(row.getByText(/comments?$/)).toHaveCount(0);
 
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('tab', { name: /^Updates/ }).click();
+  await openTab(dialog, /^Updates/);
   await dialog
     .getByRole('combobox', { name: 'Write an update' })
     .fill('Admin account disabled.\nNew accounts per person.');
@@ -284,7 +280,7 @@ test('phone: Insights cards fill the width, and item cards show the comment mark
   const item = await ids.item('Corrective actions', 'Burrs on bracket 44-210');
   await page.goto(`/${slug}/s/${ca}?view=table&item=${item.display_id}`);
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('tab', { name: /^Updates/ }).click();
+  await openTab(dialog, /^Updates/);
   await dialog.getByRole('combobox', { name: 'Write an update' }).fill('Lot 2210 quarantined.');
   await dialog.getByRole('button', { name: 'Post update' }).click();
   await expect(page.getByText('Update posted.')).toBeVisible();

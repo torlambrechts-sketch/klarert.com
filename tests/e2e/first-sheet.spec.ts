@@ -10,7 +10,15 @@ import {
   shortDate,
   ukDate,
 } from './first-sheet-helpers';
-import { MIN_FILL_MS, OPEN_PUBLIC_FORM, rest, signIn } from './helpers';
+import {
+  MIN_FILL_MS,
+  OPEN_PUBLIC_FORM,
+  rest,
+  signIn,
+  openTab,
+  viewTab,
+  openViewTab,
+} from './helpers';
 
 // docs/07 · the first spreadsheet, end to end. Part A builds "Corrective actions" by hand in an empty workspace;
 // Part B loads templates/first-sheet.json (the seed's importer) into a fresh workspace and walks rows B1–B12.
@@ -22,7 +30,6 @@ test.beforeEach(({}, info) => test.skip(info.project.name === 'phone', 'desktop 
 
 const grid = (page: Page) => page.getByRole('grid').first();
 const panel = (page: Page) => page.getByRole('dialog').first();
-const views = (page: Page) => page.getByRole('navigation', { name: 'Views' });
 
 /** Grid cell: column 0 is the name, then the fields in order. */
 const cell = (page: Page, item: string, index: number) =>
@@ -103,10 +110,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   await page.getByRole('button', { name: 'Create sheet' }).click();
   await expect(page.getByText('Sheet created. Add your first item.')).toBeVisible();
   await expect(page.getByRole('heading', { level: 1, name: 'Corrective actions' })).toBeVisible();
-  await expect(views(page).getByRole('link', { name: 'Table' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewTab(page, 'Table')).toHaveAttribute('aria-current', 'page');
   const rail = page.getByRole('navigation', { name: 'Side menu' });
   await expect(rail.getByRole('link', { name: 'Corrective actions' })).toHaveAttribute(
     'data-testid',
@@ -116,7 +120,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
   const caUrl = page.url().replace(/\?.*$/, '');
 
   // ── 2. "+ Add item" in Open (the Table's add row), Enter to continue, Esc
-  await views(page).getByRole('link', { name: 'Table' }).click();
+  await openViewTab(page, 'Table');
   const add = page.getByRole('textbox', { name: 'Add corrective action to Open' });
   await add.click();
   await add.fill('Burrs on bracket 44-210');
@@ -383,9 +387,7 @@ test('Part A · build Corrective actions by hand', async ({ page }) => {
 
   // ── 10. Item panel CA-001 → Activity log → Verify audit trail
   await grid(page).getByRole('button', { name: 'Burrs on bracket 44-210', exact: true }).click();
-  await panel(page)
-    .getByRole('tab', { name: /^Activity log/ })
-    .click();
+  await openTab(panel(page), /^Activity log/);
   await panel(page).getByRole('button', { name: 'Verify audit trail' }).click();
   await expect(
     panel(page).getByRole('status').filter({ hasText: 'Audit trail intact' }),
@@ -1155,11 +1157,13 @@ test.describe('Part B · automations on the reference template', () => {
     await page.goto(`/${slug}/s/${ca}?view=table`);
     await page.getByRole('checkbox', { name: 'Select Shared admin account on firewall' }).check();
     let answered = nextAnswer(page);
+    // the bulk bar's More ▾ › Delete… moves the item to Archived items (docs/18 §5)
     await page
       .getByRole('region', { name: 'Selected items' })
-      .getByRole('button', { name: 'Actions' })
+      .getByRole('button', { name: 'More' })
       .click();
-    await page.getByRole('menuitem', { name: 'Archive' }).click();
+    await page.getByRole('menuitem', { name: 'Delete…' }).click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Delete item' }).click();
     await answered;
     await expect(page.getByText('1 item archived.')).toBeVisible();
     await expect(grid(page).getByText('Shared admin account on firewall')).toHaveCount(0);
@@ -1197,7 +1201,7 @@ test.describe('Part B · automations on the reference template', () => {
     await page.keyboard.press('Escape');
 
     const p = await openItem(page, ca, fw.display_id);
-    await p.getByRole('tab', { name: /^Activity log/ }).click();
+    await openTab(p, /^Activity log/);
     const log = p.getByRole('list', { name: 'Activity log' });
     await expect(log.getByRole('listitem').nth(0)).toContainText('Restored');
     await expect(log.getByRole('listitem').nth(1)).toContainText('Archived');

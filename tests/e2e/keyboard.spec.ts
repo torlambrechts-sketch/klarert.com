@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { nextAnswer } from './automation-helpers';
 import { idsOf, seedWorkspace } from './first-sheet-helpers';
-import { rest, signIn } from './helpers';
+import { rest, signIn, panelTab } from './helpers';
 
 // M10 keyboard pass (docs/08-accessibility.md): a core flow with the keyboard only — add an item, set its status,
 // open its panel, post an update, close the panel — on the seeded first-sheet template. After the page loads, every
@@ -98,15 +98,22 @@ test('keyboard only: add an item, set its status, open it, post an update, close
 
   // 4. the Updates tab (tabs: Tab reaches the selected one, arrows move between them), write, post
   await tabTo(page, panel.getByRole('tab', { name: 'Details' }));
-  // tab order: Details, the sub-items (Steps), Files, Updates (docs/05 §3.4)
+  // tab order: Details, the sub-items (Steps), then More ▾ with Files, Updates, Activity log (docs/05 §3.4, docs/18 §3)
   await page.keyboard.press('ArrowRight');
-  await expect(panel.getByRole('tab', { name: /^Steps/ })).toBeFocused();
-  await page.keyboard.press('ArrowRight');
-  await expect(panel.getByRole('tab', { name: /^Files/ })).toBeFocused();
-  await page.keyboard.press('ArrowRight');
-  const updatesTab = panel.getByRole('tab', { name: /^Updates/ });
+  await expect(panelTab(panel, /^Steps/)).toBeFocused();
+  // Tab leaves the tabs for More ▾; Enter opens it on its first item, ↓ moves, Enter picks
+  await page.keyboard.press('Tab');
+  const more = panel.locator('[role="tablist"] [data-testid="overflow-tabs-more"]');
+  await expect(more).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('menuitemradio', { name: /^Files/ })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('menuitemradio', { name: /^Updates/ })).toBeFocused();
+  await page.keyboard.press('Enter');
+  const updatesTab = panelTab(panel, /^Updates/);
   await expect(updatesTab).toBeFocused();
-  await expect(updatesTab).toHaveAttribute('aria-selected', 'true');
+  // the Updates tab is the one shown
+  await expect(panel.getByRole('combobox', { name: 'Write an update' })).toBeVisible();
   const box = panel.getByRole('combobox', { name: 'Write an update' });
   await tabTo(page, box);
   await page.keyboard.type('Cable tied back, checking the other lines.');
